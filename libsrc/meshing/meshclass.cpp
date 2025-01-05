@@ -181,13 +181,21 @@ namespace netgen
       return 0;
 
     vlam[2] = 1.-vlam[0] - vlam[1];
-    NgArray<int> edges;
+    // NgArray<int> edges;
     auto & topology = mesh.GetTopology();
+
+    /*
     topology.GetSurfaceElementEdges(velement, edges);
     Array<SegmentIndex> segs(edges.Size());
     for(auto i : Range(edges))
       segs[i] = topology.GetSegmentOfEdge(edges[i]);
-
+    */
+    auto hedges = topology.GetEdges(SurfaceElementIndex(velement-1));
+    Array<SegmentIndex> segs(hedges.Size());
+    for(auto i : Range(hedges))
+      segs[i] = topology.GetSegmentOfEdge(hedges[i]+1);
+    
+    
     for(auto i : Range(segs))
       {
         if(IsInvalid(segs[i]))
@@ -224,12 +232,7 @@ namespace netgen
   Mesh :: Mesh ()
     : topology(*this), surfarea(*this)
   {
-    // boundaryedges = nullptr;
-    // surfelementht = nullptr; 
-    // segmentht = nullptr;
-
     lochfunc = {nullptr};
-    // mglevels = 1;
     elementsearchtree = nullptr;
     elementsearchtreets = NextTimeStamp();
     majortimestamp = timestamp = NextTimeStamp();
@@ -242,9 +245,6 @@ namespace netgen
     clusters = make_unique<AnisotropicClusters> (*this);
     ident = make_unique<Identifications> (*this);
 
-    hpelements = NULL;
-    coarsemesh = NULL;
-
     ps_startelement = 0;
 
     geomtype = NO_GEOM;
@@ -252,7 +252,6 @@ namespace netgen
     bcnames.SetSize(0);
     cd2names.SetSize(0);
 
-    // this->comm = netgen :: ng_comm;
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
@@ -261,17 +260,6 @@ namespace netgen
 
   Mesh :: ~Mesh()
   {
-    // delete lochfunc;
-    // delete boundaryedges;
-    // delete surfelementht;
-    // delete segmentht;
-    // delete curvedelems;
-    // delete clusters;
-    // delete ident;
-    // delete elementsearchtree;
-    // delete coarsemesh;
-    // delete hpelements;
-
     for (int i = 0; i < materials.Size(); i++)
       delete materials[i];
     for(int i = 0; i < userdata_int.Size(); i++)
@@ -922,17 +910,17 @@ namespace netgen
       }
 
     int cntmat = 0;
-    for (i = 1; i <= materials.Size(); i++)
-      if (materials.Get(i) && materials.Get(i)->length())
+    for (int i = 0; i < materials.Size(); i++)
+      if (materials[i] && materials[i]->length())
         cntmat++;
 
     if (cntmat)
       {
         outfile << "materials" << endl;
         outfile << cntmat << endl;
-        for (i = 1; i <= materials.Size(); i++)
-          if (materials.Get(i) && materials.Get(i)->length())
-            outfile << i << " " << *materials.Get(i) << endl;
+        for (int i = 0; i < materials.Size(); i++)
+          if (materials[i] && materials[i]->length())
+            outfile << i+1 << " " << *materials[i] << endl;
       }
 
 
@@ -7437,14 +7425,14 @@ namespace netgen
     materials.Elem(domnr) = new char[strlen(mat)+1];
     strcpy (materials.Elem(domnr), mat);
     */
-    materials.Elem(domnr) = new string(mat);
+    materials[domnr-1] = new string(mat);
   }
 
   string Mesh :: defaultmat = "default";
   const string & Mesh :: GetMaterial (int domnr) const
   {
     if (domnr <= materials.Size())
-      return *materials.Get(domnr);
+      return *materials[domnr-1];
     static string emptystring("default");
     return emptystring;
   }
@@ -7588,7 +7576,7 @@ namespace netgen
   }
 
 
-  NgArray<string*> & Mesh :: GetRegionNamesCD (int codim)
+  Array<string*> & Mesh :: GetRegionNamesCD (int codim)
   {
     switch (codim)
       {

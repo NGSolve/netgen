@@ -78,9 +78,9 @@ namespace netgen
     
     [[deprecated("Use L2G(pi) instead!")]]                
     void SetLoc2Glob_Vert   (int locnum, int globnum) { glob_vert[locnum-1] = globnum; }
-    // [[deprecated("Try to avoid global enumration!")]]                
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Edge   (int locnum, int globnum) { glob_edge[locnum-1] = globnum; }
-    // [[deprecated("Try to avoid global enumration!")]]                
+    [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_Face   (int locnum, int globnum) { glob_face[locnum-1] = globnum; }
     // [[deprecated("Try to avoid global enumration!")]]                
     void SetLoc2Glob_VolEl  (int locnum, int globnum) { glob_el[locnum-1] = globnum; }

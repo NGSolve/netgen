@@ -1345,13 +1345,10 @@ namespace netgen
     if (nparts == 1)
       {
         for (int i = 0; i < GetNE(); i++)
-          // VolumeElement(i+1).SetPartition(1);
           vol_partition[i]= 1;
         for (int i = 0; i < GetNSE(); i++)
-          // SurfaceElement(i+1).SetPartition(1);
           surf_partition[i] = 1;
         for (int i = 0; i < GetNSeg(); i++)
-          // LineSegment(i+1).SetPartition(1);
           seg_partition[i] = 1;
       }
 
@@ -1370,23 +1367,14 @@ namespace netgen
                             NULL, NULL,
                             &edgecut, &epart[0], &npart[0]);
         tm.Stop();
-        
-        /*
-          METIS_PartMeshNodal (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &nparts,
-          NULL, NULL,
-          &edgecut, &epart[0], &npart[0]);
-        */
+
         PrintMessage (3, "metis complete");
-        // cout << "done" << endl;
         
         for (int i = 0; i < GetNE(); i++)
-          // VolumeElement(i+1).SetPartition(epart[i] + 1);
           vol_partition[i]= epart[i] + 1;
         for (int i = 0; i < GetNSE(); i++)
-          // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
           surf_partition[i] = epart[i+GetNE()] + 1;
         for (int i = 0; i < GetNSeg(); i++)
-          // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
           seg_partition[i] = epart[i+GetNE()+GetNSE()] + 1;
       }
     

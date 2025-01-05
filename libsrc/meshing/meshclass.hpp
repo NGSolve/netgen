@@ -129,16 +129,16 @@ namespace netgen
     NgArray<EdgeDescriptor> edgedecoding;
 
     /// sub-domain materials 
-    NgArray<string*> materials;
+    Array<string*> materials;
 
     /// labels for boundary conditions
-    NgArray<string*> bcnames;
+    Array<string*> bcnames;
 
     /// labels for co dim 2 bboundary conditions
-    NgArray<string*> cd2names;
+    Array<string*> cd2names;
 
     /// labels for co dim 3 bbboundary conditions
-    NgArray<string*> cd3names;
+    Array<string*> cd3names;
 
     /// Periodic surface, close surface, etc. identifications
     unique_ptr<Identifications> ident;
@@ -713,7 +713,7 @@ namespace netgen
     DLL_HEADER static string defaultmat;
     const string * GetMaterialPtr (int domnr) const // 1-based
     {
-      return domnr <= materials.Size() ? materials.Get(domnr) : &defaultmat;
+      return domnr <= materials.Size() ? materials[domnr-1] : &defaultmat;
     }
     
     DLL_HEADER void SetNBCNames ( int nbcn );
@@ -752,7 +752,7 @@ namespace netgen
     { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
 
 
-    DLL_HEADER NgArray<string*> & GetRegionNamesCD (int codim);
+    DLL_HEADER Array<string*> & GetRegionNamesCD (int codim);
 
     DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
     DLL_HEADER std::string_view GetRegionName(const Element2d & el) const;
@@ -959,7 +959,7 @@ namespace netgen
     /// distributes the master-mesh to local meshes
     DLL_HEADER void Distribute ();
     DLL_HEADER void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
-		     NgArray<int> & segment_weights);
+                                NgArray<int> & segment_weights);
 
 
     /// find connection to parallel meshes
@@ -969,20 +969,19 @@ namespace netgen
     //   void FindExchangeFaces ();
 
     /// use metis to decompose master mesh 
-    DLL_HEADER void ParallelMetis (int nproc); //  NgArray<int> & neloc );
+    DLL_HEADER void ParallelMetis (int nproc); 
     DLL_HEADER void ParallelMetis (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
-			NgArray<int> & segment_weights); 
+                                   NgArray<int> & segment_weights); 
 
-    void PartHybridMesh (); //  NgArray<int> & neloc );
-    void PartDualHybridMesh (); //  NgArray<int> & neloc );
-    void PartDualHybridMesh2D ();  // ( NgArray<int> & neloc );
-
+    void PartHybridMesh (); 
+    void PartDualHybridMesh (); 
+    void PartDualHybridMesh2D ();
 
     /// send mesh from master to local procs
     void SendRecvMesh ();
 
     /// send mesh to parallel machine, keep global mesh at master 
-    void SendMesh ( ) const;   // Mesh * mastermesh, NgArray<int> & neloc) const;
+    void SendMesh ( ) const;   
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
 

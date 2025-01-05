@@ -770,7 +770,8 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   outfile << nsurfelem << "\n";
   for (int i = 1; i <= nsurfelem; i++)
     {
-      Element2d el = mesh.SurfaceElement(i);
+      SurfaceElementIndex sei(i-1);
+      Element2d el = mesh[sei];
       if (invertsurf)
 	el.Invert();
       outfile.width(4);
@@ -784,15 +785,16 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 	  outfile << el.PNum(j);
 	}
 
-      top->GetSurfaceElementEdges(i,edges);
+      // top->GetSurfaceElementEdges(i,edges);
+      auto edges = top->GetEdges(sei);
       outfile << endl << "      ";
       outfile.width(8);
       outfile << edges.Size();
-      for (int j=1; j <= edges.Size(); j++)
+      for (int j=0; j < edges.Size(); j++)
 	{
 	  outfile << " ";
 	  outfile.width(8);
-	  outfile << edges[j-1];
+	  outfile << edges[j]+1;
 	}
       outfile << "\n";
     }

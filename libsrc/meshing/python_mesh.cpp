@@ -1236,7 +1236,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             else
               throw Exception("either 'dim' or 'codim' must be specified");
             
-            NgArray<string*> & codimnames = self.GetRegionNamesCD (codim);
+            Array<string*> & codimnames = self.GetRegionNamesCD (codim);
             
             std::vector<string> names;
             for (auto name : codimnames)

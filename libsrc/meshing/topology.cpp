@@ -2408,7 +2408,10 @@ namespace netgen
     if (!surfel.IsValid())
       {
 	// GetSurfaceElementEdges (surfel, fedges);
-        GetEdges (surfel, fedges);
+        auto hedges = GetEdges (surfel);
+        fedges.SetSize(hedges.Size());
+        for (int i : Range(hedges))
+          fedges[i]=hedges[i];
 	return;
       }
   }
