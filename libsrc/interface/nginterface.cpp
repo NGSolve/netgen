@@ -1606,7 +1606,10 @@ void Ng_GetEdge_Vertices (int ednr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
   // topology.GetEdgeVertices (ednr, vert[0], vert[1]);
-  tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
+  // tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
+  auto [v1,v2] = topology.GetEdgeVertices(ednr-1);
+  vert[0] = v1-IndexBASE<PointIndex>()+1;
+  vert[1] = v2-IndexBASE<PointIndex>()+1;
 }
 
 
