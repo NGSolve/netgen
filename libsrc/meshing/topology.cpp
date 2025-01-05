@@ -1228,8 +1228,8 @@ namespace netgen
 
 	face2surfel.SetSize (nfa);
 	face2surfel = 0;
-	for (int i = 1; i <= nse; i++)
-	  face2surfel[GetSurfaceElementFace(i)-1] = i;
+	for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+	  face2surfel[GetFace(sei)] = sei;
 
 	/*
 	  cout << "build table complete" << endl;
@@ -1243,7 +1243,8 @@ namespace netgen
 
 	
 	surf2volelement.SetSize (nse);
-        surf2volelement = INDEX_2(0,0);
+        // surf2volelement = INDEX_2(0,0);
+        surf2volelement = { ElementIndex::INVALID, ElementIndex::INVALID };
 
         (*tracer) ("Topology::Update build surf2vol", false);        
 	// for (int i = 0; i < ne; i++)
@@ -1252,13 +1253,12 @@ namespace netgen
                        for (int j = 0; j < 6; j++)
                          {
                            // int fnum = (faces.Get(i)[j]+7) / 8;
-                           int fnum = faces[i][j]+1;
-                           if (fnum > 0 && face2surfel[fnum-1])
+                           int fnum = faces[i][j];
+                           if (fnum >= 0 && face2surfel[fnum].IsValid())
                              {
-                               int sel = face2surfel[fnum-1];
-                               surf2volelement[sel-1][1] = 
-                                 surf2volelement[sel-1][0];
-                               surf2volelement[sel-1][0] = i+1;
+                               SurfaceElementIndex sel = face2surfel[fnum];
+                               surf2volelement[sel][1] = surf2volelement[sel][0];
+                               surf2volelement[sel][0] = i; // +1;
                              }
                          }});
         (*tracer) ("Topology::Update build surf2vol", true);        
@@ -1296,8 +1296,12 @@ namespace netgen
                   AsAtomic(face_els[f])++;
               
             }, TasksPerThread(4));
+        /*
 	for (int i = 1; i <= nse; i++)
-	  face_surfels[GetSurfaceElementFace (i)-1]++;
+	  face_surfels[GetSurfaceElementFace1 (i)-1]++;
+        */
+        for (auto sei : Range(mesh->SurfaceElements()))
+	  face_surfels[GetFace(sei)]++;          
         (*tracer) ("Topology::Update count face_els", true);
 
 
@@ -2019,12 +2023,12 @@ namespace netgen
   */
   
   
+  /*
   int MeshTopology :: GetSurfaceElementFace (int elnr) const
   {
     return surffaces[elnr-1]+1;
   }
   
-  /*
   int MeshTopology :: GetFace (SurfaceElementIndex elnr) const
   {
     return surffaces[elnr].fnr;
@@ -2400,10 +2404,11 @@ namespace netgen
 	  }
       }   
 
-    int surfel = GetFace2SurfaceElement(fnr);
-    if (surfel != 0)
+    SurfaceElementIndex surfel = GetFace2SurfaceElement(fnr);
+    if (!surfel.IsValid())
       {
-	GetSurfaceElementEdges (surfel, fedges);
+	// GetSurfaceElementEdges (surfel, fedges);
+        GetEdges (surfel, fedges);
 	return;
       }
   }

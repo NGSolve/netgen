@@ -1326,7 +1326,7 @@ int Ngx_Mesh::GetSurfaceElement_Face (int selnr, int * orient) const
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
 	*orient = topology.GetSurfaceElementFaceOrientation (selnr+1);
-      return topology.GetSurfaceElementFace (selnr+1)-1;
+      return topology.GetFace (SurfaceElementIndex(selnr));
     }
   return -1;
 }

@@ -16,11 +16,10 @@
 
 namespace netgen
 {
-  
   typedef int T_EDGE;
   typedef int T_FACE;
 
-
+  
 class MeshTopology
 {
   const Mesh * mesh;
@@ -40,8 +39,9 @@ class MeshTopology
   
   Array<T_EDGE> segedges;
   Array<T_FACE> surffaces;
-  Array<INDEX_2, SurfaceElementIndex> surf2volelement;
-  Array<int> face2surfel;
+  // Array<INDEX_2, SurfaceElementIndex> surf2volelement;
+  Array<std::array<ElementIndex,2>, SurfaceElementIndex> surf2volelement;
+  Array<SurfaceElementIndex> face2surfel;
   
   Array<SegmentIndex> edge2segment;
   Table<ElementIndex, PointIndex> vert2element;
@@ -147,7 +147,8 @@ public:
 
   [[deprecated("use GetEdges (SurfaceElementIndex) -> FlatArray")]]  
   void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
-  int GetSurfaceElementFace (int elnr) const;
+  [[deprecated("use GetFace(SurfaceElementIndex")]]                            
+  int GetSurfaceElementFace1 (int elnr) const { return surffaces[elnr-1]+1; }    
   [[deprecated("orientation is outdated")]]                          
   void GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
   // [[deprecated("orientation is outdated")]]                            
@@ -176,18 +177,22 @@ public:
 
   void GetSurface2VolumeElement (int selnr, int & elnr1, int & elnr2) const
   { 
-    elnr1 = surf2volelement[selnr-1][0];
-    elnr2 = surf2volelement[selnr-1][1];
+    elnr1 = surf2volelement[selnr-1][0]+1;
+    elnr2 = surf2volelement[selnr-1][1]+1;
   }
 
   std::array<ElementIndex,2> GetSurface2VolumeElement (SurfaceElementIndex sei) 
   {
+    return surf2volelement[sei];
+    /*
     return { ElementIndex( surf2volelement[sei][0] - 1),
              ElementIndex( surf2volelement[sei][1] - 1) };
+    */
   }
 
-  
-  int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
+  [[deprecated("use GetSurfaceEleement -> SurfaceElementIndex")]]
+  int GetFace2SurfaceElement1 (int fnr) const { return face2surfel[fnr-1]+1; }
+  SurfaceElementIndex GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr]; }
 
   SegmentIndex GetSegmentOfEdge(int edgenr) const { return edge2segment[edgenr-1]; }
 

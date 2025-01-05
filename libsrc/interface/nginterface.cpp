@@ -1571,10 +1571,11 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 {
   if (mesh->GetDimension() == 3)
     {
+      SurfaceElementIndex sei = selnr-1;
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
 	*orient = topology.GetSurfaceElementFaceOrientation (selnr);
-      return topology.GetSurfaceElementFace (selnr);
+      return topology.GetFace(sei);
     }
   return -1;
 }
@@ -2343,7 +2344,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
 
         if (nodeset & 4)  // Faces
           {
-            int face = mesh->GetTopology().GetSurfaceElementFace (elementnr+1);
+            int face = mesh->GetTopology().GetFace (SurfaceElementIndex(elementnr))+1;
             nodes[cnt++] = 2;
             nodes[cnt++] = face-1;
           }

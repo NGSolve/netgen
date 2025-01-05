@@ -152,7 +152,7 @@ namespace netgen
          NgArrayMem<int,9> nnums; // , ednums;
          for (SurfaceElementIndex i_ : myrange)
            {
-             int i = i_+1;
+             // int i = i_+1;
              const Element2d & el = mesh[i_]; // .SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
@@ -160,7 +160,7 @@ namespace netgen
              auto ednums = top.GetEdges (i_);
              // cout << "ednums = " << ednums << endl;
              
-             int fanum = top.GetSurfaceElementFace (i);             
+             int fanum = top.GetFace(i_)+1;
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();

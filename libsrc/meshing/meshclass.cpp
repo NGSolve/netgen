@@ -99,7 +99,7 @@ namespace netgen
       //(*testout) << "faces " << faces << endl;
 
       for(int i=0; i<faces.Size(); i++)
-        faces[i] = topology.GetFace2SurfaceElement(faces[i]+1);
+        faces[i] = topology.GetFace2SurfaceElement(faces[i])+1;
 
       //(*testout) << "surfel " << faces << endl;
 

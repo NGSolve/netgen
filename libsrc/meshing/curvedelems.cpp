@@ -1278,7 +1278,7 @@ namespace netgen
 			 with MPI and an interior surface element between volume elements assigned to different
 			 procs, only one of them has the surf-el
 		      **/
-                      SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
+                      SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
 		      if (sei != SurfaceElementIndex(-1)) {
 			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
                         // use improved initial guess
@@ -1680,7 +1680,7 @@ namespace netgen
         */
         info.SetEdges (top.GetEdges(SurfaceElementIndex(elnr)));
         
-	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
+	info.facenr = top.GetFace(elnr);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
 	info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
@@ -1763,7 +1763,7 @@ namespace netgen
 	  info.edgenrs[i]--;
         */
         info.SetEdges(top.GetEdges(SurfaceElementIndex(elnr)));
-	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
+	info.facenr = top.GetFace(elnr);
 
 
 	bool firsttry = true;
@@ -4211,7 +4211,7 @@ namespace netgen
 	  info.edgenrs[i]--;
         */
         info.SetEdges(top.GetEdges(elnr));  
-	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
+	info.facenr = top.GetFace (elnr);
 
 
 	bool firsttry = true;
