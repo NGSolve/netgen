@@ -13,6 +13,7 @@
 #include <gprim/geomobjects.hpp>
 
 #include "meshtype.hpp"
+#include "meshclass.hpp"
 
 namespace netgen
 {
@@ -248,6 +249,14 @@ private:
     int ndof;
     NgArrayMem<int,4> edgenrs;
     int facenr;
+
+    void SetEdges (FlatArray<int> edges)
+    {
+      edgenrs.SetSize(edges.Size());
+      for (int i = 0; i < edges.Size(); i++)
+        edgenrs[i] = edges[i];
+    }
+    
   };
 
   template <typename T>

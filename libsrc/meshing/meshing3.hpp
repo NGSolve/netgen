@@ -1,6 +1,7 @@
 #ifndef FILE_MESHING3
 #define FILE_MESHING3
 
+#include "meshclass.hpp"
 #include "adfront3.hpp"
 #include "ruler3.hpp"
 

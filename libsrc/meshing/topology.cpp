@@ -1229,7 +1229,7 @@ namespace netgen
 	face2surfel.SetSize (nfa);
 	face2surfel = 0;
 	for (int i = 1; i <= nse; i++)
-	  face2surfel.Elem(GetSurfaceElementFace(i)) = i;
+	  face2surfel[GetSurfaceElementFace(i)-1] = i;
 
 	/*
 	  cout << "build table complete" << endl;
@@ -1243,11 +1243,8 @@ namespace netgen
 
 	
 	surf2volelement.SetSize (nse);
-	for (int i = 1; i <= nse; i++)
-	  {
-	    surf2volelement.Elem(i)[0] = 0;
-	    surf2volelement.Elem(i)[1] = 0;
-	  }
+        surf2volelement = INDEX_2(0,0);
+
         (*tracer) ("Topology::Update build surf2vol", false);        
 	// for (int i = 0; i < ne; i++)
         ParallelFor (ne, [this](auto i)
@@ -1256,12 +1253,12 @@ namespace netgen
                          {
                            // int fnum = (faces.Get(i)[j]+7) / 8;
                            int fnum = faces[i][j]+1;
-                           if (fnum > 0 && face2surfel.Elem(fnum))
+                           if (fnum > 0 && face2surfel[fnum-1])
                              {
-                               int sel = face2surfel.Elem(fnum);
-                               surf2volelement.Elem(sel)[1] = 
-                                 surf2volelement.Elem(sel)[0];
-                               surf2volelement.Elem(sel)[0] = i+1;
+                               int sel = face2surfel[fnum-1];
+                               surf2volelement[sel-1][1] = 
+                                 surf2volelement[sel-1][0];
+                               surf2volelement[sel-1][0] = i+1;
                              }
                          }});
         (*tracer) ("Topology::Update build surf2vol", true);        
@@ -2024,7 +2021,7 @@ namespace netgen
   
   int MeshTopology :: GetSurfaceElementFace (int elnr) const
   {
-    return surffaces.Get(elnr)+1;
+    return surffaces[elnr-1]+1;
   }
   
   /*
@@ -2101,7 +2098,7 @@ namespace netgen
 	if (orient)
 	  orient[0] = segedges.Get(elnr) > 0 ? 1 : -1;
         */
-	eledges[0] = segedges.Get(elnr)+1;
+	eledges[0] = segedges[elnr-1]+1;
 	if (orient)
 	  // orient[0] = segedges.Get(elnr).orient ? -1 : 1;
           // orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
@@ -2249,7 +2246,7 @@ namespace netgen
 
   void MeshTopology :: GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
-    enr = segedges.Get(segnr)+1;
+    enr = segedges[segnr-1]+1;
     orient = GetSegmentEdgeOrientation(segnr);
   }
 

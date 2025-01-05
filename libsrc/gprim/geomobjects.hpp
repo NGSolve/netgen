@@ -140,7 +140,8 @@ namespace netgen
 
     operator const T* () const { return x; }
 
-    void DoArchive(Archive& archive)
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& archive)
     {
       for(int i=0; i<D; i++)
         archive & x[i];
@@ -294,7 +295,8 @@ namespace netgen
       sol = inv * rhs;
     }
 
-    void DoArchive(Archive & ar)
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE & ar)
     {
       ar.Do(x, H*W);
     }
@@ -440,7 +442,8 @@ namespace netgen
       pmax = center + factor*(pmax-center);
     }
 
-    void DoArchive(Archive& archive)
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE & archive)
     { archive & pmin & pmax; }
   };
 

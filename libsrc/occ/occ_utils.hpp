@@ -3,8 +3,8 @@
 
 #include <variant>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// #pragma clang diagnostic push
+// #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
@@ -17,7 +17,7 @@
 #include <gp_Trsf.hxx>
 #include <gp_GTrsf.hxx>
 
-#pragma clang diagnostic pop
+// #pragma clang diagnostic pop
 
 #include "meshing.hpp"
 

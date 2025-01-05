@@ -19,6 +19,7 @@
 #include "meshtype.hpp"
 #include "localh.hpp"
 #include "topology.hpp"
+#include "paralleltop.hpp"
 
 namespace netgen
 {

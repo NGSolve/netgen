@@ -1,9 +1,12 @@
 #include <mystdlib.h>
 #include <core/array.hpp>
+
+#include "meshclass.hpp" 
 #include "bisect.hpp"
 #include "validate.hpp"
+#include "paralleltop.hpp"
 
-#include "meshing.hpp"  // quickfix for parallel 
+// #include "meshing.hpp"  // quickfix for parallel
 
 #define noDEBUG
 

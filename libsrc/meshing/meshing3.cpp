@@ -1,5 +1,8 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+
+#include "meshing3.hpp"
+#include "findip.hpp"
+#include "findip2.hpp"
 
 namespace netgen
 {

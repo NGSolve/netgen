@@ -1,5 +1,7 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include "meshclass.hpp"
+#include "bisect.hpp"
+#include "paralleltop.hpp"
 
 
 namespace netgen

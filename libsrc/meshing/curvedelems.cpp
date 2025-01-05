@@ -1,7 +1,6 @@
 #include <mystdlib.h>
 
 #include "meshing.hpp"
-
 // #include "../general/autodiff.hpp"
 
 
@@ -1667,12 +1666,21 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
+
+        /*
 	top.GetSurfaceElementEdges (elnr+1, info.edgenrs);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.edgenrs[i]--;
+        */
+        /*
+        auto edgs = top.GetEdges(SurfaceElementIndex(elnr));
+        info.edgenrs.SetSize(edgs.Size());
+        for (auto [i,nr] : Enumerate(edgs))
+          info.edgenrs[i] = nr;
+        */
+        info.SetEdges (top.GetEdges(SurfaceElementIndex(elnr)));
+        
 	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
-
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
 	info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
@@ -1748,10 +1756,13 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
+
+        /*
 	top.GetSurfaceElementEdges (elnr+1, info.edgenrs);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.edgenrs[i]--;
+        */
+        info.SetEdges(top.GetEdges(SurfaceElementIndex(elnr)));
 	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
 
 
@@ -4193,10 +4204,13 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
+
+        /*
 	top.GetSurfaceElementEdges (elnr+1, info.edgenrs);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.edgenrs[i]--;
+        */
+        info.SetEdges(top.GetEdges(elnr));  
 	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
 
 
@@ -4355,7 +4369,7 @@ namespace netgen
 					  const double * xi, size_t sxi,
 					  double * x, size_t sx,
 					  double * dxdxi, size_t sdxdxi);
-
+  
 
   template void CurvedElements :: 
   CalcMultiPointSurfaceTransformation<2> (SurfaceElementIndex elnr, int npts,
