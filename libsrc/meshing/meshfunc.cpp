@@ -479,8 +479,8 @@ namespace netgen
          mp.sloppy = 5;
          meshing.GenerateMesh (mesh, mp);
          
-         for (ElementIndex ei = oldne; ei < mesh.GetNE(); ei++)
-            mesh[ei].SetIndex (domain);
+         for (auto & el : mesh.VolumeElements().Range(oldne, END))
+           el.SetIndex (domain);
          
 
          mesh.CalcSurfacesOfNode();

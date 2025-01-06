@@ -202,15 +202,15 @@ namespace netgen
   template <typename T, typename TIndex, int Base>    
   constexpr inline auto operator- (Index<T,TIndex,Base> pi, int i) -> TIndex { return TIndex(pi.i-i); }
   template <typename T, typename TIndex, int Base>    
-  constexpr inline int operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
+  constexpr inline auto operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
   template <typename T, typename TIndex, int Base>      
-  inline bool operator< (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i < 0; }
+  inline bool operator< (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b < 0; }
   template <typename T, typename TIndex, int Base>      
-  inline bool operator> (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i > 0; }
+  inline bool operator> (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b > 0; }
   template <typename T, typename TIndex, int Base>      
-  inline bool operator>= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i >= 0; }
+  inline bool operator>= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b >= 0; }
   template <typename T, typename TIndex, int Base>      
-  inline bool operator<= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i-b.i <= 0; }
+  inline bool operator<= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b <= 0; }
   template <typename T, typename TIndex, int Base>      
   inline bool operator== (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i == b.i; }
   template <typename T, typename TIndex, int Base>      
@@ -421,27 +421,28 @@ namespace netgen
   class ElementIndex : public Index<int,ElementIndex,0>
   {
   public:
-    using Index<int,ElementIndex,0>::Index;
+    using Index::Index; // <int,ElementIndex,0>::Index;
   };
   
-  inline istream & operator>> (istream & ist, ElementIndex & pi)
+  inline istream & operator>> (istream & ist, ElementIndex & ei)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; ei = ElementIndex::Base()+i; return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const ElementIndex & ei)
   {
-    return (ost << ei-IndexBASE<ElementIndex>());
+    return ost << int(ei-ElementIndex::Base());
   }
 
-  
+
+  /*
   // these should not be needed soon
   inline bool operator== (Index<int,ElementIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
   inline bool operator< (size_t s, Index<int,ElementIndex,0> ei2) { return int(s) < int(ei2); };    
   inline bool operator< ( Index<int,ElementIndex,0> ei1, size_t s) { return int(ei1) < int(s); };   // should not need
   inline bool operator< ( Index<int,ElementIndex,0> ei1, int s) { return int(ei1) < int(s); };   // should not need
   inline bool operator>= (size_t s,  Index<int,ElementIndex,0> ei2) { return int(s) >= int(ei2); };
-
+  */
 
   class SurfaceElementIndex : public Index<int,SurfaceElementIndex,0>
   {
@@ -451,6 +452,7 @@ namespace netgen
 
   
   // these should not be needed soon
+  /*
   inline bool operator== (Index<int, SurfaceElementIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };
   inline bool operator== (int ei2, Index<int, SurfaceElementIndex,0> ei1) { return int(ei1) == int(ei2); };
   inline bool operator!= (Index<int, SurfaceElementIndex,0> ei1, int ei2) { return int(ei1) != int(ei2); };    
@@ -459,7 +461,7 @@ namespace netgen
   inline bool operator< (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) < int(s); };   // should not need
   inline bool operator>= (size_t s, Index<int, SurfaceElementIndex,0> ei2) { return int(s) >= int(ei2); };
   inline bool operator>= (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) >= int(s); };
-
+  */
   
   inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
   inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }
@@ -481,11 +483,13 @@ namespace netgen
     using Index::Index;
   };
 
-  // these should not be needed soon  
+  // these should not be needed soon
+  /*
   inline bool operator== (Index<int, SegmentIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
   inline bool operator< (size_t s, Index<int,SegmentIndex,0> ei2) { return int(s) < int(ei2); };
   inline bool operator< (Index<int, SegmentIndex,0> ei1, size_t s) { return int(ei1) < int(s); };
   inline bool operator< (Index<int, SegmentIndex,0> ei1, int s) { return int(ei1) < int(s); };   
+  */
   
   inline void SetInvalid (SegmentIndex & id) { id = -1; }
   inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
