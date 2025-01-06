@@ -2403,8 +2403,7 @@ namespace netgen
 	    return;
 	  }
       }   
-
-    SurfaceElementIndex surfel = GetFace2SurfaceElement(fnr);
+    SurfaceElementIndex surfel = GetFace2SurfaceElement(fnr-1);
     if (!surfel.IsValid())
       {
 	// GetSurfaceElementEdges (surfel, fedges);
