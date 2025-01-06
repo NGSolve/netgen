@@ -187,7 +187,7 @@ namespace netgen
     constexpr TIndex operator-= (int add) { i -= add; return TIndex{*this}; }
     constexpr TIndex operator-= (size_t add) { i -= add; return TIndex{*this}; }
 
-    auto operator- (Index i2) const { return i-i2.i; }
+    constexpr auto operator- (Index i2) const { return i-i2.i; }
 
     // bool operator== (Index i2) const { return i==i2.i; }
     // bool operator!= (Index i2) const { return i!=i2.i; }
