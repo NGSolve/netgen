@@ -19,7 +19,9 @@
 #ifdef NETGEN_ARCH_AMD64
 #ifdef WIN32
 #include <intrin.h>   // for __rdtsc()  CPU time step counter
-#else
+#define NGCORE_HAVE_RDTSC
+#elif defined __SSE__
+#define NGCORE_HAVE_RDTSC
 #include <x86intrin.h>   // for __rdtsc()  CPU time step counter
 #endif // WIN32
 #endif // NETGEN_ARCH_AMD64
@@ -65,7 +67,7 @@ namespace ngcore
   {
 #if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
     return mach_absolute_time();
-#elif defined(NETGEN_ARCH_AMD64)
+#elif defined(NETGEN_ARCH_AMD64) || defined(NGCORE_HAVE_RDTSC)
     return __rdtsc();
 #elif defined(NETGEN_ARCH_ARM64) && defined(__GNUC__)
     // __GNUC__ is also defined by CLANG. Use inline asm to read Generic Timer
@@ -74,6 +76,8 @@ namespace ngcore
     return tics;
 #elif defined(__EMSCRIPTEN__)
     return std::chrono::high_resolution_clock::now().time_since_epoch().count();
+#elifndef NGCORE_HAVE_RDTSC
+    return TTimePoint(std::chrono::steady_clock::now().time_since_epoch().count());
 #else
 #warning "Unsupported CPU architecture"
     return 0;

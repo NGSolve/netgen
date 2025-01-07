@@ -2,6 +2,7 @@
 #define NETGEN_CORE_PYTHON_NGCORE_HPP
 
 #include "ngcore_api.hpp" // for operator new
+#include <cstdint>
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
@@ -182,10 +183,12 @@ namespace ngcore
     static std::string GetName() { return "D"; }
   };
 
+#if INTPTR_MAX != INT32_MAX
   template<>
   struct PyNameTraits<size_t> {
     static std::string GetName() { return "S"; }
   };
+#endif
 
   template<typename T>
   struct PyNameTraits<std::shared_ptr<T>> {
