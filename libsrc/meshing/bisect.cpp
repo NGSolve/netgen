@@ -2148,9 +2148,13 @@ namespace netgen
 	  }
 	
 	// for (int i = 1; i <= nse; i++)
+        /*
         for (SurfaceElementIndex sei = 0; sei < nse; sei++)
 	  {
 	    const Element2d & el = mesh[sei];
+        */
+        for (const Element2d & el  : mesh.SurfaceElements())
+          {
 	    if (el.GetType() == TRIG ||
 		el.GetType() == TRIG6)
 	      {
@@ -2175,9 +2179,13 @@ namespace netgen
 	  }
         if(mesh.GetDimension() == 2)
           {
+            /*
             for (SegmentIndex j=0; j<mesh.GetNSeg(); j++)
               {
                 auto seg = mesh[j];
+            */
+            for (const Segment & seg : mesh.LineSegments())
+              {
                 for (auto map : idmaps)
                   {
                     if (seg[0].IsValid() && seg[1].IsValid() && (*map)[seg[0]].IsValid() && (*map)[seg[1]].IsValid())
@@ -2574,11 +2582,14 @@ namespace netgen
 
 	
     
-    
+    /*
     for (auto ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
-	
+    */
+
+    for (const Element & el : mesh.VolumeElements())
+      {
 	//int pos = elements_before[el[0]]->Pos(el);
 	//int elnum = (pos >= 0) ? (*markedelts_num[el[0]])[pos] : -1;
 	 
@@ -2622,12 +2633,14 @@ namespace netgen
 	
       }
     
-
-    
-     for(SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    /*
+    for(SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
        {
 	 const Element2d & el = mesh[sei];
+    */
 
+    for (const Element2d & el : mesh.SurfaceElements())
+      {
 	 /*
 	 for(int k=0; k<3; k++)
 	   auxind3[k] = el[k];

@@ -174,7 +174,7 @@ namespace netgen
     
   public:
     constexpr Index (t_invalid inv) : i(long(BASE)-1) { ; }
-    // private:  
+    // protected:
     constexpr operator T () const { return i; }
     explicit constexpr operator T& () { return i; }
   public:
@@ -200,16 +200,16 @@ namespace netgen
 
 
   template <typename T, typename TIndex, int Base>  
-  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { TIndex res(ind); res += i; return res; }
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { Index<T,TIndex,Base> res(ind); return res += i; }
   template <typename T, typename TIndex, int Base>
-  constexpr auto operator+ (Index<T,TIndex,Base> ind, size_t i) { TIndex res(ind); res += i; return res; }  
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, size_t i) { Index<T,TIndex,Base> res(ind); return res += i; }
   template <typename T, typename TIndex, int Base>    
-  constexpr TIndex operator+ (int i, Index<T,TIndex,Base> ind) { TIndex res(ind); res += i; return res; }
+  constexpr TIndex operator+ (int i, Index<T,TIndex,Base> ind) { return ind+i; } // Indexx<T,TIndex,Base> res(ind); return res += i; 
   template <typename T, typename TIndex, int Base>    
-  inline TIndex operator+ (size_t i, Index<T,TIndex,Base> ind) { TIndex res(ind); res += i; return res; }
+  inline TIndex operator+ (size_t i, Index<T,TIndex,Base> ind) { return ind+i; } //  TIndex res(ind); res += i; return res; }
   
   template <typename T, typename TIndex, int Base>    
-  constexpr inline auto operator- (Index<T,TIndex,Base> ind, int i) { TIndex res(ind); res -= i; return res; }  
+  constexpr inline auto operator- (Index<T,TIndex,Base> ind, int i) { Index<T,TIndex,Base> res(ind); return res -= i; }  
   // template <typename T, typename TIndex, int Base>    
   // constexpr inline auto operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
   
@@ -228,10 +228,18 @@ namespace netgen
   inline bool operator!= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i != b.i; }
 
 
+  template <typename T, typename TIndex, int Base>      
+  inline void SetInvalid (Index<T,TIndex,Base> & id) { id.Invalidate(); }
+  template <typename T, typename TIndex, int Base>        
+  inline bool IsInvalid (const Index<T,TIndex,Base> & id) { return !id.IsValid(); }
+
+
+  
   class PointIndex : public Index<int,PointIndex,1>
   {
   public:
     using Index::Index;
+    template <int N> friend class PointIndices;    
   };
 
 }
@@ -473,17 +481,17 @@ namespace netgen
   inline bool operator>= (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) >= int(s); };
   */
   
-  inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
-  inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }
+  // inline void SetInvalid (SurfaceElementIndex & id) { id.Invalidate(); }
+  // inline bool IsInvalid (SurfaceElementIndex & id) { return !id.IsValid(); }
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & pi)
+  inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & si)
   {
-    return (ost << int(pi));
+    return ost << (si-IndexBASE(si));
   }
 
 
@@ -501,8 +509,8 @@ namespace netgen
   inline bool operator< (Index<int, SegmentIndex,0> ei1, int s) { return int(ei1) < int(s); };   
   */
   
-  inline void SetInvalid (SegmentIndex & id) { id = -1; }
-  inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
+  // inline void SetInvalid (SegmentIndex & id) { id = -1; }
+  // inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
 
 
   inline istream & operator>> (istream & ist, SegmentIndex & pi)
@@ -510,10 +518,10 @@ namespace netgen
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const SegmentIndex & pi)
+  inline ostream & operator<< (ostream & ost, const SegmentIndex & si)
   {
-    return (ost << int(pi));
-  }
+    return ost << (si - IndexBASE(si));
+  } 
 
 
 

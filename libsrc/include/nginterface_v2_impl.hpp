@@ -116,7 +116,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   ret.edges.num = 1;
   ret.edges.ptr = mesh->GetTopology().GetSegmentElementEdgesPtr (nr);
   */
-  ret.edges.Assign ( FlatArray<T_EDGE2> (1, const_cast<T_EDGE2*>( mesh->GetTopology().GetSegmentElementEdgesPtr (nr))));
+  ret.edges.Assign ( FlatArray<T_EDGE2> (1, const_cast<T_EDGE2*>((const int*)  mesh->GetTopology().GetSegmentElementEdgesPtr (nr))));
 
   /*
   ret.faces.num = 0;
@@ -172,12 +172,19 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
   ret.edges.num = MeshTopology::GetNEdges (el.GetType());
   ret.edges.ptr = mesh->GetTopology().GetSurfaceElementEdgesPtr (nr);
   */
-  ret.edges.Assign (mesh->GetTopology().GetEdges (SurfaceElementIndex(nr)));
+
+  // ret.edges.Assign (mesh->GetTopology().GetEdges (SurfaceElementIndex(nr)));
+  auto hedges = mesh->GetTopology().GetEdges (SurfaceElementIndex(nr));
+  ret.edges.Assign ( { hedges.Size(), (int*)hedges.Data() } );
+  
   /*
   ret.faces.num = MeshTopology::GetNFaces (el.GetType());
   ret.faces.ptr = mesh->GetTopology().GetSurfaceElementFacesPtr (nr);
   */
-  ret.faces.Assign ( { 1, const_cast<int*>(mesh->GetTopology().GetSurfaceElementFacesPtr (nr)) });
+
+  // ret.faces.Assign ( { 1, const_cast<int*>(mesh->GetTopology().GetSurfaceElementFacesPtr (nr)) });
+  ret.faces.Assign ( { 1, (int*)(mesh->GetTopology().GetSurfaceElementFacesPtr (nr)) });
+  
   if (mesh->GetDimension() == 3)
     {
       ret.facets.num = ret.faces.Size();
@@ -214,13 +221,18 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   ret.edges.num = MeshTopology::GetNEdges (el.GetType());
   ret.edges.ptr = mesh->GetTopology().GetElementEdgesPtr (nr);
   */
-  ret.edges.Assign (mesh->GetTopology().GetEdges (ElementIndex(nr)));  
+  // ret.edges.Assign (mesh->GetTopology().GetEdges (ElementIndex(nr)));
+  auto hedges = mesh->GetTopology().GetEdges (ElementIndex(nr));
+  ret.edges.Assign ( { hedges.Size(), (int*)hedges.Data() } );
+  
 
   /*
   ret.faces.num = MeshTopology::GetNFaces (el.GetType());
   ret.faces.ptr = mesh->GetTopology().GetElementFacesPtr (nr);
   */
-  ret.faces.Assign (mesh->GetTopology().GetFaces (ElementIndex(nr)));
+  // ret.faces.Assign (mesh->GetTopology().GetFaces (ElementIndex(nr)));
+  auto hfaces = mesh->GetTopology().GetFaces (ElementIndex(nr));
+  ret.faces.Assign ( { hfaces.Size(), (int*)hfaces.Data() } );
   
   ret.facets.num = ret.faces.Size();
   ret.facets.base = 0;
