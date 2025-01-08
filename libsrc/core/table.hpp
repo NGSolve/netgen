@@ -94,6 +94,7 @@ namespace ngcore
     Iterator end() const { return Iterator(*this, BASE+size); }
   };
 
+  /*
   NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<unsigned int> entrysize);
   NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<size_t> entrysize);
 
@@ -106,7 +107,20 @@ namespace ngcore
   { return TablePrefixSum32 (FlatArray<unsigned> (entrysize.Size(), (unsigned int*)(std::atomic<int>*)entrysize.Addr(0))); }
   NETGEN_INLINE size_t * TablePrefixSum (FlatArray<size_t> entrysize)
   { return TablePrefixSum64 (entrysize); }
+  */
 
+  NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<uint32_t> entrysize);
+  NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<uint64_t> entrysize);
+
+  template <typename T> // TODO: enable_if T is integral
+  NETGEN_INLINE size_t * TablePrefixSum (FlatArray<T> entrysize)
+  {
+    if constexpr (sizeof(T) == 4)
+      return TablePrefixSum32 ( { entrysize.Size(), (uint32_t*)(void*)entrysize.Addr(0) });
+    else
+      return TablePrefixSum64 ( { entrysize.Size(), (uint64_t*)(void*)entrysize.Addr(0) });
+  }
+  
 
   /**
      A compact Table container.

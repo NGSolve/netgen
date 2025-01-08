@@ -138,6 +138,8 @@ namespace netgen
 
     class t_invalid { public: constexpr t_invalid() = default; };
     static constexpr t_invalid INVALID{};
+
+    typedef decltype( declval<T>()-declval<T>() ) T_diff;
     
   public:
     constexpr Index () = default;
@@ -182,11 +184,16 @@ namespace netgen
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
     TIndex & operator++ () { i++; return static_cast<TIndex&>(*this); }
     TIndex & operator-- () { i--; return static_cast<TIndex&>(*this); }
+
+    /*
     constexpr TIndex operator+= (int add) { i += add; return TIndex{*this}; }
     constexpr TIndex operator+= (size_t add) { i += add; return TIndex{*this}; }
     constexpr TIndex operator-= (int add) { i -= add; return TIndex{*this}; }
     constexpr TIndex operator-= (size_t add) { i -= add; return TIndex{*this}; }
-
+    */
+    constexpr TIndex operator+= (T_diff add) { i += add; return TIndex{*this}; }
+    constexpr TIndex operator-= (T_diff add) { i -= add; return TIndex{*this}; }
+    
     constexpr auto operator- (Index i2) const { return i-i2.i; }
 
     // bool operator== (Index i2) const { return i==i2.i; }
