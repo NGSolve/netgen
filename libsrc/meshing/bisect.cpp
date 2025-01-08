@@ -666,7 +666,8 @@ namespace netgen
 	  {
 	    int ii = sorted.Get(i);
 	    for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
-              edgenumber.Set (edges[eclasstab.Get(ii, j)], ++cnt); 
+              edgenumber.Set (edges[eclasstab.Get(ii, j)], ++cnt);
+            
 	  }
 	return cnt;
       }
@@ -1031,8 +1032,8 @@ namespace netgen
 	  i2.Sort();
 	  int hval = edgenumber.Get(i2);
           */
-	  // int hval = edgenumber[ SortedPointIndices<2>(mt.pnums[i], mt.pnums[j]) ];
-          int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] }];
+          int hval = edgenumber[ SortedPointIndices<2>(mt.pnums[i], mt.pnums[j]) ];
+          // int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] }];
 	  if (hval > val)
 	    {
 	      val = hval;
@@ -2038,7 +2039,8 @@ namespace netgen
 	
 	// INDEX_2_HASHTABLE<int> edgenumber(np);
         // INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*ne+4*nse);  
-        ClosedHashTable<INDEX_2, int> edgenumber(9*ne+4*nse);
+        // ClosedHashTable<INDEX_2, int> edgenumber(9*ne+4*nse);
+        ClosedHashTable<SortedPointIndices<2>, int> edgenumber(9*ne+4*nse);
 	BTSortEdges (mesh, idmaps, edgenumber);
 	
 	
