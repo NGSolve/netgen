@@ -1227,7 +1227,7 @@ namespace netgen
 
 
 	face2surfel.SetSize (nfa);
-	face2surfel = 0;
+	face2surfel = SurfaceElementIndex::INVALID;
 	for (SurfaceElementIndex sei = 0; sei < nse; sei++)
 	  face2surfel[GetFace(sei)] = sei;
 
