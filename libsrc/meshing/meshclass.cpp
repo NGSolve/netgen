@@ -905,7 +905,9 @@ namespace netgen
         for (i = 1; i <= ident -> GetMaxNr(); i++)
           {
             string name = ident -> GetName(i);
-            outfile << ident->GetName(i) << "\n";
+            if(name == "")
+              name = "default";
+            outfile << name << "\n";
           }
       }
 
