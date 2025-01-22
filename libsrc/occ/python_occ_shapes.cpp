@@ -46,6 +46,7 @@
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepTools.hxx>
 #include <GCE2d_MakeArcOfCircle.hxx>
 #include <GCE2d_MakeCircle.hxx>
 #include <GCE2d_MakeSegment.hxx>
@@ -806,7 +807,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("WriteStep", [](const TopoDS_Shape & shape, string & filename)
             { step_utils::WriteSTEP(shape, filename); }
          , py::arg("filename"), "export shape in STEP - format")
-
+    .def("WriteBrep", [](const TopoDS_Shape & shape, const string& filename)
+    {
+      BRepTools::Write(shape, filename.c_str());
+    }, py::arg("filename"), "export shape in BREP - format")
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
