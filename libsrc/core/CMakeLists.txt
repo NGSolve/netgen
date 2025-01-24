@@ -24,7 +24,7 @@ if(EMSCRIPTEN)
   target_compile_options(ngcore PUBLIC -sNO_DISABLE_EXCEPTION_CATCHING)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND USE_PYTHON)
   # Python packages on Linux are compiled with the old ABI,
   # make sure that the same ABI is used in plugins aswell
   try_run(
@@ -33,19 +33,21 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     RUN_OUTPUT_VARIABLE use_glibcxx_cxx11_abi
     )
   target_compile_definitions(ngcore PUBLIC -D_GLIBCXX_USE_CXX11_ABI=${use_glibcxx_cxx11_abi})
-  if(USE_PYTHON)
-    try_run(
-      ret_val can_compile
-      ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/_get_gxx_abi.cpp
-      RUN_OUTPUT_VARIABLE cxx_abi_version
-      )
-    if(${can_compile} AND (${ret_val} EQUAL 0))
-      # Different python modules using pybind11 need to use the same C++ ABI version
-      # for compatibility
-      message(STATUS "GNU C++ ABI version: ${cxx_abi_version}")
-      target_compile_options(ngcore PUBLIC "-fabi-version=${cxx_abi_version}")
+  try_run(
+    ret_val can_compile
+    ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/_get_gxx_abi.cpp
+    RUN_OUTPUT_VARIABLE default_cxx_abi_version
+    )
+  if(${can_compile} AND (${ret_val} EQUAL 0))
+    # Different python modules using pybind11 need to use the same C++ ABI version
+    # for compatibility
+    set(cxx_abi_version 17)
+    if(cxx_abi_version LESS default_cxx_abi_version)
+      set(cxx_abi_version ${default_cxx_abi_version})
     endif()
-  endif(USE_PYTHON)
+    message(STATUS "GNU C++ ABI version: ${cxx_abi_version}")
+    target_compile_options(ngcore PUBLIC "-fabi-version=${cxx_abi_version}")
+  endif()
 endif()
 
 if(USE_PYTHON)
