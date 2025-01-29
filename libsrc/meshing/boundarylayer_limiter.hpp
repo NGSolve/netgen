@@ -85,16 +85,14 @@ struct GrowthVectorLimiter
 
   double GetLimit (PointIndex pi)
   {
-    // if (pi <= tool.np)
-    if (pi < tool.npi)    
+    if (pi < tool.first_new_pi)
       return limits[pi];
     return limits[map_from[pi]];
   }
 
   bool SetLimit (PointIndex pi, double new_limit)
   {
-    // double& limit = (pi <= tool.np) ? limits[pi] : limits[map_from[pi]];
-    double& limit = (pi < tool.npi) ? limits[pi] : limits[map_from[pi]];    
+    double& limit = (pi < tool.first_new_pi) ? limits[pi] : limits[map_from[pi]];
     if (limit <= new_limit)
       return false;
     limit = new_limit;
@@ -103,8 +101,7 @@ struct GrowthVectorLimiter
 
   bool ScaleLimit (PointIndex pi, double factor)
   {
-    // double& limit = (pi <= tool.np) ? limits[pi] : limits[map_from[pi]];
-    double& limit = (pi < tool.npi) ? limits[pi] : limits[map_from[pi]];
+    double& limit = (pi < tool.first_new_pi) ? limits[pi] : limits[map_from[pi]];
     return SetLimit(pi, limit * factor);
   }
 
@@ -118,8 +115,7 @@ struct GrowthVectorLimiter
 
   Point<3> GetPoint (PointIndex pi_to, double shift = 1., bool apply_limit = false)
   {
-    // if (pi_to <= tool.np || tool.growth_vector_map.count(pi_to) == 0)
-    if (pi_to < tool.npi || tool.growth_vector_map.count(pi_to) == 0)
+    if (pi_to < tool.first_new_pi || tool.growth_vector_map.count(pi_to) == 0)
       return mesh[pi_to];
 
     return mesh[pi_to] + GetVector(pi_to, shift, apply_limit);
@@ -336,8 +332,7 @@ struct GrowthVectorLimiter
       auto np = sel.GetNP();
       for (auto i : Range(np))
         {
-          // if (sel[i] > tool.np)
-          if (sel[i] >= tool.npi)
+          if (sel[i] >= tool.first_new_pi)
             return false;
           if (tool.mapto[sel[i]].Size() == 0)
             return false;
@@ -566,8 +561,7 @@ struct GrowthVectorLimiter
                   PointIndex pi_max_limit = PointIndex::INVALID;
                   for (PointIndex pi :
                        {tri[0], tri[1], tri[2], tri2[0], tri2[1], tri2[2]})
-                    // if (pi > tool.np && (!pi_max_limit.IsValid() || GetLimit(pi) > GetLimit(pi_max_limit)))
-                    if (pi >= tool.npi && (!pi_max_limit.IsValid() || GetLimit(pi) > GetLimit(pi_max_limit)))                    
+                    if (pi >= tool.first_new_pi && (!pi_max_limit.IsValid() || GetLimit(pi) > GetLimit(pi_max_limit)))
                       pi_max_limit = map_from[pi];
 
                   if (!pi_max_limit.IsValid())
@@ -656,18 +650,14 @@ struct GrowthVectorLimiter
                 for (auto pi : sel.PNums())
                   {
                     relevant_points_next.SetBit(pi);
-                    // if (pi >= tool.np)  // was this correct (JS) ? 
-                    if (pi >= tool.npi)
-                      relevant_points_next.SetBit(map_from[pi]);
-                    else
+                    if (pi >= tool.first_new_pi)
                       relevant_points_next.SetBit(map_from[pi]);
                   }
               }
 
             for (auto pi : sel.PNums())
               {
-                //if (pi >= tool.np) // was this correct (JS) ? 
-                if (pi >= tool.npi)
+                if (pi >= tool.first_new_pi)
                   return;
                 if (tool.mapto[pi].Size() == 0)
                   return;

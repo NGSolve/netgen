@@ -297,7 +297,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
     segments = mesh.LineSegments();
 
   np = mesh.GetNP();
-  npi = IndexBASE<PointIndex>()+np;
+  first_new_pi = IndexBASE<PointIndex>()+np;
   ne = mesh.GetNE();
   nse = mesh.GetNSE();
   nseg = segments.Size();

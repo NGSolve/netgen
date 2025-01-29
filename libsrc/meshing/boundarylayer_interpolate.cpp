@@ -155,8 +155,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
         {
           for (auto* p_seg : edgenr2seg[edgenr])
             for (auto pi : p_seg->PNums())
-              // if (pi <= np && point_types[pi] == EDGEPOINT)
-              if (pi < npi && point_types[pi] == EDGEPOINT)
+              if (pi < first_new_pi && point_types[pi] == EDGEPOINT)
                 point_types[pi] = SURFACEPOINT;
           continue;
         }
