@@ -1772,8 +1772,19 @@ namespace netgen
         ar & has_identifications;
         if(has_identifications)
           {
-            auto & idents = GetIdentifications(s);
-            auto n_idents = idents.size();
+            int n_idents;
+            std::vector<OCCIdentification> used_idents;
+            if(ar.Output())
+              {
+                // only use identifications that are used within the geometry
+                for(auto& id : GetIdentifications(s))
+                  {
+                    if(shape_map.Contains(id.from) && shape_map.Contains(id.to))
+                      used_idents.push_back(id);
+                  }
+                n_idents = used_idents.size();
+              }
+            auto & idents = ar.Output() ? used_idents : GetIdentifications(s);
             ar & n_idents;
             idents.resize(n_idents);
             for(auto i : Range(n_idents))
