@@ -132,7 +132,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
           auto& seg = *p_seg;
           faces.SetSize(0);
           // if (seg[0] <= p2sel.Size())
-          if (seg[0] < IndexBASE<PointIndex>()+p2sel.Size())
+          if (seg[0] < IndexBASE<PointIndex>() + p2sel.Size())
             {
               for (auto sei : p2sel[seg[0]])
                 if (moved_surfaces.Test(mesh[sei].GetIndex()) && p2sel[seg[1]].Contains(sei))
@@ -143,7 +143,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
             {
               auto n0 = getNormal(mesh[faces[0]]);
               auto n1 = getNormal(mesh[faces[1]]);
-              if (n0 * n1 < 0.999)
+              if (n0 * n1 < 0.9)
                 no_angles = false;
             }
           else
