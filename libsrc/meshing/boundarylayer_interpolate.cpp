@@ -155,8 +155,27 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
         {
           for (auto* p_seg : edgenr2seg[edgenr])
             for (auto pi : p_seg->PNums())
-              if (pi < first_new_pi && point_types[pi] == EDGEPOINT)
-                point_types[pi] = SURFACEPOINT;
+              {
+                if (pi >= first_new_pi)
+                  continue;
+                if (point_types[pi] == EDGEPOINT)
+                  point_types[pi] = SURFACEPOINT;
+                else if (point_types[pi] == FIXEDPOINT)
+                  {
+                    // Check at edge corners if all adjacent surface elements have roughly the same normal.
+                    // If so, also treat this point as surface point for growth vector interpolation
+                    Vec<3> n = 0.0;
+                    for (auto si : p2sel[pi])
+                      n += getNormal(mesh[si]);
+                    n.Normalize();
+                    bool is_corner = false;
+                    for (auto si : p2sel[pi])
+                      if (getNormal(mesh[si]) * n < 0.9)
+                        is_corner = true;
+                    if (!is_corner)
+                      point_types[pi] = SURFACEPOINT;
+                  }
+              }
           continue;
         }
     }
