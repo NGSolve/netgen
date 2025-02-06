@@ -143,7 +143,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
             {
               auto n0 = getNormal(mesh[faces[0]]);
               auto n1 = getNormal(mesh[faces[1]]);
-              if (n0 * n1 < 0.9)
+              if (n0 * n1 < 0.99)
                 no_angles = false;
             }
           else
@@ -170,7 +170,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
                     n.Normalize();
                     bool is_corner = false;
                     for (auto si : p2sel[pi])
-                      if (getNormal(mesh[si]) * n < 0.9)
+                      if (getNormal(mesh[si]) * n < 0.99)
                         is_corner = true;
                     if (!is_corner)
                       point_types[pi] = SURFACEPOINT;
