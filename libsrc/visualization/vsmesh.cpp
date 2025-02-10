@@ -876,15 +876,21 @@ namespace netgen
                     auto [hash_pts, hash_nr] = hash;
                     auto [pi1, pi2] = hash_pts;
                       // val = pts[2];   
-		      const Point3d & p1 = mesh->Point(pi1);
-		      const Point3d & p2 = mesh->Point(pi2);
+		      Point<3> p1 = mesh->Point(pi1);
+		      Point<3> p2 = mesh->Point(pi2);
+                      Point<3> c = Center(p1, p2);
+                      if (vispar.shrink < 1)
+                        {
+                          p1 = c + vispar.shrink * (p1 - c);
+                          p2 = c + vispar.shrink * (p2 - c);
+                        }
 
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
 				    identifiedcol);
 
 		      glBegin (GL_LINES);
-		      glVertex3f (p1.X(), p1.Y(), p1.Z());
-		      glVertex3f (p2.X(), p2.Y(), p2.Z());
+		      glVertex3dv(p1);
+		      glVertex3dv(p2);
 		      glEnd();
 		    }
 	      }
