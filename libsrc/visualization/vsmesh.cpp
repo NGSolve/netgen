@@ -853,24 +853,14 @@ namespace netgen
 	GLfloat identifiedcol[] = { 1, 0, 1, 1 };
 
 	glLineWidth (3);
-
-	//  for (i = 1; i <= mesh->GetNSeg(); i++)
+        glEnable (GL_COLOR_MATERIAL);
+        glDisable (GL_LIGHTING);
 
 	if (mesh -> HasIdentifications() )
 	  {
-            // if (mesh->GetIdentifications().HasIdentifiedPoints())
 	      {
                 auto & idpts =
                   mesh->GetIdentifications().GetIdentifiedPoints();
-
-                /*
-		for (int i = 1; i <= idpts.GetNBags(); i++)
-                  for (int j = 1; j <= idpts.GetBagSize(i); j++)
-		    {
-		      INDEX_3 pts;
-		      int dummy; // , val;   
-		      idpts.GetData (i, j, pts, dummy);
-                */
                 for (auto [hash, val] : idpts)
                   {
                     auto [hash_pts, hash_nr] = hash;
@@ -885,6 +875,7 @@ namespace netgen
                           p2 = c + vispar.shrink * (p2 - c);
                         }
 
+                      glColor3fv (identifiedcol);
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
 				    identifiedcol);
 
@@ -896,6 +887,8 @@ namespace netgen
 	      }
 	  }
 
+        glDisable (GL_COLOR_MATERIAL);
+        glEnable (GL_LIGHTING);
 	glEndList ();
       }
 
