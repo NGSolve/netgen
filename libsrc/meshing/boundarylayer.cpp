@@ -154,7 +154,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr, FlatArray<S
       auto& seg = *p_seg;
       if (seg.edgenr != edgenr)
         continue;
-      PointIndex other = seg[0]-pi + seg[1];
+      PointIndex other = seg[0] - pi + seg[1];
       if (!pts.Contains(other))
         pts.Append(other);
     }
@@ -297,7 +297,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
     segments = mesh.LineSegments();
 
   np = mesh.GetNP();
-  first_new_pi = IndexBASE<PointIndex>()+np;
+  first_new_pi = IndexBASE<PointIndex>() + np;
   ne = mesh.GetNE();
   nse = mesh.GetNSE();
   nseg = segments.Size();
@@ -629,7 +629,8 @@ void BoundaryLayerTool ::InsertNewElements(
   // insert new points
   // for (PointIndex pi = 1; pi <= np; pi++)
   for (PointIndex pi = IndexBASE<PointIndex>();
-       pi < IndexBASE<PointIndex>()+np; pi++)
+       pi < IndexBASE<PointIndex>() + np;
+       pi++)
     {
       if (growthvectors[pi].Length2() != 0)
         {
@@ -724,8 +725,11 @@ void BoundaryLayerTool ::InsertNewElements(
                   auto g1 = getGroups(p1, segj.si);
 
                   if (g0.Size() == 1 && g1.Size() == 1)
-                    [[maybe_unused]] auto s =
-                      addSegment(newPoint(p0, -1, g0[0]), newPoint(p1, -1, g1[0]));
+                    {
+                      auto p0_new = newPoint(p0, -1, g0[0]);
+                      auto p1_new = newPoint(p1, -1, g1[0]);
+                      addSegment(p0_new, p1_new);
+                    }
                   else
                     {
                       if (g0.Size() == 2)
@@ -908,27 +912,16 @@ void BoundaryLayerTool ::InsertNewElements(
                   // quads
                   for (auto i : Range(points))
                     if (numGroups(sel[i]) == 1)
-                      identifications.Add(el[i], el[i + points.Size()], identnr);
+                      {
+                        auto pi0 = el[i];
+                        auto pi1 = el[i + points.Size()];
+                        auto nr = identifications.Get(pi0, pi1);
+                        if (nr == 0)
+                          identifications.Add(el[i], el[i + points.Size()], identnr);
+                      }
                 }
             }
           Element2d newel = sel;
-          // check if the original points have a closesurface identification, if so, we need to also identify the corresponding new points
-
-          for (auto pi : sel.PNums())
-            for (auto pj : sel.PNums())
-              {
-                if (pi == pj)
-                  continue;
-
-                auto nr = identifications.Get(pi, pj);
-                if (nr == 0)
-                  continue;
-
-                auto newpi = newPoint(pi);
-                auto newpj = newPoint(pj);
-                identifications.Add(newpi, newpj, nr);
-              }
-
           for (auto i : Range(points))
             newel[i] = newPoint(sel[i], -1, groups[i]);
           newel.SetIndex(si_map[sel.GetIndex()]);
@@ -937,31 +930,7 @@ void BoundaryLayerTool ::InsertNewElements(
       if (is_boundary_moved.Test(sel.GetIndex()))
         {
           auto& sel = mesh[si];
-          auto pnums = sel.PNums();
-          if (pnums.Size() == 4)
-            {
-              // check if there are closesurface identifications, if so, we need to also identify the corresponding new points
-              for (auto i : Range(pnums))
-                for (auto j : Range(i + 1, pnums.Size()))
-                  {
-                    if (i == j)
-                      continue;
-
-                    auto pi = pnums[i];
-                    auto pj = pnums[j];
-
-                    auto nr = identifications.Get(pi, pj);
-                    if (nr == 0)
-                      continue;
-                    if (identifications.GetType(nr) != Identifications::CLOSESURFACES)
-                      continue;
-
-                    auto newpi = hasMoved(pi) ? newPoint(pi) : pi;
-                    auto newpj = hasMoved(pj) ? newPoint(pj) : pj;
-                    identifications.Add(newpi, newpj, nr);
-                  }
-            }
-          for (auto& p : pnums)
+          for (auto& p : sel.PNums())
             if (hasMoved(p))
               p = newPoint(p);
         }
@@ -1418,6 +1387,21 @@ void BoundaryLayerTool ::Perform()
   if (insert_only_volume_elements)
     {
       mesh.LineSegments() = old_segments;
+    }
+
+  auto& identifications = mesh.GetIdentifications();
+  NgArray<INDEX_2> pairs;
+  for (auto nr : Range(0, identifications.GetMaxNr() + 1))
+    {
+      identifications.GetPairs(nr, pairs);
+      for (auto pair : pairs)
+        {
+          auto p0 = pair[0];
+          auto p1 = pair[1];
+          if (max(p0, p1) < first_new_pi && mapto[p0].Size() && mapto[p1].Size())
+            for (auto i : Range(mapto[p0].Size()))
+              identifications.Add(mapto[p0][i], mapto[p1][i], nr);
+        }
     }
 
   mesh.CalcSurfacesOfNode();
