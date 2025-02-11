@@ -584,13 +584,15 @@ namespace netgen
         auto p2 = [](Point<3> p) { return Point<2>{p[0], p[1]}; };
 
         auto seg = line_segments[segi];
-        double alpha,beta;
-        intersect( p2(mesh[seg[0]]), p2(mesh[seg[0]]+total_thickness*growthvectors[seg[0]]), p2(mesh[seg[1]]), p2(mesh[seg[1]]+total_thickness*growthvectors[seg[1]]), alpha, beta );
-
-        if(beta>0 && alpha>0 && alpha<1.1)
-           growth[seg[0]] = min(growth[seg[0]], 0.8*alpha);
-        if(alpha>0 && beta>0 && beta<1.1)
-           growth[seg[1]] = min(growth[seg[1]], 0.8*beta);
+        double alpha=0.0;
+        double beta=0.0;
+        if (intersect(p2(mesh[seg[0]]), p2(mesh[seg[0]] + total_thickness * growthvectors[seg[0]]), p2(mesh[seg[1]]), p2(mesh[seg[1]] + total_thickness * growthvectors[seg[1]]), alpha, beta))
+          {
+            if (beta > 0 && alpha > 0 && alpha < 1.1)
+              growth[seg[0]] = min(growth[seg[0]], 0.8 * alpha);
+            if (alpha > 0 && beta > 0 && beta < 1.1)
+              growth[seg[1]] = min(growth[seg[1]], 0.8 * beta);
+          }
 
         for (auto segj : Range(mesh.LineSegments()))
            if(segi!=segj)
