@@ -944,7 +944,14 @@ void BoundaryLayerTool ::InsertNewElements(
           // cout << "moved setg " << seg << endl;
           for (auto& p : seg.PNums())
             if (hasMoved(p))
-              p = newPoint(p);
+              {
+                p = newPoint(p);
+                if (params.disable_curving)
+                  {
+                    seg.epgeominfo[0].edgenr = -1;
+                    seg.epgeominfo[1].edgenr = -1;
+                  }
+              }
         }
     }
 
