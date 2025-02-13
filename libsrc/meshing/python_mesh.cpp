@@ -599,7 +599,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           py::format_descriptor<int[3]>::format(),
           py::detail::npy_format_descriptor<int[3]>::dtype() },
         py::detail::field_descriptor {
-          "index", offsetof(Segment, edgenr), sizeof(int),
+          "index", offsetof(Segment, si), sizeof(int),
+          py::format_descriptor<int>::format(),
+          py::detail::npy_format_descriptor<int>::dtype() },
+        py::detail::field_descriptor {
+          "edgenr", offsetof(Segment, edgenr), sizeof(int),
           py::format_descriptor<int>::format(),
           py::detail::npy_format_descriptor<int>::dtype() },
       });
