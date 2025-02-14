@@ -1,8 +1,9 @@
 #include <meshing.hpp>
+#include "debugging.hpp"
 
 namespace netgen
 {
-    unique_ptr<Mesh> GetOpenElements( const Mesh & m, int dom = 0, bool only_quads = false )
+    unique_ptr<Mesh> GetOpenElements( const Mesh & m, int dom, bool only_quads )
     {
         static Timer t("GetOpenElements"); RegionTimer rt(t);
         auto mesh = make_unique<Mesh>();
@@ -96,6 +97,127 @@ namespace netgen
         return mesh_ptr;
     }
 
+    void CheckMesh (const Mesh& mesh, MESHING_STEP step)
+    {
+      if (step == MESHCONST_OPTVOLUME)
+        {
+          bool have_error = false;
+          for (auto el : mesh.VolumeElements())
+            {
+              double volume = el.Volume(mesh.Points());
+              if (volume < 0)
+                {
+                  have_error = true;
+                  cout << "volume of element " << el << " is negative: " << volume << endl;
+                }
+            }
+          if (have_error)
+            throw Exception("Negative volume");
 
+        CheckElementsAroundEdges(mesh);
+        }
+    }
 
-}
+    void CheckElementsAroundEdges (const Mesh& mesh)
+    {
+      static Mesh last_good_mesh;
+
+      Array<std::tuple<PointIndex, PointIndex>> edges;
+      auto elementsonnode = mesh.CreatePoint2ElementTable();
+      BuildEdgeList(mesh, elementsonnode, edges);
+      mesh.BoundaryEdge(1, 2); // trigger build of boundary edges
+
+      ArrayMem<ElementIndex, 20> hasbothpoints;
+      for (auto [pi0, pi1] : edges)
+        {
+          if (mesh.BoundaryEdge(pi0, pi1))
+            continue;
+
+          hasbothpoints.SetSize(0);
+          for (ElementIndex ei : elementsonnode[pi0])
+            if (mesh[ei].PNums().Contains(pi1))
+              hasbothpoints.Append(ei);
+
+          bool skip = false;
+          for (ElementIndex ei : hasbothpoints)
+            {
+              if (mesh[ei].GetType() != TET)
+                {
+                  skip = true;
+                  break;
+                }
+            }
+          if (skip)
+            continue;
+
+          int nsuround = hasbothpoints.Size();
+          ArrayMem<PointIndex, 50> suroundpts(nsuround + 1);
+          suroundpts = PointIndex::INVALID;
+          ArrayMem<bool, 50> tetused(nsuround);
+          tetused = false;
+          tetused[0] = true;
+
+          auto el = mesh[hasbothpoints[0]];
+          PointIndex pi2 = PointIndex::INVALID;
+          PointIndex pi3 = PointIndex::INVALID;
+          for (auto pi : el.PNums())
+            if (pi != pi0 && pi != pi1)
+              {
+                pi3 = pi2;
+                pi2 = pi;
+              }
+          suroundpts[0] = pi2;
+          suroundpts[1] = pi3;
+
+          for (auto i : Range(2, nsuround + 1))
+            {
+              PointIndex oldpi = suroundpts[i - 1];
+              PointIndex newpi = PointIndex::INVALID;
+
+              for (int k = 0; k < nsuround && !newpi.IsValid(); k++)
+                if (!tetused[k])
+                  {
+                    const Element& nel = mesh[hasbothpoints[k]];
+                    for (int k2 = 0; k2 < 4 && !newpi.IsValid(); k2++)
+                      if (nel[k2] == oldpi)
+                        {
+                          newpi = nel[0] - pi0 + nel[1] - pi1 + nel[2] - oldpi + nel[3];
+                          tetused[k] = true;
+                          suroundpts[i] = newpi;
+
+                          ArrayMem<PointIndex, 4> nelpts{nel[0], nel[1], nel[2], nel[3]};
+                          ArrayMem<PointIndex, 4> check_points{pi0, pi1, oldpi, newpi};
+                          QuickSort(check_points);
+                          QuickSort(nelpts);
+                          if (check_points != nelpts)
+                            {
+                              cout << __FILE__ << ":" << __LINE__ << "\tFound error" << endl;
+                              cout << "i = " << i << endl;
+                              cout << "oldpi = " << oldpi << endl;
+                              cout << "newpi = " << newpi << endl;
+                              cout << "Elements: " << endl;
+                              cout << "nel " << nel << endl;
+                              for (auto ei : hasbothpoints)
+                                cout << mesh[ei] << endl;
+                              cout << endl;
+                              cout << "check_points: " << check_points << endl;
+                              cout << "nelpts: " << nelpts << endl;
+                              cout << "hasbothpoints: " << hasbothpoints << endl;
+                              cout << "suroundpts: " << suroundpts << endl;
+                              throw Exception("Found error");
+                            }
+                        }
+                  }
+            }
+          if (suroundpts.Last() != suroundpts[0])
+            {
+              cout << __FILE__ << ":" << __LINE__ << "\tFound error" << endl;
+              cout << "hasbothpoints: " << hasbothpoints << endl;
+              cout << "suroundpts: " << suroundpts << endl;
+              for (auto ei : hasbothpoints)
+                cout << mesh[ei] << endl;
+              throw Exception("Found error");
+            }
+        }
+    }
+} // namespace netgen
