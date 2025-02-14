@@ -704,21 +704,12 @@ void MeshOptimize3d :: SplitImprove ()
   multithread.task = savetask;
 }
 
-
 double MeshOptimize3d :: SwapImproveEdge (
         const TBitArray<ElementIndex> * working_elements,
         Table<ElementIndex, PointIndex> & elementsonnode,
         INDEX_3_HASHTABLE<int> & faces,
         PointIndex pi1, PointIndex pi2, bool check_only)
 {
-  PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID),
-             pi5(PointIndex::INVALID), pi6(PointIndex::INVALID);
-
-  double bad1, bad2, bad3;
-
-  Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
-  Element el1(TET), el2(TET), el3(TET), el4(TET);
-  Element el1b(TET), el2b(TET), el3b(TET), el4b(TET);
   ArrayMem<ElementIndex, 20> hasbothpoints;
 
   double d_badness = 0.0;
@@ -780,8 +771,41 @@ double MeshOptimize3d :: SwapImproveEdge (
   int nsuround = hasbothpoints.Size();
   int mattyp = mesh[hasbothpoints[0]].GetIndex();
 
+  auto fix_orientation = [&] (Element & el) {
+    if (WrongOrientation (mesh.Points(), el))
+      el.Invert();
+  };
+
+  auto El = [&] ( PointIndex pi0, PointIndex pi1, PointIndex pi2, PointIndex pi3) -> Element {
+    Element el(TET);
+    el[0] = pi0;
+    el[1] = pi1;
+    el[2] = pi2;
+    el[3] = pi3;
+    el.SetIndex (mattyp);
+    // fix_orientation(el);
+    return el;
+  };
+
+  auto combined_badness = [&] (std::initializer_list<Element> els, bool apply_illegal_penalty = true) {
+    double bad = 0.0;
+    bool have_illegal = false;
+    for (auto el : els) {
+      bad += CalcBad(mesh.Points(), el, 0);
+      if(apply_illegal_penalty && !have_illegal) {
+        el.Touch();
+        have_illegal = !mesh.LegalTet(el);
+      }
+    }
+    if(have_illegal && apply_illegal_penalty)
+      bad += GetLegalPenalty();
+    return bad;
+  };
+
   if ( nsuround == 3 )
     {
+      PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID), pi5(PointIndex::INVALID);
+
       Element & elem = mesh[hasbothpoints[0]];
       for (int l = 0; l < 4; l++)
           if (elem[l] != pi1 && elem[l] != pi2)
@@ -790,12 +814,7 @@ double MeshOptimize3d :: SwapImproveEdge (
               pi3 = elem[l];
             }
 
-      el31[0] = pi1;
-      el31[1] = pi2;
-      el31[2] = pi3;
-      el31[3] = pi4;
-      el31.SetIndex (mattyp);
-
+      auto el31 = El(pi1, pi2, pi3, pi4);
       if (WrongOrientation (mesh.Points(), el31))
         {
           Swap (pi3, pi4);
@@ -823,53 +842,14 @@ double MeshOptimize3d :: SwapImproveEdge (
           throw NgException("Illegal state observed in SwapImprove");
 
 
-      el32[0] = pi1;
-      el32[1] = pi2;
-      el32[2] = pi4;
-      el32[3] = pi5;
-      el32.SetIndex (mattyp);
+      auto el32 = El(pi1, pi2, pi4, pi5);
+      auto el33 = El(pi1, pi2, pi5, pi3);
 
-      el33[0] = pi1;
-      el33[1] = pi2;
-      el33[2] = pi5;
-      el33[3] = pi3;
-      el33.SetIndex (mattyp);
+      auto el21 = El(pi3, pi4, pi5, pi2);
+      auto el22 = El(pi5, pi4, pi3, pi1);
 
-      bad1 = CalcBad (mesh.Points(), el31, 0) +
-          CalcBad (mesh.Points(), el32, 0) +
-          CalcBad (mesh.Points(), el33, 0);
-
-      el31.Touch();
-      el32.Touch();
-      el33.Touch();
-
-      if (!mesh.LegalTet(el31) ||
-              !mesh.LegalTet(el32) ||
-              !mesh.LegalTet(el33))
-          bad1 += GetLegalPenalty();
-
-      el21[0] = pi3;
-      el21[1] = pi4;
-      el21[2] = pi5;
-      el21[3] = pi2;
-      el21.SetIndex (mattyp);
-
-      el22[0] = pi5;
-      el22[1] = pi4;
-      el22[2] = pi3;
-      el22[3] = pi1;
-      el22.SetIndex (mattyp);
-
-      bad2 = CalcBad (mesh.Points(), el21, 0) +
-          CalcBad (mesh.Points(), el22, 0);
-
-      el21.Touch();
-      el22.Touch();
-
-      if (!mesh.LegalTet(el21) ||
-              !mesh.LegalTet(el22))
-          bad2 += GetLegalPenalty();
-
+      double bad1 = combined_badness({el31, el32, el33});
+      double bad2 = combined_badness({el21, el22});
 
       if ((goal == OPT_CONFORM) && NotTooBad(bad1, bad2))
         {
@@ -906,8 +886,6 @@ double MeshOptimize3d :: SwapImproveEdge (
           mesh[hasbothpoints[1]].Delete();
           mesh[hasbothpoints[2]].Delete();
 
-          el21.Touch();
-          el22.Touch();
           mesh.AddVolumeElement(el21);
           mesh.AddVolumeElement(el22);
         }
@@ -915,6 +893,9 @@ double MeshOptimize3d :: SwapImproveEdge (
 
   if (nsuround == 4)
     {
+      PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID);
+      PointIndex pi5(PointIndex::INVALID), pi6(PointIndex::INVALID);
+
       const Element & elem1 = mesh[hasbothpoints[0]];
       for (int l = 0; l < 4; l++)
           if (elem1[l] != pi1 && elem1[l] != pi2)
@@ -923,9 +904,7 @@ double MeshOptimize3d :: SwapImproveEdge (
               pi3 = elem1[l];
             }
 
-      el1[0] = pi1; el1[1] = pi2;
-      el1[2] = pi3; el1[3] = pi4;
-      el1.SetIndex (mattyp);
+      auto el1 = El(pi1, pi2, pi3, pi4);
 
       if (WrongOrientation (mesh.Points(), el1))
         {
@@ -960,113 +939,23 @@ double MeshOptimize3d :: SwapImproveEdge (
             }
         }
 
-      el1[0] = pi1; el1[1] = pi2;
-      el1[2] = pi3; el1[3] = pi4;
-      el1.SetIndex (mattyp);
+      el1 = El(pi1, pi2, pi3, pi4);
+      auto el2 = El(pi1, pi2, pi4, pi5);
+      auto el3 = El(pi1, pi2, pi5, pi6);
+      auto el4 = El(pi1, pi2, pi6, pi3);
+      double bad1 = combined_badness({el1, el2, el3, el4}, goal != OPT_CONFORM);
 
-      el2[0] = pi1; el2[1] = pi2;
-      el2[2] = pi4; el2[3] = pi5;
-      el2.SetIndex (mattyp);
+      el1 = El(pi3, pi5, pi2, pi4);
+      el2 = El(pi3, pi5, pi4, pi1);
+      el3 = El(pi3, pi5, pi1, pi6);
+      el4 = El(pi3, pi5, pi6, pi2);
+      double bad2 = combined_badness({el1, el2, el3, el4}, goal != OPT_CONFORM);
 
-      el3[0] = pi1; el3[1] = pi2;
-      el3[2] = pi5; el3[3] = pi6;
-      el3.SetIndex (mattyp);
-
-      el4[0] = pi1; el4[1] = pi2;
-      el4[2] = pi6; el4[3] = pi3;
-      el4.SetIndex (mattyp);
-
-      bad1 = CalcBad (mesh.Points(), el1, 0) +
-          CalcBad (mesh.Points(), el2, 0) +
-          CalcBad (mesh.Points(), el3, 0) +
-          CalcBad (mesh.Points(), el4, 0);
-
-
-      el1.Touch();
-      el2.Touch();
-      el3.Touch();
-      el4.Touch();
-
-
-      if (goal != OPT_CONFORM)
-        {
-          if (!mesh.LegalTet(el1) ||
-                  !mesh.LegalTet(el2) ||
-                  !mesh.LegalTet(el3) ||
-                  !mesh.LegalTet(el4))
-              bad1 += GetLegalPenalty();
-        }
-
-      el1[0] = pi3; el1[1] = pi5;
-      el1[2] = pi2; el1[3] = pi4;
-      el1.SetIndex (mattyp);
-
-      el2[0] = pi3; el2[1] = pi5;
-      el2[2] = pi4; el2[3] = pi1;
-      el2.SetIndex (mattyp);
-
-      el3[0] = pi3; el3[1] = pi5;
-      el3[2] = pi1; el3[3] = pi6;
-      el3.SetIndex (mattyp);
-
-      el4[0] = pi3; el4[1] = pi5;
-      el4[2] = pi6; el4[3] = pi2;  	
-      el4.SetIndex (mattyp);
-
-      bad2 = CalcBad (mesh.Points(), el1, 0) +
-          CalcBad (mesh.Points(), el2, 0) +
-          CalcBad (mesh.Points(), el3, 0) +
-          CalcBad (mesh.Points(), el4, 0);
-
-      el1.Touch();
-      el2.Touch();
-      el3.Touch();
-      el4.Touch();
-
-      if (goal != OPT_CONFORM)
-        {
-          if (!mesh.LegalTet(el1) ||
-                  !mesh.LegalTet(el2) ||
-                  !mesh.LegalTet(el3) ||
-                  !mesh.LegalTet(el4))
-              bad2 += GetLegalPenalty();
-        }
-
-
-      el1b[0] = pi4; el1b[1] = pi6;
-      el1b[2] = pi3; el1b[3] = pi2;
-      el1b.SetIndex (mattyp);
-
-      el2b[0] = pi4; el2b[1] = pi6;
-      el2b[2] = pi2; el2b[3] = pi5;
-      el2b.SetIndex (mattyp);
-
-      el3b[0] = pi4; el3b[1] = pi6;
-      el3b[2] = pi5; el3b[3] = pi1;
-      el3b.SetIndex (mattyp);
-
-      el4b[0] = pi4; el4b[1] = pi6;
-      el4b[2] = pi1; el4b[3] = pi3;
-      el4b.SetIndex (mattyp);
-
-      bad3 = CalcBad (mesh.Points(), el1b, 0) +
-          CalcBad (mesh.Points(), el2b, 0) +
-          CalcBad (mesh.Points(), el3b, 0) +
-          CalcBad (mesh.Points(), el4b, 0);
-
-      el1b.Touch();
-      el2b.Touch();
-      el3b.Touch();
-      el4b.Touch();
-
-      if (goal != OPT_CONFORM)
-        {
-          if (!mesh.LegalTet(el1b) ||
-                  !mesh.LegalTet(el2b) ||
-                  !mesh.LegalTet(el3b) ||
-                  !mesh.LegalTet(el4b))
-              bad3 += GetLegalPenalty();
-        }
+      auto el1b = El(pi4, pi6, pi3, pi2);
+      auto el2b = El(pi4, pi6, pi2, pi5);
+      auto el3b = El(pi4, pi6, pi5, pi1);
+      auto el4b = El(pi4, pi6, pi1, pi3);
+      double bad3 = combined_badness({el1b, el2b, el3b, el4b}, goal != OPT_CONFORM);
 
       bool swap2=false;
       bool swap3=false;
@@ -1095,10 +984,6 @@ double MeshOptimize3d :: SwapImproveEdge (
           for (auto i : IntRange(4))
               mesh[hasbothpoints[i]].Delete();
 
-          el1.Touch();
-          el2.Touch();
-          el3.Touch();
-          el4.Touch();
           mesh.AddVolumeElement (el1);
           mesh.AddVolumeElement (el2);
           mesh.AddVolumeElement (el3);
@@ -1109,10 +994,6 @@ double MeshOptimize3d :: SwapImproveEdge (
           for (auto i : IntRange(4))
               mesh[hasbothpoints[i]].Delete();
 
-          el1b.Touch();
-          el2b.Touch();
-          el3b.Touch();
-          el4b.Touch();
           mesh.AddVolumeElement (el1b);
           mesh.AddVolumeElement (el2b);
           mesh.AddVolumeElement (el3b);
@@ -1123,7 +1004,7 @@ double MeshOptimize3d :: SwapImproveEdge (
   // if (goal == OPT_QUALITY)
   if (nsuround >= 5)
     {
-      Element hel(TET);
+      PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID);
 
       NgArrayMem<PointIndex, 50> suroundpts(nsuround);
       NgArrayMem<bool, 50> tetused(nsuround);
@@ -1137,19 +1018,8 @@ double MeshOptimize3d :: SwapImproveEdge (
               pi3 = elem[l];
             }
 
-      hel[0] = pi1;
-      hel[1] = pi2;
-      hel[2] = pi3;
-      hel[3] = pi4;
-      hel.SetIndex (mattyp);
-
-      if (WrongOrientation (mesh.Points(), hel))
-        {
+      if (WrongOrientation (mesh.Points(), El(pi1, pi2, pi3, pi4)))
           Swap (pi3, pi4);
-          hel[2] = pi3;
-          hel[3] = pi4;
-        }
-
 
       // suroundpts.SetSize (nsuround);
       suroundpts = PointIndex::INVALID;
@@ -1180,17 +1050,9 @@ double MeshOptimize3d :: SwapImproveEdge (
         }
 
 
-      bad1 = 0;
-      for (int k = 0; k < nsuround; k++)
-        {
-          hel[0] = pi1;
-          hel[1] = pi2;
-          hel[2] = suroundpts[k];
-          hel[3] = suroundpts[(k+1) % nsuround];
-          hel.SetIndex (mattyp);
-
-          bad1 += CalcBad (mesh.Points(), hel, 0);
-        }
+      double bad1 = 0;
+      for (auto k : Range(nsuround))
+          bad1 += CalcBad (mesh.Points(), El(pi1, pi2, suroundpts[k], suroundpts[(k+1) % nsuround]), 0);
 
       //  (*testout) << "nsuround = " << nsuround << " bad1 = " << bad1 << endl;
 
@@ -1202,27 +1064,16 @@ double MeshOptimize3d :: SwapImproveEdge (
 
       for (int l = 0; l < nsuround; l++)
         {
-          bad2 = 0;
+          double bad2 = 0;
 
           for (int k = l+1; k <= nsuround + l - 2; k++)
             {
-              hel[0] = suroundpts[l];
-              hel[1] = suroundpts[k % nsuround];
-              hel[2] = suroundpts[(k+1) % nsuround];
-              hel[3] = pi2;
+              PointIndex pil = suroundpts[l];
+              PointIndex pik0 = suroundpts[k % nsuround];
+              PointIndex pik1 = suroundpts[(k+1) % nsuround];
 
-              bad2 += CalcBad (mesh.Points(), hel, 0);
-              hel.Touch();
-              if (!mesh.LegalTet(hel)) bad2 += GetLegalPenalty();
-
-              hel[2] = suroundpts[k % nsuround];
-              hel[1] = suroundpts[(k+1) % nsuround];
-              hel[3] = pi1;
-
-              bad2 += CalcBad (mesh.Points(), hel, 0);
-
-              hel.Touch();
-              if (!mesh.LegalTet(hel)) bad2 += GetLegalPenalty();
+              bad2 += combined_badness({El(pil, pik0, pik1, pi2)});
+              bad2 += combined_badness({El(pil, pik1, pik0, pi1)});
             }
           // (*testout) << "bad2," << l << " = " << bad2 << endl;
 
@@ -1286,29 +1137,24 @@ double MeshOptimize3d :: SwapImproveEdge (
           for (int k = bestl+1; k <= nsuround + bestl - 2; k++)
             {
               // int k1;
+              PointIndex pi = suroundpts[bestl];
+              PointIndex pik0 = suroundpts[k % nsuround];
+              PointIndex pik1 = suroundpts[(k+1) % nsuround];
 
-              hel[0] = suroundpts[bestl];
-              hel[1] = suroundpts[k % nsuround];
-              hel[2] = suroundpts[(k+1) % nsuround];
-              hel[3] = pi2;
-              hel.Touch();
-
+              auto el = El(pi, pik0, pik1, pi2);
               /*
                  (*testout) << nsuround << "-swap, new el,top = "
-                 << hel << endl;
+                 << el << endl;
                  */
-              mesh.AddVolumeElement (hel);
+              mesh.AddVolumeElement (el);
 
-              hel[2] = suroundpts[k % nsuround];
-              hel[1] = suroundpts[(k+1) % nsuround];
-              hel[3] = pi1;
-
+              el = El(pi, pik1, pik0, pi1);
               /*
                  (*testout) << nsuround << "-swap, new el,bot = "
-                 << hel << endl;
+                 << el << endl;
                  */
 
-              mesh.AddVolumeElement (hel);
+              mesh.AddVolumeElement (el);
             }
 
           for (int k = 0; k < nsuround; k++)
