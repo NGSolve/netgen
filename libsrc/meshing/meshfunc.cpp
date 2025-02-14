@@ -777,18 +777,16 @@ namespace netgen
     if(geo->GetSolid(domain-1).free_edges.Size() == 0)
       return;
 
-    Segment bad_seg;
-    Array<Segment> free_segs;
-    for (auto seg : mesh.LineSegments())
-      if(seg.domin == domain && seg.domout == domain)
-        free_segs.Append(seg);
+    Array<SegmentIndex> free_segs;
+    for (auto segi : Range(mesh.LineSegments()))
+      if(mesh[segi].domin == domain && mesh[segi].domout == domain)
+        free_segs.Append(segi);
 
-    auto num_nonconforming = [&] () {
-      size_t count = 0;
+    auto get_nonconforming = [&] (const auto & p2el) {
+      Array<size_t> nonconforming;
 
-      auto p2el = mesh.CreatePoint2ElementTable();
-
-      for (auto seg : free_segs) {
+      for (auto segi : free_segs) {
+        auto seg = mesh[segi];
 
         auto has_p0 = p2el[seg[0]];
         bool has_both = false;
@@ -798,34 +796,106 @@ namespace netgen
             has_both = true;
         }
 
-        if(!has_both) {
-          bad_seg = seg;
-          count++;
-        }
+        if(!has_both)
+          nonconforming.Append(segi);
       }
-      return count;
+      return nonconforming;
     };
 
-    for ([[maybe_unused]] auto i : Range(5)) {
-      auto num_bad_segs = num_nonconforming();
-      PrintMessage(1, "Non-conforming free segments in domain ", domain, ": ", num_bad_segs);
+    auto split_segment = [&] (SegmentIndex segi, const auto & p2el) {
+      // Todo: handle curved segments correctly
+      auto seg = mesh[segi];
+      auto p_new = Center(mesh[seg[0]], mesh[seg[1]]);
+      auto pi_new = mesh.AddPoint(p_new);
+      auto seg_new0 = seg;
+      auto seg_new1 = seg;
+      seg_new0[1] = pi_new;
+      seg_new1[0] = pi_new;
+
+      mesh[segi][0] = PointIndex::INVALID;
+      mesh.AddSegment(seg_new0);
+      mesh.AddSegment(seg_new1);
+
+      double lam[3];
+      ElementIndex ei = mesh.GetElementOfPoint(p_new, lam, false, domain);
+      if(ei == 0) {
+        PrintMessage(1, "Could not find volume element with new point");
+        return;
+      }
+      ei -= 1;
+
+      // split tet into 4 new tests, with new point inside
+      auto el = mesh[ei];
+      if(el.GetNP() != 4) {
+        PrintMessage(1, "Only tet elements are supported to split around free segments");
+        return;
+      }
+
+      if(el.IsDeleted()) {
+        PrintMessage(1,"Element to split is already deleted");
+        return;
+      }
+
+      int pmap[4][4] = {
+        {0,1,2,4},
+        {1,3,2,4},
+        {0,2,3,4},
+        {0,3,1,4}
+      };
+
+      PointIndex pis[5] = {el[0], el[1], el[2], el[3], pi_new};
+
+      for (auto i : Range(4)) {
+        Element el_new;
+        el_new = el;
+        for (auto j : Range(4))
+          el_new[j] = pis[pmap[i][j]];
+        mesh.AddVolumeElement(el_new);
+      }
+      mesh[ei].Delete();
+    };
+
+    size_t last_num_bad_segs = -1;
+    for ([[maybe_unused]] auto i : Range(10)) {
+      auto p2el = mesh.CreatePoint2ElementTable();
+
+      auto bad_segs = get_nonconforming(p2el);
+      auto num_bad_segs = bad_segs.Size();
 
       if(num_bad_segs == 0)
         return;
+
+      PrintMessage(3, "Non-conforming free segments in domain ", domain, ": ", num_bad_segs);
+
+      if(i>=5 || num_bad_segs != last_num_bad_segs) {
+        for(auto i : bad_segs)
+          split_segment(i, p2el);
+        mesh.Compress();
+      }
 
       MeshingParameters dummymp;
       MeshOptimize3d optmesh(mesh, dummymp, OPT_CONFORM);
 
       for ([[maybe_unused]] auto i : Range(3)) {
+        optmesh.ImproveMesh();
         optmesh.SwapImprove2 ();
+        optmesh.ImproveMesh();
         optmesh.SwapImprove();
+        optmesh.ImproveMesh();
         optmesh.CombineImprove();
       }
+      last_num_bad_segs = num_bad_segs;
     }
 
-    if(debugparam.write_mesh_on_error)
-      mesh.Save("free_segment_not_conformed_dom_"+ToString(domain)+"_seg_"+ToString(bad_seg[0])+"_"+ToString(bad_seg[1])+".vol.gz");
-    throw Exception("Segment not resolved in volume mesh in domain " + ToString(domain)+ ", seg: " + ToString(bad_seg));
+    auto p2el = mesh.CreatePoint2ElementTable();
+    auto bad_segs = get_nonconforming(p2el);
+
+    if(bad_segs.Size() > 0) {
+      auto bad_seg = mesh[free_segs[bad_segs[0]]];
+      if(debugparam.write_mesh_on_error)
+        mesh.Save("free_segment_not_conformed_dom_"+ToString(domain)+"_seg_"+ToString(bad_seg[0])+"_"+ToString(bad_seg[1])+".vol.gz");
+      throw Exception("Segment not resolved in volume mesh in domain " + ToString(domain)+ ", seg: " + ToString(bad_seg));
+    }
   }
 
 
