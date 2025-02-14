@@ -763,6 +763,9 @@ double MeshOptimize3d :: SwapImproveEdge (
 
       if (mesh[ei].IsDeleted())
           return 0.0;
+
+      if(WrongOrientation(mesh.Points(), mesh[ei]))
+          return 0.0;
     }
 
   if(!NeedsOptimization(hasbothpoints))
