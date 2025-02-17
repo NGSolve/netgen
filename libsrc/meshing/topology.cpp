@@ -2404,13 +2404,14 @@ namespace netgen
 	  }
       }   
     SurfaceElementIndex surfel = GetFace2SurfaceElement(fnr-1);
-    if (!surfel.IsValid())
+    
+    if (surfel.IsValid())
       {
 	// GetSurfaceElementEdges (surfel, fedges);
         auto hedges = GetEdges (surfel);
         fedges.SetSize(hedges.Size());
         for (int i : Range(hedges))
-          fedges[i]=hedges[i];
+          fedges[i]=hedges[i]+1;
 	return;
       }
   }
