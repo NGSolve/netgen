@@ -485,6 +485,7 @@ namespace netgen
 
          mesh.CalcSurfacesOfNode();
          mesh.FindOpenElements(domain);
+         CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
 
          // teterrpow = 2;
          if (mesh.GetNOpenElements() != 0)
@@ -497,6 +498,7 @@ namespace netgen
             const char * optstr = "mcmstmcmstmcmstmcm";
             for (size_t j = 1; j <= strlen(optstr); j++)
             {
+               CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
                mesh.FindOpenElements();
                mesh.CalcSurfacesOfNode();
                mesh.FreeOpenElementsEnvironment(2);
