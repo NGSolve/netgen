@@ -704,6 +704,7 @@ namespace netgen
     */
 
     mesh3d.CalcSurfacesOfNode();
+    CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
 
     MeshOptimize3d optmesh(mesh3d, mp);
 
@@ -714,6 +715,7 @@ namespace netgen
     bool do_swap2 = mp.optimize3d.find('t') != string::npos;
     for([[maybe_unused]] auto i : Range(mp.optsteps3d))
       {
+        CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         auto [total_badness, max_badness, bad_els] = optmesh.UpdateBadness();
         if(bad_els==0) break;
         if(do_split) optmesh.SplitImprove();
@@ -723,6 +725,8 @@ namespace netgen
 
     // Now optimize all elements
     optmesh.SetMinBadness(0);
+
+    CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
 
     for (auto i : Range(mp.optsteps3d))
       {
@@ -736,6 +740,8 @@ namespace netgen
             multithread.percent = 100.* (double(j)/mp.optimize3d.size() + i)/mp.optsteps3d;
 	    if (multithread.terminate)
 	      break;
+
+      CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
 
 	    switch (mp.optimize3d[j])
 	      {
@@ -762,6 +768,8 @@ namespace netgen
 	// mesh3d.mglevels = 1;
 	MeshQuality3d (mesh3d);
       }
+
+    CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
   
     multithread.task = savetask;
     return MESHING3_OK;
@@ -877,12 +885,19 @@ namespace netgen
       MeshOptimize3d optmesh(mesh, dummymp, OPT_CONFORM);
 
       for ([[maybe_unused]] auto i : Range(3)) {
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         optmesh.ImproveMesh();
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         optmesh.SwapImprove2 ();
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         optmesh.ImproveMesh();
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         optmesh.SwapImprove();
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         optmesh.ImproveMesh();
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         optmesh.CombineImprove();
+        CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
       }
       last_num_bad_segs = num_bad_segs;
     }

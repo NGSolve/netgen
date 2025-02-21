@@ -97,7 +97,7 @@ namespace netgen
         return mesh_ptr;
     }
 
-    void CheckMesh (const Mesh& mesh, MESHING_STEP step)
+    void CheckMesh (const Mesh& mesh, MESHING_STEP step, const char * filename, int line)
     {
       if (step == MESHCONST_OPTVOLUME)
         {
@@ -107,12 +107,24 @@ namespace netgen
               double volume = el.Volume(mesh.Points());
               if (volume < 0)
                 {
+                  if(!have_error && line != -1)
+                    cerr << "Negative volume in mesh at " << filename << ":" << line << endl;
                   have_error = true;
-                  cout << "volume of element " << el << " is negative: " << volume << endl;
+                  cerr << "volume of element " << el << " is negative: " << volume << endl;
                 }
             }
           if (have_error)
-            throw Exception("Negative volume");
+            {
+              string s;
+              if(line != -1)
+                {
+                  s += filename;
+                  s += ":";
+                  s += ToString(line);
+                  s += "\t";
+                }
+              throw Exception(s + "Negative volume");
+            }
 
         CheckElementsAroundEdges(mesh);
         }
