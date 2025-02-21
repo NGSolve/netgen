@@ -203,19 +203,19 @@ namespace netgen
                           QuickSort(nelpts);
                           if (check_points != nelpts)
                             {
-                              cout << __FILE__ << ":" << __LINE__ << "\tFound error" << endl;
-                              cout << "i = " << i << endl;
-                              cout << "oldpi = " << oldpi << endl;
-                              cout << "newpi = " << newpi << endl;
-                              cout << "Elements: " << endl;
-                              cout << "nel " << nel << endl;
+                              cerr << __FILE__ << ":" << __LINE__ << "\tFound error" << endl;
+                              cerr << "i = " << i << endl;
+                              cerr << "oldpi = " << oldpi << endl;
+                              cerr << "newpi = " << newpi << endl;
+                              cerr << "Elements: " << endl;
+                              cerr << "nel " << nel << endl;
                               for (auto ei : hasbothpoints)
-                                cout << mesh[ei] << endl;
-                              cout << endl;
-                              cout << "check_points: " << check_points << endl;
-                              cout << "nelpts: " << nelpts << endl;
-                              cout << "hasbothpoints: " << hasbothpoints << endl;
-                              cout << "suroundpts: " << suroundpts << endl;
+                                cerr << mesh[ei] << endl;
+                              cerr << endl;
+                              cerr << "check_points: " << check_points << endl;
+                              cerr << "nelpts: " << nelpts << endl;
+                              cerr << "hasbothpoints: " << hasbothpoints << endl;
+                              cerr << "suroundpts: " << suroundpts << endl;
                               throw Exception("Found error");
                             }
                         }
@@ -223,11 +223,11 @@ namespace netgen
             }
           if (suroundpts.Last() != suroundpts[0])
             {
-              cout << __FILE__ << ":" << __LINE__ << "\tFound error" << endl;
-              cout << "hasbothpoints: " << hasbothpoints << endl;
-              cout << "suroundpts: " << suroundpts << endl;
+              cerr << __FILE__ << ":" << __LINE__ << "\tFound error" << endl;
+              cerr << "hasbothpoints: " << hasbothpoints << endl;
+              cerr << "suroundpts: " << suroundpts << endl;
               for (auto ei : hasbothpoints)
-                cout << mesh[ei] << endl;
+                cerr << mesh[ei] << endl;
               throw Exception("Found error");
             }
         }
