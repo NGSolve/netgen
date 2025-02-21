@@ -994,7 +994,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
-    
+    .def("RestrictLocalH", [](Mesh& self, const Point<3>& pnt, double maxh,
+                              int layer)
+    {
+      self.RestrictLocalH(pnt, maxh, layer);
+    }, py::arg("p"), py::arg("h"), py::arg("layer")=1)
     .def("FaceDescriptors", 
          // static_cast<Array<Element>&(Mesh::*)()> (&Mesh::FaceDescriptors),
          &Mesh::FaceDescriptors,         
