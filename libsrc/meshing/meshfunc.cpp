@@ -514,6 +514,7 @@ namespace netgen
                }	  
 
             }
+            CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
 
             mesh.FindOpenElements(domain);
             PrintMessage (3, "Call remove problem");
@@ -540,8 +541,11 @@ namespace netgen
       PrintError ("Surface mesh not consistent");
       throw NgException ("Stop meshing since surface mesh not consistent");
     }
+    CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
     RemoveIllegalElements (mesh, domain);
+    CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
     ConformToFreeSegments (mesh, domain);
+    CheckMesh(mesh, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
   }
 
   void MergeMeshes( Mesh & mesh, Array<MeshingData> & md )
