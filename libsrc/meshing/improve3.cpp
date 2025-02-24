@@ -14,6 +14,16 @@
 namespace netgen
 {
 
+bool WrongOrientation(Point<3> p1, Point<3> p2, Point<3> p3, Point<3> p4)
+{
+  Vec<3> v1 = p2 - p1;
+  Vec<3> v2 = p3 - p1;
+  Vec<3> v3 = p4 - p1;
+
+  Vec<3> n = Cross(v1, v2);
+  return n * v3 > 0;
+}
+
 static constexpr int tetedges[6][2] =
   { { 0, 1 }, { 0, 2 }, { 0, 3 },
     { 1, 2 }, { 1, 3 }, { 2, 3 } };
@@ -562,15 +572,28 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
       newel1.Touch();
       newel2.Touch();
 
+      Point<3> pel1[4];
+      Point<3> pel2[4];
       for (int l = 0; l < 4; l++)
         {
-          if (newel1[l] == pi2) newel1[l] = ptmp;
-          if (newel2[l] == pi1) newel2[l] = ptmp;
+          pel1[l] = pel2[l] = mesh[oldel[l]];
+          if (newel1[l] == pi2) {
+            newel1[l] = ptmp;
+            pel1[l] = pnew;
+          }
+          if (newel2[l] == pi1) {
+            newel2[l] = ptmp;
+            pel2[l] = pnew;
+          }
         }
 
       if (!mesh.LegalTet (oldel)) return 0.0;
       if (!mesh.LegalTet (newel1)) return 0.0;
       if (!mesh.LegalTet (newel2)) return 0.0;
+
+      if( WrongOrientation(pel1[0], pel1[1], pel1[2], pel1[3]) ||
+          WrongOrientation(pel2[0], pel2[1], pel2[2], pel2[3]) )
+        return 0.0;
     }
 
   if(bad2 >= 1e24) return 0.0;
