@@ -725,8 +725,11 @@ namespace netgen
         auto [total_badness, max_badness, bad_els] = optmesh.UpdateBadness();
         if(bad_els==0) break;
         if(do_split) optmesh.SplitImprove();
+        CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         if(do_swap) optmesh.SwapImprove();
+        CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
         if(do_swap2) optmesh.SwapImprove2();
+        CheckMesh(mesh3d, MESHCONST_OPTVOLUME, __FILE__, __LINE__);
       }
 
     // Now optimize all elements
