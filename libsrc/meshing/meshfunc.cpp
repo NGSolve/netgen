@@ -803,7 +803,6 @@ namespace netgen
     };
 
     auto split_segment = [&] (SegmentIndex segi, const auto & p2el) {
-      // Todo: handle curved segments correctly
       auto seg = mesh[segi];
       auto p_new = Center(mesh[seg[0]], mesh[seg[1]]);
       auto pi_new = mesh.AddPoint(p_new);
@@ -817,15 +816,35 @@ namespace netgen
       mesh.AddSegment(seg_new1);
 
       double lam[3];
-      ElementIndex ei = mesh.GetElementOfPoint(p_new, lam, false, domain);
-      if(ei == 0) {
+      ElementIndex ei_start = mesh.GetElementOfPoint(p_new, lam, false, domain);
+
+      if(ei_start == 0) {
         PrintMessage(1, "Could not find volume element with new point");
         return;
       }
-      ei -= 1;
+      ei_start -= 1;
+
+      double max_inside = -1.;
+      ElementIndex ei_max_inside = -1;
+
+      // search for adjacent volume element, where the new point is "most inside",
+      // i.e. the minimal barycentric coordinate is maximal
+      for(auto pi : mesh[ei_start].PNums()) {
+        for(auto ei1 : p2el[pi]) {
+          double lam[3];
+          if(!mesh.PointContainedIn3DElement(p_new, lam, ei1+1))
+            continue;
+
+          double inside = min(min(lam[0], lam[1]), min(lam[2], 1.0-lam[0]-lam[1]));
+          if(inside > max_inside) {
+            max_inside = inside;
+            ei_max_inside = ei1;
+          }
+        }
+      }
 
       // split tet into 4 new tests, with new point inside
-      auto el = mesh[ei];
+      auto el = mesh[ei_max_inside];
       if(el.GetNP() != 4) {
         PrintMessage(1, "Only tet elements are supported to split around free segments");
         return;
@@ -852,7 +871,7 @@ namespace netgen
           el_new[j] = pis[pmap[i][j]];
         mesh.AddVolumeElement(el_new);
       }
-      mesh[ei].Delete();
+      mesh[ei_max_inside].Delete();
     };
 
     size_t last_num_bad_segs = -1;
