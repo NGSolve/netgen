@@ -105,7 +105,7 @@ namespace netgen
 
         for( auto dom : {dom_in, dom_out} )
         {
-            if(dom==0)
+            if(dom<=0)
               continue;
 
             auto & sels = ret[dom-1].mesh->SurfaceElements();

@@ -1,7 +1,9 @@
+#include <algorithm>
 #include <mystdlib.h>
 #include <atomic>
 #include <regex>
 #include <set>
+#include "core/array.hpp"
 #include "meshing.hpp"
 #include "../general/gzstream.h"
 
@@ -7292,15 +7294,23 @@ namespace netgen
         int eli0, eli1;
         GetTopology().GetSurface2VolumeElement(sei+1, eli0, eli1);
         // auto [ei0,ei1] = GetTopology().GetSurface2VolumeElement(sei); // the way to go
+        if(eli0 == 0)
+          continue;
         auto & sel = (*this)[sei];
         int face = sel.GetIndex();
         int domin = VolumeElement(eli0).GetIndex();
         int domout = eli1 ? VolumeElement(eli1).GetIndex() : 0;
         if(domin < domout)
           swap(domin, domout);
+
         auto key = std::make_tuple(face, domin, domout);
         if(face_doms_2_new_face.find(key) == face_doms_2_new_face.end())
           {
+            {
+              auto & fd = FaceDescriptors()[face-1];
+              if(domout == 0 && min(fd.DomainIn(), fd.DomainOut()) > 0)
+                continue;
+            }
             if(!first_visit[face-1]) {
               nfaces++;
               FaceDescriptor new_fd = FaceDescriptors()[face-1];
@@ -7815,6 +7825,110 @@ namespace netgen
 
     nm.ComputeNVertices();
     return nm_;
+  }
+
+  void AddFacesBetweenDomains(Mesh & mesh)
+  {
+    static Timer timer("AddFacesBetweenDomains"); RegionTimer rt(timer);
+    auto & topo = mesh.GetTopology();
+    auto p2el = mesh.CreatePoint2ElementTable();
+
+    Array<size_t> els_per_domain(mesh.GetNDomains()+1);
+    els_per_domain = 0;
+
+    for(const auto & el : mesh.VolumeElements())
+      els_per_domain[el.GetIndex()]++;
+
+    std::map<tuple<int,int>, int> doms_2_new_face;
+
+    for(const auto & [facei, fd]: Enumerate(mesh.FaceDescriptors()))
+    {
+      auto dom0 = fd.DomainIn();
+      auto dom1 = fd.DomainOut();
+      if(dom0 > dom1)
+        swap(dom0, dom1);
+
+      doms_2_new_face[{dom0, dom1}] = facei+1;
+    }
+
+    for(auto dom : Range(1, 1+mesh.GetNDomains()))
+    {
+      if(els_per_domain[dom] == 0)
+        continue;
+
+      mesh.UpdateTopology();
+
+      mesh.FindOpenElements(dom);
+      for(const auto & openel : mesh.OpenElements())
+      {
+        std::set<ElementIndex> has_p1, has_p2, has_p3;
+        for (auto ei: topo.GetVertexElements(openel[0]))
+          has_p1.insert(ei);
+        for (auto ei: topo.GetVertexElements(openel[1]))
+          has_p2.insert(ei);
+        for (auto ei: topo.GetVertexElements(openel[2]))
+          has_p3.insert(ei);
+
+        std::set<ElementIndex> has_p12, has_all;
+        set_intersection(has_p1.begin(), has_p1.end(),
+                         has_p2.begin(), has_p2.end(),
+                         inserter(has_p12, has_p12.begin()));
+        set_intersection(has_p12.begin(), has_p12.end(),
+                         has_p3.begin(), has_p3.end(),
+                         inserter(has_all, has_all.begin()));
+
+        ArrayMem<ElementIndex, 5> els;
+        for(auto ei : has_all)
+          els.Append(ei);
+
+        if(els.Size() == 2 && mesh[els[0]].GetIndex() != mesh[els[1]].GetIndex())
+        {
+          auto dom0 = mesh[els[0]].GetIndex();
+          auto dom1 = mesh[els[1]].GetIndex();
+          ElementIndex ei0 = els[0];
+          if(dom0 > dom1)
+          {
+            Swap(dom0, dom1);
+            ei0 = els[1];
+          }
+
+          if(dom1 == dom)
+            continue;
+
+          if(doms_2_new_face.count({dom0, dom1}) == 0)
+          {
+            auto fd = FaceDescriptor(-1, dom0, dom1, -1);
+            auto new_si = mesh.GetNFD()+1;
+            fd.SetBCProperty(new_si);
+            auto new_face = mesh.AddFaceDescriptor(fd);
+            mesh.SetBCName(new_si - 1, "default");
+            doms_2_new_face[{dom0, dom1}] = new_face;
+          }
+          for(auto face : topo.GetFaces(ei0)) {
+            auto verts = topo.GetFaceVertices(face);
+            if(verts.Contains(openel[0]) && verts.Contains(openel[1]) && verts.Contains(openel[2])) {
+              Element2d sel(static_cast<int>(verts.Size()));
+              sel.SetIndex(doms_2_new_face[{dom0, dom1}]);
+
+              for(auto j : Range(verts.Size()))
+                sel[j] = verts[j];
+              auto normal = Cross(mesh[sel[1]]-mesh[sel[0]], mesh[sel[2]]-mesh[sel[0]]);
+              Vec<3> surf_center = Vec<3>(Center(mesh[sel[0]] , mesh[sel[1]] , mesh[sel[2]]));
+              Vec<3> center(0., 0., 0.);
+              for(auto pi : mesh[ei0].PNums())
+                center += Vec<3>(mesh[pi]);
+              center *= 1.0/mesh[ei0].GetNP();
+              if((normal * (center - surf_center)) < 0)
+                sel.Invert();
+              mesh.AddSurfaceElement(sel);
+              break;
+            }
+          }
+        }
+      }
+    }
+
+
   }
 
 }

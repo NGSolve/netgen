@@ -151,6 +151,11 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
               no_angles = false;
             }
         }
+
+      if (no_angles && faces.Size() == 2 && have_material_map)
+        if (par_new_mat[mesh.GetBCName(mesh[faces[0]].GetIndex() - 1)] != par_new_mat[mesh.GetBCName(mesh[faces[1]].GetIndex() - 1)])
+          no_angles = false;
+
       if (no_angles)
         {
           for (auto* p_seg : edgenr2seg[edgenr])

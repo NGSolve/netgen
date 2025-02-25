@@ -1035,6 +1035,7 @@ namespace netgen
     return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
   }
 
+  DLL_HEADER void AddFacesBetweenDomains(Mesh & mesh);
   
 }
 

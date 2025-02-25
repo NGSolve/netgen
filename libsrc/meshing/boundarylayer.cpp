@@ -3,6 +3,7 @@
 
 #include <regex>
 #include <set>
+#include <variant>
 
 #include "debugging.hpp"
 #include "global.hpp"
@@ -1095,6 +1096,8 @@ void BoundaryLayerTool ::SetDomInOutSides()
       if (done.Test(index))
         continue;
       done.SetBit(index);
+      if (index < nfd_old && moved_surfaces.Test(index))
+        continue;
       auto& fd = mesh.GetFaceDescriptor(index);
       if (fd.DomainIn() != -1)
         continue;
@@ -1110,7 +1113,7 @@ void BoundaryLayerTool ::SetDomInOutSides()
       if (e2)
         dom[1] = mesh.VolumeElement(e2).GetIndex();
 
-      auto& fd_old = mesh.GetFaceDescriptor(inv_si_map[index]);
+      const auto& fd_old = mesh.GetFaceDescriptor(inv_si_map[index]);
       int dom_old[2] = {fd_old.DomainIn(), fd_old.DomainOut()};
 
       for (auto i : Range(2))
@@ -1125,7 +1128,9 @@ void BoundaryLayerTool ::SetDomInOutSides()
             }
 
           // Check if the old domain adjacent to this face gets a new boundary layer domain, if so, use that number
-          int dom_new = domains.Test(dom_old[i]) ? new_mat_nrs[dom_old[i]] : dom_old[i];
+          int dom_new = dom_old[i];
+          if (domains.Test(dom_old[i]) && new_mat_nrs[dom_old[i]] > 0)
+            dom_new = new_mat_nrs[dom_old[i]];
 
           // This case is tested by test_boundarylayer.py::test_pyramids[False] -> look at the generated mesh to understand the text below :)
           // Special case check here: when growing "outside" the new face could have the same domain on both sides (before adding blayer elements).
@@ -1249,7 +1254,10 @@ void BoundaryLayerTool ::ProcessParameters()
       if (string* mat = get_if<string>(&*params.new_material); mat)
         par_new_mat = {{".*", *mat}};
       else
-        par_new_mat = *get_if<map<string, string>>(&*params.new_material);
+        {
+          par_new_mat = *get_if<map<string, string>>(&*params.new_material);
+          have_material_map = true;
+        }
     }
 
   if (params.project_boundaries.has_value())
@@ -1416,6 +1424,12 @@ void BoundaryLayerTool ::Perform()
   mesh.SetNextMajorTimeStamp();
   mesh.UpdateTopology();
   SetDomInOutSides();
+
+  if (have_material_map)
+    {
+      AddFacesBetweenDomains(mesh);
+      mesh.SplitFacesByAdjacentDomains();
+    }
 }
 
 void GenerateBoundaryLayer (Mesh& mesh, const BoundaryLayerParameters& blp)
