@@ -104,6 +104,8 @@ namespace netgen
           bool have_error = false;
           for (auto el : mesh.VolumeElements())
             {
+              if(el.GetType() != TET)
+                continue;
               double volume = el.Volume(mesh.Points());
               if (volume < 0)
                 {
