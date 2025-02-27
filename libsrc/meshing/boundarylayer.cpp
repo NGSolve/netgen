@@ -220,9 +220,8 @@ bool HaveSingleSegments (const Mesh& mesh)
 
 // duplicates segments (and sets seg.si accordingly) to have a unified data
 // structure for all geometry types
-Array<Segment> BuildSegments (Mesh& mesh)
+void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment> & segments, Array<Segment> & free_segments)
 {
-  Array<Segment> segments;
   // auto& topo = mesh.GetTopology();
 
   NgArray<SurfaceElementIndex> surf_els;
@@ -230,6 +229,16 @@ Array<Segment> BuildSegments (Mesh& mesh)
   for (auto segi : Range(mesh.LineSegments()))
     {
       auto seg = mesh[segi];
+      if (seg.domin == seg.domout && seg.domin > 0)
+        {
+          free_segments.Append(seg);
+          continue;
+        }
+      if(!have_single_segments)
+      {
+        segments.Append(seg);
+        continue;
+      }
       mesh.GetTopology().GetSegmentSurfaceElements(segi + 1, surf_els);
       for (auto seli : surf_els)
         {
@@ -250,7 +259,6 @@ Array<Segment> BuildSegments (Mesh& mesh)
           segments.Append(seg);
         }
     }
-  return segments;
 }
 
 void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Segment> new_segments)
@@ -259,11 +267,11 @@ void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Seg
 
   mesh.LineSegments().SetSize0();
 
-  auto addSegment = [&] (const auto& seg) {
-    PointIndices<2> i2(seg[0], seg[1]);
-    i2.Sort();
+  auto addSegment = [&] (auto seg) {
+    SortedPointIndices<2> i2(seg[0], seg[1]);
     if (!already_added.Used(i2))
       {
+        seg.si = seg.edgenr + 1;
         mesh.AddSegment(seg);
         already_added.Set(i2, true);
       }
@@ -292,10 +300,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
   old_segments = mesh.LineSegments();
   have_single_segments = HaveSingleSegments(mesh);
 
-  if (have_single_segments)
-    segments = BuildSegments(mesh);
-  else
-    segments = mesh.LineSegments();
+  BuildSegments(mesh, have_single_segments, segments, free_segments);
 
   np = mesh.GetNP();
   first_new_pi = IndexBASE<PointIndex>() + np;
@@ -1157,8 +1162,11 @@ void BoundaryLayerTool ::AddSegments()
 
   if (params.disable_curving)
     {
-      for (auto& seg : old_segments)
-        if (mapto[seg[0]].Size() || mapto[seg[1]].Size())
+      auto is_mapped = [&] (PointIndex pi) {
+        return pi >= mapto.Range().Next() || mapto[pi].Size() > 0;
+      };
+      for (auto& seg : segments)
+        if (is_mapped(seg[0]) || is_mapped(seg[1]))
           {
             seg.epgeominfo[0].edgenr = -1;
             seg.epgeominfo[1].edgenr = -1;
@@ -1186,6 +1194,9 @@ void BoundaryLayerTool ::AddSegments()
       for (auto& seg : new_segs)
         mesh.AddSegment(seg);
     }
+
+  for (auto& seg : free_segments)
+    mesh.AddSegment(seg);
 }
 
 void BoundaryLayerTool ::AddSurfaceElements()
@@ -1397,11 +1408,6 @@ void BoundaryLayerTool ::Perform()
     {
       auto [gw, height] = data;
       mesh[pi] += height * (*gw);
-    }
-
-  if (insert_only_volume_elements)
-    {
-      mesh.LineSegments() = old_segments;
     }
 
   auto& identifications = mesh.GetIdentifications();
