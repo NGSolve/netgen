@@ -1492,6 +1492,7 @@ py::arg("point_tolerance") = -1.)
                               bool sides_keep_surfaceindex,
                               bool disable_curving)
            {
+             throw Exception("Call syntax has changed! Pass a list of BoundaryLayerParameters to the GenerateMesh call instead: \ngeo.GenerateMesh(..., boundary_layers=[BoundaryLayerParameters(...), BoundaryLayerParameters(...), ...])");
              BoundaryLayerParameters blp;
              blp.boundary = boundary;
              blp.thickness = thickness;
