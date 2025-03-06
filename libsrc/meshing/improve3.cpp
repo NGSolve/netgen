@@ -2194,7 +2194,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 
 double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
                                         Table<ElementIndex, PointIndex> & elementsonnode,
-                                        DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool check_only )
+                                        DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool conform_segments, bool check_only )
 {
   PointIndex pi1, pi2, pi3, pi4, pi5;
   Element el21(TET), el22(TET), el31(TET), el32(TET), el33(TET);
@@ -2228,28 +2228,31 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
   }
 
 
-  bool bface = 0;
-  for (int k = 0; k < belementsonnode[pi1].Size(); k++)
-  {
-      const Element2d & bel =
-        mesh[belementsonnode[pi1][k]];
+  if(!conform_segments)
+    {
+      bool bface = 0;
+      for (int k = 0; k < belementsonnode[pi1].Size(); k++)
+      {
+          const Element2d & bel =
+            mesh[belementsonnode[pi1][k]];
 
-      bool bface1 = 1;
-      for (int l = 0; l < 3; l++)
-          if (bel[l] != pi1 && bel[l] != pi2 && bel[l] != pi3)
+          bool bface1 = 1;
+          for (int l = 0; l < 3; l++)
+              if (bel[l] != pi1 && bel[l] != pi2 && bel[l] != pi3)
+              {
+                  bface1 = 0;
+                  break;
+              }
+
+          if (bface1)
           {
-              bface1 = 0;
+              bface = 1;
               break;
           }
-
-      if (bface1)
-      {
-          bface = 1;
-          break;
       }
-  }
 
-  if (bface) return 0.0;
+      if (bface) return 0.0;
+    }
 
 
   FlatArray<ElementIndex> row = elementsonnode[pi1];
@@ -2367,11 +2370,11 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
   2 -> 3 conversion
 */
 
-void MeshOptimize3d :: SwapImprove2 ()
+void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
 {
   static Timer t("MeshOptimize3d::SwapImprove2"); RegionTimer reg(t);
 
-  if (goal == OPT_CONFORM) return;
+  if (!conform_segments && goal == OPT_CONFORM) return;
 
   mesh.BuildBoundaryEdges(false);
 
@@ -2433,7 +2436,7 @@ void MeshOptimize3d :: SwapImprove2 ()
 
             for (int j = 0; j < 4; j++)
               {
-                double d_badness = SwapImprove2( eli1, j, elementsonnode, belementsonnode, true);
+                double d_badness = SwapImprove2( eli1, j, elementsonnode, belementsonnode, conform_segments, true);
                 if(d_badness<0.0)
                     my_faces_with_improvement.Append( std::make_tuple(d_badness, eli1, j) );
               }
@@ -2449,7 +2452,7 @@ void MeshOptimize3d :: SwapImprove2 ()
     {
       if(mesh[eli].IsDeleted())
           continue;
-      if(SwapImprove2( eli, j, elementsonnode, belementsonnode, false) < 0.0)
+      if(SwapImprove2( eli, j, elementsonnode, belementsonnode, conform_segments, false) < 0.0)
           cnt++;
     }
 

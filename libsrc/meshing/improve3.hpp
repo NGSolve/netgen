@@ -45,8 +45,8 @@ public:
   void SwapImprove (const TBitArray<ElementIndex> * working_elements = NULL);
   void SwapImproveSurface (const TBitArray<ElementIndex> * working_elements = NULL,
 			   const NgArray< idmap_type* > * idmaps = NULL);
-  void SwapImprove2 ();
-  double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool check_only=false );
+  void SwapImprove2 (bool conform_segments = false);
+  double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool conform_segments, bool check_only=false );
 
   void ImproveMesh() { mesh.ImproveMesh(mp, goal); }
 

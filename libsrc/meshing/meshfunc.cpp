@@ -783,7 +783,7 @@ namespace netgen
         free_segs.Append(segi);
 
     auto get_nonconforming = [&] (const auto & p2el) {
-      Array<size_t> nonconforming;
+      Array<SegmentIndex> nonconforming;
 
       for (auto segi : free_segs) {
         auto seg = mesh[segi];
@@ -805,16 +805,6 @@ namespace netgen
     auto split_segment = [&] (SegmentIndex segi, const auto & p2el) {
       auto seg = mesh[segi];
       auto p_new = Center(mesh[seg[0]], mesh[seg[1]]);
-      auto pi_new = mesh.AddPoint(p_new);
-      auto seg_new0 = seg;
-      auto seg_new1 = seg;
-      seg_new0[1] = pi_new;
-      seg_new1[0] = pi_new;
-
-      mesh[segi][0] = PointIndex::INVALID;
-      mesh.AddSegment(seg_new0);
-      mesh.AddSegment(seg_new1);
-
       double lam[3];
       ElementIndex ei_start = mesh.GetElementOfPoint(p_new, lam, false, domain);
 
@@ -824,6 +814,9 @@ namespace netgen
       }
       ei_start -= 1;
 
+      if(mesh[ei_start].IsDeleted())
+        return;
+
       double max_inside = -1.;
       ElementIndex ei_max_inside = -1;
 
@@ -832,6 +825,9 @@ namespace netgen
       for(auto pi : mesh[ei_start].PNums()) {
         for(auto ei1 : p2el[pi]) {
           double lam[3];
+
+          if(mesh[ei1].IsDeleted())
+            return;
           if(!mesh.PointContainedIn3DElement(p_new, lam, ei1+1))
             continue;
 
@@ -843,17 +839,33 @@ namespace netgen
         }
       }
 
+      if(max_inside < 1e-4) {
+        PrintMessage(3, "Could not find volume element with new point inside");
+        return;
+      }
+
       // split tet into 4 new tests, with new point inside
       auto el = mesh[ei_max_inside];
       if(el.GetNP() != 4) {
-        PrintMessage(1, "Only tet elements are supported to split around free segments");
+        PrintMessage(3, "Only tet elements are supported to split around free segments");
         return;
       }
 
       if(el.IsDeleted()) {
-        PrintMessage(1,"Element to split is already deleted");
+        PrintMessage(3,"Element to split is already deleted");
         return;
       }
+
+      auto pi_new = mesh.AddPoint(p_new);
+      auto seg_new0 = seg;
+      auto seg_new1 = seg;
+      seg_new0[1] = pi_new;
+      seg_new1[0] = pi_new;
+
+      mesh[segi][0] = PointIndex::INVALID;
+      mesh.AddSegment(seg_new0);
+      mesh.AddSegment(seg_new1);
+
 
       int pmap[4][4] = {
         {0,1,2,4},
@@ -897,7 +909,7 @@ namespace netgen
 
       for ([[maybe_unused]] auto i : Range(3)) {
         optmesh.ImproveMesh();
-        optmesh.SwapImprove2 ();
+        optmesh.SwapImprove2(true);
         optmesh.ImproveMesh();
         optmesh.SwapImprove();
         optmesh.ImproveMesh();
@@ -910,7 +922,7 @@ namespace netgen
     auto bad_segs = get_nonconforming(p2el);
 
     if(bad_segs.Size() > 0) {
-      auto bad_seg = mesh[free_segs[bad_segs[0]]];
+      auto bad_seg = mesh[bad_segs[0]];
       if(debugparam.write_mesh_on_error)
         mesh.Save("free_segment_not_conformed_dom_"+ToString(domain)+"_seg_"+ToString(bad_seg[0])+"_"+ToString(bad_seg[1])+".vol.gz");
       throw Exception("Segment not resolved in volume mesh in domain " + ToString(domain)+ ", seg: " + ToString(bad_seg));
