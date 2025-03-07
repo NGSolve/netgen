@@ -79,7 +79,7 @@ void WriteFluentFormat (const Mesh & mesh,
   snprintf (str, size(str), "(13 (4 1 %x 2 3)(",noverbface); //hexadecimal!!!
   outfile << str << endl;
 
-  const_cast<Mesh&> (mesh).BuildElementSearchTree();
+  const_cast<Mesh&> (mesh).BuildElementSearchTree(3);
 
   for (i = 1; i <= ne; i++)
     {

@@ -148,9 +148,9 @@ namespace netgen
     int numvertices;
 
     /// geometric search tree for interval intersection search
-    unique_ptr<BoxTree<3>> elementsearchtree;
+    unique_ptr<BoxTree<3>> elementsearchtree[4] = {nullptr,nullptr,nullptr,nullptr};
     /// time stamp for tree
-    mutable int elementsearchtreets;
+    mutable size_t elementsearchtreets[4];
 
     /// element -> face, element -> edge etc ...
     MeshTopology topology;
@@ -663,7 +663,11 @@ namespace netgen
 
 
     /// build box-search tree
-    DLL_HEADER void BuildElementSearchTree ();
+    DLL_HEADER void BuildElementSearchTree (int dim);
+    BoxTree<3>* GetElementSearchTree (int dim) const
+    {
+      return elementsearchtree[dim].get();
+    }
 
     void SetPointSearchStartElement(const int el) const {ps_startelement = el;}
 
@@ -1036,6 +1040,20 @@ namespace netgen
   }
 
   DLL_HEADER void AddFacesBetweenDomains(Mesh & mesh);
+
+  int Find2dElement (const Mesh& mesh,
+                     const netgen::Point<3> & p,
+		     double * lami,
+		     const NgArray<int> * const indices,
+		     BoxTree<3> * searchtree,
+		     const bool allowindex = true);
+
+  int Find3dElement (const Mesh& mesh,
+                     const netgen::Point<3> & p,
+		     double * lami,
+		     const NgArray<int> * const indices,
+		     BoxTree<3> * searchtree,
+		     const bool allowindex = true);
   
 }
 

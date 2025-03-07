@@ -607,7 +607,7 @@ namespace netgen
       const_cast<Mesh&> (mesh).Compress();
       const_cast<Mesh&> (mesh).CalcSurfacesOfNode();
       const_cast<Mesh&> (mesh).RebuildSurfaceElementLists();
-      const_cast<Mesh&> (mesh).BuildElementSearchTree();
+      const_cast<Mesh&> (mesh).BuildElementSearchTree(3);
 
 
       int np = mesh.GetNP();
