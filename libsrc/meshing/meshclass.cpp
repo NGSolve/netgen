@@ -17,7 +17,7 @@ namespace netgen
 		     double * lami,
 		     const NgArray<int> * const indices,
 		     BoxTree<3> * searchtree,
-		     const bool allowindex = true)
+		     const bool allowindex)
   {
     int ne = 0;
     NgArray<int> locels;
@@ -79,13 +79,13 @@ namespace netgen
 		     double * lami,
 		     const NgArray<int> * const indices,
 		     BoxTree<3> * searchtree,
-		     const bool allowindex = true)
+		     const bool allowindex)
   {
     double vlam[3];
     int velement = 0;
 
     if(mesh.GetNE())
-      velement = Find3dElement(mesh, p,vlam,NULL,searchtree,allowindex);
+      velement = Find3dElement(mesh, p,vlam,NULL,searchtree ? mesh.GetElementSearchTree(3) : nullptr,allowindex);
 
     //(*testout) << "p " << p << endl;
     //(*testout) << "velement " << velement << endl;
@@ -141,7 +141,7 @@ namespace netgen
 
     NgArray<int> locels;
     // TODO: build search tree for surface elements
-    if (!mesh.GetNE() && searchtree)
+    if (searchtree)
       {
         searchtree->GetIntersecting (p, p, locels);
         ne = locels.Size();
@@ -235,8 +235,8 @@ namespace netgen
     : topology(*this), surfarea(*this)
   {
     lochfunc = {nullptr};
-    elementsearchtree = nullptr;
-    elementsearchtreets = NextTimeStamp();
+    for(auto i : Range(4))
+      elementsearchtreets[i] = NextTimeStamp();
     majortimestamp = timestamp = NextTimeStamp();
     hglob = 1e10;
     hmin = 0;
@@ -5251,122 +5251,91 @@ namespace netgen
     RebuildSurfaceElementLists();
   }
 
-  void Mesh :: BuildElementSearchTree ()
+  void Mesh :: BuildElementSearchTree (int dim)
   {
-    if (elementsearchtreets == GetTimeStamp()) return;
+    if (elementsearchtreets[dim] == GetTimeStamp())
+      return;
 
     {
       std::lock_guard<std::mutex> guard(buildsearchtree_mutex);
-      if (elementsearchtreets != GetTimeStamp())
+      // check again to see if some other thread built while waiting for lock
+      if (elementsearchtreets[dim] == GetTimeStamp()) return;
+          
+      PrintMessage (4, "Rebuild element searchtree dim " + ToString(dim));
+          
+
+      Point3d pmin, pmax;
+      GetBox(pmin, pmax);
+      Box<3> box(pmin, pmax);
+      if (dim > 1)
+        elementsearchtree[dim] = make_unique<BoxTree<3>>(box);
+      else
+        elementsearchtree[dim] = nullptr; // not yet implemented
+
+      if (dim == 3)
         {
-          NgLock lock(mutex);
-          lock.Lock();
-          
-          PrintMessage (4, "Rebuild element searchtree");
-          
-          elementsearchtree = nullptr;
-          
-          int ne = (dimension == 2) ? GetNSE() : GetNE();
-          if (dimension == 3 && !GetNE() && GetNSE())
-            ne = GetNSE();
-
-          if (ne) 
+          for(auto ei : volelements.Range())
             {
-              if (dimension == 2 || (dimension == 3 && !GetNE()) )
+              const auto& el = volelements[ei];
+              Box<3> box (Box<3>::EMPTY_BOX);
+              for (auto pi : el.PNums())
+                box.Add (points[pi]);
+
+              if(el.IsCurved() && curvedelems->IsElementCurved(ei))
                 {
-                  Box<3> box (Box<3>::EMPTY_BOX);
-                  for (SurfaceElementIndex sei = 0; sei < ne; sei++)
-                    // box.Add (points[surfelements[sei].PNums()]);
-                    for (auto pi : surfelements[sei].PNums())
-                      box.Add (points[pi]);
-                  
-                  box.Increase (1.01 * box.Diam());
-                  elementsearchtree = make_unique<BoxTree<3>> (box);
-                  
-                  for (SurfaceElementIndex sei = 0; sei < ne; sei++)
-                    {
-                      //  box.Set (points[surfelements[sei].PNums()]);
+                  // add edge/face midpoints to box
+                  auto eltype = el.GetType();
+                  const auto verts = topology.GetVertices(eltype);
 
-                      Box<3> box (Box<3>::EMPTY_BOX);
-                      for (auto pi : surfelements[sei].PNums())
-                        box.Add (points[pi]);
+                  const auto edges = FlatArray<const ELEMENT_EDGE>(topology.GetNEdges(eltype), topology.GetEdges0(eltype));
+                  for (const auto & edge: edges) {
+                    netgen::Point<3> lam = netgen::Point<3>(0.5* (verts[edge[0]] + verts[edge[1]]));
+                    auto p = netgen::Point<3>(0.0);
+                    curvedelems->CalcElementTransformation(lam,ei,p);
+                    box.Add(p);
+                  }
 
-                      auto & el = surfelements[sei];
-                      if(el.IsCurved() && curvedelems->IsSurfaceElementCurved(sei))
-                        {
-                          netgen::Point<2>  lami [4] = {netgen::Point<2>(0.5,0), netgen::Point<2>(0,0.5), netgen::Point<2>(0.5,0.5), netgen::Point<2>(1./3,1./3)};
-                          for (auto lam : lami)
-                            {
-                              netgen::Point<3> x;
-                              Mat<3,2> Jac;
-                          
-                              curvedelems->CalcSurfaceTransformation(lam,sei,x,Jac);
-                              box.Add (x);
-                            }
-                          box.Scale(1.2);
-                        }
-                      elementsearchtree -> Insert (box, sei+1);
+                  const auto faces = FlatArray<const ELEMENT_FACE>(topology.GetNFaces(eltype), topology.GetFaces0(eltype));
+                  for (const auto & face: faces) {
+                    netgen::Vec<3> lam = netgen::Vec<3>(verts[face[0]] + verts[face[1]] + verts[face[2]]);
+                    if(face[3] != -1) {
+                      lam += netgen::Vec<3>(verts[face[3]]);
+                      lam *= 0.25;
                     }
+                    else
+                      lam *= 1.0/3;
+                    auto p = netgen::Point<3>(0.0);
+                    curvedelems->CalcElementTransformation(netgen::Point<3>(lam),ei,p);
+                    box.Add(p);
+                  }
                 }
-              else
+              box.Scale(1.2);
+              elementsearchtree[dim] -> Insert (box, ei+1);
+            }
+        }
+      else if (dim == 2)
+        {
+          for (auto ei : Range(surfelements))
+            {
+              const auto& el = surfelements[ei];
+              Box<3> box (Box<3>::EMPTY_BOX);
+              for (auto pi : el.PNums())
+                box.Add (points[pi]);
+
+              if(el.IsCurved() && curvedelems->IsSurfaceElementCurved(ei))
                 {
-                  Box<3> box (Box<3>::EMPTY_BOX);
-                  for (ElementIndex ei = 0; ei < ne; ei++)
-                    // box.Add (points[volelements[ei].PNums()]);
-                    for (auto pi : volelements[ei].PNums())
-                      box.Add (points[pi]);
-                  
-                  box.Increase (1.01 * box.Diam());
-                  elementsearchtree = make_unique<BoxTree<3>> (box);
-                  
-                  for (ElementIndex ei = 0; ei < ne; ei++)
+                  netgen::Point<2>  lami [4] = {netgen::Point<2>(0.5,0), netgen::Point<2>(0,0.5), netgen::Point<2>(0.5,0.5), netgen::Point<2>(1./3,1./3)};
+                  for (auto lam : lami)
                     {
-                      // box.Set (points[volelements[ei].PNums()]);
+                      netgen::Point<3> x;
+                      Mat<3,2> Jac;
 
-                      Box<3> box (Box<3>::EMPTY_BOX);
-                      for (auto pi : volelements[ei].PNums())
-                        box.Add (points[pi]);
-
-                      auto & el = volelements[ei];
-                      if(el.IsCurved() && curvedelems->IsElementCurved(ei))
-                      {
-                        // add edge/face midpoints to box
-                        auto eltype = el.GetType();
-                        const auto verts = topology.GetVertices(eltype);
-
-
-                        const auto edges = FlatArray<const ELEMENT_EDGE>(topology.GetNEdges(eltype), topology.GetEdges0(eltype));
-                        for (const auto & edge: edges) {
-                          netgen::Point<3> lam = netgen::Point<3>(0.5* (verts[edge[0]] + verts[edge[1]]));
-                          auto p = netgen::Point<3>(0.0);
-                          curvedelems->CalcElementTransformation(lam,ei,p);
-                          box.Add(p);
-                        }
-
-                        const auto faces = FlatArray<const ELEMENT_FACE>(topology.GetNFaces(eltype), topology.GetFaces0(eltype));
-                        for (const auto & face: faces) {
-                          netgen::Vec<3> lam = netgen::Vec<3>(verts[face[0]] + verts[face[1]] + verts[face[2]]);
-                          if(face[3] != -1) {
-                            lam += netgen::Vec<3>(verts[face[3]]);
-                            lam *= 0.25;
-                          }
-                          else
-                            lam *= 1.0/3;
-                          auto p = netgen::Point<3>(0.0);
-                          curvedelems->CalcElementTransformation(netgen::Point<3>(lam),ei,p);
-                          box.Add(p);
-                        }
-
-
-                        box.Scale(1.2);
-                      }
-
-
-                      elementsearchtree -> Insert (box, ei+1);
+                      curvedelems->CalcSurfaceTransformation(lam,ei,x,Jac);
+                      box.Add (x);
                     }
+                  box.Scale(1.2);
                 }
-              
-              elementsearchtreets = GetTimeStamp();
+              elementsearchtree[dim] -> Insert (box, ei+1);
             }
         }
     }
@@ -6073,13 +6042,17 @@ namespace netgen
     	 (dimension == 3 && !GetNE() && !GetNSE()) )
       return -1;
 
-    if (build_searchtree)
-      const_cast<Mesh&>(*this).BuildElementSearchTree ();
 
     if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
-      return Find2dElement(*this, p, lami, indices, elementsearchtree.get(), allowindex);
+      {
+        if (build_searchtree)
+          const_cast<Mesh&>(*this).BuildElementSearchTree (2);
+        return Find2dElement(*this, p, lami, indices, elementsearchtree[2].get(), allowindex);
+      }
 
-    return Find3dElement(*this, p, lami, indices, elementsearchtree.get(), allowindex);
+    if (build_searchtree)
+      const_cast<Mesh&>(*this).BuildElementSearchTree (3);
+    return Find3dElement(*this, p, lami, indices, elementsearchtree[3].get(), allowindex);
   }
 
 
@@ -6109,13 +6082,14 @@ namespace netgen
                                         bool build_searchtree,
                                         const bool allowindex) const
   {
-    if (!GetNE() && build_searchtree)
-      const_cast<Mesh&>(*this).BuildElementSearchTree ();
-
     if (dimension == 2)
-        return Find1dElement(*this, p, lami, indices, elementsearchtree.get(), allowindex);
+      return Find1dElement(*this, p, lami, indices, nullptr, allowindex);
     else
-        return Find2dElement(*this, p, lami, indices, elementsearchtree.get(), allowindex);
+      {
+        if (build_searchtree)
+          const_cast<Mesh&>(*this).BuildElementSearchTree(2);
+        return Find2dElement(*this, p, lami, indices, elementsearchtree[2].get(), allowindex);
+      }
     return 0;
   }
 
@@ -6123,7 +6097,7 @@ namespace netgen
   void Mesh::GetIntersectingVolEls(const Point3d& p1, const Point3d& p2, 
                                    NgArray<int> & locels) const
   {
-    elementsearchtree->GetIntersecting (p1, p2, locels);
+    elementsearchtree[3]->GetIntersecting (p1, p2, locels);
   }
 
   void Mesh :: SplitIntoParts()

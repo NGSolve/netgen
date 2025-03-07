@@ -1011,68 +1011,19 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    switch (mesh->GetDimension())
+    Point<3> p(hp[0], 0,0);
+    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
       {
-      case 1:
-        {
-          Point<3> p(hp[0], 0,0);
-          for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
-            {
-              auto & seg = (*mesh)[si];
-              Point<3> p1 = (*mesh)[seg[0]];
-              Point<3> p2 = (*mesh)[seg[1]];
-              double lam = (p(0)-p1(0)) / (p2(0)-p1(0));
-              if (lam >= -1e-10 && lam <= 1+1e-10)
-                {
-                  lami[0] = 1-lam;
-                  return si;
-                }
-            }
-        }
-        break;
-      case 2:
-        {
-          Point<3> p(hp[0], hp[1],0);
-          try
-            {
-              auto ind = mesh->GetSurfaceElementOfPoint(p, lami, nullptr,
-                                                        build_searchtree);
-              return ind - 1;
-            }
-          catch(const NgException & e) // quads not implemented curved yet
-            {
-          for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
-            {
-              auto & seg = (*mesh)[si];
-              Point<3> p1 = (*mesh)[seg[0]];
-              Point<3> p2 = (*mesh)[seg[1]];
-              double lam;
-              double r;
-              if (fabs(p2[0]-p1[0]) >= fabs(p2[1]-p1[1]))
-                {
-                  lam = (p[0]-p1[0])/(p2[0]-p1[0]);
-                  r = p[1] - p1[1] - lam*(p2[1]-p1[1]);
-                }
-              else
-                {
-                  lam = (p[1]-p1[1])/(p2[1]-p1[1]);
-                  r = p[0] - p1[0] - lam*(p2[0]-p1[0]);
-                }
-              if ( lam >= -1e-10 && lam <= 1+1e-10 && fabs(r) <= 1e-10 )
-                {
-                  lami[0] = 1-lam;
-                  return si;
-                }
-            }
-            }
-        }
-        break;
-      case 3:
-      default:
-        throw Exception("FindElementOfPoint<1> only implemented for mesh-dimension 1 and 2!");
-        break;
+        auto & seg = (*mesh)[si];
+        Point<3> p1 = (*mesh)[seg[0]];
+        Point<3> p2 = (*mesh)[seg[1]];
+        double lam = (p(0)-p1(0)) / (p2(0)-p1(0));
+        if (lam >= -1e-10 && lam <= 1+1e-10)
+          {
+            lami[0] = 1-lam;
+            return si;
+          }
       }
- 
     return -1;
   }
 
@@ -1083,37 +1034,13 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    NgArray<int> dummy(numind);
-    for (int i = 0; i < numind; i++) dummy[i] = indices[i]+1;
-    
-    double lam3[3];
-    int ind;
-
-    if (mesh->GetDimension() == 2)
-      {
-        Point<3> p2d(p[0], p[1], 0);
-        ind = mesh->GetElementOfPoint(p2d, lam3, &dummy, build_searchtree);
-      }
-    else
-      {
-        Point3d p3d(p[0], p[1], p[2]);
-        ind = mesh->GetSurfaceElementOfPoint(p3d, lam3, &dummy, build_searchtree);
-      }
-    
-    if (ind > 0)
-      {
-        if(mesh->SurfaceElement(ind).GetType()==QUAD || mesh->SurfaceElement(ind).GetType()==TRIG6)
-          {
-            lami[0] = lam3[0];
-            lami[1] = lam3[1];
-          }
-        else 
-          {
-            lami[0] = 1-lam3[0]-lam3[1];
-            lami[1] = lam3[0];
-          }
-      }
-    return ind-1;
+    if(build_searchtree)
+      mesh->BuildElementSearchTree(2);
+    Point<3> pp(p[0], p[1], 0.);
+    if(mesh->GetDimension() == 3)
+      pp[2] = p[2];
+    NgArray<int> ind(numind, indices);
+    return Find2dElement(*mesh, pp, lami, &ind, mesh->GetElementSearchTree(2));
   }
 
 
@@ -1124,13 +1051,11 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    NgArray<int> dummy(numind);
-    for (int i = 0; i < numind; i++) dummy[i] = indices[i]+1;
-    
-    Point<3> p3d(p[0], p[1], p[2]);
-    int ind = 
-      mesh->GetElementOfPoint(p3d, lami, &dummy, build_searchtree);
-    return ind-1;
+    if(build_searchtree)
+      mesh->BuildElementSearchTree(3);
+    Point<3> pp(p[0], p[1], p[2]);
+    NgArray<int> ind(numind, indices);
+    return Find3dElement(*mesh, pp, lami, &ind, mesh->GetElementSearchTree(3));
   }
 
   void Ngx_Mesh :: Curve (int order)

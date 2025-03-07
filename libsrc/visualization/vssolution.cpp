@@ -841,7 +841,7 @@ namespace netgen
         if (vispar.clipping.enable && clipsolution == 2)      
           {
             mesh->Mutex().unlock();
-            mesh->BuildElementSearchTree();
+            mesh->BuildElementSearchTree(3);
             mesh->Mutex().lock();
           }
 

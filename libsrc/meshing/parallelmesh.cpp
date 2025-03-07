@@ -966,7 +966,7 @@ namespace netgen
     self.ident = make_unique<Identifications> (self);
     self.topology = MeshTopology(*this);
     self.topology.Update();
-    self.BuildElementSearchTree();
+    self.BuildElementSearchTree(3);
     
     // const_cast<Mesh&>(*this).DeleteMesh();
 
