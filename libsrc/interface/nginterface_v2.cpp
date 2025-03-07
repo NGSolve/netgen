@@ -1011,14 +1011,23 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    Point<3> p(hp[0], 0,0);
+    Point<3> p(hp[0], 0., 0.);
+    if(mesh->GetDimension() > 1)
+      p[1] = hp[1];
+    if(mesh->GetDimension() == 3)
+      p[2] = hp[2];
+
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
       {
         auto & seg = (*mesh)[si];
         Point<3> p1 = (*mesh)[seg[0]];
         Point<3> p2 = (*mesh)[seg[1]];
-        double lam = (p(0)-p1(0)) / (p2(0)-p1(0));
-        if (lam >= -1e-10 && lam <= 1+1e-10)
+        Vec<3> v1 = p2-p1;
+        Vec<3> v2 = p-p1;
+        double lam = v1*v2 / v1.Length2();
+        double lam2 = (v2 - lam * v1).Length() / v1.Length();
+
+        if (lam >= -1e-10 && lam <= 1+1e-10 && lam2 < 1e-10)
           {
             lami[0] = 1-lam;
             return si;

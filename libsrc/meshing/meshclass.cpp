@@ -85,7 +85,11 @@ namespace netgen
     int velement = 0;
 
     if(mesh.GetNE())
-      velement = Find3dElement(mesh, p,vlam,NULL,searchtree ? mesh.GetElementSearchTree(3) : nullptr,allowindex);
+      {
+        if(searchtree)
+          const_cast<Mesh&>(mesh).BuildElementSearchTree(3);
+        velement = Find3dElement(mesh, p,vlam,NULL,searchtree ? mesh.GetElementSearchTree(3) : nullptr,allowindex);
+      }
 
     //(*testout) << "p " << p << endl;
     //(*testout) << "velement " << velement << endl;
