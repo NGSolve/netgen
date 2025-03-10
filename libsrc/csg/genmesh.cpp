@@ -718,7 +718,7 @@ namespace netgen
 
 	    mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
             for (auto mspnt : mparam.meshsize_points)
-              mesh -> RestrictLocalH (mspnt.pnt, mspnt.h);
+              mesh -> RestrictLocalH (mspnt.pnt, mspnt.h, mspnt.layer);
 	  }
 
 	spoints.SetSize(0);

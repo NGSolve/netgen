@@ -1683,25 +1683,25 @@ py::arg("point_tolerance") = -1.)
                     return mp;
                   }), py::arg("mp")=nullptr, meshingparameter_description.c_str())
     .def("__str__", &ToString<MP>)
-    .def("RestrictH", [](MP & mp, double x, double y, double z, double h)
+    .def("RestrictH", [](MP & mp, double x, double y, double z, double h, int layer)
           {
-            mp.meshsize_points.Append ( MeshingParameters::MeshSizePoint(Point<3> (x,y,z), h));
-          }, py::arg("x"), py::arg("y"), py::arg("z"), py::arg("h")
+            mp.meshsize_points.Append ( MeshingParameters::MeshSizePoint(Point<3> (x,y,z), h, layer));
+          }, py::arg("x"), py::arg("y"), py::arg("z"), py::arg("h"), py::arg("layer")=1
          )
-    .def("RestrictH", [](MP & mp, const Point<3>& p, double h)
+    .def("RestrictH", [](MP & mp, const Point<3>& p, double h, int layer)
     {
-      mp.meshsize_points.Append ({p, h});
-    }, py::arg("p"), py::arg("h"))
+      mp.meshsize_points.Append ({p, h, layer});
+    }, py::arg("p"), py::arg("h"), py::arg("layer")=1)
     .def("RestrictHLine", [](MP& mp, const Point<3>& p1, const Point<3>& p2,
-                             double maxh)
+                             double maxh, int layer)
     {
       int steps = int(Dist(p1, p2) / maxh) + 2;
       auto v = p2 - p1;
       for (int i = 0; i <= steps; i++)
         {
-          mp.meshsize_points.Append({p1 + double(i)/steps * v, maxh});
+          mp.meshsize_points.Append({p1 + double(i)/steps * v, maxh, layer});
         }
-    }, py::arg("p1"), py::arg("p2"), py::arg("maxh"))
+    }, py::arg("p1"), py::arg("p2"), py::arg("maxh"), py::arg("layer")=1)
     ;
 
   m.def("SetTestoutFile", FunctionPointer ([] (const string & filename)

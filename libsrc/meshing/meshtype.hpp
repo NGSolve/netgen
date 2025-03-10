@@ -1635,7 +1635,7 @@ namespace netgen
       Point<3> pnt;
       double h;
       int layer = 1;
-      MeshSizePoint (Point<3> _pnt, double _h) : pnt(_pnt), h(_h) { ; }
+      MeshSizePoint (Point<3> pnt_, double h_, int layer_ = 1) : pnt(pnt_), h(h_), layer(layer_) { ; }
       MeshSizePoint () = default;
       MeshSizePoint (const MeshSizePoint &) = default;
       MeshSizePoint (MeshSizePoint &&) = default;

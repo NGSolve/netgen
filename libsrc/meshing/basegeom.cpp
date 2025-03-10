@@ -474,7 +474,7 @@ namespace netgen
       }
 
     for(const auto& mspnt : mparam.meshsize_points)
-      mesh.RestrictLocalH(mspnt.pnt, mspnt.h);
+      mesh.RestrictLocalH(mspnt.pnt, mspnt.h, mspnt.layer);
 
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
