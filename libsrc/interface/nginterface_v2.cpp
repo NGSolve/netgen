@@ -1043,13 +1043,26 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    if(build_searchtree)
-      mesh->BuildElementSearchTree(2);
     Point<3> pp(p[0], p[1], 0.);
     if(mesh->GetDimension() == 3)
       pp[2] = p[2];
-    NgArray<int> ind(numind, indices);
-    return Find2dElement(*mesh, pp, lami, &ind, mesh->GetElementSearchTree(2));
+    FlatArray<int> ind(numind, indices);
+    double lam3[3];
+    auto elnr = mesh->GetSurfaceElementOfPoint(pp, lam3, ind, build_searchtree);
+    if(elnr.IsValid())
+      {
+        if((*mesh)[elnr].GetType() == QUAD || (*mesh)[elnr].GetType() == TRIG6)
+          {
+            lami[0] = lam3[0];
+            lami[1] = lam3[1];
+          }
+        else
+          {
+            lami[0] = 1-lam3[0]-lam3[1];
+            lami[1] = lam3[0];
+          }
+      }
+    return elnr;
   }
 
 
@@ -1060,11 +1073,9 @@ namespace netgen
    int * const indices, int numind) const
 
   {
-    if(build_searchtree)
-      mesh->BuildElementSearchTree(3);
     Point<3> pp(p[0], p[1], p[2]);
-    NgArray<int> ind(numind, indices);
-    return Find3dElement(*mesh, pp, lami, &ind, mesh->GetElementSearchTree(3));
+    FlatArray<int> ind(numind, indices);
+    return mesh->GetElementOfPoint(pp, lami, ind, build_searchtree);
   }
 
   void Ngx_Mesh :: Curve (int order)
