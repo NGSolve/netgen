@@ -83,7 +83,6 @@ namespace netgen
                  bool allowindex)
   {
     double vlam[3];
-    cout << "find2delement " << p << endl;
     ElementIndex velement = ElementIndex::INVALID;
 
     if(mesh.GetNE())
@@ -91,7 +90,6 @@ namespace netgen
         if(searchtree)
           const_cast<Mesh&>(mesh).BuildElementSearchTree(3);
         velement = Find3dElement(mesh, p,vlam, nullopt,searchtree ? mesh.GetElementSearchTree() : nullptr,allowindex);
-        cout << "found volume element = " << velement << endl;
       }
 
     //(*testout) << "p " << p << endl;
@@ -106,8 +104,6 @@ namespace netgen
       for(auto face : fnrs)
         faces.Append(topology.GetFace2SurfaceElement(face));
 
-      cout << "faces = " << faces << endl;
-
       for(int i=0; i<faces.Size(); i++)
         {
           if(!faces[i].IsValid())
@@ -117,13 +113,10 @@ namespace netgen
             continue;
 
           auto & el = mesh[velement];
-          cout << "eltype = " << el.GetType() << endl;
           if (el.GetType() == TET)
           {
             double lam4[4] = { vlam[0], vlam[1], vlam[2], 1.0-vlam[0]-vlam[1]-vlam[2] };
-            cout << "lam4 = " << lam4[0] << ", " << lam4[1] << ", " << lam4[2] << ", " << lam4[3] << endl;
             double face_lam = lam4[i];
-            cout << "face lam = " << face_lam << endl;
             if(face_lam < 1e-5)
             {
               // found volume point very close to a face -> use barycentric coordinates directly
@@ -132,16 +125,12 @@ namespace netgen
                 for(auto k : Range(4))
                   if(sel[j] == el[k])
                     lami[j-1] = lam4[k]/(1.0-face_lam);
-              cout << "found close tet face = " << faces[i] << ", sel = " << sel << endl;
               return SurfaceElementIndex(faces[i]);
             }
           }
 
           if(mesh.PointContainedIn2DElement(p,lami,faces[i],true))
-            {
-              cout << "apoint contained in 2d el = " << faces[i] <<  ", sel = " << sel << endl;
-              return faces[i];
-            }
+            return faces[i];
         }
     }
 
@@ -172,11 +161,7 @@ namespace netgen
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
         if(mesh.PointContainedIn2DElement(p,lami,ii))
-          {
-            cout << "point contained in 2d el = " << ii <<  ", sel = " << mesh[ii] << endl;
-            return ii;
-          }
-
+          return ii;
       }
     return 0;
   }
