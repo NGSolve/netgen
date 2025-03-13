@@ -2667,6 +2667,8 @@ namespace netgen
                   for (int i=first; i<next; i++)
                     {
                       double val;
+                      if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex(i)]))
+                        continue;
                       bool considerElem = GetValue (sol, i, 0.333, 0.333, 0.333, comp, val);
                       if (considerElem)
                         {
@@ -2698,6 +2700,8 @@ namespace netgen
               // for (int i = 0; i < nse; i++)
               for (SurfaceElementIndex i : mesh->SurfaceElements().Range())
                 {
+                  if(!SurfaceElementActive(sol, *mesh, (*mesh)[i]))
+                    continue;
                   ELEMENT_TYPE type = (*mesh)[i].GetType();
                   double val;
                   bool considerElem = (type == QUAD) 
@@ -4723,7 +4727,7 @@ namespace netgen
 
 
   bool VisualSceneSolution ::
-  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el)
+  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el) const
   {
     if(data == nullptr) return true;
     bool is_active = true;
@@ -4749,7 +4753,7 @@ namespace netgen
   }
 
   bool VisualSceneSolution ::
-  VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & el)
+  VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & el) const
   {
     bool is_active = true;
     if(data->draw_volumes)

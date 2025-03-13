@@ -253,8 +253,8 @@ private:
   void DrawCone (const Point<3> & p1, const Point<3> & p2, double r);
   void DrawCylinder (const Point<3> & p1, const Point<3> & p2, double r);
 
-  bool SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & sei);
-  bool VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & ei);
+  bool SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & sei) const;
+  bool VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & ei) const;
 
   // Get Function Value, local coordinates lam1, lam2, lam3, 
   bool GetValue (const SolData * data, ElementIndex elnr, 
