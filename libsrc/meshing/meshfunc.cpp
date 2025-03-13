@@ -808,17 +808,16 @@ namespace netgen
       double lam[3];
       ElementIndex ei_start = mesh.GetElementOfPoint(p_new, lam, false, domain);
 
-      if(ei_start == 0) {
+      if(!ei_start.IsValid()) {
         PrintMessage(1, "Could not find volume element with new point");
         return;
       }
-      ei_start -= 1;
 
       if(mesh[ei_start].IsDeleted())
         return;
 
       double max_inside = -1.;
-      ElementIndex ei_max_inside = -1;
+      ElementIndex ei_max_inside = ElementIndex::INVALID;
 
       // search for adjacent volume element, where the new point is "most inside",
       // i.e. the minimal barycentric coordinate is maximal
@@ -828,7 +827,7 @@ namespace netgen
 
           if(mesh[ei1].IsDeleted())
             return;
-          if(!mesh.PointContainedIn3DElement(p_new, lam, ei1+1))
+          if(!mesh.PointContainedIn3DElement(p_new, lam, ei1))
             continue;
 
           double inside = min(min(lam[0], lam[1]), min(lam[2], 1.0-lam[0]-lam[1]));

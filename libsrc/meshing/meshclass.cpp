@@ -12,15 +12,15 @@
 
 namespace netgen
 {
-  int Find3dElement (const Mesh& mesh,
-                     const netgen::Point<3> & p,
-		     double * lami,
-		     const NgArray<int> * const indices,
-		     BoxTree<3> * searchtree,
-		     const bool allowindex)
+  ElementIndex Find3dElement (const Mesh& mesh,
+                              const netgen::Point<3> & p,
+                              double * lami,
+                              optional<FlatArray<int>> indices,
+                              BoxTree<3, ElementIndex> * searchtree,
+                              const bool allowindex)
   {
     int ne = 0;
-    NgArray<int> locels;
+    Array<ElementIndex> locels;
     if (searchtree)
       {
         searchtree->GetIntersecting (p, p, locels);
@@ -29,100 +29,101 @@ namespace netgen
     else
       ne = mesh.GetNE();
 
-    for (int i = 1; i <= ne; i++)
+    for (auto i : Range(ne))
       {
-        int ii;
+        ElementIndex ei;
 
         if (searchtree)
-          ii = locels.Get(i);
+          ei = locels[i];
         else
-          ii = i;
+          ei = i;
 
-        if(indices != NULL && indices->Size() > 0)
+        if(indices && indices->Size() > 0)
           {
-            bool contained = indices->Contains(mesh.VolumeElement(ii).GetIndex());
+            bool contained = indices->Contains(mesh[ei].GetIndex());
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
 
-        if(mesh.PointContainedIn3DElement(p,lami,ii))
-            return ii;
+        if(mesh.PointContainedIn3DElement(p,lami,ei))
+          return ei;
       }
 
     // Not found, try uncurved variant:
-    for (int i = 1; i <= ne; i++)
+    for (auto i : Range(ne))
       {
-        int ii;
+        ElementIndex ei;
 
         if (searchtree)
-          ii = locels.Get(i);
+          ei = locels[i];
         else
-          ii = i;
+          ei = i;
 
-        if(indices != NULL && indices->Size() > 0)
+        if(indices && indices->Size() > 0)
           {
-            bool contained = indices->Contains(mesh.VolumeElement(ii).GetIndex());
+            bool contained = indices->Contains(mesh[ei].GetIndex());
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
 
 
-        if(mesh.PointContainedIn3DElementOld(p,lami,ii))
+        if(mesh.PointContainedIn3DElementOld(p,lami,ei))
           {
             (*testout) << "WARNING: found element of point " << p <<" only for uncurved mesh" << endl;
-            return ii;
+            return ei;
           }
       }
-    return 0;
+    return ElementIndex::INVALID;
   }
 
-  int Find2dElement (const Mesh& mesh,
-                     const netgen::Point<3> & p,
-		     double * lami,
-		     const NgArray<int> * const indices,
-		     BoxTree<3> * searchtree,
-		     const bool allowindex)
+  SurfaceElementIndex
+  Find2dElement (const Mesh& mesh,
+                 const netgen::Point<3> & p,
+                 double * lami,
+                 std::optional<FlatArray<int>> indices,
+                 BoxTree<3, SurfaceElementIndex> * searchtree,
+                 bool allowindex)
   {
     double vlam[3];
-    int velement = 0;
+    cout << "find2delement " << p << endl;
+    ElementIndex velement = ElementIndex::INVALID;
 
     if(mesh.GetNE())
       {
         if(searchtree)
           const_cast<Mesh&>(mesh).BuildElementSearchTree(3);
-        velement = Find3dElement(mesh, p,vlam,NULL,searchtree ? mesh.GetElementSearchTree(3) : nullptr,allowindex);
+        velement = Find3dElement(mesh, p,vlam, nullopt,searchtree ? mesh.GetElementSearchTree() : nullptr,allowindex);
+        cout << "found volume element = " << velement << endl;
       }
 
     //(*testout) << "p " << p << endl;
     //(*testout) << "velement " << velement << endl;
 
     // first try to find a volume element containing p and project to face
-    if(velement!=0)
+    if(velement.IsValid())
     {
       auto & topology = mesh.GetTopology();
-      // NgArray<int> faces;
-      // topology.GetElementFaces(velement,faces);
-      auto faces = Array<int> (topology.GetFaces(ElementIndex(velement-1)));
+      const auto & fnrs = topology.GetFaces(velement);
+      auto faces = ArrayMem<SurfaceElementIndex,4>();
+      for(auto face : fnrs)
+        faces.Append(topology.GetFace2SurfaceElement(face));
 
-      //(*testout) << "faces " << faces << endl;
-
-      for(int i=0; i<faces.Size(); i++)
-        faces[i] = topology.GetFace2SurfaceElement(faces[i])+1;
-
-      //(*testout) << "surfel " << faces << endl;
+      cout << "faces = " << faces << endl;
 
       for(int i=0; i<faces.Size(); i++)
         {
-          if(faces[i] == 0)
+          if(!faces[i].IsValid())
             continue;
           auto sel = mesh.SurfaceElement(faces[i]);
-          if(indices && indices->Size() != 0 && !indices->Contains(sel.GetIndex()))
+          if(indices && indices->Size() > 0 && !indices->Contains(sel.GetIndex()))
             continue;
 
-          auto & el = mesh.VolumeElement(velement);
-
+          auto & el = mesh[velement];
+          cout << "eltype = " << el.GetType() << endl;
           if (el.GetType() == TET)
           {
             double lam4[4] = { vlam[0], vlam[1], vlam[2], 1.0-vlam[0]-vlam[1]-vlam[2] };
+            cout << "lam4 = " << lam4[0] << ", " << lam4[1] << ", " << lam4[2] << ", " << lam4[3] << endl;
             double face_lam = lam4[i];
+            cout << "face lam = " << face_lam << endl;
             if(face_lam < 1e-5)
             {
               // found volume point very close to a face -> use barycentric coordinates directly
@@ -131,20 +132,23 @@ namespace netgen
                 for(auto k : Range(4))
                   if(sel[j] == el[k])
                     lami[j-1] = lam4[k]/(1.0-face_lam);
-              return faces[i];
+              cout << "found close tet face = " << faces[i] << ", sel = " << sel << endl;
+              return SurfaceElementIndex(faces[i]);
             }
           }
 
           if(mesh.PointContainedIn2DElement(p,lami,faces[i],true))
-            return faces[i];
+            {
+              cout << "apoint contained in 2d el = " << faces[i] <<  ", sel = " << sel << endl;
+              return faces[i];
+            }
         }
     }
 
     // Did't find any matching face of a volume element, search 2d elements directly
     int ne;
 
-    NgArray<int> locels;
-    // TODO: build search tree for surface elements
+    Array<SurfaceElementIndex> locels;
     if (searchtree)
       {
         searchtree->GetIntersecting (p, p, locels);
@@ -153,37 +157,42 @@ namespace netgen
     else
       ne = mesh.GetNSE();
 
-    for (int i = 1; i <= ne; i++)
+    for (auto i : Range(ne))
       {
-        int ii;
+        SurfaceElementIndex ii;
 
         if (locels.Size())
-          ii = locels.Get(i);
+          ii = locels[i];
         else
           ii = i;
 
-        if(indices != NULL && indices->Size() > 0)
+        if(indices && indices->Size() > 0)
           {
-            bool contained = indices->Contains(mesh.SurfaceElement(ii).GetIndex());
+            bool contained = indices->Contains(mesh[ii].GetIndex());
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
-
-        if(mesh.PointContainedIn2DElement(p,lami,ii)) return ii;
+        if(mesh.PointContainedIn2DElement(p,lami,ii))
+          {
+            cout << "point contained in 2d el = " << ii <<  ", sel = " << mesh[ii] << endl;
+            return ii;
+          }
 
       }
     return 0;
   }
 
-  int Find1dElement (const Mesh& mesh,
-                     const netgen::Point<3> & p,
-		     double * lami,
-		     const NgArray<int> * const indices,
-		     BoxTree<3> * searchtree,
-		     const bool allowindex = true)
+  SegmentIndex Find1dElement (const Mesh& mesh,
+                              const netgen::Point<3> & p,
+                              double * lami,
+                              std::optional<FlatArray<int>> indices,
+                              BoxTree<3> * searchtree,
+                              const bool allowindex = true)
   {
     double vlam[3];
-    int velement = Find2dElement(mesh, p, vlam, NULL, searchtree, allowindex);
-    if(velement == 0)
+    if(searchtree)
+      const_cast<Mesh&>(mesh).BuildElementSearchTree(2);
+    auto velement = Find2dElement(mesh, p, vlam, nullopt, searchtree ? mesh.GetSurfaceElementSearchTree() : nullptr, allowindex);
+    if(!velement.IsValid())
       return 0;
 
     vlam[2] = 1.-vlam[0] - vlam[1];
@@ -5257,6 +5266,8 @@ namespace netgen
 
   void Mesh :: BuildElementSearchTree (int dim)
   {
+    if(dim < 2)
+      return;
     if (elementsearchtreets[dim] == GetTimeStamp())
       return;
 
@@ -5273,10 +5284,10 @@ namespace netgen
       Point3d pmin, pmax;
       GetBox(pmin, pmax);
       Box<3> box(pmin, pmax);
-      if (dim > 1)
-        elementsearchtree[dim] = make_unique<BoxTree<3>>(box);
+      if (dim == 3)
+        elementsearchtree_vol = make_unique<BoxTree<3, ElementIndex>>(box);
       else
-        elementsearchtree[dim] = nullptr; // not yet implemented
+        elementsearchtree_surf = make_unique<BoxTree<3, SurfaceElementIndex>>(box);
 
       if (dim == 3)
         {
@@ -5316,7 +5327,7 @@ namespace netgen
                   }
                 }
               box.Scale(1.2);
-              elementsearchtree[dim] -> Insert (box, ei+1);
+              elementsearchtree_vol -> Insert (box, ei);
             }
         }
       else if (dim == 2)
@@ -5341,7 +5352,7 @@ namespace netgen
                     }
                   box.Scale(1.2);
                 }
-              elementsearchtree[dim] -> Insert (box, ei+1);
+              elementsearchtree_surf -> Insert (box, ei);
             }
         }
     }
@@ -5381,7 +5392,7 @@ namespace netgen
 
   bool Mesh :: PointContainedIn2DElement(const Point3d & p,
                                          double lami[3],
-                                         const int element,
+                                         SurfaceElementIndex ei,
                                          bool consider3D) const
   {
     Vec3d col1, col2, col3;
@@ -5392,9 +5403,9 @@ namespace netgen
 
     
     //SZ 
-    if(SurfaceElement(element).GetType()==QUAD)
+    if(surfelements[ei].GetType()==QUAD)
       {
-        const Element2d & el = SurfaceElement(element); 
+        const Element2d & el = surfelements[ei];
 
         const Point3d & p1 = Point(el.PNum(1)); 
         const Point3d & p2 = Point(el.PNum(2));
@@ -5413,7 +5424,7 @@ namespace netgen
           int i = 0;
           while(delta > 1e-16 && i < maxits)
             {
-              curvedelems->CalcSurfaceTransformation(lam,element-1,x,Jac);
+              curvedelems->CalcSurfaceTransformation(lam,ei,x,Jac);
               rhs = p - x;
               Jac.Solve(rhs,deltalam);
               lam += deltalam;
@@ -5742,7 +5753,7 @@ namespace netgen
       {
         //	  SurfaceElement(element).GetTets (loctets);
         loctrigs.SetSize(1);
-        loctrigs.Elem(1) = SurfaceElement(element);
+        loctrigs.Elem(1) = surfelements[ei];
 
 
 
@@ -5777,11 +5788,11 @@ namespace netgen
             //(*testout) << "col1 " << col1 << " col2 " << col2 << " col3 " << col3 << " rhs " << rhs << endl;
             //(*testout) << "sol " << sol << endl;
 
-            if (SurfaceElement(element).GetType() ==TRIG6 || curvedelems->IsSurfaceElementCurved(element-1))
+            if (surfelements[ei].GetType() ==TRIG6 || curvedelems->IsSurfaceElementCurved(ei))
               {
                 // netgen::Point<2> lam(1./3,1./3);
                 netgen::Point<2> lam(sol.X(), sol.Y());
-                if(SurfaceElement(element).GetType() != TRIG6)
+                if(surfelements[ei].GetType() != TRIG6)
                   {
                     lam[0] = 1-sol.X()-sol.Y();
                     lam[1] = sol.X();
@@ -5800,7 +5811,7 @@ namespace netgen
                 const int maxits = 30;
                 while(delta > 1e-16 && i<maxits)
                   {
-                    curvedelems->CalcSurfaceTransformation(lam,element-1,x,Jac);
+                    curvedelems->CalcSurfaceTransformation(lam,ei,x,Jac);
                     rhs = p-x;
                     Jac.Solve(rhs,deltalam);
                     
@@ -5819,7 +5830,7 @@ namespace netgen
                 sol.X() = lam(0);
                 sol.Y() = lam(1);
 
-                if (SurfaceElement(element).GetType() !=TRIG6 )
+                if (surfelements[ei].GetType() !=TRIG6 )
                   {
                     sol.Z() = sol.X();
                     sol.X() = sol.Y();
@@ -5851,7 +5862,7 @@ namespace netgen
 
   bool Mesh :: PointContainedIn3DElement(const Point3d & p,
                                          double lami[3],
-                                         const int element) const
+                                         ElementIndex ei) const
   {
     //bool oldresult = PointContainedIn3DElementOld(p,lami,element);
     //(*testout) << "old result: " << oldresult
@@ -5862,7 +5873,7 @@ namespace netgen
 
 
     const double eps = 1.e-4;
-    const Element & el = VolumeElement(element);
+    const Element & el = volelements[ei];
 
     netgen::Point<3> lam = 0.0;
 
@@ -5897,7 +5908,7 @@ namespace netgen
     const int maxits = 30;
     while(delta > 1e-16 && i<maxits)
       {
-        curvedelems->CalcElementTransformation(lam,element-1,x,Jac);
+        curvedelems->CalcElementTransformation(lam,ei,x,Jac);
         rhs = p-x;
         Jac.Solve(rhs,deltalam);
 
@@ -6019,91 +6030,72 @@ namespace netgen
   }
 
 
-  int Mesh :: GetElementOfPoint (const netgen::Point<3> & p,
-                                 double lami[3],
-                                 bool build_searchtree,
-                                 const int index,
-                                 const bool allowindex) const
+  ElementIndex Mesh :: GetElementOfPoint (const netgen::Point<3> & p,
+                                          double* lami,
+                                          bool build_searchtree,
+                                          int index,
+                                          bool allowindex) const
   {
     if(index != -1) 
       {
-        NgArray<int> dummy(1);
+        Array<int> dummy(1);
         dummy[0] = index;
-        return GetElementOfPoint(p,lami,&dummy,build_searchtree,allowindex);
+        return GetElementOfPoint(p,lami,dummy,build_searchtree,allowindex);
       }
     else
-      return GetElementOfPoint(p,lami,NULL,build_searchtree,allowindex);
+      return GetElementOfPoint(p,lami,nullopt,build_searchtree,allowindex);
   }
 
 
 
 
-  int Mesh :: GetElementOfPoint (const netgen::Point<3> & p,
-                                 double lami[3],
-                                 const NgArray<int> * const indices,
-                                 bool build_searchtree,
-                                 const bool allowindex) const
+  ElementIndex Mesh :: GetElementOfPoint (const netgen::Point<3> & p,
+                                          double* lami,
+                                          std::optional<FlatArray<int>> indices,
+                                          bool build_searchtree,
+                                          bool allowindex) const
   {
-    if ( (dimension == 2 && !GetNSE()) ||
-    	 (dimension == 3 && !GetNE() && !GetNSE()) )
-      return -1;
-
-
-    if (dimension == 2 || (dimension==3 && !GetNE() && GetNSE()))
-      {
-        if (build_searchtree)
-          const_cast<Mesh&>(*this).BuildElementSearchTree (2);
-        return Find2dElement(*this, p, lami, indices, elementsearchtree[2].get(), allowindex);
-      }
-
     if (build_searchtree)
       const_cast<Mesh&>(*this).BuildElementSearchTree (3);
-    return Find3dElement(*this, p, lami, indices, elementsearchtree[3].get(), allowindex);
+    return Find3dElement(*this, p, lami, indices, elementsearchtree_vol.get(), allowindex);
   }
 
 
 
-  int Mesh :: GetSurfaceElementOfPoint (const netgen::Point<3> & p,
-                                        double lami[3],
-                                        bool build_searchtree,
-                                        const int index,
-                                        const bool allowindex) const
+  SurfaceElementIndex Mesh ::
+  GetSurfaceElementOfPoint (const netgen::Point<3> & p,
+                            double* lami,
+                            bool build_searchtree,
+                            int index,
+                            bool allowindex) const
   {
-    if(index != -1) 
+    if(index != -1)
       {
-        NgArray<int> dummy(1);
+        Array<int> dummy(1);
         dummy[0] = index;
-        return GetSurfaceElementOfPoint(p,lami,&dummy,build_searchtree,allowindex);
+        return GetSurfaceElementOfPoint(p,lami,dummy,build_searchtree,allowindex);
       }
     else
-      return GetSurfaceElementOfPoint(p,lami,NULL,build_searchtree,allowindex);
+      return GetSurfaceElementOfPoint(p,lami,nullopt,build_searchtree,allowindex);
   }
 
-
-
-
-  int Mesh :: GetSurfaceElementOfPoint (const netgen::Point<3> & p,
-                                        double lami[3],
-                                        const NgArray<int> * const indices,
-                                        bool build_searchtree,
-                                        const bool allowindex) const
+  SurfaceElementIndex Mesh ::
+  GetSurfaceElementOfPoint (const netgen::Point<3> & p,
+                            double* lami,
+                            std::optional<FlatArray<int>> indices,
+                            bool build_searchtree,
+                            bool allowindex) const
   {
-    if (dimension == 2)
-      return Find1dElement(*this, p, lami, indices, nullptr, allowindex);
-    else
-      {
-        if (build_searchtree)
-          const_cast<Mesh&>(*this).BuildElementSearchTree(2);
-        return Find2dElement(*this, p, lami, indices, elementsearchtree[2].get(), allowindex);
-      }
-    return 0;
+    if (build_searchtree)
+      const_cast<Mesh&>(*this).BuildElementSearchTree(2);
+    return Find2dElement(*this, p, lami, indices, elementsearchtree_surf.get(), allowindex);
   }
 
 
   void Mesh::GetIntersectingVolEls(const Point3d& p1, const Point3d& p2, 
-                                   NgArray<int> & locels) const
+                                   Array<ElementIndex> & locels) const
   {
-    elementsearchtree[3]->GetIntersecting (p1, p2, locels);
+    elementsearchtree_vol->GetIntersecting (p1, p2, locels);
   }
 
   void Mesh :: SplitIntoParts()

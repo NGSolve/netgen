@@ -4337,7 +4337,7 @@ namespace netgen
             }
 
           double lami[3];
-          int elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex)-1;
+          int elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex);
 
           if (elnr != -1)
             {
@@ -4858,18 +4858,18 @@ namespace netgen
             if(sol.iscomplex && rcomponent != 0)
             {
               rcomponent = 2 * ((rcomponent-1)/2) + 1;
-              GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
+              GetValue(&sol, el3d,  lami[0], lami[1], lami[2], rcomponent+1,
                   imag);
               comp = (scalcomp-1)/2 + 1;
             }
-            GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
+            GetValue(&sol, el3d,  lami[0], lami[1], lami[2], rcomponent, val);
             printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
           }
           if(vecfunction!=-1 && soldata[vecfunction]->draw_volume)
           {
             auto & sol = *soldata[vecfunction];
             ArrayMem<double, 10> values(sol.components);
-            GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
+            GetValues(&sol, el3d,  lami[0], lami[1], lami[2], &values[0]);
             printVecValue(sol, values);
           }
           return;
@@ -4880,7 +4880,7 @@ namespace netgen
     double lami[3] = {0.0, 0.0, 0.0};
     // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
     bool found_2del = false;
-    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
+    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement-1, false && fabs(lami[2])<1e-3))
       {
         // Found it, use coordinates of point projected to surface element
         mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);

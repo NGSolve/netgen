@@ -66,7 +66,7 @@ void WriteFluentFormat (const Mesh & mesh,
   int i2, j2;
   NgArray<INDEX_3> surfaceelp;
   NgArray<int> surfaceeli;
-  NgArray<int> locels;
+  Array<ElementIndex> locels;
 
   //no cells=no tets
   //no faces=2*tets
@@ -117,12 +117,9 @@ void WriteFluentFormat (const Mesh & mesh,
 	  int eli2 = 0;
 	  int stopsig = 0;
 	      
-	  for (i2 = 1; i2 <= nel; i2++)
+	  for (auto locind : locels)
 	    {
-	      locind = locels.Get(i2);
-	      //cout << "  locind=" << locind << endl;
-
-	      Element el2 = mesh.VolumeElement(locind);
+	      Element el2 = mesh[locind];
 	      //if (inverttets)
 	      //  el2.Invert();
 
@@ -130,7 +127,7 @@ void WriteFluentFormat (const Mesh & mesh,
 		{
 		  el2.GetFace(j2, face2);
 
-		  if (face2.HasFace(face)) {eli2 = locind; stopsig = 1; break;}
+		  if (face2.HasFace(face)) {eli2 = locind+1; stopsig = 1; break;}
 		}
 	      if (stopsig) break;
 	    }
