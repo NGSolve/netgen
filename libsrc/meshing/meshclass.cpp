@@ -5264,7 +5264,9 @@ namespace netgen
       std::lock_guard<std::mutex> guard(buildsearchtree_mutex);
       // check again to see if some other thread built while waiting for lock
       if (elementsearchtreets[dim] == GetTimeStamp()) return;
-          
+
+      elementsearchtreets[dim] = GetTimeStamp();
+
       PrintMessage (4, "Rebuild element searchtree dim " + ToString(dim));
           
 
