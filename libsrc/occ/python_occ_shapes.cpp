@@ -2046,14 +2046,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return BRepOffsetAPI_MakePipe (spine, profile).Shape();
         }, py::arg("spine"), py::arg("profile"), py::arg("twist")=nullopt, py::arg("auxspine")=nullopt);
   
-  m.def("PipeShell", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile, const TopoDS_Wire & auxspine) {
+  m.def("PipeShell", [] (const TopoDS_Wire & spine, variant<TopoDS_Shape, std::vector<TopoDS_Shape>> profile, std::optional<TopoDS_Wire> auxspine) {
       try
         {
           BRepOffsetAPI_MakePipeShell builder(spine);
-          builder.SetMode (auxspine, Standard_True);
-          builder.Add (profile);
-          // builder.Build();
-          // builder.MakeSolid();
+          if(auxspine)
+            builder.SetMode (*auxspine, Standard_True);
+          if(std::holds_alternative<TopoDS_Shape>(profile))
+            builder.Add (std::get<TopoDS_Shape>(profile));
+          else
+            {
+              for(auto s : std::get<std::vector<TopoDS_Shape>>(profile))
+                builder.Add(s);
+            }
           return builder.Shape();
         }
       catch (Standard_Failure & e)
@@ -2062,7 +2067,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           e.Print(errstr);
           throw NgException("cannot create PipeShell: "+errstr.str());
         }
-    }, py::arg("spine"), py::arg("profile"), py::arg("auxspine"));
+    }, py::arg("spine"), py::arg("profile"), py::arg("auxspine")=nullopt);
 
 
   // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
