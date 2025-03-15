@@ -168,7 +168,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
          {
            std::vector<float> vertices;
-           std::vector<int> trigs;
+           std::vector<uint32_t> indices;
            std::vector<float> normals;
            std::vector<float> min = {std::numeric_limits<float>::max(),
                                std::numeric_limits<float>::max(),
@@ -177,6 +177,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                                std::numeric_limits<float>::lowest(),
                                std::numeric_limits<float>::lowest()};
            std::vector<string> surfnames;
+           std::vector<float> face_colors;
            auto box = occ_geo->GetBoundingBox();
            for(int i = 0; i < 3; i++)
              {
@@ -188,11 +189,32 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            gp_Pnt pnt;
            gp_Vec n;
            gp_Pnt p[3];
-           int count = 0;
            for (int i = 1; i <= occ_geo->fmap.Extent(); i++)
              {
-               surfnames.push_back("occ_surface" + to_string(i));
                auto face = TopoDS::Face(occ_geo->fmap(i));
+               if (OCCGeometry::HaveProperties(face))
+                 {
+                   const auto& props = OCCGeometry::GetProperties(face);
+                   if(props.name)
+                     surfnames.push_back(props.name.value());
+                   else
+                     surfnames.push_back("");
+                   if(props.col)
+                     face_colors.insert(face_colors.end(),
+                                        {float((*props.col)[0]),
+                                         float((*props.col)[1]),
+                                         float((*props.col)[2]),
+                                         float((*props.col)[3])});
+                    else
+                      {
+                        face_colors.insert(face_colors.end(),{0.7,0.7,0.7,1.});
+                      }
+                 }
+               else
+                 {
+                   surfnames.push_back("");
+                   face_colors.insert(face_colors.end(),{0.7,0.7,0.7,1.});
+                 }
                auto surf = BRep_Tool::Surface(face);
                TopLoc_Location loc;
                BRepAdaptor_Surface sf(face, Standard_False);
@@ -200,7 +222,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
                if (triangulation.IsNull())
                  cout << "cannot visualize face " << i << endl;
-               trigs.reserve(trigs.size() + triangulation->NbTriangles()*4);
+               indices.reserve(indices.size() + triangulation->NbTriangles());
                vertices.reserve(vertices.size() + triangulation->NbTriangles()*3*3);
                normals.reserve(normals.size() + triangulation->NbTriangles()*3*3);
                for (int j = 1; j < triangulation->NbTriangles()+1; j++)
@@ -208,11 +230,13 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                    auto triangle = triangulation->Triangle(j);
                    for (int k = 1; k < 4; k++)
                      p[k-1] = triangulation->Node(triangle(k)).Transformed(loc);
+                   indices.push_back(uint32_t(i-1));
                    for (int k = 1; k < 4; k++)
                      {
-                       vertices.insert(vertices.end(),{float(p[k-1].X()), float(p[k-1].Y()), float(p[k-1].Z())});
-                       trigs.insert(trigs.end(),{count, count+1, count+2,i});
-                       count += 3;
+                       vertices.insert(vertices.end(),{
+                           float(p[k-1].X()),
+                           float(p[k-1].Y()),
+                           float(p[k-1].Z())});
                        uv = triangulation->UVNode(triangle(k));
                        prop.SetParameters(uv.X(), uv.Y());
                        if (prop.IsNormalDefined())
@@ -234,9 +258,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             for(auto name : surfnames)
               snames.append(py::cast(name));
             res["vertices"] = MoveToNumpy(vertices);
-            res["triangles"] = MoveToNumpy(trigs);
+            res["indices"] = MoveToNumpy(indices);
             res["normals"] = MoveToNumpy(normals);
             res["surfnames"] = snames;
+            res["face_colors"] = MoveToNumpy(face_colors);
             res["min"] = MoveToNumpy(min);
             res["max"] = MoveToNumpy(max);
             return res;
