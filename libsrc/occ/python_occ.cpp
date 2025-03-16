@@ -21,6 +21,9 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_MaterialTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <TopoDS_Edge.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <GCPnts_TangentialDeflection.hxx>
 
 using namespace netgen;
 
@@ -169,6 +172,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          {
            std::vector<float> vertices;
            std::vector<uint32_t> indices;
+           std::vector<float> edges;
+           std::vector<uint32_t> edge_indices;
            std::vector<float> normals;
            std::vector<float> min = {std::numeric_limits<float>::max(),
                                std::numeric_limits<float>::max(),
@@ -176,8 +181,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            std::vector<float> max = {std::numeric_limits<float>::lowest(),
                                std::numeric_limits<float>::lowest(),
                                std::numeric_limits<float>::lowest()};
-           std::vector<string> surfnames;
            std::vector<float> face_colors;
+           std::vector<float> edge_colors;
            auto box = occ_geo->GetBoundingBox();
            for(int i = 0; i < 3; i++)
              {
@@ -189,16 +194,52 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            gp_Pnt pnt;
            gp_Vec n;
            gp_Pnt p[3];
+           for(int edge_index = 1; edge_index <= occ_geo->emap.Extent();
+               edge_index++)
+             {
+               auto edge = TopoDS::Edge(occ_geo->emap(edge_index));
+               if(OCCGeometry::HaveProperties(edge))
+                 {
+                   const auto& props = OCCGeometry::GetProperties(edge);
+                   if(props.col)
+                     edge_colors.insert(edge_colors.end(),
+                                        {float((*props.col)[0]),
+                                         float((*props.col)[1]),
+                                         float((*props.col)[2]),
+                                         float((*props.col)[3])});
+                   else
+                     edge_colors.insert(edge_colors.end(),{0.f,0.f,0.f,1.f});
+                 }
+               else
+                 {
+                   edge_colors.insert(edge_colors.end(),{0.f,0.f,0.f,1.f});
+                 }
+               BRepAdaptor_Curve adapt_crv = BRepAdaptor_Curve(edge);
+               GCPnts_TangentialDeflection discretizer;
+               discretizer.Initialize(adapt_crv, 0.09, 0.01);
+		if (discretizer.NbPoints() > 1)
+		{
+                  for (int j = 1; j <= discretizer.NbPoints()-1; ++j)
+                    {
+                      gp_Pnt p_0 = discretizer.Value(j);
+                      gp_Pnt p_1 = discretizer.Value(j+1);
+                      edges.insert(edges.end(),
+                                   {float(p_0.X()),
+                                    float(p_0.Y()),
+                                    float(p_0.Z()),
+                                    float(p_1.X()),
+                                    float(p_1.Y()),
+                                    float(p_1.Z())});
+                      edge_indices.push_back(uint32_t(edge_index-1));
+                    }
+		}
+             }
            for (int i = 1; i <= occ_geo->fmap.Extent(); i++)
              {
                auto face = TopoDS::Face(occ_geo->fmap(i));
                if (OCCGeometry::HaveProperties(face))
                  {
                    const auto& props = OCCGeometry::GetProperties(face);
-                   if(props.name)
-                     surfnames.push_back(props.name.value());
-                   else
-                     surfnames.push_back("");
                    if(props.col)
                      face_colors.insert(face_colors.end(),
                                         {float((*props.col)[0]),
@@ -212,7 +253,6 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                  }
                else
                  {
-                   surfnames.push_back("");
                    face_colors.insert(face_colors.end(),{0.7,0.7,0.7,1.});
                  }
                auto surf = BRep_Tool::Surface(face);
@@ -255,12 +295,12 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             py::gil_scoped_acquire ac;
             py::dict res;
             py::list snames;
-            for(auto name : surfnames)
-              snames.append(py::cast(name));
             res["vertices"] = MoveToNumpy(vertices);
+            res["edges"] = MoveToNumpy(edges);
+            res["edge_indices"] = MoveToNumpy(edge_indices);
+            res["edge_colors"] = MoveToNumpy(edge_colors);
             res["indices"] = MoveToNumpy(indices);
             res["normals"] = MoveToNumpy(normals);
-            res["surfnames"] = snames;
             res["face_colors"] = MoveToNumpy(face_colors);
             res["min"] = MoveToNumpy(min);
             res["max"] = MoveToNumpy(max);
