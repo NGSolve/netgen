@@ -708,7 +708,6 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     py::object py_this = shape.attr("this");
     PyObject* obj = py_this.ptr();
     SwigPyObject* swig_obj = reinterpret_cast<SwigPyObject*>(obj);
-    cout << "swig type = " << swig_obj->ty->name << endl;
     if (!swig_obj->ptr || !swig_obj->ty || !swig_obj->ty->name) {
         throw std::runtime_error("SWIG object does not contain a valid pointer");
     }
