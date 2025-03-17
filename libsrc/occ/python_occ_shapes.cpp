@@ -689,6 +689,32 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     OCCGeometry::global_shape_properties.clear();
     OCCGeometry::global_shape_property_indices.Clear();
   });
+
+  struct SwigTypeInfo
+  {
+    const char* name;  // SWIG's type name string
+    // Other fields...
+  };
+
+  struct SwigPyObject{
+    PyObject_HEAD
+    void *ptr;
+    SwigTypeInfo* ty; // SWIG type information
+    int own; // ownership flag
+  };
+
+  m.def("From_PyOCC", [](py::object shape)
+  {
+    py::object py_this = shape.attr("this");
+    PyObject* obj = py_this.ptr();
+    SwigPyObject* swig_obj = reinterpret_cast<SwigPyObject*>(obj);
+    if (!swig_obj->ptr || !swig_obj->ty || !swig_obj->ty->name) {
+        throw std::runtime_error("SWIG object does not contain a valid pointer");
+    }
+    if(strcmp(swig_obj->ty->name, "_p_TopoDS_Shape") != 0)
+      throw std::runtime_error("Does not contain TopoDS_Shape from pyocc!");
+    return py::cast(static_cast<TopoDS_Shape*>(swig_obj->ptr));
+  }, py::return_value_policy::reference, py::keep_alive<0,1>());
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
