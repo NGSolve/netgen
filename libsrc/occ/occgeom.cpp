@@ -2288,10 +2288,22 @@ namespace netgen
             XCAFPrs::CollectStyleSettings(label, loc, set);
             XCAFPrs_Style aStyle;
             set.FindFromKey(e.Current(), aStyle);
-
-            auto & prop = OCCGeometry::GetProperties(e.Current());
             if(aStyle.IsSetColorSurf())
-                prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+              {
+                for(TopExp_Explorer e2(e.Current(), TopAbs_FACE); e2.More(); e2.Next())
+                  {
+                    auto & prop = OCCGeometry::GetProperties(e2.Current());
+                    prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+                  }
+              }
+            if(aStyle.IsSetColorCurv())
+              {
+                for(TopExp_Explorer e2(e.Current(), TopAbs_EDGE); e2.More(); e2.Next())
+                  {
+                    auto & prop = OCCGeometry::GetProperties(e2.Current());
+                    prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+                  }
+              }
           }
 
         // load names
