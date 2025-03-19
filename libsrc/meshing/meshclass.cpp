@@ -4819,6 +4819,24 @@ namespace netgen
         for (auto & seg : LineSegments())
           seg.si = seg.edgenr;
       }
+    if (dimension == 3 && dim == 1)
+      {
+        for(auto str : materials)
+          delete str;
+        materials.SetSize(0);
+        for(auto str : bcnames)
+          delete str;
+        bcnames.SetSize(0);
+        for(auto str: cd2names)
+          {
+            cout << "found material = " << *str << endl;
+            materials.Append(str);
+          }
+        cd2names.SetSize(0);
+        for(auto str : cd3names)
+          bcnames.Append(str);
+        cd3names.SetSize(0);
+      }
     dimension = dim;
   }
 

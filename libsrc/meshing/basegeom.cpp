@@ -1314,6 +1314,13 @@ namespace netgen
     if(multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHEDGES)
       return 0;
 
+    if(dimension == 1)
+      {
+        FinalizeMesh(*mesh);
+        mesh->SetDimension(1);
+        return 0;
+      }
+
     if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
         MeshSurface(*mesh, mparam);
