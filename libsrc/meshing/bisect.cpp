@@ -4061,6 +4061,8 @@ namespace netgen
           {
             PointIndices<2> oi2(identmap[i2[0]], 
                                 identmap[i2[1]]);
+            if((!oi2[0].IsValid()) || (!oi2[1].IsValid()))
+              continue;
             oi2.Sort();
             if (cutedges.Used (oi2))
               {
