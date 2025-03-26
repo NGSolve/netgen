@@ -1220,6 +1220,7 @@ namespace netgen
       {
         PrintMessage(3, "Optimization step ", i);
         meshopt.SetFaceIndex(k+1);
+        meshopt.SetMetricWeight (mparam.elsizeweight);
         int innerstep = 0;
         for(auto optstep : mparam.optimize2d)
           {
