@@ -196,54 +196,41 @@ namespace netgen
             fabs (p(1) - root->xmid[1]) > root->h2)
           return;
         
-        if (GetH(p) <= 1.2 * h) return;
-        
-        GradingBox * box = root;
-        GradingBox * nbox = root;
-        GradingBox * ngb;
-        int childnr;
-        double x1[3], x2[3];
-        
-        while (nbox)
-          {
-            box = nbox;
-            childnr = 0;
-            if (p(0) > box->xmid[0]) childnr += 1;
-            if (p(1) > box->xmid[1]) childnr += 2;
-            nbox = box->childs[childnr];
-          };
+        GradingBox * box = Find(p);
+        if (box->HOpt() <= 1.2 * h) return;
         
         while (2 * box->h2 > h)
           {
-            childnr = 0;
-            if (p(0) > box->xmid[0]) childnr += 1;
-            if (p(1) > box->xmid[1]) childnr += 2;
-            
+            int childnr = 0;
+            double x1[3], x2[3];
+        
             double h2 = box->h2;
-            if (childnr & 1)
+            if (p(0) > box->xmid[0])
               {
+                childnr += 1;
                 x1[0] = box->xmid[0];
-                x2[0] = x1[0]+h2;   // box->x2[0];
+                x2[0] = x1[0]+h2;
               }
             else
               {
                 x2[0] = box->xmid[0];
-                x1[0] = x2[0]-h2;   // box->x1[0];
+                x1[0] = x2[0]-h2;
               }
             
-            if (childnr & 2)
+            if (p(1) > box->xmid[1])
               {
+                childnr += 2;
                 x1[1] = box->xmid[1];
-                x2[1] = x1[1]+h2;   // box->x2[1];
+                x2[1] = x1[1]+h2;
               }
             else
               {
                 x2[1] = box->xmid[1];
-                x1[1] = x2[1]-h2;   // box->x1[1];
+                x1[1] = x2[1]-h2;
               }
             x1[2] = x2[2] = 0;
 
-            ngb = new GradingBox (x1, x2);
+            auto ngb = new GradingBox (x1, x2);
             box->childs[childnr] = ngb;
             ngb->father = box;
             
@@ -276,67 +263,52 @@ namespace netgen
             fabs (p(2) - root->xmid[2]) > root->h2)
           return;
         
-        if (GetH(p) <= 1.2 * h) return;
-        
-        GradingBox * box = root;
-        GradingBox * nbox = root;
-        GradingBox * ngb;
-        int childnr;
-        double x1[3], x2[3];
-        
-        while (nbox)
-          {
-            box = nbox;
-            childnr = 0;
-            if (p(0) > box->xmid[0]) childnr += 1;
-            if (p(1) > box->xmid[1]) childnr += 2;
-            if (p(2) > box->xmid[2]) childnr += 4;
-            nbox = box->childs[childnr];
-          };
-        
+        GradingBox * box = Find(p);
+        if (box->HOpt() <= 1.2 * h) return;
         
         while (2 * box->h2 > h)
           {
-            childnr = 0;
-            if (p(0) > box->xmid[0]) childnr += 1;
-            if (p(1) > box->xmid[1]) childnr += 2;
-            if (p(2) > box->xmid[2]) childnr += 4;
-            
+            double x1[3], x2[3];
+            int childnr = 0;
             double h2 = box->h2;
-            if (childnr & 1)
+
+            if (p(0) > box->xmid[0])
               {
+                childnr += 1;
                 x1[0] = box->xmid[0];
-                x2[0] = x1[0]+h2;   // box->x2[0];
+                x2[0] = x1[0]+h2;
               }
             else
               {
                 x2[0] = box->xmid[0];
-                x1[0] = x2[0]-h2;   // box->x1[0];
+                x1[0] = x2[0]-h2;
               }
             
-            if (childnr & 2)
+            if (p(1) > box->xmid[1])
               {
+                childnr += 2;
                 x1[1] = box->xmid[1];
-                x2[1] = x1[1]+h2;   // box->x2[1];
+                x2[1] = x1[1]+h2;
               }
             else
               {
                 x2[1] = box->xmid[1];
-                x1[1] = x2[1]-h2;   // box->x1[1];
+                x1[1] = x2[1]-h2;
               }
             
-            if (childnr & 4)
+            if (p(2) > box->xmid[2])
               {
+                childnr += 4;
                 x1[2] = box->xmid[2];
-                x2[2] = x1[2]+h2;  // box->x2[2];
+                x2[2] = x1[2]+h2;
               }
             else
               {
                 x2[2] = box->xmid[2];
-                x1[2] = x2[2]-h2;  // box->x1[2];
+                x1[2] = x2[2]-h2;
               }
             
-            ngb = new GradingBox (x1, x2);
+            auto ngb = new GradingBox (x1, x2);
             box->childs[childnr] = ngb;
             ngb->father = box;
             
@@ -366,37 +338,7 @@ namespace netgen
 
   double LocalH :: GetH (Point<3> x) const
   {
-    const GradingBox * box = root;
-    if (dimension == 2)
-      {
-        while (1)
-          {
-            int childnr = 0;
-            if (x(0) > box->xmid[0]) childnr += 1;
-            if (x(1) > box->xmid[1]) childnr += 2;
-            
-            if (box->childs[childnr])
-              box = box->childs[childnr];
-            else
-              return box->hopt;
-          }
-      }
-    else
-      {
-        while (1)
-          {
-            int childnr = 0;
-            if (x(0) > box->xmid[0]) childnr += 1;
-            if (x(1) > box->xmid[1]) childnr += 2;
-            if (x(2) > box->xmid[2]) childnr += 4;
-            
-            if (box->childs[childnr])
-              box = box->childs[childnr];
-            else
-              return box->hopt;
-          }
-      }
-      
+    return Find(x)->HOpt();
   }
 
 
@@ -487,6 +429,41 @@ namespace netgen
 	CutBoundaryRec (pmin, pmax, box->childs[i]);
   }
 
+
+  GradingBox * LocalH :: Find (Point<3> p) const
+  {
+    GradingBox * box = root;
+    if (dimension == 2)
+      {
+        while (1)
+          {
+            int childnr = 0;
+            if (p(0) > box->xmid[0]) childnr += 1;
+            if (p(1) > box->xmid[1]) childnr += 2;
+
+            if (box->childs[childnr])
+              box = box->childs[childnr];
+            else
+              return box;
+          }
+      }
+    else
+      {
+        while (1)
+          {
+            int childnr = 0;
+            if (p(0) > box->xmid[0]) childnr += 1;
+            if (p(1) > box->xmid[1]) childnr += 2;
+            if (p(2) > box->xmid[2]) childnr += 4;
+
+            if (box->childs[childnr])
+              box = box->childs[childnr];
+            else
+              return box;
+          }
+      }
+    return nullptr;
+  }
 
 
   void LocalH :: FindInnerBoxes (const AdFront3 & adfront,

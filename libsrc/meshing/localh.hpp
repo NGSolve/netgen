@@ -54,6 +54,7 @@ namespace netgen
 
     Point<3> PMid() const { return Point<3> (xmid[0], xmid[1], xmid[2]); }
     double H2() const { return h2; }
+    double HOpt() const { return hopt; }
 
     bool HasChilds() const
     {
@@ -119,6 +120,8 @@ namespace netgen
 
     void CutBoundary (const Box<3> & box)
     { CutBoundaryRec (box.PMin(), box.PMax(), root); }
+
+    GradingBox * Find(Point<3> p) const;
   
     /// find inner boxes
     void FindInnerBoxes (const class AdFront3 & adfront,
