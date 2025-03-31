@@ -168,6 +168,34 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     {
       ng_geometry = geo;
     })
+    .def_property_readonly("solids", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes solids;
+           for (int i = 1; i <= geo->somap.Extent(); i++)
+             solids.push_back(geo->somap(i));
+           return solids;
+         }, "Get solids in order that they will be in the mesh")
+    .def_property_readonly("faces", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes faces;
+           for (int i = 1; i <= geo->fmap.Extent(); i++)
+             faces.push_back(geo->fmap(i));
+           return faces;
+         }, "Get faces in order that they will be in the mesh")
+    .def_property_readonly("edges", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes edges;
+           for (int i = 1; i <= geo->emap.Extent(); i++)
+             edges.push_back(geo->emap(i));
+           return edges;
+         }, "Get edges in order that they will be in the mesh")
+    .def_property_readonly("vertices", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes vertices;
+           for (int i = 1; i <= geo->vmap.Extent(); i++)
+             vertices.push_back(geo->vmap(i));
+           return vertices;
+         }, "Get vertices in order that they will be in the mesh")
     .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
          {
            std::vector<float> vertices;
