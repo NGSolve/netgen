@@ -14,6 +14,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+#include <BinTools_ShapeWriter.hxx>
 #include <BOPAlgo_Builder.hxx>
 #include <BOPTools_AlgoTools.hxx>
 #include <BRepAlgoAPI_Common.hxx>
@@ -833,10 +834,25 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("WriteStep", [](const TopoDS_Shape & shape, string & filename)
             { step_utils::WriteSTEP(shape, filename); }
          , py::arg("filename"), "export shape in STEP - format")
-    .def("WriteBrep", [](const TopoDS_Shape & shape, const string& filename)
+    .def("WriteBrep", [](const TopoDS_Shape & shape, const string& filename,
+                         bool withTriangles, bool withNormals,
+                         optional<int> version, bool binary)
     {
-      BRepTools::Write(shape, filename.c_str());
-    }, py::arg("filename"), "export shape in BREP - format")
+      if(binary)
+        {
+          BinTools_FormatVersion v = version ? BinTools_FormatVersion(*version) : BinTools_FormatVersion_CURRENT;
+          BinTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
+        }
+      else
+        {
+          TopTools_FormatVersion v = version ? (TopTools_FormatVersion)(*version) : TopTools_FormatVersion_CURRENT;
+          BRepTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
+        }
+    }, py::arg("filename"), py::arg("withTriangles")=true,
+       py::arg("withNormals")=false,
+         py::arg("version")=py::none(),
+         py::arg("binary")=false,
+       "export shape in BREP - format")
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
