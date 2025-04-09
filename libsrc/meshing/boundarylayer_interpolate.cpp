@@ -139,7 +139,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
                   faces.Append(sei);
             }
 
-          if (faces.Size() == 2)
+          if (faces.Size() == 2 && mesh[faces[0]].GetIndex() != mesh[faces[1]].GetIndex())
             {
               auto n0 = getNormal(mesh[faces[0]]);
               auto n1 = getNormal(mesh[faces[1]]);
