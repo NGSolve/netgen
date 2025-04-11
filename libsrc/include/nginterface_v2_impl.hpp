@@ -78,7 +78,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
     ret.mat = *(mesh->GetCD2NamePtr(el.index-1));
   else
     ret.mat = *(mesh->GetCD3NamePtr(el.index-1));
-  
+
+  ret.is_curved = false;
   return ret;
 }
 
