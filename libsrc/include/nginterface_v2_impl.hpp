@@ -72,13 +72,16 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   ret.facets.base = POINTINDEX_BASE;
   ret.facets.ptr = (int*)&el.pnum;
 
+  /*
   if (mesh->GetDimension() == 1)
     ret.mat = *(mesh->GetBCNamePtr(el.index-1));
   else if (mesh->GetDimension() == 2)
     ret.mat = *(mesh->GetCD2NamePtr(el.index-1));
   else
     ret.mat = *(mesh->GetCD3NamePtr(el.index-1));
-
+  */
+  ret.mat = mesh->GetRegionName(0, el.index);
+    
   ret.is_curved = false;
   return ret;
 }
@@ -97,6 +100,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
     ret.index = el.edgenr;
   else
     ret.index = el.si;
+
+  /*
   if (mesh->GetDimension() == 2)
     ret.mat = *(mesh->GetBCNamePtr(el.si-1));
   else
@@ -106,6 +111,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
       else
         ret.mat = *(mesh->GetMaterialPtr(el.si));
     }
+  */
+  ret.mat = mesh->GetRegionName(1, ret.index);
 
   ret.points.num = el.GetNP();
   ret.points.ptr = (int*)&(el[0]);

@@ -4828,10 +4828,7 @@ namespace netgen
           delete str;
         bcnames.SetSize(0);
         for(auto str: cd2names)
-          {
-            cout << "found material = " << *str << endl;
-            materials.Append(str);
-          }
+          materials.Append(str);
         cd2names.SetSize(0);
         for(auto str : cd3names)
           bcnames.Append(str);
@@ -7416,6 +7413,7 @@ namespace netgen
   }
 
   string Mesh :: defaultmat = "default";
+  string_view Mesh :: defaultmat_sv = "default";  
   const string & Mesh :: GetMaterial (int domnr) const
   {
     if (domnr <= materials.Size())

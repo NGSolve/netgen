@@ -128,6 +128,13 @@ namespace netgen
     */
     NgArray<EdgeDescriptor> edgedecoding;
 
+    Array<string*> region_name_cd[4];
+    Array<string*> & materials = region_name_cd[0];
+    Array<string*> & bcnames   = region_name_cd[1];
+    Array<string*> & cd2names  = region_name_cd[2];
+    Array<string*> & cd3names  = region_name_cd[3];
+
+    /*
     /// sub-domain materials 
     Array<string*> materials;
 
@@ -139,7 +146,8 @@ namespace netgen
 
     /// labels for co dim 3 bbboundary conditions
     Array<string*> cd3names;
-
+    */
+    
     /// Periodic surface, close surface, etc. identifications
     unique_ptr<Identifications> ident;
 
@@ -775,6 +783,15 @@ namespace netgen
     std::string_view GetRegionName(SegmentIndex ei) const { return GetRegionName((*this)[ei]); }
     std::string_view GetRegionName(SurfaceElementIndex ei) const { return GetRegionName((*this)[ei]); }
     std::string_view GetRegionName(ElementIndex ei) const { return GetRegionName((*this)[ei]); }
+
+    DLL_HEADER static string_view defaultmat_sv;
+    std::string_view GetRegionName (int dim, int domnr) // 1-based domnr
+    {
+      domnr--;
+      auto & names = region_name_cd[dimension-dim];
+      if (domnr < names.Size() && names[domnr]) return *names[domnr];
+      return defaultmat_sv;
+    }
     
     ///
     void ClearFaceDescriptors()
