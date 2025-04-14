@@ -7416,7 +7416,7 @@ namespace netgen
   string_view Mesh :: defaultmat_sv = "default";  
   const string & Mesh :: GetMaterial (int domnr) const
   {
-    if (domnr <= materials.Size())
+    if (domnr <= materials.Size() && materials[domnr-1])
       return *materials[domnr-1];
     static string emptystring("default");
     return emptystring;
