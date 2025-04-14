@@ -52,6 +52,7 @@
 #include <BRepTools.hxx>
 #include <GCE2d_MakeArcOfCircle.hxx>
 #include <GCE2d_MakeCircle.hxx>
+#include <GCE2d_MakeEllipse.hxx>
 #include <GCE2d_MakeSegment.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <GC_MakeCircle.hxx>
@@ -2125,7 +2126,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
   m.def("Ellipse", [] (const gp_Ax2d & ax, double major, double minor) -> Handle(Geom2d_Curve)
         {
-          return new Geom2d_Ellipse(ax, major, minor);
+          return Handle(Geom2d_Ellipse) (GCE2d_MakeEllipse(ax, major, minor));
         }, py::arg("axes"), py::arg("major"), py::arg("minor"), "create 2d ellipse curve");
   
   m.def("Segment", [](gp_Pnt2d p1, gp_Pnt2d p2) -> Handle(Geom2d_Curve) {
