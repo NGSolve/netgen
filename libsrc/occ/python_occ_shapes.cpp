@@ -14,7 +14,9 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
 #include <BinTools_ShapeWriter.hxx>
+#endif // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #include <BOPAlgo_Builder.hxx>
 #include <BOPTools_AlgoTools.hxx>
 #include <BRepAlgoAPI_Common.hxx>
@@ -840,8 +842,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     {
       if(binary)
         {
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
           BinTools_FormatVersion v = version ? BinTools_FormatVersion(*version) : BinTools_FormatVersion_CURRENT;
           BinTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
+# else // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+          throw Exception("Binary BREP export not supported in this version of OpenCascade");
+#endif // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
         }
       else
         {
