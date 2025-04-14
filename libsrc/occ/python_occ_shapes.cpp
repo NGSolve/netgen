@@ -602,6 +602,19 @@ public:
     return shared_from_this();    
   }
 
+  auto Ellipse(double major, double minor)
+  {
+    Handle(Geom2d_Ellipse) ell_curve = GCE2d_MakeEllipse(localpos, major, minor).Value();
+
+    auto edge = BRepBuilderAPI_MakeEdge(ell_curve, surf).Edge();
+    BRepLib::BuildCurves3d(edge);
+
+    wire_builder.Add(edge);
+    wires.push_back (wire_builder.Wire());
+    wire_builder = BRepBuilderAPI_MakeWire();
+    return shared_from_this();
+  }
+
   auto NameVertex (string name)
   {
     if (!lastvertex.IsNull())
@@ -2694,6 +2707,8 @@ degen_tol : double
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
         return wp.Circle(x,y,r); }, py::arg("h"), py::arg("v"), py::arg("r"), "draw circle with center (h,v) and radius 'r'")
     .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"), "draw circle with center in current position")
+    .def("Ellipse", [](WorkPlane& wp, double major, double minor)
+    { return wp.Ellipse(major, minor); }, py::arg("major"), py::arg("minor"), "draw ellipse with current position as center")
     .def("NameVertex", &WorkPlane::NameVertex, py::arg("name"), "name vertex at current position")
     .def("Offset", &WorkPlane::Offset, py::arg("d"), "replace current wire by offset curve of distance 'd'")
     .def("Reverse", &WorkPlane::Reverse, "revert orientation of current wire")
