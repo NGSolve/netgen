@@ -851,8 +851,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
       else
         {
+#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
           TopTools_FormatVersion v = version ? (TopTools_FormatVersion)(*version) : TopTools_FormatVersion_CURRENT;
           BRepTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
+#else // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+          BRepTools::Write(shape, filename.c_str());
+#endif // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
         }
     }, py::arg("filename"), py::arg("withTriangles")=true,
        py::arg("withNormals")=false,
