@@ -70,7 +70,7 @@ BuildNeighbors (FlatArray<PointIndex> points, const Mesh& mesh)
   return neighbors;
 }
 
-void BoundaryLayerTool ::InterpolateGrowthVectors()
+void BoundaryLayerTool ::InterpolateGrowthVectors ()
 {
   point_types.SetSize(mesh.GetNP());
   for (auto p : mesh.Points().Range())
@@ -299,7 +299,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors()
     }
 }
 
-void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors()
+void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors ()
 {
   static Timer tall("InterpolateSurfaceGrowthVectors");
   RegionTimer rtall(tall);
@@ -399,7 +399,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors()
     growthvectors[pi] += corrections[pi];
 }
 
-void BoundaryLayerTool ::FixSurfaceElements()
+void BoundaryLayerTool ::FixSurfaceElements ()
 {
   static Timer tall("FixSurfaceElements");
   RegionTimer rtall(tall);

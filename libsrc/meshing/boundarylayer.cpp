@@ -14,7 +14,7 @@ namespace netgen
 
 struct SpecialPointException : public Exception
 {
-  SpecialPointException()
+  SpecialPointException ()
     : Exception("") {}
 };
 
@@ -101,14 +101,14 @@ Vec<3> CalcGrowthVector (FlatArray<Vec<3>> ns)
   return gw;
 }
 
-SpecialBoundaryPoint ::GrowthGroup ::GrowthGroup(FlatArray<int> faces_,
-                                                 FlatArray<Vec<3>> normals)
+SpecialBoundaryPoint ::GrowthGroup ::GrowthGroup (FlatArray<int> faces_,
+                                                  FlatArray<Vec<3>> normals)
 {
   faces = faces_;
   growth_vector = CalcGrowthVector(normals);
 }
 
-SpecialBoundaryPoint ::SpecialBoundaryPoint(
+SpecialBoundaryPoint ::SpecialBoundaryPoint (
   const std::map<int, Vec<3>>& normals)
 {
   // find opposing face normals
@@ -146,7 +146,7 @@ SpecialBoundaryPoint ::SpecialBoundaryPoint(
   growth_groups.Append(GrowthGroup(g2_faces, normals2));
 }
 
-Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr, FlatArray<Segment*> segs)
+Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int edgenr, FlatArray<Segment*> segs)
 {
   Vec<3> tangent = 0.0;
   ArrayMem<PointIndex, 2> pts;
@@ -171,7 +171,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent(PointIndex pi, int edgenr, FlatArray<S
   return tangent.Normalize();
 }
 
-void BoundaryLayerTool ::LimitGrowthVectorLengths()
+void BoundaryLayerTool ::LimitGrowthVectorLengths ()
 {
   static Timer tall("BoundaryLayerTool::LimitGrowthVectorLengths");
   RegionTimer rtall(tall);
@@ -220,7 +220,7 @@ bool HaveSingleSegments (const Mesh& mesh)
 
 // duplicates segments (and sets seg.si accordingly) to have a unified data
 // structure for all geometry types
-void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment> & segments, Array<Segment> & free_segments)
+void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segments, Array<Segment>& free_segments)
 {
   // auto& topo = mesh.GetTopology();
 
@@ -234,11 +234,11 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment> & segm
           free_segments.Append(seg);
           continue;
         }
-      if(!have_single_segments)
-      {
-        segments.Append(seg);
-        continue;
-      }
+      if (!have_single_segments)
+        {
+          segments.Append(seg);
+          continue;
+        }
       mesh.GetTopology().GetSegmentSurfaceElements(segi + 1, surf_els);
       for (auto seli : surf_els)
         {
@@ -284,8 +284,8 @@ void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Seg
     addSegment(seg);
 }
 
-BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
-                                     const BoundaryLayerParameters& params_)
+BoundaryLayerTool::BoundaryLayerTool (Mesh& mesh_,
+                                      const BoundaryLayerParameters& params_)
   : mesh(mesh_), topo(mesh_.GetTopology()), params(params_)
 {
   static Timer timer("BoundaryLayerTool::ctor");
@@ -318,7 +318,7 @@ BoundaryLayerTool::BoundaryLayerTool(Mesh& mesh_,
     si_map[i] = i;
 }
 
-void BoundaryLayerTool ::CreateNewFaceDescriptors()
+void BoundaryLayerTool ::CreateNewFaceDescriptors ()
 {
   surfacefacs.SetSize(nfd_old + 1);
   surfacefacs = 0.0;
@@ -360,7 +360,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors()
       throw Exception("Surface " + to_string(si) + " is not a boundary of the domain to be grown into!");
 }
 
-void BoundaryLayerTool ::CreateFaceDescriptorsSides()
+void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
 {
   if (insert_only_volume_elements)
     return;
@@ -400,7 +400,7 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides()
     }
 }
 
-void BoundaryLayerTool ::CalculateGrowthVectors()
+void BoundaryLayerTool ::CalculateGrowthVectors ()
 {
   growthvectors.SetSize(np);
   growthvectors = 0.;
@@ -457,7 +457,7 @@ void BoundaryLayerTool ::CalculateGrowthVectors()
 }
 
 Array<Array<pair<SegmentIndex, int>>, SegmentIndex>
-BoundaryLayerTool ::BuildSegMap()
+BoundaryLayerTool ::BuildSegMap ()
 {
   // Bit array to keep track of segments already processed
   BitArray segs_done(nseg + 1);
@@ -536,7 +536,7 @@ BoundaryLayerTool ::BuildSegMap()
   return segmap;
 }
 
-BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface()
+BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
 {
   BitArray in_surface_direction(nfd_old + 1);
   in_surface_direction.Clear();
@@ -596,7 +596,7 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface()
   return in_surface_direction;
 }
 
-void BoundaryLayerTool ::InsertNewElements(
+void BoundaryLayerTool ::InsertNewElements (
   FlatArray<Array<pair<SegmentIndex, int>>, SegmentIndex> segmap,
   const BitArray& in_surface_direction)
 {
@@ -1065,7 +1065,7 @@ void BoundaryLayerTool ::InsertNewElements(
     }
 }
 
-void BoundaryLayerTool ::SetDomInOut()
+void BoundaryLayerTool ::SetDomInOut ()
 {
   if (insert_only_volume_elements)
     return;
@@ -1081,7 +1081,7 @@ void BoundaryLayerTool ::SetDomInOut()
       }
 }
 
-void BoundaryLayerTool ::SetDomInOutSides()
+void BoundaryLayerTool ::SetDomInOutSides ()
 {
   // Set the domin/domout entries for face descriptors on the "side" of new boundary layers
   if (insert_only_volume_elements)
@@ -1155,7 +1155,7 @@ void BoundaryLayerTool ::SetDomInOutSides()
     }
 }
 
-void BoundaryLayerTool ::AddSegments()
+void BoundaryLayerTool ::AddSegments ()
 {
   auto& new_segs =
     insert_only_volume_elements ? new_segments_on_moved_bnd : new_segments;
@@ -1199,14 +1199,14 @@ void BoundaryLayerTool ::AddSegments()
     mesh.AddSegment(seg);
 }
 
-void BoundaryLayerTool ::AddSurfaceElements()
+void BoundaryLayerTool ::AddSurfaceElements ()
 {
   for (auto& sel :
        insert_only_volume_elements ? new_sels_on_moved_bnd : new_sels)
     mesh.AddSurfaceElement(sel);
 }
 
-void BoundaryLayerTool ::ProcessParameters()
+void BoundaryLayerTool ::ProcessParameters ()
 {
   if (int* bc = get_if<int>(&params.boundary); bc)
     {
@@ -1374,7 +1374,7 @@ void BoundaryLayerTool ::ProcessParameters()
     domains.Invert();
 }
 
-void BoundaryLayerTool ::Perform()
+void BoundaryLayerTool ::Perform ()
 {
   if (domains.NumSet() == 0)
     return;

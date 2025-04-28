@@ -22,15 +22,15 @@ struct SpecialBoundaryPoint
     Vec<3> growth_vector;
     Array<PointIndex> new_points;
 
-    GrowthGroup(FlatArray<int> faces_, FlatArray<Vec<3>> normals);
-    GrowthGroup(const GrowthGroup&) = default;
-    GrowthGroup() = default;
+    GrowthGroup (FlatArray<int> faces_, FlatArray<Vec<3>> normals);
+    GrowthGroup (const GrowthGroup&) = default;
+    GrowthGroup () = default;
   };
   Array<GrowthGroup> growth_groups;
   Vec<3> separating_direction;
 
-  SpecialBoundaryPoint(const std::map<int, Vec<3>>& normals);
-  SpecialBoundaryPoint() = default;
+  SpecialBoundaryPoint (const std::map<int, Vec<3>>& normals);
+  SpecialBoundaryPoint () = default;
 };
 
 DLL_HEADER void GenerateBoundaryLayer (Mesh& mesh,
@@ -41,7 +41,7 @@ DLL_HEADER int /* new_domain_number */ GenerateBoundaryLayer2 (Mesh& mesh, int d
 class BoundaryLayerTool
 {
 public:
-  BoundaryLayerTool(Mesh& mesh_, const BoundaryLayerParameters& params_);
+  BoundaryLayerTool (Mesh& mesh_, const BoundaryLayerParameters& params_);
   void ProcessParameters ();
   void Perform ();
 

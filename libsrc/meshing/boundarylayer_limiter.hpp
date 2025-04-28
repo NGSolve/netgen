@@ -29,7 +29,7 @@ struct GrowthVectorLimiter
   Array<PointIndex, PointIndex> map_from;
   Table<SurfaceElementIndex, PointIndex> p2sel;
 
-  GrowthVectorLimiter(BoundaryLayerTool& tool_)
+  GrowthVectorLimiter (BoundaryLayerTool& tool_)
     : tool(tool_), params(tool_.params), mesh(tool_.mesh), height(tool_.total_height), growthvectors(tool_.growthvectors), map_from(mesh.Points().Size())
   {
     changed_domains = tool.domains;
@@ -287,7 +287,7 @@ struct GrowthVectorLimiter
     if (factor == 0.0)
       return;
     // for (PointIndex pi : IntRange(tool.np, mesh.GetNP()))
-    for (PointIndex pi : mesh.Points().Range().Modify(tool.np,0))
+    for (PointIndex pi : mesh.Points().Range().Modify(tool.np, 0))
       {
         // auto pi_from = map_from[pi];
         std::set<PointIndex> pis;
@@ -464,8 +464,7 @@ struct GrowthVectorLimiter
   }
 
   template <typename TFunc>
-  void FindTreeIntersections (double trig_shift, double seg_shift, TFunc f,
-                              TBitArray<PointIndex> * relevant_points = nullptr)
+  void FindTreeIntersections (double trig_shift, double seg_shift, TFunc f, TBitArray<PointIndex>* relevant_points = nullptr)
   {
     static Timer t("GrowthVectorLimiter::FindTreeIntersections");
     RegionTimer rt(t);
@@ -629,7 +628,7 @@ struct GrowthVectorLimiter
     size_t limit_counter = 1;
 
     TBitArray<PointIndex> relevant_points, relevant_points_next;
-    relevant_points.SetSize(mesh.Points().Size() + 1);   
+    relevant_points.SetSize(mesh.Points().Size() + 1);
     relevant_points_next.SetSize(mesh.Points().Size() + 1);
     relevant_points.Set();
 
