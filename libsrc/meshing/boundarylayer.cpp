@@ -879,61 +879,61 @@ void BoundaryLayerTool ::InsertNewElements(
   auto p2el = mesh.CreatePoint2ElementTable();
   for (SurfaceElementIndex si = 0; si < nse; si++)
     {
-      // copy because surfaceels array will be resized!
       const auto sel = mesh[si];
-      if (moved_surfaces.Test(sel.GetIndex()))
+      const auto iface = sel.GetIndex();
+
+      if (moved_surfaces.Test(iface))
         {
-          Array<PointIndex> points(sel.PNums());
-          if (surfacefacs[sel.GetIndex()] > 0)
+          const auto np = sel.GetNP();
+          ArrayMem<PointIndex, 4> points(sel.PNums());
+          if (surfacefacs[iface] > 0)
             Swap(points[0], points[2]);
           ArrayMem<int, 4> groups(points.Size());
           for (auto i : Range(points))
-            groups[i] = getClosestGroup(sel[i], si);
+            groups[i] = getClosestGroup(points[i], si);
           bool add_volume_element = true;
-          for (auto pi : sel.PNums())
+          for (auto pi : points)
             if (numGroups(pi) > 1)
               add_volume_element = false;
+
+          Element el(2 * np);
+          el.PNums().Range(np, 2 * np) = points;
+          auto new_index = new_mat_nrs[iface];
+          if (new_index == -1)
+            throw Exception("Boundary " + ToString(iface) + " with name " + mesh.GetBCName(iface - 1) + " extruded, but no new material specified for it!");
+          el.SetIndex(new_index);
+
           for (auto j : Range(par_heights))
             {
-              auto eltype = points.Size() == 3 ? PRISM : HEX;
-              Element el(eltype);
-              for (auto i : Range(points))
-                el[i] = points[i];
-              for (auto i : Range(points))
-                points[i] = newPoint(sel.PNums()[i], j, groups[i]);
-              if (surfacefacs[sel.GetIndex()] > 0)
-                Swap(points[0], points[2]);
-              for (auto i : Range(points))
-                el[sel.PNums().Size() + i] = points[i];
-              auto new_index = new_mat_nrs[sel.GetIndex()];
-              if (new_index == -1)
-                throw Exception("Boundary " + ToString(sel.GetIndex()) + " with name " + mesh.GetBCName(sel.GetIndex() - 1) + " extruded, but no new material specified for it!");
-              el.SetIndex(new_mat_nrs[sel.GetIndex()]);
+              el.PNums().Range(0, np) = el.PNums().Range(np, 2 * np);
+              for (auto i : Range(np))
+                el[np + i] = newPoint(points[i], j, groups[i]);
               if (add_volume_element)
                 mesh.AddVolumeElement(el);
               else
                 {
                   // Let the volume mesher fill the hole with pyramids/tets
-                  // To insert pyramids, we need close surface identifications on open
-                  // quads
-                  for (auto i : Range(points))
-                    if (numGroups(sel[i]) == 1)
+                  // To insert pyramids, we need close surface identifications on open quads
+                  for (auto i : Range(np))
+                    if (numGroups(el[i]) == 1)
                       {
                         auto pi0 = el[i];
-                        auto pi1 = el[i + points.Size()];
+                        auto pi1 = el[np + i];
                         auto nr = identifications.Get(pi0, pi1);
                         if (nr == 0)
-                          identifications.Add(el[i], el[i + points.Size()], identnr);
+                          identifications.Add(pi0, pi1, identnr);
                       }
                 }
             }
           Element2d newel = sel;
-          for (auto i : Range(points))
-            newel[i] = newPoint(sel[i], -1, groups[i]);
-          newel.SetIndex(si_map[sel.GetIndex()]);
+          for (auto i : Range(np))
+            newel[i] = newPoint(points[i], -1, groups[i]);
+          if (surfacefacs[iface] > 0)
+            Swap(newel[0], newel[2]); // swap back
+          newel.SetIndex(si_map[iface]);
           new_sels.Append(newel);
         }
-      if (is_boundary_moved.Test(sel.GetIndex()))
+      if (is_boundary_moved.Test(iface))
         {
           auto& sel = mesh[si];
           for (auto& p : sel.PNums())
