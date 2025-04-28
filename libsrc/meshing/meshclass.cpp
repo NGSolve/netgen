@@ -163,7 +163,7 @@ namespace netgen
         if(mesh.PointContainedIn2DElement(p,lami,ii))
           return ii;
       }
-    return 0;
+    return SurfaceElementIndex::INVALID;
   }
 
   SegmentIndex Find1dElement (const Mesh& mesh,
