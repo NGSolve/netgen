@@ -1300,6 +1300,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("IdentifyPeriodicBoundaries", &Mesh::IdentifyPeriodicBoundaries,
          py::arg("identification_name"), py::arg("face1"), py::arg("mapping"),
 py::arg("point_tolerance") = -1.)
+    .def("GetCurveOrder", [] (Mesh & self)
+          {
+            return self.GetCurvedElements().GetOrder();
+          })
     .def("GetNrIdentifications", [](Mesh& self)
                                  {
                                    return self.GetIdentifications().GetMaxNr();
