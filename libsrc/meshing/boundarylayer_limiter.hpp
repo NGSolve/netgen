@@ -505,6 +505,25 @@ struct GrowthVectorLimiter
     RegionTimer reg(t);
     // check if surface trigs are intersecting each other
     bool changed = true;
+    std::set<PointIndex> special_points;
+
+    if (tool.insert_only_volume_elements)
+      for (auto [pi, special_point] : tool.special_boundary_points)
+        {
+          special_points.insert(pi);
+          for (auto& group : special_point.growth_groups)
+            special_points.insert(group.new_points.Last());
+        }
+
+    auto skip_trig = [&] (const Element2d& tri) {
+      if (!tool.insert_only_volume_elements)
+        return false;
+      for (auto pi : tri.PNums())
+        if (special_points.find(pi) != special_points.end())
+          return true;
+      return false;
+    };
+
     while (changed)
       {
         changed = false;
@@ -515,6 +534,9 @@ struct GrowthVectorLimiter
         for (auto sei : SurfaceElementsRange())
           {
             const Element2d& tri = Get(sei);
+
+            if (skip_trig(tri))
+              continue;
 
             Box<3> box(Box<3>::EMPTY_BOX);
             for (PointIndex pi : tri.PNums())
@@ -527,6 +549,9 @@ struct GrowthVectorLimiter
         for (auto sei : SurfaceElementsRange())
           {
             const Element2d& tri = Get(sei);
+
+            if (skip_trig(tri))
+              continue;
 
             Box<3> box(Box<3>::EMPTY_BOX);
             for (PointIndex pi : tri.PNums())
@@ -684,8 +709,9 @@ struct GrowthVectorLimiter
     for (auto pi : Range(growthvectors))
       check_point(pi);
 
-    for (auto& [special_pi, special_point] : tool.special_boundary_points)
-      check_point(special_pi);
+    if (!tool.insert_only_volume_elements)
+      for (auto& [special_pi, special_point] : tool.special_boundary_points)
+        check_point(special_pi);
   }
 
   void Perform ()
