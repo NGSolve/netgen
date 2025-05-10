@@ -31,7 +31,7 @@
 #include <TopoDS_Shape.hxx>
 #include <Transfer_FinderProcess.hxx>
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4) || OCC_VERSION_MAJOR>=8
 #define OCC_HAVE_HISTORY
 #endif
 
