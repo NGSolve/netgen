@@ -21,7 +21,7 @@
 
 #include "meshing.hpp"
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4) || OCC_VERSION_MAJOR>=8
 #define OCC_HAVE_DUMP_JSON
 #endif
 
