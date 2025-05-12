@@ -76,6 +76,7 @@
 #include <IntTools_Context.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
 #include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <ShapeFix_ShapeTolerance.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax2d.hxx>
@@ -774,6 +775,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                auto box = GetBoundingBox(shape);
                return py::make_tuple( ng2occ(box.PMin()), ng2occ(box.PMax()) );
             }, "returns bounding box (pmin, pmax)")
+
+    .def("LimitTolerance", [](TopoDS_Shape& self, double tmin,
+                              double tmax, TopAbs_ShapeEnum type)
+    {
+      ShapeFix_ShapeTolerance fix;
+      fix.LimitTolerance(self, tmin, tmax, type);
+    }, py::arg("tmin"), py::arg("tmax")=0., py::arg("type")=TopAbs_SHAPE,
+         "limit tolerance of shape to range [tmin, tmax]")
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
