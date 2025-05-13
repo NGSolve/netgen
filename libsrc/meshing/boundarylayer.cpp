@@ -1157,6 +1157,22 @@ void BoundaryLayerTool ::SetDomInOutSides ()
 
 void BoundaryLayerTool ::AddSegments ()
 {
+  if (insert_only_volume_elements)
+    {
+      if (params.disable_curving)
+        {
+          auto is_mapped = [&] (PointIndex pi) {
+            return pi >= mapto.Range().Next() || mapto[pi].Size() > 0;
+          };
+          for (auto& seg : old_segments)
+            if (is_mapped(seg[0]) || is_mapped(seg[1]))
+              {
+                seg.epgeominfo[0].edgenr = -1;
+                seg.epgeominfo[1].edgenr = -1;
+              }
+        }
+    }
+
   auto& new_segs =
     insert_only_volume_elements ? new_segments_on_moved_bnd : new_segments;
 
@@ -1424,6 +1440,11 @@ void BoundaryLayerTool ::Perform ()
               identifications.Add(mapto[p0][i], mapto[p1][i], nr);
         }
     }
+
+  // there is still a bug with segment edge numbers in moved boundaries.
+  // As a workaround, don't add them at all if only volume elements are inserted
+  if (insert_only_volume_elements)
+    mesh.LineSegments() = old_segments;
 
   mesh.CalcSurfacesOfNode();
   mesh.GetTopology().ClearEdges();
