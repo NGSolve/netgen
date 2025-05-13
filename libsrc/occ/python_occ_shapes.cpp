@@ -14,7 +14,7 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6) || OCC_VERSION_MAJOR>=8
 #include <BinTools_ShapeWriter.hxx>
 #endif // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
 #include <BOPAlgo_Builder.hxx>
@@ -865,7 +865,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     {
       if(binary)
         {
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6) || OCC_VERSION_MAJOR>=8
           BinTools_FormatVersion v = version ? BinTools_FormatVersion(*version) : BinTools_FormatVersion_CURRENT;
           BinTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
 # else // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
@@ -874,7 +874,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
       else
         {
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6) || OCC_VERSION_MAJOR>=8
           TopTools_FormatVersion v = version ? (TopTools_FormatVersion)(*version) : TopTools_FormatVersion_CURRENT;
           BRepTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
 #else // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
@@ -1200,7 +1200,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
   
     .def("MakeChamfer", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double d) {
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4        
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4) || OCC_VERSION_MAJOR>=8        
         BRepFilletAPI_MakeChamfer mkChamfer(shape);
         for (auto e : edges)
           mkChamfer.Add (d, TopoDS::Edge(e));
@@ -2535,7 +2535,7 @@ tangents : Dict[int, gp_Vec]
           points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
 
       GeomAPI_PointsToBSplineSurface builder;
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4) || OCC_VERSION_MAJOR>=8
       builder.Init(points, approx_type, deg_min, deg_max, continuity, tol, periodic);
 #else
       if(periodic)
@@ -2605,7 +2605,7 @@ degen_tol : double
                   points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
 
           GeomAPI_PointsToBSplineSurface builder;
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if (OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4) || OCC_VERSION_MAJOR>=8
           builder.Interpolate(points, approx_type, periodic);
 #else
           if(periodic)
