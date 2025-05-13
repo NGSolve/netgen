@@ -439,6 +439,9 @@ if (USE_MPEG)
     find_package(FFMPEG REQUIRED)
     add_definitions(-DFFMPEG -D__STDC_CONSTANT_MACROS)
     include_directories(${FFMPEG_INCLUDE_DIR})
+    if(USE_GUI)
+        target_link_libraries(nggui INTERFACE ${FFMPEG_LIBRARIES})
+    endif(USE_GUI)
 endif (USE_MPEG)
 
 #######################################################################
