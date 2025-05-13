@@ -7545,9 +7545,9 @@ namespace netgen
   }
   
   string Mesh :: cd3_default_name = "default";
+  static string defaultstring  = "default";
   const string & Mesh :: GetCD3Name (int cd3nr) const
   {
-    static string defaultstring  = "default";
     if (!cd3names.Size())
       return defaultstring;
 
@@ -7586,6 +7586,9 @@ namespace netgen
 
   std::string_view Mesh :: GetRegionName (const Element & el) const
   {
+    const auto& names = const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-3);
+    if(names.Size() <= el.GetIndex())
+      return defaultstring;
     return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-3)[el.GetIndex()-1];
   }
   
