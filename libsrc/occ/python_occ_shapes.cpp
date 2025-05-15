@@ -940,13 +940,16 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         return py::none();
       auto col = *OCCGeometry::GetProperties(self).col;
       return py::cast(std::vector<double>({ col(0), col(1), col(2), col(3) }));
-    }, [](const TopoDS_Shape & self, std::vector<double> c) {
-        Vec<4> col(c[0], c[1], c[2], 1.0);
-        if(c.size() == 4)
-          col[3] = c[3];
-        OCCGeometry::GetProperties(self).col = col;
-        for(auto & s : GetHighestDimShapes(self))
-          OCCGeometry::GetProperties(s).col = col;
+    }, [](const TopoDS_Shape & self, std::optional<std::vector<double>> c) {
+      if(c.has_value())
+        {
+          Vec<4> col((*c)[0], (*c)[1], (*c)[2], 1.0);
+          if(c->size() == 4)
+            col[3] = (*c)[3];
+          OCCGeometry::GetProperties(self).col = col;
+        }
+      else
+        OCCGeometry :: GetProperties(self).col = nullopt;
       }, "color of shape as RGB - tuple")
     .def_property("layer", [](const TopoDS_Shape& self) {
     if (!OCCGeometry::HaveProperties(self))
