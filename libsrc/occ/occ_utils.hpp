@@ -1,6 +1,12 @@
 #ifndef FILE_OCC_UTILS_INCLUDED
 #define FILE_OCC_UTILS_INCLUDED
 
+#define NETGEN_OCC_VERSION_AT_LEAST(MAYOR, MINOR) \
+  MAYOR > OCC_VERSION_MAYOR ||                                \
+  (MAYOR == OCC_VERSION_MAYOR && MINOR >= OCC_VERSION_MINOR)
+#define NETGEN_OCC_VERSION_AT_LEAST_MAYOR(MAYOR) \
+  NETGEN_OCC_VERSION_AT_LEAST(MAYOR, 0)
+
 #include <variant>
 
 // #pragma clang diagnostic push
@@ -21,7 +27,7 @@
 
 #include "meshing.hpp"
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
 #define OCC_HAVE_DUMP_JSON
 #endif
 
