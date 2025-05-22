@@ -17,5 +17,5 @@ if ($LASTEXITCODE -ne 0) {
 }
 & $pydir\python.exe -m pip install scikit-build wheel numpy twine pybind11-stubgen
 & $pydir\python.exe -m pip install --upgrade netgen-occt==7.8.1 netgen-occt-devel==7.8.1
-& $pydir\python setup.py bdist_wheel -G"Visual Studio 16 2019"
+& $pydir\python setup.py bdist_wheel -G"Visual Studio 17 2022"
 & $pydir\python -m twine upload dist\*.whl
