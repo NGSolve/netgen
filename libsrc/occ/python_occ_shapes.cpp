@@ -783,6 +783,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       fix.LimitTolerance(self, tmin, tmax, type);
     }, py::arg("tmin"), py::arg("tmax")=0., py::arg("type")=TopAbs_SHAPE,
          "limit tolerance of shape to range [tmin, tmax]")
+    .def("SetTolerance", [](TopoDS_Shape& self, double tol,
+                            TopAbs_ShapeEnum stype)
+    {
+      ShapeFix_ShapeTolerance fix;
+      fix.SetTolerance(self, tol, stype);
+    }, py::arg("tol"), py::arg("stype")=TopAbs_SHAPE, "set (enforce) tolerance of shape to 't'")
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
