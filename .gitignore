@@ -5,7 +5,6 @@ build
 *.vol
 *.ini
 __pycache__
-*.json
 *.zip
 .cache
 *.patch
