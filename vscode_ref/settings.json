@@ -1,0 +1,30 @@
+{
+    "cmake.generator": "Ninja",
+    "cmake.sourceDirectory": "${workspaceFolder}",
+    "cmake.buildDirectory": "${workspaceFolder}/build",
+    "cmake.configureOnOpen": false,
+    "cmake.configureOnEdit": false,
+    "cmake.useCMakePresets": "never",
+    "cmake.configureSettings": {
+        //
+        "CMAKE_C_COMPILER": "cl",
+        "CMAKE_CXX_COMPILER": "cl",
+        //
+        "USE_SUPERBUILD": false,
+        "USE_GUI": false,
+        "USE_PYTHON": false,
+        "USE_TESTING": false,
+        "USE_OCC": false,
+        "CMAKE_INSTALL_PREFIX": "${workspaceFolder}/../netgen_svn",
+        "ZLIB_INCLUDE_DIRS": "D:/lloyd/dev/z43libs/svn-esx.speag.com_SuperMash_libraries_zlib_zlib-1_2_11_msvc140-win10/include",
+        "ZLIB_LIBRARIES": "D:/lloyd/dev/z43libs/svn-esx.speag.com_SuperMash_libraries_zlib_zlib-1_2_11_msvc140-win10/lib/x64/zlibwapi.lib",
+    },
+    "files.associations": {
+        "*.py": "python",
+        "memory": "cpp",
+        "algorithm": "cpp",
+        "xiosbase": "cpp",
+        "xlocale": "cpp",
+        "xutility": "cpp"
+    }
+}
