@@ -8,25 +8,26 @@ namespace netgen
 {
   struct PointTree
   {
-      BoxTree<3> tree;
+      std::map<int, BoxTree<3>> tree;
+      Box<3> bounding_box;
 
-      PointTree( Box<3> bb ) : tree(bb) {}
+      PointTree( Box<3> bb ) : bounding_box(bb) {}
 
-      void Insert(Point<3> p, PointIndex n)
+      void Insert(Point<3> p, PointIndex n, int index)
       {
-          tree.Insert(p, p, n);
+        if(tree.count(index) == 0)
+          tree.emplace(index, bounding_box);
+        tree.at(index).Insert(p, p, n);
       }
 
-      PointIndex Find(Point<3> p) const
+      PointIndex Find(Point<3> p, int index) const
       {
           ArrayMem<int, 1> points;
-          tree.GetIntersecting(p, p, points);
+          tree.at(index).GetIntersecting(p, p, points);
           if(points.Size()==0)
-              throw Exception("cannot find mapped point");
+              throw Exception("cannot find mapped point " + ToString(p));
           return points[0];
       }
-
-      double GetTolerance() { return tree.GetTolerance(); }
   };
 
   DLL_HEADER GeometryRegisterArray geometryregister;
@@ -213,22 +214,24 @@ namespace netgen
       }
   }
 
-  struct Line
-  {
-    Point<3> p0, p1;
-    inline double Length() const { return (p1-p0).Length(); }
-    inline double Dist(const Line& other) const
+  namespace {
+    struct Line
     {
-      Vec<3> n = p1-p0;
-      Vec<3> q = other.p1-other.p0;
-      double nq = n*q;
-      Point<3> p = p0 + 0.5*n;
-      double lambda = (p-other.p0)*n / (nq + 1e-10);
-      if (lambda >= 0 && lambda <= 1)
-        return (p-other.p0-lambda*q).Length();
-      return 1e99;
-    }
-  };
+      Point<3> p0, p1;
+      inline double Length() const { return (p1-p0).Length(); }
+      inline double Dist(const Line& other) const
+      {
+        Vec<3> n = p1-p0;
+        Vec<3> q = other.p1-other.p0;
+        double nq = n*q;
+        Point<3> p = p0 + 0.5*n;
+        double lambda = (p-other.p0)*n / (nq + 1e-10);
+        if (lambda >= 0 && lambda <= 1)
+          return (p-other.p0-lambda*q).Length();
+        return 1e99;
+      }
+    };
+  }
 
   void NetgenGeometry :: Clear()
   {
@@ -256,8 +259,8 @@ namespace netgen
               auto &s = shapes[i];
               s->nr = i;
               for(auto & ident : s->identifications)
-                  if(s.get() == ident.from)
-                      ident.to->identifications.Append(ident);
+                if(s.get() == ident.from && s.get() != ident.to)
+                  ident.to->identifications.Append(ident);
           }
       };
 
@@ -266,7 +269,7 @@ namespace netgen
         for(auto & ident: f->identifications)
           for(auto e : static_cast<GeometryFace*>(ident.from)->edges)
             for(auto e_other : static_cast<GeometryFace*>(ident.to)->edges)
-              if(e->IsMappedShape(*e_other, ident.trafo, tol))
+              if(ident.trafo && e->IsMappedShape(*e_other, *ident.trafo, tol))
                 e->identifications.Append( {e, e_other, ident.trafo, ident.type, ident.name} );
 
       for(auto & e : edges)
@@ -278,9 +281,11 @@ namespace netgen
               GeometryVertex * pfrom[] = { &from.GetStartVertex(), &from.GetEndVertex() };
               GeometryVertex * pto[] = { &to.GetStartVertex(), &to.GetEndVertex() };
 
+              if(!ident.trafo) continue;
+
               // swap points of other edge if necessary
-              Point<3> p_from0 = ident.trafo(from.GetStartVertex().GetPoint());
-              Point<3> p_from1 = ident.trafo(from.GetEndVertex().GetPoint());
+              Point<3> p_from0 = (*ident.trafo)(from.GetStartVertex().GetPoint());
+              Point<3> p_from1 = (*ident.trafo)(from.GetEndVertex().GetPoint());
               Point<3> p_to0 = to.GetStartVertex().GetPoint();
 
               if(Dist(p_from1, p_to0) < Dist(p_from0, p_to0))
@@ -298,10 +303,7 @@ namespace netgen
       auto find_primary = [&] (auto & shapes)
       {
           for(auto &s : shapes)
-          {
               s->primary = s.get();
-              s->primary_to_me = Transformation<3>{ Vec<3> {0,0,0} }; // init with identity
-          }
 
           bool changed = true;
 
@@ -313,23 +315,21 @@ namespace netgen
               {
                   bool need_inverse = ident.from == s.get();
                   auto other = need_inverse ? ident.to : ident.from;
-                  if(other->nr < s->primary->nr)
-                  {
-                      auto trafo = ident.trafo;
-                      if(need_inverse)
-                          trafo = trafo.CalcInverse();
-                      s->primary = other;
-                      s->primary_to_me.Combine(trafo, s->primary_to_me);
-                      changed = true;
-                  }
                   if(other->primary->nr < s->primary->nr)
                   {
-                      auto trafo = ident.trafo;
-                      if(need_inverse)
-                          trafo = trafo.CalcInverse();
                       s->primary = other->primary;
-                      s->primary_to_me.Combine(trafo, other->primary_to_me);
-                      changed = true;
+                      if(ident.trafo)
+                      {
+                        auto trafo = *ident.trafo;
+                        if(need_inverse)
+                            trafo = trafo.CalcInverse();
+                        if(!s->primary_to_me)
+                          s->primary_to_me = Transformation<3>( Vec<3>{0., 0., 0.} );
+                        if(!other->primary_to_me)
+                          other->primary_to_me = Transformation<3>( Vec<3>{0., 0., 0.} );
+                        s->primary_to_me->Combine(trafo, *other->primary_to_me);
+                        changed = true;
+                    }
                   }
               }
             }
@@ -474,7 +474,7 @@ namespace netgen
       }
 
     for(const auto& mspnt : mparam.meshsize_points)
-      mesh.RestrictLocalH(mspnt.pnt, mspnt.h);
+      mesh.RestrictLocalH(mspnt.pnt, mspnt.h, mspnt.layer);
 
     mesh.LoadLocalMeshSize(mparam.meshsizefilename);
   }
@@ -485,6 +485,20 @@ namespace netgen
     static Timer tdivide("Divide Edges");
     RegionTimer rt(tdivide);
     // -------------------- DivideEdge -----------------
+    if(properties.partition)
+      {
+        points.SetSize(properties.partition->Size());
+        params.SetSize(properties.partition->Size()+2);
+        params[0] = 0.0;
+        params.Last() = 1.0;
+        for(auto i : Range(properties.partition->Size()))
+          {
+            params[i+1] = (*properties.partition)[i];
+            points[i] = GetPoint(params[i+1]);
+          }
+        return;
+      }
+
     tdivedgesections.Start();
     auto layer = properties.layer;
     double safety = 0.5*(1.-mparam.grading);
@@ -513,7 +527,7 @@ namespace netgen
 
     tdivedgesections.Stop();
 
-    auto n = hvalue.Size()-1;
+    // auto n = hvalue.Size()-1;
     int nsubedges = max2(1, int(floor(hvalue.Last()+0.5)));
     points.SetSize(nsubedges-1);
     params.SetSize(nsubedges+1);
@@ -568,29 +582,30 @@ namespace netgen
 
     auto & identifications = mesh.GetIdentifications();
 
-    std::map<size_t, PointIndex> vert2meshpt;
+    Array<PointIndex> vert2meshpt(vertices.Size());
+    vert2meshpt = PointIndex::INVALID;
+
     for(auto & vert : vertices)
       {
         auto pi = mesh.AddPoint(vert->GetPoint(), vert->properties.layer);
-        tree.Insert(mesh[pi], pi);
-        vert2meshpt[vert->GetHash()] = pi;
+        vert2meshpt[vert->nr] = pi;
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
-
-        Element0d el(pi, pi);
+        
+        Element0d el(pi, pi-IndexBASE<PointIndex>()+1);
         el.name = vert->properties.GetName();
-        mesh.SetCD3Name(pi, el.name);
+        mesh.SetCD3Name(pi-IndexBASE<PointIndex>()+1, el.name);
         mesh.pointelements.Append (el);
       }
 
     for(auto & vert : vertices)
         for(auto & ident : vert->identifications)
-            identifications.Add(vert2meshpt[ident.from->GetHash()],
-                                vert2meshpt[ident.to->GetHash()],
+            identifications.Add(vert2meshpt[ident.from->nr],
+                                vert2meshpt[ident.to->nr],
                                 ident.name,
                                 ident.type);
 
-    size_t segnr = 0;
+    // size_t segnr = 0;
     auto nedges = edges.Size();
     Array<Array<PointIndex>> all_pnums(nedges);
     Array<Array<double>> all_params(nedges);
@@ -600,12 +615,12 @@ namespace netgen
         auto edge = edges[edgenr].get();
         PointIndex startp, endp;
         // throws if points are not found
-        startp = vert2meshpt.at(edge->GetStartVertex().GetHash());
-        endp = vert2meshpt.at(edge->GetEndVertex().GetHash());
+        startp = vert2meshpt[edge->GetStartVertex().nr];
+        endp = vert2meshpt[edge->GetEndVertex().nr];
 
         // ignore collapsed edges
-        if(startp == endp && edge->GetLength() < 1e-10 * bounding_box.Diam())
-            continue;
+        if(edge->IsDegenerated())
+          continue;
 
         // ----------- Add Points to mesh and create segments -----
         auto & pnums = all_pnums[edgenr];
@@ -644,7 +659,7 @@ namespace netgen
         {
             auto nr_primary = edge->primary->nr;
             auto & pnums_primary = all_pnums[nr_primary];
-            auto & params_primary = all_params[nr_primary];
+            // auto & params_primary = all_params[nr_primary];
             auto trafo = edge->primary_to_me;
 
             auto np = pnums_primary.Size();
@@ -652,7 +667,9 @@ namespace netgen
             edge_params.SetSize(np-2);
             for(auto i : Range(np-2))
             {
-                edge_points[i] = trafo(mesh[pnums_primary[i+1]]);
+                edge_points[i] = mesh[pnums_primary[i+1]];
+                if(trafo)
+                  edge_points[i] = (*trafo)(edge_points[i]);
                 EdgePointGeomInfo gi;
                 edge->ProjectPoint(edge_points[i], &gi);
                 edge_params[i] = gi.dist;
@@ -683,7 +700,8 @@ namespace netgen
             {
               for(size_t i : std::vector{0UL, pnums_primary.Size()-1})
               {
-                auto p_mapped = trafo(mesh[pnums_primary[i]]);
+                auto p_mapped = mesh[pnums_primary[i]];
+                if(trafo) p_mapped = (*trafo)(p_mapped);
                 EdgePointGeomInfo gi;
                 edge->ProjectPoint(p_mapped, &gi);
                 params[i] = gi.dist;
@@ -701,13 +719,14 @@ namespace netgen
         for(auto i : Range(edge_points))
         {
             auto pi = mesh.AddPoint(edge_points[i], edge->properties.layer);
-            tree.Insert(mesh[pi], pi);
+            if(edge->identifications.Size())
+              tree.Insert(mesh[pi], pi, edge->nr);
             pnums[i+1] = pi;
         }
 
         for(auto i : Range(pnums.Size()-1))
         {
-            segnr++;
+          // segnr++;
             Segment seg;
             seg[0] = pnums[i];
             seg[1] = pnums[i+1];
@@ -733,10 +752,16 @@ namespace netgen
           if(ident.from == edge.get())
           {
             auto & pnums = all_pnums[edge->nr];
+            if(pnums.Size() < 2) continue; // degenerated edge
             // start and end vertex are already identified
             for(auto pi : pnums.Range(1, pnums.Size()-1))
             {
-                auto pi_other = tree.Find(ident.trafo(mesh[pi]));
+                Point<3> p_other = mesh[pi];
+                if(ident.trafo)
+                  p_other = (*ident.trafo)(mesh[pi]);
+                else
+                  static_cast<GeometryEdge*>(ident.to)->ProjectPoint(p_other, nullptr);
+                auto pi_other = tree.Find(p_other, ident.to->nr);
                 identifications.Add(pi, pi_other, ident.name, ident.type);
             }
           }
@@ -775,7 +800,10 @@ namespace netgen
         PointIndex pi = vert->nr + 1;
         if(glob2loc[pi] == 0)
           {
-            meshing.AddPoint(mesh[pi], pi);
+            auto gi = face.Project(mesh[pi]);
+            MultiPointGeomInfo mgi;
+            mgi.AddPointGeomInfo(gi);
+            meshing.AddPoint(mesh[pi], pi, &mgi);
             cntp++;
             glob2loc[pi] = cntp;
           }
@@ -829,7 +857,7 @@ namespace netgen
         if(face.primary == &face)
         {
             // check if this face connects two identified closesurfaces
-            auto & idents = mesh.GetIdentifications();
+            // auto & idents = mesh.GetIdentifications();
             std::set<int> relevant_edges;
             auto segments = face.GetBoundary(mesh);
             for(const auto &s : segments)
@@ -842,7 +870,7 @@ namespace netgen
                 for(auto pi : s.PNums())
                     if(!is_point_in_tree[pi])
                     {
-                        tree.Insert(mesh[pi], pi);
+                        tree.Insert(mesh[pi], pi, -1);
                         is_point_in_tree[pi] = true;
                     }
 
@@ -851,7 +879,7 @@ namespace netgen
             constexpr int NOT_MAPPED = -1;
             mapped_edges = UNINITIALIZED;
 
-            Transformation<3> trafo;
+            optional<Transformation<3>> trafo;
 
             if(face.IsConnectingCloseSurfaces())
             {
@@ -866,7 +894,7 @@ namespace netgen
                 {
                     auto edgenr = s.edgenr-1;
                     auto & edge = *edges[edgenr];
-                    ShapeIdentification *edge_mapping;
+                    // ShapeIdentification *edge_mapping;
 
                     // have edgenr first time, search for closesurface identification
 
@@ -893,14 +921,27 @@ namespace netgen
                         Element2d sel(4);
                         sel[0] = s[0];
                         sel[1] = s[1];
-                        sel[2] = tree.Find(trafo(mesh[s[1]]));
-                        sel[3] = tree.Find(trafo(mesh[s[0]]));
                         auto gis = sel.GeomInfo();
                         for(auto i : Range(2))
                         {
                             gis[i].u = s.epgeominfo[i].u;
                             gis[i].v = s.epgeominfo[i].v;
                         }
+
+                        Point<3> p2 = mesh[s[1]];
+                        Point<3> p3 = mesh[s[0]];
+                        if(trafo)
+                        {
+                          p2 = (*trafo)(p2);
+                          p3 = (*trafo)(p3);
+                        }
+                        else 
+                        {
+                          edges[mapped_edges[edgenr]]->ProjectPoint(p2, nullptr);
+                          edges[mapped_edges[edgenr]]->ProjectPoint(p3, nullptr);
+                        }
+                        sel[2] = tree.Find(p2, -1);
+                        sel[3] = tree.Find(p3, -1);
 
                         // find mapped segment to set PointGeomInfo correctly
                         Segment s_other;
@@ -944,11 +985,12 @@ namespace netgen
     }
 
     bool have_identifications = false;
+    std::map<tuple<PointIndex, int>, PointIndex> mapto;
     for(auto & face : faces)
         if(face->primary != face.get())
         {
             have_identifications = true;
-            MapSurfaceMesh(mesh, *face);
+            MapSurfaceMesh(mesh, *face, mapto);
         }
 
     // identify points on faces
@@ -979,7 +1021,7 @@ namespace netgen
                         if(mesh[pi].Type() == SURFACEPOINT && pi_to_face[pi]==-1)
                         {
                             pi_to_face[pi] = face->nr;
-                            tree.Insert(mesh[pi], pi);
+                            tree.Insert(mesh[pi], pi, -1);
                             pi_of_face[face->nr].Append(pi);
                         }
                     }
@@ -992,7 +1034,8 @@ namespace netgen
                 if(ident.from == face.get())
                     for(auto pi : pi_of_face[face->nr])
                     {
-                        auto pi_other = tree.Find(ident.trafo(mesh[pi]));
+                        auto pi_primary = ident.from->primary->nr == ident.from->nr ? pi : mapto[{pi, ident.to->primary->nr}];
+                        auto pi_other = ident.to->primary->nr == ident.to->nr ? pi_primary : mapto[{pi_primary, ident.to->nr}];
                         mesh_ident.Add(pi, pi_other, ident.name, ident.type);
                     }
             }
@@ -1002,7 +1045,7 @@ namespace netgen
     multithread.task = savetask;
   }
 
-  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const
+  void NetgenGeometry :: MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst, std::map<tuple<PointIndex, int>, PointIndex> & mapto ) const
   {
     static Timer timer("MapSurfaceMesh");
     RegionTimer rt(timer);
@@ -1029,7 +1072,24 @@ namespace netgen
             auto pi = seg[i];
             if(!is_point_in_tree[pi])
             {
-              tree.Insert(trafo(mesh[pi]), pi);
+              auto p = mesh[pi];
+              if(trafo)
+                p = (*trafo)(p);
+              else
+                for(auto& edge: dst.edges)
+                  if (edge->primary->nr == seg.edgenr-1)
+                    {
+                      if (mesh[pi].Type() == FIXEDPOINT) {
+                        if((edge->GetStartVertex().GetPoint() - p).Length2() >\
+                           (edge->GetEndVertex().GetPoint() - p).Length2())
+                          p = edge->GetEndVertex().GetPoint();
+                        else
+                          p = edge->GetStartVertex().GetPoint();
+                      }
+                      else
+                        edge->ProjectPoint(p, nullptr);
+                    }
+              tree.Insert(p, pi, -1);
               is_point_in_tree[pi] = true;
             }
           }
@@ -1041,7 +1101,7 @@ namespace netgen
           {
             auto pi = seg[i];
             if(!pmap[pi].IsValid())
-                pmap[tree.Find(mesh[pi])] = pi;
+              pmap[tree.Find(mesh[pi], -1)] = pi;
 
             // store uv values (might be different values for same point in case of internal edges)
             double u = seg.epgeominfo[i].u;
@@ -1057,12 +1117,7 @@ namespace netgen
     }
 
     xbool do_invert = maybe;
-    if(dst.identifications[0].type == Identifications::PERIODIC)
-      {
-        auto other = static_cast<GeometryFace*>(dst.primary);
-        if(dst.domin != other->domout && dst.domout != other->domin)
-          do_invert = true;
-      }
+    if(!trafo) do_invert = true;
 
     // now insert mapped surface elements
     for(auto sei : mesh.SurfaceElements().Range())
@@ -1071,14 +1126,6 @@ namespace netgen
         if(sel.GetIndex() != src.nr+1)
           continue;
 
-        if(do_invert.IsMaybe())
-        {
-            auto n_src = src.GetNormal(mesh[sel[0]]);
-            auto n_dist = dst.GetNormal(trafo(mesh[sel[0]]));
-            Mat<3> normal_matrix;
-            CalcInverse(Trans(trafo.GetMatrix()), normal_matrix);
-            do_invert = n_src * (normal_matrix * n_dist) < 0.0;
-        }
         auto sel_new = sel;
         sel_new.SetIndex(dst.nr+1);
         for(auto i : Range(sel.PNums()))
@@ -1086,60 +1133,75 @@ namespace netgen
             auto pi = sel[i];
             if(!pmap[pi].IsValid())
               {
-                pmap[pi] = mesh.AddPoint(trafo(mesh[pi]), 1, SURFACEPOINT);
+                auto p = mesh[pi];
+                if(trafo)
+                  p = (*trafo)(p);
+                else
+                  dst.Project(p);
+                pmap[pi] = mesh.AddPoint(p, 1, SURFACEPOINT);
               }
               sel_new[i] = pmap[pi];
+              mapto[{pi, dst.nr}] = pmap[pi];
+              mapto[{pmap[pi], src.nr}] = pi;
           }
-          if(do_invert.IsTrue())
-              sel_new.Invert();
+        if(do_invert.IsMaybe())
+        {
+            auto n_src = src.GetNormal(mesh[sel[0]]);
+            auto n_dist = dst.GetNormal(mesh[sel_new[0]]);
+            Mat<3> normal_matrix;
+            CalcInverse(Trans(trafo->GetMatrix()), normal_matrix);
+            do_invert = (normal_matrix * n_src) * n_dist < 0.0;
+        }
+        if(do_invert.IsTrue())
+            sel_new.Invert();
 
-          for(auto i : Range(sel.PNums()))
-          {
-              auto pi = sel_new[i];
-              if(uv_values.Range().Next() <= pi)
-              {
-                  // new point (inner surface point)
-                  PointGeomInfo gi;
-                  dst.CalcPointGeomInfo(mesh[sel_new[i]], gi);
-                  sel_new.GeomInfo()[i] = gi;
-                  continue;
-              }
+        for(auto i : Range(sel.PNums()))
+        {
+            auto pi = sel_new[i];
+            if(uv_values.Range().Next() <= pi)
+            {
+                // new point (inner surface point)
+                PointGeomInfo gi;
+                dst.CalcPointGeomInfo(mesh[sel_new[i]], gi);
+                sel_new.GeomInfo()[i] = gi;
+                continue;
+            }
 
-              const auto & uvs = uv_values[pi];
-              if(uvs.Size() == 1)
-              {
-                  // appears only once -> take uv values from edgepointgeominfo
-                  const auto & [u,v] = uvs[0];
-                  PointGeomInfo gi;
-                  gi.u = u;
-                  gi.v = v;
-                  sel_new.GeomInfo()[i] = gi;
-              }
-              else if(uvs.Size() > 1)
-              {
-                  // multiple uv pairs -> project to close point and select closest uv pair
-                  double eps = 1e-3;
-                  auto p = Point<3>((1.0-eps)*Vec<3>(mesh[sel_new.PNumMod(i+1)]) +
-                                        eps/2*Vec<3>(mesh[sel_new.PNumMod(i+2)]) +
-                                        eps/2*Vec<3>(mesh[sel_new.PNumMod(i+3)]));
-                  PointGeomInfo gi_p, gi;
-                  dst.CalcPointGeomInfo(p, gi_p);
-                  gi.trignum = gi_p.trignum;
-                  double min_dist = numeric_limits<double>::max();
-                  for(const auto & [u,v] : uvs)
-                  {
-                      double dist = (gi_p.u-u)*(gi_p.u-u) + (gi_p.v-v)*(gi_p.v-v);
-                      if(dist < min_dist)
-                      {
-                          min_dist = dist;
-                          gi.u = u;
-                          gi.v = v;
-                      }
-                  }
-                  sel_new.GeomInfo()[i] = gi;
-              }
-              else
-                  throw Exception(string(__FILE__) + ":"+ToString(__LINE__) + " shouldn't come here");
+            const auto & uvs = uv_values[pi];
+            if(uvs.Size() == 1)
+            {
+                // appears only once -> take uv values from edgepointgeominfo
+                const auto & [u,v] = uvs[0];
+                PointGeomInfo gi;
+                gi.u = u;
+                gi.v = v;
+                sel_new.GeomInfo()[i] = gi;
+            }
+            else if(uvs.Size() > 1)
+            {
+                // multiple uv pairs -> project to close point and select closest uv pair
+                double eps = 1e-3;
+                auto p = Point<3>((1.0-eps)*Vec<3>(mesh[sel_new.PNumMod(i+1)]) +
+                                      eps/2*Vec<3>(mesh[sel_new.PNumMod(i+2)]) +
+                                      eps/2*Vec<3>(mesh[sel_new.PNumMod(i+3)]));
+                PointGeomInfo gi_p, gi;
+                dst.CalcPointGeomInfo(p, gi_p);
+                gi.trignum = gi_p.trignum;
+                double min_dist = numeric_limits<double>::max();
+                for(const auto & [u,v] : uvs)
+                {
+                    double dist = (gi_p.u-u)*(gi_p.u-u) + (gi_p.v-v)*(gi_p.v-v);
+                    if(dist < min_dist)
+                    {
+                        min_dist = dist;
+                        gi.u = u;
+                        gi.v = v;
+                    }
+                }
+                sel_new.GeomInfo()[i] = gi;
+            }
+            else
+                throw Exception(string(__FILE__) + ":"+ToString(__LINE__) + " shouldn't come here");
           }
           mesh.AddSurfaceElement(sel_new);
       }
@@ -1158,6 +1220,7 @@ namespace netgen
       {
         PrintMessage(3, "Optimization step ", i);
         meshopt.SetFaceIndex(k+1);
+        meshopt.SetMetricWeight (mparam.elsizeweight);
         int innerstep = 0;
         for(auto optstep : mparam.optimize2d)
           {
@@ -1186,8 +1249,7 @@ namespace netgen
 
   void NetgenGeometry :: FinalizeMesh(Mesh& mesh) const
   {
-    if(solids.Size())
-      for (int i = 0; i < mesh.GetNDomains(); i++)
+      for (int i = 0; i < std::min(solids.Size(), (size_t)mesh.GetNDomains()); i++)
         if (auto name = solids[i]->properties.name)
           mesh.SetMaterial (i+1, *name);
 
@@ -1253,6 +1315,13 @@ namespace netgen
     if(multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHEDGES)
       return 0;
 
+    if(dimension == 1)
+      {
+        FinalizeMesh(*mesh);
+        mesh->SetDimension(1);
+        return 0;
+      }
+
     if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
         MeshSurface(*mesh, mparam);
@@ -1275,9 +1344,6 @@ namespace netgen
         MESHING3_RESULT res = MeshVolume (mparam, *mesh);
 
         if (res != MESHING3_OK) return 1;
-        if (multithread.terminate) return 0;
-
-        RemoveIllegalElements (*mesh);
         if (multithread.terminate) return 0;
 
         MeshQuality3d (*mesh);

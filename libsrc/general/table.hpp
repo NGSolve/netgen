@@ -120,7 +120,7 @@ public:
   
   /// Creates fixed maximal element size table
   inline TABLE (const NgFlatArray<int,BASE> & entrysizes)
-    : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), const_cast<int*>(&entrysizes[BASE])), 
+    : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), entrysizes.Size() ? const_cast<int*>(&entrysizes[BASE]) : nullptr), 
 		  sizeof(T))
   { ; }
 
@@ -169,6 +169,7 @@ public:
   /// Inserts element acont into row i. BASE-based. Does not test if already used, assumes to have enough memory
   inline void AddSave (int i, const T & acont)
     {
+      NETGEN_CHECK_RANGE(i, BASE, data.Size()+BASE);
       ((T*)data[i-BASE].col)[data[i-BASE].size] = acont;
       data[i-BASE].size++;
     }

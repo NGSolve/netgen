@@ -12,7 +12,6 @@
 */
 
 
-
 #include "../include/mystdlib.h"
 #include "../include/mydefs.hpp"
 
@@ -25,7 +24,7 @@ namespace netgen
 }
 #include "parthreads.hpp"
 // #include "moveablemem.hpp"
-#include "dynamicmem.hpp"
+// #include "dynamicmem.hpp"
 
 #include "template.hpp"
 #include "ngarray.hpp"
@@ -45,6 +44,5 @@ namespace netgen
 
 // #include "mpi_interface.hpp"
 #include "netgenout.hpp"
-
 
 #endif

@@ -6,7 +6,7 @@
 namespace netgen
 {
   void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
-		      const NgBitArray & isnewpoint)
+		      const TBitArray<PointIndex> & isnewpoint)
   {
     //const int ne = mesh.GetNE();
     const int np = mesh.GetNP();
@@ -20,11 +20,11 @@ namespace netgen
       {
 	backup[i] = new Point<3>(mesh.Point(i+1));
 
-	if(isnewpoint.Test(i+PointIndex::BASE) &&
-	   mesh.mlbetweennodes[i+PointIndex::BASE][0] > 0)
+	if(isnewpoint.Test(i+IndexBASE<PointIndex>()) &&
+	   mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][0].IsValid())
 	  {
-	    mesh.Point(i+1) = Center(mesh.Point(mesh.mlbetweennodes[i+PointIndex::BASE][0]),
-				     mesh.Point(mesh.mlbetweennodes[i+PointIndex::BASE][1]));
+	    mesh.Point(i+1) = Center(mesh.Point(mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][0]),
+				     mesh.Point(mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][1]));
 	  }
       }
     for (ElementIndex i = 0; i < mesh.GetNE(); i++)
@@ -104,7 +104,7 @@ namespace netgen
   }
 
 
-  void GetWorkingArea(NgBitArray & working_elements, NgBitArray & working_points,
+  void GetWorkingArea(BitArray & working_elements, TBitArray<PointIndex> & working_points,
 		      const Mesh & mesh, const NgArray<ElementIndex> & bad_elements,
 		      const int width)
   {
@@ -113,10 +113,10 @@ namespace netgen
 
     for(int i=0; i<bad_elements.Size(); i++)
       {
-	working_elements.Set(bad_elements[i]);
+	working_elements.SetBit(bad_elements[i]);
 	const Element & el = mesh[bad_elements[i]];
 	for(int j=1; j<=el.GetNP(); j++)
-	  working_points.Set(el.PNum(j));
+	  working_points.SetBit(el.PNum(j));
       }
     
 
@@ -133,7 +133,7 @@ namespace netgen
 		  set_active = working_points.Test(el.PNum(k));
 		
 		if(set_active)
-		  working_elements.Set(j);
+		  working_elements.SetBit(j);
 	      }
 	  }
 
@@ -143,7 +143,7 @@ namespace netgen
 	      {
 		const Element & el = mesh[j];
 		for(int k=1; k<=el.GetNP(); k++)
-		  working_points.Set(el.PNum(k));
+		  working_points.SetBit(el.PNum(k));
 	      }
 	  }
       }
@@ -152,10 +152,10 @@ namespace netgen
 
 
   void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
-		       const NgBitArray & isnewpoint, const Refinement & refinement,
+		       const TBitArray<PointIndex> & isnewpoint, const Refinement & refinement,
 		       const NgArray<double> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
-		       const NgArray< NgArray<int,PointIndex::BASE>* > & idmaps)
+		       const NgArray< idmap_type* > & idmaps)
   {
     ostringstream ostrstr;
 
@@ -185,39 +185,41 @@ namespace netgen
 	can[i] = new Point<3>;
       }
     
-    NgBitArray isboundarypoint(np),isedgepoint(np);
+    TBitArray<PointIndex> isboundarypoint(np),isedgepoint(np);
     isboundarypoint.Clear();
     isedgepoint.Clear();
 
     for(int i = 1; i <= mesh.GetNSeg(); i++)
       {
 	const Segment & seg = mesh.LineSegment(i);
-	isedgepoint.Set(seg[0]);
-	isedgepoint.Set(seg[1]);
+	isedgepoint.SetBit(seg[0]);
+	isedgepoint.SetBit(seg[1]);
       }
 
     NgArray<int> surfaceindex(np);
     surfaceindex = -1;
-    
+
+    /*
     for (int i = 1; i <= mesh.GetNSE(); i++)
       {
 	const Element2d & sel = mesh.SurfaceElement(i);
-	for (int j = 1; j <= sel.GetNP(); j++)
-	  if(!isedgepoint.Test(sel.PNum(j)))
-	    {
-	      isboundarypoint.Set(sel.PNum(j));
-	      surfaceindex[sel.PNum(j) - PointIndex::BASE] = 
-		mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
-	    }
-      }
-
+    */
+    for (auto & sel : mesh.SurfaceElements())
+      for (int j = 1; j <= sel.GetNP(); j++)
+        if(!isedgepoint.Test(sel.PNum(j)))
+          {
+            isboundarypoint.SetBit(sel.PNum(j));
+            surfaceindex[sel.PNum(j) - IndexBASE<PointIndex>()] = 
+              mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
+          }
+    
 
 
     Validate(mesh,bad_elements,pure_badness,
 	     ((uselocalworsening) ?  (0.8*(max_worsening-1.) + 1.) : (0.1*(max_worsening-1.) + 1.)),
 	     uselocalworsening); // -> larger working area
-    NgBitArray working_elements(ne);
-    NgBitArray working_points(np);
+    TBitArray<ElementIndex> working_elements(ne+1);
+    TBitArray<PointIndex> working_points(np);
 
     GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
     //working_elements.Set();
@@ -240,10 +242,10 @@ namespace netgen
     PrintMessage(5,ostrstr.str());
     
 
-    NgBitArray isworkingboundary(np);
+    TBitArray<PointIndex> isworkingboundary(np);
     for(int i=1; i<=np; i++)
       if(working_points.Test(i) && isboundarypoint.Test(i))
-	isworkingboundary.Set(i);
+	isworkingboundary.SetBit(i);
       else
 	isworkingboundary.Clear(i);
 
@@ -252,15 +254,16 @@ namespace netgen
       *should[i] = mesh.Point(i+1);
 
     
-    for(int i=0; i<np; i++)
+    // for(int i=0; i<np; i++)
+    for (PointIndex i = IndexBASE<PointIndex>(); i < IndexBASE<PointIndex>()+np; i++)
       {
-	if(isnewpoint.Test(i+PointIndex::BASE) && 
+	if(isnewpoint.Test(i) && 
 	   //working_points.Test(i+PointIndex::BASE) && 
-	   mesh.mlbetweennodes[i+PointIndex::BASE][0] > 0)
-	  *can[i] = Center(*can[mesh.mlbetweennodes[i+PointIndex::BASE][0]-PointIndex::BASE],
-			   *can[mesh.mlbetweennodes[i+PointIndex::BASE][1]-PointIndex::BASE]);
+	   mesh.mlbetweennodes[i][0].IsValid())
+	  *can[i-IndexBASE<PointIndex>()] = Center(*can[mesh.mlbetweennodes[i][0]-IndexBASE<PointIndex>()],
+                                                   *can[mesh.mlbetweennodes[i][1]-IndexBASE<PointIndex>()]);
 	else
-	  *can[i] = mesh.Point(i+1);
+	  *can[i-IndexBASE<PointIndex>()] = mesh[i];
       }
 
 
@@ -306,15 +309,19 @@ namespace netgen
 	  {
 	    for(int i=0; i<nv.Size(); i++)
 	      *nv[i] = Vec<3>(0,0,0);
+            /*
 	    for (int i = 1; i <= mesh.GetNSE(); i++)
 	      {
 		const Element2d & sel = mesh.SurfaceElement(i);
+            */
+            for (auto & sel : mesh.SurfaceElements())
+              {
 		Vec<3> auxvec = Cross(mesh.Point(sel.PNum(2))-mesh.Point(sel.PNum(1)),
                                       mesh.Point(sel.PNum(3))-mesh.Point(sel.PNum(1)));
 		auxvec.Normalize();
 		for (int j = 1; j <= sel.GetNP(); j++)
 		  if(!isedgepoint.Test(sel.PNum(j)))
-		    *nv[sel.PNum(j) - PointIndex::BASE] += auxvec;
+		    *nv[sel.PNum(j) - IndexBASE<PointIndex>()] += auxvec;
 	      }
 	    for(int i=0; i<nv.Size(); i++)
 	      nv[i]->Normalize();
@@ -470,11 +477,11 @@ namespace netgen
 	   multithread.terminate != 1)
 	  {
 	    MeshingParameters dummymp;
-	    MeshOptimize3d optmesh(dummymp);
+	    MeshOptimize3d optmesh(mesh, dummymp, OPT_QUALITY);
 	    for(int i=0; i<numtopimprove; i++)
 	      {
-		optmesh.SwapImproveSurface(mesh,OPT_QUALITY,&working_elements,&idmaps);
-		optmesh.SwapImprove(mesh,OPT_QUALITY,&working_elements);
+		optmesh.SwapImproveSurface(&working_elements,&idmaps);
+		optmesh.SwapImprove(&working_elements);
 		
 	      }	    
 
@@ -497,7 +504,7 @@ namespace netgen
 	    GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
 	    for(int i=1; i<=np; i++)
 	      if(working_points.Test(i) && isboundarypoint.Test(i))
-		isworkingboundary.Set(i);
+		isworkingboundary.SetBit(i);
 	      else
 		isworkingboundary.Clear(i);
 	    auxnum=0;
@@ -518,11 +525,11 @@ namespace netgen
       }
 
     MeshingParameters dummymp;
-    MeshOptimize3d optmesh(dummymp);
+    MeshOptimize3d optmesh(mesh, dummymp, OPT_QUALITY);
     for(int i=0; i<numtopimprove && multithread.terminate != 1; i++)
       {
-	optmesh.SwapImproveSurface(mesh,OPT_QUALITY,NULL,&idmaps);
-	optmesh.SwapImprove(mesh,OPT_QUALITY);
+	optmesh.SwapImproveSurface(NULL,&idmaps);
+	optmesh.SwapImprove();
 	//mesh.UpdateTopology();
       }
     mesh.UpdateTopology();

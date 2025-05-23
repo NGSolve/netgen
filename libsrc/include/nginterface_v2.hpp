@@ -9,6 +9,7 @@
 /**************************************************************************/
 
 #include "mydefs.hpp"
+#include <core/mpi_wrapper.hpp>
 
 /*
   C++ interface to Netgen
@@ -22,7 +23,7 @@ enum NG_ELEMENT_TYPE {
   NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13, NG_QUAD8 = 14,
   NG_TET = 20, NG_TET10 = 21, 
   NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24, NG_PRISM15 = 27, NG_PYRAMID13 = 28,
-  NG_HEX = 25, NG_HEX20 = 26
+  NG_HEX = 25, NG_HEX20 = 26, NG_HEX7 = 29
 };
 
 enum NG_REFINEMENT_TYPE { NG_REFINE_H = 0, NG_REFINE_P = 1, NG_REFINE_HP = 2 };
@@ -38,24 +39,9 @@ namespace netgen
   using namespace std;
   using namespace ngcore;
   
-  // extern DLL_HEADER NgMPI_Comm ng_comm;
   
   static constexpr int POINTINDEX_BASE = 1;
 
-  /*
-  struct T_EDGE2
-  {
-    // int orient:1;
-    // int nr:31;    // 0-based
-    int nr;    // 0-based
-  };
-  struct T_FACE2
-  {
-    // int orient:3;
-    // int nr:29;    // 0-based
-    int nr;    // 0-based
-  };
-  */
   typedef int T_EDGE2; 
   typedef int T_FACE2; 
 
@@ -111,26 +97,6 @@ namespace netgen
       int operator[] (size_t i) const { return ptr[i]-POINTINDEX_BASE; }
     };
 
-    class Ng_Edges
-    {
-    public:
-      size_t num;
-      const T_EDGE2 * ptr;
-  
-      size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i]; }
-    };
-
-    class Ng_Faces
-    {
-    public:
-      size_t num;
-      const T_FACE2 * ptr;
-  
-      size_t Size() const { return num; }
-      int operator[] (size_t i) const { return ptr[i]; }
-    };
-
     class Ng_Facets
     {
     public:
@@ -146,15 +112,16 @@ namespace netgen
   public:
     NG_ELEMENT_TYPE type;
     int index;           // material / boundary condition 
-    const string * mat;   // material / boundary label
+    string_view mat;   // material / boundary label
     NG_ELEMENT_TYPE GetType() const { return type; }
     int GetIndex() const { return index-1; }
     Ng_Points points;      // all points
     Ng_Vertices vertices;
-    Ng_Edges edges;
-    Ng_Faces faces;
+    FlatArray<T_EDGE2> edges;
+    FlatArray<T_FACE2> faces;    
     Ng_Facets facets;
     bool is_curved;
+    int8_t newest_vertex;
   };
 
   
@@ -303,7 +270,7 @@ namespace netgen
 
     /// material/boundary label of region, template argument is co-dimension
     template <int DIM> 
-    const string & GetMaterialCD (int region_nr) const;
+    string_view GetMaterialCD (int region_nr) const;
 
     /// Curved Elements:
     /// elnr .. element nr
@@ -389,6 +356,8 @@ namespace netgen
     // also added from nginterface.h, still 1-based, need redesign
     void HPRefinement (int levels, double parameter = 0.125,
                        bool setorders = true,bool ref_level = false);
+    void SplitAlfeld ();
+    
     size_t GetNP() const;
     int GetSurfaceElementSurfaceNumber (size_t ei) const;
     int GetSurfaceElementFDNumber (size_t ei) const;
@@ -405,6 +374,10 @@ namespace netgen
     int GetClusterRepEdge (int edi) const;
     int GetClusterRepFace (int fai) const;
     int GetClusterRepElement (int eli) const;
+
+    // just copied from nginterface, now 0-based
+    int GetElement_Faces (int elnr, int * faces, int * orient = 0) const;
+    int GetSurfaceElement_Face (int selnr, int * orient = 0) const;
   };
 
 

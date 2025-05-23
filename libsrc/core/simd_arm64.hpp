@@ -126,7 +126,13 @@ namespace ngcore
     return SIMD<double,4> (HSum(a,b), HSum(c,d));
   }
 
+
+  NETGEN_INLINE SIMD<double,2>  SwapPairs (SIMD<double,2> a)
+  {
+    return __builtin_shufflevector(a.Data(), a.Data(), 1, 0);
+  }
   
+
 
   // a*b+c
   NETGEN_INLINE SIMD<double,2> FMA (SIMD<double,2> a, SIMD<double,2> b, SIMD<double,2> c)
@@ -147,6 +153,16 @@ namespace ngcore
   {
     return FNMA(SIMD<double,2> (a), b, c);
   }
+
+  // ARM complex mult:
+  // https://arxiv.org/pdf/1901.07294.pdf
+  // c += a*b    (a0re, a0im, a1re, a1im, ...), 
+  NETGEN_INLINE void FMAComplex (SIMD<double,2> a, SIMD<double,2> b, SIMD<double,2> & c)
+  {
+    auto tmp = vcmlaq_f64(c.Data(), a.Data(), b.Data());   // are * b
+    c = vcmlaq_rot90_f64(tmp, a.Data(), b.Data());    // += i*aim * b
+  }
+  
 
   NETGEN_INLINE SIMD<double,2> operator+ (SIMD<double,2> a, SIMD<double,2> b)
   { return a.Data()+b.Data(); }

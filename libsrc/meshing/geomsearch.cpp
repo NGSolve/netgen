@@ -1,5 +1,6 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include "geomsearch.hpp"
+#include "adfront3.hpp"
 
 
 namespace netgen
@@ -19,7 +20,7 @@ namespace netgen
       } 
   }
 
-  void GeomSearch3d :: Init (NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, NgArray <FrontFace> *facesi)
+  void GeomSearch3d :: Init (Array <FrontPoint3,PointIndex> *pointsi, NgArray <FrontFace> *facesi)
   {
     points = pointsi;
     faces = facesi;
@@ -105,6 +106,12 @@ namespace netgen
 	size.i1 = int (boxext.X()/midext.X()/hashelemsizefactor+1);
 	size.i2 = int (boxext.Y()/midext.Y()/hashelemsizefactor+1);
 	size.i3 = int (boxext.Z()/midext.Z()/hashelemsizefactor+1);
+
+	int nfaces = faces->Size();
+	size.i1 = min(size.i1, nfaces);
+	size.i2 = min(size.i2, nfaces);
+	size.i3 = min(size.i3, nfaces);
+
 	// PrintMessage (5, "hashsizes = ", size.i1, ", ", size.i2, ", ", size.i3);
       
 	elemsize.X()=boxext.X()/size.i1;
@@ -189,7 +196,7 @@ namespace netgen
     MinCoords(maxextreal,maxp);
 
 
-    int cluster = faces->Get(fstind).Cluster();
+    PointIndex cluster = faces->Get(fstind).Cluster();
   
     int sx = int((minp.X()-minext.X())/elemsize.X()+1.);
     int ex = int((maxp.X()-minext.X())/elemsize.X()+1.);
@@ -199,9 +206,9 @@ namespace netgen
     int ez = int((maxp.Z()-minext.Z())/elemsize.Z()+1.);
     int ix,iy,iz,i,k;
 
-    int cnt1 = 0;  // test, how efficient hashtable is
-    int cnt2 = 0;
-    int cnt3 = 0;
+    [[maybe_unused]] int cnt1 = 0;  // test, how efficient hashtable is
+    [[maybe_unused]] int cnt2 = 0;
+    [[maybe_unused]] int cnt3 = 0;
   
     for (ix = sx; ix <= ex; ix++)
       {

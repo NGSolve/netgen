@@ -334,23 +334,23 @@ void netrule :: LoadRule (istream & ist)
 	    {
 	      elements.Append (Element2d(TRIG));
 
-	      ist >> elements.Last().PNum(1);
+	      ist >> (int&)elements.Last().PNum(1);
 	      ist >> ch;    // ','
 	  
 	      if (ch == COMMASIGN)
 		{
-		  ist >> elements.Last().PNum(2);
+		  ist >> (int&)elements.Last().PNum(2);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
-		  ist >> elements.Last().PNum(3);
+		  ist >> (int&)elements.Last().PNum(3);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  elements.Last().SetType (QUAD);
-		  ist >> elements.Last().PNum(4);
+		  ist >> (int&)elements.Last().PNum(4);
 		  ist >> ch;    // ','
 		  
 		  // const Element2d & el = elements.Last();

@@ -7,6 +7,10 @@
 /* Date:   04. Apr. 97                                                    */
 /**************************************************************************/
 
+#include <mydefs.hpp>
+
+#include "ngarray.hpp"
+
 namespace netgen
 {
 

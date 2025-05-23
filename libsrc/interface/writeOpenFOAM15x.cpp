@@ -31,10 +31,10 @@
 #include <sys/stat.h>
 
 #include "../general/gzstream.h"
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
   extern MeshingParameters mparam;
 
@@ -215,7 +215,8 @@ namespace netgen
             // Check if the face is a surface element (boundary face)
             // if not, add the current volume element and the corresponding face into 
             // the owner list
-            int surfelem = meshtopo.GetFace2SurfaceElement(absfacenr);
+            // int surfelem = meshtopo.GetFace2SurfaceElement1(absfacenr);
+            int surfelem = meshtopo.GetFace2SurfaceElement(absfacenr-1)+1;
             if(!surfelem)
             {
                // If it is a new face which has not been listed before, 
@@ -600,13 +601,13 @@ namespace netgen
    void WriteOpenFOAM15xFormat (const Mesh & mesh, const filesystem::path & dirname, const bool compressed)
    {
       bool error = false;
-      char casefiles[256];
+      // char casefiles[256];
 
       // Make sure that the mesh data has been updated
       const_cast<Mesh&> (mesh).Compress();
       const_cast<Mesh&> (mesh).CalcSurfacesOfNode();
       const_cast<Mesh&> (mesh).RebuildSurfaceElementLists();
-      const_cast<Mesh&> (mesh).BuildElementSearchTree();
+      const_cast<Mesh&> (mesh).BuildElementSearchTree(3);
 
 
       int np = mesh.GetNP();
@@ -757,5 +758,11 @@ namespace netgen
          cout << "Error in OpenFOAM 1.5+ Export.... Aborted!\n";
       }
    }
+
+void WriteOpenFOAM15xFormatCompressed (const Mesh & mesh, const filesystem::path & dirname) { WriteOpenFOAM15xFormat(mesh, dirname, true); }
+void WriteOpenFOAM15xFormatUncompressed (const Mesh & mesh, const filesystem::path & dirname) { WriteOpenFOAM15xFormat(mesh, dirname, false); }
+
+static RegisterUserFormat reg_openfoam ("OpenFOAM 1.5+ Format", {"*"}, nullopt, WriteOpenFOAM15xFormatUncompressed);
+static RegisterUserFormat reg_openfoam_compressed ("OpenFOAM 1.5+ Compressed", {"*"}, nullopt, WriteOpenFOAM15xFormatCompressed);
 }
 

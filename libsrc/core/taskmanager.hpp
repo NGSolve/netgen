@@ -10,6 +10,7 @@
 #include <atomic>
 #include <functional>
 #include <list>
+#include <cmath>
 #include <ostream>
 #include <thread>
 
@@ -316,6 +317,7 @@ namespace ngcore
     
   public:
     SharedLoop (IntRange ar) : r(ar) { cnt = r.begin(); }
+    SharedLoop (size_t s) : SharedLoop (IntRange{s}) { ; }
     SharedIterator begin() { return SharedIterator (cnt, r.end(), true); }
     SharedIterator end()   { return SharedIterator (cnt, r.end(), false); }
   };
@@ -622,6 +624,8 @@ public:
       Reset (r);
     }
 
+    SharedLoop2 (size_t s) : SharedLoop2 (IntRange{s}) { } 
+    
     void Reset (IntRange r)
     {
       for (size_t i = 0; i < ranges.Size(); i++)
@@ -631,6 +635,9 @@ public:
       participants.store(0, std::memory_order_relaxed);
       processed.store(0, std::memory_order_release);
     }
+
+    void Reset (size_t s) { Reset(IntRange{s}); }
+      
     
     SharedIterator begin()
     {
@@ -1010,7 +1017,7 @@ public:
     int num_nodes = numa_num_configured_nodes();
     size_t pagesize = numa_pagesize();
     
-    int npages = ceil ( double(s)*sizeof(T) / pagesize );
+    int npages = std::ceil ( double(s)*sizeof(T) / pagesize );
 
     // cout << "size = " << numa_size << endl;
     // cout << "npages = " << npages << endl;

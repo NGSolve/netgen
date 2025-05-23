@@ -58,6 +58,8 @@ public:
   int drawedgenumbers;
   int drawfacenumbers;
   int drawelementnumbers;
+  int drawsurfaceelementnumbers;
+  int drawsegmentnumbers;
   int drawdomainsurf;
   int drawtets;
   int drawtetsdomain;

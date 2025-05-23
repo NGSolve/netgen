@@ -222,9 +222,15 @@ loadmeshinifile;
 
 
 
+set meshimportformats [Ng_GetImportFormats]
 
 .ngmenu.file add command -label "Import Mesh..." \
     -command { 
+	foreach importformat $meshimportformats {
+	    if { [lindex $importformat 0] == $importfiletype } {
+		set extension [lindex $importformat 1]
+	    }
+	}
 	set types {
 	    {"Neutral format"  {.mesh .emt} }
 	    {"Surface mesh format"  {.surf} }
@@ -235,9 +241,9 @@ loadmeshinifile;
 	    {"Pro/ENGINEER neutral format" {.fnf} }
 	    {"CFD General Notation System" {.cgns} }
 	          }
-	set file [tk_getOpenFile -filetypes $types ]
+  set file [tk_getOpenFile -filetypes $meshimportformats -typevariable importfiletype]
 	if {$file != ""} {
-	    Ng_ImportMesh $file 
+	    Ng_ImportMesh $file $importfiletype
 	    set selectvisual mesh
 	    Ng_SetVisParameters
 	    redraw

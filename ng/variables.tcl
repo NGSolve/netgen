@@ -112,6 +112,8 @@ set viewoptions.drawpointnumbers 0
 set viewoptions.drawedgenumbers 0
 set viewoptions.drawfacenumbers 0
 set viewoptions.drawelementnumbers 0
+set viewoptions.drawsegmentnumbers 0
+set viewoptions.drawsurfaceelementnumbers 0
 set viewoptions.drawdomainsurf 0
 
 set viewoptions.drawededges 1
@@ -230,6 +232,7 @@ set status_filename 0
 set status_tetqualclasses "10 20 30 40 10 20 30 40 10 20 30 40 10 20 30 40 10 20 30 40"
 
 set exportfiletype "Neutral Format"
+set importfiletype "Neutral Format"
 
 set preproc.facenr 0
 set preproc.selectmode query

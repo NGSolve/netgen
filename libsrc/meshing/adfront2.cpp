@@ -3,8 +3,9 @@
 */
 
 #include <mystdlib.h>
-#include "meshing.hpp"
-
+#include <gprim/geom2d.hpp>
+#include <gprim/geomfuncs.hpp>
+#include "adfront2.hpp"
 
 namespace netgen
 {
@@ -151,15 +152,15 @@ namespace netgen
 
     if (allflines)
       {
-	if (allflines->Used (INDEX_2 (GetGlobalIndex (pi1), 
-				      GetGlobalIndex (pi2))))
+	if (allflines->Used (PointIndices<2>(GetGlobalIndex (pi1), 
+                                             GetGlobalIndex (pi2))))
 	  {
 	    cerr << "ERROR Adfront2::AddLine: line exists" << endl;
 	    (*testout) << "ERROR Adfront2::AddLine: line exists" << endl;
 	  }
 
-	allflines->Set (INDEX_2 (GetGlobalIndex (pi1), 
-				 GetGlobalIndex (pi2)), 1);
+	allflines->Set (PointIndices<2>(GetGlobalIndex (pi1), 
+                                        GetGlobalIndex (pi2)), 1);
       }
 
     return li;
@@ -193,8 +194,8 @@ namespace netgen
 
     if (allflines)
       {
-	allflines->Set (INDEX_2 (GetGlobalIndex (lines[li].L().I1()),
-				 GetGlobalIndex (lines[li].L().I2())), 2);
+	allflines->Set (PointIndices<2>(GetGlobalIndex (lines[li].L().I1()),
+                                        GetGlobalIndex (lines[li].L().I2())), 2);
       }
 
     lines[li].Invalidate();
@@ -281,7 +282,7 @@ namespace netgen
 			     NgArray<INDEX> & lindex,
 			     double xh)
   {
-    static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
+    // static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
     
     int pstind;
     Point<3>  midp, p0;

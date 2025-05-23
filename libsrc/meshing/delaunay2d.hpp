@@ -2,7 +2,6 @@
 
 namespace netgen
 {
-  using ngcore::INT;
 
   static inline Point<2> P2( Point<3> p )
   {
@@ -23,7 +22,7 @@ namespace netgen
     double r;
     double rad2;
     DelaunayTrig () = default;
-    DelaunayTrig (int p1, int p2, int p3)
+    DelaunayTrig (PointIndex p1, PointIndex p2, PointIndex p3)
     {
       pnums[0] = p1;
       pnums[1] = p2;
@@ -39,19 +38,19 @@ namespace netgen
     double Radius2() const { return rad2; }
     Box<2> BoundingBox() const { return Box<2> (c-Vec<2>(r,r), c+Vec<2>(r,r)); }
 
-    mutable PointIndex visited_pi = -1;
+    mutable PointIndex visited_pi = PointIndex::INVALID; //  -1;
   };
 
   class DelaunayMesh
   {
-    ngcore::ClosedHashTable<INT<2>, INT<2>> edge_to_trig;
+    ngcore::ClosedHashTable<PointIndices<2>, IVec<2>> edge_to_trig;
     Array<DelaunayTrig> trigs;
     unique_ptr<DelaunayTree<2>> tree;
     Array<Point<2>, PointIndex> & points;
 
     Array<int> closeels;
     Array<int> intersecting;
-    Array<INT<2>> edges;
+    Array<PointIndices<2>> edges;
 
     int GetNeighbour( int eli, int edge );
 
@@ -59,7 +58,7 @@ namespace netgen
 
     void UnsetNeighbours( int eli );
 
-    void AppendTrig( int pi0, int pi1, int pi2 );
+    void AppendTrig( PointIndex pi0, PointIndex pi1, PointIndex pi2 );
 
     public:
     DelaunayMesh( Array<Point<2>, PointIndex> & points_, Box<2> box  );

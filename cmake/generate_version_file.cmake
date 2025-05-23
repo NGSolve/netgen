@@ -24,8 +24,8 @@ if(status AND NOT status EQUAL 0)
       string(REGEX REPLACE "^netgen(.*)" "\\1" git_version_string "${git_version_string}")
     endif()
   else()
-    MESSAGE(WARNING "Could not determine git-version from source code - assuming 6.2.0.0")
-    set(git_version_string "v6.2.0.0")
+    MESSAGE(WARNING "Could not determine git-version from source code - assuming 6.2.0-0")
+    set(git_version_string "v6.2.0-0")
   endif()
 endif()
 string(STRIP ${git_version_string} git_version_string)
@@ -106,6 +106,7 @@ file(GENERATE OUTPUT netgen_config.hpp CONTENT
 #define NETGEN_USE_CHECK_RANGE          $<BOOL:${CHECK_RANGE}>
 #define NETGEN_BUILD_STUB_FILES         $<BOOL:${BUILD_STUB_FILES}>
 #define NETGEN_BUILD_FOR_CONDA          $<BOOL:${BUILD_FOR_CONDA}>
+#define NETGEN_SHARED_LIBRARY_SUFFIX    \"${CMAKE_SHARED_LIBRARY_SUFFIX}\"
 
 #endif // NETGEN_CONFIG_HPP_INCLUDED___
 ")

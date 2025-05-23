@@ -32,11 +32,6 @@ namespace netgen {
 
 
 
-#ifdef PARALLEL
-#include <mpi.h>
-
-#endif
-
 /*
 namespace netgen
 {
@@ -410,7 +405,7 @@ namespace nglib
    NGLIB_API Ng_Surface_Element_Type 
       Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi, int * facenr)
    {
-      const Element2d & el = ((Mesh*)mesh)->SurfaceElement(num);
+     const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex(num-1));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i);
       Ng_Surface_Element_Type et;
@@ -443,7 +438,7 @@ namespace nglib
    NGLIB_API Ng_Volume_Element_Type
       Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi, int * domain)
    {
-      const Element & el = ((Mesh*)mesh)->VolumeElement(num);
+     const Element & el = ((Mesh*)mesh)->VolumeElement(ElementIndex(num-1));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i);
       Ng_Volume_Element_Type et;
@@ -604,7 +599,7 @@ namespace nglib
    NGLIB_API Ng_Surface_Element_Type
       Ng_GetElement_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum)
    {
-      const Element2d & el = ((Mesh*)mesh)->SurfaceElement(num);
+     const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex(num-1));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i);
 
@@ -1322,7 +1317,7 @@ namespace netgen
    {
 #ifdef PARALLEL
      int id = 0;
-     MPI_Comm_rank(MPI_COMM_WORLD, &id);
+     NG_MPI_Comm_rank(NG_MPI_COMM_WORLD, &id);
      if (id != 0) return;
 #endif
      (*mycout) << s << flush;

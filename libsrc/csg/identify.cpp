@@ -65,10 +65,10 @@ ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const
   return 0;
 }
 
-int Identification :: GetIdentifiedPoint (class Mesh & mesh, int pi)
+PointIndex Identification :: GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 {
   cout << "Identification::GetIdentifiedPoint called for base-class" << endl;
-  return -1;
+  return PointIndex::INVALID;
 }
 
 void Identification :: IdentifyPoints (Mesh & mesh)
@@ -261,8 +261,8 @@ Identifiable (const Point<3> & p1, const Point<3> & p2) const
 
 
 
-int PeriodicIdentification :: 
-GetIdentifiedPoint (class Mesh & mesh,  int pi)
+PointIndex PeriodicIdentification :: 
+GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 {
   const Surface *snew;
   const Point<3> & p = mesh.Point (pi);
@@ -289,14 +289,14 @@ GetIdentifiedPoint (class Mesh & mesh,  int pi)
   // project to other surface
   snew->Project (hp);
 
-  int newpi = 0;
-  for (int i = 1; i <= mesh.GetNP(); i++)
-    if (Dist2 (mesh.Point(i), hp) < 1e-12)
+  PointIndex newpi(PointIndex::INVALID);
+  for (PointIndex pi : Range(mesh.Points()))
+    if (Dist2 (mesh.Point(pi), hp) < 1e-12)
       {
-	newpi = i;
+	newpi = pi;
 	break;
       }
-  if (!newpi)
+  if (!newpi.IsValid())
     newpi = mesh.AddPoint (hp);
 
   if (snew == s2)
@@ -322,6 +322,7 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
   mesh.GetBox(p1, p2);
   auto eps = 1e-6 * (p2-p1).Length();
 
+  /*
   for (int i = 1; i <= mesh.GetNP(); i++)
     {
       Point<3> p = mesh.Point(i);
@@ -334,11 +335,22 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 	    if (Dist2(mesh.Point(j), pp) < eps)
 	      {
 		mesh.GetIdentifications().Add (i, j, nr);
-		/*
-		(*testout) << "Identify points(periodic:), nr = " << nr << ": "
-			   << mesh.Point(i) << " - " << mesh.Point(j) << endl;
-		*/
 	      }
+	}
+    }
+  */
+
+  for (auto pi : Range(mesh.Points()))
+    {
+      Point<3> p = mesh[pi];
+      if (s1->PointOnSurface (p))
+	{
+	  Point<3> pp = p;
+          pp = trafo(pp);
+	  s2->Project (pp);
+          for (PointIndex pj : Range(mesh.Points()))
+	    if (Dist2(mesh[pj], pp) < eps)
+              mesh.GetIdentifications().Add (pi, pj, nr);
 	}
     }
 
@@ -396,15 +408,15 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 
 		    if (side == 1)
 		      {
-			if (mesh.GetIdentifications().Get (seg1[0], seg2[0]) &&
-			    mesh.GetIdentifications().Get (seg1[1], seg2[1]))
+			if (mesh.GetIdentifications().Used (seg1[0], seg2[0]) &&
+			    mesh.GetIdentifications().Used (seg1[1], seg2[1]))
 			  {
 			    foundother = 1;
 			    break;
 			  }
 			
-			if (mesh.GetIdentifications().Get (seg1[0], seg2[1]) &&
-			    mesh.GetIdentifications().Get (seg1[1], seg2[0]))
+			if (mesh.GetIdentifications().Used (seg1[0], seg2[1]) &&
+			    mesh.GetIdentifications().Used (seg1[1], seg2[0]))
 			  {
 			    foundother = 1;
 			    break;
@@ -412,15 +424,15 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 		      }
 		    else
 		      {
-			if (mesh.GetIdentifications().Get (seg2[0], seg1[0]) &&
-			    mesh.GetIdentifications().Get (seg2[1], seg1[1]))
+			if (mesh.GetIdentifications().Used (seg2[0], seg1[0]) &&
+			    mesh.GetIdentifications().Used (seg2[1], seg1[1]))
 			  {
 			    foundother = 1;
 			    break;
 			  }
 			
-			if (mesh.GetIdentifications().Get (seg2[0], seg1[1]) &&
-			    mesh.GetIdentifications().Get (seg2[1], seg1[0]))
+			if (mesh.GetIdentifications().Used (seg2[0], seg1[1]) &&
+			    mesh.GetIdentifications().Used (seg2[1], seg1[0]))
 			  {
 			    foundother = 1;
 			    break;
@@ -885,17 +897,21 @@ ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const
 
 
 
-int CloseSurfaceIdentification :: 
-GetIdentifiedPoint (class Mesh & mesh,  int pi)
+PointIndex CloseSurfaceIdentification :: 
+GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 {
   const Surface *snew;
   const Point<3> & p = mesh.Point (pi);
 
-  NgArray<int,PointIndex::BASE> identmap(mesh.GetNP());
+  idmap_type identmap(mesh.GetNP());
   mesh.GetIdentifications().GetMap (nr, identmap);
+  /*
   if (identmap.Get(pi))
     return identmap.Get(pi);
-
+  */
+  if (identmap[pi].IsValid())
+    return identmap[pi];
+  
   
   if (s1->PointOnSurface (p))
     snew = s2;
@@ -1168,15 +1184,15 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 		      
 		      if (side == 1)
 			{
-			  if (mesh.GetIdentifications().Get (seg1[0], seg2[0]) &&
-			      mesh.GetIdentifications().Get (seg1[1], seg2[1]))
+			  if (mesh.GetIdentifications().Used (seg1[0], seg2[0]) &&
+			      mesh.GetIdentifications().Used (seg1[1], seg2[1]))
 			    {
 			      foundother = 1;
 			      break;
 			    }
 			  
-			  if (mesh.GetIdentifications().Get (seg1[0], seg2[1]) &&
-			      mesh.GetIdentifications().Get (seg1[1], seg2[0]))
+			  if (mesh.GetIdentifications().Used (seg1[0], seg2[1]) &&
+			      mesh.GetIdentifications().Used (seg1[1], seg2[0]))
 			    {
 			      foundother = 1;
 			      break;
@@ -1184,15 +1200,15 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 			}
 		      else
 			{
-			  if (mesh.GetIdentifications().Get (seg2[0], seg1[0]) &&
-			      mesh.GetIdentifications().Get (seg2[1], seg1[1]))
+			  if (mesh.GetIdentifications().Used (seg2[0], seg1[0]) &&
+			      mesh.GetIdentifications().Used (seg2[1], seg1[1]))
 			    {
 			      foundother = 1;
 			      break;
 			    }
 			  
-			  if (mesh.GetIdentifications().Get (seg2[0], seg1[1]) &&
-			      mesh.GetIdentifications().Get (seg2[1], seg1[0]))
+			  if (mesh.GetIdentifications().Used (seg2[0], seg1[1]) &&
+			      mesh.GetIdentifications().Used (seg2[1], seg1[0]))
 			    {
 			      foundother = 1;
 			      break;
@@ -1229,7 +1245,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   bool found = 0;
   int cntquads = 0;
 
-  NgArray<int,PointIndex::BASE>  identmap;
+  idmap_type identmap;
   identmap = 0;
 
   mesh.GetIdentifications().GetMap (nr, identmap);
@@ -1650,8 +1666,8 @@ BuildSurfaceElements (NgArray<Segment> & segs,
       {
 	const Segment & s1 = segs.Get(i1);
 	const Segment & s2 = segs.Get(i2);
-	if (mesh.GetIdentifications().Get (s1[0], s2[1]) &&
-	    mesh.GetIdentifications().Get (s1[1], s2[0]))
+	if (mesh.GetIdentifications().Used (s1[0], s2[1]) &&
+	    mesh.GetIdentifications().Used (s1[1], s2[0]))
 	  {
 	    Element2d el(QUAD);
 	    el.PNum(1) = s1[0];

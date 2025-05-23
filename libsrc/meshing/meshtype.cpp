@@ -18,125 +18,125 @@ namespace netgen
 
 
 #ifdef PARALLEL
-  MPI_Datatype MeshPoint :: MyGetMPIType ( )
+  NG_MPI_Datatype MeshPoint :: MyGetMPIType ( )
   { 
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	MeshPoint hp;
 	int blocklen[] = { 3, 1, 1 };
-	MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
+	NG_MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
 			     (char*)&hp.layer - (char*)&hp,
 			     (char*)&hp.singular - (char*)&hp };
-	MPI_Datatype types[] = { MPI_DOUBLE, MPI_INT, MPI_DOUBLE };
+	NG_MPI_Datatype types[] = { NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_DOUBLE };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (3, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (3, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (MeshPoint);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
 	
       }
     return type;
   }
 
 
-  MPI_Datatype Element2d :: MyGetMPIType ( )
+  NG_MPI_Datatype Element2d :: MyGetMPIType ( )
   { 
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	Element2d hel;
 	int blocklen[] = { ELEMENT2D_MAXPOINTS, 1, 1, 1 };
-	MPI_Aint displ[] =
+	NG_MPI_Aint displ[] =
           { (char*)&hel.pnum[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
             (char*)&hel.typ - (char*)&hel,
             (char*)&hel.np - (char*)&hel
           };
-	MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+	NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
                                  GetMPIType(hel.typ), GetMPIType(hel.np) };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (Element2d);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
       }
     return type;
   }
 
-  MPI_Datatype Element :: MyGetMPIType ( )
+  NG_MPI_Datatype Element :: MyGetMPIType ( )
   {
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	Element hel;
 	int blocklen[] = { ELEMENT_MAXPOINTS, 1, 1, 1 };
-	MPI_Aint displ[] =
+	NG_MPI_Aint displ[] =
           { (char*)&hel.pnum[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
             (char*)&hel.typ - (char*)&hel,
             (char*)&hel.np - (char*)&hel
           };
-	MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+	NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
                                  GetMPIType(hel.typ), GetMPIType(hel.np) };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (Element);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
       }
     return type;
   }
 
-  MPI_Datatype Segment :: MyGetMPIType ( )
+  NG_MPI_Datatype Segment :: MyGetMPIType ( )
   {
-    static MPI_Datatype type = MPI_DATATYPE_NULL;
-    static MPI_Datatype htype = MPI_DATATYPE_NULL;
-    if (type == MPI_DATATYPE_NULL)
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
       {
 	Segment hel;
 	int blocklen[] = { 3, 1, 1, 1 };
-	MPI_Aint displ[] =
+	NG_MPI_Aint displ[] =
           { (char*)&hel.pnums[0] - (char*)&hel,
             (char*)&hel.edgenr - (char*)&hel,
             (char*)&hel.cd2i - (char*)&hel,
             (char*)&hel.si - (char*)&hel
           };
-	MPI_Datatype types[] = {
+	NG_MPI_Datatype types[] = {
           GetMPIType<PointIndex>(), GetMPIType(hel.edgenr), GetMPIType(hel.cd2i), GetMPIType(hel.si)
         };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	MPI_Type_commit ( &htype );
-	MPI_Aint lb, ext;
-	MPI_Type_get_extent (htype, &lb, &ext);
+	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
 	// *testout << "lb = " << lb << endl;
 	// *testout << "ext = " << ext << endl;
 	ext = sizeof (Segment);
-	MPI_Type_create_resized (htype, lb, ext, &type);
-	MPI_Type_commit ( &type );
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
       }
     return type;
   }
@@ -144,7 +144,40 @@ namespace netgen
 #endif
 
 
+#ifdef PARALLEL
+  NG_MPI_Datatype Element0d :: MyGetMPIType()
+  {
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
+    if (type == NG_MPI_DATATYPE_NULL)
+      {
+	Element0d hel;
+	int blocklen[] = { 1, 1 };
+	NG_MPI_Aint displ[] =
+          { (char*)&hel.pnum - (char*)&hel,
+            (char*)&hel.index - (char*)&hel,
+          };
+	NG_MPI_Datatype types[] = {
+          GetMPIType(hel.pnum), GetMPIType(hel.index)
+        };
+	NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
+	NG_MPI_Type_commit ( &htype );
+	NG_MPI_Aint lb, ext;
+	NG_MPI_Type_get_extent (htype, &lb, &ext);
+	// *testout << "lb = " << lb << endl;
+	// *testout << "ext = " << ext << endl;
+	ext = sizeof (Element0d);
+	NG_MPI_Type_create_resized (htype, lb, ext, &type);
+	NG_MPI_Type_commit ( &type );
+      }
+    return type;
+  }
+#endif
 
+ void Element0d :: DoArchive (Archive & ar)
+ {
+   ar & pnum & index;
+ }
 
   Segment :: Segment() 
     : is_curved(false)
@@ -204,7 +237,7 @@ namespace netgen
   {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-	pnum[i] = 0;
+	pnum[i].Invalidate();
 	geominfo[i].trignum = 0;
       }
     np = 3;
@@ -216,7 +249,7 @@ namespace netgen
     orderx = ordery = 1;
     refflag = 1;
     strongrefflag = false;
-    is_curved = false;
+    is_curved = 0;
   } 
 
   Element2d :: Element2d (int anp)
@@ -266,7 +299,7 @@ namespace netgen
 
 
 
-  Element2d :: Element2d (int pi1, int pi2, int pi3)
+  Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3)
   {
     pnum[0] = pi1;
     pnum[1] = pi2;
@@ -289,7 +322,7 @@ namespace netgen
     is_curved = false;
   }
 
-  Element2d :: Element2d (int pi1, int pi2, int pi3, int pi4)
+  Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4)
   {
     pnum[0] = pi1;
     pnum[1] = pi2;
@@ -298,8 +331,8 @@ namespace netgen
     np = 4;
     typ = QUAD;
 
-    pnum[4] = 0;
-    pnum[5] = 0;
+    pnum[4].Invalidate();
+    pnum[5].Invalidate();
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
@@ -1005,7 +1038,7 @@ namespace netgen
   {
     s << "np = " << el.GetNP();
     for (int j = 0; j < el.GetNP(); j++)
-      s << " " << int(el[j]);
+      s << " " << el[j];
     return s;
   }
 
@@ -1057,6 +1090,7 @@ namespace netgen
       case 4: typ = TET; break;
       case 5: typ = PYRAMID; break;
       case 6: typ = PRISM; break;
+      case 7: typ = HEX7; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
       case 13: typ = PYRAMID13; break;
@@ -1139,6 +1173,7 @@ namespace netgen
       case 4: typ = TET; break;
       case 5: typ = PYRAMID; break;
       case 6: typ = PRISM; break;
+      case 7: typ = HEX7; break;
       case 8: typ = HEX; break;
       case 10: typ = TET10; break;
       case 13: typ = PYRAMID13; break;
@@ -1160,6 +1195,7 @@ namespace netgen
       case TET: np = 4; break;
       case PYRAMID: np = 5; break;
       case PRISM: np = 6; break;
+      case HEX7: np = 7; break;
       case HEX: np = 8; break;
       case TET10: np = 10; break;
       case PYRAMID13: np = 13; break;
@@ -1256,6 +1292,16 @@ namespace netgen
         { 4, 3, 1, 4, 6 }
       };
     
+    static const int hex7faces[][5] =
+      {
+        { 4, 4, 3, 2, 1 },
+        { 4, 3, 7, 6, 2 },
+        { 3, 7, 5, 6 },
+        { 4, 7, 4, 1, 5 },
+        { 4, 1, 2, 6, 5 },
+        { 3, 3, 4, 7 }
+      };
+    
     static const int hexfaces[][5] =
       {
         { 4, 4, 3, 2, 1 },
@@ -1265,7 +1311,6 @@ namespace netgen
         { 4, 1, 2, 6, 5 },
         { 4, 3, 4, 8, 7 }
       };
-    
 
     switch (np)
       {
@@ -1299,6 +1344,14 @@ namespace netgen
           face.SetType ( (i >= 3) ? QUAD : TRIG);
           for (int j = 1; j <= face.GetNP(); j++)
             face.PNum(j) = PNum(prismfaces[i-1][j]);
+          break;
+        }
+      case 7: // hex7
+        {
+          //	face.SetNP(prismfaces[i-1][0]);
+          face.SetType ( ((i == 3) || (i==6)) ? TRIG : QUAD);
+          for (int j = 1; j <= face.GetNP(); j++)
+            face.PNum(j) = PNum(hex7faces[i-1][j]);
           break;
         }
       case 8:
@@ -1684,6 +1737,20 @@ namespace netgen
         { 6, 1, 4 }
       };
   
+    static int hex7trigs[][3] = 
+      {
+        { 1, 3, 2 },
+        { 1, 4, 3 }, 
+        { 5, 6, 7 },
+        { 1, 2, 6 },
+        { 1, 6, 5 },
+        { 2, 3, 7 },
+        { 2, 7, 6 },
+        { 3, 4, 7 },
+        { 4, 1, 7 },
+        { 1, 5, 7 }
+      };
+    
     static int hextrigs[][3] = 
       {
         { 1, 3, 2 },
@@ -1700,6 +1767,8 @@ namespace netgen
         { 1, 5, 8 }
       };
 
+
+    
     int j;
 
     int nf;
@@ -1730,6 +1799,12 @@ namespace netgen
         {
           nf = 16;
           fp = tet10trigs;
+          break;
+        }
+      case HEX7:
+        {
+          nf = 10;
+          fp = hex7trigs;
           break;
         }
       case HEX:
@@ -2046,6 +2121,26 @@ namespace netgen
           shape[14] = 4 * y * lam * (2*z*z-z);
           break;
         }
+      case HEX7:
+        {
+          T y = p(1);
+          T z = p(2);
+          // T den = (1-y)*(1-z);
+          T den = (1-y*z);
+          den += T(1e-12);
+          
+          T x = p(0) / den;
+
+          shape(0) = (1-x)*(1-y)*(1-z);
+          shape(1) = (  x)*(1-y)*(1-z);
+          shape(2) = (  x)*(  y)*(1-z);
+          shape(3) = (1-x)*(  y)*(1-z);
+          shape(4) = (1-x)*(1-y)*(  z);
+          shape(5) = (  x)*(1-y)*(  z);
+          shape(6) =       (  y)*(  z);
+          break;
+        }
+
       case HEX:
         {
           shape(0) = (1-p(0))*(1-p(1))*(1-p(2));
@@ -2168,6 +2263,7 @@ namespace netgen
 
       default:
         {
+          /*
           int np = GetNP();
           double eps = 1e-6;
           NgArrayMem<T,100> mem(2*np);
@@ -2186,6 +2282,18 @@ namespace netgen
               for (int j = 0; j < np; j++)
                 dshape(j, i) = (shaper(j) - shapel(j)) / (2 * eps);
             }
+          */
+
+          AutoDiff<3,T> adx(p(0), 0);
+          AutoDiff<3,T> ady(p(1), 1);
+          AutoDiff<3,T> adz(p(2), 2);
+          Point<3,AutoDiff<3,T>> adp{adx, ady, adz};
+          NgArrayMem<AutoDiff<3,T>,100> mem(np);
+          TFlatVector<AutoDiff<3,T>> adshape(np, &mem[0]);
+          GetShapeNew (adp, adshape);
+          for (int j = 0; j < np; j++)
+            for (int k = 0; k < 3; k++)
+              dshape(j,k) = adshape(j).DValue(k);
         }
       }
   }
@@ -2586,6 +2694,7 @@ namespace netgen
   {
     identifiedpoints.DeleteData();
     identifiedpoints_nr.DeleteData();
+    idpoints_table.SetSize(0);
 
     /*
     delete identifiedpoints;
@@ -2600,8 +2709,8 @@ namespace netgen
     {
       ar & maxidentnr;
       ar & identifiedpoints & identifiedpoints_nr;
-
       ar & idpoints_table;
+      
       if (ar.Output())
         {
           size_t s = type.Size();
@@ -2617,6 +2726,8 @@ namespace netgen
           for (auto & t : type)
             ar & (unsigned char&)(t);
         }
+      if (ar.GetVersion("netgen") > "v6.2.2404-66")
+        ar & names;
     }    
 
   
@@ -2624,11 +2735,11 @@ namespace netgen
   void Identifications :: Add (PointIndex pi1, PointIndex pi2, int identnr)
   {
     //  (*testout) << "Identification::Add, pi1 = " << pi1 << ", pi2 = " << pi2 << ", identnr = " << identnr << endl;
-    INDEX_2 pair (pi1, pi2);
+    PointIndices<2> pair (pi1, pi2);
     identifiedpoints.Set (pair, identnr);
 
-    INDEX_3 tripl (pi1, pi2, identnr);
-    identifiedpoints_nr.Set (tripl, 1);
+    // INDEX_3 tripl (pi1, pi2, identnr);
+    identifiedpoints_nr.Set ( { { pi1, pi2 }, identnr }, 1);
 
     if (identnr > maxidentnr) maxidentnr = identnr;
     names.SetSize(maxidentnr);
@@ -2651,8 +2762,9 @@ namespace netgen
 
   bool Identifications :: Get (PointIndex pi1, PointIndex pi2, int nr) const
   {
-    INDEX_3 tripl(pi1, pi2, nr);
-    if (identifiedpoints_nr.Used (tripl))
+    // INDEX_3 tripl(pi1, pi2, nr);
+    // if (identifiedpoints_nr.Used (tripl))
+    if (identifiedpoints_nr.Used ( { { pi1, pi1 }, nr } ) )
       return 1;
     else
       return 0;
@@ -2674,7 +2786,7 @@ namespace netgen
   }
 
 
-  void Identifications :: GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric) const
+  void Identifications :: GetMap (int identnr, idmap_type & identmap, bool symmetric) const
   {
     identmap.SetSize (mesh.GetNP());
     identmap = 0;
@@ -2692,18 +2804,30 @@ namespace netgen
       {
         cout << "getmap, identnr = " << identnr << endl;
 
+        /*
         for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
           for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
+        */
+        for (auto [hash, val] : identifiedpoints_nr)
             {
+              /*
               INDEX_3 i3;
               int dummy;
               identifiedpoints_nr.GetData (i, j, i3, dummy);
-	    
-              if (i3.I3() == identnr || !identnr)
+              */
+
+              auto [hash_pts, hash_nr] = hash;
+              
+              if (hash_nr == identnr || !identnr)
                 {
+                  /*
                   identmap.Elem(i3.I1()) = i3.I2();
                   if(symmetric)
                     identmap.Elem(i3.I2()) = i3.I1();
+                  */
+                  identmap[hash_pts.I1()] = hash_pts.I2();
+                  if(symmetric)
+                    identmap[hash_pts.I2()] = hash_pts.I1();
                 }
             }  
       }
@@ -2711,12 +2835,26 @@ namespace netgen
   }
 
 
+  Array<INDEX_3> Identifications :: GetPairs () const
+  {
+    Array<INDEX_3> pairs;
+    for(auto [hash, dummy] : identifiedpoints_nr)
+      // pairs.Append(i3);
+      {
+        auto [pts,nr] = hash;
+        pairs.Append ( { pts[0], pts[1], nr } );
+      }
+    return pairs;
+  }
+
   void Identifications :: GetPairs (int identnr, 
                                     NgArray<INDEX_2> & identpairs) const
   {
     identpairs.SetSize(0);
   
     if (identnr == 0)
+      {
+        /*
       for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
           {
@@ -2724,8 +2862,14 @@ namespace netgen
             int nr;
             identifiedpoints.GetData (i, j, i2, nr);
             identpairs.Append (i2);
-          }  
+          }
+        */
+        for (auto [hash,val] : identifiedpoints)
+          identpairs.Append (hash);
+      }
     else
+      {
+        /*
       for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
           {
@@ -2735,12 +2879,21 @@ namespace netgen
 	  
             if (i3.I3() == identnr)
               identpairs.Append (INDEX_2(i3.I1(), i3.I2()));
-          }  
+          }
+        */
+        for (auto [hash,val] : identifiedpoints_nr)
+          {
+            auto [hash_pts, hash_nr] = hash;
+            if (hash_nr == identnr)
+              identpairs.Append (hash_pts);
+          }
+      }
   }
 
 
   void Identifications :: SetMaxPointNr (int maxpnum)
   {
+    /*
     for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
       for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
         {
@@ -2754,17 +2907,105 @@ namespace netgen
               identifiedpoints.SetData (i, j, i2, -1);	    
             }
         }
+    */
+
+    // can we get data by reference ? 
+    for (auto [hash,data] : identifiedpoints)
+      {
+        if (hash.I1() > IndexBASE<PointIndex>()+maxpnum-1 ||
+            hash.I2() > IndexBASE<PointIndex>()+maxpnum-1)
+          {
+            identifiedpoints[hash] = -1;
+          }
+            
+      }
   }
 
+  // Map points in the identifications to new point numbers
+  // deletes identifications with invalid (mapped) points
+  void Identifications :: MapPoints(FlatArray<PointIndex, PointIndex> op2np)
+  {
+    auto pairs = GetPairs();
+    Delete();
+
+    for(auto pair : pairs)
+      {
+        auto p1 = op2np[pair.I1()];
+        auto p2 = op2np[pair.I2()];
+        if(p1.IsValid() && p2.IsValid())
+          Add(p1, p2, pair.I3());
+      }
+  }
 
   void Identifications :: Print (ostream & ost) const
   {
     ost << "Identifications:" << endl;
     ost << "pairs: " << endl << identifiedpoints << endl;
-    ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
+    // ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
+#pragma message( "Can't ostream a tuple " __FILE__ )    
     ost << "table: " << endl << idpoints_table << endl;
   }
 
+  ostream & operator<< (ostream & ost, const BoundaryLayerParameters & mp)
+  {
+    auto print_vec = [&ost](auto & v) {
+        ost << "[";
+        for (const auto & val : v)
+          ost << val << " ";
+        ost << "]";
+    };
+    ost << "BoundaryLayerParameters" << endl;
+    ost << "  boundary: ";
+    switch(mp.boundary.index())
+      {
+        case 0: ost << std::get<0>(mp.boundary); break;
+        case 1: ost << std::get<1>(mp.boundary); break;
+        case 2: print_vec(std::get<2>(mp.boundary)); break;
+      }
+    ost << "\n  thickness: ";
+    switch(mp.thickness.index())
+      {
+        case 0: ost << std::get<0>(mp.thickness); break;
+        case 1: print_vec(std::get<1>(mp.thickness)); break;
+      }
+    ost <<"\n  new_material: ";
+    if(!mp.new_material) ost << "nullopt";
+    else {
+      switch(mp.new_material->index())
+        {
+          case 0: ost << std::get<0>(*mp.new_material); break;
+          case 1:
+          for (const auto & [key, value] : std::get<1>(*mp.new_material))
+            ost << key << " -> " << value << ", ";
+          break;
+        }
+    }
+    ost << "\n  domain: ";
+    switch(mp.domain.index())
+      {
+        case 0: ost << std::get<0>(mp.domain); break;
+        case 1: ost << std::get<1>(mp.domain); break;
+        case 2: print_vec(std::get<2>(mp.domain)); break;
+      }
+    ost << "\n  outside: " << mp.outside;
+    ost << "\n  project_boundaries: ";
+    if(mp.project_boundaries) {
+      auto & proj_bnd = *mp.project_boundaries;
+      switch(proj_bnd.index())
+        {
+          case 0: ost << std::get<0>(proj_bnd); break;
+          case 1: print_vec(std::get<1>(proj_bnd)); break;
+        }
+    }
+    else
+      ost << "nullopt";
+    ost << "\n  grow_edges: " << mp.grow_edges;
+    ost << "\n  limit_growth_vectors: " << mp.limit_growth_vectors;
+    ost << "\n  sides_keep_surfaceindex: " << (mp.sides_keep_surfaceindex ? ToString(*mp.sides_keep_surfaceindex) : "nullopt");
+    ost << "\n  disable_curving: " << mp.disable_curving;
+    ost << endl;
+    return ost;
+  }
 
   MeshingParameters :: MeshingParameters ()
   {
@@ -2898,7 +3139,7 @@ namespace netgen
     haltsegment = 0;
     haltsegmentp1 = 0;
     haltsegmentp2 = 0;
-    write_mesh_on_error = false;
+    write_mesh_on_error = getenv("NG_WRITE_MESH_ON_ERROR");
   };
 
 

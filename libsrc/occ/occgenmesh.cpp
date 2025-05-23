@@ -11,7 +11,6 @@
 #include <BRepGProp.hxx>
 #include <BRepLProp_CLProps.hxx>
 #include <BRepLProp_SLProps.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepTools.hxx>
 #include <GProp_GProps.hxx>
 #include <Quantity_Color.hxx>
@@ -249,7 +248,7 @@ namespace netgen
     multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
     geom.facemeshstatus[k-1] = -1;
 
-    FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+    // FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
     auto face = TopoDS::Face(geom.fmap(k));
     const auto& occface = dynamic_cast<const OCCFace&>(geom.GetFace(k-1));
 
@@ -301,7 +300,7 @@ namespace netgen
               }
         for(const auto& vert : geom.GetFaceVertices(geom.GetFace(k-1)))
           {
-            PointIndex pi = vert->nr + 1;
+            PointIndex pi = vert->nr + IndexBASE<PointIndex>();
             if(glob2loc[pi] == 0)
               {
                 auto gi = occface.Project(mesh[pi]);
@@ -342,7 +341,7 @@ namespace netgen
         Array<PointGeomInfo> gis(2*segments.Size());
         gis.SetSize (0);
         glob2loc = 0;
-        int cntpt = 0;
+        // int cntpt = 0;
 
         Box<2> uv_box(Box<2>::EMPTY_BOX);
         for(auto & seg : segments)
@@ -399,7 +398,7 @@ namespace netgen
         }
         for(const auto& vert : geom.GetFaceVertices(geom.GetFace(k-1)))
           {
-            PointIndex pi = vert->nr + 1;
+            PointIndex pi = vert->nr + IndexBASE<PointIndex>();
             if(glob2loc[pi] == 0)
               {
                 auto gi = occface.Project(mesh[pi]);
@@ -415,7 +414,7 @@ namespace netgen
 
 
     // Philippose - 15/01/2009
-    auto& props = OCCGeometry::GetProperties(geom.fmap(k));
+    auto& props = occface.properties;
     double maxh = min2(geom.face_maxh[k-1], props.maxh);
     //double maxh = mparam.maxh;
     //      int noldpoints = mesh->GetNP();
@@ -485,14 +484,18 @@ namespace netgen
     maxhdom = mparam.maxh;
     int maxlayer = 1;
 
-    int dom = 0;
-    for (TopExp_Explorer e(geom.GetShape(), TopAbs_SOLID); e.More(); e.Next(), dom++)
+    for(auto dom : Range(geom.GetNSolids()))
     {
-      auto& props = OCCGeometry::GetProperties(e.Current());
+      auto & props = geom.GetSolid(dom).properties;
       maxhdom[dom] = min2(maxhdom[dom], props.maxh);
       maxlayer = max2(maxlayer, props.layer);
     }
 
+    for(auto & f : geom.Faces())
+      maxlayer = max2(maxlayer, f->properties.layer);
+
+    for(auto & e : geom.Edges())
+      maxlayer = max2(maxlayer, e->properties.layer);
 
     mesh.SetMaxHDomain (maxhdom);
 
@@ -506,6 +509,13 @@ namespace netgen
 
         for(auto layer : Range(1, maxlayer+1))
             mesh.SetLocalH (bb.PMin(), bb.PMax(), mparam.grading, layer);
+
+        for(auto& v : geom.Vertices())
+          {
+            auto& props = v->properties;
+            if(props.maxh < 1e99)
+                mesh.GetLocalH(props.layer)->SetH(v->GetPoint(), props.maxh);
+          }
 
         int nedges = geom.emap.Extent();
 
@@ -521,19 +531,10 @@ namespace netgen
 
         multithread.task = "Setting local mesh size (elements per edge)";
 
-        // Philippose - 23/01/2009
-        // Find all the parent faces of a given edge
-        // and limit the mesh size of the edge based on the
-        // mesh size limit of the face
-        TopTools_IndexedDataMapOfShapeListOfShape edge_face_map;
-        edge_face_map.Clear();
-        TopExp::MapShapesAndAncestors(geom.shape, TopAbs_EDGE, TopAbs_FACE, edge_face_map);
-
         // setting elements per edge
         for (int i = 1; i <= nedges && !multithread.terminate; i++)
           {
             TopoDS_Edge e = TopoDS::Edge (geom.emap(i));
-            int layer = OCCGeometry::GetProperties(e).layer;
             multithread.percent = 100 * (i-1)/double(nedges);
             if (BRep_Tool::Degenerated(e)) continue;
 
@@ -566,23 +567,10 @@ namespace netgen
             double localh = len/mparam.segmentsperedge;
             double s0, s1;
 
-            const TopTools_ListOfShape& parent_faces = edge_face_map.FindFromKey(e);
-
-            TopTools_ListIteratorOfListOfShape parent_face_list;
-
-            for(parent_face_list.Initialize(parent_faces); parent_face_list.More(); parent_face_list.Next())
-              {
-                TopoDS_Face parent_face = TopoDS::Face(parent_face_list.Value());
-
-                int face_index = geom.fmap.FindIndex(parent_face);
-
-                if(face_index >= 1) localh = min(localh,geom.face_maxh[face_index - 1]);
-                localh = min2(localh, OCCGeometry::GetProperties(parent_face).maxh);
-              }
-
             Handle(Geom_Curve) c = BRep_Tool::Curve(e, s0, s1);
 
-            localh = min2(localh, OCCGeometry::GetProperties(e).maxh);
+            const auto & props = gedge.properties;
+            localh = min2(localh, props.maxh);
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
             int maxj = max((int) ceil(len/localh)*2, 2);
@@ -590,7 +578,7 @@ namespace netgen
             for (int j = 0; j <= maxj; j++)
               {
                 gp_Pnt pnt = c->Value (s0+double(j)/maxj*(s1-s0));
-                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), localh, layer);
+                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), localh, props.layer);
               }
           }
 
@@ -605,12 +593,12 @@ namespace netgen
             double maxcur = 0;
             multithread.percent = 100 * (i-1)/double(nedges);
             TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
-            int layer = OCCGeometry::GetProperties(edge).layer;
             if (BRep_Tool::Degenerated(edge)) continue;
             double s0, s1;
             Handle(Geom_Curve) c = BRep_Tool::Curve(edge, s0, s1);
             BRepAdaptor_Curve brepc(edge);
             BRepLProp_CLProps prop(brepc, 2, 1e-5);
+            auto layer = geom.GetEdge(edge).properties.layer;
 
             for (int j = 1; j <= nsections; j++)
               {
@@ -636,26 +624,28 @@ namespace netgen
 
         int nfaces = geom.fmap.Extent();
 
+        BuildTriangulation(geom.shape);
         for (int i = 1; i <= nfaces && !multithread.terminate; i++)
           {
             multithread.percent = 100 * (i-1)/double(nfaces);
             TopoDS_Face face = TopoDS::Face(geom.fmap(i));
-            int layer = OCCGeometry::GetProperties(face).layer;
             TopLoc_Location loc;
             Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
             Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
 
-            if (triangulation.IsNull())
+            if(triangulation.IsNull())
               {
-                BRepTools::Clean (geom.shape);
-                BRepMesh_IncrementalMesh (geom.shape, 0.01, true);
-                triangulation = BRep_Tool::Triangulation (face, loc);
+                if (geom.shape.Infinite())
+                  throw Exception("Cannot generate mesh for an infinite geometry");
+                else
+                  throw Exception("OCC-Triangulation could not be built");
               }
-
+            
             BRepAdaptor_Surface sf(face, Standard_True);
             // one prop for evaluating and one for derivatives
             BRepLProp_SLProps prop(sf, 0, 1e-5);
             BRepLProp_SLProps prop2(sf, 2, 1e-5);
+            auto layer = geom.GetFace(face).properties.layer;
 
             int ntriangles = triangulation -> NbTriangles();
             for (int j = 1; j <= ntriangles; j++)
@@ -706,7 +696,7 @@ namespace netgen
             for (int i = 1; i <= nedges && !multithread.terminate; i++)
               {
                 TopoDS_Edge edge = TopoDS::Edge (geom.emap(i));
-                int layer = OCCGeometry::GetProperties(edge).layer;
+                int layer = geom.GetEdge(edge).properties.layer;
                 if (BRep_Tool::Degenerated(edge)) continue;
 
                 double s0, s1;
@@ -717,7 +707,7 @@ namespace netgen
 
                 gp_Vec d0 = prop.D1().Normalized();
                 double s_start = s0;
-                int count = 0;
+                // int count = 0;
                 for (int j = 1; j <= sections; j++)
                   {
                     double s = s0 + (s1-s0)*(double)j/(double)sections;
@@ -726,7 +716,7 @@ namespace netgen
                     double cosalpha = fabs(d0*d1);
                     if ((j == sections) || (cosalpha < cos(10.0/180.0*M_PI)))
                       {
-                        count++;
+                        // count++;
                         gp_Pnt p0 = c->Value (s_start);
                         gp_Pnt p1 = c->Value (s);
                         lines[nlines].p0 = Point<3> (p0.X(), p0.Y(), p0.Z());

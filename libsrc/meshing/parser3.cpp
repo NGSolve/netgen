@@ -177,16 +177,16 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      face.SetType(TRIG);
-	      ist >> face.PNum(1);
+	      ist >> (int&)face.PNum(1);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(2);
+	      ist >> (int&)face.PNum(2);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(3);
+	      ist >> (int&)face.PNum(3);
 	      ist >> ch;    // ')' or ','
 	      if (ch == COMMASIGN)
 		{
 		  face.SetType(QUAD);
-		  ist >> face.PNum(4);
+		  ist >> (int&)face.PNum(4);
 		  ist >> ch;    // ')' 
 		}
 	      faces.Append (face);
@@ -285,16 +285,16 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      face.SetType(TRIG);
-	      ist >> face.PNum(1);
+	      ist >> (int&)face.PNum(1);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(2);
+	      ist >> (int&)face.PNum(2);
 	      ist >> ch;    // ','
-	      ist >> face.PNum(3);
+	      ist >> (int&)face.PNum(3);
 	      ist >> ch;    // ')' or ','
 	      if (ch == COMMASIGN)
 		{
 		  face.SetType(QUAD);
-		  ist >> face.PNum(4);
+		  ist >> (int&)face.PNum(4);
 		  ist >> ch;    // ')' 
 		}
 	      faces.Append (face);
@@ -494,40 +494,40 @@ void vnetrule :: LoadRule (istream & ist)
 	      elements.Append (Element(TET));
 
 	      //	      elements.Last().SetNP(1);
-	      ist >> elements.Last().PNum(1);
+	      ist >> (int&)elements.Last().PNum(1);
 	      ist >> ch;    // ','
 
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(2);
-		  ist >> elements.Last().PNum(2);
+		  ist >> (int&)elements.Last().PNum(2);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(3);
-		  ist >> elements.Last().PNum(3);
+		  ist >> (int&)elements.Last().PNum(3);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(4);
 		  elements.Last().SetType(TET);
-		  ist >> elements.Last().PNum(4);
+		  ist >> (int&)elements.Last().PNum(4);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(5);
 		  elements.Last().SetType(PYRAMID);
-		  ist >> elements.Last().PNum(5);
+		  ist >> (int&)elements.Last().PNum(5);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(PRISM);
-		  ist >> elements.Last().PNum(6);
+		  ist >> (int&)elements.Last().PNum(6);
 		  ist >> ch;    // ','
 		}
               
@@ -535,14 +535,14 @@ void vnetrule :: LoadRule (istream & ist)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(HEX);
-		  ist >> elements.Last().PNum(7);
+		  ist >> (int&)elements.Last().PNum(7);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(HEX);
-		  ist >> elements.Last().PNum(8);
+		  ist >> (int&)elements.Last().PNum(8);
 		  ist >> ch;    // ','
 		}
 
@@ -879,16 +879,16 @@ void vnetrule :: LoadRule (istream & ist)
       //      NgArray<int> & freeset = *freesets.Get(fs);
       NgArray<twoint> & freesetedges = *freeedges.Last();
       NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
-      int k,l;
-      INDEX ind;
+      // int k,l;
+      // INDEX ind;
       
-      for (k = 1; k <= freesetfaces.Size(); k++)
+      for (int k = 1; k <= freesetfaces.Size(); k++)
 	{
           // threeint tr = freesetfaces.Get(k);
 
-	  for (l = k+1; l <= freesetfaces.Size(); l++)
+	  for (int l = k+1; l <= freesetfaces.Size(); l++)
 	    {
-	      ind = NeighbourTrianglePoint(freesetfaces.Get(k), freesetfaces.Get(l));
+	      INDEX ind = NeighbourTrianglePoint(freesetfaces.Get(k), freesetfaces.Get(l));
 	      if (!ind) continue;
 
 	      INDEX_3 f1(freesetfaces.Get(k).i1, 
@@ -897,7 +897,7 @@ void vnetrule :: LoadRule (istream & ist)
 	      INDEX_3 f2(freesetfaces.Get(l).i1, 
 			 freesetfaces.Get(l).i2, 
 			 freesetfaces.Get(l).i3);
-	      INDEX_2 ed(0, 0);
+	      PointIndices<2> ed(PointIndex::INVALID, PointIndex::INVALID);
 	      for (int f11 = 1; f11 <= 3; f11++)
 		for (int f12 = 1; f12 <= 3; f12++)
 		  if (f11 != f12)
@@ -916,8 +916,8 @@ void vnetrule :: LoadRule (istream & ist)
 		    {
 		      for (int elr = 1; elr <= 4; elr++)
 			{
-			  if (GetPointNrMod (eli, elr) == ed.I(1) &&
-			      GetPointNrMod (eli, elr+2) == ed.I(2))
+			  if (GetPointNrMod (eli, elr) == ed[0] &&
+			      GetPointNrMod (eli, elr+2) == ed[1])
 			    {
 			      /*
 			      (*testout) << "ed is diagonal of rectangle" << endl;
@@ -1014,14 +1014,15 @@ void Meshing3 :: LoadRules (const char * filename, const char ** prules)
 	
       if (strcmp (buf, "rule") == 0)
 	{
-	  vnetrule * rule = new vnetrule;
+	  // vnetrule * rule = new vnetrule;
+          auto rule = make_unique<vnetrule>();
 	  rule -> LoadRule(*ist);
-	  rules.Append (rule);
 	  if (!rule->TestOk())
 	    {
 	      PrintSysError ("Parser3d: Rule ", rules.Size(), " not ok");
 	      exit (1);
 	    }
+	  rules.Append (std::move(rule));
 	}
       else if (strcmp (buf, "tolfak") == 0)
 	{

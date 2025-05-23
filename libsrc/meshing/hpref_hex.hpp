@@ -54,6 +54,8 @@ HPRef_Struct refhex_1f_0e_0v =
 
 
 
+
+
 // HP_HEX_1FA_1FB  ... face (1 - 4 - 3 -2) and face (1-2-6-5) singular 
 int refhex_1fa_1fb_0e_0v_splitedges[][3] =
   {
@@ -232,5 +234,97 @@ HPRef_Struct refhex_1fa_1fb_0e_0v =
       refhex_1e_0v_newelstypes, 
       refhex_1e_0v_newels
     };
+
+
+
+
+
+
+// HP_HEX  ... no refinement
+int refhex7_splitedges[][3] =
+  {
+      { 0, 0, 0 }
+  };
+HPREF_ELEMENT_TYPE refhex7_newelstypes[] =
+  {
+    HP_HEX7,
+    HP_NONE,
+  };
+int refhex7_newels[][8] =
+  {
+    { 1, 2, 3, 4, 5, 6, 7 }
+  };
+HPRef_Struct refhex7 =
+  {
+    HP_HEX7,
+    refhex7_splitedges, 
+    0, 0,
+    refhex7_newelstypes, 
+    refhex7_newels
+  };
+
+// HP_HEX_1FA  ... face (1 - 4 - 3 -2) singular 
+int refhex7_1fa_splitedges[][3] =
+  {
+    { 1, 5, 8 },
+    { 2, 6, 9 },
+    { 3, 7, 10 },
+    { 4, 7, 11 }, 
+    { 0, 0, 0 }
+  };
+HPREF_ELEMENT_TYPE refhex7_1fa_newelstypes[] =
+  {
+    HP_HEX_1F_0E_0V,
+    HP_HEX7,
+    HP_NONE,
+  };
+int  refhex7_1fa_newels[][8] =
+  {
+    { 1, 2, 3, 4, 8, 9, 10, 11 },
+    { 8, 9, 10, 11, 5, 6, 7 }
+ }; 
+HPRef_Struct refhex7_1fa =
+  {
+    HP_HEX7,
+    refhex7_1fa_splitedges, 
+    0, 0,
+    refhex7_1fa_newelstypes, 
+    refhex7_1fa_newels
+  };
+
+
+
+
+// HP_HEX_1FB  ... face (5,6,7) singular 
+int refhex7_1fb_splitedges[][3] =
+  {
+    { 5, 1, 8 },
+    { 6, 2, 9 },
+    { 7, 3, 10 },
+    { 7, 4, 11 }, 
+    { 0, 0, 0 }
+  };
+HPREF_ELEMENT_TYPE refhex7_1fb_newelstypes[] =
+  {
+    HP_HEX,
+    HP_HEX7_1FB,
+    HP_NONE,
+  };
+int  refhex7_1fb_newels[][8] =
+  {
+    { 1, 2, 3, 4, 8, 9, 10, 11 },
+    { 8, 9, 10, 11, 5, 6, 7 }
+ }; 
+HPRef_Struct refhex7_1fb =
+  {
+    HP_HEX7,
+    refhex7_1fb_splitedges, 
+    0, 0,
+    refhex7_1fb_newelstypes, 
+    refhex7_1fb_newels
+  };
+
+
+
 
 

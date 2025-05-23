@@ -216,6 +216,10 @@ namespace ngcore
   template <typename  T>
   constexpr T IndexBASE () { return T(0); }
 
+  template <typename  T>
+  constexpr T IndexBASE (T ind) { return IndexBASE<T>(); }
+
+  
 
   class IndexFromEnd
   {
@@ -278,7 +282,8 @@ namespace ngcore
     T first, next;
   public: 
     NETGEN_INLINE T_Range () { ; }
-    NETGEN_INLINE T_Range (T n) : first(0), next(n) {;}
+    // NETGEN_INLINE T_Range (T n) : first(0), next(n) {;}
+    NETGEN_INLINE explicit T_Range (size_t n) : first(IndexBASE<T>()), next(IndexBASE<T>()+n) {;}    
     NETGEN_INLINE T_Range (T f, T n) : first(f), next(n) {;}
     template <typename T2>
       NETGEN_INLINE T_Range(T_Range<T2> r2) : first(r2.First()), next(r2.Next()) { ; }
@@ -296,7 +301,7 @@ namespace ngcore
 
     NETGEN_INLINE T_Range Split (size_t nr, int tot) const
     {
-      T diff = next-first;
+      auto diff = next-first;
       return T_Range (first + nr * diff / tot,
                       first + (nr+1) * diff / tot);
     }
@@ -554,6 +559,13 @@ namespace ngcore
     // { return CArray<T> (data+pos); }
     NETGEN_INLINE T * operator+ (size_t pos) const { return data+pos; }
 
+    /// access first element. check by macro NETGEN_CHECK_RANGE
+    T & First () const
+    {
+      NETGEN_CHECK_RANGE(0,0,size);
+      return data[0];
+    }
+
     /// access last element. check by macro NETGEN_CHECK_RANGE
     T & Last () const
     {
@@ -687,6 +699,7 @@ namespace ngcore
     size_t allocsize;
     /// that's the data we have to delete, nullptr for not owning the memory
     T * mem_to_delete;
+    MemoryTracer mt;
 
 
     using FlatArray<T,IndexType>::size;
@@ -708,6 +721,7 @@ namespace ngcore
     {
       allocsize = asize; 
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*asize);
     }
 
 
@@ -717,7 +731,10 @@ namespace ngcore
     {
       allocsize = asize;
       if(ownMemory)
+      {
         mem_to_delete = adata;
+        mt.Alloc(sizeof(T)*asize);
+      }
       else
         mem_to_delete = nullptr;
     }
@@ -733,8 +750,7 @@ namespace ngcore
 
     NETGEN_INLINE Array (Array && a2) 
     {
-      mt.Swap(sizeof(T) * allocsize, a2.mt, sizeof(T) * a2.allocsize);
-
+      mt = std::move(a2.mt);
       size = a2.size; 
       data = a2.data;
       allocsize = a2.allocsize;
@@ -753,6 +769,7 @@ namespace ngcore
         {
           allocsize = size;
           mem_to_delete = data;
+          mt.Alloc(sizeof(T)*size);
           for (size_t i = 0; i < size; i++)
             data[i] = a2.data[i];
         }
@@ -772,6 +789,7 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*size);
       /*
       for (size_t i = 0; i < size; i++)
         data[i] = a2[i];
@@ -788,6 +806,7 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*size);
       size_t cnt = 0;
       for (auto val : list)
         data[cnt++] = val;
@@ -800,6 +819,7 @@ namespace ngcore
     {
       allocsize = size;
       mem_to_delete = data;
+      mt.Alloc(sizeof(T)*size);
       for(size_t i = 0; i <  a2.Size(); i++)
         data[i] = a2[i];
       for (size_t i = a2.Size(), j=0; i < size; i++,j++)
@@ -834,6 +854,9 @@ namespace ngcore
     NETGEN_INLINE void NothingToDelete () 
     { 
       mem_to_delete = nullptr;
+
+      // this memory is not managed by the Array anymore, so set the memory usage to 0
+      mt.Free(sizeof(T)*allocsize);
     }
 
     /// Change logical size. If necessary, do reallocation. Keeps contents.
@@ -947,7 +970,7 @@ namespace ngcore
 
 
     /// Delete element i. Move last element to position i.
-    NETGEN_INLINE void DeleteElement (size_t i)
+    NETGEN_INLINE void DeleteElement (IndexType i)
     {
       NETGEN_CHECK_RANGE(i,BASE,BASE+size);
       data[i-BASE] = std::move(data[size-1]);
@@ -956,10 +979,10 @@ namespace ngcore
 
 
     /// Delete element i. Move all remaining elements forward
-    NETGEN_INLINE void RemoveElement (size_t i)
+    NETGEN_INLINE void RemoveElement (IndexType i)
     {
       NETGEN_CHECK_RANGE(i, BASE, BASE+size);
-      for(size_t j = i; j < this->size-1; j++)
+      for(size_t j = i-BASE; j+1 < this->size; j++)
 	this->data[j] = this->data[j+1];
       this->size--;
     }
@@ -1001,16 +1024,17 @@ namespace ngcore
             data[i] = a2.data[i];
           return *this;
         }
+#ifndef __CUDA_ARCH__      
       else
         throw Exception(std::string("cannot copy Array of type ") + typeid(T).name());
+#endif
     }
 
     
     /// steal array 
     NETGEN_INLINE Array & operator= (Array && a2)
     {
-      mt.Swap(sizeof(T)*allocsize, a2.mt, sizeof(T)*a2.allocsize);
-
+      mt = std::move(a2.mt);
       ngcore::Swap (size, a2.size);
       ngcore::Swap (data, a2.data);
       ngcore::Swap (allocsize, a2.allocsize);
@@ -1084,8 +1108,7 @@ namespace ngcore
     
     NETGEN_INLINE void Swap (Array & b)
     {
-      mt.Swap(sizeof(T) * allocsize, b.mt, sizeof(T) * b.allocsize);
-
+      mt = std::move(b.mt);
       ngcore::Swap (size, b.size);
       ngcore::Swap (data, b.data);
       ngcore::Swap (allocsize, b.allocsize);
@@ -1094,7 +1117,8 @@ namespace ngcore
 
     NETGEN_INLINE void StartMemoryTracing () const
     {
-      mt.Alloc(sizeof(T) * allocsize);
+      if(mem_to_delete)
+        mt.Alloc(sizeof(T) * allocsize);
     }
 
     const MemoryTracer& GetMemoryTracer() const { return mt; }
@@ -1103,7 +1127,6 @@ namespace ngcore
 
     /// resize array, at least to size minsize. copy contents
     NETGEN_INLINE void ReSize (size_t minsize);
-    MemoryTracer mt;
   };
 
   
@@ -1156,6 +1179,7 @@ namespace ngcore
     using Array<T>::allocsize;
     using Array<T>::data;
     using Array<T>::mem_to_delete;
+    using Array<T>::mt;
     // using Array<T>::ownmem;
 
   public:
@@ -1169,6 +1193,7 @@ namespace ngcore
           data = new T[asize];
           allocsize = size;
           mem_to_delete = data;
+          mt.Alloc(sizeof(T)*asize);
         }
     }
 
@@ -1189,6 +1214,7 @@ namespace ngcore
     ArrayMem(ArrayMem && a2)
       : Array<T> (a2.Size(), (T*)mem)
     {
+      mt = std::move(a2.mt);
       if (a2.mem_to_delete)
         {
           mem_to_delete = a2.mem_to_delete;
@@ -1231,6 +1257,7 @@ namespace ngcore
 
     ArrayMem & operator= (ArrayMem && a2)
     {
+      mt = std::move(a2.mt);
       ngcore::Swap (mem_to_delete, a2.mem_to_delete);
       ngcore::Swap (allocsize, a2.allocsize);
       ngcore::Swap (size, a2.size);
@@ -1526,6 +1553,8 @@ namespace ngcore
   }
                                
 
+  struct HTAHelp { };
+  
   // head-tail array
   template <size_t S, typename T>
   class HTArray
@@ -1533,10 +1562,22 @@ namespace ngcore
     HTArray<S-1,T> tail;
     T head;
   public:
-    HTArray () = default;
-    HTArray (const HTArray &) = default;
+    constexpr HTArray () = default;
+    constexpr HTArray (const HTArray &) = default;
     template <typename T2>
-    HTArray (const HTArray<S,T2> & a2) : tail(a2.Tail()), head(a2.Head()) { ; }
+    constexpr HTArray (const HTArray<S,T2> & a2) : tail(a2.Tail()), head(a2.Head()) { ; }
+
+    constexpr HTArray (T v) : tail(v), head(v) { } // all the same
+    
+    template <class... T2,
+              std::enable_if_t<S==1+sizeof...(T2),bool> = true>
+    constexpr HTArray (const T &v, T2... rest)
+      : tail{HTAHelp(), v,rest...}, head(std::get<S-2>(std::tuple(rest...))) { }
+
+    template <class... T2>
+    constexpr HTArray (HTAHelp h, const T &v, T2... rest)
+      : tail{h, v,rest...}, head(std::get<S-2>(std::tuple(rest...))) { }
+
     
     HTArray & operator= (const HTArray &) = default;
 
@@ -1557,10 +1598,15 @@ namespace ngcore
   {
     T head;
   public:
-    HTArray () = default;
-    HTArray (const HTArray &) = default;
+    constexpr HTArray () = default;
+    constexpr HTArray (const HTArray &) = default;
     template <typename T2>
-    HTArray (const HTArray<1,T2> & a2) : head(a2.Head()) { ; }
+    constexpr HTArray (const HTArray<1,T2> & a2) : head(a2.Head()) { ; }
+    constexpr HTArray (T v) : head(v) { } // all the same
+    template <class... T2>    
+    constexpr HTArray (HTAHelp h, const T &v, T2... rest)
+      : head(v) { } 
+
     
     HTArray & operator= (const HTArray &) = default;
 
@@ -1588,7 +1634,7 @@ namespace ngcore
     HTArray (const HTArray &) = default;
     template <typename T2>
     HTArray (const HTArray<0,T2> & a2) { ; }
-    
+    constexpr HTArray (T v) { } // all the same    
     HTArray & operator= (const HTArray &) = default;
 
     /*

@@ -14,15 +14,16 @@
 #include "occgeom.hpp"
 #include "Partition_Spliter.hxx"
 
+#include <BinTools.hxx>
 #include <BOPAlgo_Builder.hxx>
 #include <BRepBndLib.hxx>
+#include <BRepBuilderAPI_Copy.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>
 #include <BRepBuilderAPI_MakeVertex.hxx>
 #include <BRepCheck_Analyzer.hxx>
 #include <BRepExtrema_DistShapeShape.hxx>
 #include <BRepGProp.hxx>
 #include <BRepLib.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepOffsetAPI_Sewing.hxx>
 #include <BRepTools.hxx>
 #include <IGESCAFControl_Reader.hxx>
@@ -70,6 +71,15 @@ namespace netgen
 {
   void LoadOCCInto(OCCGeometry* occgeo, const filesystem::path & filename);
   void PrintContents (OCCGeometry * geom);
+
+  // Utility function to apply builder and propagate properties
+  template <typename T>
+  static TopoDS_Shape Apply(T & builder, TopoDS_Shape & shape) {
+    auto newshape = builder->Apply(shape);
+    PropagateProperties(*builder, newshape);
+    return newshape;
+  };
+
 
   TopTools_IndexedMapOfShape OCCGeometry::global_shape_property_indices;
   std::vector<ShapeProperties> OCCGeometry::global_shape_properties;
@@ -188,6 +198,11 @@ namespace netgen
   const GeometryFace & OCCGeometry :: GetFace(const TopoDS_Shape & shape) const
   {
       return *faces[fmap.FindIndex(shape)-1];
+  }
+
+  const GeometrySolid & OCCGeometry :: GetSolid(const TopoDS_Shape & shape) const
+  {
+      return *solids[somap.FindIndex(shape)-1];
   }
 
 
@@ -406,16 +421,7 @@ namespace netgen
       }
 #endif
 
-#ifdef OCC_HAVE_HISTORY    
-    Handle(BRepTools_History) history = aBuilder.History ();
-    
-    for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
-      {
-        if (auto name = OCCGeometry::GetProperties(e.Current()).name)
-          for (auto mods : history->Modified(e.Current()))
-            OCCGeometry::GetProperties(mods).name = *name;
-      }
-#endif // OCC_HAVE_HISTORY    
+    PropagateProperties(aBuilder, shape);
     
     // result of the operation
     shape = aBuilder.Shape();
@@ -443,14 +449,14 @@ namespace netgen
       
       {
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
                rebuild->Remove(edge);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
       BuildFMap();
@@ -474,7 +480,7 @@ namespace netgen
 
          Handle(ShapeFix_Face) sff;
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
 
          for (exp0.Init (shape, TopAbs_FACE); exp0.More(); exp0.Next())
          {
@@ -512,20 +518,20 @@ namespace netgen
             // face (after the healing process)
             // GetProperties(face);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
 
       {
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
          for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
          {
             TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
             if ( BRep_Tool::Degenerated(edge) )
                rebuild->Remove(edge);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
 
@@ -535,7 +541,7 @@ namespace netgen
 
          Handle(ShapeFix_Wire) sfw;
          Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-         rebuild->Apply(shape);
+         Apply(rebuild, shape);
 
 
          for (exp0.Init (shape, TopAbs_FACE); exp0.More(); exp0.Next())
@@ -595,14 +601,14 @@ namespace netgen
             }
          }
 
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
 
 
 
          {
             BuildFMap();
             Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-            rebuild->Apply(shape);
+            Apply(rebuild, shape);
 
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
             {
@@ -621,7 +627,7 @@ namespace netgen
                   }
                }
             }
-            shape = rebuild->Apply(shape);
+            shape = Apply(rebuild, shape);
 
             //delete rebuild; rebuild = NULL;
          }
@@ -630,14 +636,14 @@ namespace netgen
 
          {
             Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-            rebuild->Apply(shape);
+            Apply(rebuild, shape);
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
             {
                TopoDS_Edge edge = TopoDS::Edge(exp1.Current());
                if ( BRep_Tool::Degenerated(edge) )
                   rebuild->Remove(edge);
             }
-            shape = rebuild->Apply(shape);
+            shape = Apply(rebuild, shape);
          }
 
 
@@ -684,7 +690,9 @@ namespace netgen
 
 
 
-         shape = sfwf->Shape();
+         auto newshape = sfwf->Shape();
+         PropagateProperties(*sfwf->Context(), newshape);
+         shape = newshape;
 
          //delete sfwf; sfwf = NULL;
          //delete rebuild; rebuild = NULL;
@@ -716,7 +724,9 @@ namespace netgen
          sffsm -> SetPrecision (tolerance);
          sffsm -> Perform();
 
-         shape = sffsm -> FixShape();
+         auto newshape = sffsm -> FixShape();
+         PropagateProperties(*sffsm->Context(), newshape);
+         shape = newshape;
          //delete sffsm; sffsm = NULL;
       }
 
@@ -745,6 +755,7 @@ namespace netgen
          }
 
          sewedObj.Perform();
+         PropagateProperties(sewedObj, shape);
 
          if (!sewedObj.SewedShape().IsNull())
             shape = sewedObj.SewedShape();
@@ -763,7 +774,7 @@ namespace netgen
             if ( BRep_Tool::Degenerated(edge) )
                rebuild->Remove(edge);
          }
-         shape = rebuild->Apply(shape);
+         shape = Apply(rebuild, shape);
       }
 
 
@@ -896,6 +907,30 @@ namespace netgen
    }
 
 
+   // For 2d geometries, make sure all faces have a normal vector with positive z-component
+   void OCCGeometry :: FixFaceOrientation()
+   {
+     if(dimension!=2) return;
+
+     bool needs_fix = false;
+     Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
+     for (auto face : GetFaces(shape))
+     {
+       auto occface = OCCFace(face);
+       auto normal = occface.GetNormal(occ2ng(GetVertices(face)[0]));
+       if(normal[2] < 0) {
+         needs_fix = true;
+         // Need do copy the face, otherwise replace is ignored
+         BRepBuilderAPI_Copy copy(face);
+         auto newface = copy.Shape().Reversed();
+         GetProperties(newface).Merge(GetProperties(face));
+         rebuild->Replace(face, newface);
+       }
+     }
+
+     if(needs_fix )
+       shape = Apply(rebuild, shape);
+   }
 
    void OCCGeometry :: BuildFMap()
    {
@@ -907,6 +942,9 @@ namespace netgen
       vmap.Clear();
 
       TopExp_Explorer exp0, exp1, exp2, exp3, exp4, exp5;
+
+      // Check face orientation in 2d geometries
+      FixFaceOrientation();
 
       for (exp0.Init(shape, TopAbs_COMPOUND);
          exp0.More(); exp0.Next())
@@ -1094,6 +1132,21 @@ namespace netgen
          }
       }
       */
+
+      std::map<int, ArrayMem<int, 10>> free_edges_in_solid;
+      for(auto i1 : Range(1, somap.Extent()+1))
+      {
+          auto s = somap(i1);
+          for (auto edge : MyExplorer(s, TopAbs_EDGE, TopAbs_WIRE))
+            if (!emap.Contains(edge))
+              {
+                free_edges_in_solid[i1].Append(emap.Add (edge));
+                for (auto vertex : MyExplorer(edge, TopAbs_VERTEX))
+                  if (!vmap.Contains(vertex))
+                    vmap.Add (vertex);
+              }
+      }
+
       for (auto edge : MyExplorer(shape, TopAbs_EDGE, TopAbs_WIRE))
         if (!emap.Contains(edge))
           {
@@ -1166,6 +1219,8 @@ namespace netgen
           auto e = emap(i1);
           auto edge = TopoDS::Edge(e);
           auto verts = GetVertices(e);
+          if(verts.size() == 0)
+            continue;
           auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
           occ_edge->properties = GetProperties(e);
           edges.Append(std::move(occ_edge));
@@ -1204,17 +1259,36 @@ namespace netgen
           auto occ_solid = make_unique<OCCSolid>(s);
           if(HaveProperties(s))
             occ_solid->properties = GetProperties(s);
-          solids.Append(std::move(occ_solid));
-
           for(auto f : GetFaces(s))
           {
-              auto & face = GetFace(f);
+              auto & face = static_cast<OCCFace&>(GetFace(f));
+              face.properties.maxh = min2(face.properties.maxh, occ_solid->properties.maxh);
+
               if(face.domin==-1)
                   face.domin = k;
               else
                   face.domout = k;
+              if(face.Shape().Orientation() == TopAbs_INTERNAL)
+                  face.domout = k;
           }
+
+          if(free_edges_in_solid.count(i1))
+            for(auto ei : free_edges_in_solid[i1])
+            {
+              auto & edge = GetEdge(emap(ei));
+              edge.properties.maxh = min(edge.properties.maxh, occ_solid->properties.maxh);
+              edge.domin = k;
+              edge.domout = k;
+              occ_solid->free_edges.Append(&GetEdge(emap(ei)));
+            }
+          solids.Append(std::move(occ_solid));
       }
+
+      // Propagate maxh to children
+      for(auto& face : faces)
+        for(auto& edge : face->edges)
+          edge->properties.maxh = min2(edge->properties.maxh,
+                                       face->properties.maxh);
 
       // Add identifications
       auto add_identifications = [&](auto & shapes, auto & shape_map)
@@ -1335,18 +1409,15 @@ namespace netgen
     const auto& occface = dynamic_cast<const OCCFace&>(face);
     for(auto& vert : GetVertices(occface.Shape()))
       verts.Append(&GetVertex(vert));
-    return std::move(verts);
+    return verts;
   }
 
 
    void OCCGeometry :: BuildVisualizationMesh (double deflection)
    {
-      cout << "Preparing visualization (deflection = " << deflection << ") ... " << flush;
-
-      BRepTools::Clean (shape);
-      // BRepMesh_IncrementalMesh::
-      BRepMesh_IncrementalMesh (shape, deflection, true);
-      cout << "done" << endl;
+      // cout << IM(5) << "Preparing visualization (deflection = " << deflection << ") ... " << flush;
+      BuildTriangulation(shape);
+      // cout << IM(5) << "done" << endl;
    }
 
 
@@ -1467,6 +1538,7 @@ namespace netgen
 
       // Enable transfer of colours
       reader.SetColorMode(Standard_True);
+      reader.SetNameMode(Standard_True);
 
       reader.Transfer(iges_doc);
 
@@ -1478,22 +1550,66 @@ namespace netgen
       iges_shape_contents->GetShapes(iges_shapes);
 
       // List out the available colours in the IGES File as Colour Names
-      TDF_LabelSequence all_colours;
-      iges_colour_contents->GetColors(all_colours);
-      PrintMessage(1,"Number of colours in IGES File: ",all_colours.Length());
-      for(int i = 1; i <= all_colours.Length(); i++)
-      {
-         Quantity_Color col;
-         stringstream col_rgb;
-         iges_colour_contents->GetColor(all_colours.Value(i),col);
-         col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
-         PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
-      }
+      // TDF_LabelSequence all_colours;
+      // iges_colour_contents->GetColors(all_colours);
+      // PrintMessage(1,"Number of colours in IGES File: ",all_colours.Length());
+      // for(int i = 1; i <= all_colours.Length(); i++)
+      // {
+      //    Quantity_Color col;
+      //    stringstream col_rgb;
+      //    iges_colour_contents->GetColor(all_colours.Value(i),col);
+      //    col_rgb << " : (" << col.Red() << "," << col.Green() << "," << col.Blue() << ")";
+      //    PrintMessage(1, "Colour [", i, "] = ",col.StringName(col.Name()),col_rgb.str());
+      // }
 
 
       // For the IGES Reader, all the shapes can be exported as one compound shape
       // using the "OneShape" member
-      occgeo->shape = reader.OneShape();
+      auto shape = reader.OneShape();
+      auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(iges_doc->Main());
+      // load colors
+      for (auto typ : {TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+        for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+          {
+            TDF_Label label;
+            shapeTool->Search(e.Current(), label);
+
+            if(label.IsNull())
+              continue;
+
+            XCAFPrs_IndexedDataMapOfShapeStyle set;
+            TopLoc_Location loc;
+            XCAFPrs::CollectStyleSettings(label, loc, set);
+            XCAFPrs_Style aStyle;
+            set.FindFromKey(e.Current(), aStyle);
+
+            auto & prop = OCCGeometry::GetProperties(e.Current());
+            if(aStyle.IsSetColorSurf())
+              prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+          }
+
+      // load names
+      auto workSession = reader.WS();
+      auto model = workSession->Model();
+      auto transProc = workSession->TransferReader()->TransientProcess();
+      Standard_Integer nb = model->NbEntities();
+      for (Standard_Integer i = 1; i <= nb; i++)
+        {
+          Handle(Standard_Transient) entity = model->Value(i);
+          auto item = Handle(StepRepr_RepresentationItem)::DownCast(entity);
+
+          if(item.IsNull())
+            continue;
+
+          TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(item));
+          string name = item->Name()->ToCString();
+          if (!transProc->IsBound(item))
+            continue;
+
+          OCCGeometry::GetProperties(shape).name = name;
+        }
+
+      occgeo->shape = shape;
       occgeo->changed = 1;
       occgeo->BuildFMap();
 
@@ -1533,8 +1649,12 @@ namespace netgen
 
       if(!result)
       {
-         delete occgeo;
-         return NULL;
+        result = BinTools::Read(occgeo->shape, filename.string().c_str());
+        if (!result)
+          {
+            delete occgeo;
+            throw Exception("Could not read BREP file " + filename.string());
+          }
       }
 
       occgeo->changed = 1;
@@ -1623,16 +1743,14 @@ namespace netgen
         BRepTools::Read(shape, ss, builder);
       }
 
-    // enumerate shapes and archive only integers
-    auto my_hash = [](const TopoDS_Shape & key) {
-        auto occ_hash = key.HashCode(1<<31UL);
-        return std::hash<decltype(occ_hash)>()(occ_hash);
-    };
     TopTools_IndexedMapOfShape shape_map;
     Array<TopoDS_Shape> shape_list;
 
     ar & dimension;
-    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+    auto types = Array<TopAbs_ShapeEnum>{ TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE };
+    if(ar.GetVersion("netgen") >= "v6.2.2406-22")
+      types.Append(TopAbs_VERTEX);
+    for (auto typ : types)
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto ds = e.Current();
@@ -1654,8 +1772,19 @@ namespace netgen
         ar & has_identifications;
         if(has_identifications)
           {
-            auto & idents = GetIdentifications(s);
-            auto n_idents = idents.size();
+            int n_idents;
+            std::vector<OCCIdentification> used_idents;
+            if(ar.Output())
+              {
+                // only use identifications that are used within the geometry
+                for(auto& id : GetIdentifications(s))
+                  {
+                    if(shape_map.Contains(id.from) && shape_map.Contains(id.to))
+                      used_idents.push_back(id);
+                  }
+                n_idents = used_idents.size();
+              }
+            auto & idents = ar.Output() ? used_idents : GetIdentifications(s);
             ar & n_idents;
             idents.resize(n_idents);
             for(auto i : Range(n_idents))
@@ -1667,7 +1796,18 @@ namespace netgen
                   id_from = shape_map.FindIndex(id.from)-1;
                   id_to = shape_map.FindIndex(id.to)-1;
                 }
-                ar & id_from & id_to & id.trafo & id.name;
+                ar & id_from & id_to;
+
+                // trafo is now optional -> special treatment necessary for backward compatibility
+                if(ar.Output() || netgen_version >= "v6.2.2403-34-g571cbbe4")
+                  ar & id.trafo;
+                else
+                {
+                  auto trafo = Transformation<3>();
+                  ar & trafo;
+                  id.trafo = trafo;
+                }
+                ar & id.name;
                 if(ar.Input())
                 {
                     id.from = shape_list[id_from];
@@ -1695,7 +1835,7 @@ namespace netgen
    "Face", "Wire", "Edge", "Vertex"};
 
   const char * orientationstring[] =
-     {"+", "-"};
+    {"+", "-", "i", "e"};
 
 
 
@@ -1754,6 +1894,16 @@ namespace netgen
          }
 
          str << "{" << shapename[l] << " " << count2;
+         if(HaveProperties(e.Current()))
+           {
+             const auto& props = GetProperties(e.Current());
+             if(props.name || props.maxh < 1e99)
+               str << " - ";
+             if(props.name)
+               str << props.GetName();
+             if(props.maxh < 1e99)
+               str << " maxh(" << props.maxh << ")";
+           }
 
          if (l <= TopAbs_EDGE)
          {
@@ -2138,10 +2288,22 @@ namespace netgen
             XCAFPrs::CollectStyleSettings(label, loc, set);
             XCAFPrs_Style aStyle;
             set.FindFromKey(e.Current(), aStyle);
-
-            auto & prop = OCCGeometry::GetProperties(e.Current());
             if(aStyle.IsSetColorSurf())
-                prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+              {
+                for(TopExp_Explorer e2(e.Current(), TopAbs_FACE); e2.More(); e2.Next())
+                  {
+                    auto & prop = OCCGeometry::GetProperties(e2.Current());
+                    prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+                  }
+              }
+            if(aStyle.IsSetColorCurv())
+              {
+                for(TopExp_Explorer e2(e.Current(), TopAbs_EDGE); e2.More(); e2.Next())
+                  {
+                    auto & prop = OCCGeometry::GetProperties(e2.Current());
+                    prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+                  }
+              }
           }
 
         // load names
@@ -2243,27 +2405,33 @@ namespace netgen
           auto & identifications = OCCGeometry::GetIdentifications(shape);
           if(identifications.size()==0)
               return;
-          auto n = identifications.size();
+          // auto n = identifications.size();
           Array<Handle(StepRepr_RepresentationItem)> ident_items;
           ident_items.Append(item);
 
           for(auto & ident : identifications)
           {
+              const auto& to = STEPConstruct::FindEntity(finder, ident.from == shape ? ident.to : ident.from);
+              if(to.IsNull())
+                  continue;
               Array<Handle(StepRepr_RepresentationItem)> items;
-              // items.Append(STEPConstruct::FindEntity(finder, ident.other)); // TODO!
-              auto & m = ident.trafo.GetMatrix();
+              items.Append(MakeReal(ident.from == shape ? 1 : 0));
+              items.Append(to);
+              Transformation<3> trafo;
+              if(ident.trafo) trafo = *ident.trafo;
+              auto & m = trafo.GetMatrix();
               for(auto i : Range(9))
                   items.Append(MakeReal(m(i)));
-              auto & v = ident.trafo.GetVector();
+              auto & v = trafo.GetVector();
               for(auto i : Range(3))
                   items.Append(MakeReal(v(i)));
-              for(auto & item : items.Range(1,items.Size()))
+              items.Append(MakeInt(ident.type));
+              for(auto & item : items.Range(0, items.Size()))
                   model->AddEntity(item);
               ident_items.Append(MakeCompound(items, ident.name));
           }
-
-          for(auto & item : ident_items.Range(1,ident_items.Size()))
-              model->AddEntity(item);
+          for(auto & item : ident_items.Range(1, ident_items.Size()))
+            model->AddEntity(item);
           auto comp = MakeCompound(ident_items, "netgen_geometry_identification");
           model->AddEntity(comp);
       }
@@ -2280,15 +2448,29 @@ namespace netgen
               auto id_item = Handle(StepRepr_CompoundRepresentationItem)::DownCast(idents->ItemElementValue(i));
               OCCIdentification ident;
               ident.name = id_item->Name()->ToCString();
-              // ident.other = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(1))); /TODO!
+              auto is_from = ReadReal(id_item->ItemElementValue(1));
+              if(is_from)
+                {
+                  ident.from = shape_origin;
+                  ident.to = TransferBRep::ShapeResult(transProc->Find(id_item->ItemElementValue(2)));
+                }
+              else
+                {
+                  ident.from = TransferBRep::ShapeResult(
+                      transProc->Find(id_item->ItemElementValue(2)));
+                  ident.to = shape_origin;
+                }
 
-              auto & m = ident.trafo.GetMatrix();
+              Transformation<3> trafo;
+              auto & m = trafo.GetMatrix();
               for(auto i : Range(9))
                   m(i) = ReadReal(id_item->ItemElementValue(3+i));
-              auto & v = ident.trafo.GetVector();
+              auto & v = trafo.GetVector();
               for(auto i : Range(3))
                   v(i) = ReadReal(id_item->ItemElementValue(12+i));
-
+              if(FlatVector(9, &trafo.GetMatrix()(0,0)).L2Norm() != .0 && trafo.GetVector().Length2() != .0)
+                  ident.trafo = trafo;
+              ident.type = Identifications::ID_TYPE(ReadInt(id_item->ItemElementValue(15)));
               result.push_back(ident);
           }
           OCCGeometry::GetIdentifications(shape_origin) = result;

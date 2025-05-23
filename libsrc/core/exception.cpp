@@ -1,15 +1,69 @@
 #include "exception.hpp"
 #include "utils.hpp"
 
+#ifdef EMSCRIPTEN
+#include <iostream>
+#endif // EMSCRIPTEN
+
 namespace ngcore
 {
   Exception :: Exception(const std::string& s)
-    : m_what(s) {}
+    : m_what(s) {
+  #ifdef EMSCRIPTEN
+  std::cout << "THROW Exception " << s << std::endl;
+  #endif
+}
   
   Exception :: Exception(const char* s)
-    : m_what(s) {}
+    : m_what(s) {
+  #ifdef EMSCRIPTEN
+  std::cout << "THROW Exception " << s << std::endl;
+  #endif
+
+}
 
 
+  Exception :: Exception(std::string_view s1, std::string_view s2)
+    : Exception(std::string(s1)+std::string(s2))
+  { }
+
+  Exception :: Exception(std::string_view s1, std::string_view s2, std::string_view s3)
+    : Exception(std::string(s1)+std::string(s2)+std::string(s3))
+  { }
+
+
+  void Exception :: Throw (std::string_view s1)
+  {
+    throw Exception(std::string(s1));
+  }
+
+  void Exception :: Throw (std::string_view s1, std::string_view s2)
+  {
+    throw Exception(std::string(s1)+std::string(s2));
+  }
+    
+  void Exception :: Throw (std::string_view s1, std::string_view s2, std::string_view s3)
+  {
+    throw Exception(std::string(s1)+std::string(s2)+std::string(s3));
+  }
+  
+  
+  RangeException :: RangeException (// const std::string & where,
+                                    const char * where,
+                                    ptrdiff_t ind, ptrdiff_t imin, ptrdiff_t imax) : Exception("")
+  {
+    std::stringstream str;
+    str << where << ": index " << ind << " out of range [" << imin << "," << imax << ")\n";
+    Append (str.str());
+    Append (GetBackTrace());
+  }
+  
+
+  void ThrowRangeException(const char * s, ptrdiff_t ind, ptrdiff_t imin, ptrdiff_t imax)
+  {
+    throw RangeException(s, ind, imin, imax);
+  }
+  
   void ThrowException(const std::string & s)
   {
     throw Exception (s);
@@ -19,11 +73,18 @@ namespace ngcore
   {
     throw Exception (s);
   }
+
+
+  void ThrowNotTheSameException(const char * s, ptrdiff_t a, ptrdiff_t b)
+  {
+    throw ngcore::Exception(std::string(s) + ", a="+ToString(a) + ", b="+ToString(b) + GetBackTrace());     
+  }
+  
 } // namespace ngcore
 
 
 // ********* STUFF FOR GETBACKTRACE ***************************
-#ifdef __GNUC__
+#if defined __GNUC__ && !defined __EMSCRIPTEN__
 
 #include <execinfo.h>
 #include <string.h>
@@ -67,7 +128,7 @@ namespace ngcore
       // 1   libngcore.dylib                     0x000000010ddb298c _ZL21ngcore_signal_handleri + 316
       constexpr char reset_shell[] = "\033[0m";
       constexpr char green[] = "\033[32m";
-      constexpr char yellow[] = "\033[33m";
+      [[maybe_unused]] constexpr char yellow[] = "\033[33m";
 
       std::istringstream in(s);
 
@@ -122,7 +183,7 @@ namespace ngcore
       auto libname = s.substr(0, brace_open_pos);
       auto funcname = s.substr(brace_open_pos+1, plus_pos - brace_open_pos - 1);
       auto offset = std::strtoul(s.substr(plus_pos+1, brace_close_pos - plus_pos - 1).c_str(), 0, 16);
-      auto position = std::strtoul(s.substr(bracket_open_pos+1, bracket_close_pos - bracket_open_pos - 1).c_str(), 0, 16);
+      // auto position = std::strtoul(s.substr(bracket_open_pos+1, bracket_close_pos - bracket_open_pos - 1).c_str(), 0, 16);
       std::stringstream out;
 
       if(!funcname.empty())
@@ -181,7 +242,7 @@ namespace ngcore
     for (i = 1; i < bt_size-1; i++)
       {
         dladdr(bt[i], &info);
-        size_t len = strlen(bt_syms[i]);
+        // size_t len = strlen(bt_syms[i]);
         result << '#'<< i << '\t' << detail::TranslateBacktrace( bt_syms[i], info.dli_fname );
       }
     free(bt_syms);
@@ -226,7 +287,7 @@ static bool dummy = []()
     return true;
 }();
 
-#else // __GNUC__
+#else // __GNUC__ and not __EMSCRIPTEN__
 
 namespace ngcore
 {

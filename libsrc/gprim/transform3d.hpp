@@ -11,6 +11,9 @@
   Affine - Linear mapping in 3D space
  */
 
+#include "geom3d.hpp"
+#include "geomfuncs.hpp"
+
 namespace netgen
 {
 

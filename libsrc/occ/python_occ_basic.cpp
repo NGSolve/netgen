@@ -25,7 +25,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (py::tuple pnt)
                   {
                     if (py::len(pnt) != 3)
-                      throw Exception("need 3-tuple to create gp_Pnt");
+                      throw std::length_error("need 3-tuple to create gp_Pnt");
                     
                     return gp_Pnt(py::cast<double>(pnt[0]),
                                   py::cast<double>(pnt[1]),
@@ -73,6 +73,7 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([] (double x, double y, double z) {
           return gp_Vec(x, y, z);
         }), py::arg("x"), py::arg("y"), py::arg("z"))
+    .def(py::init([](gp_Dir d) { return gp_Vec(d); }))
     .def_property("x", [](gp_Vec&p) { return p.X(); }, [](gp_Vec&p,double x) { p.SetX(x); })
     .def_property("y", [](gp_Vec&p) { return p.Y(); }, [](gp_Vec&p,double y) { p.SetY(y); })
     .def_property("z", [](gp_Vec&p) { return p.Z(); }, [](gp_Vec&p,double z) { p.SetZ(z); })
@@ -132,6 +133,12 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         return str.str();
       })
     ;
+
+
+  py::class_<gp_Mat>(m, "gp_Mat", "3d OCC matrix")
+    .def("__getitem__", [](const gp_Mat& mat, tuple<int,int> index)
+    { return mat.Row(get<0>(index)+1).Coord(get<1>(index)+1); })
+    ;
   
   py::class_<gp_Ax1>(m, "Axis", "an OCC axis in 3d") 
     .def(py::init([](gp_Pnt p, gp_Dir d) {
@@ -151,18 +158,18 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
     .def(py::init([](gp_Pnt p, gp_Dir N, gp_Dir Vx) {
           return gp_Ax3(p,N, Vx);
         }), py::arg("p")=gp_Pnt(0,0,0), py::arg("n")=gp_Vec(0,0,1), py::arg("h")=gp_Vec(1,0,0))
+    .def(py::init([](gp_Ax1 ax1) {
+          return gp_Ax3(ax1.Location(), ax1.Direction());
+        }), py::arg("axis"))
     .def(py::init<gp_Ax2>())
     .def_property("p", [](gp_Ax3 & ax) { return ax.Location(); }, [](gp_Ax3&ax, gp_Pnt p) { ax.SetLocation(p); })
     ;
 
 
   py::class_<gp_Pnt2d>(m, "gp_Pnt2d", "2d OCC point")
-    .def(py::init([] (py::tuple pnt)
+    .def(py::init([] (std::tuple<double,double> pnt)
                   {
-                    if (py::len(pnt) != 2)
-                      throw Exception("need 2-tuple to create gp_Pnt2d");
-                    return gp_Pnt2d(py::cast<double>(pnt[0]),
-                                    py::cast<double>(pnt[1]));
+                    return gp_Pnt2d(get<0>(pnt), get<1>(pnt));
                   }))
     .def(py::init([] (double x, double y) {
           return gp_Pnt2d(x, y);
@@ -359,10 +366,14 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
   py::implicitly_convertible<py::tuple, gp_Pnt>();
   py::implicitly_convertible<py::tuple, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Dir>();
-  py::implicitly_convertible<gp_Vec, gp_Dir>();  
+  py::implicitly_convertible<gp_Vec, gp_Dir>();
+  py::implicitly_convertible<gp_Dir, gp_Vec>();
   py::implicitly_convertible<py::tuple, gp_Pnt2d>();  
   py::implicitly_convertible<py::tuple, gp_Vec2d>();  
   py::implicitly_convertible<py::tuple, gp_Dir2d>();
+  
+  py::implicitly_convertible<gp_Ax1, gp_Ax3>();  
+  py::implicitly_convertible<gp_Ax3, gp_Ax1>();  
 
 
   py::implicitly_convertible<gp_Ax3, gp_Ax2>();

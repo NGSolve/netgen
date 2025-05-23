@@ -1,6 +1,3 @@
-// #ifdef PARALLEL
-
-
 #include <meshing.hpp>
 #include "paralleltop.hpp"
 
@@ -94,9 +91,9 @@ namespace netgen
 
     Array<int> first_master_point(comm.Size());
     comm.AllGather (num_master_points, first_master_point);
-    auto max_oldv = comm.AllReduce (Max (glob_vert.Range(0, oldnv)), MPI_MAX);
-    if (comm.AllReduce (oldnv, MPI_SUM) == 0)
-      max_oldv = PointIndex::BASE-1;
+    auto max_oldv = comm.AllReduce (Max (glob_vert.Range(0, oldnv)), NG_MPI_MAX);
+    if (comm.AllReduce (oldnv, NG_MPI_SUM) == 0)
+      max_oldv = long(PointIndex::BASE)-1;
     
     size_t num_glob_points = max_oldv+1;
     for (int i = 0; i < comm.Size(); i++)
@@ -138,16 +135,17 @@ namespace netgen
           for (auto p : dps)
             send_data[p][nsend[p]++] = L2G(pi);
 
-    Array<MPI_Request> requests;
+    NgMPI_Requests requests;
     for (int i = 0; i < comm.Size(); i++)
       {
         if (nsend[i])
-          requests.Append (comm.ISend (send_data[i], i, 200));
+          requests += comm.ISend (send_data[i], i, 200);
         if (nrecv[i])
-          requests.Append (comm.IRecv (recv_data[i], i, 200));
+          requests += comm.IRecv (recv_data[i], i, 200);
       }
     
-    MyMPI_WaitAll (requests);
+    // MyMPI_WaitAll (requests);
+    requests.WaitAll();
     
     Array<int> cnt(comm.Size());
     cnt = 0;
@@ -186,7 +184,7 @@ namespace netgen
 
         if (mesh.mlbetweennodes.Size() == mesh.Points().Size())
           {
-            NgArray<PointIndices<2>,PointIndex::BASE> hml { mesh.mlbetweennodes };
+            Array<PointIndices<2>,PointIndex> hml { mesh.mlbetweennodes };
             for (PointIndex pi : Range(mesh.Points()))
               mesh.mlbetweennodes[inv_index[pi]] = hml[pi];
           }
@@ -292,7 +290,7 @@ namespace netgen
 
 
 
-
+  /*
 
   void ParallelMeshTopology :: UpdateCoarseGridGlobal ()
   {
@@ -319,7 +317,7 @@ namespace netgen
 	  {
 	    topology.GetElementFaces (el, faces);
 	    topology.GetElementEdges (el, edges);
-	    const Element & volel = mesh.VolumeElement (el);
+	    // const Element & volel = mesh.VolumeElement (el);
 
 	    // NgArray<int> & sendarray = *sendarrays[volel.GetPartition()];
             NgArray<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
@@ -333,7 +331,7 @@ namespace netgen
 	for (int el = 1; el <= mesh.GetNSE(); el++)
 	  {
 	    topology.GetSurfaceElementEdges (el, edges);
-	    const Element2d & surfel = mesh.SurfaceElement (el);
+	    // const Element2d & surfel = mesh.SurfaceElement (el);
 	    // NgArray<int> & sendarray = *sendarrays[surfel.GetPartition()];
             NgArray<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
@@ -342,10 +340,10 @@ namespace netgen
 	    sendarray.Append (topology.GetSurfaceElementFace (el));
 	  }
 
-	Array<MPI_Request> sendrequests;
+	Array<NG_MPI_Request> sendrequests;
 	for (int dest = 1; dest < ntasks; dest++)
-	  // sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, MPI_TAG_MESH+10, comm));
-          sendrequests.Append (comm.ISend (FlatArray<int>(*sendarrays[dest]), dest, MPI_TAG_MESH+10));
+	  // sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, NG_MPI_TAG_MESH+10, comm));
+          sendrequests.Append (comm.ISend (FlatArray<int>(*sendarrays[dest]), dest, NG_MPI_TAG_MESH+10));
 	MyMPI_WaitAll (sendrequests);
 
 	for (int dest = 1; dest < ntasks; dest++)
@@ -356,9 +354,9 @@ namespace netgen
 
       {
 	// NgArray<int> recvarray;
-	// MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
+	// MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
 	Array<int> recvarray;
-	comm.Recv (recvarray, 0, MPI_TAG_MESH+10); // MyMPI_Recv (recvarray, 0, MPI_TAG_MESH+10, comm);
+	comm.Recv (recvarray, 0, NG_MPI_TAG_MESH+10); // MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
 
 	int ii = 0;
 
@@ -387,7 +385,8 @@ namespace netgen
     
     is_updated = true;
   }
-
+  */
+  
   
   void ParallelMeshTopology :: IdentifyVerticesAfterRefinement()
   {
@@ -409,11 +408,11 @@ namespace netgen
       PrintMessage (1, "update parallel topology");
     
     
-    const MeshTopology & topology = mesh.GetTopology();
+    // const MeshTopology & topology = mesh.GetTopology();
 
     Array<int> cnt_send(ntasks);
 
-    int maxsize = comm.AllReduce (mesh.mlbetweennodes.Size(), MPI_MAX);
+    int maxsize = comm.AllReduce (mesh.mlbetweennodes.Size(), NG_MPI_MAX);
     // update new vertices after mesh-refinement
     if (maxsize > 0)
       {
@@ -437,7 +436,7 @@ namespace netgen
 	      for (int dist : GetDistantProcs(pi))
 		dest2vert.Add (dist, pi);
             
-	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+	    for (PointIndex pi = IndexBASE<PointIndex>(); pi < newnv+IndexBASE<PointIndex>(); pi++)
               if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())              
                 {
                   auto procs1 = GetDistantProcs(v1);
@@ -500,8 +499,7 @@ namespace netgen
 		}
 
 	    DynamicTable<int> recv_verts(ntasks);
-	    // MyMPI_ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9, comm);
-            comm.ExchangeTable (send_verts, recv_verts, MPI_TAG_MESH+9);
+            comm.ExchangeTable (send_verts, recv_verts, NG_MPI_TAG_MESH+9);
 
 	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
@@ -533,7 +531,7 @@ namespace netgen
 		      }
 		}
 
-            changed = comm.AllReduce (changed, MPI_LOR);
+            changed = comm.AllReduce (changed, NG_MPI_LOR);
 	  }
       }
 
@@ -542,7 +540,7 @@ namespace netgen
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
     static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
-    static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
+    // static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
 
     
     NgProfiler::StartTimer (timere);
@@ -558,8 +556,8 @@ namespace netgen
       for (int dist : GetDistantProcs(pi))
 	dest2vert.Add (dist, pi);
     
-    // MPI_Group_free(&MPI_LocalGroup);
-    // MPI_Comm_free(&MPI_LocalComm);
+    // NG_MPI_Group_free(&NG_MPI_LocalGroup);
+    // NG_MPI_Comm_free(&NG_MPI_LocalComm);
   }
 
 
@@ -639,10 +637,11 @@ namespace netgen
 
     // exchange edges
     cnt_send = 0;
-    int v1, v2;
+    // int v1, v2;
     for (int edge = 1; edge <= ned; edge++)
       {
-	topology.GetEdgeVertices (edge, v1, v2);
+	// topology.GetEdgeVertices (edge, v1, v2);
+        auto [v1,v2] = topology.GetEdgeVertices(edge-1);
         /*
 	for (int dest = 1; dest < ntasks; dest++)
 	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
@@ -662,7 +661,8 @@ namespace netgen
 
     for (int edge = 1; edge <= ned; edge++)
       {
-	topology.GetEdgeVertices (edge, v1, v2);
+	// topology.GetEdgeVertices (edge, v1, v2);
+        auto [v1,v2] = topology.GetEdgeVertices(edge-1);        
 	for (int dest = 0; dest < ntasks; dest++)
 	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
           if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
@@ -680,7 +680,8 @@ namespace netgen
 
 	for (int edge : dest2edge[dest])
           {
-            topology.GetEdgeVertices (edge, v1, v2);
+            // topology.GetEdgeVertices (edge, v1, v2);
+            auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
             // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
             if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))            
               {
@@ -690,12 +691,8 @@ namespace netgen
           }
       }
 
-    // cout << "UpdateCoarseGrid - edges mpi-exchange" << endl;
-    // TABLE<int> recv_edges(ntasks);
     DynamicTable<int> recv_edges(ntasks);
-    // MyMPI_ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9, comm);
-    comm.ExchangeTable (send_edges, recv_edges, MPI_TAG_MESH+9);
-    // cout << "UpdateCoarseGrid - edges mpi-exchange done" << endl;
+    comm.ExchangeTable (send_edges, recv_edges, NG_MPI_TAG_MESH+9);
 
     for (int dest = 0; dest < ntasks; dest++)
       {
@@ -705,7 +702,8 @@ namespace netgen
 	INDEX_2_CLOSED_HASHTABLE<int> vert2edge(2*dest2edge[dest].Size()+10); 
 	for (int edge : dest2edge[dest])
 	  {
-	    topology.GetEdgeVertices (edge, v1, v2);
+	    // topology.GetEdgeVertices (edge, v1, v2);
+            auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
 	    vert2edge.Set(INDEX_2(v1,v2), edge);
 	  }
 
@@ -799,12 +797,8 @@ namespace netgen
 		}
 	    }
 	
-	// cout << "UpdateCoarseGrid - faces mpi-exchange" << endl;
-	// TABLE<int> recv_faces(ntasks);
 	DynamicTable<int> recv_faces(ntasks);
-	// MyMPI_ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9, comm);
-        comm.ExchangeTable (send_faces, recv_faces, MPI_TAG_MESH+9);
-	// cout << "UpdateCoarseGrid - faces mpi-exchange done" << endl;
+        comm.ExchangeTable (send_faces, recv_faces, NG_MPI_TAG_MESH+9);
 	
 	for (int dest = 0; dest < ntasks; dest++)
 	  {
@@ -835,10 +829,9 @@ namespace netgen
     // EnumeratePointsGlobally();
     is_updated = true;
 
-    // MPI_Group_free(&MPI_LocalGroup);
-    // MPI_Comm_free(&MPI_LocalComm);
+    // NG_MPI_Group_free(&NG_MPI_LocalGroup);
+    // NG_MPI_Comm_free(&NG_MPI_LocalComm);
   }
 }
 
 
-// #endif

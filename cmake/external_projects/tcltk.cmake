@@ -7,7 +7,7 @@ else(LINUX)
 if(SKBUILD)
 # we are building a pip package - download the tcl/tk sources matching the tkinter version (for private headers not shipped with python)
 
-execute_process(COMMAND ${PYTHON_EXECUTABLE} -c 
+execute_process(COMMAND ${Python3_EXECUTABLE} -c
 "import tkinter;print(tkinter.Tcl().eval('info patchlevel').replace('.','-'))"
 OUTPUT_VARIABLE PYTHON_TCL_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE)
 
@@ -39,7 +39,7 @@ set(TK_INCLUDE_PATH ${TK_DIR}/generic)
 list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
 
 if(APPLE OR WIN32)
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import sys; print(sys.prefix)" OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sys; print(sys.prefix)" OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PREFIX} PYTHON_PREFIX)
 
     set(tcl_find_args
@@ -51,12 +51,17 @@ if(APPLE OR WIN32)
         NO_SYSTEM_ENVIRONMENT_PATH
         NO_CMAKE_SYSTEM_PATH
         NO_CMAKE_FIND_ROOT_PATH
-        HINTS ${PYTHON_PREFIX}/lib ${PYTHON_PREFIX}/tcl
+        HINTS
+        ${PYTHON_PREFIX}/lib
+        ${PYTHON_PREFIX}/tcl
+        ${PYTHON_PREFIX}/Frameworks
+        ${PYTHON_PREFIX}/Frameworks/Tcl.framework
+        ${PYTHON_PREFIX}/Frameworks/Tk.framework
         )
     find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 ${tcl_find_args})
     find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 ${tcl_find_args})
-    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t ${tcl_find_args})
-    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t ${tcl_find_args})
+    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t Tcl ${tcl_find_args})
+    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t Tk ${tcl_find_args})
 else()
     # use system tcl/tk on linux
     find_package(TclStub REQUIRED)
@@ -93,7 +98,7 @@ if(APPLE)
     )
 
   ExternalProject_Add(project_tkdnd
-    URL "http://sourceforge.net/projects/tkdnd/files/TkDND/TkDND%202.8/tkdnd2.8-src.tar.gz"
+    URL "https://src.fedoraproject.org/repo/pkgs/tkdnd/tkdnd2.8-src.tar.gz/a6d47a996ea957416469b12965d4db91/tkdnd2.8-src.tar.gz"
     URL_MD5 a6d47a996ea957416469b12965d4db91
     DEPENDS project_tcl project_tk
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
@@ -104,6 +109,7 @@ if(APPLE)
            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/Contents/MacOS
 	   -DTCL_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/Headers
 	   -DTK_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/Headers
+     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     ${SUBPROJECT_ARGS}
   )
 
@@ -183,7 +189,10 @@ elseif(WIN32)
     BUILD_IN_SOURCE 1
     CONFIGURE_COMMAND ""
     BUILD_COMMAND ""
-    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
+    INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory lib ${CMAKE_INSTALL_PREFIX}/${NG_INSTALL_DIR_LIB}
+	    COMMAND ${CMAKE_COMMAND} -E copy_directory bin ${CMAKE_INSTALL_PREFIX}/${NG_INSTALL_DIR_BIN}
+	    COMMAND ${CMAKE_COMMAND} -E copy_directory include ${CMAKE_INSTALL_PREFIX}/${NG_INSTALL_DIR_INCLUDE}
+
     ${SUBPROJECT_ARGS}
     )
 

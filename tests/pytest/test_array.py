@@ -1,3 +1,4 @@
+import netgen
 from pyngcore import *
 from numpy import sort, array
 

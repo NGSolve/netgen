@@ -49,6 +49,7 @@ public:
   {
     ba2.owns_data = false;
     ba2.data = nullptr;
+    mt = std::move(ba2.mt);
   }
 
   template <typename T>
@@ -59,13 +60,17 @@ public:
     int cnt = 0;
     for (auto i = list.begin(); i < list.end(); i++, cnt++)
       if (*i) SetBit(cnt);
+    StartMemoryTracing();
   }
 
   /// delete data
   ~BitArray ()
   {
     if (owns_data)
+    {
       delete [] data;
+      mt.Free(GetMemoryUsage());
+    }
   }
 
   /// Set size, loose values
@@ -150,11 +155,11 @@ public:
   
   NGCORE_API auto * Data() const { return data; }
 
+  const size_t GetMemoryUsage() const { return owns_data ? (size+CHAR_BIT-1)/CHAR_BIT : 0; }
   const MemoryTracer& GetMemoryTracer() const { return mt; }
   void StartMemoryTracing() const
   {
-    if(owns_data)
-      mt.Alloc(Addr(size)+1);
+    mt.Alloc(GetMemoryUsage());
   }
 
 private:
@@ -205,6 +210,31 @@ private:
 
   NGCORE_API std::ostream & operator<<(std::ostream & s, const BitArray & ba);
 
+
+
+  template <typename IndexType>
+  class TBitArray : public BitArray
+  {
+  public:
+    using BitArray::BitArray;
+
+    void SetBit (IndexType i) { BitArray::SetBit(i-IndexBASE<IndexType>()); }
+    void Clear () { BitArray::Clear(); }
+    void Clear (IndexType i) { BitArray::Clear(i-IndexBASE<IndexType>()); }
+    void SetBitAtomic (IndexType i) { BitArray::SetBitAtomic(i-IndexBASE<IndexType>()); }
+    bool Test (IndexType i) const { return BitArray::Test(i-IndexBASE<IndexType>()); }
+    
+    bool operator[] (IndexType i) const { return Test(i); } 
+    T_Range<IndexType> Range() const { return { IndexBASE<IndexType>(), IndexBASE<IndexType>()+Size() }; }
+    NGCORE_API TBitArray & Or (const TBitArray & ba2)
+    {
+      BitArray::Or(ba2);
+      return *this;
+    }
+
+  };
+
 } // namespace ngcore
 
+  
 #endif // NETGEN_CORE_BITARRAY

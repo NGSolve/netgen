@@ -343,7 +343,7 @@ namespace netgen
 	    const Point3d p = Center (p1, p2);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	  
-	    sprintf (buf, "%d", seg.edgenr);
+	    snprintf (buf, sizeof(buf), "%d", seg.edgenr);
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	    MyOpenGLText (buf);
 	  }
@@ -393,9 +393,9 @@ namespace netgen
 	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
 	  }
         */
-        for (const Point3d & p : mesh->Points())
+        for (Point<3> p : mesh->Points())
           {
-	    glRasterPos3d (p.X(), p.Y(), p.Z());
+	    glRasterPos3d (p(0), p(1), p(2));
 	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
           }
       }
@@ -418,7 +418,7 @@ namespace netgen
 	    const Point3d & p = mesh->Point(i);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	  
-	    sprintf (buf, "%d", int(i));
+	    snprintf (buf, sizeof(buf), "%d", int(i));
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	    MyOpenGLText (buf);
 	  }
@@ -472,7 +472,8 @@ namespace netgen
 	box = Box3d (Point3d (0,0,0), Point3d (1,1,1));
       }
   
-    if (zoomall == 2 && ((vispar.centerpoint >= 1 && vispar.centerpoint <= mesh->GetNP()) ||
+    if (zoomall == 2 && ((vispar.centerpoint-IndexBASE<PointIndex>() >= 0 &&
+                          vispar.centerpoint-IndexBASE<PointIndex>() < mesh->GetNP()) ||
 			 vispar.use_center_coords))
       {
 	if (vispar.use_center_coords)

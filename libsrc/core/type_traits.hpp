@@ -16,6 +16,15 @@ namespace ngcore
     template<typename T>
     struct is_any_pointer_impl : std::false_type {};
 
+    // check if second template argument is tuple of base classes to first
+    // template argument, return constexpr bool
+    template<typename T, typename Tuple>
+    constexpr bool is_base_of_tuple = false;
+
+    template<typename T, typename... Ts>
+    constexpr bool is_base_of_tuple<T, std::tuple<Ts...>> =
+      all_of_tmpl<std::is_base_of<Ts, T>::value...>;
+
     template<typename T>
     struct is_any_pointer_impl<T*> : std::true_type {};
 

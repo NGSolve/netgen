@@ -45,9 +45,10 @@ namespace netgen
   void MakePrismsSingEdge (Mesh & mesh, INDEX_2_HASHTABLE<int> & singedges)
   {
     // volume elements
-    for (int i = 1; i <= mesh.GetNE(); i++)
+    // for (int i = 1; i <= mesh.GetNE(); i++)
+    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
       {
-	Element & el = mesh.VolumeElement(i);
+	Element & el = mesh.VolumeElement(ei);
 	if (el.GetType() != TET) continue;
 
 	for (int j = 1; j <= 3; j++)
@@ -76,9 +77,9 @@ namespace netgen
       }
 
     // surface elements
-    for (int i = 1; i <= mesh.GetNSE(); i++)
+    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
       {
-	Element2d & el = mesh.SurfaceElement(i);
+	Element2d & el = mesh.SurfaceElement(sei);
 	if (el.GetType() != TRIG) continue;
 
 	for (int j = 1; j <= 3; j++)
@@ -110,18 +111,18 @@ namespace netgen
   */
   void MakePrismsClosePoints (Mesh & mesh)
   {
-    int i, j, k;
-    for (i = 1; i <= mesh.GetNE(); i++)
+    // int i, j, k;
+    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
       {
-	Element & el = mesh.VolumeElement(i);
+	Element & el = mesh.VolumeElement(ei);
 	if (el.GetType() == TET)
 	  {
-	    for (j = 1; j <= 3; j++)
-	      for (k = j+1; k <= 4; k++)
+	    for (int j = 1; j <= 3; j++)
+	      for (int k = j+1; k <= 4; k++)
 		{
 		  INDEX_2 edge(el.PNum(j), el.PNum(k));
 		  edge.Sort();
-		  if (mesh.GetIdentifications().GetSymmetric (el.PNum(j), el.PNum(k)))
+		  if (mesh.GetIdentifications().UsedSymmetric (el.PNum(j), el.PNum(k)))
 		    {
 		      int pi3 = 1, pi4 = 1;
 		      while (pi3 == j || pi3 == k) pi3++;
@@ -145,7 +146,7 @@ namespace netgen
 	  {
 	    // pyramid, base face = 1,2,3,4
 	  
-	    for (j = 0; j <= 1; j++)
+	    for (int j = 0; j <= 1; j++)
 	      {
 		PointIndex pi1 = el.PNum( (j+0) % 4 + 1);
 		PointIndex pi2 = el.PNum( (j+1) % 4 + 1);
@@ -157,8 +158,8 @@ namespace netgen
 		INDEX_2 edge2(pi2, pi3);
 		edge1.Sort();
 		edge2.Sort();
-		if (mesh.GetIdentifications().GetSymmetric (pi1, pi4) &&
-		    mesh.GetIdentifications().GetSymmetric (pi2, pi3))
+		if (mesh.GetIdentifications().UsedSymmetric (pi1, pi4) &&
+		    mesh.GetIdentifications().UsedSymmetric (pi2, pi3))
 		  {
 		    //int p3 = el.PNum(pi3);
 		    //int p4 = el.PNum(pi4);
@@ -175,18 +176,18 @@ namespace netgen
 	  }
       }
   
-    for (i = 1; i <= mesh.GetNSE(); i++)
+    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
       {
-	Element2d & el = mesh.SurfaceElement(i);
+	Element2d & el = mesh.SurfaceElement(sei);
 	if (el.GetType() != TRIG) continue;
 
-	for (j = 1; j <= 3; j++)
+	for (int j = 1; j <= 3; j++)
 	  {
-	    k = (j % 3) + 1;
+	    int k = (j % 3) + 1;
 	    INDEX_2 edge(el.PNum(j), el.PNum(k));
 	    edge.Sort();
 
-	    if (mesh.GetIdentifications().GetSymmetric (el.PNum(j), el.PNum(k)))
+	    if (mesh.GetIdentifications().UsedSymmetric (el.PNum(j), el.PNum(k)))
 	      {
 		int pi3 = 6-j-k;
 		int p3 = el.PNum(pi3);
@@ -244,7 +245,7 @@ namespace netgen
   void RefinePrisms (Mesh & mesh, const CSGeometry * geom, 
 		     ZRefinementOptions & opt)
   {
-    int i, j;
+    // int i, j;
     bool found, change;
     int cnt = 0;
 
@@ -261,15 +262,23 @@ namespace netgen
   
     // if (mesh.GetIdentifications().HasIdentifiedPoints())
       {
-        INDEX_2_HASHTABLE<int> & identpts = 
+        auto & identpts =
           mesh.GetIdentifications().GetIdentifiedPoints ();
-        
-	for (i = 1; i <= identpts.GetNBags(); i++)
-	  for (j = 1; j <= identpts.GetBagSize(i); j++)
+
+        /*
+	for (int i = 1; i <= identpts.GetNBags(); i++)
+	  for (int j = 1; j <= identpts.GetBagSize(i); j++)
 	    {
-	      INDEX_2 pair;
-	      int idnr;
-	      identpts.GetData(i, j, pair, idnr);
+	      INDEX_3 pair;
+	      int dummy;
+	      identpts.GetData(i, j, pair, dummy);
+        */
+        for (auto [hash, val] : identpts)\
+          {
+            auto [hash_pts, idnr] = hash;
+            auto [pi1, pi2] = hash_pts;
+            // auto idnr = pair[2];
+            
 	      const CloseSurfaceIdentification * csid = 
 		dynamic_cast<const CloseSurfaceIdentification*> 
 		(geom->identifications.Get(idnr));
@@ -280,17 +289,25 @@ namespace netgen
 		      if (first_id.Test (idnr))
 			{
 			  first_id.Clear(idnr);
+                          /*
 			  ref_uniform.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels()));
 			  ref_singular.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels1()));
 			  ref_singular.Append (INDEX_3 (pair.I2(), pair.I1(), csid->RefLevels2()));
+                          */
+			  ref_uniform.Append (INDEX_3 (pi1, pi2, csid->RefLevels()));
+			  ref_singular.Append (INDEX_3 (pi1, pi2, csid->RefLevels1()));
+			  ref_singular.Append (INDEX_3 (pi2, pi1, csid->RefLevels2()));
+                          
 			}
 		    }
 		  else
 		    {   
 		      //const NgArray<double> & slices = csid->GetSlices();
 		      INDEX_4 i4;
-		      i4[0] = pair.I1();
-		      i4[1] = pair.I2();
+		      // i4[0] = pair.I1();
+		      // i4[1] = pair.I2();
+		      i4[0] = pi1; 
+		      i4[1] = pi2; 
 		      i4[2] = idnr;
 		      i4[3] = csid->GetSlices().Size();
 		      ref_slices.Append (i4);
@@ -313,7 +330,7 @@ namespace netgen
 	found = 0;
 	// mark prisms due to close surface flags:
 	int oldsize = ref_uniform.Size();
-	for (i = 1; i <= oldsize; i++)
+	for (int i = 1; i <= oldsize; i++)
 	  {
 	    int pi1 = ref_uniform.Get(i).I1();
 	    int pi2 = ref_uniform.Get(i).I2();
@@ -339,7 +356,7 @@ namespace netgen
 		ref_uniform.Append (INDEX_3(pi2, npi, levels-1));
 	      }
 	  }
-	for (i = 1; i <= ref_singular.Size(); i++)
+	for (int i = 1; i <= ref_singular.Size(); i++)
 	  {
 	    int pi1 = ref_singular.Get(i).I1();
 	    int pi2 = ref_singular.Get(i).I2();
@@ -367,7 +384,7 @@ namespace netgen
 	      }
 	  }
 
-	for (i = 1; i <= ref_slices.Size(); i++)
+	for (int i = 1; i <= ref_slices.Size(); i++)
 	  {
 	    int pi1 = ref_slices.Get(i)[0];
 	    int pi2 = ref_slices.Get(i)[1];
@@ -413,13 +430,13 @@ namespace netgen
 
 
 
-	for (i = 1; i <= mesh.GetNE(); i++)
+	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
 	  {
-	    Element & el = mesh.VolumeElement (i);
+	    Element & el = mesh.VolumeElement (ei);
 	    if (el.GetType() != PRISM)
 	      continue;
 
-	    for (j = 1; j <= 3; j++)
+	    for (int j = 1; j <= 3; j++)
 	      {
 		int pi1 = el.PNum(j);
 		int pi2 = el.PNum(j+3);
@@ -465,14 +482,14 @@ namespace netgen
 	  {
 	    PrintMessage (5, "start loop");
 	    change = 0;
-	    for (i = 1; i <= mesh.GetNE(); i++)
+	    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
 	      {
-		Element & el = mesh.VolumeElement (i);
+		Element & el = mesh.VolumeElement (ei);
 		if (el.GetType() != PRISM)
 		  continue;
 	      
 		bool hasref = 0, hasnonref = 0;
-		for (j = 1; j <= 3; j++)
+		for (int j = 1; j <= 3; j++)
 		  {
 		    int pi1 = el.PNum(j);
 		    int pi2 = el.PNum(j+3);
@@ -491,7 +508,7 @@ namespace netgen
 		  {
 		    //		  cout << "el " << i << " in closure" << endl;
 		    change = 1;
-		    for (j = 1; j <= 3; j++)
+		    for (int j = 1; j <= 3; j++)
 		      {
 			int pi1 = el.PNum(j);
 			int pi2 = el.PNum(j+3);
@@ -518,7 +535,7 @@ namespace netgen
 
 	int oldns = mesh.GetNSeg();
 
-	for (i = 1; i <= oldns; i++)
+	for (int i = 1; i <= oldns; i++)
 	  {
 	    const Segment & el = mesh.LineSegment(i);
 
@@ -572,14 +589,14 @@ namespace netgen
 
 	// do refinement
 	int oldne = mesh.GetNE();
-	for (i = 1; i <= oldne; i++)
+	for (ElementIndex ei = 0; ei < oldne; ei++)
 	  {
-	    Element & el = mesh.VolumeElement (i);
+	    Element & el = mesh.VolumeElement (ei);
 	    if (el.GetNP() != 6)
 	      continue;
 
 	    int npi[3];
-	    for (j = 1; j <= 3; j++)
+	    for (int j = 1; j <= 3; j++)
 	      {
 		int pi1 = el.PNum(j);
 		int pi2 = el.PNum(j+3);
@@ -607,7 +624,7 @@ namespace netgen
 	    if (npi[0])
 	      {
 		Element nel1(6), nel2(6);
-		for (j = 1; j <= 3; j++)
+		for (int j = 1; j <= 3; j++)
 		  {
 		    nel1.PNum(j) = el.PNum(j);
 		    nel1.PNum(j+3) = npi[j-1];
@@ -616,7 +633,7 @@ namespace netgen
 		  }
 		nel1.SetIndex (el.GetIndex());
 		nel2.SetIndex (el.GetIndex());
-		mesh.VolumeElement (i) = nel1;
+		mesh.VolumeElement (ei) = nel1;
 		mesh.AddVolumeElement (nel2);
 	      }
 	  }
@@ -628,15 +645,15 @@ namespace netgen
 	// do surface elements
 	int oldnse = mesh.GetNSE();
 	//      cout << "oldnse = " << oldnse << endl;
-	for (i = 1; i <= oldnse; i++)
+	for (SurfaceElementIndex sei = 0; sei < oldnse; sei++)
 	  {
-	    Element2d & el = mesh.SurfaceElement (i);
+	    Element2d & el = mesh.SurfaceElement (sei);
 	    if (el.GetType() != QUAD)
 	      continue;
 
 	    int index = el.GetIndex();
 	    int npi[2];
-	    for (j = 1; j <= 2; j++)
+	    for (int j = 1; j <= 2; j++)
 	      {
 		int pi1, pi2;
 
@@ -669,7 +686,7 @@ namespace netgen
 	    if (npi[0])
 	      {
 		Element2d nel1(QUAD), nel2(QUAD);
-		for (j = 1; j <= 4; j++)
+		for (int j = 1; j <= 4; j++)
 		  {
 		    nel1.PNum(j) = el.PNum(j);
 		    nel2.PNum(j) = el.PNum(j);
@@ -690,7 +707,7 @@ namespace netgen
 		nel1.SetIndex (el.GetIndex());
 		nel2.SetIndex (el.GetIndex());
 
-		mesh.SurfaceElement (i) = nel1;
+		mesh.SurfaceElement (sei) = nel1;
 		mesh.AddSurfaceElement (nel2);
 
 		int si = mesh.GetFaceDescriptor (index).SurfNr();
@@ -716,9 +733,9 @@ namespace netgen
 
   void CombineSingularPrisms(Mesh& mesh)
   {
-    for(int i = 1; i<=mesh.GetNE(); i++)
+    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
       {
-        Element& el = mesh.VolumeElement(i);
+        Element& el = mesh.VolumeElement(ei);
         if(el.GetType() != PRISM)
           continue;
         if(el.PNum(3) == el.PNum(6))

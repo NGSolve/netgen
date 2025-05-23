@@ -14,7 +14,7 @@ if not USE_OCC:
     raise ImportError("Netgen was not built with Opencascade support")
 
 from .libngpy._NgOCC import *
-from .meshing import meshsize
+from .meshing import meshsize, IdentificationType
 
 
 gp_Ax3 = Axes

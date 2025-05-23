@@ -1,7 +1,16 @@
 #ifndef FILE_OCC_UTILS_INCLUDED
 #define FILE_OCC_UTILS_INCLUDED
 
+#define NETGEN_OCC_VERSION_AT_LEAST(MAYOR, MINOR) \
+  OCC_VERSION_MAYOR > MAYOR ||                    \
+  (OCC_VERSION_MAYOR == MAYOR && OCC_VERSION_MINOR >= MINOR)
+#define NETGEN_OCC_VERSION_AT_LEAST_MAYOR(MAYOR) \
+  NETGEN_OCC_VERSION_AT_LEAST(MAYOR, 0)
+
 #include <variant>
+
+// #pragma clang diagnostic push
+// #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
@@ -14,9 +23,11 @@
 #include <gp_Trsf.hxx>
 #include <gp_GTrsf.hxx>
 
+// #pragma clang diagnostic pop
+
 #include "meshing.hpp"
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
 #define OCC_HAVE_DUMP_JSON
 #endif
 
@@ -60,16 +71,17 @@ namespace netgen
 
     DLL_HEADER Box<3> GetBoundingBox( const TopoDS_Shape & shape );
 
-    class OCCIdentification
+    struct OCCIdentification
     {
-    public:
       TopoDS_Shape from;
       TopoDS_Shape to;
-      Transformation<3> trafo;
+      optional<Transformation<3>> trafo = nullopt;
       string name;
       Identifications::ID_TYPE type;
-      bool opposite_direction;
+      bool opposite_direction = false;
     };
+
+    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape );
 
 
     class MyExplorer
@@ -164,6 +176,17 @@ namespace netgen
               common.push_back(shape);
         return common;
       }
+
+      ListOfShapes GetHighestDimShapes() const
+      {
+        for (auto type : {TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX})
+        {
+          auto ret = SubShapes(type);
+          if (ret.size() > 0)
+            return ret;
+        }
+        return ListOfShapes();
+      }
     };
 
     inline ListOfShapes GetSolids(const TopoDS_Shape & shape)
@@ -205,6 +228,16 @@ namespace netgen
         sub.push_back(e.Current());
       return sub;
     }
+
+    inline ListOfShapes GetHighestDimShapes(const TopoDS_Shape & shape)
+    {
+      auto ret = GetSolids(shape); if(ret.size() > 0) return ret;
+      ret = GetFaces(shape); if(ret.size() > 0) return ret;
+      ret = GetEdges(shape); if(ret.size() > 0) return ret;
+      ret = GetVertices(shape); if(ret.size() > 0) return ret;
+      return ListOfShapes();
+    }
+
 
   class DirectionalInterval
   {
@@ -310,6 +343,6 @@ namespace netgen
   {
     return Properties(shape).Mass();
   }
-
+  
 }
 #endif // FILE_OCC_UTILS_INCLUDED

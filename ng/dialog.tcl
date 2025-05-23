@@ -1214,6 +1214,12 @@ proc viewingoptionsdialog { } {
 	ttk::checkbutton $f.showelementnumbers -text "Show Element-numbers" \
 	    -variable viewoptions.drawelementnumbers \
 	    -command { Ng_SetVisParameters; redraw }
+        ttk::checkbutton $f.showsegmentnumbers -text "Show Segment-numbers" \
+            -variable viewoptions.drawsegmentnumbers \
+            -command { Ng_SetVisParameters; redraw }
+        ttk::checkbutton $f.showsurfaceelementnumbers -text "Show Surfaceelement-numbers" \
+            -variable viewoptions.drawsurfaceelementnumbers \
+            -command { Ng_SetVisParameters; redraw }
 	
 	# label $f.showdomainlab -text "Domain Surface"
 #	scale $f.showdomain -orient horizontal -length 100 -from 0 -to 50 \
@@ -1281,7 +1287,8 @@ proc viewingoptionsdialog { } {
         grid $f.showfilledtrigs $f.showoutline -sticky nw
         grid $f.showedges $f.showbadels -sticky nw
         grid $f.showpointnumbers $f.showedgenumbers -sticky nw
-        grid $f.showfacenumbers $f.showelementnumbers -sticky nw        
+        grid $f.showfacenumbers $f.showelementnumbers -sticky nw
+        grid $f.showsurfaceelementnumbers $f.showsegmentnumbers -sticky nw
         grid $f.showmetispartition $f.showidentified -sticky nw
 	grid $f.showcolor $f.showpyramids -sticky nw 
         grid $f.showprisms $f.showhexes -sticky nw        

@@ -134,27 +134,46 @@ namespace netgen
     if (vispar.drawbadels)
       glCallList (badellist);
 
+    BitArray shownode(mesh->GetNP()+1);
+    if (vispar.clipping.enable)
+      {
+	shownode.Clear();
+	for (PointIndex pi : mesh->Points().Range())
+	  {
+            Point<3> p = (*mesh)[pi];
+
+            double val =
+	      p[0] * clipplane[0] +
+	      p[1] * clipplane[1] +
+	      p[2] * clipplane[2] +
+	      clipplane[3];
+
+            if (val > 0) shownode.SetBit (pi);
+	  }
+      }
+    else
+      shownode.Set();
     if (vispar.drawprisms)
       {
-	BuildPrismList ();
+	BuildPrismList (shownode);
 	glCallList (prismlist);
       }
 
     if (vispar.drawpyramids)
       {
-	BuildPyramidList ();
+	BuildPyramidList (shownode);
 	glCallList (pyramidlist);
       }
 
     if (vispar.drawhexes)
       {
-	BuildHexList ();
+	BuildHexList (shownode);
 	glCallList (hexlist);
       }
 
     if (vispar.drawtets)
       {
-	BuildTetList ();
+	BuildTetList (shownode);
 	glCallList (tetlist);
       }
 
@@ -209,6 +228,8 @@ namespace netgen
     if (vispar.drawpointnumbers ||
 	vispar.drawedgenumbers ||
 	vispar.drawfacenumbers ||
+        vispar.drawsegmentnumbers ||
+        vispar.drawsurfaceelementnumbers ||
 	vispar.drawelementnumbers)
       glCallList (pointnumberlist);
 
@@ -245,7 +266,7 @@ namespace netgen
 
     
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         // cout << "don't have a mesh to visualize" << endl;
         VisualScene::DrawScene();      
@@ -271,11 +292,11 @@ namespace netgen
       center.Y() = vispar.centery;
       center.Z() = vispar.centerz;
     }
-    else if (selpoint >= 1 && zoomall==2)
+    else if (selpoint-IndexBASE<PointIndex>() >= 1 && zoomall==2)
       center = mesh->Point (selpoint);
     else if (marker && zoomall==2)
       center = *marker;
-    else if (vispar.centerpoint >= 1 && zoomall==2)
+    else if (vispar.centerpoint-IndexBASE<PointIndex>() >= 0 && zoomall==2)
       center = mesh->Point (vispar.centerpoint);
     else
       center = Center (pmin, pmax);
@@ -366,6 +387,8 @@ namespace netgen
     if (vispar.drawpointnumbers ||
 	vispar.drawedgenumbers ||
 	vispar.drawfacenumbers ||
+        vispar.drawsegmentnumbers ||
+        vispar.drawsurfaceelementnumbers ||
 	vispar.drawelementnumbers)
       {
 	//     	glEnable (GL_COLOR_MATERIAL);
@@ -411,8 +434,9 @@ namespace netgen
 	    const MeshTopology & top = mesh->GetTopology();
 	    for (int i = 1; i <= top.GetNEdges(); i++)
 	      {
-		int v1, v2;
-		top.GetEdgeVertices (i, v1, v2);
+		// int v1, v2;
+		// top.GetEdgeVertices (i, v1, v2);
+                auto [v1,v2] = top.GetEdgeVertices(i-1);
 		const Point3d & p1 = mesh->Point(v1);
 		const Point3d & p2 = mesh->Point(v2);
 		const Point3d p = Center (p1, p2);
@@ -426,8 +450,18 @@ namespace netgen
 
 	  }
 
+          if (vispar.drawsegmentnumbers)
+            {
+              for (auto si : Range(mesh->LineSegments())) {
+                const auto& seg = (*mesh)[si];
+                Point<3> c = Center((*mesh)[seg[0]], (*mesh)[seg[1]]);
+		glRasterPos3d (c[0], c[1], c[2]);
+		snprintf (buf, size(buf),  "%d", int(si));
+		MyOpenGLText (buf);
+              }
+            }
 
-	if (vispar.drawfacenumbers)
+          if (vispar.drawfacenumbers)
 	  {
 	    const MeshTopology & top = mesh->GetTopology();
 	    NgArray<int> v;
@@ -438,7 +472,7 @@ namespace netgen
 		const Point3d & p2 = mesh->Point(v.Elem(2));
 		const Point3d & p3 = mesh->Point(v.Elem(3));
 		Point3d p;
-		if (v.Elem(4) == 0)
+		if (v.Size() == 3)
                   {
 		    p = Center (p1, p2, p3);
                   }
@@ -457,25 +491,45 @@ namespace netgen
 	      }
 	  }
 
+          if (vispar.drawsurfaceelementnumbers)
+            {
+              for (auto sei : Range(mesh->SurfaceElements()))
+                {
+                  const auto & sel = (*mesh)[sei];
+                  Point<3> c;
+                  if(sel.GetNV() == 3)
+                    c = Center((*mesh)[sel[0]],
+                               (*mesh)[sel[1]],
+                               (*mesh)[sel[2]]);
+                  else
+                    c = Center((*mesh)[sel[0]],
+                               (*mesh)[sel[1]],
+                               (*mesh)[sel[2]],
+                               (*mesh)[sel[3]]);
+                  glRasterPos3d (c[0], c[1], c[2]);
+                  snprintf (buf, size(buf),  "%d", int(sei));
+                  MyOpenGLText (buf);
+                }
+            }
 
-
-	if (vispar.drawelementnumbers)
+        if (vispar.drawelementnumbers)
 	  {
 	    NgArray<int> v;
-	    for (int i = 1; i <= mesh->GetNE(); i++)
+	    // for (int i = 1; i <= mesh->GetNE(); i++)
+            for (ElementIndex ei : Range(mesh->VolumeElements()))
 	      {
 		// const ELEMENTTYPE & eltype = mesh->ElementType(i);
 		NgArray<int> pnums;
 
 		Point3d p;
-		const Element & el = mesh->VolumeElement (i);
+		const Element & el = mesh->VolumeElement (ei);
 
 		if ( ! el.PNum(5)) //  eltype == TET )
                   {
 
 		    pnums.SetSize(4);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
@@ -488,7 +542,7 @@ namespace netgen
                   {
 		    pnums.SetSize(5);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
@@ -506,7 +560,7 @@ namespace netgen
                   {
 		    pnums.SetSize(6);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
 		    const Point3d & p2 = mesh->Point(pnums[1]);
@@ -521,7 +575,7 @@ namespace netgen
                   {
 		    pnums.SetSize(8);
 		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(i).PNum(j+1);
+		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
 
 		    const Point3d & p1 = mesh->Point(pnums[0]);
 		    const Point3d & p2 = mesh->Point(pnums[1]);
@@ -536,7 +590,7 @@ namespace netgen
                   }
 
 		glRasterPos3d (p.X(), p.Y(), p.Z());
-		snprintf (buf, size(buf),  "%d", i);
+		snprintf (buf, size(buf),  "%d", ei-IndexBASE(ei));
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);
 
@@ -564,14 +618,15 @@ namespace netgen
 	static float badelcol[] = { 1.0f, 0.0f, 1.0f, 1.0f };
 	glLineWidth (1.0f);
 
-	for (int i = 1; i <= mesh->GetNE(); i++)
+	//for (int i = 1; i <= mesh->GetNE(); i++)
+        for (ElementIndex ei : Range(mesh->VolumeElements()))
 	  {
-            if (mesh->VolumeElement(i).Flags().badel ||
-		mesh->VolumeElement(i).Flags().illegal ||
-		(i == vispar.drawelement))
+            if (mesh->VolumeElement(ei).Flags().badel ||
+		mesh->VolumeElement(ei).Flags().illegal ||
+		(ei-IndexBASE(ei) == vispar.drawelement))
 	      {
 		// copy to be thread-safe
-		Element el = mesh->VolumeElement (i);
+		Element el = mesh->VolumeElement (ei);
 		el.GetSurfaceTriangles (faces);
 
 		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, badelcol);
@@ -621,9 +676,9 @@ namespace netgen
 	  }
 
 
-	for (int i = 1; i <= mesh->GetNE(); i++)
+        for (ElementIndex ei : Range(mesh->VolumeElements()))
 	  {
-            Element el = mesh->VolumeElement (i);
+            Element el = mesh->VolumeElement (ei);
             int hascp = 0;
             for (int j = 1; j <= el.GetNP(); j++)
 	      if (el.PNum(j) == vispar.centerpoint)
@@ -631,7 +686,7 @@ namespace netgen
 
             if (hascp)
 	      {
-		(*testout) << "draw el " << i << " : ";
+		(*testout) << "draw el " << ei << " : ";
 		for (int j = 1; j <= el.GetNP(); j++)
                   (*testout) << el.PNum(j) << " ";
 		(*testout) << endl;
@@ -798,37 +853,42 @@ namespace netgen
 	GLfloat identifiedcol[] = { 1, 0, 1, 1 };
 
 	glLineWidth (3);
-
-	//  for (i = 1; i <= mesh->GetNSeg(); i++)
+        glEnable (GL_COLOR_MATERIAL);
+        glDisable (GL_LIGHTING);
 
 	if (mesh -> HasIdentifications() )
 	  {
-            // if (mesh->GetIdentifications().HasIdentifiedPoints())
 	      {
-                INDEX_2_HASHTABLE<int> & idpts =
+                auto & idpts =
                   mesh->GetIdentifications().GetIdentifiedPoints();
-                
-		for (int i = 1; i <= idpts.GetNBags(); i++)
-                  for (int j = 1; j <= idpts.GetBagSize(i); j++)
-		    {
-		      INDEX_2 pts;
-		      int val;
+                for (auto [hash, val] : idpts)
+                  {
+                    auto [hash_pts, hash_nr] = hash;
+                    auto [pi1, pi2] = hash_pts;
+                      // val = pts[2];   
+		      Point<3> p1 = mesh->Point(pi1);
+		      Point<3> p2 = mesh->Point(pi2);
+                      Point<3> c = Center(p1, p2);
+                      if (vispar.shrink < 1)
+                        {
+                          p1 = c + vispar.shrink * (p1 - c);
+                          p2 = c + vispar.shrink * (p2 - c);
+                        }
 
-		      idpts.GetData (i, j, pts, val);
-		      const Point3d & p1 = mesh->Point(pts.I1());
-		      const Point3d & p2 = mesh->Point(pts.I2());
-
+                      glColor3fv (identifiedcol);
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
 				    identifiedcol);
 
 		      glBegin (GL_LINES);
-		      glVertex3f (p1.X(), p1.Y(), p1.Z());
-		      glVertex3f (p2.X(), p2.Y(), p2.Z());
+		      glVertex3dv(p1);
+		      glVertex3dv(p2);
 		      glEnd();
 		    }
 	      }
 	  }
 
+        glDisable (GL_COLOR_MATERIAL);
+        glEnable (GL_LIGHTING);
 	glEndList ();
       }
 
@@ -841,7 +901,7 @@ namespace netgen
 
     vstimestamp = meshtimestamp;
       }
-    catch (bad_weak_ptr e)
+    catch (const bad_weak_ptr & e)
       {
         PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
         VisualScene::BuildScene (zoomall);
@@ -870,9 +930,9 @@ namespace netgen
       data.Append(cf);
     }
     int n = data.Size()/4;
-    colors.width = min2(n, 1024);
+    colors.width = max2(1,min2(n, 1024));
     colors.height = (n+colors.width-1)/colors.width;
-    for(auto i: Range(n, colors.width*colors.height))
+    for([[maybe_unused]] auto i: Range(n, colors.width*colors.height))
       data.Append({0.0f, 0.0f, 0.0f, 0.0f});
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, colors.width, colors.height, 0, GL_RGBA, GL_FLOAT, data.Data());
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -928,7 +988,7 @@ namespace netgen
 
     timestamp = NextTimeStamp();
 
-    if(!build_select && !vispar.colormeshsize && colors.texture==-1)
+    if(!build_select && !vispar.colormeshsize)
       BuildColorTexture();
 
     if (list)
@@ -985,8 +1045,8 @@ namespace netgen
       glBindTexture(GL_TEXTURE_2D, colors.texture);
     }
 
-    GLfloat matcol[] = { 0, 1, 0, 1 };
-    GLfloat matcolsel[] = { 1, 0, 0, 1 };
+    // GLfloat matcol[] = { 0, 1, 0, 1 };
+    // GLfloat matcolsel[] = { 1, 0, 0, 1 };
 
     GLint rendermode;
     glGetIntegerv (GL_RENDER_MODE, &rendermode);
@@ -1020,7 +1080,7 @@ namespace netgen
 	    SurfaceElementIndex sei = seia[hi];
             const Element2d & el = (*mesh)[sei];
 
-            bool drawel = (!el.IsDeleted() & el.IsVisible());
+            bool drawel = (!el.IsDeleted() && el.IsVisible());
 
 #ifdef STLGEOM
             if (checkvicinity)
@@ -1363,7 +1423,7 @@ namespace netgen
       {
 	const Element2d & el = (*mesh)[sei];
 
-	bool drawel = (!el.IsDeleted() & el.IsVisible());
+	bool drawel = (!el.IsDeleted() && el.IsVisible());
 
 #ifdef STLGEOM
 	if (checkvicinity)
@@ -1755,7 +1815,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildTetList()
+  void VisualSceneMesh :: BuildTetList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -1810,27 +1870,6 @@ namespace netgen
 
     NgArray<Element2d> faces;
 
-    NgBitArray shownode(mesh->GetNP());
-    if (vispar.clipping.enable)
-      {
-	shownode.Clear();
-	for (int i = 1; i <= shownode.Size(); i++)
-	  {
-            Point<3> p = mesh->Point(i);
-
-            double val =
-	      p[0] * clipplane[0] +
-	      p[1] * clipplane[1] +
-	      p[2] * clipplane[2] +
-	      clipplane[3];
-
-            if (val > 0) shownode.Set (i);
-	  }
-      }
-    else
-      shownode.Set();
-
-
     static float tetcols[][4] =
       {
 	{ 1.0f, 1.0f, 0.0f, 1.0f },
@@ -1873,12 +1912,11 @@ namespace netgen
 
 	if ((el.GetType() == TET || el.GetType() == TET10) && !el.IsDeleted())
 	  {
-
-            bool drawtet = 1;
-            for (int j = 0; j < 4; j++)
-	      if (!shownode.Test(el[j]))
-		drawtet = 0;
-            if (!drawtet) continue;
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
 
             int ind = el.GetIndex() % 4;
 
@@ -2107,7 +2145,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildPrismList()
+  void VisualSceneMesh :: BuildPrismList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2145,6 +2183,12 @@ namespace netgen
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == PRISM && !el.IsDeleted())
 	  {
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
+
             int j;
             int i = ei + 1;
 
@@ -2438,7 +2482,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildHexList()
+  void VisualSceneMesh :: BuildHexList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2473,6 +2517,11 @@ namespace netgen
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == HEX && !el.IsDeleted())
 	  {
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
 	      {
@@ -2638,6 +2687,121 @@ namespace netgen
 	      }
 	  }
       }
+
+    static float hex7col[] = { 1.0f, 0.65f, 0.0f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hex7col);
+
+    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+      {
+	const Element & el = (*mesh)[ei];
+	if (el.GetType() == HEX7 && !el.IsDeleted())
+	  {
+            /*
+            CurvedElements & curv = mesh->GetCurvedElements();
+            if (curv.IsHighOrder()) 
+	      {
+		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
+		const Point3d * vertices = MeshTopology :: GetVertices (HEX);
+
+		Point<3> grid[11][11];
+		Point<3> fpts[4];
+		int order = subdivisions+1;
+
+		for (int quad = 0; quad<6; quad++)
+		  {
+		    for (int j = 0; j < 4; j++)
+		      fpts[j] = vertices[faces[quad][j]-1];
+
+		    static Point<3> c(0.5, 0.5, 0.5);
+		    if (vispar.shrink < 1)
+		      for (int j = 0; j < 4; j++)
+                        fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
+
+		    for (int ix = 0; ix <= order; ix++)
+		      for (int iy = 0; iy <= order; iy++)
+			{
+			  double lami[4] =
+			    { (1-double(ix)/order) * (1-double(iy)/order),
+			      (  double(ix)/order) * (1-double(iy)/order),
+			      (  double(ix)/order) * (  double(iy)/order),
+			      (1-double(ix)/order) * (  double(iy)/order) };
+
+			  Point<3> xl;
+			  for (int l = 0; l < 3; l++)
+			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+			      lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+
+			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+			}
+
+		    for (int j = 0; j <= order; j++)
+		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+		    for (int j = 0; j <= order; j++)
+		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+
+		    glMap2d(GL_MAP2_VERTEX_3,
+			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+			    &grid[0][0](0));
+		    glEnable(GL_MAP2_VERTEX_3);
+		    glEnable(GL_AUTO_NORMAL);
+
+		    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+
+		    glDisable (GL_AUTO_NORMAL);
+		    glDisable (GL_MAP2_VERTEX_3);
+		  }
+	      }
+            else
+            */
+	      {
+		Point3d c(0,0,0);
+		if (vispar.shrink < 1)
+		  {
+		    for (int j = 1; j <= 7; j++)
+		      {
+			Point3d p = mesh->Point(el.PNum(j));
+			c.X() += p.X();
+			c.Y() += p.Y();
+			c.Z() += p.Z();
+		      }
+		    c.X() /= 7;
+		    c.Y() /= 7;
+		    c.Z() /= 7;
+		  }
+
+		glBegin (GL_TRIANGLES);
+
+		el.GetSurfaceTriangles (faces);
+		for (int j = 1; j <= faces.Size(); j++)
+		  {
+		    Element2d & face = faces.Elem(j);
+		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+		    Vec<3> n = Cross (lp3-lp1, lp2-lp1);
+		    n.Normalize();
+		    glNormal3dv (n);
+
+		    if (vispar.shrink < 1)
+		      {
+			lp1 = c + vispar.shrink * (lp1 - c);
+			lp2 = c + vispar.shrink * (lp2 - c);
+			lp3 = c + vispar.shrink * (lp3 - c);
+		      }
+
+		    glVertex3dv (lp1);
+		    glVertex3dv (lp2);
+		    glVertex3dv (lp3);
+		  }
+
+		glEnd();
+	      }
+	  }
+      }
+
+    
     glEndList ();
   }
 
@@ -2649,7 +2813,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildPyramidList()
+  void VisualSceneMesh :: BuildPyramidList(const BitArray & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2685,6 +2849,12 @@ namespace netgen
 	const Element & el = (*mesh)[ei];
 	if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
 	  {
+            bool visible = true;
+            for (auto pi: el.PNums())
+              if (!shownode[pi])
+                visible = false;
+            if(!visible) continue;
+
             int i = ei + 1;
 
             CurvedElements & curv = mesh->GetCurvedElements();
@@ -3134,7 +3304,7 @@ namespace netgen
     }
 
     glGetIntegerv (GL_VIEWPORT, select.viewport);
-    GLenum err;
+    // GLenum err;
     if(select.framebuffer == 0 || select.viewport[2] != select.width || select.viewport[3] != select.height)
     {
       select.width = select.viewport[2];
@@ -3242,13 +3412,13 @@ namespace netgen
     return pz<1 && pz>0;
   }
 
-  ngcore::INT<2> VisualSceneMesh :: Project(Point<3> p)
+  ngcore::IVec<2> VisualSceneMesh :: Project(Point<3> p)
   {
     Point<3> pwin;
     gluProject(p[0], p[1], p[2], transformationmat, select.projmat, select.viewport,
         &pwin[0], &pwin[1], &pwin[2]);
 
-    return ngcore::INT<2>(pwin[0]+0.5, select.viewport[3]-pwin[1]+0.5);
+    return ngcore::IVec<2>(pwin[0]+0.5, select.viewport[3]-pwin[1]+0.5);
   }
 
 
@@ -3285,10 +3455,24 @@ namespace netgen
             cout << endl << "select element " << selelement
               << " on face " << sel.GetIndex();
             // output face name
-            auto name = GetMesh()->GetFaceDescriptor(sel.GetIndex()).GetBCName();
+            auto mesh = GetMesh();
+            string name;
+            if(mesh->GetDimension() == 3)
+              name = mesh->GetFaceDescriptor(sel.GetIndex()).GetBCName();
+            else
+              name = mesh->GetMaterial(sel.GetIndex());
+
             if(name != "")
               cout << " with name " << name;
             cout << endl;
+            if(mesh->GetDimension() == 3) {
+              auto & fd = mesh->GetFaceDescriptor(sel.GetIndex());
+              auto domin = fd.DomainIn();
+              auto domout = fd.DomainOut();
+              string name_in = domin >0 ? mesh->GetMaterial(domin) : "";
+              string name_out = domout >0 ? mesh->GetMaterial(domout) : "";
+              cout << "\tadjacent domains " << domin << ": " << name_in << ", " << domout << ": " << name_out << endl;
+            }
             cout << "\tpoint: " << p << endl;;
             cout << "\tnodes: ";
             for (int i = 1; i <= sel.GetNP(); i++)

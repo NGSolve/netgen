@@ -1,5 +1,5 @@
-#ifndef CLUSTERS
-#define CLUSTERS
+#ifndef NETGEN_CLUSTERS_HPP
+#define NETGEN_CLUSTERS_HPP
 
 /**************************************************************************/
 /* File:   clusers.hh                                                     */
@@ -13,6 +13,10 @@
   nodes, edges, faces, elements
 */
 
+#include "meshclass.hpp"
+
+namespace netgen
+{
 
 class AnisotropicClusters
 {
@@ -38,5 +42,5 @@ public:
   int GetElementRepresentant (int enr) const
   { return cluster_reps.Get(nv+ned+nfa+enr); }
 };
-
-#endif
+} // namespace netgen
+#endif // NETGEN_CLUSTERS_HPP

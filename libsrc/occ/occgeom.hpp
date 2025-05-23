@@ -15,6 +15,10 @@
 #include "occ_utils.hpp"
 #include "occmeshsurf.hpp"
 
+#include <BOPAlgo_BuilderShape.hxx>
+#include <BRepTools_ReShape.hxx>
+#include <BRepBuilderAPI_MakeShape.hxx>
+#include <BRepBuilderAPI_Sewing.hxx>
 #include <Quantity_ColorRGBA.hxx>
 #include <STEPCAFControl_Reader.hxx>
 #include <StepBasic_MeasureValueMember.hxx>
@@ -228,6 +232,7 @@ namespace netgen
     using NetgenGeometry::GetVertex;
     using NetgenGeometry::GetEdge;
     using NetgenGeometry::GetFace;
+    using NetgenGeometry::GetSolid;
 
     GeometryShape & GetShape(const TopoDS_Shape & shape)
     {
@@ -248,10 +253,16 @@ namespace netgen
         return const_cast<GeometryFace&>(as_const(*this).GetFace(shape));
     }
 
+    GeometrySolid & GetSolid(const TopoDS_Shape & shape)
+    {
+        return const_cast<GeometrySolid&>(as_const(*this).GetSolid(shape));
+    }
+
     const GeometryShape & GetShape(const TopoDS_Shape & shape) const;
     const GeometryVertex & GetVertex(const TopoDS_Shape & shape) const;
     const GeometryEdge & GetEdge(const TopoDS_Shape & shape) const;
     const GeometryFace & GetFace(const TopoDS_Shape & shape) const;
+    const GeometrySolid & GetSolid(const TopoDS_Shape & shape) const;
 
     void Analyse(Mesh& mesh,
                  const MeshingParameters& mparam) const override;
@@ -311,6 +322,7 @@ namespace netgen
 
     Array<const GeometryVertex*> GetFaceVertices(const GeometryFace& face) const override;
 
+    void FixFaceOrientation();
     void HealGeometry();
     void GlueGeometry();
 
@@ -415,8 +427,8 @@ namespace netgen
     //bool FastProject (int surfi, Point<3> & ap, double& u, double& v) const;
   };
 
-  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, Transformation<3> trafo);
-  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<std::variant<gp_Trsf, gp_GTrsf>> opt_trafo);
+  DLL_HEADER void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, Transformation<3> trafo);
+  DLL_HEADER void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<std::variant<gp_Trsf, gp_GTrsf>> opt_trafo);
    
 
   void PrintContents (OCCGeometry * geom);
@@ -434,6 +446,14 @@ namespace netgen
   DLL_HEADER extern bool OCCMeshFace (const OCCGeometry & geom, Mesh & mesh, FlatArray<int, PointIndex> glob2loc,
                        const MeshingParameters & mparam, int nr, int projecttype, bool delete_on_failure);
 
+  inline auto GetModified(BRepBuilderAPI_MakeShape & builder, TopoDS_Shape shape) { return builder.Modified(shape); }
+  inline auto GetModified(BRepTools_History & history, TopoDS_Shape shape) { return history.Modified(shape); }
+  inline auto GetModified(BOPAlgo_BuilderShape & builder, TopoDS_Shape shape) { return builder.Modified(shape); }
+  inline ArrayMem<TopoDS_Shape, 1> GetModified(BRepBuilderAPI_Sewing& builder, TopoDS_Shape shape) { return {builder.Modified(shape)}; }
+  inline auto GetModified(BRepTools_ReShape& reshape, TopoDS_Shape shape) {
+    auto history = reshape.History();
+    return history->Modified(shape);
+  }
 
   template <class TBuilder>
   void PropagateIdentifications (TBuilder & builder, TopoDS_Shape shape, std::optional<Transformation<3>> trafo = nullopt)
@@ -459,7 +479,7 @@ namespace netgen
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto s = e.Current();
-            for (auto mods : builder.Modified(s))
+            for (auto mods : GetModified(builder, s))
               {
                 auto index = mod_indices.FindIndex(s)-1;
                 modifications[index].Add(mods);
@@ -479,7 +499,7 @@ namespace netgen
             continue;
           auto& identifications = OCCGeometry::GetIdentifications(s);
 
-          auto& shape_mapped = modifications[mod_indices.FindIndex(s)-1];
+          // auto& shape_mapped = modifications[mod_indices.FindIndex(s)-1];
   
           for(auto ident : identifications)
           {
@@ -503,11 +523,13 @@ namespace netgen
                       if(from.IsSame(from_mapped) && to.IsSame(to_mapped))
                         continue;
   
-                      Transformation<3> trafo_mapped = ident.trafo;
+                      if(!ident.trafo) continue;
+                      Transformation<3> trafo_mapped = *ident.trafo;
+
                       if(trafo)
                       {
                           Transformation<3> trafo_temp;
-                          trafo_temp.Combine(ident.trafo, trafo_inv);
+                          trafo_temp.Combine(*ident.trafo, trafo_inv);
                           trafo_mapped.Combine(*trafo, trafo_temp);
                       }
   
@@ -530,7 +552,7 @@ namespace netgen
   {
     bool have_identifications = false;
   
-    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
+    for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE, TopAbs_VERTEX })
       for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
         {
           auto s = e.Current();
@@ -538,7 +560,7 @@ namespace netgen
           if(!OCCGeometry::HaveProperties(s))
             continue;
           auto prop = OCCGeometry::GetProperties(s);
-          for (auto mods : builder.Modified(s))
+          for (auto mods : GetModified(builder, s))
             OCCGeometry::GetProperties(mods).Merge(prop);
         }
     if(have_identifications)

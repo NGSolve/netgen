@@ -327,6 +327,7 @@ public:
   void SaveSTLE (const filesystem::path & filename) const; // stores trigs and edges
 
   bool IsSurfaceSTL() const { return surface; }
+  void SetSurfaceSTL( bool surface_ ) { surface = surface_; }
 
   virtual void DoArchive(Archive& ar)
   {

@@ -7,14 +7,16 @@
 /* Date:   01. Jun. 95                                                    */
 /**************************************************************************/
 
+#include <core/utils.hpp>
+
 namespace netgen 
 {
-
+  using namespace ngcore;
 /*
    templates, global types, defines and variables
 */
 
-DLL_HEADER extern const string netgen_version;
+  DLL_HEADER extern const std::string netgen_version;
 
 ///	The following value may be adapted to the hardware !
 #ifndef CLOCKS_PER_SEC
@@ -112,14 +114,24 @@ class INDEX_2
 
 public:
   ///
+  // protected:
   INDEX_2 () { }
+  INDEX_2 (const INDEX_2&) = default;
+public:
+  INDEX_2 (INDEX_2&&) = default;
+
+  INDEX_2 & operator= (const INDEX_2&) = default;
+  INDEX_2 & operator= (INDEX_2&&) = default;
   ///
-  INDEX_2 (INDEX ai1, INDEX ai2)
-    { i[0] = ai1; i[1] = ai2; }
+  constexpr INDEX_2 (INDEX ai1, INDEX ai2)
+    : i{ai1, ai2} { } 
+  // { i[0] = ai1; i[1] = ai2; }
 
   ///
-  INDEX_2 (const INDEX_2 & in2)
-    { i[0] = in2.i[0]; i[1] = in2.i[1]; }
+  // constexpr INDEX_2 (const INDEX_2 & in2)
+  // : i{in2.i[0], in2.i[1]} { } 
+  
+  // { i[0] = in2.i[0]; i[1] = in2.i[1]; }
 
   ///
   int operator== (const INDEX_2 & in2) const
@@ -128,7 +140,7 @@ public:
   ///
 
 
-  INDEX_2 Sort ()
+  constexpr INDEX_2 Sort ()
   {
     if (i[0] > i[1]) 
       {
@@ -147,7 +159,7 @@ public:
       return INDEX_2 (i1,i2);
   }
 
-
+  operator std::array<INDEX,2>() { return { i[0], i[1] }; }
   ///
   INDEX & I1 () { return i[0]; }
   ///
@@ -163,7 +175,7 @@ public:
   ///
   int & operator[] (int j) { return i[j]; }
   ///
-  const int & operator[] (int j) const { return i[j]; }
+  constexpr const int & operator[] (int j) const { return i[j]; }
   ///
   friend ostream & operator<<(ostream  & s, const INDEX_2 & i2);
 };
@@ -201,13 +213,12 @@ public:
   ///
   INDEX_3 () { }
   ///
-  INDEX_3 (INDEX ai1, INDEX ai2, INDEX ai3)
-    { i[0] = ai1; i[1] = ai2; i[2] = ai3; }
+  constexpr INDEX_3 (INDEX ai1, INDEX ai2, INDEX ai3)
+    : i{ai1, ai2, ai3} { }
 
-  ///
-  INDEX_3 (const INDEX_3 & in2)
-    { i[0] = in2.i[0]; i[1] = in2.i[1]; i[2] = in2.i[2]; }
-
+  /// 
+  constexpr INDEX_3 (const INDEX_3 & in2)
+    : i{in2.i[0], in2.i[1], in2.i[2]} { } 
 
   static INDEX_3 Sort (INDEX_3 i3)
   {
@@ -462,4 +473,37 @@ void MergeSort (int size, T * data, T * help);
 
 }
 
+namespace ngcore
+{
+  // template <>
+  // constexpr inline netgen::INDEX_2 InvalidHash<netgen::INDEX_2> () { return netgen::INDEX_2{-1,-1}; }
+
+
+  template <>
+  struct CHT_trait<netgen::INDEX_2>
+  {
+    constexpr static inline netgen::INDEX_2 Invalid() { return { -1, -1 } ; }
+    constexpr static inline size_t HashValue (const netgen::INDEX_2 & hash, size_t mask)
+    { return HashValue2(IVec<2,netgen::INDEX>(hash[0], hash[1]), mask); }
+  };
+
+  
+}
+
+namespace netgen
+{
+  /*
+  inline size_t HashValue2 (const netgen::INDEX_2 & ind, size_t mask)
+  {
+    return HashValue2(IVec<2,netgen::INDEX>(ind[0], ind[1]), mask);
+  }
+  */
+  
+  inline size_t HashValue2 (const netgen::INDEX_3 & ind, size_t mask)
+  {
+    return HashValue2(IVec<3,netgen::INDEX>(ind[0], ind[1], ind[2]), mask);
+  }
+
+
+}
 #endif

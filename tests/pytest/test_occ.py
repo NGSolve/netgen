@@ -41,3 +41,15 @@ def test_box_and_cyl():
     check_volume(cyl, vcyl)
     fused = box+cyl
     check_volume(fused, 1+vcyl)
+
+def test_internal_face():
+    occ = pytest.importorskip("netgen.occ")
+    box = occ.Box((0,0,0), (3, 1, 10))
+
+    face = occ.WorkPlane(occ.Axes((1.5,0,0), occ.X, occ.Y)).Rectangle(1, 6).Face()
+
+    shape = occ.Glue([box, face])
+    geo = occ.OCCGeometry(shape)
+    mesh = geo.GenerateMesh(maxh=0.5)
+    assert any(mesh.Elements2D().NumPy()['index'] == 8)
+

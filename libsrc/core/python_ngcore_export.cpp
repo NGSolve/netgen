@@ -1,10 +1,17 @@
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
+#include "mpi_wrapper.hpp"
 
 using namespace ngcore;
 using namespace std;
 using namespace pybind11::literals;
+
+namespace pybind11 { namespace detail {
+}} // namespace pybind11::detail
+
+
+
 
 PYBIND11_MODULE(pyngcore, m) // NOLINT
 {
@@ -24,8 +31,18 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   ExportArray<unsigned short>(m);
   ExportArray<unsigned char>(m);
 
+  // Compiler dependent implementation of size_t
+  if constexpr(!is_same_v<size_t, uint64_t>)
+    ExportArray<uint64_t>(m);
+
   ExportTable<int>(m);
-  
+
+  #ifdef PARALLEL
+  py::class_<NG_MPI_Comm> (m, "_NG_MPI_Comm")
+          ;
+  m.def("InitMPI", &InitMPI, py::arg("mpi_library_path")=nullopt);
+  #endif // PARALLEL
+
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")
     .def(py::init([] (size_t n) { return make_shared<BitArray>(n); }),py::arg("n"))
     .def(py::init([] (const BitArray& a) { return make_shared<BitArray>(a); } ), py::arg("ba"))
@@ -124,20 +141,34 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def(py::self | py::self)
     .def(py::self & py::self)
+    #ifdef __clang__ 
+    // see https://github.com/pybind/pybind11/issues/1893
+    #pragma GCC diagnostic push
+    #pragma GCC diagnostic ignored "-Wself-assign-overloaded"
+    #endif
     .def(py::self |= py::self)
     .def(py::self &= py::self)
+    #ifdef __clang__
+    #pragma GCC diagnostic pop
+    #endif
     .def(~py::self)
     ;
 
   py::class_<Flags>(m, "Flags")
     .def(py::init<>())
     .def("__str__", &ToString<Flags>)
-    .def(py::init([](py::object & obj) {
+    .def(py::init([](py::dict kwargs) {
           Flags flags;
-          py::dict d(obj);          
-          SetFlag (flags, "", d);
+          for (auto d : kwargs)
+            SetFlag(flags, d.first.cast<string>(), d.second.cast<py::object>());
           return flags;
-        }), py::arg("obj"), "Create Flags by given object")
+    }), "Create flags from dict")
+    .def(py::init([](py::kwargs kwargs) {
+          Flags flags;
+          for (auto d : kwargs)
+            SetFlag(flags, d.first.cast<string>(), d.second.cast<py::object>());
+          return flags;
+        }), "Create flags from kwargs")
     .def(py::pickle([] (const Flags& self)
         {
           std::stringstream str;
@@ -165,6 +196,9 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
         return self;
     }, py::arg("akey"), py::arg("value"), "Set flag by given value.")
 
+    .def("keys", [](Flags & self) -> py::list {
+        return CreateDictFromFlags(self).attr("keys")();
+    })
     .def("__getitem__", [](Flags & self, const string& name) -> py::object {
 
 	  if(self.NumListFlagDefined(name))
@@ -187,6 +221,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     .def("ToDict", [](const Flags& flags)
     {
       return CreateDictFromFlags(flags);
+    })
+    .def("items", [](const Flags& flags)
+    {
+      return CreateDictFromFlags(flags).attr("items")();
     })
   ;
   py::implicitly_convertible<py::dict, Flags>();
@@ -286,5 +324,70 @@ threads : int
 #endif // NETGEN_TRACE_MEMORY
     ;
 
+    m.def("GetTotalMemory", MemoryTracer::GetTotalMemory);
 
+    py::class_<Timer<>> (m, "Timer")
+    .def(py::init<const string&>())
+    .def("Start", static_cast<void (Timer<>::*)()const>(&Timer<>::Start), "start timer")
+    .def("Stop", static_cast<void (Timer<>::*)()const>(&Timer<>::Stop), "stop timer")
+    .def_property_readonly("time", &Timer<>::GetTime, "returns time")
+    .def("__enter__", static_cast<void (Timer<>::*)()const>(&Timer<>::Start))
+    .def("__exit__", [](Timer<>& t, py::object, py::object, py::object)
+                     {
+                       t.Stop();
+                     })
+    ;
+  
+  m.def("Timers",
+	  []() 
+	   {
+	     py::list timers;
+	     for (int i = 0; i < NgProfiler::SIZE; i++)
+	       if (!NgProfiler::timers[i].name.empty())
+               {
+                 py::dict timer;
+                 timer["name"] = py::str(NgProfiler::timers[i].name);
+                 timer["time"] = py::float_(NgProfiler::GetTime(i));
+                 timer["counts"] = py::int_(NgProfiler::GetCounts(i));
+                 timer["flops"] = py::float_(NgProfiler::GetFlops(i));
+                 timer["Gflop/s"] = py::float_(NgProfiler::GetFlops(i)/NgProfiler::GetTime(i)*1e-9);
+                 timers.append(timer);
+               }
+	     return timers;
+	   }, "Returns list of timers"
+	   );
+  m.def("ResetTimers", &NgProfiler::Reset);
+
+  py::class_<NgMPI_Comm> (m, "MPI_Comm")
+#ifdef PARALLEL
+    .def(py::init([] (mpi4py_comm comm) { return NgMPI_Comm(comm); }))
+    .def("WTime", [](NgMPI_Comm  & c) { return NG_MPI_Wtime(); })
+    .def_property_readonly ("mpi4py", [](NgMPI_Comm & self) { return NG_MPI_CommToMPI4Py(self); })
+#endif  // PARALLEL
+    .def_property_readonly ("rank", &NgMPI_Comm::Rank)
+    .def_property_readonly ("size", &NgMPI_Comm::Size)
+    .def("Barrier", &NgMPI_Comm::Barrier)
+    .def("Sum", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, NG_MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, NG_MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, double x) { return c.AllReduce(x, NG_MPI_MAX); })
+    .def("Sum", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, NG_MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, NG_MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, int x) { return c.AllReduce(x, NG_MPI_MAX); })
+    .def("Sum", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, NG_MPI_SUM); })
+    .def("Min", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, NG_MPI_MIN); })
+    .def("Max", [](NgMPI_Comm  & c, size_t x) { return c.AllReduce(x, NG_MPI_MAX); })
+    .def("SubComm", [](NgMPI_Comm & c, std::vector<int> proc_list) {
+        Array<int> procs(proc_list.size());
+        for (int i = 0; i < procs.Size(); i++)
+          { procs[i] = proc_list[i]; }
+        if (!procs.Contains(c.Rank()))
+          { throw Exception("rank "+ToString(c.Rank())+" not in subcomm"); }
+	return c.SubCommunicator(procs);
+      }, py::arg("procs"));
+  ;
+
+    
+#ifdef PARALLEL
+  py::implicitly_convertible<mpi4py_comm, NgMPI_Comm>();
+#endif // PARALLEL
 }

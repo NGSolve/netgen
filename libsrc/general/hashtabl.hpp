@@ -7,6 +7,8 @@
 /* Date:   01. Jun. 95                                                    */
 /**************************************************************************/
 
+#include "table.hpp"
+
 namespace netgen
 {
 
@@ -412,9 +414,14 @@ public:
     int BagNr() const { return bagnr; }
     int Pos() const { return pos; }
 
-    void operator++ (int)
+    Iterator operator++ (int)
     {
-      // cout << "begin Operator ++: bagnr = " << bagnr << " -  pos = " << pos << endl;
+      Iterator it(ht, bagnr, pos);
+      ++(*this);
+      return it;
+    }
+    Iterator& operator++()
+    {
       pos++;
       while (bagnr < ht.GetNBags() && 
 	     pos == ht.GetBagSize(bagnr+1))
@@ -422,7 +429,12 @@ public:
 	  pos = 0;
 	  bagnr++;
 	}
-      // cout << "end Operator ++: bagnr = " << bagnr << " - pos = " << pos << endl;
+      return *this;
+    }
+
+    std::pair<INDEX_3, T> operator*()
+    {
+      return std::make_pair(ht.hash[bagnr][pos], ht.cont[bagnr][pos]);
     }
 
     bool operator != (int i) const
@@ -440,6 +452,18 @@ public:
   }
 
   int End() const
+  {
+    return GetNBags();
+  }
+
+  Iterator begin () const
+  {
+    Iterator it(*this, 0, -1);
+    it++;
+    return it;
+  }
+
+  int end() const
   {
     return GetNBags();
   }
@@ -837,9 +861,10 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
   for (int i = 0; i < ht.Size(); i++)
     if (ht.UsedPos(i))
       {
-	INDEX_2 hash;
-	T data;
-	ht.GetData0 (i, hash, data);
+	// INDEX_2 hash;
+	// T data;
+	// ht.GetData0 (i, hash, data);
+        auto [hash,data] = ht.GetBoth(i);
 	ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
@@ -856,7 +881,8 @@ protected:
   size_t mask;
 
 protected: 
-  BASE_INDEX_3_CLOSED_HASHTABLE (size_t size)
+  BASE_INDEX_3_CLOSED_HASHTABLE (size_t size);
+  /*
     : hash(RoundUp2(size))
   {
     // cout << "orig size = " << size
@@ -868,6 +894,7 @@ protected:
     for (size_t i = 0; i < size; i++)
       hash[i].I1() = invalid;
   }
+  */
 
 public:
   int Size() const 
@@ -1049,9 +1076,12 @@ inline ostream & operator<< (ostream & ost, const INDEX_3_CLOSED_HASHTABLE<T> & 
   for (int i = 0; i < ht.Size(); i++)
     if (ht.UsedPos(i))
       {
+        /*
 	INDEX_3 hash;
 	T data;
-	ht.GetData (i, hash, data);
+        ht.GetData (i, hash, data);
+        */
+        auto [hash, data] = ht.GetBoth();
 	ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
@@ -1410,7 +1440,7 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
      The array should be allocated with the double size of the expected number of entries.
   */
   template <class T_HASH, class T>
-  class ClosedHashTable
+  class NgClosedHashTable
   {
   protected:
     ///
@@ -1423,16 +1453,16 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
     NgArray<T> cont;
   public:
     ///
-    ClosedHashTable (size_t asize = 128)
+    NgClosedHashTable (size_t asize = 128)
       : size(asize), used(0), hash(asize), cont(asize)
     {
       for (auto & v : hash)
         SetInvalid(v);
     }
 
-    ClosedHashTable (ClosedHashTable && ht2) = default;
+    NgClosedHashTable (NgClosedHashTable && ht2) = default;
 
-    ClosedHashTable (NgFlatArray<T_HASH> _hash, NgFlatArray<T> _cont)
+    NgClosedHashTable (NgFlatArray<T_HASH> _hash, NgFlatArray<T> _cont)
       : size(_hash.Size()), used(0), hash(_hash.Size(), _hash.Addr(0)), cont(_cont.Size(), _cont.Addr(0))
     {
       for (auto & v : hash)
@@ -1440,7 +1470,7 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
     }
 
 
-    ClosedHashTable & operator= (ClosedHashTable && ht2) = default;
+    NgClosedHashTable & operator= (NgClosedHashTable && ht2) = default;
 
     /// 
     size_t Size() const
@@ -1474,7 +1504,7 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
 
     void DoubleSize()
     {
-      ClosedHashTable tmp(2*Size());
+      NgClosedHashTable tmp(2*Size());
       for (auto both : *this)
         tmp[both.first] = both.second;
       *this = std::move(tmp);
@@ -1609,10 +1639,10 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
     
     class Iterator
     {
-      const ClosedHashTable & tab;
+      const NgClosedHashTable & tab;
       size_t nr;
     public:
-      Iterator (const ClosedHashTable & _tab, size_t _nr)
+      Iterator (const NgClosedHashTable & _tab, size_t _nr)
         : tab(_tab), nr(_nr)
       {
         while (nr < tab.Size() && !tab.UsedPos(nr)) nr++;
@@ -1639,7 +1669,7 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
 
   template <class T_HASH, class T>  
   ostream & operator<< (ostream & ost,
-                        const ClosedHashTable<T_HASH,T> & tab)
+                        const NgClosedHashTable<T_HASH,T> & tab)
   {
     for (size_t i = 0; i < tab.Size(); i++)
       if (tab.UsedPos(i))

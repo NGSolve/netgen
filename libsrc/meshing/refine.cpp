@@ -1,5 +1,7 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include "meshclass.hpp"
+#include "bisect.hpp"
+#include "paralleltop.hpp"
 
 
 namespace netgen
@@ -31,7 +33,7 @@ namespace netgen
     if (mesh.mlbetweennodes.Size() < mesh.GetNV())
       {
         mesh.mlbetweennodes.SetSize(mesh.GetNV());
-        mesh.mlbetweennodes = INDEX_2(PointIndex::BASE-1,PointIndex::BASE-1);
+        mesh.mlbetweennodes = PointIndices<2>(PointIndex::INVALID, PointIndex::INVALID);
       }
 
     if (mesh.level_nv.Size() == 0)
@@ -189,8 +191,8 @@ namespace netgen
             mesh.Point(pinew) = pnew;
 	    // between.Set (i2, pinew);
 
-	    if (pinew >= epgi.Size()+PointIndex::BASE)
-	      epgi.SetSize (pinew+1-PointIndex::BASE);
+	    if (pinew >= epgi.Size()+IndexBASE<PointIndex>())
+	      epgi.SetSize (pinew+1-IndexBASE<PointIndex>());
 	    epgi[pinew] = ngi;
 	  }
 
@@ -208,7 +210,7 @@ namespace netgen
     PrintMessage (5, "have 1d elements");
     
     // refine surface elements
-    NgArray<PointGeomInfo,PointIndex::BASE> surfgi (8*mesh.GetNP());
+    Array<PointGeomInfo,PointIndex> surfgi (8*mesh.GetNP());
     for (int i = PointIndex::BASE;
 	 i < surfgi.Size()+PointIndex::BASE; i++)
       surfgi[i].trignum = -1;
@@ -273,9 +275,9 @@ namespace netgen
 		      between.Set (i2, pnums.Get(4+j));
 		    }
                   */
-		  if (surfgi.Size() < pnums.Elem(4+j))
-		    surfgi.SetSize (pnums.Elem(4+j));
-		  surfgi.Elem(pnums.Elem(4+j)) = pgis.Elem(4+j);
+		  if (surfgi.Size() < pnums.Elem(4+j)-IndexBASE<PointIndex>()+1)
+		    surfgi.SetSize (pnums.Elem(4+j)-IndexBASE<PointIndex>()+1);
+		  surfgi[pnums.Elem(4+j)] = pgis.Elem(4+j);
 		}
 
 
@@ -356,9 +358,9 @@ namespace netgen
                       mesh.Point(pinew) = pb;                      
                     }
                   
-                  if (surfgi.Size() < pnums[4+j])
-                    surfgi.SetSize (pnums[4+j]);
-                  surfgi.Elem(pnums[4+j]) = pgis[4+j];
+                  if (surfgi.Size() < pnums[4+j]-IndexBASE<PointIndex>()+1)
+                    surfgi.SetSize (pnums[4+j]-IndexBASE<PointIndex>()+1);
+                  surfgi[pnums[4+j]] = pgis[4+j];
                 }
 
 	      static int reftab[4][4] =
@@ -749,17 +751,17 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	NgArray<int,PointIndex::BASE> identmap;
+	idmap_type identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
 	for (int j = 1; j <= between.GetNBags(); j++)
 	  for (int k = 1; k <= between.GetBagSize(j); k++)
 	    {
-	      INDEX_2 i2;
+	      PointIndices<2> i2;
 	      PointIndex newpi;
 	      between.GetData (j, k, i2, newpi);
-	      INDEX_2 oi2(identmap.Get(i2.I1()),
-			  identmap.Get(i2.I2()));
+	      PointIndices<2> oi2(identmap[i2[0]], 
+                                  identmap[i2[1]]);
 	      oi2.Sort();
 	      if (between.Used (oi2))
 		{
@@ -790,14 +792,15 @@ namespace netgen
 
     int cnttrials = 10;
     int wrongels = 0;
-    for (int i = 1; i <= mesh.GetNE(); i++)
-      if (mesh.VolumeElement(i).Volume(mesh.Points()) < 0)
+
+    for (auto & el : mesh.VolumeElements())
+      if (el.Volume(mesh.Points()) < 0)
 	{
 	  wrongels++;
-	  mesh.VolumeElement(i).Flags().badel = 1;
+	  el.Flags().badel = 1;
 	}
       else
-	mesh.VolumeElement(i).Flags().badel = 0;
+	el.Flags().badel = 0;
 
     if (wrongels)
       {
@@ -820,11 +823,11 @@ namespace netgen
 					can.Elem(parent.I2()));
 	    }
 
-	NgBitArray boundp(np);
+	TBitArray<PointIndex> boundp(np);
 	boundp.Clear();
 	for (auto & sel : mesh.SurfaceElements())
           for (auto pi : sel.PNums())
-            boundp.Set(pi);
+            boundp.SetBit(pi);
 
 
 	double lam = 0.5;
@@ -851,28 +854,30 @@ namespace netgen
 		    mesh.Point(i) = can.Get(i);
 	      
 
-		NgBitArray free (mesh.GetNP()), fhelp(mesh.GetNP());
+		TBitArray<PointIndex> free (mesh.GetNP()), fhelp(mesh.GetNP());
 		free.Clear();
-		for (int i = 1; i <= mesh.GetNE(); i++)
+		// for (int i = 1; i <= mesh.GetNE(); i++)
+                for (ElementIndex ei : mesh.VolumeElements().Range())
 		  {
-		    const Element & el = mesh.VolumeElement(i);
+		    const Element & el = mesh.VolumeElement(ei);
 		    if (el.Volume(mesh.Points()) < 0)
 		      for (int j = 1; j <= el.GetNP(); j++)
-			free.Set (el.PNum(j));
+			free.SetBit (el.PNum(j));
 		  }
 		for (int k = 1; k <= 3; k++)
 		  {
 		    fhelp.Clear();
-		    for (int i = 1; i <= mesh.GetNE(); i++)
+		    // for (int i = 1; i <= mesh.GetNE(); i++) 
+                    for (const Element & el : mesh.VolumeElements())
 		      {
-			const Element & el = mesh.VolumeElement(i);
+			// const Element & el = mesh.VolumeElement(i);
 			int freeel = 0;
 			for (int j = 1; j <= el.GetNP(); j++)
 			  if (free.Test(el.PNum(j)))
 			    freeel = 1;
 			if (freeel)
 			  for (int j = 1; j <= el.GetNP(); j++)
-			    fhelp.Set (el.PNum(j));
+			    fhelp.SetBit (el.PNum(j));
 		      }
 		    free.Or (fhelp);
 		  }
@@ -895,19 +900,19 @@ namespace netgen
 
 
 		wrongels = 0;
-		for (int i = 1; i <= mesh.GetNE(); i++)
+                for (ElementIndex ei : mesh.VolumeElements().Range())
 		  {
-		    if (mesh.VolumeElement(i).Volume(mesh.Points()) < 0)
+		    if (mesh.VolumeElement(ei).Volume(mesh.Points()) < 0)
 		      {
 			wrongels++;
-			mesh.VolumeElement(i).Flags().badel = 1;
+			mesh.VolumeElement(ei).Flags().badel = 1;
 			(*testout) << "wrong el: ";
 			for (int j = 1; j <= 4; j++)
-			  (*testout) << mesh.VolumeElement(i).PNum(j) << " ";
+			  (*testout) << mesh.VolumeElement(ei).PNum(j) << " ";
 			(*testout) << endl;
 		      }
 		    else
-		      mesh.VolumeElement(i).Flags().badel = 0;
+		      mesh.VolumeElement(ei).Flags().badel = 0;
 		  }
 		cout << "wrongels = " << wrongels << endl;
 	      }

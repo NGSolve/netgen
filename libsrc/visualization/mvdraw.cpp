@@ -57,6 +57,13 @@ namespace netgen
       return opengl_text_width;
   }
 
+  void MyOpenGLLines(FlatArray<Point<3>> points)
+  {
+    glBegin(GL_LINES);
+    for (auto p : points)
+      glVertex3dv(&p[0]);
+    glEnd();
+  }
 
   // texture for color decoding
   // GLubyte * VisualScene :: colortexture = NULL;
@@ -497,7 +504,8 @@ namespace netgen
       {
 	ntexcols = ncols;
       
-	GLubyte colortexture[4*32];
+	ArrayMem<GLubyte, 4*32> colortexture;
+	colortexture.SetSize(4*ncols);
 
 	const double colp[][3] =
 	  {
@@ -532,8 +540,8 @@ namespace netgen
 
 	// glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
-     	glTexImage1D (GL_TEXTURE_1D, 0, 4, ncols, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture);
-	glTexImage2D (GL_TEXTURE_2D, 0, 4, ncols, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture);
+	glTexImage1D (GL_TEXTURE_1D, 0, 4, ncols, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
+	glTexImage2D (GL_TEXTURE_2D, 0, 4, ncols, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
 
 	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, typ);  // DECAL or MODULATE
 	
@@ -950,7 +958,7 @@ namespace netgen
   //  glEnable (GL_LIGHTING);
 
   double shine = vispar.shininess;
-  double transp = vispar.transp;
+  // double transp = vispar.transp;
 
   glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, shine);
   glLogicOp (GL_COPY);

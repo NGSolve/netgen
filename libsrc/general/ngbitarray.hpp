@@ -12,7 +12,6 @@
 namespace netgen
 {
 
-
 /**
    data type NgBitArray
    
@@ -29,8 +28,11 @@ class NgBitArray
   unsigned char * data;
 
 public:
+  
+  // [[ deprecated ("use BitArray instead")]]  
   DLL_HEADER NgBitArray ();
   ///
+  // [[ deprecated ("use BitArray instead")]]  
   DLL_HEADER NgBitArray (INDEX asize);
   ///
   DLL_HEADER ~NgBitArray ();

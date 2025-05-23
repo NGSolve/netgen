@@ -1,6 +1,11 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
+
+#pragma clang diagnostic pop
 
 #include "occ_edge.hpp"
 #include "occgeom.hpp"
@@ -48,15 +53,15 @@ namespace netgen
         throw Exception(ToString("not implemented") + __FILE__ + ":" + ToString(__LINE__));
     }
 
-    size_t OCCEdge::GetHash() const
-    {
-      return edge.HashCode(std::numeric_limits<Standard_Integer>::max());
-    }
-
     void OCCEdge::ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const
     {
         auto pnt = ng2occ(p);
-        GeomAPI_ProjectPointOnCurve proj(pnt, curve, s0, s1);
+        // extend the projection parameter range, else projection might fail
+        // for an endpoint
+        // see discussion here: https://forum.ngsolve.org/t/how-to-apply-occidentification-correctly/2555
+        // I do not see a better way using occ tolerances?
+        double eps = 1e-7 * (s1-s0);
+        GeomAPI_ProjectPointOnCurve proj(pnt, curve, s0-eps, s1+eps);
         pnt = proj.NearestPoint();
         if(gi)
             gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);

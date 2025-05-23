@@ -90,6 +90,7 @@ namespace netgen
   NGGUI_API extern void Set_OpenGLText_Callback ( void (*fun) (const char * text), int width );
   NGGUI_API extern VisualScene visual_scene_cross;
   NGGUI_API extern VisualScene *visual_scene;
+  NGGUI_API extern void MyOpenGLLines (FlatArray<Point<3>> points);
 
 
 
@@ -145,16 +146,16 @@ namespace netgen
     int filledtimestamp = -1;
     int linetimestamp = -1;
     int edgetimestamp = -1;
-    int pointnumbertimestamp = -1;
+    // int pointnumbertimestamp = -1;
 
     int tettimestamp = -1;
     int prismtimestamp = -1;
     int pyramidtimestamp = -1;
     int hextimestamp = -1;
 
-    int badeltimestamp = -1;
-    int identifiedtimestamp = -1;
-    int domainsurftimestamp = -1;
+    // int badeltimestamp = -1;
+    // int identifiedtimestamp = -1;
+    // int domainsurftimestamp = -1;
 
     struct {
       unsigned texture = -1;
@@ -228,10 +229,10 @@ namespace netgen
     void BuildEdgeList();
     void BuildPointNumberList();
 
-    void BuildTetList();
-    void BuildPrismList();
-    void BuildPyramidList();
-    void BuildHexList();
+    void BuildTetList(const BitArray & shownode);
+    void BuildPrismList(const BitArray & shownode);
+    void BuildPyramidList(const BitArray & shownode);
+    void BuildHexList(const BitArray & shownode);
 
     void BuildBadelList();
     void BuildIdentifiedList();
@@ -239,7 +240,7 @@ namespace netgen
 
     bool SelectSurfaceElement (int px, int py, Point<3> &p, bool select_on_clipping_plane);
     bool Unproject(int px, int py, Point<3> &p);
-    ngcore::INT<2> Project(Point<3> p);
+    ngcore::IVec<2> Project(Point<3> p);
   };
 
   NGGUI_API extern VisualSceneMesh vsmesh;

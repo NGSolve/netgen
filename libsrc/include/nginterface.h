@@ -38,7 +38,7 @@ enum NG_ELEMENT_TYPE {
   NG_TRIG = 10, NG_QUAD=11, NG_TRIG6 = 12, NG_QUAD6 = 13, NG_QUAD8 = 14,
   NG_TET = 20, NG_TET10 = 21, 
   NG_PYRAMID = 22, NG_PRISM = 23, NG_PRISM12 = 24, NG_PRISM15 = 27, NG_PYRAMID13 = 28,
-  NG_HEX = 25, NG_HEX20 = 26
+  NG_HEX = 25, NG_HEX20 = 26, NG_HEX7 = 29
 };
 
 typedef double NG_POINT[3];  // coordinates
@@ -316,6 +316,7 @@ extern "C" {
     int iscomplex;    // complex vector ? 
     bool draw_surface;
     bool draw_volume;
+    std::shared_ptr<netgen::BitArray> draw_surfaces, draw_volumes;
     int order;        // order of elements, only partially supported 
     Ng_SolutionType soltype;  // type of solution function
     netgen::SolutionData * solclass;

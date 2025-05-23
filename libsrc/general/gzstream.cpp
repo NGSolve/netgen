@@ -44,7 +44,7 @@ namespace GZSTREAM_NAMESPACE {
 // class gzstreambuf:
 // --------------------------------------
 
-gzstreambuf* gzstreambuf::open( const filesystem::path & name, int open_mode) {
+  gzstreambuf* gzstreambuf::open( const std::filesystem::path & name, int open_mode) {
     if ( is_open())
         return (gzstreambuf*)0;
     mode = open_mode;
@@ -143,7 +143,7 @@ int gzstreambuf::sync() {
 // class gzstreambase:
 // --------------------------------------
 
-gzstreambase::gzstreambase( const filesystem::path & name, int mode) {
+  gzstreambase::gzstreambase( const std::filesystem::path & name, int mode) {
     init( &buf);
     open( name.c_str(), mode);
 }
@@ -152,7 +152,7 @@ gzstreambase::~gzstreambase() {
     buf.close();
 }
 
-void gzstreambase::open( const filesystem::path & name, int open_mode) {
+  void gzstreambase::open( const std::filesystem::path & name, int open_mode) {
     if ( ! buf.open( name.c_str(), open_mode))
         clear( rdstate() | std::ios::badbit);
 }

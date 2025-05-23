@@ -583,8 +583,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
             NgArray<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
             s2->GetSolid()->GetSurfaceIndices (si2);
-            cout << "surface ids1 = " << si1 << endl;
-            cout << "surface ids2 = " << si2 << endl;
+            cout << IM(3) << "surface ids1 = " << si1 << endl;
+            cout << IM(3) << "surface ids2 = " << si2 << endl;
 
             Flags flags;
             const TopLevelObject * domain = nullptr;
@@ -756,10 +756,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
            {
              MeshingParameters mp;
              if(pars) mp = *pars;
-             {
-               py::gil_scoped_acquire aq;
-               CreateMPfromKwargs(mp, kwargs);
-             }
+             CreateMPfromKwargs(mp, kwargs);
+             py::gil_scoped_release gil_rel;
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
@@ -770,8 +768,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                throw Exception("Meshing failed!");
              return mesh;
            }, py::arg("mp") = nullptr,
-       meshingparameter_description.c_str(),
-    py::call_guard<py::gil_scoped_release>())
+       meshingparameter_description.c_str())
     ;
 
   m.def("Save", FunctionPointer 

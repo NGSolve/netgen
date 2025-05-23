@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <map>
 #include <ostream>
+#include <optional>
 #include <sstream>
 #include <string>
 
@@ -71,6 +72,8 @@ namespace ngcore
     unsigned long long tics;
     __asm __volatile("mrs %0, CNTVCT_EL0" : "=&r" (tics));
     return tics;
+#elif defined(__EMSCRIPTEN__)
+    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #else
 #warning "Unsupported CPU architecture"
     return 0;
@@ -179,7 +182,7 @@ namespace ngcore
   
   /// square element 
   template <class T>
-  NETGEN_INLINE T sqr (const T a)
+  NETGEN_INLINE constexpr T sqr (const T a)
   {
     return a * a; 
   }
@@ -251,6 +254,27 @@ namespace ngcore
 
   
   template <int N> using IC = std::integral_constant<int,N>;  // needed for Iterate
+
+  
+  namespace detail {
+    template <typename T, typename Enable = int>
+    struct IsIC_trait {
+      static constexpr auto check() { return false; }
+    };
+    
+    template <typename T>
+    struct IsIC_trait<T, std::enable_if_t<std::is_same_v<T, IC<T::value>> == true, int> > {
+      static constexpr auto check() { return true; }  
+    };
+  }
+  
+  template <typename T>
+  constexpr bool is_IC() {
+    return detail::IsIC_trait<T>::check();
+  }
+  
+  
+
   
   template <int NUM, typename FUNC>
   NETGEN_INLINE void Iterate (FUNC f)
@@ -323,6 +347,41 @@ namespace ngcore
   NGCORE_API bool IsRangeCheckEnabled();
 
   NGCORE_API std::filesystem::path GetTempFilename();
+
+  NGCORE_API void* GetRawSymbol( std::string func_name );
+
+  template <typename TFunc>
+  TFunc GetSymbol( std::string func_name )
+  {
+    return reinterpret_cast<TFunc>(GetRawSymbol(func_name));
+  }
+
+  // Class to handle/load shared libraries
+  class NGCORE_API SharedLibrary
+  {
+    std::filesystem::path lib_name;
+    std::optional<std::filesystem::path> directory_to_delete = std::nullopt;
+    void *lib = nullptr;
+
+  public:
+    SharedLibrary() = default;
+    SharedLibrary(const std::filesystem::path & lib_name_, std::optional<std::filesystem::path> directory_to_delete_ = std::nullopt, bool global = false );
+
+    SharedLibrary(const SharedLibrary &) = delete;
+    SharedLibrary & operator =(const SharedLibrary &) = delete;
+
+    ~SharedLibrary();
+
+    template <typename TFunc>
+    TFunc GetSymbol( std::string func_name )
+    {
+      return reinterpret_cast<TFunc>(GetRawSymbol(func_name));
+    }
+
+    void Load( const std::filesystem::path & lib_name_, bool global = true);
+    void Unload();
+    void* GetRawSymbol( std::string func_name );
+  };
 
 } // namespace ngcore
 

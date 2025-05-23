@@ -1,6 +1,8 @@
 #ifndef FILE_RULER3
 #define FILE_RULER3
 
+namespace netgen
+{
 
 /**
   3D element generation rule.
@@ -170,10 +172,10 @@ public:
   int GetNP (int fn) const
   { return faces.Get(fn).GetNP(); }
   ///
-  int GetPointNr (int fn, int endp) const
+  PointIndex GetPointNr (int fn, int endp) const
   { return faces.Get(fn).PNum(endp); }
   ///
-  int GetPointNrMod (int fn, int endp) const
+  PointIndex GetPointNrMod (int fn, int endp) const
   { return faces.Get(fn).PNumMod(endp); }
   ///
   const fourint & GetOrientation (int i) { return orientations.Get(i); }
@@ -204,7 +206,6 @@ public:
   //  friend void Plot3DRule (const ROT3D & r, char key);
 };
 
-
-
+} // namespace netgen
 #endif
 

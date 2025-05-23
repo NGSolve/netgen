@@ -17,6 +17,7 @@
 #include "ngcore_api.hpp"
 #include "profiler.hpp"
 
+
 namespace ngcore
 {
 
@@ -93,6 +94,7 @@ namespace ngcore
     Iterator end() const { return Iterator(*this, BASE+size); }
   };
 
+  /*
   NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<unsigned int> entrysize);
   NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<size_t> entrysize);
 
@@ -105,7 +107,20 @@ namespace ngcore
   { return TablePrefixSum32 (FlatArray<unsigned> (entrysize.Size(), (unsigned int*)(std::atomic<int>*)entrysize.Addr(0))); }
   NETGEN_INLINE size_t * TablePrefixSum (FlatArray<size_t> entrysize)
   { return TablePrefixSum64 (entrysize); }
+  */
 
+  NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<uint32_t> entrysize);
+  NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<uint64_t> entrysize);
+
+  template <typename T> // TODO: enable_if T is integral
+  NETGEN_INLINE size_t * TablePrefixSum (FlatArray<T> entrysize)
+  {
+    if constexpr (sizeof(T) == 4)
+      return TablePrefixSum32 ( { entrysize.Size(), (uint32_t*)(void*)entrysize.Addr(0) });
+    else
+      return TablePrefixSum64 ( { entrysize.Size(), (uint64_t*)(void*)entrysize.Addr(0) });
+  }
+  
 
   /**
      A compact Table container.
@@ -130,6 +145,7 @@ namespace ngcore
     {
       for (size_t i : IntRange(size+1))
         index[i] = i*entrysize;
+      mt.Alloc(GetMemUsage());
     }
 
     /// Construct table of variable entrysize
@@ -141,6 +157,7 @@ namespace ngcore
       index = TablePrefixSum (FlatArray<TI> (entrysize.Size(), entrysize.Data()));
       size_t cnt = index[size];
       data = new T[cnt];
+      mt.Alloc(GetMemUsage());
     }
 
     explicit NETGEN_INLINE Table (const FlatTable<T,IndexType> & tab2)
@@ -157,6 +174,7 @@ namespace ngcore
       size_t cnt = index[size];
       data = new T[cnt];
       this->AsArray() = tab2.AsArray();
+      mt.Alloc(GetMemUsage());
       /*
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
@@ -177,12 +195,14 @@ namespace ngcore
       data = new T[cnt];
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
+
+      mt.Alloc(GetMemUsage());
     }
 
     NETGEN_INLINE Table (Table && tab2)
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
-      tab2.mt.Free(tab2.GetMemUsage());
+      mt = std::move(tab2.mt);
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -210,7 +230,7 @@ namespace ngcore
 
     NETGEN_INLINE Table & operator= (Table && tab2)
     {
-      mt.Swap(GetMemUsage(), tab2.mt, tab2.GetMemUsage());
+      mt = std::move(tab2.mt);
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -324,8 +344,8 @@ namespace ngcore
 	case 1:
           {
             size_t oldval = nd;
-            while (blocknr+1>nd) {
-              nd.compare_exchange_weak (oldval, blocknr+1);
+            while (blocknr-IndexBASE<IndexType>()+1>nd) {
+              nd.compare_exchange_weak (oldval, blocknr-IndexBASE<IndexType>()+1);
               oldval = nd;
             }
             break;
@@ -401,7 +421,7 @@ namespace ngcore
           pcreator = std::make_unique<TableCreator<TEntry, TIndex>>(*cnt);
       else
           pcreator = std::make_unique<TableCreator<TEntry, TIndex>>();
-
+      
       auto & creator = *pcreator;
 
       for ( ; !creator.Done(); creator++)
@@ -447,7 +467,9 @@ namespace ngcore
     void Add (size_t blocknr, FlatArray<int> dofs);
   };
 
+  
 
+  
 
   /**
      A dynamic table class.

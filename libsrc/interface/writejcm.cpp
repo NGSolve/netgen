@@ -11,12 +11,12 @@
 #include <meshing.hpp>
 #include <sys/stat.h>
 
-namespace netgen
-{
 #include "writeuser.hpp"
 
+namespace netgen
+{
+
 void WriteJCMFormat (const Mesh & mesh,
-                     const NetgenGeometry & geom,
                      const filesystem::path & filename)
 {
   if (mesh.GetDimension() != 3)
@@ -33,7 +33,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int np = mesh.GetNP();
 
   // Identic points
-  NgArray<int,PointIndex::BASE> identmap1, identmap2, identmap3;
+  idmap_type identmap1, identmap2, identmap3;
   mesh.GetIdentifications().GetMap(1, identmap1);
   mesh.GetIdentifications().GetMap(2, identmap2);
   mesh.GetIdentifications().GetMap(3, identmap3);
@@ -52,19 +52,21 @@ void WriteJCMFormat (const Mesh & mesh,
       for (j = 1; j <= 4; j++)
         for (jj = 1; jj <=4; jj++)
         {
-          if (identmap1.Elem(el.PNum(j)) == el.PNum(jj))
+          // if (identmap1.Elem(el.PNum(j)) == el.PNum(jj))
+          if (identmap1[el.PNum(j)] == el.PNum(jj))          
           {
             cout << "\n Error: two points on a tetrahedron identified (1) with each other"
                  << "\n REFINE MESH !" << endl;
             return;
           }
-          if (identmap2.Elem(el.PNum(j)) == el.PNum(jj))
+          // if (identmap2.Elem(el.PNum(j)) == el.PNum(jj))
+          if (identmap2[el.PNum(j)] == el.PNum(jj))          
           {
             cout << "\n Error: two points on a tetrahedron identified (2) with each other"
                  << "\n REFINE MESH !" << endl;
             return;
           }
-          if (identmap3.Elem(el.PNum(j)) == el.PNum(jj))
+          if (identmap3[el.PNum(j)] == el.PNum(jj))
           {
             cout << "\n Error: two points on a tetrahedron identified (3) with each other"
                  << "\n REFINE MESH !" << endl;
@@ -271,6 +273,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int npid1 = 0;
   int npid2 = 0;
   int npid3 = 0;
+  /*
   for (i=1; i<=np; i++)
   {
     if (identmap1.Elem(i))
@@ -280,6 +283,10 @@ void WriteJCMFormat (const Mesh & mesh,
     if (identmap3.Elem(i))
       npid3++;
   }
+  */
+  for (auto pi : identmap1) if (pi.IsValid()) npid1++;
+  for (auto pi : identmap2) if (pi.IsValid()) npid1++;
+  for (auto pi : identmap3) if (pi.IsValid()) npid1++;
 
   outfile << "\n";
   outfile << "# Boundary triangles\n";  
@@ -302,31 +309,31 @@ void WriteJCMFormat (const Mesh & mesh,
         outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "\n";      
       if (mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() == bc_at_infinity)
         outfile << "-2\n\n";
-      else if (identmap1.Elem(el.PNum(1))
-               &&identmap1.Elem(el.PNum(2))
-               &&identmap1.Elem(el.PNum(3)))
+      else if (identmap1[el.PNum(1)].IsValid()
+               &&identmap1[el.PNum(2)].IsValid()
+               &&identmap1[el.PNum(3)].IsValid())
       {
         outfile << "-1\n";
         for (j = 1; j <= 3; j++)
-          outfile << identmap1.Elem(el.PNum(j))<<"\n";
+          outfile << identmap1[el.PNum(j)]<<"\n";
         outfile << "\n";
       }
-      else if (identmap2.Elem(el.PNum(1))
-               &&identmap2.Elem(el.PNum(2))
-               &&identmap2.Elem(el.PNum(3)))
+      else if (identmap2[el.PNum(1)].IsValid()
+               &&identmap2[el.PNum(2)].IsValid()
+               &&identmap2[el.PNum(3)].IsValid())
       {
         outfile << "-1\n";
         for (j = 1; j <= 3; j++)
-          outfile << identmap2.Elem(el.PNum(j))<<"\n";
+          outfile << identmap2[el.PNum(j)]<<"\n";
         outfile << "\n";
       }
-      else if (identmap3.Elem(el.PNum(1))
-               &&identmap3.Elem(el.PNum(2))
-               &&identmap3.Elem(el.PNum(3)))
+      else if (identmap3[el.PNum(1)].IsValid()
+               &&identmap3[el.PNum(2)].IsValid()
+               &&identmap3[el.PNum(3)].IsValid())
       {
         outfile << "-1\n";
         for (j = 1; j <= 3; j++)
-          outfile << identmap3.Elem(el.PNum(j))<<"\n";
+          outfile << identmap3[el.PNum(j)]<<"\n";
         outfile << "\n";
       }
       else
@@ -373,10 +380,10 @@ void WriteJCMFormat (const Mesh & mesh,
         outfile << "-2\n\n";
         cout << "\nWarning: Quadrilateral at infinity found (this should not occur)!"<<endl;
       }
-      else if ( identmap1.Elem(el.PNum(1)) &&
-                identmap1.Elem(el.PNum(2)) &&
-                identmap1.Elem(el.PNum(3)) &&
-                identmap1.Elem(el.PNum(4))    )
+      else if ( identmap1[el.PNum(1)].IsValid() &&
+                identmap1[el.PNum(2)].IsValid() &&
+                identmap1[el.PNum(3)].IsValid() &&
+                identmap1[el.PNum(4)].IsValid())
       {
         outfile << "-1\n";
         for (j = 1; j <= 4; j++)
@@ -384,14 +391,14 @@ void WriteJCMFormat (const Mesh & mesh,
           jj = j + ct;
           if ( jj >= 5 )
             jj = jj - 4;
-          outfile << identmap1.Elem(el.PNum(jj))<<"\n";
+          outfile << identmap1[el.PNum(jj)]<<"\n";
         }
         outfile << "\n";
       }
-      else if ( identmap2.Elem(el.PNum(1)) &&
-                identmap2.Elem(el.PNum(2)) &&
-                identmap2.Elem(el.PNum(3)) &&
-                identmap2.Elem(el.PNum(4))    )
+      else if ( identmap2[el.PNum(1)].IsValid() &&
+                identmap2[el.PNum(2)].IsValid() &&
+                identmap2[el.PNum(3)].IsValid() &&
+                identmap2[el.PNum(4)].IsValid() )
       {
         outfile << "-1\n";
         for (j = 1; j <= 4; j++)
@@ -399,14 +406,14 @@ void WriteJCMFormat (const Mesh & mesh,
           jj = j + ct;
           if ( jj >= 5 )
             jj = jj - 4;
-          outfile << identmap2.Elem(el.PNum(jj))<<"\n";
+          outfile << identmap2[el.PNum(jj)] <<"\n";
         }
         outfile << "\n";
       }
-      else if ( identmap3.Elem(el.PNum(1)) &&
-                identmap3.Elem(el.PNum(2)) &&
-                identmap3.Elem(el.PNum(3)) &&
-                identmap3.Elem(el.PNum(4))    )
+      else if ( identmap3[el.PNum(1)].IsValid() &&
+                identmap3[el.PNum(2)].IsValid() &&
+                identmap3[el.PNum(3)].IsValid() &&
+                identmap3[el.PNum(4)].IsValid() )
       {
         outfile << "-1\n";
         for (j = 1; j <= 4; j++)
@@ -414,7 +421,7 @@ void WriteJCMFormat (const Mesh & mesh,
           jj = j + ct;
           if ( jj >= 5 )
             jj = jj - 4;
-          outfile << identmap3.Elem(el.PNum(jj))<<"\n";
+          outfile << identmap3[el.PNum(jj)]<<"\n";
         }
         outfile << "\n";
       }
@@ -426,5 +433,6 @@ void WriteJCMFormat (const Mesh & mesh,
   cout << " JCMwave grid file written." << endl;
 }
 
+static RegisterUserFormat reg_jcmwave ("JCMwave Format", {".jcm"}, nullopt, WriteJCMFormat);
 }
 

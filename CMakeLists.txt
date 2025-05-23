@@ -2,8 +2,12 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING INTERNAL)
 endif(NOT CMAKE_BUILD_TYPE)
 
-cmake_minimum_required(VERSION 3.13)
-cmake_policy(VERSION 3.13)
+cmake_minimum_required(VERSION 3.16)
+cmake_policy(VERSION 3.16)
+
+if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
+  cmake_policy(SET CMP0135 NEW)
+endif()
 
 include (CMakeDependentOption)
 option( USE_NATIVE_ARCH  "build for native cpu architecture" ON)
@@ -12,8 +16,8 @@ option( USE_GUI     "build with GUI" ON )
 option( USE_PYTHON  "build with python interface" ON )
 cmake_dependent_option( PREFER_SYSTEM_PYBIND11  "Use system wide PyBind11" OFF "USE_PYTHON" OFF)
 option( USE_MPI     "enable mpi parallelization" OFF )
-option( USE_MPI4PY  "enable mpi4py interface" ON )
-option( USE_OCC     "build with OpenCascade geometry kernel interface" OFF)
+option( USE_MPI_WRAPPER "enable mpi wrapper (run-time dispatch of MPI library calls)" OFF )
+option( USE_OCC     "build with OpenCascade geometry kernel interface" ON)
 option( USE_STLGEOM     "build with STL geometry support" ON)
 option( USE_CSG     "build with CSG kernel" ON)
 option( USE_INTERFACE     "build nginterface" ON)
@@ -28,7 +32,6 @@ option( USE_CCACHE       "use ccache")
 option( USE_INTERNAL_TCL "Compile tcl files into the code and don't install them" ON)
 option( ENABLE_UNIT_TESTS "Enable Catch unit tests")
 option( ENABLE_CPP_CORE_GUIDELINES_CHECK "Enable cpp core guideline checks on ngcore" OFF)
-option( USE_SPDLOG "Enable spd log logging" OFF)
 option( DEBUG_LOG "Enable more debug output (may increase computation time) - only works with USE_SPDLOG=ON" OFF)
 option( CHECK_RANGE "Check array range access, automatically enabled if built in debug mode" OFF)
 option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
@@ -71,19 +74,83 @@ endif(UNIX AND USE_SUPERBUILD)
 
 if (USE_SUPERBUILD)
   project (SUPERBUILD)
-  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
+else()
+  project(Netgen)
+endif()
+
+if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+  set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
+endif()
+
+set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
+
+if(USE_PYTHON)
+  if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+      find_package(Python3 REQUIRED COMPONENTS Development.Module)
+      if(NOT EMSCRIPTEN)
+          find_package(Python3 COMPONENTS Interpreter Development.Embed)
+      endif()
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
   endif()
 
+  if(NOT CMAKE_CROSSCOMPILING)
+      find_package(Python3 REQUIRED COMPONENTS Interpreter)
+      execute_process(COMMAND ${Python3_EXECUTABLE} -c "import os.path, sysconfig;print(os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
+      file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
+  endif(NOT CMAKE_CROSSCOMPILING)
+endif(USE_PYTHON)
+
+if(APPLE AND NOT EMSCRIPTEN)
+  set(NG_INSTALL_DIR_BIN_DEFAULT Contents/MacOS)
+  set(NG_INSTALL_DIR_LIB_DEFAULT Contents/MacOS)
+  set(NG_INSTALL_DIR_CMAKE_DEFAULT Contents/Resources/CMake)
+  set(NG_INSTALL_DIR_PYTHON_DEFAULT Contents/Resources/${PYTHON_PACKAGES_INSTALL_DIR})
+  set(NG_INSTALL_DIR_RES_DEFAULT Contents/Resources/share)
+  set(NG_INSTALL_DIR_INCLUDE_DEFAULT Contents/Resources/include)
+
+  set(NG_RPATH_TOKEN "@loader_path")
+else(APPLE AND NOT EMSCRIPTEN)
+  set(NG_INSTALL_DIR_BIN_DEFAULT bin)
+  set(NG_INSTALL_DIR_LIB_DEFAULT lib)
+  if(WIN32)
+    set(NG_INSTALL_DIR_CMAKE_DEFAULT cmake)
+  else(WIN32)
+    set(NG_INSTALL_DIR_CMAKE_DEFAULT lib/cmake/${NG_INSTALL_SUFFIX})
+  endif(WIN32)
+  set(NG_INSTALL_DIR_PYTHON_DEFAULT ${PYTHON_PACKAGES_INSTALL_DIR})
+  set(NG_INSTALL_DIR_RES_DEFAULT share)
+  set(NG_INSTALL_DIR_INCLUDE_DEFAULT include)
+
+  set(NG_RPATH_TOKEN "\$ORIGIN")
+endif(APPLE AND NOT EMSCRIPTEN)
+
+set(NG_INSTALL_DIR_PYTHON ${NG_INSTALL_DIR_PYTHON_DEFAULT} CACHE STRING "Install directory for Python files")
+set(NG_INSTALL_DIR_BIN ${NG_INSTALL_DIR_BIN_DEFAULT} CACHE STRING "Install directory for executables")
+set(NG_INSTALL_DIR_LIB ${NG_INSTALL_DIR_LIB_DEFAULT} CACHE STRING "Install directory for libraries")
+set(NG_INSTALL_DIR_INCLUDE ${NG_INSTALL_DIR_INCLUDE_DEFAULT} CACHE STRING "Install directory for header files")
+set(NG_INSTALL_DIR_CMAKE ${NG_INSTALL_DIR_CMAKE_DEFAULT} CACHE STRING "Install directory for CMake files")
+set(NG_INSTALL_DIR_RES ${NG_INSTALL_DIR_RES_DEFAULT} CACHE STRING "Install directory for resources")
+
+get_filename_component(NETGEN_CMAKE_DIR_ABSOLUTE ${NG_INSTALL_DIR_CMAKE} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_BINARY_DIR_ABSOLUTE ${NG_INSTALL_DIR_BIN} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_LIBRARY_DIR_ABSOLUTE ${NG_INSTALL_DIR_LIB} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_INCLUDE_DIR_ABSOLUTE ${NG_INSTALL_DIR_INCLUDE} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+get_filename_component(NETGEN_RESOURCE_DIR_ABSOLUTE ${NG_INSTALL_DIR_RES} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
+
+file(RELATIVE_PATH NETGEN_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${CMAKE_INSTALL_PREFIX})
+file(RELATIVE_PATH NETGEN_BINARY_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_BINARY_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_LIBRARY_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_INCLUDE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_INCLUDE_DIR_ABSOLUTE})
+file(RELATIVE_PATH NETGEN_RESOURCE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_RESOURCE_DIR_ABSOLUTE})
+
+file(RELATIVE_PATH NETGEN_RPATH ${NETGEN_BINARY_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
+
+if (USE_SUPERBUILD)
   # execute the superbuild (this script will be invoked again without the
   # USE_SUPERBUILD option this time)
   include (cmake/SuperBuild.cmake)
   return()                      # stop processing this file further
-else()
-  project(Netgen)
-  if (CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-    set(CMAKE_INSTALL_PREFIX "${INSTALL_DIR_DEFAULT}" CACHE PATH "Install directory" FORCE)
-  endif()
 endif()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -97,6 +164,7 @@ if(USE_CCACHE)
   find_program(CCACHE_FOUND NAMES ccache ccache.bat)
   if(CCACHE_FOUND)
     set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_FOUND})
+    message(STATUS "Using ccache ${CCACHE_FOUND}")
   endif(CCACHE_FOUND)
 endif(USE_CCACHE)
 
@@ -124,63 +192,6 @@ include_directories ("${PROJECT_SOURCE_DIR}/libsrc/include")
 include_directories ("${PROJECT_BINARY_DIR}")
 
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-if(USE_PYTHON)
-    find_package(PythonInterp 3 REQUIRED)
-    if(NOT BUILD_FOR_CONDA)
-      find_package(PythonLibs 3 REQUIRED)
-    endif()
-
-    execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))" OUTPUT_VARIABLE PYTHON_PACKAGES_INSTALL_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
-    file(TO_CMAKE_PATH ${PYTHON_PACKAGES_INSTALL_DIR} PYTHON_PACKAGES_INSTALL_DIR)
-endif(USE_PYTHON)
-
-set(NG_INSTALL_SUFFIX netgen CACHE STRING "Suffix appended to install directories (project name)")
-
-if(APPLE)
-  set(NG_INSTALL_DIR_BIN_DEFAULT Contents/MacOS)
-  set(NG_INSTALL_DIR_LIB_DEFAULT Contents/MacOS)
-  set(NG_INSTALL_DIR_CMAKE_DEFAULT Contents/Resources/CMake)
-  set(NG_INSTALL_DIR_PYTHON_DEFAULT Contents/Resources/${PYTHON_PACKAGES_INSTALL_DIR})
-  set(NG_INSTALL_DIR_RES_DEFAULT Contents/Resources/share)
-  set(NG_INSTALL_DIR_INCLUDE_DEFAULT Contents/Resources/include)
-
-  set(NG_RPATH_TOKEN "@loader_path")
-else(APPLE)
-  set(NG_INSTALL_DIR_BIN_DEFAULT bin)
-  set(NG_INSTALL_DIR_LIB_DEFAULT lib)
-  if(WIN32)
-    set(NG_INSTALL_DIR_CMAKE_DEFAULT cmake)
-  else(WIN32)
-    set(NG_INSTALL_DIR_CMAKE_DEFAULT lib/cmake/${NG_INSTALL_SUFFIX})
-  endif(WIN32)
-  set(NG_INSTALL_DIR_PYTHON_DEFAULT ${PYTHON_PACKAGES_INSTALL_DIR})
-  set(NG_INSTALL_DIR_RES_DEFAULT share)
-  set(NG_INSTALL_DIR_INCLUDE_DEFAULT include)
-
-  set(NG_RPATH_TOKEN "\$ORIGIN")
-endif(APPLE)
-
-set(NG_INSTALL_DIR_PYTHON ${NG_INSTALL_DIR_PYTHON_DEFAULT} CACHE STRING "Install directory for Python files")
-set(NG_INSTALL_DIR_BIN ${NG_INSTALL_DIR_BIN_DEFAULT} CACHE STRING "Install directory for executables")
-set(NG_INSTALL_DIR_LIB ${NG_INSTALL_DIR_LIB_DEFAULT} CACHE STRING "Install directory for libraries")
-set(NG_INSTALL_DIR_INCLUDE ${NG_INSTALL_DIR_INCLUDE_DEFAULT} CACHE STRING "Install directory for header files")
-set(NG_INSTALL_DIR_CMAKE ${NG_INSTALL_DIR_CMAKE_DEFAULT} CACHE STRING "Install directory for CMake files")
-set(NG_INSTALL_DIR_RES ${NG_INSTALL_DIR_RES_DEFAULT} CACHE STRING "Install directory for resources")
-
-get_filename_component(NETGEN_CMAKE_DIR_ABSOLUTE ${NG_INSTALL_DIR_CMAKE} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
-get_filename_component(NETGEN_BINARY_DIR_ABSOLUTE ${NG_INSTALL_DIR_BIN} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
-get_filename_component(NETGEN_LIBRARY_DIR_ABSOLUTE ${NG_INSTALL_DIR_LIB} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
-get_filename_component(NETGEN_INCLUDE_DIR_ABSOLUTE ${NG_INSTALL_DIR_INCLUDE} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
-get_filename_component(NETGEN_RESOURCE_DIR_ABSOLUTE ${NG_INSTALL_DIR_RES} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
-
-file(RELATIVE_PATH NETGEN_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${CMAKE_INSTALL_PREFIX})
-file(RELATIVE_PATH NETGEN_BINARY_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_BINARY_DIR_ABSOLUTE})
-file(RELATIVE_PATH NETGEN_LIBRARY_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
-file(RELATIVE_PATH NETGEN_INCLUDE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_INCLUDE_DIR_ABSOLUTE})
-file(RELATIVE_PATH NETGEN_RESOURCE_DIR ${NETGEN_CMAKE_DIR_ABSOLUTE} ${NETGEN_RESOURCE_DIR_ABSOLUTE})
-
-file(RELATIVE_PATH NETGEN_RPATH ${NETGEN_BINARY_DIR_ABSOLUTE} ${NETGEN_LIBRARY_DIR_ABSOLUTE})
 
 if(USE_PYTHON)
     get_filename_component(NETGEN_PYTHON_DIR_ABSOLUTE ${NG_INSTALL_DIR_PYTHON} ABSOLUTE BASE_DIR ${CMAKE_INSTALL_PREFIX})
@@ -252,7 +263,6 @@ target_include_directories(nglib PRIVATE ${ZLIB_INCLUDE_DIRS})
 if(USE_GUI)
     target_include_directories(nggui PRIVATE ${ZLIB_INCLUDE_DIRS})
 endif(USE_GUI)
-target_link_libraries(nglib PRIVATE ${ZLIB_LIBRARIES})
 
 #######################################################################
 if(WIN32)
@@ -313,11 +323,11 @@ if (USE_PYTHON)
       add_subdirectory(external_dependencies/pybind11)
     endif()
 
-    target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
-    target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${PYTHON_INCLUDE_DIRS})
-    if(NOT ${BUILD_FOR_CONDA} OR WIN32)
-        # Don't link python libraries in conda environments
-        target_link_libraries(netgen_python INTERFACE ${PYTHON_LIBRARIES})
+    target_compile_definitions(netgen_python INTERFACE NG_PYTHON NETGEN_PYTHON)
+    target_include_directories(netgen_python INTERFACE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+    target_include_directories(nglib PRIVATE ${pybind11_INCLUDE_DIR} ${Python3_INCLUDE_DIRS})
+    if(Python3_LIBRARIES AND (WIN32 OR NOT BUILD_FOR_CONDA))
+        target_link_libraries(netgen_python INTERFACE ${Python3_LIBRARIES})
     endif()
 
     if(NG_INSTALL_PYBIND)
@@ -327,30 +337,19 @@ if (USE_PYTHON)
 endif (USE_PYTHON)
 
 #######################################################################
-add_library(netgen_mpi INTERFACE)
 add_library(netgen_metis INTERFACE)
 if (USE_MPI)
-    find_package(MPI REQUIRED)
-    target_include_directories(netgen_mpi INTERFACE ${MPI_CXX_INCLUDE_PATH})
-    target_link_libraries(netgen_mpi INTERFACE ${MPI_mpi_LIBRARY} ${MPI_CXX_LIBRARIES} )
-    target_compile_definitions(netgen_mpi INTERFACE PARALLEL )
+    set(MPI_DETERMINE_LIBRARY_VERSION TRUE)
+    find_package(MPI)
 
     find_package(METIS REQUIRED)
     target_include_directories(netgen_metis INTERFACE ${METIS_INCLUDE_DIR})
     target_link_libraries(netgen_metis INTERFACE ${METIS_LIBRARY} )
     target_compile_definitions(netgen_metis INTERFACE METIS )
-
-    if(USE_MPI4PY AND USE_PYTHON)
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} -c "import mpi4py;print(mpi4py.get_include())" OUTPUT_VARIABLE mpi4py_path OUTPUT_STRIP_TRAILING_WHITESPACE)
-      find_path(MPI4PY_INCLUDE_DIR mpi4py.h HINTS ${mpi4py_path}/mpi4py NO_DEFAULT_PATH REQUIRED)
-      target_include_directories(netgen_metis INTERFACE ${MPI4PY_INCLUDE_DIR})
-      target_compile_definitions(netgen_metis INTERFACE NG_MPI4PY )
-      message(STATUS "Found mpi4py: ${MPI4PY_INCLUDE_DIR}")
-    endif(USE_MPI4PY AND USE_PYTHON)
 endif (USE_MPI)
-install(TARGETS netgen_mpi netgen_metis ${NG_INSTALL_DIR})
 
 #######################################################################
+add_library(occ_libs INTERFACE IMPORTED)
 if (USE_OCC)
     find_package(OpenCascade NAMES OpenCASCADE opencascade REQUIRED CMAKE_FIND_ROOT_PATH_BOTH)
     add_definitions(-DOCCGEOMETRY)
@@ -366,53 +365,66 @@ if (USE_OCC)
       TKGeomAlgo
       TKGeomBase
       TKHLR
-      TKIGES
       TKLCAF
       TKMath
       TKMesh
       TKOffset
       TKPrim
-      TKSTEP
-      TKSTEP209
-      TKSTEPAttr
-      TKSTEPBase
-      TKSTL
       TKService
       TKShHealing
       TKTopAlgo
       TKV3d
       TKVCAF
       TKXCAF
-      TKXDEIGES
-      TKXDESTEP
       TKXSBase
       TKernel
     )
-    include_directories(${OpenCASCADE_INCLUDE_DIR})
+    if(${OpenCASCADE_MAJOR_VERSION}.${OpenCASCADE_MINOR_VERSION} VERSION_GREATER_EQUAL 7.8)
+      list(APPEND OCC_LIBRARIES TKDEIGES TKDESTEP TKDESTL)
+    else()
+      list(APPEND OCC_LIBRARIES
+        TKIGES
+        TKSTEP
+        TKSTL
+        TKXDEIGES
+        TKXDESTEP
+        TKSTEP209
+        TKSTEPAttr
+        TKSTEPBase
+        )
+    endif()
+    if(UNIX AND NOT APPLE)
+      list(PREPEND OCC_LIBRARIES -Wl,--start-group)
+      list(APPEND OCC_LIBRARIES -Wl,--end-group)
+    endif()
+
+    target_link_libraries(occ_libs INTERFACE ${OCC_LIBRARIES})
+    get_target_property(occ_include_dir TKernel INTERFACE_INCLUDE_DIRECTORIES)
+    if(NOT occ_include_dir)
+      set(occ_include_dir ${OpenCASCADE_INCLUDE_DIR})
+    endif()
+    target_include_directories(occ_libs INTERFACE ${occ_include_dir})
+    message(STATUS "OpenCasCade include dirs: ${occ_include_dir}")
     if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
       if(OpenCASCADE_WITH_FREETYPE)
-        find_library( FREETYPE NAMES freetype HINTS ${OpenCASCADE_INSTALL_PREFIX}/lib)
+        find_library( FREETYPE NAMES freetype HINTS ${OpenCASCADE_LIBRARY_DIR})
         list(APPEND OCC_LIBRARIES ${FREETYPE})
+        target_link_libraries(occ_libs INTERFACE ${FREETYPE})
         if(UNIX AND NOT APPLE)
           find_package(Fontconfig REQUIRED)
-          list(APPEND OCC_LIBRARIES ${Fontconfig_LIBRARIES})
+          target_link_libraries(occ_libs INTERFACE ${Fontconfig_LIBRARIES})
         endif()
       endif(OpenCASCADE_WITH_FREETYPE)
-      if(UNIX AND NOT APPLE)
-        set(THREADS_PREFER_PTHREAD_FLAG ON)
-        find_package(Threads REQUIRED)
-        list(APPEND OCC_LIBRARIES Threads::Threads)
-        list(PREPEND OCC_LIBRARIES -Wl,--start-group)
-        list(APPEND OCC_LIBRARIES -Wl,--end-group)
-      endif()
-      if(WIN32)
-          list(APPEND OCC_LIBRARIES Ws2_32.lib)
-      endif()
+      set(THREADS_PREFER_PTHREAD_FLAG ON)
+      find_package(Threads REQUIRED)
+      target_link_libraries(occ_libs INTERFACE Threads::Threads)
     endif()
-    message(STATUS "OCC DIRS ${OpenCASCADE_INCLUDE_DIR}")
     if(WIN32 AND USE_GUI)
-      target_link_libraries(nggui PRIVATE ${OCC_LIBRARIES})
+      target_link_libraries(nggui PRIVATE Ws2_32.lib)
     endif(WIN32 AND USE_GUI)
+    if(USE_GUI)
+      target_link_libraries(nggui PRIVATE occ_libs)
+    endif(USE_GUI)
 endif (USE_OCC)
 
 #######################################################################
@@ -620,6 +632,16 @@ if(UNIX)
         set(CPACK_PACKAGE_FILE_NAME "netgen-${PACKAGE_VERSION}_${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")   
     endif(temp)
 endif(UNIX)
+
+if(USE_PYTHON AND NOT SKBUILD)
+  # install egg file to let python/pip know that Netgen ist installed
+  file( WRITE "netgen_mesher-py3.egg-info"
+"Metadata-Version: 2.1
+Name: netgen-mesher
+Version: ${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}.${NETGEN_VERSION_PATCH}.post${NETGEN_VERSION_TWEAK}
+")
+  install(FILES netgen_mesher-py3.egg-info DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
+endif()
 
 if(APPLE AND NOT SKBUILD)
     # create some auxiliary files

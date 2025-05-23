@@ -14,13 +14,11 @@ namespace ngcore
   {
     if (py::isinstance<py::dict>(value))
       {             
-        py::dict vdd(value);
-        // call recursively to set dictionary
-        for (auto item : vdd) {
-          string name = item.first.cast<string>();
-          py::object val = py::reinterpret_borrow<py::object>(item.second);
-          SetFlag(flags, name, val);
-        }
+        Flags nested_flags;
+        for(auto item : value.cast<py::dict>())
+          SetFlag(nested_flags, item.first.cast<string>(),
+                  item.second.cast<py::object>());
+        flags.SetFlag(s, nested_flags);
         return;
       }
 
@@ -103,7 +101,9 @@ namespace ngcore
           }
       }
 
-    auto flags = py::cast<Flags>(flags_dict);
+    Flags flags;
+    for(auto item : flags_dict)
+      SetFlag(flags, item.first.cast<string>(), item.second.cast<py::object>());
 
     for (auto item : kwargs)
       {

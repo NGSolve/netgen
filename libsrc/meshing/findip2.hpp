@@ -1,4 +1,10 @@
+#ifndef NETGEN_FINDIP2_HPP
+#define NETGEN_FINDIP2_HPP
+
 // find inner point
+
+namespace netgen
+{
 
 template <typename POINTArray, typename FACEArray>
 inline int FindInnerPoint2 (POINTArray & points,
@@ -93,3 +99,5 @@ inline int FindInnerPoint2 (POINTArray & points,
   return (fmin < -1e-3 * hmax);
 }
 
+} // namespace netgen
+#endif // NETGEN_FINDIP2_HPP

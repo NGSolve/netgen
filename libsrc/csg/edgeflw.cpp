@@ -567,7 +567,7 @@ namespace netgen
     {
     //    int i, j;
     SegmentIndex si;
-    PointIndex pi;
+    // PointIndex pi;
 
     NgArray<int> osedges(cntedge);
     INDEX_2_HASHTABLE<int> osedgesht (cntedge+1);
@@ -610,7 +610,7 @@ namespace netgen
     for (int i = 1; i <= osedgesht.GetNBags(); i++)
       for (int j = 1; j <= osedgesht.GetBagSize(i); j++)
 	{
-	  INDEX_2 i2; 
+	  PointIndices<2> i2; 
 	  int val;
 	  osedgesht.GetData (i, j, i2, val);
 
@@ -619,8 +619,8 @@ namespace netgen
 	  Vec<3> v = p2 - p1;
 	  double vlen = v.Length();
 	  v /= vlen;
-	  for (pi = PointIndex::BASE; 
-	       pi < mesh.GetNP()+PointIndex::BASE; pi++)
+	  for (PointIndex pi = IndexBASE<PointIndex>(); 
+	       pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 
 	    if (pi != i2.I1() && pi != i2.I2())
 	      {
@@ -1371,8 +1371,8 @@ namespace netgen
     lastpi = PointIndex::INVALID;
 
     /*
-    for (pi = PointIndex::BASE; 
-	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
+    for (pi = IndexBASE<PointIndex>(); 
+	 pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
       if (Dist (mesh[pi], p) < 1e-6)
 	{
 	  lastpi = pi;
@@ -1414,8 +1414,8 @@ namespace netgen
 	if (i == ne)
 	  {
 	    /*
-	  for (pi = PointIndex::BASE; 
-	       pi < mesh.GetNP()+PointIndex::BASE; pi++)
+	  for (pi = IndexBASE<PointIndex>(); 
+	       pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 	    if (Dist(mesh[pi], np) < 1e-6)
 	      thispi = pi;
 	    */
@@ -1539,8 +1539,8 @@ namespace netgen
     // generate initial point
     Point<3> p = edgepoints[0];
     PointIndex pi1 = PointIndex::INVALID;
-    for (pi = PointIndex::BASE; 
-	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
+    for (PointIndex pi = IndexBASE<PointIndex>(); 
+	 pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 
       if (Dist (mesh[pi], p) < 1e-6*geometry.MaxSize())
 	{
@@ -1557,8 +1557,8 @@ namespace netgen
 
     p = edgepoints.Last();
     PointIndex pi2 = PointIndex::INVALID;
-    for (pi = PointIndex::BASE; 
-	 pi < mesh.GetNP()+PointIndex::BASE; pi++)
+    for (pi = IndexBASE<PointIndex>(); 
+	 pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 
       if (Dist (mesh[pi], p) < 1e-6*geometry.MaxSize())
 	{
@@ -1646,7 +1646,7 @@ namespace netgen
 	    Mesh & mesh)
   {
     int k;
-    PointIndex pi;
+    // PointIndex pi;
 
     double size = geometry.MaxSize();
     
@@ -1660,8 +1660,8 @@ namespace netgen
       
 	PointIndex frompi = PointIndex::INVALID;
 	PointIndex topi = PointIndex::INVALID;
-	for (pi = PointIndex::BASE; 
-	     pi < mesh.GetNP()+PointIndex::BASE; pi++)
+	for (PointIndex pi = IndexBASE<PointIndex>(); 
+	     pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 	  {
 	    if (Dist2 (mesh[pi], fromp) <= 1e-16*size)
 	      frompi = pi;
@@ -1714,12 +1714,12 @@ namespace netgen
 	if (oldseg.seginfo == 0)
 	  continue;
 
-	int pi1 = oldseg[0];
-	int pi2 = oldseg[1];
+	PointIndex pi1 = oldseg[0];
+	PointIndex pi2 = oldseg[1];
 
-	int npi1 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi1 = geometry.identifications.Get(copyedgeidentification)
 	  -> GetIdentifiedPoint (mesh, pi1);
-	int npi2 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi2 = geometry.identifications.Get(copyedgeidentification)
 	  -> GetIdentifiedPoint (mesh, pi2);
 
 	//(*testout) << "copy edge, pts = " << npi1 << " - " << npi2 << endl;
@@ -1885,12 +1885,10 @@ namespace netgen
 
 	    if (seg1.domin != -1 || seg1.domout != -1)
 	      {
-		mesh.AddPoint (p1, layer, EDGEPOINT);
-		mesh.AddPoint (p2, layer, EDGEPOINT);
-		seg1[0] = mesh.GetNP()-1;
-		seg1[1] = mesh.GetNP();
-		seg2[1] = mesh.GetNP()-1;
-		seg2[0] = mesh.GetNP();
+                seg1[0] = mesh.AddPoint (p1, layer, EDGEPOINT);
+                seg1[1] = mesh.AddPoint (p2, layer, EDGEPOINT);
+                seg2[0] = seg1[1];
+                seg2[1] = seg1[0];
 		seg1.geominfo[0].trignum = 1;
 		seg1.geominfo[1].trignum = 1;
 		seg2.geominfo[0].trignum = 1;

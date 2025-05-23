@@ -125,15 +125,15 @@ namespace ngcore
     /// Returns std::string flag, default value if not exists
     std::string GetStringFlag (const std::string & name, std::string def = "") const;
     /// Returns numerical flag, default value if not exists
-    double GetNumFlag (const std::string & name, double def) const;
+    double GetNumFlag (std::string_view name, double def) const;
     /// Returns address of numerical flag, null if not exists
-    const double * GetNumFlagPtr (const std::string & name) const;
+    const double * GetNumFlagPtr (std::string_view name) const;
     /// Returns address of numerical flag, null if not exists
     double * GetNumFlagPtr (const std::string & name);
     /// Returns boolean flag
     // int GetDefineFlag (const char * name) const;
-    bool GetDefineFlag (const std::string & name) const throw();
-    xbool GetDefineFlagX (const std::string & name) const throw();
+    bool GetDefineFlag (std::string_view name) const  noexcept;
+    xbool GetDefineFlagX (std::string_view name) const  noexcept;
     /// Returns string list flag, empty array if not exist
     const Array<std::string> & GetStringListFlag (const std::string & name) const;
     /// Returns num list flag, empty array if not exist
@@ -144,16 +144,16 @@ namespace ngcore
 
 
     /// Test, if string flag is defined
-    bool StringFlagDefined (const std::string & name) const;
+    bool StringFlagDefined (std::string_view name) const noexcept;
     /// Test, if num flag is defined
-    bool NumFlagDefined (const std::string & name) const;
+    bool NumFlagDefined (std::string_view name) const noexcept;
     /// Test, if num flag is defined
-    bool FlagsFlagDefined (const std::string & name) const;
+    bool FlagsFlagDefined (std::string_view name) const noexcept;
     /// Test, if string list flag is defined
-    bool StringListFlagDefined (const std::string & name) const;
+    bool StringListFlagDefined (std::string_view name) const noexcept;
     /// Test, if num list flag is defined
-    bool NumListFlagDefined (const std::string & name) const;
-    bool AnyFlagDefined (const std::string& name) const;
+    bool NumListFlagDefined (std::string_view name) const noexcept;
+    bool AnyFlagDefined (std::string_view name) const noexcept;
 
     /// number of string flags
     int GetNStringFlags () const { return strflags.Size(); }

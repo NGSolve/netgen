@@ -7,6 +7,8 @@
 /* Date:   20. Nov. 99                                                    */
 /**************************************************************************/
 
+#include <general/mystring.hpp>
+
 
 namespace netgen
 {

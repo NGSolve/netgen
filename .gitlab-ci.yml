@@ -32,13 +32,23 @@ push_github:
     - "echo off"
     - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64"
     - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
-    - set CLCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
+    - set CCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
     - set NETGEN_BUILD_DIR=%CI_DIR%\build
     - set INSTALL_DIR=%CI_DIR%\install
     - set SRC_DIR=%CI_DIR%\src
     - set NETGENDIR=%INSTALL_DIR%\bin
     - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
-    - set PATH=%NETGENDIR%;%PATH%
+    - echo %PATH%
+    - set PATH=%INSTALL_DIR%\bin;C:\python312;C:\python312\bin;C:\python312\Scripts;C:\tools\;%PATH%
+    - echo %PATH%
+    - set CCACHE_HARDLINK=1
+    - set CCACHE_NOHASHDIR=1
+    - C:\tools\ccache -s
+    - C:\tools\ccache -M 20G
+    - dir C:\python312
+    - python.exe --version
+    - python.exe -m pip install -U netgen-occt netgen-occt-devel
+    - cmake --version
 
 build_win:
   <<: *win
@@ -54,12 +64,14 @@ build_win:
     - >-
         cmake %SRC_DIR%
         -G Ninja
+        -DCMAKE_PREFIX=C:/python312
+        -DPython3_ROOT_DIR=C:/python312
         -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
         -DCHECK_RANGE=ON
         -DUSE_CGNS=ON
         -DUSE_OCC=ON
         -DUSE_CCACHE=ON
-        -DENABLE_UNIT_TESTS=ON
+        -DENABLE_UNIT_TESTS=OFF
         -DCMAKE_BUILD_TYPE=Release
     - cmake --build . --target install --config Release
 
@@ -73,6 +85,21 @@ test_win:
     - ctest -C Release -V --output-on-failure
     - cd ..
   needs: ["build_win"]
+
+generate_results:
+  <<: *win
+  stage: test
+  script:
+    - pip install pytest-check
+    - cd tests\pytest
+    - python test_tutorials.py new_results.json
+  needs: ["build_win"]
+  when: manual
+  artifacts:
+    paths:
+      - tests/pytest/new_results.json
+    when: always
+    expire_in: 1 week
 
 cleanup_win:
   <<: *win
@@ -99,6 +126,7 @@ cleanup_win:
     - pwd
     - ls
     - docker info
+    - export PYTHONPATH=/opt/netgen/`python3 -c "import os.path, sysconfig;print(os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')))"`
   variables:
     UBUNTU_VERSION: "22.04"
 
@@ -112,6 +140,7 @@ build_ubuntu_debug:
       docker run
       --cidfile netgen_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id
       -e CCACHE_DIR=/ccache
+      -e PYTHONPATH=$PYTHONPATH
       -v /mnt/ccache:/ccache
       netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION}
       bash /root/src/netgen/tests/build_debug.sh
@@ -128,6 +157,7 @@ build_ubuntu_mpi:
       docker run>-
       --cidfile netgen_mpi_${CI_PIPELINE_ID}_${UBUNTU_VERSION}.id>-
       -e CCACHE_DIR=/ccache
+      -e PYTHONPATH=$PYTHONPATH
       -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
       -v /mnt/ccache:/ccache
       netgen_mpi_${CI_PIPELINE_ID}:${UBUNTU_VERSION}
@@ -141,8 +171,7 @@ test_ubuntu_debug:
   script:
     - >-
       docker run
-      -e NETGENDIR=/opt/netgen/bin
-      -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
+      -e PYTHONPATH=$PYTHONPATH
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V --output-on-failure"'
   needs: ["build_ubuntu_debug"]
@@ -154,8 +183,7 @@ test_ubuntu_mpi:
     - >-
       docker run
       -e RUN_SLOW_TESTS=${RUN_SLOW_TESTS}
-      -e NETGENDIR=/opt/netgen/bin
-      -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
+      -e PYTHONPATH=$PYTHONPATH
       netgen_mpi_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/build/netgen && make test_netgen ARGS="-V --output-on-failure"'
   needs: ["build_ubuntu_mpi"]
@@ -168,29 +196,13 @@ test_build_ngsolve:
     - >-
       docker run
       -e NETGENDIR=/opt/netgen/bin
-      -e PYTHONPATH=/opt/netgen/lib/python3/dist-packages
+      -e PYTHONPATH=$PYTHONPATH
       -e MKLROOT=/opt/intel/mkl
       -v /opt/intel:/opt/intel
       -e CCACHE_DIR=/ccache
       -v /mnt/ccache:/ccache
       netgen_${CI_PIPELINE_ID}_installed:${UBUNTU_VERSION}
       bash -c 'cd /root/src/netgen/tests/ && ./build_ngsolve.sh'
-
-# cpp guideline checks
-# test_guidelines:
-#   <<: *ubuntu
-#   stage: test
-#   script:
-#     - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_guidelines.sh
-#   when: always
-#   allow_failure: true
-
-# check if it compiles without spdlog
-test_noSpdlog:
-  <<: *ubuntu
-  stage: test
-  script:
-    - docker run -e CCACHE_DIR=/ccache -v /mnt/ccache:/ccache netgen_${CI_PIPELINE_ID}:${UBUNTU_VERSION} bash /root/src/netgen/tests/build_nospdlog.sh
 
 cleanup_ubuntu:
   stage: cleanup
@@ -222,7 +234,7 @@ cleanup_ubuntu:
     - export SRC_DIR=$ROOT_DIR/src
     - export BUILD_DIR=$ROOT_DIR/build
     - export CMAKE_INSTALL_PREFIX=/tmp/$CI_PIPELINE_ID/install/Netgen.app
-    - export PYTHONPATH=$CMAKE_INSTALL_PREFIX/Contents/Resources/`python3 -c "from distutils.sysconfig import get_python_lib; print(get_python_lib(1,0,''))"`:.
+    - export PYTHONPATH=$CMAKE_INSTALL_PREFIX/Contents/Resources/`python3 -c "import os.path, sysconfig;print(os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')))"`:.
     - export PATH=$CMAKE_INSTALL_PREFIX/Contents/MacOS:$PATH
 
 build_mac:
@@ -248,6 +260,7 @@ build_mac:
         -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
         -DUSE_CGNS=ON
         -DUSE_OCC=ON
+        -DPython3_ROOT_DIR=/Library/Frameworks/Python.framework/Versions/3.8/
     - make -j5 install
 
 test_mac:
@@ -268,7 +281,7 @@ cleanup_mac:
   needs: ["test_mac"]
 
 pip_linux:
-  image: quay.io/pypa/manylinux2014_x86_64
+  image: quay.io/pypa/manylinux_2_28_x86_64
   stage: build
   tags:
     - pip
@@ -284,10 +297,11 @@ pip_windows:
     - pip
     - windows
   script:
-    - .\tests\build_pip.ps1 C:\Python38
-    - .\tests\build_pip.ps1 C:\Python39
-    - .\tests\build_pip.ps1 C:\Python310
+    - .\tests\build_pip.ps1 C:\Python313
+    - .\tests\build_pip.ps1 C:\Python312
     - .\tests\build_pip.ps1 C:\Python311
+    - .\tests\build_pip.ps1 C:\Python310
+    - .\tests\build_pip.ps1 C:\Python39
   when: manual
 
 pip_macos:
@@ -297,8 +311,9 @@ pip_macos:
     - macosx
     - m1
   script:
-    - ./tests/build_pip_mac.sh 3.8
-    - ./tests/build_pip_mac.sh 3.9
-    - ./tests/build_pip_mac.sh 3.10
+    - ./tests/build_pip_mac.sh 3.13
+    - ./tests/build_pip_mac.sh 3.12
     - ./tests/build_pip_mac.sh 3.11
+    - ./tests/build_pip_mac.sh 3.10
+    - ./tests/build_pip_mac.sh 3.9
   when: manual

@@ -1,6 +1,8 @@
 #ifndef FILE_NETRULE
 #define FILE_NETRULE
 
+namespace netgen
+{
 ///
 class netrule
 {
@@ -165,5 +167,6 @@ public:
 /** Draws 2D rules.
     Visual testing of 2D meshing rules */
 extern void DrawRules ();
+} // namespace netgen
 #endif
 

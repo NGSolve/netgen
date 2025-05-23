@@ -57,7 +57,7 @@ void WriteElmerFormat (const Mesh &mesh,
   int ne = mesh.GetNE();
   int nse = mesh.GetNSE();
   int i, j;
-  char str[200];
+  // char str[200];
   
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
@@ -196,5 +196,7 @@ void WriteElmerFormat (const Mesh &mesh,
   for( auto & [eltype,count] : elcount )
       outfile_h << tmap[eltype] << " " << count << "\n";
 }
+
+static RegisterUserFormat reg_elmer ("Elmer Format", {"*"}, nullopt, WriteElmerFormat);
 
 }

@@ -18,7 +18,6 @@ namespace netgen
   class TriangleApproximation;
   class TATriangle;
 
-
   /**
      A top level object is an entity to be meshed.
      I can be either a solid, or one surface patch of a solid.

@@ -2,6 +2,8 @@
 #include <catch2/catch.hpp>
 #include <../core/ngcore.hpp>
 #include <core/register_archive.hpp>
+#include <core/logging.hpp>
+#include <meshing.hpp>
 using namespace ngcore;
 using namespace std;
 
@@ -84,12 +86,34 @@ public:
   const int* getPtr() { return ptr; }
 };
 
-class OneMoreDerivedClass : public SharedPtrAndPtrHolder {};
+class ClassWithoutDefaultConstructor
+{
+public:
+  int a;
+  double b;
+  double c;
+  ClassWithoutDefaultConstructor(int aa, double c) : a(aa), c(c) {}
+
+  void DoArchive(Archive& ar)
+  {
+    ar & b;
+  }
+
+  auto GetCArgs()
+  {
+    return make_tuple(a, c);
+  }
+};
+
+static RegisterClassForArchive<ClassWithoutDefaultConstructor> regwdc;
+
+class OneMoreDerivedClass : public SharedPtrAndPtrHolder {
+};
 
 static RegisterClassForArchive<CommonBase> regb;
 static RegisterClassForArchive<SharedPtrHolder, CommonBase> regsp;
 static RegisterClassForArchive<PtrHolder, CommonBase> regp;
-static RegisterClassForArchive<SharedPtrAndPtrHolder, SharedPtrHolder, PtrHolder> regspp;
+static RegisterClassForArchive<SharedPtrAndPtrHolder, tuple<SharedPtrHolder, PtrHolder>> regspp;
 static RegisterClassForArchive<OneMoreDerivedClass, SharedPtrAndPtrHolder> regom;
 
 void testNullPtr(Archive& in, Archive& out)
@@ -332,6 +356,19 @@ void testArchive(Archive& in, Archive& out)
       SharedPtrAndPtrHolder* p = new NotRegisteredForArchive;
       REQUIRE_THROWS(out & p, Catch::Contains("not registered for archive"));
     }
+  SECTION("Non-default constructor")
+    {
+      ClassWithoutDefaultConstructor c(5, 2.2);
+      c.b = 3.2;
+      auto p = &c;
+      out & p;
+      out.FlushBuffer();
+      ClassWithoutDefaultConstructor* cin;
+      in & cin;
+      CHECK(cin->a == 5);
+      CHECK(cin->b == 3.2);
+      CHECK(cin->c == 2.2);
+    }
   SECTION("nullptr")
     {
       testNullPtr(in, out);
@@ -364,4 +401,36 @@ TEST_CASE("TextArchive")
   TextOutArchive out(stream);
   TextInArchive in(stream);
   testArchive(in, out);
+}
+
+
+template <typename T>
+auto CheckCopyWithArchive(const T * v) {
+  T * tcopy = nullptr;
+  auto tstream = make_shared<stringstream>();
+  TextOutArchive tout(tstream);
+  tout & v;
+  TextInArchive tin(tstream);
+  tin & tcopy;
+
+  T *bcopy = nullptr;
+  auto bstream = make_shared<stringstream>();
+  BinaryOutArchive bout(bstream);
+  bout & v;
+  bout.FlushBuffer();
+  BinaryInArchive in(bstream);
+  in & bcopy;
+
+  CHECK(*v == *tcopy);
+  CHECK(*v == *bcopy);
+  CHECK(*bcopy == *bcopy);
+}
+
+TEST_CASE("CopyWithArchive")
+{
+  Array<int> aint{1,2,5,67,23252};
+  CheckCopyWithArchive(&aint);
+
+  std::vector<byte> abyte{byte(1), byte(3), byte(255), byte(0), byte(76)};
+  CheckCopyWithArchive(&abyte);
 }

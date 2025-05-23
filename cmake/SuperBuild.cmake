@@ -14,9 +14,16 @@ set (SUBPROJECT_ARGS
     PREFIX ${CMAKE_CURRENT_BINARY_DIR}/dependencies
 )
 
+if (EMSCRIPTEN)
+    set (SUBPROJECT_ARGS
+        ${SUBPROJECT_ARGS}
+        CMAKE_COMMAND emcmake ${CMAKE_COMMAND})
+endif()
+
 # only show output on failure in ci-builds
 if(DEFINED ENV{CI})
     set (SUBPROJECT_ARGS
+        ${SUBPROJECT_ARGS}
         LOG_DOWNLOAD ON
         LOG_BUILD ON
         LOG_INSTALL ON
@@ -50,7 +57,7 @@ set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_C_COMPILER)
 set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_CXX_COMPILER)
 set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_BUILD_TYPE)
 
-set(SUBPROJECT_CMAKE_ARGS "${SUBPROJECT_CMAKE_ARGS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON" CACHE INTERNAL "")
+set(SUBPROJECT_CMAKE_ARGS "${SUBPROJECT_CMAKE_ARGS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON;-DCMAKE_POLICY_VERSION_MINIMUM=3.5" CACHE INTERNAL "")
 
 if(USE_CCACHE)
   find_program(CCACHE_FOUND NAMES ccache ccache.bat)
@@ -82,8 +89,12 @@ if(BUILD_OCC)
   set(OCC_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/occ)
 
   ExternalProject_Add(project_occ
-    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_1.zip
-    URL_MD5 e891d85cad61c5cc7ccba3d0110f0c8c
+    # URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_6_3.zip
+    # URL_MD5 2426e373903faabbd4f96a01a934b66d
+    # URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_7_2.zip
+    # URL_MD5 533eb4f18af0f77ae321b158caeaee79
+    URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V7_8_1.zip
+    URL_MD5 bf62952a03696dab9e4272aa8efacb1a
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     ${SUBPROJECT_ARGS}
     CMAKE_ARGS
@@ -97,6 +108,7 @@ if(BUILD_OCC)
          -DBUILD_MODULE_Visualization:BOOL=OFF
          -DBUILD_MODULE_ApplicationFramework:BOOL=OFF
          -DBUILD_MODULE_Draw:BOOL=OFF
+         -DBUILD_MODULE_DETools:BOOL=OFF
          -DUSE_FREETYPE:BOOL=OFF
          -DUSE_OPENGL:BOOL=OFF
          -DUSE_XLIB:BOOL=OFF
@@ -108,44 +120,42 @@ if(BUILD_OCC)
   list(APPEND NETGEN_DEPENDENCIES project_occ)
   set(OpenCascade_ROOT ${OCC_DIR})
 else(BUILD_OCC)
-    if(WIN32 AND NOT OCC_INCLUDE_DIR AND NOT OpenCASCADE_DIR)
-        # we can download prebuilt occ binaries for windows
-        ExternalProject_Add(win_download_occ
-          ${SUBPROJECT_ARGS}
-          URL ${OCC_DOWNLOAD_URL_WIN}
-          UPDATE_COMMAND "" # Disable update
-          BUILD_IN_SOURCE 1
-          CONFIGURE_COMMAND ""
-          BUILD_COMMAND ""
-          INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_directory . ${CMAKE_INSTALL_PREFIX}
-          )
-        list(APPEND NETGEN_DEPENDENCIES win_download_occ)
-    else()
-        find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade REQUIRED)
+    find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
+    if(NOT OpenCascade_FOUND)
+      message(FATAL_ERROR "Opencascade not found, either\n\
+      - install pip packages netgen-occt-devel netgen-occ\n\
+      - set OpenCascade_DIR to a directory containting opencascadeConfig.cmake\n\
+      - build OpenCascade automatically by passing -DBUILD_OCC=ON\n\
+      - disable OpenCascade by passing -DUSE_OCC=OFF\n\
+      ")
     endif()
 endif(BUILD_OCC)
 endif(USE_OCC)
 
 if(BUILD_ZLIB)
-  set(ZLIB_DIR ${CMAKE_CURRENT_BINARY_DIR}/dependencies/zlib)
+  set(ZLIB_ROOT ${CMAKE_CURRENT_BINARY_DIR}/dependencies/zlib)
   ExternalProject_Add(project_zlib
     ${SUBPROJECT_ARGS}
     URL https://github.com/madler/zlib/archive/refs/tags/v1.2.11.zip
     URL_MD5 9d6a627693163bbbf3f26403a3a0b0b1
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     CMAKE_ARGS
-         -DCMAKE_INSTALL_PREFIX=${ZLIB_DIR}
+         -DCMAKE_INSTALL_PREFIX=${ZLIB_ROOT}
          ${SUBPROJECT_CMAKE_ARGS}
     UPDATE_COMMAND "" # Disable update
     BUILD_IN_SOURCE 1
     )
 
   list(APPEND NETGEN_DEPENDENCIES project_zlib)
-  list(APPEND NETGEN_CMAKE_PREFIX_PATH ${ZLIB_DIR})
   if(WIN32)
     # force linking the static library
-    set(ZLIB_INCLUDE_DIRS ${ZLIB_DIR}/include)
-    set(ZLIB_LIBRARIES ${ZLIB_DIR}/lib/zlibstatic.lib)
+    set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
+    set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/zlibstatic.lib)
+    set(ZLIB_LIBRARY_RELEASE ${ZLIB_ROOT}/lib/zlibstatic.lib)
+  else(WIN32)
+    set(ZLIB_INCLUDE_DIRS ${ZLIB_ROOT}/include)
+    set(ZLIB_LIBRARIES ${ZLIB_ROOT}/lib/libz.a)
+    set(ZLIB_LIBRARY_RELEASE ${ZLIB_ROOT}/lib/libz.a)
   endif(WIN32)
 else()
     include(cmake/external_projects/zlib.cmake)
@@ -165,16 +175,20 @@ if (USE_PYTHON)
     else( PYBIND_INCLUDE_DIR )
         message(FATAL_ERROR "Could NOT find pybind11!")
     endif( PYBIND_INCLUDE_DIR )
-    find_package(PythonInterp 3 REQUIRED)
-    if(NOT BUILD_FOR_CONDA)
-      find_package(PythonLibs 3 REQUIRED)
+    if(${CMAKE_VERSION} VERSION_GREATER_EQUAL 3.18)
+      find_package(Python3 COMPONENTS Interpreter Development.Module)
+      if(NOT EMSCRIPTEN)
+          find_package(Python3 COMPONENTS Interpreter Development.Embed)
+      endif()
+    else()
+      find_package(Python3 REQUIRED COMPONENTS Interpreter Development)
     endif()
 
     set_vars(NETGEN_CMAKE_ARGS
-      PYTHON_INCLUDE_DIRS
-      PYTHON_LIBRARIES
-      PYTHON_EXECUTABLE
-      PYTHON_VERSION
+      Python3_INCLUDE_DIRS
+      Python3_LIBRARIES
+      Python3_EXECUTABLE
+      Python3_VERSION
       PYBIND_INCLUDE_DIR
       NG_INSTALL_PYBIND
       )
@@ -192,7 +206,6 @@ endif(USE_CGNS)
 
 #######################################################################
 if(USE_MPI)
-  if(UNIX)
     if (METIS_DIR)
       message(STATUS "Using external METIS at: ${METIS_DIR}")
     else (METIS_DIR)
@@ -203,23 +216,24 @@ if(USE_MPI)
 	include(cmake/external_projects/metis.cmake)
       endif(NOT METIS_FOUND)
     endif(METIS_DIR)
-  else(UNIX)
-    find_package(METIS REQUIRED)
-  endif(UNIX)
 endif(USE_MPI)
 
 
 #######################################################################
 # propagate cmake variables to Netgen subproject
 set_vars( NETGEN_CMAKE_ARGS
+  CMAKE_MODULE_LINKER_FLAGS
+  CMAKE_MODULE_LINKER_FLAGS_RELEASE
   CMAKE_SHARED_LINKER_FLAGS
   CMAKE_SHARED_LINKER_FLAGS_RELEASE
   CMAKE_CXX_FLAGS
   CMAKE_CXX_FLAGS_RELEASE
+  CMAKE_STRIP
 
   USE_GUI
   USE_PYTHON
   USE_MPI
+  USE_MPI_WRAPPER
   USE_VT
   USE_VTUNE
   USE_NUMA
@@ -245,10 +259,20 @@ set_vars( NETGEN_CMAKE_ARGS
   OpenCascade_ROOT
   ZLIB_INCLUDE_DIRS
   ZLIB_LIBRARIES
+  ZLIB_LIBRARY_RELEASE
+  ZLIB_ROOT
 
   NGLIB_LIBRARY_TYPE
   NGCORE_LIBRARY_TYPE
   NGGUI_LIBRARY_TYPE
+
+  NG_INSTALL_DIR_PYTHON
+  NG_INSTALL_DIR_BIN
+  NG_INSTALL_DIR_LIB
+  NG_INSTALL_DIR_INCLUDE
+  NG_INSTALL_DIR_CMAKE
+  NG_INSTALL_DIR_RES
+  NG_INSTALL_SUFFIX
   )
 
 # propagate all variables set on the command line using cmake -DFOO=BAR

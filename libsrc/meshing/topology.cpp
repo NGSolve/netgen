@@ -5,7 +5,6 @@ namespace netgen
 {
   using ngcore::ParallelForRange;
   using ngcore::ParallelFor;
-  using ngcore::INT;
   using ngcore::TasksPerThread;
 
   /*
@@ -103,11 +102,11 @@ namespace netgen
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
           {
-            INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+            PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
 
-            int edgedir = (edge.I1() > edge.I2());
-            if (edgedir) swap (edge.I1(), edge.I2());
-            if (edge.I1() != v) continue;
+            bool edgedir = edge[0] > edge[1];
+            if (edgedir) swap (edge[0], edge[1]);
+            if (edge[0] != v) continue;
 
             func (edge, elnr, k, 3);
           }      
@@ -120,7 +119,7 @@ namespace netgen
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
           {
-            INDEX_2 edge(el[eledges[k][0]], el[eledges[k][1]]);
+            PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
 
             int edgedir = (edge.I1() > edge.I2());
             if (edgedir) swap (edge.I1(), edge.I2());
@@ -134,7 +133,7 @@ namespace netgen
     for (SegmentIndex elnr : top.GetVertexSegments(v))
       {
         const Segment & el = mesh[elnr];
-        INDEX_2 edge(el[0], el[1]);
+        PointIndices<2> edge(el[0], el[1]);
         int edgedir = (edge.I1() > edge.I2());
         if (edgedir) swap (edge.I1(), edge.I2());
         
@@ -160,10 +159,11 @@ namespace netgen
           if (elfaces[j][3] < 0)
             
             { // triangle
-              INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                           el[elfaces[j][2]], 0);
-              
-              int facedir = 0;
+              PointIndices<4> face(el[elfaces[j][0]], el[elfaces[j][1]], 
+                                   el[elfaces[j][2]], PointIndex(PointIndex::INVALID));
+
+
+              [[maybe_unused]] int facedir = 0;
               if (face.I1() > face.I2())
                 { swap (face.I1(), face.I2()); facedir += 1; }
               if (face.I2() > face.I3())
@@ -197,27 +197,27 @@ namespace netgen
             {
               // quad
               // int facenum;
-              INDEX_4 face4(el[elfaces[j][0]], el[elfaces[j][1]],
-                            el[elfaces[j][2]], el[elfaces[j][3]]);
+              PointIndices<4> face4(el[elfaces[j][0]], el[elfaces[j][1]],
+                                    el[elfaces[j][2]], el[elfaces[j][3]]);
               
-              int facedir = 0;
+              // int facedir = 0;
               if (min2 (face4.I1(), face4.I2()) > 
                   min2 (face4.I4(), face4.I3())) 
                 {  // z - flip
-                  facedir += 1; 
+                  // facedir += 1; 
                   swap (face4.I1(), face4.I4());
                   swap (face4.I2(), face4.I3());
                 }
               if (min2 (face4.I1(), face4.I4()) >
                   min2 (face4.I2(), face4.I3())) 
                 {  // x - flip
-                  facedir += 2; 
+                  // facedir += 2; 
                   swap (face4.I1(), face4.I2());
                   swap (face4.I3(), face4.I4());
                 }
               if (face4.I2() > face4.I4())
                 {  // diagonal flip
-                  facedir += 4; 
+                  // facedir += 4; 
                   swap (face4.I2(), face4.I4());
                 }
               
@@ -262,27 +262,27 @@ namespace netgen
           { // triangle
             
             // int facenum;
-            int facedir;
+            // int facedir;
             
-            INDEX_4 face(el.PNum(elfaces[0][0]),
-                         el.PNum(elfaces[0][1]),
-                         el.PNum(elfaces[0][2]),0);
+            PointIndices<4> face(el.PNum(elfaces[0][0]),
+                                 el.PNum(elfaces[0][1]),
+                                 el.PNum(elfaces[0][2]), PointIndex(PointIndex::INVALID));
             
-            facedir = 0;
-            if (face.I1() > face.I2())
+            // facedir = 0;
+            if (face[0] > face[1])
               {
-                swap (face.I1(), face.I2());
-                facedir += 1;
+                swap (face[0], face[1]);
+                // facedir += 1;
               }
-            if (face.I2() > face.I3())
+            if (face[1] > face[2])
               {
-                swap (face.I2(), face.I3());
-                facedir += 2;
+                swap (face[1], face[2]);
+                // facedir += 2;
               }
-            if (face.I1() > face.I2())
+            if (face.I1() > face[1])
               {
-                swap (face.I1(), face.I2());
-                facedir += 4;
+                swap (face.I1(), face[1]);
+                // facedir += 4;
               }
             
             if (face.I1() != v) continue;
@@ -311,31 +311,31 @@ namespace netgen
           {
             // quad
             // int facenum;
-            int facedir;
+            // int facedir;
             
-            INDEX_4 face4(el.PNum(elfaces[0][0]),
-                          el.PNum(elfaces[0][1]),
-                          el.PNum(elfaces[0][2]),
-                          el.PNum(elfaces[0][3]));
+            PointIndices<4> face4(el.PNum(elfaces[0][0]),
+                                  el.PNum(elfaces[0][1]),
+                                  el.PNum(elfaces[0][2]),
+                                  el.PNum(elfaces[0][3]));
             
-            facedir = 0;
+            // facedir = 0;
             if (min2 (face4.I1(), face4.I2()) > 
                 min2 (face4.I4(), face4.I3())) 
               {  // z - orientation
-                facedir += 1; 
+                // facedir += 1; 
                 swap (face4.I1(), face4.I4());
                 swap (face4.I2(), face4.I3());
               }
             if (min2 (face4.I1(), face4.I4()) >
                 min2 (face4.I2(), face4.I3())) 
               {  // x - orientation
-                facedir += 2; 
+                // facedir += 2; 
                 swap (face4.I1(), face4.I2());
                 swap (face4.I3(), face4.I4());
               }
             if (face4.I2() > face4.I4())
               { 
-                facedir += 4; 
+                // facedir += 4; 
                 swap (face4.I2(), face4.I4());
               }
             
@@ -480,15 +480,15 @@ namespace netgen
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (int i : mesh->mlbetweennodes.Range())
 	  {
-	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
-	    if (parents[0] >= PointIndex::BASE) cnt[parents[0]]++;
+	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
+	    if (parents[0].IsValid()) cnt[parents[0]]++;
 	  }
 	TABLE<int,PointIndex::BASE> vert2vertcoarse (cnt);
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (int i : mesh->mlbetweennodes.Range())
 	  {
-	    INDEX_2 parents = Sort (mesh->mlbetweennodes[i]);
-	    if (parents[0] >= PointIndex::BASE) vert2vertcoarse.AddSave (parents[0], parents[1]);
+	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
+	    if (parents[0].IsValid()) vert2vertcoarse.AddSave (parents[0], parents[1]);
 	  }
 
 
@@ -513,8 +513,8 @@ namespace netgen
              auto end = r.Next();
              // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
              ngcore::ClosedHashTable<int, int> v2eht(2*max_edge_on_vertex+10);
-             for (PointIndex v = begin+PointIndex::BASE;
-                  v < end+PointIndex::BASE; v++)
+             for (PointIndex v = begin+IndexBASE<PointIndex>();
+                  v < end+IndexBASE<PointIndex>(); v++)
                {
                  v2eht.DeleteData();
                  for (int ednr : vert2edge[v])
@@ -553,7 +553,7 @@ namespace netgen
 
         // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
 	// NgArray<int> vertex2;
-	// for (PointIndex v = PointIndex::BASE; v < nv+PointIndex::BASE; v++)
+	// for (PointIndex v = IndexBASE<PointIndex>(); v < nv+IndexBASE<PointIndex>(); v++)
 
         ParallelForRange
           (mesh->GetNV(), // Points().Size(),
@@ -565,8 +565,8 @@ namespace netgen
              ngcore::ClosedHashTable<int, int> v2eht(2*max_edge_on_vertex+10);
 
              Array<int> vertex2;
-             for (PointIndex v = begin+PointIndex::BASE;
-                  v < end+PointIndex::BASE; v++)
+             for (PointIndex v = begin+IndexBASE<PointIndex>();
+                  v < end+IndexBASE<PointIndex>(); v++)
                {
                  int ned = cnt[v];
                  v2eht.DeleteData();            
@@ -659,8 +659,8 @@ namespace netgen
           {
             auto verts = edge2vert[i];  // 2 vertices of edge
 
-            if (verts[0] >= mesh->mlbetweennodes.Size()+PointIndex::BASE ||
-                verts[1] >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+            if (verts[0] >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>() ||
+                verts[1] >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
               continue;
 
             auto pa0 = mesh->mlbetweennodes[verts[0]]; // two parent vertices of v0
@@ -698,20 +698,20 @@ namespace netgen
               // edge is splitting edge in middle of triangle:
               for (int j = 1; j <= 2; j++)
               {
-                INT<2> paedge1, paedge2, paedge3;
+                IVec<2,PointIndex> paedge1, paedge2, paedge3;
                 int orient_inner = 0;
                 if (j == 1)
                 {
-                  paedge1 = INT<2> (pa0[0], verts[1]);
-                  paedge2 = INT<2> (pa0[1], verts[1]);
-                  paedge3 = INT<2> (pa0[0], pa0[1]);
+                  paedge1 = IVec<2> (pa0[0], verts[1]);
+                  paedge2 = IVec<2> (pa0[1], verts[1]);
+                  paedge3 = IVec<2> (pa0[0], pa0[1]);
                   orient_inner = 0;
                 }
                 else
                 {
-                  paedge1 = INT<2> (pa1[0], verts[0]);
-                  paedge2 = INT<2> (pa1[1], verts[0]);
-                  paedge3 = INT<2> (pa1[0], pa1[1]);
+                  paedge1 = IVec<2> (pa1[0], verts[0]);
+                  paedge2 = IVec<2> (pa1[1], verts[0]);
+                  paedge3 = IVec<2> (pa1[0], pa1[1]);
                   orient_inner = 1;
                 }
                 if (paedge1[0] > paedge1[1]) 
@@ -722,7 +722,7 @@ namespace netgen
                   Swap (paedge3[0], paedge3[1]);
 
                 // if first vertex number is -1, then don't try to find entry in node2edge hash table
-                if ( paedge1[0] == PointIndex::BASE-1 || paedge2[0] == PointIndex::BASE-1 )
+                if ( !paedge1[0].IsValid() || !paedge2[0].IsValid() )
                   continue;
 
                 int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1, orient1 = 0, orient2 = 0;
@@ -751,21 +751,21 @@ namespace netgen
 
               if (!bisect_edge) // not a bisect edge (then a red edge)
               {
-                INT<2> paedge1, paedge2, paedge3;
+                IVec<2,PointIndex> paedge1, paedge2, paedge3;
                 int orient1 = 0, orient2 = 0, orient3=0;
-                int orient_inner = 0;
-                paedge1 = INT<2> (pa0[0], pa0[1]);
-                paedge2 = INT<2> (pa1[0], pa1[1]);
+                // int orient_inner = 0;
+                paedge1 = IVec<2,PointIndex> (pa0[0], pa0[1]);
+                paedge2 = IVec<2,PointIndex> (pa1[0], pa1[1]);
                 // find common vertex and the third pa edge
                 if (pa0[0]==pa1[0]){// 00
                   //orient1 = 0; 
                   orient2 = 1; 
                   if (pa0[1]<pa1[1]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[1], pa1[1]);
+                    paedge3 = IVec<2,PointIndex> (pa0[1], pa1[1]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[1], pa0[1]);
+                    paedge3 = IVec<2,PointIndex> (pa1[1], pa0[1]);
                   }
                 }
                 else if (pa0[0]==pa1[1]){//01
@@ -773,10 +773,10 @@ namespace netgen
                   //orient2 = 0; 
                   if (pa0[1]<pa1[0]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[1], pa1[0]);
+                    paedge3 = IVec<2,PointIndex> (pa0[1], pa1[0]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[0], pa0[1]);
+                    paedge3 = IVec<2,PointIndex> (pa1[0], pa0[1]);
                   }
                 }
                 else if (pa0[1]==pa1[0]){//10
@@ -784,10 +784,10 @@ namespace netgen
                   orient2 = 1; 
                   if (pa0[0]<pa1[1]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[0], pa1[1]);
+                    paedge3 = IVec<2,PointIndex> (pa0[0], pa1[1]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[1], pa0[0]);
+                    paedge3 = IVec<2,PointIndex> (pa1[1], pa0[0]);
                   }
                 }
                 else if (pa0[1]==pa1[1]){//11
@@ -795,10 +795,10 @@ namespace netgen
                   //orient2 = 0; 
                   if (pa0[0]<pa1[0]){
                     orient3 = 1;
-                    paedge3 = INT<2> (pa0[0], pa1[0]);
+                    paedge3 = IVec<2,PointIndex> (pa0[0], pa1[0]);
                   }else{
                     //orient3 = 0;
-                    paedge3 = INT<2> (pa1[0], pa0[0]);
+                    paedge3 = IVec<2,PointIndex> (pa1[0], pa0[0]);
                   }
                 }
 
@@ -831,16 +831,16 @@ namespace netgen
               pa1[1] != pa2[1])
               for (int j = 1; j <= 2; j++)
               {
-              INT<2> paedge1, paedge2;
+              IVec<2> paedge1, paedge2;
               if (j == 1)
               {
-              paedge1 = INT<2> (pa1[0], pa2[0]);
-              paedge2 = INT<2> (pa1[1], pa2[1]);
+              paedge1 = IVec<2> (pa1[0], pa2[0]);
+              paedge2 = IVec<2> (pa1[1], pa2[1]);
               }
               else
               {
-              paedge1 = INT<2> (pa1[0], pa2[1]);
-              paedge2 = INT<2> (pa1[1], pa2[0]);
+              paedge1 = IVec<2> (pa1[0], pa2[1]);
+              paedge2 = IVec<2> (pa1[1], pa2[0]);
               }
 
               int paedgenr1 = 0, paedgenr2 = 0;
@@ -876,7 +876,7 @@ namespace netgen
               for (int j = 0; j < 2; j++)
               for (int k = 0; k < 2; k++)
               {
-              INT<2> paedge (pa1[1-j], pa2[1-k]);
+              IVec<2> paedge (pa1[1-j], pa2[1-k]);
               int orientpa = 1;
               if (paedge[0] > paedge[1]) 
               {
@@ -908,12 +908,12 @@ namespace netgen
     
 
     // edge hashtable:: needed for getting parent faces	
-    ngcore::ClosedHashTable<INT<2>, int> v2e(nv);
+    ngcore::ClosedHashTable<IVec<2>, int> v2e(nv);
     if (build_parent_faces)
       for (auto i : Range(edge2vert))
         {
           auto edge = edge2vert[i];
-          INT<2> e2(edge[0], edge[1]);
+          IVec<2> e2(edge[0], edge[1]);
           e2.Sort();
           v2e[e2] = i;
         }
@@ -946,7 +946,7 @@ namespace netgen
 	  vert2oldface.AddSave (face2vert[i][0], i);
 
         // find all potential intermediate faces
-        Array<INT<3>> intermediate_faces;
+        Array<IVec<3>> intermediate_faces;
         if (build_parent_faces)
           {
             for (ElementIndex ei = 0; ei < ne; ei++)
@@ -956,11 +956,11 @@ namespace netgen
                   // cout << "element: " << (*mesh)[ei].PNums() << endl;
                   (*mesh)[ei].GetFace(i+1, face);
                   // cout << "face " << face.PNums() << endl;
-                  INT<3,PointIndex> f3 = { face[0], face[1], face[2] };
+                  IVec<3,PointIndex> f3 = { face[0], face[1], face[2] };
                   for (int j = 0; j < 3; j++)
                     {
                       PointIndex v = f3[j];
-                      if (v >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                      if (v >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                         continue;
 
                       auto pa = mesh->mlbetweennodes[v];
@@ -969,13 +969,13 @@ namespace netgen
                           {
                             PointIndex v0 = pa[k]; // also in face
                             PointIndex v1 = pa[1-k];
-                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v - v0;
+                            PointIndex v2 = f3[0]-v+f3[1]-v0+f3[2];
                             // if there is an edge connecting v1 and v2, accept
                             // the new face
-                            INT<2> parentedge(v1, v2);
+                            IVec<2> parentedge(v1, v2);
                             parentedge.Sort();
                             if (v2e.Used(parentedge)){ 
-                              INT<3> cf3 = { v0, v1, v2 };
+                              IVec<3> cf3 = { v0, v1, v2 };
                               cf3.Sort();
                               // cout << "intermediate: " << cf3 << " of " << f3 << endl;
                               intermediate_faces.Append (cf3);
@@ -983,6 +983,38 @@ namespace netgen
                           }
                     }
                 }
+
+            for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+              {
+                const Element2d & sel = (*mesh)[sei];
+                IVec<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
+                for (int j = 0; j < 3; j++)
+                  {
+                    PointIndex v = f3[j];
+                    if (v >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
+                      continue;
+                    
+                    auto pa = mesh->mlbetweennodes[v];
+                    for (int k = 0; k < 2; k++)
+                      if (f3.Contains(pa[k]))
+                        {
+                          PointIndex v0 = pa[k]; // also in face
+                          PointIndex v1 = pa[1-k];
+                          PointIndex v2 = f3[0]-v+f3[1]-v0+f3[2];
+                          // if there is an edge connecting v1 and v2, accept
+                          // the new face
+                          IVec<2> parentedge(v1, v2);
+                          parentedge.Sort();
+                          if (v2e.Used(parentedge)){ 
+                            IVec<3> cf3 = { v0, v1, v2 };
+                            cf3.Sort();
+                            // cout << "intermediate: " << cf3 << " of " << f3 << endl;
+                            intermediate_faces.Append (cf3);
+                          }
+                        }
+                  }
+              }
+
           }
 	cnt = 0;
 	for (int i = 0; i < intermediate_faces.Size(); i++)
@@ -999,7 +1031,7 @@ namespace netgen
 	
 
 	int max_face_on_vertex = 0;
-	for (int i = PointIndex::BASE; i < nv+PointIndex::BASE; i++)
+	for (PointIndex i = IndexBASE<PointIndex>(); i < nv+IndexBASE<PointIndex>(); i++)
 	  {
 	    int onv = vert2oldface[i].Size() + vert2element[i].Size() + vert2surfelement[i].Size();
 	    max_face_on_vertex = max (onv, max_face_on_vertex);
@@ -1026,7 +1058,7 @@ namespace netgen
               // auto begin = r.First();
               // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10); 
+              NgClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
               // for (PointIndex v = begin+PointIndex::BASE;
               // v < end+PointIndex::BASE; v++)
               for (PointIndex v : r+PointIndex::BASE)                
@@ -1091,7 +1123,7 @@ namespace netgen
               // auto begin = r.First();
               // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              ClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
+              NgClosedHashTable<INDEX_3, int> vert2face(2*max_face_on_vertex+10);
               /*
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
@@ -1129,7 +1161,7 @@ namespace netgen
                       size_t pos;
                       if (vert2face.PositionCreate(face, pos))
                         {
-                          face2vert[nfa] = { face[0], face[1], face[2], 0 }; // i4;
+                          face2vert[nfa] = { face[0], face[1], face[2], PointIndex::BASE-1 }; // i4;
                           vert2face.SetData (pos, face, nfa);
                           nfa++;
                         }
@@ -1195,9 +1227,9 @@ namespace netgen
 
 
 	face2surfel.SetSize (nfa);
-	face2surfel = 0;
-	for (int i = 1; i <= nse; i++)
-	  face2surfel.Elem(GetSurfaceElementFace(i)) = i;
+	face2surfel = SurfaceElementIndex::INVALID;
+	for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+	  face2surfel[GetFace(sei)] = sei;
 
 	/*
 	  cout << "build table complete" << endl;
@@ -1211,11 +1243,9 @@ namespace netgen
 
 	
 	surf2volelement.SetSize (nse);
-	for (int i = 1; i <= nse; i++)
-	  {
-	    surf2volelement.Elem(i)[0] = 0;
-	    surf2volelement.Elem(i)[1] = 0;
-	  }
+        // surf2volelement = INDEX_2(0,0);
+        surf2volelement = { ElementIndex::INVALID, ElementIndex::INVALID };
+
         (*tracer) ("Topology::Update build surf2vol", false);        
 	// for (int i = 0; i < ne; i++)
         ParallelFor (ne, [this](auto i)
@@ -1223,13 +1253,12 @@ namespace netgen
                        for (int j = 0; j < 6; j++)
                          {
                            // int fnum = (faces.Get(i)[j]+7) / 8;
-                           int fnum = faces[i][j]+1;
-                           if (fnum > 0 && face2surfel.Elem(fnum))
+                           int fnum = faces[i][j];
+                           if (fnum >= 0 && face2surfel[fnum].IsValid())
                              {
-                               int sel = face2surfel.Elem(fnum);
-                               surf2volelement.Elem(sel)[1] = 
-                                 surf2volelement.Elem(sel)[0];
-                               surf2volelement.Elem(sel)[0] = i+1;
+                               SurfaceElementIndex sel = face2surfel[fnum];
+                               surf2volelement[sel][1] = surf2volelement[sel][0];
+                               surf2volelement[sel][0] = i; // +1;
                              }
                          }});
         (*tracer) ("Topology::Update build surf2vol", true);        
@@ -1267,8 +1296,12 @@ namespace netgen
                   AsAtomic(face_els[f])++;
               
             }, TasksPerThread(4));
+        /*
 	for (int i = 1; i <= nse; i++)
-	  face_surfels[GetSurfaceElementFace (i)-1]++;
+	  face_surfels[GetSurfaceElementFace1 (i)-1]++;
+        */
+        for (auto sei : Range(mesh->SurfaceElements()))
+	  face_surfels[GetFace(sei)]++;          
         (*tracer) ("Topology::Update count face_els", true);
 
 
@@ -1294,7 +1327,7 @@ namespace netgen
 		    else
 #endif
 		      {
-			(*testout) << "illegal face : " << i << endl;
+			(*testout) << "illegal face : " << i << ", cnt = " << face_els[i]+face_surfels[i] << endl;
 			(*testout) << "points = "
                                    << face2vert[i][0] << ","
                                    << face2vert[i][1] << ","
@@ -1303,7 +1336,7 @@ namespace netgen
                                    << endl;
 			(*testout) << "pos = ";
 			for (int j = 0; j < 4; j++)
-                          if (face2vert[i][j] >= 1)
+                          if (face2vert[i][j].IsValid())
                             (*testout) << (*mesh)[(PointIndex)face2vert[i][j]] << " ";
 			(*testout) << endl;
 
@@ -1315,7 +1348,7 @@ namespace netgen
 			    for (int l = 0; l < nf; l++)
 			      if (elfaces[l] == i)
 				{
-				  // (*testout) << "is face of element " << vertels[k] << endl;
+                                  (*testout) << "is face of element " << vertels[k] << endl;
 			    
 				  if (mesh->coarsemesh && mesh->hpelements->Size() == mesh->GetNE() )
 				    {
@@ -1344,23 +1377,23 @@ namespace netgen
 
             // cout << "f2v = " << face2vert << endl;
             
-            ngcore::ClosedHashTable<INT<3>, int> v2f(nv);
+            ngcore::ClosedHashTable<IVec<3>, int> v2f(nv);
             for (auto i : Range(face2vert))
               {
                 auto face = face2vert[i];
-                INT<3> f3(face[0], face[1], face[2]);
+                IVec<3> f3(face[0], face[1], face[2]);
                 f3.Sort();
                 v2f[f3] = i;
               }
 
             // cout << "v2f:" << endl << v2f << endl;
-           
+            
             parent_faces.SetSize (nfa);
             parent_faces = { -1, { -1, -1, -1, -1 } };
 
             for (auto i : Range(nfa))
               {
-                INT<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
+                IVec<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
 
 
                 // face on coarses level ?
@@ -1368,10 +1401,10 @@ namespace netgen
                 for (int k = 0; k < 3; k++)
                   {
                     PointIndex vb = f3[k]; 
-                    if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                    if (vb >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                       continue;
                     auto parents = mesh->mlbetweennodes[vb];
-                    if (parents[0] >= PointIndex::BASE)
+                    if (parents[0] >= IndexBASE<PointIndex>())
                       all_vert_coarse = false;
                   }
                 if (all_vert_coarse) continue;
@@ -1383,7 +1416,7 @@ namespace netgen
                 for (int k = 0; k < 3; k++)
                   {
                     PointIndex vb = f3[k]; // assume vb as the new bisect vert
-                    if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                    if (vb >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                       continue;
                     auto parents = mesh->mlbetweennodes[vb];
                     
@@ -1396,14 +1429,14 @@ namespace netgen
                             PointIndex v1 = parents[1-j];
                             
                             // the third one, on the tip
-                            PointIndex v2 = f3[0]+f3[1]+f3[2] - v0 - vb;
+                            PointIndex v2 = f3[0]-v0+f3[1]-vb+f3[2];
                             
                             // if there is an edge connecting v1 and v2, accept
                             // the new face
-                            INT<2> parentedge(v1, v2);
+                            IVec<2> parentedge(v1, v2);
                             parentedge.Sort();
                             if (v2e.Used(parentedge)){ 
-                              INT<3> parentverts(v0, v1, v2);
+                              IVec<3> parentverts(v0, v1, v2);
                               parentverts.Sort();
 
                               int classnr = 0;
@@ -1443,13 +1476,13 @@ namespace netgen
                       PointIndex v1 = parents[1];
                       PointIndex v2 = f3[(k+1)%3];
                       PointIndex v3 = f3[(k+2)%3];
-                      INT<3> parentedge1(v0, v2);
+                      IVec<3> parentedge1(v0, v2);
                       parentedge1.Sort();
-                      INT<3> parentedge2(v0, v3);
+                      IVec<3> parentedge2(v0, v3);
                       parentedge2.Sort();
-                      INT<3> parentedge3(v1, v2);
+                      IVec<3> parentedge3(v1, v2);
                       parentedge3.Sort();
-                      INT<3> parentedge4(v1, v3);
+                      IVec<3> parentedge4(v1, v3);
                       parentedge4.Sort();
                       // if edges [v0,v2], [v0, v3], [v1,v2], [v1,v3] exists
                       // then vb is the bisecting edge
@@ -1474,13 +1507,13 @@ namespace netgen
                           // by default v0 < v1 < vb <  v2 < v3
                           classnr=9;
                         }
-                        INT<3> parentverts1(v0, v2, v3);
+                        IVec<3> parentverts1(v0, v2, v3);
                         parentverts1.Sort();
-                        INT<3> parentverts2(v1, v2, v3);
+                        IVec<3> parentverts2(v1, v2, v3);
                         parentverts2.Sort();
-                        INT<3> parentverts3(v0, v1, v2);
+                        IVec<3> parentverts3(v0, v1, v2);
                         parentverts3.Sort();
-                        INT<3> parentverts4(v0, v1, v3);
+                        IVec<3> parentverts4(v0, v1, v3);
                         parentverts4.Sort();
                         int pafacenr1=-1, pafacenr2=-1, pafacenr3=-1, pafacenr4=-1;
                         if (v2f.Used(parentverts1))
@@ -1520,7 +1553,7 @@ namespace netgen
                   for (int k = 0; k < 3; k++)
                     {
                       PointIndex vb = f3[k]; // assume vb as the new bisect vert
-                      if (vb >= mesh->mlbetweennodes.Size()+PointIndex::BASE)
+                      if (vb >= mesh->mlbetweennodes.Size()+IndexBASE<PointIndex>())
                         continue;
                       auto parents = mesh->mlbetweennodes[vb];
 
@@ -1528,13 +1561,13 @@ namespace netgen
                       PointIndex v1 = parents[1];
                       PointIndex v2 = f3[(k+1)%3];
                       PointIndex v3 = f3[(k+2)%3];
-                      INT<2> parentedge1(v0, v2);
+                      IVec<2> parentedge1(v0, v2);
                       parentedge1.Sort();
-                      INT<2> parentedge2(v0, v3);
+                      IVec<2> parentedge2(v0, v3);
                       parentedge2.Sort();
-                      INT<2> parentedge3(v1, v2);
+                      IVec<2> parentedge3(v1, v2);
                       parentedge3.Sort();
-                      INT<2> parentedge4(v1, v3);
+                      IVec<2> parentedge4(v1, v3);
                       parentedge4.Sort();
 
                       // if edges [v0,v2], [v0, v3], [v1,v2], [v1,v3] exists
@@ -1562,13 +1595,13 @@ namespace netgen
                             }
                           // cout << "classnr = " << classnr << endl;
 
-                          INT<3> parentverts1(v1, v2, v3);
+                          IVec<3> parentverts1(v1, v2, v3);
                           parentverts1.Sort();
-                          INT<3> parentverts2(v0, v2, v3);
+                          IVec<3> parentverts2(v0, v2, v3);
                           parentverts2.Sort();
-                          INT<3> parentverts3(v0, v1, v3);
+                          IVec<3> parentverts3(v0, v1, v3);
                           parentverts3.Sort();
-                          INT<3> parentverts4(v0, v1, v2);
+                          IVec<3> parentverts4(v0, v1, v2);
                           parentverts4.Sort();
                           
                           if (!v2f.Used(parentverts1) || !v2f.Used(parentverts2) ||
@@ -1601,17 +1634,17 @@ namespace netgen
                   // v0 is a coarse vertex ==> f3 is a boundary face
                   if (v0==pa1[0] || v0==pa1[1]){
                     if (pa1[0]==v0){// type 0: bottom left corner
-                      INT<3> parentverts(v0, pa1[1], pa2[1]);
+                      IVec<3> parentverts(v0, pa1[1], pa2[1]);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 16, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "A" <<endl;
                     }else if (pa2[0]==v0) {// type 1: bottom right corner
-                      INT<3> parentverts(pa1[0], v0, pa2[1]);
+                      IVec<3> parentverts(pa1[0], v0, pa2[1]);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 17, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "B" <<endl;
                     }else if (pa1[1]==v0){// type 2: top left corner
-                      INT<3> parentverts(pa1[0], pa2[0], v0);
+                      IVec<3> parentverts(pa1[0], pa2[0], v0);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 18, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "C" <<endl;
@@ -1622,7 +1655,7 @@ namespace netgen
                   else{// all vertices are on fine level [fff]
                     // Here we only work with boundary fff face
                     if (pa0[0]==pa1[0] && pa0[1]==pa2[0] && pa1[1]==pa2[1]){//type 3 bdry face
-                      INT<3> parentverts(pa0[0], pa0[1], pa1[1]);
+                      IVec<3> parentverts(pa0[0], pa0[1], pa1[1]);
                       int pafacenr = v2f[parentverts];
                       parent_faces[i] = { 19, { pafacenr, -1, -1, -1} };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "D" <<endl;
@@ -1775,25 +1808,43 @@ namespace netgen
   void MeshTopology :: GetElementEdges (int elnr, NgArray<int> & eledges) const
   {
     int ned = GetNEdges (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     eledges.SetSize (ned);
     for (int i = 0; i < ned; i++)
-      eledges[i] = edges.Get(elnr)[i]+1;
-      // eledges[i] = abs (edges.Get(elnr)[i]);
+      // eledges[i] = edges.Get(elnr)[i]+1;
+      eledges[i] = edges[ei][i]+1;
   }
-  void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
+
+  void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces) const
   {
     int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    
     elfaces.SetSize (nfa);
 
     for (auto i : Range(nfa))
-      elfaces[i] = faces.Get(elnr)[i]+1;
+      // elfaces[i] = faces.Get(elnr)[i]+1;
+      elfaces[i] = faces[ei][i]+1;
+  }
+
+  
+  void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
+  {
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
+    
+    elfaces.SetSize (nfa);
+
+    for (auto i : Range(nfa))
+      // elfaces[i] = faces.Get(elnr)[i]+1;
+      elfaces[i] = faces[ei][i]+1;
     
     if(withorientation)
     {
         for(auto & face : elfaces)
         {
             auto v = face2vert[face-1];
-            if(v[3]!=0)
+            if(v[3].IsValid())
                 cerr << "GetElementFaces with orientation currently not supported for quads" << endl;
 
             int classnr = 0;
@@ -1809,7 +1860,8 @@ namespace netgen
 
   void MeshTopology :: GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const
   {
-    int ned = GetNEdges (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
+    int ned = GetNEdges (mesh->VolumeElement(ei).GetType());
     eorient.SetSize (ned);
     for (int i = 1; i <= ned; i++)
       // eorient.Elem(i) = (edges.Get(elnr)[i-1] > 0) ? 1 : -1;
@@ -1819,7 +1871,8 @@ namespace netgen
 
   void MeshTopology :: GetElementFaceOrientations (int elnr, NgArray<int> & forient) const
   {
-    int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
+    int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
     forient.SetSize (nfa);
     for (int i = 1; i <= nfa; i++)
       // forient.Elem(i) = faces.Get(elnr)[i-1].forient;
@@ -1832,7 +1885,7 @@ namespace netgen
   int MeshTopology :: GetElementEdges (int elnr, int * eledges, int * orient) const
   {
     //  int ned = GetNEdges (mesh.VolumeElement(elnr).GetType());
-    
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     if (mesh->GetDimension()==3 || 1)
       {
         if (orient)
@@ -1844,8 +1897,12 @@ namespace netgen
 		eledges[i] = abs (edges.Get(elnr)[i]);
 		orient[i] = (edges.Get(elnr)[i] > 0 ) ? 1 : -1;
                 */
-                if (edges.Get(elnr)[i] == -1) return i;
-                eledges[i] = edges.Get(elnr)[i]+1;
+                
+                // if (edges.Get(elnr)[i] == -1) return i;
+                // eledges[i] = edges[ei].Get(elnr)[i]+1;
+                if (edges[ei][i] == -1) return i;
+                eledges[i] = edges[ei][i]+1;
+                
 		// orient[i] = edges.Get(elnr)[i].orient ? -1 : 1;
                 orient[i] = GetElementEdgeOrientation(elnr, i) ? -1 : 1;
 	      }
@@ -1856,8 +1913,11 @@ namespace netgen
 	      {
 		// if (!edges.Get(elnr)[i]) return i;
 		// eledges[i] = abs (edges.Get(elnr)[i]);
-                if (edges.Get(elnr)[i] == -1) return i;
-                eledges[i] = edges.Get(elnr)[i]+1;
+                
+                // if (edges.Get(elnr)[i] == -1) return i;
+                //eledges[i] = edges.Get(elnr)[i]+1;
+                if (edges[ei][i] == -1) return i;
+                eledges[i] = edges[ei][i]+1;
 
 	      }
 	  }
@@ -1890,6 +1950,8 @@ namespace netgen
 
   int MeshTopology :: GetElementFaces (int elnr, int * elfaces, int * orient) const
   {
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
+    
     //  int nfa = GetNFaces (mesh.VolumeElement(elnr).GetType());
     if (orient)
       {
@@ -1900,8 +1962,10 @@ namespace netgen
 	    elfaces[i] = (faces.Get(elnr)[i]-1) / 8 + 1;
 	    orient[i] = (faces.Get(elnr)[i]-1) % 8;
             */
-	    if (faces.Get(elnr)[i] == -1) return i;
-	    elfaces[i] = faces.Get(elnr)[i]+1;
+	    // if (faces.Get(elnr)[i] == -1) return i;
+	    // elfaces[i] = faces.Get(elnr)[i]+1;
+	    if (faces[ei][i] == -1) return i;
+	    elfaces[i] = faces[ei][i]+1;
 	    // orient[i] = faces.Get(elnr)[i].forient;
             orient[i] = GetElementFaceOrientation (elnr, i);
 	  }
@@ -1912,8 +1976,11 @@ namespace netgen
 	  {
 	    // if (!faces.Get(elnr)[i]) return i;
 	    // elfaces[i] = (faces.Get(elnr)[i]-1) / 8 + 1;
-	    if (faces.Get(elnr)[i] == -1) return i;
-	    elfaces[i] = faces.Get(elnr)[i]+1;
+
+	    // if (faces.Get(elnr)[i] == -1) return i;
+	    // elfaces[i] = faces.Get(elnr)[i]+1;
+	    if (faces[ei][i] == -1) return i;
+	    elfaces[i] = faces[ei][i]+1;
 	  }
       }
     return 6;
@@ -1923,9 +1990,11 @@ namespace netgen
   void MeshTopology :: GetSurfaceElementEdges (int elnr, NgArray<int> & eledges) const
   {
     int ned = GetNEdges (mesh->SurfaceElement(elnr).GetType());
+    SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);    
     eledges.SetSize (ned);
     for (int i = 0; i < ned; i++)
-      eledges[i] = surfedges.Get(elnr)[i]+1;
+      // eledges[i] = surfedges.Get(elnr)[i]+1;
+      eledges[i] = surfedges[sei][i]+1;
   }
 
   void MeshTopology :: GetEdges (SurfaceElementIndex elnr, NgArray<int> & eledges) const
@@ -1954,12 +2023,12 @@ namespace netgen
   */
   
   
+  /*
   int MeshTopology :: GetSurfaceElementFace (int elnr) const
   {
-    return surffaces.Get(elnr)+1;
+    return surffaces[elnr-1]+1;
   }
   
-  /*
   int MeshTopology :: GetFace (SurfaceElementIndex elnr) const
   {
     return surffaces[elnr].fnr;
@@ -1987,6 +2056,7 @@ namespace netgen
 
   int MeshTopology :: GetSurfaceElementEdges (int elnr, int * eledges, int * orient) const
   {
+    SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);        
     int i;
     if (mesh->GetDimension() == 3 || 1)
       {
@@ -1999,8 +2069,10 @@ namespace netgen
 		eledges[i] = abs (surfedges.Get(elnr)[i]);
 		orient[i] = (surfedges.Get(elnr)[i] > 0 ) ? 1 : -1;
                 */
-		if (surfedges.Get(elnr)[i] == -1) return i;
-		eledges[i] = surfedges.Get(elnr)[i]+1;
+		// if (surfedges.Get(elnr)[i] == -1) return i;
+		// eledges[i] = surfedges.Get(elnr)[i]+1;
+		if (surfedges[sei][i] == -1) return i;
+		eledges[i] = surfedges[sei][i]+1;
 		// orient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
                 // orient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
                 orient[i] = 1;
@@ -2015,8 +2087,10 @@ namespace netgen
 		if (!surfedges.Get(elnr)[i]) return i;
 		eledges[i] = abs (surfedges.Get(elnr)[i]);
                 */
-		if (surfedges.Get(elnr)[i] == -1) return i;
-		eledges[i] = surfedges.Get(elnr)[i]+1;
+		// if (surfedges.Get(elnr)[i] == -1) return i;
+		// eledges[i] = surfedges.Get(elnr)[i]+1;
+		if (surfedges[sei][i] == -1) return i;
+		eledges[i] = surfedges[sei][i]+1;
 	      }
 	  }
 	return 4;
@@ -2028,7 +2102,7 @@ namespace netgen
 	if (orient)
 	  orient[0] = segedges.Get(elnr) > 0 ? 1 : -1;
         */
-	eledges[0] = segedges.Get(elnr)+1;
+	eledges[0] = segedges[elnr-1]+1;
 	if (orient)
 	  // orient[0] = segedges.Get(elnr).orient ? -1 : 1;
           // orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
@@ -2040,7 +2114,9 @@ namespace netgen
 
   int MeshTopology :: GetElementEdgeOrientation (int elnr, int locedgenr) const
   {
-    const Element & el = mesh->VolumeElement (elnr);
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
+    
+    const Element & el = mesh->VolumeElement (ei);
     const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
 
     int k = locedgenr;
@@ -2052,7 +2128,8 @@ namespace netgen
   
   int MeshTopology :: GetElementFaceOrientation (int elnr, int locfacenr) const
   {
-    const Element & el = mesh->VolumeElement (elnr);
+    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
+    const Element & el = mesh->VolumeElement (ei);
     
     const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
 
@@ -2060,7 +2137,7 @@ namespace netgen
     if (elfaces[j][3] < 0)
       { // triangle
         INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                     el[elfaces[j][2]], 0);
+                     el[elfaces[j][2]], PointIndex::BASE-1 );
         
         int facedir = 0;
         if (face.I1() > face.I2())
@@ -2127,7 +2204,7 @@ namespace netgen
     if (elfaces[j][3] < 0)
       { // triangle
         INDEX_4 face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                     el[elfaces[j][2]], 0);
+                     el[elfaces[j][2]], PointIndex(PointIndex::INVALID));
         
         int facedir = 0;
         if (face.I1() > face.I2())
@@ -2173,7 +2250,7 @@ namespace netgen
 
   void MeshTopology :: GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
-    enr = segedges.Get(segnr)+1;
+    enr = segedges[segnr-1]+1;
     orient = GetSegmentEdgeOrientation(segnr);
   }
 
@@ -2196,7 +2273,7 @@ namespace netgen
     vertices.SetSize(4);
     for (int i = 0; i < 4; i++)
       vertices[i] = face2vert[fnr-1][i];
-    if (vertices[3] == 0)
+    if (vertices[3]+1==PointIndex::BASE)
       vertices.SetSize(3);
   }
 
@@ -2227,12 +2304,13 @@ namespace netgen
 
   void MeshTopology :: GetFaceEdges (int fnr, NgArray<int> & fedges, bool withorientation) const
   {
-    NgArrayMem<int,4> pi(4);
-    NgArrayMem<int,12> eledges;
+    // NgArrayMem<int,4> pi(4);
+    // NgArrayMem<int,12> eledges;
   
     fedges.SetSize (0);
-    GetFaceVertices(fnr, pi);
-
+    // GetFaceVertices(fnr, pi);
+    auto pi = GetFaceVertices(fnr-1);
+    
     // Sort Edges according to global vertex numbers 
     // e1 = fmax, f2 
     // e2 = fmax, f1 
@@ -2279,12 +2357,14 @@ namespace netgen
 	  {
 	    const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType(fnr)); 
 	    fedges.SetSize(nfa_ref_edges);
-	    GetElementEdges (els[i]+1, eledges);
+	    // GetElementEdges (els[i]+1, eledges);
+            auto eledges = GetEdges (els[i]);
 	  
 	    for (int j = 0; j < eledges.Size(); j++)
 	      {
-		int vi1, vi2;
-		GetEdgeVertices (eledges[j], vi1, vi2);
+		// int vi1, vi2;
+		// GetEdgeVertices (eledges[j]+1, vi1, vi2);
+                auto [vi1, vi2] = GetEdgeVertices(eledges[j]);
 	    
 		bool has1 = 0;
 		bool has2 = 0;
@@ -2300,19 +2380,19 @@ namespace netgen
 		    // fedges.Append (eledges[j]);
 		    for(int k=0;k<nfa_ref_edges;k++)
 		      {
-			int w1 = el[ref_faces[fa][fa_ref_edges[k][0]-1]-1]; 
-			int w2 = el[ref_faces[fa][fa_ref_edges[k][1]-1]-1]; 
+			PointIndex w1 = el[ref_faces[fa][fa_ref_edges[k][0]-1]-1]; 
+			PointIndex w2 = el[ref_faces[fa][fa_ref_edges[k][1]-1]-1]; 
 
 			if(withorientation)
 			  {
 			    if(w1==vi1 && w2==vi2)
-			      fedges[k] = eledges[j];
+			      fedges[k] = eledges[j]+1;
 			    if(w1==vi2 && w2==vi1)
-			      fedges[k] = -eledges[j];
+			      fedges[k] = -eledges[j]+1;
 			  }
 			else
 			  if((w1==vi1 && w2==vi2) || (w1==vi2 && w2==vi1))
-			    fedges[k] = eledges[j];
+			    fedges[k] = eledges[j]+1;
 		      }
 		  }
 	      }
@@ -2323,11 +2403,15 @@ namespace netgen
 	    return;
 	  }
       }   
-
-    int surfel = GetFace2SurfaceElement(fnr);
-    if (surfel != 0)
+    SurfaceElementIndex surfel = GetFace2SurfaceElement(fnr-1);
+    
+    if (surfel.IsValid())
       {
-	GetSurfaceElementEdges (surfel, fedges);
+	// GetSurfaceElementEdges (surfel, fedges);
+        auto hedges = GetEdges (surfel);
+        fedges.SetSize(hedges.Size());
+        for (int i : Range(hedges))
+          fedges[i]=hedges[i]+1;
 	return;
       }
   }
@@ -2347,25 +2431,47 @@ namespace netgen
   }
 
 
-  int MeshTopology :: GetVerticesEdge ( int v1, int v2 ) const
+  int MeshTopology :: GetVerticesEdge ( PointIndex v1, PointIndex v2 ) const
   {
-    // NgArray<int> elementedges;
-    // Array<ElementIndex> elements_v1;
-    // GetVertexElements ( v1, elements_v1);
-    auto elements_v1 = GetVertexElements ( v1 );
-    int edv1, edv2;
-
-    for ( int i = 0; i < elements_v1.Size(); i++ )
-      {
-	// GetElementEdges( elements_v1[i]+1, elementedges );
-        auto elementedges = GetEdges(ElementIndex(elements_v1[i]));
-	for ( int ed = 0; ed < elementedges.Size(); ed ++)
-	  {
-	    GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
-	    if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
-	      return elementedges[ed];
-	  }
+    /*
+    if (vert2element.Size() > 0)
+      {      
+        auto elements_v1 = GetVertexElements ( v1 );
+        // int edv1, edv2;
+        
+        for ( int i = 0; i < elements_v1.Size(); i++ )
+          {
+            // GetElementEdges( elements_v1[i]+1, elementedges );
+            auto elementedges = GetEdges(ElementIndex(elements_v1[i]));
+            for ( int ed = 0; ed < elementedges.Size(); ed ++)
+              {
+                // GetEdgeVertices( elementedges[ed]+1, edv1, edv2 );
+                auto [edv1,edv2] = GetEdgeVertices (elementedges[ed]);
+                if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
+                  return elementedges[ed];
+              }
+          }
       }
+    */
+    
+    if (vert2element.Size() > 0)
+      for (auto ei : GetVertexElements ( v1 ))
+        for (auto ed : GetEdges(ei))
+          {
+            auto [edv1,edv2] = GetEdgeVertices (ed);
+            if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
+              return ed;
+          }
+
+ 
+    if (vert2surfelement.Size() > 0)
+      for (auto sei : GetVertexSurfaceElements ( v1 ))
+        for (auto ed : GetEdges(sei))
+          {
+            auto [edv1,edv2] = GetEdgeVertices (ed);
+            if ( ( edv1 == v1 && edv2 == v2 ) || ( edv1 == v2 && edv2 == v1 ) )
+              return ed;
+          }
 
     return -1;
   }
@@ -2393,9 +2499,10 @@ namespace netgen
   void MeshTopology :: 
   GetSegmentSurfaceElements (int segnr, NgArray<SurfaceElementIndex> & els) const
   {
-    int v1, v2;
+    // int v1, v2;
     // GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );
-    GetEdgeVertices ( GetEdge (segnr-1)+1, v1, v2 );
+    // GetEdgeVertices ( GetEdge (segnr-1)+1, v1, v2 );
+    auto [v1,v2] = GetEdgeVertices ( GetEdge (segnr-1) );
     auto els1 = GetVertexSurfaceElements ( v1 );
     auto els2 = GetVertexSurfaceElements ( v2 );
     els.SetSize(0);

@@ -9,16 +9,19 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
+#include "writeuser.hpp"
 
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
 void WriteTecPlotFormat (const Mesh & mesh,
-			 const CSGeometry & geom,
-			 const string & filename)
+			 const filesystem::path & filename)
 {
+  auto geom = dynamic_pointer_cast<CSGeometry>(mesh.GetGeometry());
+  if(geom == nullptr)
+    throw Exception("TecPlot format requires a CSGeometry");
+
   INDEX i;
   int j, k, e, z;
   Vec<3> n;
@@ -30,7 +33,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
   NgArray<int> sn(np);
   ofstream outfile(filename);
   
-  outfile << "TITLE=\" " << filename << "\"" << endl;
+  outfile << "TITLE=\" " << filename.string() << "\"" << endl;
 
   // fill hashtable
 
@@ -56,7 +59,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
     }
       
       
-  for (j = 1; j <= geom.GetNSurf(); j++)       /* Flaeche Nummer j */
+  for (j = 1; j <= geom->GetNSurf(); j++)       /* Flaeche Nummer j */
     {
       for (i = 1; i <= np; i++)
 	sn.Elem(i) = 0;
@@ -85,7 +88,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
       for (i = 1; i <= np; i++)
 	if (sn.Elem(i) != 0)
 	  {
-	    n = geom.GetSurface(j) -> GetNormalVector ( mesh.Point(i) );
+	    n = geom->GetSurface(j) -> GetNormalVector ( mesh.Point(i) );
 		
 	    outfile << mesh.Point(i)(0) << " " /* Knoten Koordinaten */
 		    << mesh.Point(i)(1) << " "
@@ -123,5 +126,6 @@ void WriteTecPlotFormat (const Mesh & mesh,
     }
 }
 
+static RegisterUserFormat reg_tecplot ("TecPlot Format", {".mesh"}, nullopt, WriteTecPlotFormat);
 
 }

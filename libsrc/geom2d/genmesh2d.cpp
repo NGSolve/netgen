@@ -5,7 +5,7 @@ namespace netgen
 {
   // extern DLL_HEADER MeshingParameters mparam;
 
-  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp);
+  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex=0);
 
 
 
@@ -81,7 +81,7 @@ namespace netgen
 
     for (int j = 1; j <= n && i < nel; j++)
       {
-	double t = (j-0.5)*dt;
+	// double t = (j-0.5)*dt;
 	double fun = hi[j-1];
 
 	f = oldf + dt / fun;
@@ -92,7 +92,7 @@ namespace netgen
 	    i++;
 	  }
 	oldf = f;
-	t += dt;
+	// t += dt;
       }
     points.Append (len);
   }
@@ -139,7 +139,9 @@ namespace netgen
 	    mark = spline.GetPoint (edgelength);
 	  
 	    {
-	      PointIndex pi1 = -1, pi2 = -1;
+	      PointIndex pi1{PointIndex::INVALID};
+	      PointIndex pi2{PointIndex::INVALID};
+
 	  
 	      Point3d mark3(mark(0), mark(1), 0);
 	      Point3d oldmark3(oldmark(0), oldmark(1), 0);
@@ -157,12 +159,12 @@ namespace netgen
 		if ( mesh[PointIndex(locsearch[k])].GetLayer() == spline.layer)
 		  pi2 = locsearch[k];
 
-	      if (pi1 == -1)
+	      if (!pi1.IsValid())
 		{
 		  pi1 = mesh.AddPoint(oldmark3, spline.layer);
 		  searchtree.Insert (oldmark3, pi1);
 		}
-	      if (pi2 == -1)
+	      if (!pi2.IsValid())
 		{
 		  pi2 = mesh.AddPoint(mark3, spline.layer);
 		  searchtree.Insert (mark3, pi2);
@@ -278,7 +280,7 @@ namespace netgen
           mesh2d.AddLockedPoint(npi);
           Element0d el(npi, npi);
           el.name = point.name;
-          mesh2d.SetCD2Name(npi, point.name);
+          mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, point.name);
           mesh2d.pointelements.Append (el);
           searchtree.Insert (newp, npi);          
         }
@@ -292,20 +294,20 @@ namespace netgen
             Point<2> hnewp = (j == 1) ? splines[i]->StartPI() : splines[i]->EndPI();
             Point<3> newp(hnewp(0), hnewp(1), 0);
             int layer = GetSpline(i).layer;
-            int npi = -1;
-            for (PointIndex pi = PointIndex::BASE; 
-                 pi < mesh2d.GetNP()+PointIndex::BASE; pi++)
+            PointIndex npi(PointIndex::INVALID);
+            for (PointIndex pi = IndexBASE<PointIndex>(); 
+                 pi < mesh2d.GetNP()+IndexBASE<PointIndex>(); pi++)
               if (Dist2 (mesh2d.Point(pi), newp) < 1e-12 * diam2 && mesh2d.Point(pi).GetLayer() == layer)
                 npi = pi;
             
-	    if (npi == -1)
+	    if (!npi.IsValid())
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
 		searchtree.Insert (newp, npi);
                 mesh2d.AddLockedPoint(npi);
-                Element0d el(npi, npi);
+                Element0d el(npi, npi-IndexBASE<PointIndex>()+1);
                 el.name = "";
-                mesh2d.SetCD2Name(npi, "");
+                mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, "");
                 mesh2d.pointelements.Append (el);
 	      }
           }
@@ -463,8 +465,8 @@ namespace netgen
 	  PointIndex mpi(0);
 	  Point<2> gp = geometry.GetPoint(i);
 	  Point<3> gp3(gp(0), gp(1), 0);
-	  for (PointIndex pi = PointIndex::BASE; 
-	       pi < mesh->GetNP()+PointIndex::BASE; pi++)
+	  for (PointIndex pi = IndexBASE<PointIndex>(); 
+	       pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
 	    if (Dist2(gp3, (*mesh)[pi]) < mindist)
 	      {
 		mpi = pi;
@@ -511,7 +513,7 @@ namespace netgen
     t_h.Stop();
 
     int bnp = mesh->GetNP(); // boundary points
-    auto BndPntRange = mesh->Points().Range();
+    // auto BndPntRange = mesh->Points().Range();
 
     int hquad = mp.quad;
 
@@ -521,8 +523,8 @@ namespace netgen
         { // tensor product mesh
           RegionTimer rt(t_tensor);
           
-          NgArray<PointIndex, PointIndex::BASE> nextpi(bnp);
-          NgArray<int, PointIndex::BASE> si1(bnp), si2(bnp);
+          Array<PointIndex, PointIndex> nextpi(bnp);
+          Array<int, PointIndex> si1(bnp), si2(bnp);
           // PointIndex firstpi;
           
           nextpi = -1;
@@ -551,7 +553,8 @@ namespace netgen
           PointIndex c1(0), c2, c3, c4;  // 4 corner points
           int nex = 1, ney = 1;
 
-          for (PointIndex pi = 1; pi <= si2.Size(); pi++)
+          // for (PointIndex pi = 1; pi <= si2.Size(); pi++)
+          for (PointIndex pi : si2.Range())
             if (si2[pi] != -1)
               { c1 = pi; break; }      
 
@@ -564,13 +567,17 @@ namespace netgen
           NgArray<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
           pts = -1;
 
-          for (PointIndex pi = c1, i = 0; pi != c2; pi = nextpi[pi], i++)
+          int i = 0;
+          for (PointIndex pi = c1; pi != c2; pi = nextpi[pi], i++)
             pts[i] = pi;
-          for (PointIndex pi = c2, i = 0; pi != c3; pi = nextpi[pi], i++)
+          i = 0;
+          for (PointIndex pi = c2; pi != c3; pi = nextpi[pi], i++)
             pts[(nex+1)*i+nex] = pi;
-          for (PointIndex pi = c3, i = 0; pi != c4; pi = nextpi[pi], i++)
+          i = 0;
+          for (PointIndex pi = c3; pi != c4; pi = nextpi[pi], i++)
             pts[(nex+1)*(ney+1)-i-1] = pi;
-          for (PointIndex pi = c4, i = 0; pi != c1; pi = nextpi[pi], i++)
+          i = 0;
+          for (PointIndex pi = c4; pi != c1; pi = nextpi[pi], i++)
             pts[(nex+1)*(ney-i)] = pi;
 
 

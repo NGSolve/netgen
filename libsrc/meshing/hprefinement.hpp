@@ -11,7 +11,11 @@
   HP Refinement
 */
 
+#include "bisect.hpp"
+#include "meshtype.hpp"
 
+namespace netgen
+{
 
 
 enum HPREF_ELEMENT_TYPE {
@@ -41,6 +45,9 @@ enum HPREF_ELEMENT_TYPE {
   HP_TRIG_SINGEDGES23,
   HP_TRIG_3SINGEDGES = 40,
 
+  HP_TRIG_ALFELD,
+  HP_TRIG_POWELL,
+  
   HP_QUAD = 50,
   HP_QUAD_SINGCORNER,
   HP_DUMMY_QUAD_SINGCORNER,
@@ -102,6 +109,7 @@ enum HPREF_ELEMENT_TYPE {
 
 
   HP_TET = 100,     // no singular vertex/edge
+  HP_NONETET,       // make void
   HP_TET_0E_1V,     // V1
   HP_TET_0E_2V,     // V1,2
   HP_TET_0E_3V,     // V1,2,3  
@@ -148,14 +156,38 @@ enum HPREF_ELEMENT_TYPE {
   HP_TET_3EC_0V = 430,  // 3 edges chain, alter
   HP_TET_3EC_1V,        // 3 edges chain, alter
   HP_TET_3EC_2V,        // 3 edges chain, alter
+  HP_TET_3ED_3V,        // 3 edges in a loop  e12, e13, e23     NEW .. done
 
 
   HP_TET_1F_0E_0V = 500,  // 1 singular face
-  HP_TET_1F_0E_1VA,       // 1 sing vertex in face (V2)
+  HP_TET_1F_0E_1VA,       // 1 sing vertex in face (V2)          FIX ... (needs HEX7)
   HP_TET_1F_0E_1VB,       // 1 sing vertex not in face (V1)
+  HP_TET_1F_0E_2V,        // 2 sing vertex in face (V2,V3)       NEW .. done
+  HP_TET_1F_0E_3V,        // 3 sing vertex in face (V2,V3,V4)    NEWNEW 
   HP_TET_1F_1EA_0V,       // 1 sing edge not in face
   HP_TET_1F_1EB_0V,       // 1 sing edge in face
+  HP_TET_1F_1E_1VA,       // 1 sing edge in face e23, sing vert 2        NEW  done
+  HP_TET_1F_1E_1VB,       // 1 sing edge in face e24, sing vert 2        NEW  done
+  HP_TET_1F_1E_2VA,      //  1 sing edge not in face (e12), sing v2,v3      NEW  done
+  HP_TET_1F_1E_2VB,       // 1 sing edge not in face (e12), sing v2,v4      NEW  done
+  HP_TET_1F_1E_2VC,       // 1 sing edge not in face (e12), sing v3,v4      NEW
+  HP_TET_1F_1EA_3V,        // 1 sing edge out of face e12, sing v2, v3, v4    NEWNEW   WIP, need Pyramid with 1 sing trig-face
+  HP_TET_1F_1E_3V,        // 1 sing edge in face e23, sing v2, v3, v4       NEWNEW  done
+  HP_TET_1F_2Eoo_3V,      // 2e out of face: f234, e12, e13, v1,v2,v3       NEWNEW
+  HP_TET_1F_2E_0VA,       // edge6 && fedge3  .. 1 in face, 1 not in face    NEW done
+  HP_TET_1F_2E_0VB,       // edge6 && fedge2  .. 1 in face, 1 not in face    NEW done
+  HP_TET_1F_2E_1V,        // e4,e5 (E23,E24), V2                            NEW NEW         WIP
+  HP_TET_1F_2E_3V,        // e4,e5 (E23,E24), V2,V3,V4                     NEW NEW  done
+
   HP_TET_2F_0E_0V = 600,  // 2 singular faces
+  HP_TET_2F_0E_1V,      // 2 singular faces f234, f134, sing point V4     NEW
+  HP_TET_2F_1E_0VA,  // 2 singular faces, sing edge e4               NEW  done 
+  HP_TET_2F_1E_0VB,  // 2 singular faces, sing edge e5               NEW  done
+
+  HP_TET_2F_1E_3VA,  // 2 singular faces f234,f134, e23, v2,v3,v4        NEW3
+  HP_TET_2F_1E_4VA,  // 2 singular faces f234,f134, e23, v2,v3,v4        NEW3  
+  
+  HP_TET_3F_0E_0V = 700,  // 3 singular faces, no additional points or edges  NEW   done 
 
   HP_PRISM = 1000,
   HP_PRISM_SINGEDGE,
@@ -167,8 +199,8 @@ enum HPREF_ELEMENT_TYPE {
   HP_PRISM_2FA_0E_0V,     // 2 singular trig faces
   HP_PRISM_1FB_0E_0V,     // 1 singular quad face  1-2-4-5
 
-  HP_PRISM_1FB_1EA_0V,     // 1 singular quad face, edge is 1-2
-  HP_PRISM_1FA_1E_0V, 
+  HP_PRISM_1FB_1EA_0V,     // 1 singular quad face, edge is 1-4
+  HP_PRISM_1FA_1E_0V,       
   HP_PRISM_2FA_1E_0V, 
   HP_PRISM_1FA_1FB_0E_0V, 
   HP_PRISM_2FA_1FB_0E_0V,
@@ -218,6 +250,7 @@ enum HPREF_ELEMENT_TYPE {
   HP_PYRAMID = 2000,
   HP_PYRAMID_0E_1V,
   HP_PYRAMID_EDGES,
+  HP_PYRAMID_1FB_0E_0V,   // 1 trig face F125
   HP_PYRAMID_1FB_0E_1VA,  // 1 trig face, top vertex
 
   HP_HEX = 3000,
@@ -226,7 +259,11 @@ enum HPREF_ELEMENT_TYPE {
   HP_HEX_1E_0V,
   HP_HEX_3E_0V,
   HP_HEX_1F_0E_0V,
-  HP_HEX_1FA_1FB_0E_0V
+  HP_HEX_1FA_1FB_0E_0V,
+
+  HP_HEX7 = 3100,
+  HP_HEX7_1FA,      // singular quad face 1,2,3,4
+  HP_HEX7_1FB       // singular trig face 5,6,7
 };
 
 
@@ -296,7 +333,7 @@ public:
   int levely;
   int levelz;
   int np; 
-  int coarse_elnr;
+  int coarse_elnr;  // issue (JS): same class is for ElementIndex, SurfaceElementIndex, SegmentIndex 
   int domin, domout; // he: needed for segment!! in 3d there should be surf1, surf2!!
   // int coarse_hpelnr; 
   PointIndex & operator[](int i) { return(pnums[i]);}
@@ -304,17 +341,24 @@ public:
   PointIndex & PNum(int i) {return pnums[(i-1)]; };
   int GetIndex () const { return index; }; 
   double singedge_left, singedge_right; 
-  
+  auto PNums() const { return FlatArray<const PointIndex>(np, &pnums[0]); }
 
   //  EdgePointGeomInfo epgeominfo[2];
   
 };
 
 
+enum SplittingType { SPLIT_HP, SPLIT_ALFELD, SPLIT_POWELL};
 
-DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
+DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split, int levels,
 			  double fac1=0.125, bool setorders=true, bool ref_level = false);
 
+inline void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
+			  double fac1=0.125, bool setorders=true, bool ref_level = false)
+{
+  HPRefinement (mesh, ref, SPLIT_HP, levels, fac1, setorders, ref_level);
+}
 
+} // namespace netgen
 #endif
 

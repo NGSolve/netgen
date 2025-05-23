@@ -18,16 +18,10 @@ namespace ngcore
 {
 #if defined __AVX512F__
     #define NETGEN_DEFAULT_SIMD_SIZE 8
-    #define NETGEN_NATIVE_SIMD_SIZE  8
 #elif defined __AVX__
     #define NETGEN_DEFAULT_SIMD_SIZE 4
-    #define NETGEN_NATIVE_SIMD_SIZE  4
-#elif defined NETGEN_ARCH_AMD64
-    #define NETGEN_DEFAULT_SIMD_SIZE 2
-    #define NETGEN_NATIVE_SIMD_SIZE  2
 #else
     #define NETGEN_DEFAULT_SIMD_SIZE 2
-    #define NETGEN_NATIVE_SIMD_SIZE  1
 #endif
 
   constexpr int GetDefaultSIMDSize() {
@@ -36,9 +30,7 @@ namespace ngcore
 
   constexpr bool IsNativeSIMDSize(int n) {
     if(n==1) return true;
-#if defined NETGEN_ARCH_AMD64 || defined  __SSE__ || defined __aarch64__
     if(n==2) return true;
-#endif
 #if defined __AVX__
     if(n==4) return true;
 #endif
@@ -567,6 +559,15 @@ namespace ngcore
     sum = FNMA(a,b,sum);
   }
 
+  // c += a*b    (a0re, a0im, a1re, a1im, ...), 
+  template <int N>
+  void FMAComplex (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> & c)
+  {
+    auto [are, aim] = Unpack(a, a);
+    SIMD<double,N> bswap = SwapPairs(b);
+    SIMD<double,N> aim_bswap = aim*bswap;
+    c += FMAddSub (are, b, aim_bswap);
+  }
   
   template <int i, typename T, int N>
   T get(SIMD<T,N> a) { return a.template Get<i>(); }

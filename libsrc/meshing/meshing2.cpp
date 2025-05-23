@@ -1,5 +1,7 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+
+#include "meshing2.hpp"
+
 #include "visual_interface.hpp"
 
 namespace netgen
@@ -246,8 +248,8 @@ namespace netgen
   {
     static Timer timer("surface meshing"); RegionTimer reg(timer);
 
-    static int timer1 = NgProfiler::CreateTimer ("surface meshing1");
-    static int timer2 = NgProfiler::CreateTimer ("surface meshing2");
+    static Timer timer1("surface meshing1");
+    static Timer timer2("surface meshing2");
     static int timer3 = NgProfiler::CreateTimer ("surface meshing3");
 
     static int ts1 = NgProfiler::CreateTimer ("surface meshing start 1");
@@ -285,7 +287,7 @@ namespace netgen
     NgArray<int> plainzones;
     auto loclinesptr = make_shared<NgArray<INDEX_2>>();
     auto &loclines = *loclinesptr;
-    int cntelem = 0, trials = 0, nfaces = 0;
+    int trials = 0, nfaces = 0;
     int oldnl = 0;
 
     UpdateVisSurfaceMeshData(oldnl, locpointsptr, loclinesptr, plainpointsptr);
@@ -408,7 +410,7 @@ namespace netgen
       RegionTimer rloop(tloop);
     while (!adfront.Empty() && !multithread.terminate)
       {
-	NgProfiler::RegionTimer reg1 (timer1);
+	// RegionTimer reg1 (timer1);
 
 	if (multithread.terminate)
 	  throw NgException ("Meshing stopped");
@@ -487,8 +489,7 @@ namespace netgen
 			     pindex, lindex, 2*hinner);
         // tgetlocals.Stop();
 
-	NgProfiler::RegionTimer reg2 (timer2);
-
+	// RegionTimer reg2 (timer2);
 	//(*testout) << "h for locals: " << 2*hinner << endl;
 	
 
@@ -541,8 +542,8 @@ namespace netgen
 
 	// problem recognition !
 	if (found && 
-	    (gpi1 < illegalpoint.Size()+PointIndex::BASE) && 
-	    (gpi2 < illegalpoint.Size()+PointIndex::BASE) )
+	    (gpi1 < illegalpoint.Size()+IndexBASE<PointIndex>()) && 
+	    (gpi2 < illegalpoint.Size()+IndexBASE<PointIndex>()) )
 	  {
 	    if (illegalpoint[gpi1] || illegalpoint[gpi2])
 	      found = 0;
@@ -557,7 +558,7 @@ namespace netgen
 	    oldnl = loclines.Size();
 
             UpdateVisSurfaceMeshData(oldnl);
-	  
+            
 	    if (debugflag)
 	      (*testout) << "define new transformation" << endl;
 
@@ -574,15 +575,16 @@ namespace netgen
 		*testout << "3d points: " << endl << locpoints << endl;
 	      }
 
-
-	    for (size_t i = 0; i < locpoints.Size(); i++)
-              {
-                Point<2> pp;
-                TransformToPlain (locpoints[i], mpgeominfo[i],
-                                  pp, h, plainzones[i]);
-                plainpoints[i] = pp;
-              }
-            
+            {
+              // RegionTimer reg2 (timer2);
+              for (size_t i = 0; i < locpoints.Size(); i++)
+                {
+                  Point<2> pp;
+                  TransformToPlain (locpoints[i], mpgeominfo[i],
+                                    pp, h, plainzones[i]);
+                  plainpoints[i] = pp;
+                }
+            }
             /*
 	    for (int i = 1; i <= locpoints.Size(); i++)
 	      {
@@ -633,7 +635,6 @@ namespace netgen
 	    // 	      plainpoints.Elem(i) = Point2d (1e4, 1e4);
 	    */
 	  
-
 	  
 	    for (int i = 2; i <= loclines.Size(); i++)  // don't remove first line
 	      {
@@ -858,7 +859,8 @@ namespace netgen
 	    const Element2d & el = locelements.Get(i);
 
 	    for (int j = 1; j <= el.GetNP(); j++)
-	      if (el.PNum(j) <= oldnp && pindex.Get(el.PNum(j)) == -1)
+	      // if (el.PNum(j) <= oldnp && pindex.Get(el.PNum(j)) == -1)
+              if (el.PNum(j) < IndexBASE<PointIndex>()+oldnp && pindex.Get(el.PNum(j)) == -1)
 		{
 		  found = 0;
 		  PrintSysError ("meshing2, index missing");
@@ -1379,7 +1381,7 @@ namespace netgen
 	      
 	      
 		mesh.AddSurfaceElement (mtri);
-		cntelem++;
+		// cntelem++;
 		//	      cout << "elements: " << cntelem << endl;
 
 

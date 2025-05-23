@@ -53,7 +53,7 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 
   for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
     {
-      INDEX_2 i2 (mesh[si][0], mesh[si][1]);
+      PointIndices<2> i2 (mesh[si][0], mesh[si][1]);
       /*
       
       bool onedge = 1;
@@ -93,8 +93,8 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	{
 	  segms.Append (i2);
 	  //	  PrintMessage (5, "sing segment ", i2.I1(), " - ", i2.I2());
-	  points.Append (mesh[ PointIndex (i2.I1())]);
-	  points.Append (mesh[ PointIndex (i2.I2())]);
+	  points.Append (mesh[i2.I1()]);
+	  points.Append (mesh[i2.I2()]);
 	  mesh[si].singedge_left = factor;
 	  mesh[si].singedge_right = factor;
 	}	    
@@ -153,8 +153,8 @@ void SingularPoint :: FindPoints (class Mesh & mesh)
   NgArray<int> surfk, surf;
 
 
-  for (PointIndex pi = PointIndex::BASE; 
-       pi < mesh.GetNP()+PointIndex::BASE; pi++)
+  for (PointIndex pi = IndexBASE<PointIndex>(); 
+       pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
     {
       if (mesh[pi].Type() != FIXEDPOINT) continue;
       const Point<3> p = mesh[pi];

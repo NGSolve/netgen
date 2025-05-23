@@ -1,42 +1,54 @@
 #ifndef FILE_IMPROVE3
 #define FILE_IMPROVE3
 
-
-extern double CalcTotalBad (const Mesh::T_POINTS & points, 
-			    const Array<Element, ElementIndex> & elements,
-			    const MeshingParameters & mp);
+namespace netgen
+{
 
 
 ///
 class MeshOptimize3d
 {
+  Mesh & mesh;
   const MeshingParameters & mp;
+  OPTIMIZEGOAL goal = OPT_QUALITY;
+  double min_badness = 0;
+
+  bool HasBadElement(FlatArray<ElementIndex> els);
+  bool HasIllegalElement(FlatArray<ElementIndex> els);
+  bool NeedsOptimization(FlatArray<ElementIndex> els);
 
 public:
-  MeshOptimize3d (const MeshingParameters & amp) : mp(amp) { ; }
 
-  double CombineImproveEdge (Mesh & mesh, const MeshingParameters & mp,
+  MeshOptimize3d (Mesh & m, const MeshingParameters & amp, OPTIMIZEGOAL agoal = OPT_QUALITY) :
+      mesh(m), mp(amp), goal(agoal) { ; }
+
+  void SetGoal(OPTIMIZEGOAL agoal) { goal = agoal; }
+  void SetMinBadness(double badness) { min_badness = badness; }
+
+  tuple<double, double, int> UpdateBadness();
+
+  double CombineImproveEdge (
             Table<ElementIndex, PointIndex> & elements_of_point,
-            Array<double> & elerrs, PointIndex pi0, PointIndex pi1,
+            PointIndex pi0, PointIndex pi1,
             FlatArray<bool, PointIndex> is_point_removed, bool check_only=false);
 
-  void CombineImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
+  void CombineImprove ();
 
-  void SplitImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
-  double SplitImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, Table<ElementIndex,PointIndex> & elementsonnode, Array<double> &elerrs, NgArray<INDEX_3> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+  void SplitImprove ();
+  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<PointIndices<3>> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
 
-  void SplitImprove2 (Mesh & mesh);
-  double SplitImprove2Element (Mesh & mesh, ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, const Array<double> & elerrs, bool check_only);
+  void SplitImprove2 ();
+  double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
   
 
-  double SwapImproveEdge (Mesh & mesh, OPTIMIZEGOAL goal, const NgBitArray * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
-  void SwapImprove (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-		    const NgBitArray * working_elements = NULL);
-  void SwapImproveSurface (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY,
-			   const NgBitArray * working_elements = NULL,
-			   const NgArray< NgArray<int,PointIndex::BASE>* > * idmaps = NULL);
-  void SwapImprove2 (Mesh & mesh, OPTIMIZEGOAL goal = OPT_QUALITY);
-  double SwapImprove2 ( Mesh & mesh, OPTIMIZEGOAL goal, ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, TABLE<SurfaceElementIndex, PointIndex::BASE> & belementsonnode, bool check_only=false );
+  double SwapImproveEdge (const TBitArray<ElementIndex> * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
+  void SwapImprove (const TBitArray<ElementIndex> * working_elements = NULL);
+  void SwapImproveSurface (const TBitArray<ElementIndex> * working_elements = NULL,
+			   const NgArray< idmap_type* > * idmaps = NULL);
+  void SwapImprove2 (bool conform_segments = false);
+  double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool conform_segments, bool check_only=false );
+
+  void ImproveMesh() { mesh.ImproveMesh(mp, goal); }
 
   double 
   CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h)
@@ -48,10 +60,9 @@ public:
   }
 
 
-  double CalcTotalBad (const Mesh::T_POINTS & points, 
-		       const Array<Element, ElementIndex> & elements)
+  double GetLegalPenalty()
   {
-    return netgen::CalcTotalBad (points, elements, mp);
+    return goal == OPT_LEGAL ? 1e15 : 1e6;
   }
 
 };
@@ -97,12 +108,12 @@ public:
 class PointFunction1 : public MinFunction
 {
   Mesh::T_POINTS & points;
-  const NgArray<INDEX_3> & faces;
+  const NgArray<PointIndices<3>> & faces;
   const MeshingParameters & mp;
   double h;
 public:
   PointFunction1 (Mesh::T_POINTS & apoints, 
-		  const NgArray<INDEX_3> & afaces,
+		  const NgArray<PointIndices<3>> & afaces,
 		  const MeshingParameters & amp,
 		  double ah);
   
@@ -136,6 +147,5 @@ public:
   inline void UnSetNV(void) {onplane = false;}
 };
 
-
-
+} // namespace netgen
 #endif

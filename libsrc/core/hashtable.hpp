@@ -9,8 +9,9 @@
 
 #include <string>
 #include <tuple>
+#include <optional>
 
-#include "mpi_wrapper.hpp"
+// #include "mpi_wrapper.hpp"
 #include "ngcore_api.hpp"
 #include "table.hpp"
 #include "utils.hpp"
@@ -37,53 +38,68 @@ namespace ngcore
   };
   
   
-  
 
+  // feature check macro for transition from INT to IVec
+#define NGCORE_HAS_IVEC
+  
   /// N integers
   template <int N, typename T = int>
-  class INT
+  class IVec
   {
     /// data
-    T i[(N>0)?N:1];
+    // T i[(N>0)?N:1];
 
+    HTArray<N,T> i;
+    
   public:
     ///
-    NETGEN_INLINE INT () { }
+    constexpr NETGEN_INLINE IVec () = default;
+    constexpr NETGEN_INLINE IVec (const IVec & i1) : i(i1.i) { }
 
+    constexpr NETGEN_INLINE IVec (T ai1) : i(ai1) { }
+    
+    template <class... T2,
+              std::enable_if_t<N==1+sizeof...(T2),bool> = true>
+    constexpr IVec (const T &v, T2... rest)
+      : i{v,rest...} { } 
+
+    /*
     /// init all
-    NETGEN_INLINE INT (T ai1)
+    NETGEN_INLINE IVec (T ai1)
     { 
-      for (int j = 0; j < N; j++) { i[j] = ai1; }
+     for (int j = 0; j < N; j++) { i[j] = ai1; }
     }
 
     /// init i[0], i[1]
-    constexpr NETGEN_INLINE INT (T ai1, T ai2)
+    constexpr NETGEN_INLINE IVec (T ai1, T ai2)
       : i{ai1, ai2} { ; } 
 
     /// init i[0], i[1], i[2]
-    constexpr NETGEN_INLINE INT (T ai1, T ai2, T ai3)
+    constexpr NETGEN_INLINE IVec (T ai1, T ai2, T ai3)
       : i{ai1, ai2, ai3} { ; } 
 
     /// init i[0], i[1], i[2]
-    constexpr NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4)
+    constexpr NETGEN_INLINE IVec (T ai1, T ai2, T ai3, T ai4)
       : i{ai1, ai2, ai3, ai4} { ; }
     
     /// init i[0], i[1], i[2]
-    constexpr NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4, T ai5)
+    constexpr NETGEN_INLINE IVec (T ai1, T ai2, T ai3, T ai4, T ai5)
       : i{ai1, ai2, ai3, ai4, ai5} { ; }      
       
     /// init i[0], i[1], i[2]
-    NETGEN_INLINE INT (T ai1, T ai2, T ai3, T ai4, T ai5, T ai6, T ai7, T ai8, T ai9)
+    NETGEN_INLINE IVec (T ai1, T ai2, T ai3, T ai4, T ai5, T ai6, T ai7, T ai8, T ai9)
       : i{ai1, ai2, ai3, ai4, ai5, ai6, ai7, ai8, ai9 } { ; }            
-
+    */
+    
     template <typename ARCHIVE>
     void DoArchive(ARCHIVE& ar)
     {
-      ar.Do(i, N);
+      // ar.Do(i.begin(), N);
+      ar.Do(i.Ptr(), N);
     }
 
     template <int N2, typename T2>
-    NETGEN_INLINE INT (const INT<N2,T2> & in2)
+    NETGEN_INLINE IVec (const IVec<N2,T2> & in2)
     {
       if (N2 <= N)
         {
@@ -100,7 +116,7 @@ namespace ngcore
     }
 
     template <typename T2>
-    NETGEN_INLINE INT (const BaseArrayObject<T2> & ao)
+    NETGEN_INLINE IVec (const BaseArrayObject<T2> & ao)
     {
       for (int j = 0; j < N; j++)
         i[j] = ao.Spec()[j];
@@ -108,7 +124,7 @@ namespace ngcore
     
     NETGEN_INLINE size_t Size() const { return N; }
     /// all ints equal ?
-    NETGEN_INLINE bool operator== (const INT & in2) const
+    NETGEN_INLINE bool operator== (const IVec & in2) const
     { 
       for (int j = 0; j < N; j++) 
 	if (i[j] != in2.i[j]) return 0;
@@ -116,7 +132,7 @@ namespace ngcore
     }
 
     /// any ints unequal ?
-    NETGEN_INLINE bool operator!= (const INT & in2) const
+    NETGEN_INLINE bool operator!= (const IVec & in2) const
     {
       for (int j = 0; j < N; j++)
         if (i[j] != in2.i[j]) return 1;
@@ -124,7 +140,7 @@ namespace ngcore
     }
 
     /// sort integers
-    NETGEN_INLINE INT & Sort () & 
+    NETGEN_INLINE IVec & Sort () & 
     {
       for (int k = 0; k < N; k++)
 	for (int l = k+1; l < N; l++)
@@ -133,7 +149,7 @@ namespace ngcore
       return *this;
     }
 
-    NETGEN_INLINE INT Sort () &&
+    NETGEN_INLINE IVec Sort () &&
     {
       for (int k = 0; k < N; k++)
 	for (int l = k+1; l < N; l++)
@@ -155,7 +171,7 @@ namespace ngcore
     
     operator FlatArray<T> () { return FlatArray<T> (N, &i[0]); } 
 
-    NETGEN_INLINE INT<N,T> & operator= (T value)
+    NETGEN_INLINE IVec<N,T> & operator= (T value)
     {
       for (int j = 0; j < N; j++)
 	i[j] = value;
@@ -163,7 +179,7 @@ namespace ngcore
     }
 
     template <typename T2>
-    NETGEN_INLINE INT<N,T> & operator= (INT<N,T2> v2)
+    NETGEN_INLINE IVec<N,T> & operator= (IVec<N,T2> v2)
     {
       for (int j = 0; j < N; j++)
 	i[j] = v2[j];
@@ -186,14 +202,14 @@ namespace ngcore
 
   /// sort 2 integers
   template <>
-  NETGEN_INLINE INT<2> & INT<2>::Sort () & 
+  NETGEN_INLINE IVec<2> & IVec<2>::Sort () & 
   {
     if (i[0] > i[1]) Swap (i[0], i[1]);
     return *this;
   }
 
   template <>
-  NETGEN_INLINE INT<2> INT<2>::Sort () &&
+  NETGEN_INLINE IVec<2> IVec<2>::Sort () &&
   {
     if (i[0] > i[1]) Swap (i[0], i[1]);
     return *this;
@@ -201,7 +217,7 @@ namespace ngcore
 
   /// sort 3 integers
   template <>
-  NETGEN_INLINE INT<3> INT<3>::Sort () &&
+  NETGEN_INLINE IVec<3> IVec<3>::Sort () &&
   {
     if (i[0] > i[1]) Swap (i[0], i[1]);
     if (i[1] > i[2]) Swap (i[1], i[2]);
@@ -211,7 +227,7 @@ namespace ngcore
 
   /// Print integers
   template <int N, typename T>
-  inline ostream & operator<<(ostream  & s, const INT<N,T> & i2)
+  inline ostream & operator<<(ostream  & s, const IVec<N,T> & i2)
   {
     for (int j = 0; j < N; j++)
       s << (int) i2[j] << " ";
@@ -219,15 +235,15 @@ namespace ngcore
   }
   
   template <int N, typename T>
-  auto begin(const INT<N,T> & ind)
+  auto begin(const IVec<N,T> & ind)
   {
-    return AOWrapperIterator<INT<N,T>> (ind, 0);
+    return AOWrapperIterator<IVec<N,T>> (ind, 0);
   }
 
   template <int N, typename T>
-  auto end(const INT<N,T> & ind)
+  auto end(const IVec<N,T> & ind)
   {
-    return AOWrapperIterator<INT<N,T>> (ind, N);    
+    return AOWrapperIterator<IVec<N,T>> (ind, N);    
   }
 
 
@@ -236,9 +252,9 @@ namespace ngcore
 
   
   template <int N, typename TI>
-  NETGEN_INLINE size_t HashValue (const INT<N,TI> & ind, size_t size)
+  NETGEN_INLINE size_t HashValue (const IVec<N,TI> & ind, size_t size)
   {
-    INT<N,size_t> lind = ind;    
+    IVec<N,size_t> lind = ind;    
     size_t sum = 0;
     for (int i = 0; i < N; i++)
       sum += lind[i];
@@ -247,24 +263,24 @@ namespace ngcore
 
   /// hash value of 1 int
   template <typename TI>
-  NETGEN_INLINE size_t HashValue (const INT<1,TI> & ind, size_t size) 
+  NETGEN_INLINE size_t HashValue (const IVec<1,TI> & ind, size_t size) 
   {
     return ind[0] % size;
   }
 
   /// hash value of 2 int
   template <typename TI>  
-  NETGEN_INLINE size_t HashValue (const INT<2,TI> & ind, size_t size) 
+  NETGEN_INLINE size_t HashValue (const IVec<2,TI> & ind, size_t size) 
   {
-    INT<2,size_t> lind = ind;
+    IVec<2,size_t> lind = ind;
     return (113*lind[0]+lind[1]) % size;
   }
 
   /// hash value of 3 int
   template <typename TI>    
-  NETGEN_INLINE size_t HashValue (const INT<3,TI> & ind, size_t size) 
+  NETGEN_INLINE size_t HashValue (const IVec<3,TI> & ind, size_t size) 
   {
-    INT<3,size_t> lind = ind;
+    IVec<3,size_t> lind = ind;
     return (113*lind[0]+59*lind[1]+lind[2]) % size;
   }
 
@@ -284,9 +300,9 @@ namespace ngcore
 
   
   template <int N, typename TI>
-  NETGEN_INLINE size_t HashValue2 (const INT<N,TI> & ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<N,TI> & ind, size_t mask)
   {
-    INT<N,size_t> lind = ind;    
+    IVec<N,size_t> lind = ind;    
     size_t sum = 0;
     for (int i = 0; i < N; i++)
       sum += lind[i];
@@ -295,32 +311,32 @@ namespace ngcore
 
   /// hash value of 1 int
   template <typename TI>
-  NETGEN_INLINE size_t HashValue2 (const INT<1,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<1,TI> & ind, size_t mask) 
   {
     return ind[0] & mask;
   }
 
   /// hash value of 2 int
   template <typename TI>  
-  NETGEN_INLINE size_t HashValue2 (const INT<2,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<2,TI> & ind, size_t mask) 
   {
-    INT<2,size_t> lind = ind;
+    IVec<2,size_t> lind = ind;
     return (113*lind[0]+lind[1]) & mask;
   }
 
   /// hash value of 3 int
   template <typename TI>    
-  NETGEN_INLINE size_t HashValue2 (const INT<3,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<3,TI> & ind, size_t mask) 
   {
-    INT<3,size_t> lind = ind;
+    IVec<3,size_t> lind = ind;
     return (113*lind[0]+59*lind[1]+lind[2]) & mask;
   }
 
-  NETGEN_INLINE size_t HashValue2 (size_t ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (size_t ind, size_t mask)
   {
     return ind & mask;
   }
-  NETGEN_INLINE size_t HashValue2 (int ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (int ind, size_t mask)
   {
     return size_t(ind) & mask;
   }
@@ -332,7 +348,7 @@ namespace ngcore
   // using ngstd::max;
 
   template <int D, typename T>
-  NETGEN_INLINE T Max (const INT<D,T> & i)
+  NETGEN_INLINE T Max (const IVec<D,T> & i)
   {
     if (D == 0) return 0;
     T m = i[0];
@@ -342,7 +358,7 @@ namespace ngcore
   }
 
   template <int D, typename T>
-  NETGEN_INLINE T Min (const INT<D,T> & i)
+  NETGEN_INLINE T Min (const IVec<D,T> & i)
   {
     if (D == 0) return 0;
     T m = i[0];
@@ -352,18 +368,18 @@ namespace ngcore
   }
 
   template <int D, typename T>
-  NETGEN_INLINE INT<D,T> Max (INT<D,T> i1, INT<D,T> i2)
+  NETGEN_INLINE IVec<D,T> Max (IVec<D,T> i1, IVec<D,T> i2)
   {
-    INT<D,T> tmp;
+    IVec<D,T> tmp;
     for (int i = 0; i < D; i++)
       tmp[i] = std::max(i1[i], i2[i]);
     return tmp;
   }
 
   template <int D, typename T>
-  NETGEN_INLINE INT<D,T> operator+ (INT<D,T> i1, INT<D,T> i2)
+  NETGEN_INLINE IVec<D,T> operator+ (IVec<D,T> i1, IVec<D,T> i2)
   {
-    INT<D,T> tmp;
+    IVec<D,T> tmp;
     for (int i = 0; i < D; i++)
       tmp[i] = i1[i]+i2[i];
     return tmp;
@@ -575,7 +591,27 @@ namespace ngcore
     return res; 
   }
 
+  template <typename T>
+  constexpr inline T InvalidHash() { return T(-1); }
 
+  template <typename T_HASH>
+  struct CHT_trait
+  {
+    constexpr static inline T_HASH Invalid() { return InvalidHash<T_HASH>(); }
+    constexpr static inline size_t HashValue (const T_HASH & hash, size_t mask) { return HashValue2(hash, mask); }
+  };
+
+  template <typename T1, typename T2>
+  struct CHT_trait<std::tuple<T1,T2>>
+  {
+    constexpr static inline std::tuple<T1,T2> Invalid() { return { CHT_trait<T1>::Invalid(), CHT_trait<T2>::Invalid() } ; }
+    constexpr static inline size_t HashValue (const std::tuple<T1,T2> & hash, size_t mask)
+    {
+      return (CHT_trait<T1>::HashValue(std::get<0>(hash), mask) + CHT_trait<T2>::HashValue(std::get<1>(hash),mask)) & mask;
+    }
+  };
+
+  
 
   /**
      A closed hash-table.
@@ -596,14 +632,18 @@ namespace ngcore
     ///
     Array<T> cont;
     ///
-    T_HASH invalid = -1;
+    // T_HASH invalid = -1;
+    // static constexpr T_HASH invalid = InvalidHash<T_HASH>();
+    static constexpr T_HASH invalid = CHT_trait<T_HASH>::Invalid();
   public:
     ///
     ClosedHashTable (size_t asize = 128)
       : size(RoundUp2(asize)), hash(size), cont(size)
     {
       mask = size-1;
-      hash = T_HASH(invalid);
+      // hash = T_HASH(invalid);
+      // hash = InvalidHash<T_HASH>();
+      hash = CHT_trait<T_HASH>::Invalid();
     }
 
     ClosedHashTable (ClosedHashTable && ht2) = default;
@@ -612,7 +652,8 @@ namespace ngcore
     ClosedHashTable (size_t asize, LocalHeap & lh)
       : size(RoundUp2(asize)), mask(size-1), hash(size, lh), cont(size, lh)
     {
-      hash = T_HASH(invalid);
+      // hash = T_HASH(invalid);
+      hash = InvalidHash<T_HASH>();
     }
 
     ClosedHashTable & operator= (ClosedHashTable && ht2) = default;
@@ -637,7 +678,8 @@ namespace ngcore
 
     size_t Position (const T_HASH ind) const
     {
-      size_t i = HashValue2(ind, mask);
+      // size_t i = HashValue2(ind, mask);
+      size_t i = CHT_trait<T_HASH>::HashValue(ind, mask);
       while (true)
 	{
 	  if (hash[i] == ind) return i;
@@ -659,7 +701,8 @@ namespace ngcore
     {
       if (UsedElements()*2 > Size()) DoubleSize();
       
-      size_t i = HashValue2 (ind, mask);
+      // size_t i = HashValue2 (ind, mask);
+      size_t i = CHT_trait<T_HASH>::HashValue (ind, mask);
 
       while (true)
 	{
@@ -703,6 +746,16 @@ namespace ngcore
     {
       return (Position (ahash) != size_t(-1));
     }
+
+    inline std::optional<T> GetIfUsed (const T_HASH & ahash) const
+    {
+      size_t pos = Position (ahash);
+      if (pos != size_t(-1))
+        return cont[pos];
+      else
+        return std::nullopt;
+    }
+    
 
     void SetData (size_t pos, const T_HASH & ahash, const T & acont)
     {
@@ -781,6 +834,15 @@ namespace ngcore
       hash = T_HASH(invalid);
       used = 0;
     }
+
+    template <typename ARCHIVE>
+    void DoArchive (ARCHIVE& ar)
+    {
+      ar & hash & cont;
+      ar & size & mask & used;
+    }    
+
+    struct EndIterator { };
     
     class Iterator
     {
@@ -798,24 +860,21 @@ namespace ngcore
         while (nr < tab.Size() && !tab.UsedPos(nr)) nr++;
         return *this;
       }
-      bool operator!= (const Iterator & it2) { return nr != it2.nr; }
-      auto operator* () const
-      {
-        T_HASH hash;
-        T val;
-        tab.GetData(nr, hash,val);
-        return std::make_pair(hash,val);
-      }
+
+      bool operator!= (EndIterator it2) { return nr != tab.Size(); }
+      
+      auto operator* () const { return tab.GetBoth(nr); }
     };
 
     Iterator begin() const { return Iterator(*this, 0); }
-    Iterator end() const { return Iterator(*this, Size()); } 
+    EndIterator end() const { return EndIterator(); }
   };
 
   template <class T_HASH, class T>  
   ostream & operator<< (ostream & ost,
                         const ClosedHashTable<T_HASH,T> & tab)
   {
+    /*
     for (size_t i = 0; i < tab.Size(); i++)
       if (tab.UsedPos(i))
         {
@@ -824,25 +883,28 @@ namespace ngcore
           tab.GetData (i, key, val);
           ost << key << ": " << val << ", ";
         }
+    */
+    for (auto [key,val] : tab)
+      ost << key << ": " << val << ", ";      
     return ost;
   }
 
   template <typename TI>
-  NETGEN_INLINE size_t HashValue (const INT<3,TI> ind)
+  NETGEN_INLINE size_t HashValue (const IVec<3,TI> ind)
   {
-    INT<3,size_t> lind = ind;
+    IVec<3,size_t> lind = ind;
     return 113*lind[0]+59*lind[1]+lind[2];
   }
 
   template <typename TI>  
-  NETGEN_INLINE size_t HashValue (const INT<2,TI> ind)
+  NETGEN_INLINE size_t HashValue (const IVec<2,TI> ind)
   {
-    INT<2,size_t> lind = ind;
+    IVec<2,size_t> lind = ind;
     return 113*lind[0]+lind[1];
   }
 
   template <typename TI>  
-  NETGEN_INLINE size_t HashValue (const INT<1,TI> ind)
+  NETGEN_INLINE size_t HashValue (const IVec<1,TI> ind)
   {
     return ind[0];
   }
@@ -1068,14 +1130,114 @@ namespace ngcore
     return ost;
   }
 
+
+
+
+
+
+
+
+
+  template <class T, class IndexType>
+  class CompressedTable
+  {
+    Table<T, size_t> table;
+    ClosedHashTable<IndexType, size_t> idmap;
+    
+  public:
+    CompressedTable (Table<T, size_t> && atable, ClosedHashTable<IndexType, size_t> && aidmap)
+      : table(std::move(atable)), idmap(std::move(aidmap)) { }
+
+    FlatArray<T> operator[](IndexType id) const
+    {
+      if (auto nr = idmap.GetIfUsed(id))
+        return table[*nr];
+      else
+        return { 0, nullptr };
+    }
+    auto & GetTable() { return table; }
+  };
+
+
+  template <class T, typename IndexType>
+  class CompressedTableCreator
+  {
+  protected:
+    int mode;    // 1 .. cnt, 2 .. cnt entries, 3 .. fill table
+    size_t nd;   // number of entries;
+    ClosedHashTable<IndexType, size_t> idmap;
+    Array<int,size_t> cnt;
+    Table<T,size_t> table;
+  public:
+    CompressedTableCreator()
+    { nd = 0; mode = 1; }
+
+    CompressedTable<T,IndexType> MoveTable()
+    {
+      return { std::move(table), std::move(idmap) };
+    }
+
+    bool Done () { return mode > 3; }
+    void operator++(int) { SetMode (mode+1); }
+
+    int GetMode () const { return mode; }
+    void SetMode (int amode)
+    {
+      mode = amode;
+      if (mode == 2)
+	{
+          cnt.SetSize(nd);  
+          cnt = 0;
+	}
+      if (mode == 3)
+	{
+          table = Table<T,size_t> (cnt);
+          cnt = 0;
+	}
+    }
+
+    void Add (IndexType blocknr, const T & data)
+    {
+      switch (mode)
+	{
+	case 1:
+          {
+            if (!idmap.Used (blocknr))
+              idmap[blocknr] = nd++;
+            break;
+          }
+	case 2:
+	  cnt[idmap.Get(blocknr)]++;
+	  break;
+	case 3:
+          size_t cblock = idmap.Get(blocknr);
+          int ci = cnt[cblock]++;
+          table[cblock][ci] = data;
+	  break;
+	}
+    }
+  };
+
+
+  
+
+
+
+
+
+
+
+
+
+  
 } // namespace ngcore
 
 
-
+/*
 #ifdef PARALLEL
 namespace ngcore {
   template<int S, typename T>
-  class MPI_typetrait<ngcore::INT<S, T> >
+  class MPI_typetrait<ngcore::IVec<S, T> >
   {
   public:
     /// gets the MPI datatype
@@ -1092,6 +1254,19 @@ namespace ngcore {
   };
 }
 #endif
+*/
+
+namespace ngcore
+{
+  template<typename T> struct MPI_typetrait;
+  
+  template<int S, typename T>
+  struct MPI_typetrait<IVec<S, T> > {
+    static auto MPIType () {
+      return MPI_typetrait<std::array<T,S>>::MPIType();
+    }
+  };
+}
 
 
 
@@ -1099,8 +1274,8 @@ namespace std
 {
   // structured binding support
   template <auto N, typename T>
-  struct tuple_size<ngcore::INT<N,T>> : std::integral_constant<std::size_t, N> {};
-  template<size_t N, auto M, typename T> struct tuple_element<N,ngcore::INT<M,T>> { using type = T; };
+  struct tuple_size<ngcore::IVec<N,T>> : std::integral_constant<std::size_t, N> {};
+  template<size_t N, auto M, typename T> struct tuple_element<N,ngcore::IVec<M,T>> { using type = T; };
 }
 
 #endif

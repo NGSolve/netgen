@@ -1459,7 +1459,7 @@ void Partition_Spliter::MakeEdges (const TopoDS_Edge& E,
 
   if (VOnE.Extent() < 3) { // do not rebuild not cut edge
     if (( VF.IsSame( VOnE.First() ) && VL.IsSame( VOnE.Last() )) ||
-	VL.IsSame( VOnE.First() ) && VF.IsSame( VOnE.Last() )  ) {
+        (VL.IsSame( VOnE.First() ) && VF.IsSame( VOnE.Last() ))  ) {
       NE.Append( E );
       return;
     }
@@ -1476,7 +1476,7 @@ void Partition_Spliter::MakeEdges (const TopoDS_Edge& E,
 
   if (SV.Length() < 3) { // do not rebuild not cut edge
     if (( VF.IsSame( SV.First() ) && VL.IsSame( SV.Last() )) ||
-	VL.IsSame( SV.First() ) && VF.IsSame( SV.Last() )  ) {
+	( VL.IsSame( SV.First() ) && VF.IsSame( SV.Last() ))  ) {
       NE.Append( E );
       return;
     }

@@ -5,10 +5,13 @@
 
 #include "occgeom.hpp"
 #include "mydefs.hpp"
-
+#include <BRep_Tool.hxx>
 #include <TopoDS_Face.hxx>
 #include <Geom_Surface.hxx>
 #include <ShapeAnalysis.hxx>
+#include <ShapeAnalysis_Surface.hxx>
+#include <GeomLProp_SLProps.hxx>
+
 
 #define PARAMETERSPACE -1
 #define PLANESPACE     1
@@ -30,7 +33,8 @@ public:
   Handle(Geom_Surface) occface;
   TopAbs_Orientation orient;
   int projecttype;
-
+  ShapeAnalysis_Surface su;
+  Standard_Real toltool;
 protected:
   Point<3> p1;
   Point<3> p2;
@@ -60,10 +64,15 @@ protected:
 
 public:
   OCCSurface (const TopoDS_Face & aface, int aprojecttype)
+    : topods_face(aface),
+      occface(BRep_Tool::Surface(topods_face)),
+      su( occface ),
+      toltool(BRep_Tool::Tolerance(topods_face))
+      
   {
     static Timer t("occurface ctor"); RegionTimer r(t);
     topods_face = aface;
-    occface = BRep_Tool::Surface(topods_face);
+    // occface = BRep_Tool::Surface(topods_face);
     orient = topods_face.Orientation();
     projecttype = aprojecttype;
     ShapeAnalysis::GetFaceUVBounds (topods_face, umin, umax, vmin, vmax);
@@ -72,6 +81,8 @@ public:
     umax += fabs(umax-umin)/100.0;
     vmax += fabs(vmax-vmin)/100.0;
     // projecttype = PLANESPACE;
+
+    // su = ShapeAnalysis_Surface( occface );        
     /*
     TopExp_Explorer exp1;
     exp1.Init (topods_face, TopAbs_WIRE);

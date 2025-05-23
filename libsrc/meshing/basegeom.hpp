@@ -7,10 +7,18 @@
 /* Date:   23. Aug. 09                                                    */
 /**************************************************************************/
 
+#include <gprim/geomobjects.hpp>
+#include <gprim/transform3d.hpp>
+
+#include "meshtype.hpp"
+#include "meshclass.hpp"
+
 struct Tcl_Interp;
 
 namespace netgen
 {
+  class Refinement;
+
   struct ShapeProperties
   {
     optional<string> name;
@@ -19,10 +27,12 @@ namespace netgen
     double hpref = 0;  // number of hp refinement levels (will be multiplied by factor later)
     int layer = 1;
     optional<bool> quad_dominated;
+    optional<Array<double>> partition;
     void Merge(const ShapeProperties & prop2)
     {
       if (!name && prop2.name) name = prop2.name;
       if (!col && prop2.col) col = prop2.col;
+      if (!partition && prop2.partition) partition = prop2.partition;
       maxh = min2(maxh, prop2.maxh);
       hpref = max2(hpref, prop2.hpref);
       if(!quad_dominated.has_value()) quad_dominated = prop2.quad_dominated;
@@ -44,7 +54,7 @@ namespace netgen
   {
     GeometryShape * from;
     GeometryShape * to;
-    Transformation<3> trafo;
+    optional<Transformation<3>> trafo;
     Identifications::ID_TYPE type;
     string name = "";
   };
@@ -57,10 +67,9 @@ namespace netgen
     ShapeProperties properties;
     Array<ShapeIdentification> identifications;
     GeometryShape * primary;
-    Transformation<3> primary_to_me;
+    optional<Transformation<3>> primary_to_me = nullopt;
 
     virtual ~GeometryShape() {}
-    virtual size_t GetHash() const = 0;
     virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const;
   };
 
@@ -77,6 +86,9 @@ namespace netgen
   protected:
       GeometryVertex *start, *end;
   public:
+    // Neighboring domains in 2d
+    // In 3d unused, EXCEPT for free floating edges in a domain,
+    // then both are pointing to the containing domain
     int domin=-1, domout=-1;
 
     GeometryEdge( GeometryVertex &start_, GeometryVertex &end_ )
@@ -178,7 +190,10 @@ namespace netgen
   };
 
   class DLL_HEADER GeometrySolid : public GeometryShape
-  { };
+  {
+  public:
+    Array<GeometryEdge*> free_edges; // edges with no adjacent face
+  };
 
   class DLL_HEADER NetgenGeometry
   {
@@ -203,10 +218,17 @@ namespace netgen
     size_t GetNVertices() const { return vertices.Size(); }
     size_t GetNEdges() const { return edges.Size(); }
     size_t GetNFaces() const { return faces.Size(); }
+    size_t GetNSolids() const { return solids.Size(); }
 
+    const GeometrySolid & GetSolid(int i) const { return *solids[i]; }
     const GeometryFace & GetFace(int i) const { return *faces[i]; }
     const GeometryEdge & GetEdge(int i) const { return *edges[i]; }
     const GeometryVertex & GetVertex(int i) const { return *vertices[i]; }
+
+    auto Solids() const { return FlatArray{solids}; }
+    auto Faces() const { return FlatArray{faces}; }
+    auto Edges() const { return FlatArray{edges}; }
+    auto Vertices() const { return FlatArray{vertices}; }
 
     virtual Array<const GeometryVertex*> GetFaceVertices(const GeometryFace& face) const { return Array<const GeometryVertex*>{}; }
 
@@ -235,7 +257,7 @@ namespace netgen
     virtual void MeshSurface(Mesh& mesh, const MeshingParameters& mparam) const;
     virtual bool MeshFace(Mesh& mesh, const MeshingParameters& mparam,
                      int nr, FlatArray<int, PointIndex> glob2loc) const;
-    virtual void MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst ) const;
+    virtual void MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst, std::map<tuple<PointIndex, int>, PointIndex> & mapto) const;
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const;
 
     virtual void FinalizeMesh(Mesh& mesh) const;
@@ -249,7 +271,7 @@ namespace netgen
 
   virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const
   {
-    if(gi && gi->edgenr < edges.Size())
+    if(gi && gi->edgenr < edges.Size() && gi->edgenr >= 0)
       edges[gi->edgenr]->ProjectPoint(p, gi);
   }
 
@@ -312,13 +334,6 @@ namespace netgen
       throw Exception("Base geometry get tangent called");
     }
 
-    virtual size_t GetEdgeIndex(const GeometryEdge& edge) const
-    {
-      for(auto i : Range(edges))
-        if(edge.GetHash() == edges[i]->GetHash())
-          return i;
-      throw Exception("Couldn't find edge index");
-    }
     virtual void Save (const filesystem::path & filename) const;
     virtual void SaveToMeshFile (ostream & /* ost */) const { ; }
   };

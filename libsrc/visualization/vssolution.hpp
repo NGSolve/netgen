@@ -151,6 +151,7 @@ public:
     bool iscomplex;
     bool draw_volume;
     bool draw_surface;
+    std::shared_ptr<BitArray> draw_volumes, draw_surfaces;
     SolType soltype;
     SolutionData * solclass;
 
@@ -247,11 +248,13 @@ public:
   }
 
 private:
-  void GetClippingPlaneTrigs (NgArray<ClipPlaneTrig> & trigs, NgArray<ClipPlanePoint> & pts);
+  void GetClippingPlaneTrigs (SolData * sol, NgArray<ClipPlaneTrig> & trigs, NgArray<ClipPlanePoint> & pts);
   void GetClippingPlaneGrid (NgArray<ClipPlanePoint> & pts);
   void DrawCone (const Point<3> & p1, const Point<3> & p2, double r);
   void DrawCylinder (const Point<3> & p1, const Point<3> & p2, double r);
 
+  bool SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & sei) const;
+  bool VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & ei) const;
 
   // Get Function Value, local coordinates lam1, lam2, lam3, 
   bool GetValue (const SolData * data, ElementIndex elnr, 
@@ -316,7 +319,7 @@ private:
   Vec<3> GetDeformation (ElementIndex elnr, const Point<3> & p) const;
   Vec<3> GetSurfDeformation (SurfaceElementIndex selnr, int facetnr, double lam1, double lam2) const;
 
-  void GetPointDeformation (int pnum, Point<3> & p, SurfaceElementIndex elnr = -1) const;
+  void GetPointDeformation (PointIndex pnum, Point<3> & p, SurfaceElementIndex elnr = -1) const;
 
 public:
   /// draw elements (build lists)

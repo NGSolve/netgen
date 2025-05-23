@@ -8,6 +8,11 @@
 /* Redesigned by Wolfram Muehlhuber, May 1998                              */
 /* *************************************************************************/
 
+#include <general/optmem.hpp>
+#include <general/template.hpp>
+#include <general/hashtabl.hpp>
+
+#include "geomfuncs.hpp"
 
 namespace netgen
 {
@@ -430,7 +435,7 @@ public:
     // float cmin[dim], cmax[dim];
     Point<dim> cmin, cmax;
     // NgArray<T_ADTreeNode<dim>*> ela;
-    ClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
+    NgClosedHashTable<T, T_ADTreeNode<dim,T>*> ela;
 
     BlockAllocator ball{sizeof(T_ADTreeNode<dim,T>)};
   public:
@@ -759,7 +764,7 @@ public:
     Leaf() : n_elements(0)
     { }
 
-    void Add( ClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
+    void Add( NgClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
       {
         p[n_elements] = ap;
         index[n_elements] = aindex;
@@ -794,7 +799,7 @@ public:
 private:
   Node root;
 
-  ClosedHashTable<T, Leaf*> leaf_index;
+  NgClosedHashTable<T, Leaf*> leaf_index;
 
   Point<dim> global_min, global_max;
   double tol;
@@ -965,7 +970,7 @@ public:
           Leaf *leaf1 = (Leaf*) ball_leaves.Alloc(); new (leaf1) Leaf();
           Leaf *leaf2 = (Leaf*) ball_leaves.Alloc(); new (leaf2) Leaf();
 
-          for (auto i : order.Range(isplit))
+          for (auto i : order.Range(0, isplit))
               leaf1->Add(leaf_index, leaf->p[i], leaf->index[i] );
           for (auto i : order.Range(isplit, N))
               leaf2->Add(leaf_index, leaf->p[i], leaf->index[i] );
@@ -1329,7 +1334,7 @@ public:
             leaves.Append(leaf2);
             leaves[leaf1->nr] = leaf1;
 
-            for (auto i : order.Range(isplit))
+            for (auto i : order.Range(0,isplit))
                 leaf1->Add(leaves, leaf_index, leaf->p[i], leaf->index[i] );
             for (auto i : order.Range(isplit, N))
                 leaf2->Add(leaves, leaf_index, leaf->p[i], leaf->index[i] );

@@ -516,7 +516,7 @@ static void EdgesPartition(const TopoDS_Face&            F,
     }
   }
 
-  Standard_Boolean AffichPurge = Standard_False;
+  // Standard_Boolean AffichPurge = Standard_False;
 
   if ( LV1.IsEmpty()) return;
 

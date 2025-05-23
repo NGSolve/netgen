@@ -8,7 +8,7 @@
 
 namespace netgen::cg
 {
-  typedef ngcore::ClosedHashTable<ngcore::INT<3,size_t>, size_t> PointTable;
+  typedef ngcore::ClosedHashTable<ngcore::IVec<3,size_t>, size_t> PointTable;
 
   int getDim(ElementType_t type)
     {
@@ -416,7 +416,7 @@ namespace netgen::cg
 
           for(auto i : Range(nv))
           {
-            ngcore::INT<3,size_t> hash = {*reinterpret_cast<size_t*>(&x[i]), *reinterpret_cast<size_t*>(&y[i]), *reinterpret_cast<size_t*>(&z[i])};
+            ngcore::IVec<3,size_t> hash = {*reinterpret_cast<size_t*>(&x[i]), *reinterpret_cast<size_t*>(&y[i]), *reinterpret_cast<size_t*>(&z[i])};
             size_t pi_ng;
             size_t pos;
             // check if this point is new
@@ -808,32 +808,9 @@ namespace netgen
       cg_close(fn);
   }
 
-}
-
-#else // NG_CGNS
-
-namespace netgen
-{
-  void ReadCGNSMesh (Mesh & mesh, const filesystem::path & filename)
-    {
-      PrintMessage(1, "Could not import CGNS mesh: Netgen was built without CGNS support");
-    }
-
-  tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(const filesystem::path & filename, int base)
-    {
-      throw Exception("Netgen was built without CGNS support");
-    }
-
-  void WriteCGNSMesh (const Mesh & mesh, const filesystem::path & filename)
-    {
-      PrintMessage(1, "Could not write CGNS mesh: Netgen was built without CGNS support");
-    }
-
-  void WriteCGNSFile(shared_ptr<Mesh> mesh, const filesystem::path & filename, vector<string> fields, vector<Array<double>> values, vector<int> locations)
-    {
-      throw Exception("Netgen was built without CGNS support");
-    }
-
+  static RegisterUserFormat reg_cgns ("CGNS Format", {".cgns"},
+                                      static_cast<void(*)(Mesh &, const filesystem::path&)>(&ReadCGNSMesh),
+                                      static_cast<void(*)(const Mesh &, const filesystem::path&)>(&WriteCGNSMesh));
 }
 
 #endif // NG_CGNS

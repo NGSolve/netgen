@@ -13,11 +13,17 @@
 #include "archive.hpp"
 #include "flags.hpp"
 #include "ngcore_api.hpp"
-#include "profiler.hpp"
+#include "ng_mpi.hpp"
+
 namespace py = pybind11;
 
 namespace ngcore
 {
+#ifdef PARALLEL
+  NGCORE_API extern bool (*NG_MPI_CommFromMPI4Py)(py::handle, NG_MPI_Comm &);
+  NGCORE_API extern py::handle (*NG_MPI_CommToMPI4Py)(NG_MPI_Comm);
+#endif // PARALLEL
+
   namespace detail
   {
     template<typename T>
@@ -31,6 +37,16 @@ namespace ngcore
       static constexpr bool value = decltype(check((T*) nullptr))::value;
     };
   } // namespace detail
+
+#ifdef PARALLEL
+  struct mpi4py_comm {
+    mpi4py_comm() = default;
+    mpi4py_comm(NG_MPI_Comm value) : value(value) {}
+    operator NG_MPI_Comm () { return value; }
+
+    NG_MPI_Comm value;
+  };
+#endif  // PARALLEL
 } // namespace ngcore
 
 
@@ -38,6 +54,27 @@ namespace ngcore
 // automatic conversion of python list to Array<>
 namespace pybind11 {
 namespace detail {
+
+#ifdef PARALLEL
+template <> struct type_caster<ngcore::mpi4py_comm> {
+  public:
+  PYBIND11_TYPE_CASTER(ngcore::mpi4py_comm, _("mpi4py_comm"));
+
+    // Python -> C++
+    bool load(handle src, bool) {
+      return ngcore::NG_MPI_CommFromMPI4Py(src, value.value);
+    }
+
+    // C++ -> Python
+    static handle cast(ngcore::mpi4py_comm src,
+                       return_value_policy /* policy */,
+                       handle /* parent */)
+    {
+      // Create an mpi4py handle
+      return ngcore::NG_MPI_CommToMPI4Py(src.value);
+    }
+};
+#endif //  PARALLEL
 
 template <typename Type, typename Value> struct ngcore_list_caster {
     using value_conv = make_caster<Value>;
@@ -156,30 +193,6 @@ namespace ngcore
     { return std::string("sp_")+GetPyName<T>(); }
   };
 
-    // ***************  Archiving functionality  **************
-
-    template<typename T>
-    Archive& Archive :: Shallow(T& val)
-    {
-      static_assert(detail::is_any_pointer<T>, "ShallowArchive must be given pointer type!");
-#ifdef NETGEN_PYTHON
-      if(shallow_to_python)
-        {
-          if(is_output)
-            ShallowOutPython(pybind11::cast(val));
-          else
-          {
-            pybind11::object obj;
-            ShallowInPython(obj);
-            val = pybind11::cast<T>(obj);
-          }
-        }
-      else
-#endif // NETGEN_PYTHON
-        *this & val;
-      return *this;
-    }
-
   template<typename ARCHIVE>
   class NGCORE_API_EXPORT PyArchive : public ARCHIVE
   {
@@ -190,7 +203,6 @@ namespace ngcore
   protected:
     using ARCHIVE::stream;
     using ARCHIVE::version_map;
-    using ARCHIVE::logger;
   public:
     PyArchive(const pybind11::object& alst = pybind11::none()) :
       ARCHIVE(std::make_shared<std::stringstream>()),
@@ -202,7 +214,6 @@ namespace ngcore
           stream = std::make_shared<std::stringstream>
             (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-1]));
           *this & version_needed;
-          logger->debug("versions needed for unpickling = {}", version_needed);
           for(auto& libversion : version_needed)
             if(libversion.second > GetLibraryVersion(libversion.first))
               throw Exception("Error in unpickling data:\nLibrary " + libversion.first +
@@ -219,7 +230,6 @@ namespace ngcore
     {
       if(Output())
         {
-          logger->debug("Need version {} of library {}.", version, library);
           version_needed[library] = version_needed[library] > version ? version_needed[library] : version;
         }
     }
@@ -243,7 +253,6 @@ namespace ngcore
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
       stream = std::make_shared<std::stringstream>();
-      logger->debug("Writeout version needed = {}", version_needed);
       *this & version_needed;
       FlushBuffer();
       lst.append(pybind11::bytes(std::static_pointer_cast<std::stringstream>(stream)->str()));
@@ -286,6 +295,16 @@ namespace ngcore
     return arr;
   }
 
+  template <typename T>
+  // py::object makePyTuple (FlatArray<T> ar)
+  py::object makePyTuple (const BaseArrayObject<T> & ar)
+  {
+    py::tuple res(ar.Size());
+    for (auto i : Range(ar))
+      res[i] = py::cast(ar[i]);
+    return res;
+  }
+
   template <typename T, typename TIND=typename FlatArray<T>::index_type>
   void ExportArray (py::module &m)
   {
@@ -300,8 +319,9 @@ namespace ngcore
         .def ("__getitem__",
               [](TFlat & self, TIND i) -> T&
                              {
-                               static constexpr int base = IndexBASE<TIND>();
-                               if (i < base || i >= self.Size()+base)
+                               // static constexpr int base = IndexBASE<TIND>();
+                               auto reli = i - IndexBASE<TIND>();
+                               if (reli < 0 || reli >= self.Size())
                                  throw py::index_error();
                                return self[i]; 
                              },
@@ -309,8 +329,9 @@ namespace ngcore
         .def ("__setitem__",
               [](TFlat & self, TIND i, T val) -> T&
                              {
-                               static constexpr int base = IndexBASE<TIND>();
-                               if (i < base || i >= self.Size()+base)
+                               // static constexpr int base = IndexBASE<TIND>();
+                               auto reli = i - IndexBASE<TIND>();                               
+                               if (reli < 0 || reli >= self.Size())
                                  throw py::index_error();
                                self[i] = val;
                                return self[i];

@@ -1,14 +1,23 @@
 import glob
+import os.path
 import os
 import sys
 import pathlib
+import sysconfig
+import importlib.metadata
 
 from skbuild import setup
 import skbuild.cmaker
 from subprocess import check_output
-from distutils.sysconfig import get_python_lib;
 
-setup_requires = []
+setup_requires = ['pybind11-stubgen>=2.5', 'netgen-occt-devel']
+
+pyprefix = pathlib.Path(sys.prefix).as_posix()
+
+def find_occt_dir():
+    for f in importlib.metadata.files("netgen-occt-devel"):
+        if f.match("OpenCASCADEConfig.cmake"):
+            return f.locate().parent.resolve().absolute().as_posix()
 
 def install_filter(cmake_manifest):
     print(cmake_manifest)
@@ -26,22 +35,24 @@ def _patched_parse_manifests(self):
 # patch the parse_manifests function to point to the actual netgen cmake project within the superbuild
 skbuild.cmaker.CMaker._parse_manifests = _patched_parse_manifests
 
-git_version = check_output(['git', 'describe', '--tags']).decode('utf-8').strip()
-version = git_version[1:].split('-')
-if len(version)>2:
-    version = version[:2]
-if len(version)>1:
-    version = '.post'.join(version) + '.dev'
-else:
-    version = version[0]
+def is_dev_build():
+    if 'NG_NO_DEV_PIP_VERSION' in os.environ:
+        return False
+    if 'CI_COMMIT_REF_NAME' in os.environ and os.environ['CI_COMMIT_REF_NAME'] == 'release':
+        return False
+    return True
 
-py_install_dir = get_python_lib(1,0,'').replace('\\','/')
+git_version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-git-version']).decode('utf-8').strip()
+version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-version']).decode('utf-8').strip()
+
+py_install_dir = os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')).replace('\\','/')
 
 name = "netgen-mesher"
 arch = None
 cmake_args = [
         f'-DNETGEN_VERSION_GIT={git_version}',
         f'-DNETGEN_VERSION_PYTHON={version}',
+        f'-DOpenCascade_DIR={find_occt_dir()}',
     ]
 
 if 'NETGEN_ARCH' in os.environ and os.environ['NETGEN_ARCH'] == 'avx2':
@@ -49,7 +60,7 @@ if 'NETGEN_ARCH' in os.environ and os.environ['NETGEN_ARCH'] == 'avx2':
     if 'darwin' in sys.platform:
         flag = "'-Xarch_x86_64;-march=core-avx2'"
     elif 'win' in sys.platform:
-        flag = '/AVX2'
+        flag = '/arch:AVX2'
     else:
         flag = '-march=core-avx2'
     cmake_args += [f'-DNG_COMPILE_FLAGS={flag}']
@@ -59,6 +70,7 @@ if 'NETGEN_CCACHE' in os.environ:
 
 packages = ['netgen', 'pyngcore']
 
+have_mpi = False
 if 'darwin' in sys.platform:
     cmake_args += [
         '-DNG_INSTALL_DIR_LIB=netgen',
@@ -68,6 +80,11 @@ if 'darwin' in sys.platform:
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
         '-DNG_INSTALL_DIR_RES=share',
     ]
+    if os.path.exists('/usr/local/include/mpi.h'):
+        have_mpi = True
+        cmake_args += [
+            '-DOPENMPI_INCLUDE_DIR=/usr/local/include',
+        ]
 elif 'win' in sys.platform:
     cmake_args += [
         '-A Win64',
@@ -77,6 +94,15 @@ elif 'win' in sys.platform:
         '-DNG_INSTALL_DIR_CMAKE=netgen/cmake',
         '-DNG_INSTALL_DIR_INCLUDE=netgen/include',
     ]
+    py_libdir = pathlib.Path(sys.prefix) / 'Library'
+    lib_file = py_libdir / 'lib' / 'impi.lib'
+    include_dir = py_libdir / 'include'
+    if lib_file.exists():
+        have_mpi = True
+        cmake_args += [
+            f'-DINTEL_MPI_INCLUDE_DIR={include_dir.as_posix()}',
+            f'-DINTEL_MPI_LIBRARY={lib_file.as_posix()}',
+        ]
 elif 'linux' in sys.platform:
     name_dir = name.replace('-','_')
     cmake_args += [
@@ -86,7 +112,25 @@ elif 'linux' in sys.platform:
         '-DTCL_INCLUDE_PATH=/usr/include',
         '-DTK_INCLUDE_PATH=/usr/include',
     ]
+    mpich_include = '/opt/mpich/include'
+    openmpi_include = '/opt/openmpi/include'
+    if os.path.exists(mpich_include+'/mpi.h'):
+        have_mpi = True
+        cmake_args += [
+            f'-DMPICH_INCLUDE_DIR={mpich_include}',
+        ]
+    if os.path.exists(openmpi_include+'/mpi.h'):
+        have_mpi = True
+        cmake_args += [
+            f'-DOPENMPI_INCLUDE_DIR={openmpi_include}',
+        ]
     packages = []
+
+if have_mpi:
+    cmake_args += [
+        '-DUSE_MPI=ON',
+        '-DUSE_MPI_WRAPPER=ON',
+    ]
 
 cmake_args += [
         '-DUSE_SUPERBUILD:BOOL=ON',
@@ -94,15 +138,15 @@ cmake_args += [
         '-DUSE_GUI=ON',
         '-DUSE_NATIVE_ARCH=OFF',
         '-DBUILD_ZLIB=ON',
-        '-DBUILD_OCC=ON',
+        '-DZLIB_USE_STATIC_LIBS=ON',
+        '-DBUILD_OCC=OFF',
         '-DUSE_OCC=ON',
         '-DBUILD_FOR_CONDA=ON',
         f'-DNETGEN_PYTHON_PACKAGE_NAME={name}',
-        '-DBUILD_STUB_FILES=OFF',
+        '-DBUILD_STUB_FILES=ON',
 ]
 
-pyprefix = pathlib.Path(sys.prefix).as_posix()
-cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}']
+cmake_args += [f'-DCMAKE_PREFIX_PATH={pyprefix}', f'-DPython3_ROOT_DIR={pyprefix}']
 
 setup(
     name=name,
@@ -112,6 +156,7 @@ setup(
     license="LGPL2.1",
     packages=packages,
     #package_dir={'netgen': 'python'},
+    install_requires=[f"netgen-occt=={importlib.metadata.version('netgen-occt-devel')}"],
     tests_require=['pytest'],
     #include_package_data=True,
     cmake_process_manifest_hook=install_filter,

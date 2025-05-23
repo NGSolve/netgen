@@ -155,7 +155,7 @@ MyStr::MyStr(long l)
 MyStr::MyStr(size_t l)
 {
   char buffer[32];
-  snprintf(buffer, 32, "%ld", l);
+  snprintf(buffer, 32, "%zu", l);
   length = unsigned(strlen(buffer));
   if (length > SHORTLEN)
     str = new char[length + 1];
@@ -221,6 +221,16 @@ MyStr::MyStr(const string & st)
   else
     str = shortstr;
   strcpy (str, st.c_str());
+}
+
+MyStr::MyStr(string_view sv)
+{
+  length = unsigned(sv.length());
+  if (length > SHORTLEN)
+    str = new char[length + 1];
+  else
+    str = shortstr;
+  strcpy (str, sv.data());
 }
 
 MyStr::MyStr(const filesystem::path & path)

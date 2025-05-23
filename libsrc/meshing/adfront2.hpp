@@ -1,5 +1,5 @@
-#ifndef FILE_ADFRONT2
-#define FILE_ADFRONT2
+#ifndef NETGEN_ADFRONT2_HPP
+#define NETGEN_ADFRONT2_HPP
 
 /**************************************************************************/
 /* File:   adfront2.hpp                                                   */
@@ -14,6 +14,12 @@
 
 */
 
+#include <gprim/geomobjects.hpp>
+#include <gprim/adtree.hpp>
+#include "meshtype.hpp"
+
+namespace netgen
+{
   ///
   class FrontPoint2
   {
@@ -89,7 +95,7 @@
   {
   private:
     /// Point Indizes
-    INDEX_2 l;            
+    INDEX_2 l;  // want to replace by std::array<int,2> l;
     /// quality class 
     int lineclass;      
     /// geometry specific data
@@ -103,23 +109,12 @@
 
     ///
     FrontLine (const INDEX_2 & al)
-    {
-      l = al;
-      lineclass = 1;
-    }
-
+      : l(al), lineclass(1) { } 
 
     ///
-    const INDEX_2 & L () const
-    {
-      return l;
-    }
-
+    const auto & L () const { return l; }
     ///
-    int LineClass() const
-    {
-      return lineclass;
-    }
+    int LineClass() const { return lineclass; }
 
     ///
     void IncrementClass ()
@@ -135,13 +130,13 @@
     ///
     bool Valid () const
     {
-      return l.I1() != -1;
+      return l[0] != -1;
     }
     ///
     void Invalidate ()
     {
-      l.I1() = -1;
-      l.I2() = -1;
+      l[0] = -1;
+      l[1] = -1;
       lineclass = 1000;
     }
 
@@ -165,21 +160,21 @@ class AdFront2
 {
 
   ///
-  NgArray<FrontPoint2> points;  /// front points
-  NgArray<FrontLine> lines;     /// front lines
+  Array<FrontPoint2> points;  /// front points
+  Array<FrontLine> lines;     /// front lines
 
   Box3d boundingbox;
   BoxTree<3> linesearchtree;       /// search tree for lines
   Point3dTree pointsearchtree;    /// search tree for points
   Point3dTree cpointsearchtree;   /// search tree for cone points (not used ???)
 
-  NgArray<int> delpointl;     /// list of deleted front points
-  NgArray<int> dellinel;      /// list of deleted front lines
+  Array<int> delpointl;     /// list of deleted front points
+  Array<int> dellinel;      /// list of deleted front lines
 
   int nfl;                  /// number of front lines;
   INDEX_2_HASHTABLE<int> * allflines; /// all front lines ever have been
 
-  NgArray<int> invpindex;
+  Array<int> invpindex;
 
   int minval;
   int starti;
@@ -204,8 +199,8 @@ public:
   ///
   int GetNFL () const { return nfl; }
 
-  const FrontLine & GetLine (int nr) { return lines[nr]; }
-  const FrontPoint2 & GetPoint (int nr) { return points[nr]; }
+  const FrontLine & GetLine (int nr) const { return lines[nr]; }
+  const FrontPoint2 & GetPoint (int nr) const { return points[nr]; }
   const auto & GetLines () const { return lines; }
 
   ///
@@ -275,9 +270,5 @@ public:
   void PrintOpenSegments (ostream & ost) const;
 };
 
-
-
-#endif
-
-
-
+} // namespace netgen
+#endif // NETGEN_ADFRONT2_HPP

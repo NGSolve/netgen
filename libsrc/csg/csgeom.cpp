@@ -1211,7 +1211,7 @@ namespace netgen
 	PrintMessage (2, "Object ", i, " has ", tams->GetNT(), " triangles");
       }
       }
-    catch (exception)
+    catch (const std::exception &)
       {
 	cerr << "*************************************************************" << endl
 	     << "****   out of memory problem in CSG visualization        ****" << endl

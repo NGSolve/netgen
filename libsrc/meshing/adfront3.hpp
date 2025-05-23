@@ -11,7 +11,13 @@
   Advancing front class for volume meshing
 */
 
+#include <gprim/geomobjects.hpp>
+#include <gprim/adtree.hpp>
+#include "meshtype.hpp"
+#include "geomsearch.hpp"
 
+namespace netgen
+{
 
 /// Point in advancing front
 class FrontPoint3
@@ -25,7 +31,7 @@ class FrontPoint3
   /// distance to original boundary
   int frontnr;
   /// 
-  int cluster;
+  PointIndex cluster;
 public:
   ///
   FrontPoint3 ();
@@ -89,7 +95,8 @@ public:
   const PointIndex PNum (int i) const { return pnum[i-1]; }
   PointIndex & PNum (int i) { return pnum[i-1]; }
   const PointIndex PNumMod (int i) const { return pnum[(i-1)%np]; }
-  auto PNums() const { return NgFlatArray<const PointIndex> (np, &pnum[0]); }
+  auto PNums() { return FlatArray<PointIndex> (np, &pnum[0]); }
+  auto PNums() const { return FlatArray<const PointIndex> (np, &pnum[0]); }
   void Delete () { deleted = true; for (PointIndex & p : pnum) p.Invalidate(); }
   bool IsDeleted () const { return deleted; }
 };
@@ -119,7 +126,7 @@ private:
   ///
   int hashvalue;
   ///
-  int cluster;
+  PointIndex cluster;
   
 public:
   ///
@@ -166,7 +173,7 @@ public:
   ///
   friend class AdFront3;
 
-  int Cluster () const { return cluster; }
+  PointIndex Cluster () const { return cluster; }
 };  
 
 
@@ -176,14 +183,17 @@ public:
 class AdFront3
 {
   ///
-  NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
+  // NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
+  Array<FrontPoint3, PointIndex> points
+;
   ///
   NgArray<FrontFace> faces;
   ///
-  NgArray<PointIndex> delpointl;
+  Array<PointIndex> delpointl;
   
   /// which points are connected to pi ?
-  TABLE<int, PointIndex::BASE> * connectedpairs;
+  // TABLE<PointIndex, PointIndex::BASE> * connectedpairs;
+  unique_ptr<DynamicTable<PointIndex, PointIndex>> connectedpairs;
   
   /// number of total front faces;
   int nff;
@@ -208,8 +218,8 @@ class AdFront3
   int lasti;
   /// minimal selection-value of baseelements
   int minval;
-  NgArray<PointIndex, PointIndex::BASE, PointIndex> invpindex;
-  NgArray<char, PointIndex::BASE> pingroup;
+  Array<PointIndex, PointIndex> invpindex;
+  Array<char, PointIndex> pingroup;
   
   ///
   class BoxTree<3> * facetree;
@@ -230,9 +240,9 @@ public:
   ///
   int GetNF() const
   { return nff; }
-  ///
+  /// 1-based
   const MiniElement2d & GetFace (int i) const
-  { return faces.Get(i).Face(); }
+  { return faces[i-1].Face(); }
   const auto & Faces() const { return faces; }
   ///
   void Print () const;
@@ -256,15 +266,18 @@ public:
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
 			     NgArray<int> & ifaces) const;
 
+  bool PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
+                        const Array<MiniElement2d>& groupfaces) const;
+
   ///
   void GetFaceBoundingBox (int i, Box3d & box) const;
 
   ///
   int GetLocals (int baseelement,
-		 NgArray<Point3d, PointIndex::BASE> & locpoints,
-                 NgArray<MiniElement2d> & locfaces,   // local index
-                 NgArray<PointIndex, PointIndex::BASE> & pindex,
-                 NgArray<INDEX> & findex,
+		 Array<Point3d, PointIndex> & locpoints,
+                 Array<MiniElement2d> & locfaces,   // local index
+                 Array<PointIndex, PointIndex> & pindex,
+                 Array<INDEX> & findex,
 		 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
 		 float relh,
@@ -272,10 +285,10 @@ public:
   
   ///
   void GetGroup (int fi,
-                 NgArray<MeshPoint, PointIndex::BASE> & grouppoints,
-                 NgArray<MiniElement2d> & groupelements,
-                 NgArray<PointIndex, PointIndex::BASE> & pindex,
-                 NgArray<INDEX> & findex);
+                 Array<MeshPoint, PointIndex> & grouppoints,
+                 Array<MiniElement2d> & groupelements,
+                 Array<PointIndex, PointIndex> & pindex,
+                 Array<INDEX> & findex);
 
   ///
   void DeleteFace (INDEX fi);
@@ -284,14 +297,14 @@ public:
   ///
   INDEX AddFace (const MiniElement2d & e);
   ///
-  INDEX AddConnectedPair (const INDEX_2 & pair);
+  INDEX AddConnectedPair (PointIndices<2> pair);
   ///
   void IncrementClass (INDEX fi)
-  { faces.Elem(fi).IncrementQualClass(); }
+  { faces[fi-1].IncrementQualClass(); }
 
   ///
   void ResetClass (INDEX fi)
-  { faces.Elem(fi).ResetQualClass(); }
+  { faces[fi-1].ResetQualClass(); }
 
   ///
   void SetStartFront (int baseelnp = 0);
@@ -315,7 +328,5 @@ private:
   void RebuildInternalTables();
 };
 
-
-
-
+} // namespace netgen
 #endif

@@ -1,11 +1,16 @@
-#ifndef FILE_GEOMSEARCH
-#define FILE_GEOMSEARCH
+#ifndef NETGEN_GEOMSEARCH_HPP
+#define NETGEN_GEOMSEARCH_HPP
 
 /**************************************************************************/
 /* File:   geomsearch.hh                                                  */
 /* Author: Johannes Gerstmayr                                             */
 /* Date:   19. Nov. 97                                                    */
 /**************************************************************************/
+
+#include "meshtype.hpp"
+
+namespace netgen
+{
 
 class FrontPoint3;
 class FrontFace;
@@ -22,7 +27,7 @@ public:
   virtual ~GeomSearch3d();
 
   ///
-  void Init (NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *pointsi, NgArray <FrontFace> *facesi);
+  void Init (Array <FrontPoint3,PointIndex> *pointsi, NgArray <FrontFace> *facesi);
 
   ///get elements max extension
   void ElemMaxExt(Point3d& minp, Point3d& maxp, const MiniElement2d& elem);
@@ -47,7 +52,7 @@ public:
 private:
   
   NgArray <FrontFace> *faces; // Pointers to Arrays in Adfront
-  NgArray <FrontPoint3,PointIndex::BASE, PointIndex> *points;
+  Array <FrontPoint3,PointIndex> *points;
 
   NgArray <NgArray <int>*> hashtable;
 
@@ -60,58 +65,5 @@ private:
   int reset;
   int hashcount;
 };
-
-#endif
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+} // namespace netgen
+#endif // NETGEN_GEOMSEARCH_HPP

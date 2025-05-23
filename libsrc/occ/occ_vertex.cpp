@@ -16,9 +16,4 @@ namespace netgen
     {
         return p;
     }
-
-    size_t OCCVertex::GetHash() const
-    {
-      return vertex.HashCode(std::numeric_limits<Standard_Integer>::max());
-    }
 }

@@ -61,6 +61,7 @@ namespace ngcore
 
 
     NETGEN_INLINE auto operator[] (int i) const { return ((int64_t*)(&data))[i]; }
+    NETGEN_INLINE auto & operator[] (int i) { return ((int64_t*)(&data))[i]; }
     NETGEN_INLINE __m512i Data() const { return data; }
     NETGEN_INLINE __m512i & Data() { return data; }
     static SIMD FirstInt() { return { 0, 1, 2, 3, 4, 5, 6, 7 }; }
@@ -111,7 +112,7 @@ namespace ngcore
     template <typename Function>
     void SIMD_function (const Function & func, std::true_type)
     {
-      data = (__m512){ func(7), func(6), func(5), func(4),
+      data = (__m512d){ func(7), func(6), func(5), func(4),
                        func(3), func(2), func(1), func(0) };
     }
 
@@ -132,6 +133,7 @@ namespace ngcore
     }
 
     NETGEN_INLINE double operator[] (int i) const { return ((double*)(&data))[i]; }
+    NETGEN_INLINE double & operator[] (int i) { return ((double*)(&data))[i]; }
     NETGEN_INLINE __m512d Data() const { return data; }
     NETGEN_INLINE __m512d & Data() { return data; }
 

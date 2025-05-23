@@ -1,7 +1,12 @@
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <BRepLProp_SLProps.hxx>
+
+#pragma clang diagnostic pop
 
 #include "occ_edge.hpp"
 #include "occ_face.hpp"
@@ -23,11 +28,6 @@ namespace netgen
     size_t OCCFace::GetNBoundaries() const
     {
         return 0;
-    }
-
-    size_t OCCFace::GetHash() const
-    {
-      return face.HashCode(std::numeric_limits<Standard_Integer>::max());
     }
 
     Point<3> OCCFace::GetCenter() const
@@ -56,14 +56,20 @@ namespace netgen
         edge_on_face[FORWARD].SetSize(n_edges);
         edge_on_face[REVERSED].SetSize(n_edges);
 
-        for(auto edge_ : GetEdges(face))
+        // In case the face is INTERNAL, we need to orient it to FORWARD to get proper orientation for the edges
+        // (relative to the face) otherwise, all edges are also INTERNAL
+        auto oriented_face = TopoDS_Face(face);
+        if(oriented_face.Orientation() == TopAbs_INTERNAL)
+          oriented_face.Orientation(TopAbs_FORWARD);
+
+        for(auto edge_ : GetEdges(oriented_face))
         {
             auto edge = TopoDS::Edge(edge_);
             auto edgenr = geom.GetEdge(edge).nr;
             auto & orientation = edge_orientation[edgenr];
             double s0, s1;
-            auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
-            if(edge.Orientation() == TopAbs_FORWARD)
+            auto cof = BRep_Tool::CurveOnSurface (edge, oriented_face, s0, s1);
+            if(edge.Orientation() == TopAbs_FORWARD || edge.Orientation() == TopAbs_INTERNAL)
             {
                 curve_on_face[FORWARD][edgenr] = cof;
                 orientation += FORWARD;
@@ -74,6 +80,15 @@ namespace netgen
                 curve_on_face[REVERSED][edgenr] = cof;
                 orientation += REVERSED;
                 edge_on_face[REVERSED][edgenr] = edge;
+            }
+            if(edge.Orientation() == TopAbs_INTERNAL)
+            {
+              // add reversed edge
+              auto r_edge = TopoDS::Edge(edge.Reversed());
+              auto cof = BRep_Tool::CurveOnSurface (r_edge, oriented_face, s0, s1);
+              curve_on_face[REVERSED][edgenr] = cof;
+              orientation += REVERSED;
+              edge_on_face[REVERSED][edgenr] = r_edge;
             }
 
             if(orientation > BOTH)

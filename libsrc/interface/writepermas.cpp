@@ -12,14 +12,15 @@
 
 #include <string>
 
-using namespace std;
 #include "writeuser.hpp"
+using namespace std;
 
 namespace netgen
 {
     // Forward declarations (don't know, where to define them, sorry)
     int addComponent(string &strComp, string &strSitu, ofstream &out);
 
+    void WritePermasFormat (const Mesh &mesh, const filesystem::path &filename);
 
     // This should be the new function to export a PERMAS file
     void WritePermasFormat (const Mesh &mesh, const filesystem::path &filename, 
@@ -205,4 +206,5 @@ namespace netgen
         return 0;
     }
     
+static RegisterUserFormat reg_permas ("Permas Format", {".mesh"}, nullopt, static_cast<void(*)(const Mesh &, const filesystem::path&)>(&WritePermasFormat));
 }

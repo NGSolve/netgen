@@ -6,21 +6,20 @@
 #include <csg.hpp>
 #include <acisgeom.hpp>
 #include <meshing.hpp>
+#include "writeuser.hpp"
 
 namespace netgen
 {
-
-#include "writeuser.hpp"
-  
+  extern void ReadTETFormat (Mesh & mesh, const filesystem::path & filename);
   
   void WriteTETFormat (const Mesh & mesh,
-		       const string & filename)//, const string& problemType )
+		       const filesystem::path & filename)//, const string& problemType )
   {
     string problemType = "";
     if(!mesh.PureTetMesh())
       throw NgException("Can only export pure tet mesh in this format");
 
-    cout << "starting .tet export to file " << filename << endl;
+    cout << "starting .tet export to file " << filename.string() << endl;
 
 
     NgArray<int> point_ids,edge_ids,face_ids;
@@ -367,12 +366,12 @@ namespace netgen
       uidpid = "UID";
     
 
-    NgArray< NgArray<int,PointIndex::BASE>* > idmaps;
+    NgArray< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	  {
-	    idmaps.Append(new NgArray<int,PointIndex::BASE>);
+	    idmaps.Append(new idmap_type);
 	    mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
 	  }
       }
@@ -503,7 +502,7 @@ namespace netgen
 		<< mesh[i](0) << " "
 		<< mesh[i](1) << " "
 		<< mesh[i](2) << " " << id_type[i] << " ";
-	if(i-PointIndex::BASE < point_ids.Size())
+	if(i-IndexBASE<PointIndex>() < point_ids.Size())
 	  outfile << point_ids[i];
 	else
 	  outfile << "0";
@@ -1067,13 +1066,13 @@ namespace netgen
     //     for(PointIndex i = mesh.Points().Begin(); i < mesh.Points().End(); i++)
     for(PointIndex i : mesh.Points().Range())
       {
-	if(i-PointIndex::BASE < point_ids.Size())
+	if(i-IndexBASE<PointIndex>() < point_ids.Size())
 	  {
 	    if(uid_to_group_0D[point_ids[i]] >= 0)
-	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-PointIndex::BASE);
+	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-IndexBASE<PointIndex>());
 	  }
 	else
-	  groups[uid_to_group_0D[0]]->Append(i+1-PointIndex::BASE);
+	  groups[uid_to_group_0D[0]]->Append(i+1-IndexBASE<PointIndex>());
       }
 
 
@@ -1095,4 +1094,5 @@ namespace netgen
 
     cout << ".tet export done" << endl;
   }
+static RegisterUserFormat reg_tet ("TET Format", {".tet"}, ReadTETFormat, WriteTETFormat);
 }

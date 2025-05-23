@@ -1,8 +1,12 @@
 #ifndef FILE_MESHING3
 #define FILE_MESHING3
 
+#include "meshclass.hpp"
+#include "adfront3.hpp"
+#include "ruler3.hpp"
 
-
+namespace netgen
+{
 
 enum MESHING3_RESULT
 {
@@ -19,13 +23,13 @@ enum MESHING3_RESULT
 class Meshing3
 {
   /// current state of front
-  AdFront3 * adfront;
+  unique_ptr<AdFront3> adfront;
   /// 3d generation rules
-  NgArray<vnetrule*> rules;
+  Array<unique_ptr<vnetrule>> rules;
   /// counts how often a rule is used
-  NgArray<int> ruleused, canuse, foundmap;
+  Array<int> ruleused, canuse, foundmap;
   /// describes, why a rule is not applied
-  NgArray<char*> problems;
+  Array<string> problems;
   /// tolerance criterion
   double tolfak;
 public:
@@ -42,9 +46,9 @@ public:
   MESHING3_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp);
   
   ///
-  int ApplyRules (NgArray<Point3d, PointIndex::BASE> & lpoints,
-                  NgArray<int, PointIndex::BASE> & allowpoint,
-		  NgArray<MiniElement2d> & lfaces, INDEX lfacesplit,
+  int ApplyRules (Array<Point3d, PointIndex> & lpoints,
+                  Array<int, PointIndex> & allowpoint,
+		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
 		  NgArray<Element> & elements,
 		  NgArray<INDEX> & delfaces, int tolerance, 
@@ -114,18 +118,6 @@ extern int FindInnerPoint (POINTArray & grouppoints,
 
 */
 
-
-
-
+} // namespace netgen
 
 #endif
-
-
-
-
-
-
-
-
-
-

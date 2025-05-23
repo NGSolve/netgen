@@ -40,12 +40,13 @@ namespace ngcore
     if (owns_data)
       {
         delete [] data;
-        mt.Free(Addr(size)+1);
+        mt.Free(GetMemoryUsage());
       }
 
     size = asize;
     data = new unsigned char [Addr (size)+1];
-    mt.Alloc(Addr(size)+1);
+    owns_data = true;
+    mt.Alloc(GetMemoryUsage());
   }
 
   BitArray & BitArray :: Set () throw()

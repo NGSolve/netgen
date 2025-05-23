@@ -9,6 +9,7 @@ The interface between the GUI and the netgen library
 #include <linalg.hpp>
 
 #include <meshing.hpp>
+#include "../libsrc/meshing/boundarylayer.hpp"
 
 
 #include <inctcl.hpp>
@@ -194,7 +195,7 @@ namespace netgen
         if(mesh->GetGeometry())
           ng_geometry = mesh->GetGeometry();
       }
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	PrintMessage (3, e.What());
 	return TCL_ERROR;
@@ -269,7 +270,7 @@ namespace netgen
 	      geometry -> LoadSurfaces(infile);
 	  }
       }
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	PrintMessage (3, e.What());
 	return TCL_ERROR;
@@ -282,17 +283,33 @@ namespace netgen
   }
 
 
+  int Ng_GetImportFormats (ClientData clientData,
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
+  {
+    ostringstream fstr;
+    UserFormatRegister::IterateFormats([&](auto & entry) {
+      fstr << "{ {" << entry.format << "} {" << entry.extensions[0];
+      for(auto ext : entry.extensions.Range(1, entry.extensions.Size()))
+        fstr << ' ' << ext;
+      fstr << "} }\n";
+    }, true, false);
+    
+    Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
+    return TCL_OK;
+  }
+
   int Ng_GetExportFormats (ClientData clientData,
                            Tcl_Interp * interp,
                            int argc, tcl_const char *argv[])
   {
-    NgArray<const char*> userformats;
-    NgArray<const char*> extensions;
-    RegisterUserFormats (userformats, extensions);
-    
     ostringstream fstr;
-    for (int i = 1; i <= userformats.Size(); i++)
-      fstr << "{ {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
+    UserFormatRegister::IterateFormats([&](auto & entry) {
+      fstr << "{ {" << entry.format << "} {" << entry.extensions[0];
+      for(auto ext : entry.extensions.Range(1, entry.extensions.Size()))
+        fstr << ' ' << ext;
+      fstr << "} }\n";
+    }, false, true);
     
     Tcl_SetResult (interp, const_cast<char*>(fstr.str().c_str()), TCL_VOLATILE);
     return TCL_OK;
@@ -333,11 +350,12 @@ namespace netgen
 		     int argc, tcl_const char *argv[])
   {
     const string filename (argv[1]);
+    const string format (argv[2]);
     PrintMessage (1, "import mesh from ", filename);
 
     mesh = make_shared<Mesh>();
 
-    ReadFile (*mesh, filename);
+    ReadUserFormat (*mesh, filename, format);
     PrintMessage (2, mesh->GetNP(), " Points, ",
 		  mesh->GetNE(), " Elements.");
 
@@ -534,7 +552,7 @@ namespace netgen
 	  }
       }
 
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
 	return TCL_ERROR;
@@ -565,7 +583,7 @@ namespace netgen
 	  {
 	    ng_geometry -> Save (string (cfilename));
 	  }
-	catch (NgException e)
+	catch (const NgException & e)
 	  {
 	    Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
 	    return TCL_ERROR;
@@ -1091,7 +1109,7 @@ namespace netgen
      
      // Use an array to support creation of boundary 
      // layers for multiple surfaces in the future...
-     Array<int> surfid;
+     std::vector<int> surfid;
      int surfinp = 0;
      int prismlayers = 1;
      double hfirst = 0.01;
@@ -1102,13 +1120,13 @@ namespace netgen
        {
          cout << "Enter Surface ID (-1 to end list): ";
          cin >> surfinp;
-         if(surfinp >= 0) surfid.Append(surfinp);
+         if(surfinp >= 0) surfid.push_back(surfinp);
       }
 
-     cout << "Number of surfaces entered = " << surfid.Size() << endl; 
+     cout << "Number of surfaces entered = " << surfid.size() << endl; 
      cout << "Selected surfaces are:" << endl;
      
-     for(auto i : Range(surfid))
+     for(auto i : Range(surfid.size()))
        cout << "Surface " << i << ": " << surfid[i] << endl;
      
      cout << endl << "Enter number of prism layers: ";
@@ -1124,15 +1142,17 @@ namespace netgen
      if(growthfactor <= 0.0) growthfactor = 0.5;
      
      BoundaryLayerParameters blp;
-     blp.surfid = surfid;
+     blp.boundary = surfid;
+     std::vector<double> thickness;
      for(auto i : Range(prismlayers))
        {
          auto layer = i+1;
          if(growthfactor == 1)
-           blp.heights.Append(layer * hfirst);
+           thickness.push_back(layer * hfirst);
          else
-           blp.heights.Append(hfirst * (pow(growthfactor, (layer+1))-1)/(growthfactor-1));
+           thickness.push_back(hfirst * (pow(growthfactor, (layer+1))-1)/(growthfactor-1));
        }
+     blp.thickness = thickness;
      GenerateBoundaryLayer (*mesh, blp);
      return TCL_OK;
   }
@@ -1421,7 +1441,7 @@ namespace netgen
 	PrintMessage (1, "Meshing done, time = ", GetTime(), " sec");
       }
 
-    catch (NgException e)
+    catch (const NgException & e)
       {
 	cout << e.What() << endl;
       }
@@ -2061,7 +2081,6 @@ namespace netgen
       return TCL_ERROR;
     const char * filename = Tcl_GetString(argv[2]);
 
-    int len = strlen(filename);
     int w = Togl_PixelScale(togl)*Togl_Width (togl);
     int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
@@ -2071,6 +2090,7 @@ namespace netgen
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
 
 #ifdef JPEGLIB
+    int len = strlen(filename);
     if (strcmp ("jpg", filename+len-3) == 0)
       {
         cout << "Snapshot to file '" << filename << "'" << endl;
@@ -2113,19 +2133,15 @@ namespace netgen
 #endif // JPEGLIB
     {
         string command;
-        string filename2;
+        std::filesystem::path filepath(filename);
 
-        filename2 = filename;
+        bool need_conversion = filepath.extension() != ".ppm";
+        if (need_conversion)
+          filepath += ".ppm";
 
-        if(filename2.substr(len-3) != ".ppm")
-            filename2 += ".ppm";
+        cout << IM(3) << "Snapshot to file '" << filepath.string() << endl;
 
-        cout << "Snapshot to file '" << filename << endl;
-
-        // int w = Togl_Width (togl);
-        // int h = Togl_Height (togl);
-
-        ofstream outfile(filename2);
+        ofstream outfile(filepath);
         outfile << "P6" << endl
           << "# CREATOR: Netgen" << endl
           << w << " " << h << endl
@@ -2136,12 +2152,10 @@ namespace netgen
                     outfile.put (buffer[k+3*j+3*w*(h-i-1)]);
         outfile << flush;
 
-        if (filename2 == string(filename))
-            return TCL_OK;
-        else
+        if (need_conversion)
         {
           // convert image file (Unix/Linux only):
-          command = string("convert -quality 100 ") + filename2 + " " + filename;
+          command = string("convert -quality 100 ") + filepath.string() + " " + filename;
 
           int err = system(command.c_str());
           if (err != 0)
@@ -2150,16 +2164,10 @@ namespace netgen
               return TCL_ERROR;
           }
 
-          command  = string("rm ") + filename2;
-          err = system(command.c_str());
-
-          if (err != 0)
-          {
-              Tcl_SetResult (Togl_Interp(togl), (char*)"Cannot delete temporary file", TCL_VOLATILE);
-              return TCL_ERROR;
-          }
-          return TCL_OK;
+          std::filesystem::remove(filepath);
         }
+
+        return TCL_OK;
     }
   }
 
@@ -2644,6 +2652,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
       atoi (Tcl_GetVar (interp, "::viewoptions.drawfacenumbers", TCL_GLOBAL_ONLY));
     vispar.drawelementnumbers =
       atoi (Tcl_GetVar (interp, "::viewoptions.drawelementnumbers", TCL_GLOBAL_ONLY));
+    vispar.drawsurfaceelementnumbers =
+      atoi (Tcl_GetVar (interp, "::viewoptions.drawsurfaceelementnumbers", TCL_GLOBAL_ONLY));
+    vispar.drawsegmentnumbers =
+      atoi (Tcl_GetVar (interp, "::viewoptions.drawsegmentnumbers", TCL_GLOBAL_ONLY));
     vispar.drawdomainsurf =
       atoi (Tcl_GetVar (interp, "::viewoptions.drawdomainsurf", TCL_GLOBAL_ONLY));
 
@@ -2870,6 +2882,10 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 		       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MergeMesh", Ng_MergeMesh,
+		       (ClientData)NULL,
+		       (Tcl_CmdDeleteProc*) NULL);
+
+    Tcl_CreateCommand (interp, "Ng_GetImportFormats", Ng_GetImportFormats,
 		       (ClientData)NULL,
 		       (Tcl_CmdDeleteProc*) NULL);
 

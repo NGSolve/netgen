@@ -35,11 +35,16 @@ namespace ngcore
 
   class MemoryTracer
   {
-    #ifdef NETGEN_TRACE_MEMORY
+#if defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
     NGCORE_API static std::vector<std::string> names;
     NGCORE_API static std::vector<int> parents;
 
-    static int CreateId(const std::string& name)
+    #if defined(NETGEN_CHECK_RANGE)
+    NGCORE_API static std::atomic<size_t> total_memory;
+    mutable size_t allocated_memory = 0;
+    #endif // NETGEN_CHECK_RANGE
+
+    static int CreateId(const std::string& name = "")
     {
       int id = names.size();
       names.push_back(name);
@@ -48,7 +53,7 @@ namespace ngcore
         std::cerr << "Allocated " << id << " MemoryTracer objects" << std::endl;
       return id;
     }
-    int id;
+    mutable int id = 0;
 
     public:
 
@@ -57,8 +62,33 @@ namespace ngcore
       id = CreateId(name);
     }
 
-    // not tracing
-    MemoryTracer() : id(0) {}
+    MemoryTracer() { }
+
+    MemoryTracer(const MemoryTracer & tracer)
+    {
+      (*this) = tracer;
+    }
+
+    MemoryTracer(MemoryTracer && tracer)
+    {
+      (*this) = std::move(tracer);
+    }
+
+    MemoryTracer & operator=(const MemoryTracer & tracer) {
+      if(tracer.id)
+        id = CreateId(names[tracer.id]);
+      return *this;
+    }
+
+    MemoryTracer & operator=(MemoryTracer && tracer) {
+      ngcore::Swap(id, tracer.id);
+
+      #if defined(NETGEN_CHECK_RANGE)
+      ngcore::Swap(allocated_memory, tracer.allocated_memory);
+      #endif // NETGEN_CHECK_RANGE
+
+      return *this;
+    }
 
     template <typename... TRest>
     MemoryTracer( std::string name, TRest & ... rest )
@@ -67,38 +97,48 @@ namespace ngcore
       Track(rest...);
     }
 
+    #if defined(NETGEN_CHECK_RANGE)
+    // check if all memory was freed when object is destroyed
+    ~MemoryTracer()
+    {
+      NETGEN_CHECK_SAME(allocated_memory, 0);
+    }
+    #endif // NETGEN_CHECK_RANGE
+
     NETGEN_INLINE void Alloc(size_t size) const
     {
+      #if defined(NETGEN_CHECK_RANGE)
+      // Trace also nameless Memtracer objects if range checks are active
+      if(!id && size)
+        id = CreateId();
+      #endif // NETGEN_CHECK_RANGE
+
       if(id && trace)
         trace->AllocMemory(id, size);
+
+      #if defined(NETGEN_CHECK_RANGE)
+      if(id)
+      {
+        allocated_memory += size;
+        total_memory += size;
+      }
+      #endif // NETGEN_CHECK_RANGE
     }
 
     void Free(size_t size) const
     {
       if(id && trace)
         trace->FreeMemory(id, size);
-    }
 
-    void Swap(size_t mysize, MemoryTracer& other, size_t other_size) const
-    {
-      if(!trace || (id == 0 && other.id == 0))
-        return;
-      if(id == 0)
-        return trace->ChangeMemory(other.id, mysize - other_size);
-      if(other.id == 0)
-        return trace->ChangeMemory(id, other_size - mysize);
-
-      // first decrease memory, otherwise have artificial/wrong high peak memory usage
-      if(mysize<other_size)
-        {
-          trace->ChangeMemory(other.id, mysize-other_size);
-          trace->ChangeMemory(id, other_size-mysize);
-        }
-      else
-        {
-          trace->ChangeMemory(id, other_size-mysize);
-          trace->ChangeMemory(other.id, mysize-other_size);
-        }
+      #if defined(NETGEN_CHECK_RANGE)
+      if(id)
+      {
+        // check if we have at least size bytes of memory currently allocated (such that allocated_memory doesn't get negative)
+        NETGEN_CHECK_RANGE(allocated_memory, static_cast<ptrdiff_t>(size), std::numeric_limits<ptrdiff_t>::max());
+        allocated_memory -= size;
+        total_memory -= size;
+        #endif // NETGEN_CHECK_RANGE
+      }
     }
 
     int GetId() const { return id; }
@@ -148,7 +188,15 @@ namespace ngcore
 
     static const std::vector<std::string> & GetNames() { return names; }
     static const std::vector<int> & GetParents() { return parents; }
-#else // NETGEN_TRACE_MEMORY
+    static size_t GetTotalMemory()
+    {
+      #if defined(NETGEN_CHECK_RANGE)
+      return total_memory;
+      #else
+      return 0;
+      #endif // NETGEN_CHECK_RANGE
+    }
+#else // defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
   public:
     MemoryTracer() {}
     MemoryTracer( std::string /* name */ ) {}
@@ -157,7 +205,6 @@ namespace ngcore
 
     void Alloc(size_t /* size */) const {}
     void Free(size_t /* size */) const {}
-    void Swap(...) const {}
     int GetId() const { return 0; }
 
     template <typename... TRest>
@@ -166,6 +213,7 @@ namespace ngcore
     static std::string GetName(int /* id */) { return ""; }
     std::string GetName() const { return ""; }
     void SetName(std::string /* name */) const {}
+    static size_t GetTotalMemory() { return 0; }
 #endif // NETGEN_TRACE_MEMORY
   };
 } // namespace ngcore

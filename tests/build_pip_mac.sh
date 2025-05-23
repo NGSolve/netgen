@@ -1,12 +1,16 @@
 set -e
+
 rm -rf _skbuild dist
 
-export PATH=/Applications/CMake.app/Contents/bin:$PATH
+export PYDIR=/Library/Frameworks/Python.framework/Versions/$1/bin
+export PATH=$PYDIR:/Applications/CMake.app/Contents/bin:$PATH
 export NETGEN_CCACHE=1
 
-export PYDIR=/Library/Frameworks/Python.framework/Versions/$1/bin
 $PYDIR/python3 --version
-$PYDIR/pip3 install --user numpy twine scikit-build wheel pybind11-stubgen
+$PYDIR/python3 -m pip install packaging requests
+$PYDIR/python3 tests/utils.py --check-pip || exit 0
+$PYDIR/python3 -m pip install --user numpy twine scikit-build wheel pybind11-stubgen
+$PYDIR/python3 -m pip install --user -U netgen-occt==7.8.1 netgen-occt-devel==7.8.1
 
 export CMAKE_OSX_ARCHITECTURES='arm64;x86_64'
 export NETGEN_ARCH='avx2'

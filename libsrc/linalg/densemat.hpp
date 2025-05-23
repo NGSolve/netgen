@@ -11,7 +11,11 @@
     Data type dense matrix
 */
 
+#include <mydefs.hpp>
+#include "vector.hpp"
 
+namespace netgen
+{
 class DenseMatrix
 {
 protected:
@@ -406,5 +410,5 @@ extern ostream & operator<< (ostream & ost, const MatrixFixWidth<WIDTH> & m)
 extern DLL_HEADER void CalcAtA (const DenseMatrix & a, DenseMatrix & m2);
 extern DLL_HEADER void CalcInverse (const DenseMatrix & m1, DenseMatrix & m2);
 
-
+} // namespace netgen
 #endif

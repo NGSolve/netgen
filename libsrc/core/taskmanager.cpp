@@ -76,14 +76,14 @@ namespace ngcore
     numa_run_on_node (0);
 #endif
 
-#ifndef WIN32
+#if !defined(WIN32) && !defined(EMSCRIPTEN)
     // master has maximal priority !
     int policy;
     struct sched_param param;
     pthread_getschedparam(pthread_self(), &policy, &param);
     param.sched_priority = sched_get_priority_max(policy);
     pthread_setschedparam(pthread_self(), policy, &param);
-#endif // WIN32
+#endif // !defined(WIN32) && !defined(EMSCRIPTEN)
 
     
     task_manager->StartWorkers();
@@ -168,6 +168,12 @@ namespace ngcore
         trace = nullptr;
       }
     num_threads = 1;
+#ifdef USE_NUMA
+      for (int j = 0; j < num_nodes; j++)
+          numa_free (nodedata[j], sizeof(NodeData));
+#else
+      delete nodedata[0];
+#endif
   }
 
 #ifdef WIN32
@@ -412,7 +418,7 @@ namespace ngcore
           }
 
       }
-    catch (Exception e)
+    catch (Exception & e)
       {
         {
           lock_guard<mutex> guard(copyex_mutex);
@@ -548,7 +554,7 @@ namespace ngcore
               }
 
           }
-        catch (Exception e)
+        catch (Exception & e)
           {
             {
               // cout << "got exception in TM" << endl; 

@@ -94,7 +94,7 @@ void VisualSceneMeshDoctor :: DrawScene ()
   
   glPopName();
 
-  if (selpoint > 0 && selpoint <= mesh->GetNP())
+  if (selpoint-IndexBASE<PointIndex>() >= 0 && selpoint-IndexBASE<PointIndex>() < mesh->GetNP())
     {
       GLfloat matcolblue[] = { 0, 0, 1, 1 };
 
@@ -376,8 +376,8 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       const Point3d & p1 = mesh->Point(seg[0]);
       const Point3d & p2 = mesh->Point(seg[1]);
 
-      if (edgedist.Get(seg[0]) <= markedgedist &&
-	  edgedist.Get(seg[1]) <= markedgedist)
+      if (edgedist[seg[0]] <= markedgedist &&
+	  edgedist[seg[1]] <= markedgedist)
 	{
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, 
 			matcolseledge);
@@ -518,8 +518,7 @@ void VisualSceneMeshDoctor :: UpdateTables ()
   edgedist.SetSize(mesh->GetNP());
   int i, changed;
 
-  for (i = 1; i <= mesh->GetNP(); i++)
-    edgedist.Elem(i) = 10000;
+  edgedist = 10000;
 
   for (i = 1; i <= mesh->GetNSeg(); i++)
     {
@@ -527,8 +526,8 @@ void VisualSceneMeshDoctor :: UpdateTables ()
       if ( (seg[0] == selpoint && seg[1] == selpoint2) ||
            (seg[1] == selpoint && seg[0] == selpoint2) )
 	{
-	  edgedist.Elem(selpoint) = 1;
-	  edgedist.Elem(selpoint2) = 1;
+	  edgedist[selpoint] = 1;
+	  edgedist[selpoint2] = 1;
 	}
     }
 
@@ -540,17 +539,17 @@ void VisualSceneMeshDoctor :: UpdateTables ()
 	{
 	  const Segment & seg = mesh->LineSegment(i);
 	  
-	  int edist = min2 (edgedist.Get(seg[0]), edgedist.Get(seg[1]));
+	  int edist = min2 (edgedist[seg[0]], edgedist[seg[1]]);
 	  edist++;
 
-	  if (edgedist.Get(seg[0]) > edist)
+	  if (edgedist[seg[0]] > edist)
 	    {
-	      edgedist.Elem(seg[0]) = edist;
+	      edgedist[seg[0]] = edist;
 	      changed = 1;
 	    }
-	  if (edgedist.Get(seg[1]) > edist)
+	  if (edgedist[seg[1]] > edist)
 	    {
-	      edgedist.Elem(seg[1]) = edist;
+	      edgedist[seg[1]] = edist;
 	      changed = 1;
 	    }
 	}	    
@@ -561,8 +560,8 @@ void VisualSceneMeshDoctor :: UpdateTables ()
 int VisualSceneMeshDoctor :: IsSegmentMarked (int segnr) const
 {
   const Segment & seg = mesh->LineSegment(segnr);
-  return (edgedist.Get(seg[0]) <= markedgedist &&
-	  edgedist.Get(seg[1]) <= markedgedist);
+  return (edgedist[seg[0]] <= markedgedist &&
+	  edgedist[seg[1]] <= markedgedist);
 }
 }
 

@@ -1,5 +1,10 @@
-#ifndef FILE_IMPROVE2
-#define FILE_IMPROVE2
+#ifndef NETGEN_IMPROVE2_HPP
+#define NETGEN_IMPROVE2_HPP
+
+#include "meshtype.hpp"
+
+namespace netgen
+{
 
 inline void AppendEdges( const Element2d & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
 {
@@ -31,10 +36,10 @@ inline void AppendEdges( const Element & elem, PointIndex pi, Array<std::tuple<P
   }
 }
 
-template<typename TINDEX>
-void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
+template<typename T_PI2SEI>
+void BuildEdgeList( const Mesh & mesh, const T_PI2SEI & elementsonnode, Array<std::tuple<PointIndex, PointIndex>> & edges )
 {
-  static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
+  // static_assert(is_same_v<TINDEX, ElementIndex>||is_same_v<TINDEX,SurfaceElementIndex>, "Invalid type for TINDEX");
   static Timer tbuild_edges("Build edges"); RegionTimer reg(tbuild_edges);
 
   int ntasks = 4*ngcore::TaskManager::GetMaxThreads();
@@ -57,7 +62,7 @@ void BuildEdgeList( const Mesh & mesh, const Table<TINDEX, PointIndex> & element
         }
         QuickSort(local_edges);
 
-        auto edge_prev = std::make_tuple<PointIndex, PointIndex>(-1,-1);
+        auto edge_prev = std::make_tuple<PointIndex, PointIndex>(PointIndex::INVALID, PointIndex::INVALID);
 
         for(auto edge : local_edges)
             if(edge != edge_prev)
@@ -169,7 +174,5 @@ extern double CalcTriangleBadness (const Point<3> & p1,
 				   const Vec<3> & n,
 				   double metricweight,
 				   double h);
-
-#endif
-
-
+} // namespace netgen
+#endif // NETGEN_IMPROVE2_HPP

@@ -4,7 +4,7 @@
 namespace netgen
 {
 
-  DLL_HEADER void Optimize2d (Mesh & mesh, MeshingParameters & mp)
+  DLL_HEADER void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex)
   {
     static Timer timer("optimize2d"); RegionTimer reg(timer);
 
@@ -33,19 +33,25 @@ namespace netgen
         optimize_swap_separate_faces = true;
     }
 
+    if(faceindex)
+      optimize_swap_separate_faces = false;
+
     const char * optstr = mp.optimize2d.c_str();
     int optsteps = mp.optsteps2d;
 
+    // reset topology
+    mesh.GetTopology() = MeshTopology(mesh);
     for (int i = 1; i <= optsteps; i++)
       for (size_t j = 1; j <= strlen(optstr); j++)
 	{
 	  if (multithread.terminate) break;
+          MeshOptimize2d meshopt(mesh);
+          meshopt.SetMetricWeight (mp.elsizeweight);
+          meshopt.SetFaceIndex(faceindex);
 	  switch (optstr[j-1])
 	    {
 	    case 's': 
 	      {  // topological swap
-                MeshOptimize2d meshopt(mesh);
-                meshopt.SetMetricWeight (mp.elsizeweight);
 
                 if(optimize_swap_separate_faces)
                 {
@@ -57,16 +63,12 @@ namespace netgen
                 }
                 else
                 {
-                  meshopt.SetFaceIndex(0);
                   meshopt.EdgeSwapping (0);
                 }
 		break;
 	      }
 	    case 'S': 
 	      {  // metric swap
-		MeshOptimize2d meshopt(mesh);
-                meshopt.SetMetricWeight (mp.elsizeweight);
-
                 if(optimize_swap_separate_faces)
                 {
                   for(auto i : Range(1, mesh.GetNFD()+1))
@@ -77,22 +79,17 @@ namespace netgen
                 }
                 else
                 {
-                  meshopt.SetFaceIndex(0);
                   meshopt.EdgeSwapping (1);
                 }
 		break;
 	      }
 	    case 'm': 
 	      {
-		MeshOptimize2d meshopt(mesh);
-                meshopt.SetMetricWeight (mp.elsizeweight);
 		meshopt.ImproveMesh(mp);
 		break;
 	      }
 	    case 'c': 
 	      {
-		MeshOptimize2d meshopt(mesh);
-                meshopt.SetMetricWeight (mp.elsizeweight);
 		meshopt.CombineImprove();
 		break;
 	      }

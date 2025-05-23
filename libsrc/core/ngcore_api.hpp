@@ -1,6 +1,8 @@
 #ifndef NETGEN_CORE_NGCORE_API_HPP
 #define NETGEN_CORE_NGCORE_API_HPP
 
+#include "netgen_config.hpp"
+
 #ifdef WIN32
 
 // This function or variable may be unsafe. Consider using _ftime64_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.

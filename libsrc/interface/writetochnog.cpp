@@ -13,10 +13,10 @@
 #include <csg.hpp>
 #include <meshing.hpp>
 
+#include "writeuser.hpp"
 
 namespace netgen
 {
-#include "writeuser.hpp"
 
 
 void WriteTochnogFormat (const Mesh & mesh,
@@ -105,4 +105,5 @@ void WriteTochnogFormat (const Mesh & mesh,
   cout << "done" << endl;
 }
 
+static RegisterUserFormat reg_tochnog ("Tochnog Format", {".mesh"}, nullopt, WriteTochnogFormat);
 }

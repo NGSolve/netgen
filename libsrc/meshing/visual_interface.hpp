@@ -5,7 +5,7 @@
 #include <meshing.hpp>
 #include <myadt.hpp>
 
-class Ng_SolutionData;
+struct Ng_SolutionData;
 
 // Function pointers for visualization purposed, all set to nullptr by default and initialized correctly when the GUI library is loaded
 
@@ -15,7 +15,7 @@ DLL_HEADER extern void (*Ptr_Ng_SetSolutionData) (Ng_SolutionData * soldata);
 DLL_HEADER extern void (*Ptr_Ng_Redraw) (bool blocking);
 
 // Tcl wrapper functions
-class Tcl_Interp;
+struct Tcl_Interp;
 typedef int (Tcl_CmdProc) (void * clientData, Tcl_Interp *interp,
         int argc, const char *argv[]);
 typedef void (Tcl_FreeProc) (char *blockPtr);

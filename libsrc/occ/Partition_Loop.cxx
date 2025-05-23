@@ -67,7 +67,7 @@
 #include <TopExp_Explorer.hxx>
 
 static char* name = new char[100];
-static int nbe = 0;
+// static int nbe = 0;
 
 #ifdef WIN32
 #define M_PI 3.14159265358979323846
@@ -198,7 +198,7 @@ static Standard_Boolean  SelectEdge(const TopoDS_Face&    F,
 	  Cc->D2(uc, PC, CTg1, CTg2);
 	  C->D2(u, P, Tg1, Tg2);
 
-	  Standard_Real angle;
+	  Standard_Real angle = 0.0;
 
 	  if (CE.Orientation () == TopAbs_REVERSED && E.Orientation () == TopAbs_FORWARD) {
 	    angle = CTg1.Angle(Tg1.Reversed());
@@ -363,7 +363,7 @@ void Partition_Loop::Perform()
       }
     }
 
-    int i = 0;
+    // int i = 0;
     while (!End) { 
       //-------------------------------
       // Construction of a wire.
