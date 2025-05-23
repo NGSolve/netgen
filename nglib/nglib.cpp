@@ -25,7 +25,7 @@ namespace netgen {
    extern void MeshFromSpline2D (SplineGeometry2d & geometry,
                                  shared_ptr<Mesh> & mesh, 
                                  MeshingParameters & mp);
-   extern void Optimize2d(Mesh & mesh, MeshingParameters & mp);
+   extern void Optimize2d(Mesh & mesh, MeshingParameters & mp, int faceindex=0);
    extern MeshingParameters mparam;
    DLL_HEADER extern STLParameters stlparam;
 }

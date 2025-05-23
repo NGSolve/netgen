@@ -52,8 +52,8 @@ namespace ngcore
         */
         std::string CleanupDemangledName( std::string s )
         {
-            for(const auto & [r, sub] : demangle_regexes)
-                s = std::regex_replace (s,r,sub);
+            // for(const auto & [r, sub] : demangle_regexes)
+            //     s = std::regex_replace (s,r,sub);
 #ifdef EMSCRIPTEN
             // for some reason regex_replace is not working at all
             std::string temp = s;

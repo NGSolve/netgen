@@ -17,7 +17,6 @@
 #include <stlgeom.hpp>
 #include <geometry2d.hpp>
 #include <meshing.hpp>
-#include <../visualization/soldata.hpp>
 
 #ifdef OCCGEOMETRY
 #include <occgeom.hpp>
@@ -31,9 +30,7 @@ namespace netgen {
                                  shared_ptr<Mesh> & mesh, 
                                  MeshingParameters & mp);
 
-   extern void Optimize2d (Mesh & mesh, 
-	   MeshingParameters & mp);
-
+   extern void Optimize2d(Mesh & mesh, MeshingParameters & mp, int faceindex=0);
    // Global meshing parameters !!
    //MeshingParameters mparam;
 }
@@ -615,8 +612,7 @@ namespace nglib
    }
 
 
-   DLL_HEADER Ng_Result Ng_OptimizeMesh_2D (Ng_Mesh *mesh, 
-	   Ng_Meshing_Parameters * mp)
+   DLL_HEADER Ng_Result Ng_OptimizeMesh_2D (Ng_Mesh *mesh, Ng_Meshing_Parameters * mp)
    {
 	   Mesh * m = (Mesh*)mesh;
 
