@@ -76,7 +76,7 @@ public:
   void SetBuildParentEdges (bool bh) { build_parent_edges = bh; }
   void SetBuildParentFaces (bool bh) { build_parent_faces = bh; }
 
-  void EnableTable (string name, bool set);
+  DLL_HEADER void EnableTable (string name, bool set);
   static void EnableTableStatic (string name, bool set);
 
   bool HasEdges () const  { return buildedges; }
