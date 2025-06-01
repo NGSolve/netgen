@@ -8,6 +8,7 @@
 /**************************************************************************/
 
 #include <cstring>
+#include <array>
 #include <type_traits>
 
 #include "exception.hpp"
@@ -474,6 +475,10 @@ namespace ngcore
       : size(asize), data (lh.Alloc<T> (asize))
     { ; }
 
+    template <size_t N>
+    NETGEN_INLINE FlatArray(std::array<T,N> & a)
+      : size(N), data(&a[0]) { }
+    
     /// the size
     NETGEN_INLINE size_t Size() const { return size; }
 
