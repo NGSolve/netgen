@@ -1,6 +1,6 @@
 from netgen.csg import *
 
-def test_2_polyhedra():
+def create_2_polyhedra():
     geo = CSGeometry()
     first = Polyhedron([(0,0,0), (0,1,0), (3,1,0), (3,0,0),
                         (0,1,1), (3,1,1), (3,0,1), (0,0,1)],
@@ -19,8 +19,11 @@ def test_2_polyhedra():
     mesh = geo.GenerateMesh()
     return mesh
 
+def test_2_polyhedra():
+    create_2_polyhedra()
+
 
 if __name__ == "__main__":
     from ngsolve import Mesh, Draw
-    mesh = Mesh(test_2_polyhedra())
+    mesh = Mesh(create_2_polyhedra())
     Draw(mesh)
