@@ -242,25 +242,50 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                  {
                    edge_colors.insert(edge_colors.end(),{0.f,0.f,0.f,1.f});
                  }
-               BRepAdaptor_Curve adapt_crv = BRepAdaptor_Curve(edge);
-               GCPnts_TangentialDeflection discretizer;
-               discretizer.Initialize(adapt_crv, 0.09, 0.01);
-		if (discretizer.NbPoints() > 1)
-		{
-                  for (int j = 1; j <= discretizer.NbPoints()-1; ++j)
-                    {
-                      gp_Pnt p_0 = discretizer.Value(j);
-                      gp_Pnt p_1 = discretizer.Value(j+1);
-                      edges.insert(edges.end(),
-                                   {float(p_0.X()),
-                                    float(p_0.Y()),
-                                    float(p_0.Z()),
-                                    float(p_1.X()),
-                                    float(p_1.Y()),
-                                    float(p_1.Z())});
-                      edge_indices.push_back(uint32_t(edge_index-1));
-                    }
-		}
+
+               Handle(Poly_PolygonOnTriangulation) poly;
+               Handle(Poly_Triangulation) T;
+               TopLoc_Location loc;
+               BRep_Tool::PolygonOnTriangulation(edge, poly, T, loc);
+               if(poly.IsNull())
+                 {
+                   cout << IM(2) << "No polygon on triangulation for edge " << edge_index << endl;
+                   BRepAdaptor_Curve adapt_crv = BRepAdaptor_Curve(edge);
+                   GCPnts_TangentialDeflection discretizer;
+                   discretizer.Initialize(adapt_crv, 0.09, 0.01);
+                   if (discretizer.NbPoints() > 1)
+                     {
+                       for (int j = 1; j <= discretizer.NbPoints()-1; ++j)
+                         {
+                           gp_Pnt p_0 = discretizer.Value(j);
+                           gp_Pnt p_1 = discretizer.Value(j+1);
+                           edges.insert(edges.end(),
+                                        {float(p_0.X()),
+                                         float(p_0.Y()),
+                                         float(p_0.Z()),
+                                         float(p_1.X()),
+                                         float(p_1.Y()),
+                                         float(p_1.Z())});
+                           edge_indices.push_back(uint32_t(edge_index-1));
+                         }
+                     }
+                 }
+               else
+                 {
+                   int nbnodes = poly -> NbNodes();
+                   for (int j = 1; j < nbnodes; j++)
+                     {
+                       auto p0 = occ2ng((T -> Node(poly->Nodes()(j))).Transformed(loc));
+                       auto p1 = occ2ng((T -> Node(poly->Nodes()(j+1))).Transformed(loc));
+                       for(auto k : Range(3))
+                         edges.push_back(p0[k]);
+                       for(auto k : Range(3))
+                         edges.push_back(p1[k]);
+                       edge_indices.push_back(uint32_t(edge_index-1));
+                       box.Add(p0);
+                       box.Add(p1);
+                     }
+                 }
              }
            for (int i = 1; i <= occ_geo->fmap.Extent(); i++)
              {
