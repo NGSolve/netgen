@@ -42,9 +42,6 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND USE_PYTHON)
     # Different python modules using pybind11 need to use the same C++ ABI version
     # for compatibility
     set(cxx_abi_version 17)
-    if(cxx_abi_version LESS default_cxx_abi_version)
-      set(cxx_abi_version ${default_cxx_abi_version})
-    endif()
     message(STATUS "GNU C++ ABI version: ${cxx_abi_version}")
     target_compile_options(ngcore PUBLIC "-fabi-version=${cxx_abi_version}")
   endif()
