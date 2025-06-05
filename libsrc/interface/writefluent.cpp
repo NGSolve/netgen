@@ -63,7 +63,7 @@ void WriteFluentFormat (const Mesh & mesh,
   outfile << "(0 \"Faces:\")" << endl;
 
   Element2d face, face2;
-  int i2, j2;
+  int /* i2, */ j2;
   NgArray<INDEX_3> surfaceelp;
   NgArray<int> surfaceeli;
   Array<ElementIndex> locels;
@@ -105,8 +105,8 @@ void WriteFluentFormat (const Mesh & mesh,
       box.IncreaseRel(1e-6);
 
       mesh.GetIntersectingVolEls(box.PMin(),box.PMax(),locels);
-      int nel = locels.Size();
-      int locind;
+      // int nel = locels.Size();
+      // int locind;
 
       //cout << "nel=" << nel << endl;
 

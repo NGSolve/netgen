@@ -797,11 +797,14 @@ double MeshOptimize3d :: SwapImproveEdge (
   int nsuround = hasbothpoints.Size();
   int mattyp = mesh[hasbothpoints[0]].GetIndex();
 
+  /*
+    // unused ? 
   auto fix_orientation = [&] (Element & el) {
     if (WrongOrientation (mesh.Points(), el))
       el.Invert();
   };
-
+  */
+  
   auto El = [&] ( PointIndex pi0, PointIndex pi1, PointIndex pi2, PointIndex pi3) -> Element {
     Element el(TET);
     el[0] = pi0;

@@ -633,7 +633,7 @@ namespace netgen
         s[0] = pm0.Last();
         s[1] = pm1.Last();
         s[2] = PointIndex::INVALID;
-        auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
+        // auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
         s.edgenr = new_edge_nr;
         s.epgeominfo[0].edgenr = -1;
         s.epgeominfo[1].edgenr = -1;

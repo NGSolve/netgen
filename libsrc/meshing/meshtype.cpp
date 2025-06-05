@@ -2942,7 +2942,10 @@ namespace netgen
     ost << "Identifications:" << endl;
     ost << "pairs: " << endl << identifiedpoints << endl;
     // ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
-#pragma message( "Can't ostream a tuple " __FILE__ )    
+    ost << "pairs and nr: " << endl;
+    for (auto [key,val] : identifiedpoints_nr)
+      ost << get<0>(key) << "," << get<1>(key) << ": " << val << endl;
+    
     ost << "table: " << endl << idpoints_table << endl;
   }
 
