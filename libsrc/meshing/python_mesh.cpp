@@ -694,8 +694,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   })
     ;
 
+  py::implicitly_convertible< int, SurfaceElementIndex>();
+  PYBIND11_NUMPY_DTYPE(SurfaceElementIndex, i);
+  ExportArray<SurfaceElementIndex, SurfaceElementIndex>(m);
   
-
+  py::implicitly_convertible< int, ElementIndex>();
+  PYBIND11_NUMPY_DTYPE(ElementIndex, i);
+  ExportArray<ElementIndex, ElementIndex>(m);
+  
   ExportArray<Element,ElementIndex>(m);
   ExportArray<Element2d,SurfaceElementIndex>(m);
   ExportArray<Segment,SegmentIndex>(m);
