@@ -71,9 +71,9 @@ void Ng_LoadGeometry (const char * filename)
       return;
     }
 
-  for (int i = 0; i < geometryregister.Size(); i++)
+  for (auto loader : GeometryRegister())
     {
-      NetgenGeometry * hgeom = geometryregister[i]->Load (filename);
+      NetgenGeometry * hgeom = loader->Load (filename);
       if (hgeom)
 	{
           ng_geometry.reset (hgeom);
@@ -94,7 +94,7 @@ void Ng_LoadMeshFromStream ( istream & input )
   mesh -> Load(input);
 
   SetGlobalMesh (mesh);
-  ng_geometry = geometryregister.LoadFromMeshFile (input);
+  ng_geometry = GeometryRegister().LoadFromMeshFile (input);
 
   if (!ng_geometry)
     ng_geometry = make_shared<NetgenGeometry>();
@@ -249,7 +249,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
   shared_ptr<NetgenGeometry> geo;
   if(buf.Size()) { // if we had geom-info in the file, take it
     istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
-    geo = geometryregister.LoadFromMeshFile(geom_infile);
+    geo = GeometryRegister().LoadFromMeshFile(geom_infile);
   }
   if(geo!=nullptr) {
     ng_geometry = geo;

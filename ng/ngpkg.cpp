@@ -483,15 +483,15 @@ namespace netgen
 
     try
       {
-	for (int i = 0; i < geometryregister.Size(); i++)
+	for (auto loader : GeometryRegister())
 	  {
-	    NetgenGeometry * hgeom = geometryregister[i]->Load (lgfilename);
+	    NetgenGeometry * hgeom = loader->Load (lgfilename);
 	    if (hgeom)
 	      {
                 // delete ng_geometry;
 		// ng_geometry = hgeom;
                 ng_geometry = shared_ptr<NetgenGeometry> (hgeom);
-                geometryregister[i]->SetParameters(interp);
+                loader->SetParameters(interp);
 		
 		mesh.reset();
 		return TCL_OK;
@@ -1493,8 +1493,8 @@ namespace netgen
     extern void Render(bool blocking);
     mparam.render_function = &Render;
 
-    for (int i = 0; i < geometryregister.Size(); i++)
-      geometryregister[i] -> SetParameters (interp);
+    for (auto loader : GeometryRegister())
+      loader -> SetParameters (interp);
 
 
     Ng_SetMeshingParameters (clientData, interp, 0, argv);
@@ -1944,9 +1944,9 @@ namespace netgen
       {
 	if (strcmp (vismode, "geometry") == 0)
 	  {
-	    for (int i = 0; i < geometryregister.Size(); i++)
+	    for (auto loader : GeometryRegister())
 	      {
-		VisualScene * hvs = geometryregister[i]->GetVisualScene (ng_geometry.get());
+		VisualScene * hvs = loader->GetVisualScene (ng_geometry.get());
 		if (hvs)
 		  {
 		    vs = hvs;

@@ -365,8 +365,7 @@ namespace netgen
     virtual shared_ptr<NetgenGeometry> LoadFromMeshFile (istream & ist) const;
   };
 
-  // extern DLL_HEADER NgArray<GeometryRegister*> geometryregister; 
-  extern DLL_HEADER GeometryRegisterArray geometryregister; 
+  DLL_HEADER GeometryRegisterArray& GeometryRegister();
 }
 
 
