@@ -1674,7 +1674,7 @@ namespace netgen
   public:
     CSGInit()
     {
-      geometryregister.Append (new CSGeometryRegister);
+      GeometryRegister().Append (new CSGeometryRegister);
     }
   };
 

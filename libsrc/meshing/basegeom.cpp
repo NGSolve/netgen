@@ -30,8 +30,12 @@ namespace netgen
       }
   };
 
-  DLL_HEADER GeometryRegisterArray geometryregister;
-  //DLL_HEADER NgArray<GeometryRegister*> geometryregister;
+
+  GeometryRegisterArray& GeometryRegister()
+  {
+    static GeometryRegisterArray geometryregister;
+    return geometryregister;
+  }
 
   GeometryRegister :: ~GeometryRegister()
   { ; }

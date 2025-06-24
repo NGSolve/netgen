@@ -952,7 +952,7 @@ using namespace netgen;
 
 int Ng_occ_Init (Tcl_Interp * interp)
 {
-  geometryregister.Append (new OCCGeometryRegister);
+  GeometryRegister().Append (new OCCGeometryRegister);
 
 
     Tcl_CreateCommand (interp, "Ng_SetOCCVisParameters",

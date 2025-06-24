@@ -921,7 +921,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 	    shared_ptr<NetgenGeometry> geo;
 	    if(buf.Size()) { // if we had geom-info in the file, take it
 	      istringstream geom_infile(string((const char*)buf.Data(), buf.Size()));
-	      geo = geometryregister.LoadFromMeshFile(geom_infile);
+	      geo = GeometryRegister().LoadFromMeshFile(geom_infile);
 	    }
 	    if(geo!=nullptr) mesh->SetGeometry(geo);
 	    else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
