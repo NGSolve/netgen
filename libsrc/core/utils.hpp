@@ -74,6 +74,8 @@ namespace ngcore
     return tics;
 #elif defined(__EMSCRIPTEN__)
     return std::chrono::high_resolution_clock::now().time_since_epoch().count();
+#elif defined(_MSC_VER) && defined(_M_ARM64)
+    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #else
 #warning "Unsupported CPU architecture"
     return 0;
