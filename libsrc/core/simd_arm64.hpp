@@ -154,6 +154,7 @@ namespace ngcore
     return FNMA(SIMD<double,2> (a), b, c);
   }
 
+#ifdef __ARM_FEATURE_COMPLEX
   // ARM complex mult:
   // https://arxiv.org/pdf/1901.07294.pdf
   // c += a*b    (a0re, a0im, a1re, a1im, ...), 
@@ -162,6 +163,7 @@ namespace ngcore
     auto tmp = vcmlaq_f64(c.Data(), a.Data(), b.Data());   // are * b
     c = vcmlaq_rot90_f64(tmp, a.Data(), b.Data());    // += i*aim * b
   }
+#endif
   
 
   NETGEN_INLINE SIMD<double,2> operator+ (SIMD<double,2> a, SIMD<double,2> b)
