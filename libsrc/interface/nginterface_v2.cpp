@@ -1008,7 +1008,7 @@ namespace netgen
   DLL_HEADER int Ngx_Mesh :: FindElementOfPoint <1> 
   (double * hp, double * lami,
    bool build_searchtree, 
-   int * const indices, int numind) const
+   int * const indices, int numind, double tol) const
 
   {
     Point<3> p(hp[0], 0., 0.);
@@ -1040,7 +1040,7 @@ namespace netgen
   DLL_HEADER int Ngx_Mesh :: FindElementOfPoint <2> 
   (double * p, double * lami,
    bool build_searchtree, 
-   int * const indices, int numind) const
+   int * const indices, int numind, double tol) const
 
   {
     Point<3> pp(p[0], p[1], 0.);
@@ -1070,12 +1070,13 @@ namespace netgen
   DLL_HEADER int Ngx_Mesh :: FindElementOfPoint <3>
   (double * p, double * lami,
    bool build_searchtree, 
-   int * const indices, int numind) const
+   int * const indices, int numind,
+   double tol) const
 
   {
     Point<3> pp(p[0], p[1], p[2]);
     FlatArray<int> ind(numind, indices);
-    return mesh->GetElementOfPoint(pp, lami, ind, build_searchtree);
+    return mesh->GetElementOfPoint(pp, lami, ind, build_searchtree, true, tol);
   }
 
   void Ngx_Mesh :: Curve (int order)

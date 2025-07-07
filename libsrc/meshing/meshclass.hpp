@@ -213,10 +213,12 @@ namespace netgen
 				   bool consider3D = false) const;
     DLL_HEADER bool PointContainedIn3DElement(const Point3d & p,
 				   double lami[3],
-				   ElementIndex element) const;
+                                   ElementIndex element,
+                                   double tol=1e-4) const;
     DLL_HEADER bool PointContainedIn3DElementOld(const Point3d & p,
 				      double lami[3],
-				      const int element) const;
+                                      const int element,
+                                      double tol=1e-4) const;
 
   public:
     Signal<> updateSignal;
@@ -691,13 +693,15 @@ namespace netgen
                        double * lami,
                        bool build_searchtree = false,
                        int index = -1,
-                       bool allowindex = true) const;
+                       bool allowindex = true,
+                       double tol=1e-4) const;
     DLL_HEADER ElementIndex
     GetElementOfPoint (const netgen::Point<3> & p,
                        double * lami,
                        std::optional<FlatArray<int>> indices,
                        bool build_searchtree = 0,
-                       bool allowindex = true) const;
+                       bool allowindex = true,
+                       double tol=1e-4) const;
     DLL_HEADER SurfaceElementIndex
     GetSurfaceElementOfPoint (const netgen::Point<3> & p,
                               double * lami,

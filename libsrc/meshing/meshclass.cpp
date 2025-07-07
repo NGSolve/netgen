@@ -17,7 +17,8 @@ namespace netgen
                               double * lami,
                               optional<FlatArray<int>> indices,
                               BoxTree<3, ElementIndex> * searchtree,
-                              const bool allowindex)
+                              const bool allowindex,
+                              double tol=1e-4)
   {
     int ne = 0;
     Array<ElementIndex> locels;
@@ -44,7 +45,7 @@ namespace netgen
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
 
-        if(mesh.PointContainedIn3DElement(p,lami,ei))
+        if(mesh.PointContainedIn3DElement(p,lami,ei, tol))
           return ei;
       }
 
@@ -65,7 +66,7 @@ namespace netgen
           }
 
 
-        if(mesh.PointContainedIn3DElementOld(p,lami,ei))
+        if(mesh.PointContainedIn3DElementOld(p,lami,ei, tol))
           {
             (*testout) << "WARNING: found element of point " << p <<" only for uncurved mesh" << endl;
             return ei;
@@ -5862,7 +5863,8 @@ namespace netgen
 
   bool Mesh :: PointContainedIn3DElement(const Point3d & p,
                                          double lami[3],
-                                         ElementIndex ei) const
+                                         ElementIndex ei,
+                                         double eps) const
   {
     //bool oldresult = PointContainedIn3DElementOld(p,lami,element);
     //(*testout) << "old result: " << oldresult
@@ -5870,9 +5872,6 @@ namespace netgen
 
     //if(!curvedelems->IsElementCurved(element-1))
     //  return PointContainedIn3DElementOld(p,lami,element);
-
-
-    const double eps = 1.e-4;
     const Element & el = volelements[ei];
 
     netgen::Point<3> lam = 0.0;
@@ -5968,11 +5967,11 @@ namespace netgen
 
   bool Mesh :: PointContainedIn3DElementOld(const Point3d & p,
                                             double lami[3],
-                                            const int element) const
+                                            const int element,
+                                            double eps) const
   {
     Vec3d col1, col2, col3;
     Vec3d rhs, sol;
-    const double eps = 1.e-4;
 
     NgArray<Element> loctets;
 
@@ -6034,16 +6033,17 @@ namespace netgen
                                           double* lami,
                                           bool build_searchtree,
                                           int index,
-                                          bool allowindex) const
+                                          bool allowindex,
+                                          double tol) const
   {
     if(index != -1) 
       {
         Array<int> dummy(1);
         dummy[0] = index;
-        return GetElementOfPoint(p,lami,dummy,build_searchtree,allowindex);
+        return GetElementOfPoint(p,lami,dummy,build_searchtree,allowindex, tol);
       }
     else
-      return GetElementOfPoint(p,lami,nullopt,build_searchtree,allowindex);
+      return GetElementOfPoint(p,lami,nullopt,build_searchtree,allowindex, tol);
   }
 
 
@@ -6053,11 +6053,12 @@ namespace netgen
                                           double* lami,
                                           std::optional<FlatArray<int>> indices,
                                           bool build_searchtree,
-                                          bool allowindex) const
+                                          bool allowindex,
+                                          double tol) const
   {
     if (build_searchtree)
       const_cast<Mesh&>(*this).BuildElementSearchTree (3);
-    return Find3dElement(*this, p, lami, indices, elementsearchtree_vol.get(), allowindex);
+    return Find3dElement(*this, p, lami, indices, elementsearchtree_vol.get(), allowindex, tol);
   }
 
 
