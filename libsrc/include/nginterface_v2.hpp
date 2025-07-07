@@ -341,7 +341,7 @@ namespace netgen
     int FindElementOfPoint 
     (double * p, double * lami,
      bool build_searchtrees = false, 
-     int * const indices = NULL, int numind = 0) const;
+     int * const indices = NULL, int numind = 0, double tol = 1e-4) const;
     
 
     // for MPI-parallel
