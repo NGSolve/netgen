@@ -1,3 +1,4 @@
+#include <Geom_Curve.hxx>
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
@@ -82,6 +83,8 @@
 #include <gp_Ax2d.hxx>
 #include <gp_Pln.hxx>
 #include <gp_Trsf.hxx>
+#include <GeomLib.hxx>
+#include <Geom_BoundedCurve.hxx>
 
 #pragma clang diagnostic pop
 
@@ -1618,6 +1621,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       new_edges.push_back(newE);
       return new_edges;
     }, "Splits edge at given parameters. Parameters can either be floating values in (0,1), then edge parametrization is used. Or it can be points, then the projection of these points are used for splitting the edge.")
+    .def("Extend", [](const TopoDS_Edge & edge, gp_Pnt pnt, int continuity, bool after)
+    {
+      double s0, s1;
+      auto curve = BRep_Tool::Curve(edge, s0, s1);
+      if (continuity < 0 || continuity > 2)
+        throw Exception("continuity must be 0, 1 or 2");
+
+      auto bounded_curve = opencascade::handle<Geom_BoundedCurve>::DownCast(curve);
+      GeomLib::ExtendCurveToPoint(bounded_curve, pnt, continuity, after);
+      return BRepBuilderAPI_MakeEdge(bounded_curve).Edge();
+
+    }, py::arg("point"), py::arg("continuity") = 1, py::arg("after") = true)
     ;
   
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "Wire")
@@ -1715,6 +1730,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       builder.Build();
       return builder.Projection();
     })
+    .def("Extend", [](const TopoDS_Face & face, double length, int continuity, bool inU, bool after)
+    {
+      if (continuity < 0 || continuity > 2)
+        throw Exception("continuity must be 0, 1 or 2");
+
+      auto surf = BRep_Tool::Surface (face);
+      auto bounded_surface = opencascade::handle<Geom_BoundedSurface>::DownCast(surf);
+      GeomLib::ExtendSurfByLength(bounded_surface, length, continuity, inU, after);
+      return BRepBuilderAPI_MakeFace(bounded_surface, 1e-7).Face();
+
+    }, py::arg("length"), py::arg("continuity") = 1, py::arg("u_direction") = true, py::arg("after") = true)
     ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid")
     .def(py::init([](const TopoDS_Shape& faces)
