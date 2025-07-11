@@ -5,9 +5,13 @@
 #include <iostream>
 #endif // EMSCRIPTEN
 
-#if !defined(__EMSCRIPTEN__) && ( \                   // no backtrace on emscripten
-     (defined(__APPLE__) && defined(__GNUC__)) || \   // backtrace on Apple platforms with gnuc
-     (defined(__GNUC__) && defined(__GLIBC__)) )      // backtrace on GNU/Linux with glibc (not with musl)
+// no backtrace on Emscripten
+// backtrace on Apple platforms with GNUC (does not define __GLIBC__)
+// backtrace on GNU/Linux with glibc
+// no backtrace with musl libc
+#if !defined(__EMSCRIPTEN__) && ( \
+     (defined(__APPLE__) && defined(__GNUC__)) || \
+     (defined(__GNUC__) && defined(__GLIBC__)) )
 #define NG_HAVE_BACKTRACE
 #endif
 
