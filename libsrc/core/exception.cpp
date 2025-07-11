@@ -5,6 +5,12 @@
 #include <iostream>
 #endif // EMSCRIPTEN
 
+#if !defined(__EMSCRIPTEN__) && ( \                   // no backtrace on emscripten
+     (defined(__APPLE__) && defined(__GNUC__)) || \   // backtrace on Apple platforms with gnuc
+     (defined(__GNUC__) && defined(__GLIBC__)) )      // backtrace on GNU/Linux with glibc (not with musl)
+#define NG_HAVE_BACKTRACE
+#endif
+
 namespace ngcore
 {
   Exception :: Exception(const std::string& s)
@@ -84,7 +90,7 @@ namespace ngcore
 
 
 // ********* STUFF FOR GETBACKTRACE ***************************
-#if defined __GNUC__ && !defined __EMSCRIPTEN__
+#ifdef NG_HAVE_BACKTRACE
 
 #include <execinfo.h>
 #include <string.h>
@@ -287,7 +293,7 @@ static bool dummy = []()
     return true;
 }();
 
-#else // __GNUC__ and not __EMSCRIPTEN__
+#else // NG_HAVE_BACKTRACE
 
 namespace ngcore
 {
@@ -297,4 +303,4 @@ namespace ngcore
   }
 } // namespace ngcore
 
-#endif // __GNUC__
+#endif // NG_HAVE_BACKTRACE
