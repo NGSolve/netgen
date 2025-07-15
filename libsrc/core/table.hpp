@@ -462,6 +462,7 @@ namespace ngcore
       : TableCreator<int>(), takedofs(atakedofs) { };
     FilteredTableCreator(int acnt, const BitArray* atakedofs)
       : TableCreator<int>(acnt),takedofs(atakedofs) { };
+    void SetFilter (const BitArray * atakedofs) { takedofs = atakedofs; } 
     void Add (size_t blocknr, int data);
     void Add (size_t blocknr, IntRange range);
     void Add (size_t blocknr, FlatArray<int> dofs);
