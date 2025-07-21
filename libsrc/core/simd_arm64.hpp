@@ -162,6 +162,16 @@ namespace ngcore
     auto tmp = vcmlaq_f64(c.Data(), a.Data(), b.Data());   // are * b
     c = vcmlaq_rot90_f64(tmp, a.Data(), b.Data());    // += i*aim * b
   }
+
+  NETGEN_INLINE void FMAComplex (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> & c)
+  {
+    SIMD<double,2> clo = c.Lo();
+    SIMD<double,2> chi = c.Hi();
+    FMAComplex (a.Lo(), b.Lo(), clo);
+    FMAComplex (a.Hi(), b.Hi(), chi);
+    c = SIMD<double,4> (clo, chi);
+  }
+
   
 
   NETGEN_INLINE SIMD<double,2> operator+ (SIMD<double,2> a, SIMD<double,2> b)
