@@ -63,18 +63,13 @@ namespace ngcore
 
   inline TTimePoint GetTimeCounter() noexcept
   {
-#if defined(__APPLE__) && defined(NETGEN_ARCH_ARM64)
-    return mach_absolute_time();
-#elif defined(NETGEN_ARCH_AMD64)
+#if defined(NETGEN_ARCH_AMD64)
     return __rdtsc();
-#elif defined(NETGEN_ARCH_ARM64) && defined(__GNUC__)
-    // __GNUC__ is also defined by CLANG. Use inline asm to read Generic Timer
+#elif defined(NETGEN_ARCH_ARM64)
     unsigned long long tics;
     __asm __volatile("mrs %0, CNTVCT_EL0" : "=&r" (tics));
     return tics;
-#elif defined(__EMSCRIPTEN__)
-    return std::chrono::high_resolution_clock::now().time_since_epoch().count();
-#elif defined(_MSC_VER) && defined(_M_ARM64)
+#elif defined(__EMSCRIPTEN__) || (defined(_MSC_VER) && defined(_M_ARM64))
     return std::chrono::high_resolution_clock::now().time_since_epoch().count();
 #else
 #warning "Unsupported CPU architecture"
