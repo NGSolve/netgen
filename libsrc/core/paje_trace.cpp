@@ -228,6 +228,7 @@ namespace ngcore
           bool value_is_int = true;
 
           bool operator < (const PajeEvent & other) const {
+            /*
               // Same start and stop times can occur for very small tasks -> take "starting" events first (eg. PajePushState before PajePopState)
               if(time == other.time) {
                 if(value == other.value)  // same timer - first start, then stop
@@ -235,6 +236,7 @@ namespace ngcore
                 else                              // different timers - first stop, then start
                   return event_type > other.event_type;
               }
+            */
               return (time < other.time);
           }
 
@@ -410,7 +412,7 @@ namespace ngcore
       void WriteEvents()
         {
           logger->info("Sorting traces...");
-          std::stable_sort (events.begin(), events.end());
+          // std::stable_sort (events.begin(), events.end());
 
           logger->info("Writing traces... ");
           for (auto & event : events)
@@ -686,7 +688,7 @@ namespace ngcore
 
       if(user_events.size())
         {
-          std::stable_sort (user_events.begin(), user_events.end());
+          // std::stable_sort (user_events.begin(), user_events.end());
 
           std::map<int, int> containers;
 
