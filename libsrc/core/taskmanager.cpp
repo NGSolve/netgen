@@ -349,11 +349,28 @@ namespace ngcore
         // if (cleanup_function) (*cleanup_function)();
         return;
       }
-    
-    if (antasks == 1)
+
+
+    class StartStop
+    {
+    public:
+      StartStop(const function<void(TaskInfo&)> & afunc)
       {
         if (trace)
           trace->StartJob(jobnr, afunc.target_type());
+      }
+      ~StartStop()
+      {
+        if (trace)
+          trace->StopJob();
+      }
+    };
+    
+    if (antasks == 1)
+      {
+        StartStop startstop(afunc);
+        //if (trace)
+        // trace->StartJob(jobnr, afunc.target_type());
         jobnr++;
         if (startup_function) (*startup_function)();
         TaskInfo ti;
@@ -365,13 +382,14 @@ namespace ngcore
           afunc(ti);
         }
         if (cleanup_function) (*cleanup_function)();
-        if (trace)
-          trace->StopJob();
+        // if (trace)
+        // trace->StopJob();
         return;
       }
-    
-    if (trace)
-        trace->StartJob(jobnr, afunc.target_type());
+
+    StartStop startstop(afunc);    
+    // if (trace)
+    // trace->StartJob(jobnr, afunc.target_type());
 
     func = &afunc;
 
@@ -445,8 +463,8 @@ namespace ngcore
     if (ex)
       throw Exception (*ex);
 
-    if (trace)
-        trace->StopJob();
+    // if (trace)
+    //    trace->StopJob();
   }
     
   void TaskManager :: Loop(int thd)
