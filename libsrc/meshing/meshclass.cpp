@@ -5285,6 +5285,7 @@ namespace netgen
       Point3d pmin, pmax;
       GetBox(pmin, pmax);
       Box<3> box(pmin, pmax);
+      box.Scale(1.2);
       if (dim == 3)
         elementsearchtree_vol = make_unique<BoxTree<3, ElementIndex>>(box);
       else

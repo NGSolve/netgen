@@ -932,8 +932,8 @@ public:
       Point<2*dim> p;
       for (auto i : IntRange(dim))
         {
-          p(i) = max(pmin[i], global_min[i]);
-          p(i+dim) = min(pmax[i], global_max[i]);
+          p(i) = pmin[i];
+          p(i+dim) = pmax[i];
         }
 
       Node * node = &root;
