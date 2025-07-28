@@ -49,6 +49,7 @@ namespace netgen
     clipplane_isolinelist = 0;
     surface_vector_list = 0;
     isosurface_list = 0;
+    select_sel_list = 0;
     numtexturecols = 8;
 
     fieldlineslist = 0;
@@ -4746,8 +4747,9 @@ namespace netgen
           }
       }
 
-    if(data->draw_surfaces)
+    if(data->draw_surfaces) {
       is_active = is_active && (*data->draw_surfaces)[el.GetIndex()-1];
+    }
 
     return is_active;
   }
@@ -4767,11 +4769,45 @@ namespace netgen
 
 
 
+  void VisualSceneSolution :: BuildSelectionList()
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
+
+    if(select.list_timestamp == GetTimeStamp())
+      return;
+
+    if(select.list)
+      glDeleteLists(select.list, 1);
+
+    select.list = glGenLists(1);
+    glNewList(select.list, GL_COMPILE);
+
+    SolData *sol = nullptr;
+    if (scalfunction != -1)
+      sol = soldata[scalfunction];
+
+    auto face_init = [](int i) {return true;};
+    auto sel_init = [&](SurfaceElementIndex sei) {
+        if(!SurfaceElementActive(sol, *mesh, (*mesh)[sei]))
+          return false;
+        GLushort r,g,b;
+        r = (sei+1) % (1<<16);
+        g = (sei+1) >> 16;
+        b = 0;
+        glColor3us(r,g,b);
+        return true;
+    };
+
+    RenderSurfaceElements(mesh, subdivisions, face_init, sel_init);
+
+    glEndList();
+  }
 
 
 
   void VisualSceneSolution :: MouseDblClick (int px, int py)
   {
+    BuildSelectionList();
     auto mesh = GetMesh();
     // auto dim = mesh->GetDimension();
     marker = nullopt;
@@ -4817,11 +4853,19 @@ namespace netgen
       };
 
     Point<3> p;
-    bool found_point = vsmesh.SelectSurfaceElement(px, py, p, showclipsolution && clipsolution);
+
+    memcpy(select.transformationmat, transformationmat, sizeof(transformationmat));
+    memcpy(select.clipplane, clipplane, sizeof(clipplane));
+    select.center = center;
+    select.rad = rad;
+    select.enable_clipping_plane = vispar.clipping.enable;
+    bool found_point = select.SelectSurfaceElement(GetMesh(), px, py, p, showclipsolution && clipsolution);
+    selelement = select.selelement;
+
     if(!found_point)
         return;
 
-    // marker = p;
+    marker = p;
 
     // found point on clipping plane
     if(selelement==0)

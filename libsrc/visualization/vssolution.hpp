@@ -65,6 +65,7 @@ class NGGUI_API VisualSceneSolution : public VisualScene
   int surface_vector_list;
   // int cone_list;
   int isosurface_list;
+  int select_sel_list;
 
   int pointcurvelist;
 
@@ -104,7 +105,7 @@ class NGGUI_API VisualSceneSolution : public VisualScene
 
   NgLock *lock;
 
-  
+  VisualSelect select;
 #ifdef PARALLELGL
   NgArray<int> par_linelists;
   NgArray<int> par_surfellists;
@@ -201,6 +202,7 @@ public:
 
   virtual void BuildScene (int zoomall = 0);
   virtual void DrawScene ();
+  void BuildSelectionList();
   virtual void MouseDblClick (int px, int py);
 
   // void SetMesh (shared_ptr<Mesh> amesh);
