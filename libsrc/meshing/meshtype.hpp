@@ -903,7 +903,7 @@ namespace netgen
     int HasFace(const Element2d& el) const;
   };
 
-  ostream & operator<<(ostream  & s, const Element2d & el);
+  DLL_HEADER ostream & operator<<(ostream  & s, const Element2d & el);
 
 
 

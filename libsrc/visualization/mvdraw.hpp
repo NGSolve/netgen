@@ -123,6 +123,48 @@ namespace netgen
 
 
 
+  struct VisualSelect
+  {
+    unsigned framebuffer = 0;
+    unsigned render_buffers[2];
+    unsigned width = 0;
+    unsigned height = 0;
+    unsigned x = 0;
+    unsigned y = 0;
+    int list = 0;
+    int list_timestamp = -1;
+    double projmat[16];
+    double transformationmat[16]; // todo: set
+    double clipplane[4]; // todo: set
+    int viewport[4];
+    int selelement = -1;
+    Point<3> center; // todo: set
+    double rad = 0.0; // todo: set
+    bool enable_clipping_plane = true; // todo: set
+
+    bool Unproject(int px, int py, Point<3> &p)
+    {
+      auto hy = viewport[3] - py;
+      float pz;
+      glReadPixels (px, hy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
+      if(pz<1 && pz>0)
+        gluUnProject(px, hy, pz, transformationmat, projmat, viewport,
+            &p[0], &p[1], &p[2]);
+      return pz<1 && pz>0;
+    }
+
+    ngcore::IVec<2> Project(Point<3> p)
+    {
+      Point<3> pwin;
+      gluProject(p[0], p[1], p[2], transformationmat, projmat, viewport,
+          &pwin[0], &pwin[1], &pwin[2]);
+
+      return ngcore::IVec<2>(pwin[0]+0.5, viewport[3]-pwin[1]+0.5);
+    }
+
+    bool SelectSurfaceElement (shared_ptr<Mesh> mesh, int px, int py, Point<3> &p, bool select_on_clipping_plane);
+  };
+
 
 
 
@@ -164,18 +206,7 @@ namespace netgen
       int size = 0;
     } colors;
 
-    struct {
-      unsigned framebuffer = 0;
-      unsigned render_buffers[2];
-      unsigned width = 0;
-      unsigned height = 0;
-      unsigned x = 0;
-      unsigned y = 0;
-      int list = 0;
-      int list_timestamp = -1;
-      double projmat[16];
-      int viewport[4];
-    } select;
+    VisualSelect select;
 
 #ifdef PARALLELGL
     NgArray<int> par_linelists;
@@ -280,6 +311,11 @@ namespace netgen
                             int & selelement, int & selface, int & seledge, PointIndex & selpoint,
                             PointIndex & selpoint2, int & locpi);
 
+  void RenderSurfaceElements (shared_ptr<Mesh> mesh,
+      int subdivisions,
+      std::function<bool(int)> face_init,
+      std::function<bool(SurfaceElementIndex)> sel_init
+  );
 
   NGGUI_API std::vector<unsigned char> Snapshot( int w, int h );
 }

@@ -939,141 +939,27 @@ namespace netgen
     glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   }
 
-  void VisualSceneMesh :: BuildFilledList (bool build_select)
+  void RenderSurfaceElements (shared_ptr<Mesh> mesh,
+      int subdivisions,
+      std::function<bool(int)> face_init,
+      std::function<bool(SurfaceElementIndex)> sel_init
+    )
   {
-    shared_ptr<Mesh> mesh = GetMesh();
-    
-    static int timer = NgProfiler::CreateTimer ("Mesh::BuildFilledList");
-    NgProfiler::RegionTimer reg (timer);
-    auto & list = build_select ? select.list : filledlist;
-    auto & timestamp = build_select ? select.list_timestamp : filledtimestamp;
-    if (list && timestamp > max(mesh->GetTimeStamp(), subdivision_timestamp))
-      return;
-
-
-#ifdef PARALLELGL
-    if (id == 0 && ntasks > 1)
-      {
-	InitParallelGL();
-	par_filledlists.SetSize (ntasks);
-
-	MyMPI_SendCmd ("redraw");
-	MyMPI_SendCmd ("filledlist");
-	for ( int dest = 1; dest < ntasks; dest++ )
-	  MyMPI_Recv (par_filledlists[dest], dest, MPI_TAG_VIS);
-
-	if (list)
-	  glDeleteLists (list, 1);
-
-	list = glGenLists (1);
-	glNewList (list, GL_COMPILE);
-
-	for ( int dest = 1; dest < ntasks; dest++ )
-	  glCallList (par_filledlists[dest]);
-
-	glEndList();
-
-	timestamp = NextTimeStamp();
-	return;
-      }
-
-#endif
-
-
-    if (!lock)
-      {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
-      }
-
-    timestamp = NextTimeStamp();
-
-    if(!build_select && !vispar.colormeshsize)
-      BuildColorTexture();
-
-    if (list)
-      glDeleteLists (list, 1);
-
-    list = glGenLists (1);
-    glNewList (list, GL_COMPILE);
-
-    glBindTexture(GL_TEXTURE_2D, colors.texture);
-      
-#ifdef STLGEOM
-    STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry);
-    bool checkvicinity = (stlgeometry != NULL) && stldoctor.showvicinity;
-#endif
-    glEnable (GL_NORMALIZE);
-
-    glLineWidth (1.0f);
-
-    Vector locms;
-
-    if (vispar.colormeshsize)
-      {
-	glEnable (GL_COLOR_MATERIAL);
-	glShadeModel (GL_SMOOTH);
-	locms.SetSize (mesh->GetNP());
-	maxh = -1;
-	minh = 1e99;
-	for (int i = 1; i <= locms.Size(); i++)
-	  {
-            Point3d p = mesh->Point(i);
-            locms(i-1) = mesh->GetH (p);
-            if (locms(i-1) > maxh) maxh = locms(i-1);
-            if (locms(i-1) < minh) minh = locms(i-1);
-	  }
-	if (!locms.Size())
-	  { 
-            minh = 1; 
-            maxh = 10; 
-	  }
-      }
-    else if (build_select)
-    {
-      glDisable(GL_TEXTURE_1D);
-      glDisable(GL_TEXTURE_2D);
-      glDisable(GL_FOG);
-      glDisable(GL_LIGHTING);
-      glDisable (GL_COLOR_MATERIAL);
-    }
-    else
-    {
-      glDisable(GL_TEXTURE_1D);
-      glEnable(GL_TEXTURE_2D);
-      glEnable (GL_COLOR_MATERIAL);
-      glBindTexture(GL_TEXTURE_2D, colors.texture);
-    }
-
-    // GLfloat matcol[] = { 0, 1, 0, 1 };
-    // GLfloat matcolsel[] = { 1, 0, 0, 1 };
-
-    GLint rendermode;
-    glGetIntegerv (GL_RENDER_MODE, &rendermode);
-
     CurvedElements & curv = mesh->GetCurvedElements();
 
     int hoplotn = 1 << subdivisions;
     
     Array<SurfaceElementIndex> seia;
 
-
     for (int faceindex = 1; faceindex <= mesh->GetNFD(); faceindex++)
       {
+        if(!face_init(faceindex-1))
+          continue;
+
 	mesh->GetSurfaceElementsOfFace (faceindex, seia);
 
-        if(!build_select && !vispar.colormeshsize)
-        {
-          int i = faceindex-1;
-          float x = (0.5+i%colors.width)/colors.width;
-          float y = (0.5+i/colors.width)/colors.height;
-          glTexCoord2f(x,y);
-        }
-	
         static Point<3> xa[129];
         static Vec<3> na[129];
-
-        
         
 	for (int hi = 0; hi < seia.Size(); hi++)
 	  {
@@ -1092,14 +978,8 @@ namespace netgen
             if (!drawel)
 	      continue;
 	    
-	    if (build_select)
-            {
-              GLushort r,g,b;
-              r = (sei+1) % (1<<16);
-              g = (sei+1) >> 16;
-              b = 0;
-              glColor3us(r,g,b);
-            }
+            if (!sel_init(sei))
+              continue;
 
             switch (el.GetType())
 	      {
@@ -1161,11 +1041,7 @@ namespace netgen
 		      glNormal3dv (n);
 
 		      for (int j = 0; j < 3; j++)
-			{
-			  if (vispar.colormeshsize)
-			    SetOpenGlColor  (locms(el[0]-1), minh, maxh, 0);
 			  glVertex3dv ( (*mesh)[el[j]] );
-			}
 		      
 		      glEnd();
 		    }
@@ -1331,12 +1207,158 @@ namespace netgen
 		PrintSysError ("Cannot draw (2) surface element of type ",
 			       int(el.GetType()));
 	      }
-	    
-
-	    
 	  }
       }
+  }
+
+  void VisualSceneMesh :: BuildFilledList (bool build_select)
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
     
+    static int timer = NgProfiler::CreateTimer ("Mesh::BuildFilledList");
+    NgProfiler::RegionTimer reg (timer);
+    auto & list = build_select ? select.list : filledlist;
+    auto & timestamp = build_select ? select.list_timestamp : filledtimestamp;
+    if (list && timestamp > max(mesh->GetTimeStamp(), subdivision_timestamp))
+      return;
+
+
+#ifdef PARALLELGL
+    if (id == 0 && ntasks > 1)
+      {
+	InitParallelGL();
+	par_filledlists.SetSize (ntasks);
+
+	MyMPI_SendCmd ("redraw");
+	MyMPI_SendCmd ("filledlist");
+	for ( int dest = 1; dest < ntasks; dest++ )
+	  MyMPI_Recv (par_filledlists[dest], dest, MPI_TAG_VIS);
+
+	if (list)
+	  glDeleteLists (list, 1);
+
+	list = glGenLists (1);
+	glNewList (list, GL_COMPILE);
+
+	for ( int dest = 1; dest < ntasks; dest++ )
+	  glCallList (par_filledlists[dest]);
+
+	glEndList();
+
+	timestamp = NextTimeStamp();
+	return;
+      }
+
+#endif
+
+
+    if (!lock)
+      {
+	lock = new NgLock (mesh->Mutex());
+	lock -> Lock();
+      }
+
+    timestamp = NextTimeStamp();
+
+    if(!build_select && !vispar.colormeshsize)
+      BuildColorTexture();
+
+    if (list)
+      glDeleteLists (list, 1);
+
+    list = glGenLists (1);
+    glNewList (list, GL_COMPILE);
+
+    glBindTexture(GL_TEXTURE_2D, colors.texture);
+      
+#ifdef STLGEOM
+    STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry);
+    bool checkvicinity = (stlgeometry != NULL) && stldoctor.showvicinity;
+#endif
+    glEnable (GL_NORMALIZE);
+
+    glLineWidth (1.0f);
+
+    Vector locms;
+
+    if (vispar.colormeshsize)
+      {
+	glEnable (GL_COLOR_MATERIAL);
+	glShadeModel (GL_SMOOTH);
+	locms.SetSize (mesh->GetNP());
+	maxh = -1;
+	minh = 1e99;
+	for (int i = 1; i <= locms.Size(); i++)
+	  {
+            Point3d p = mesh->Point(i);
+            locms(i-1) = mesh->GetH (p);
+            if (locms(i-1) > maxh) maxh = locms(i-1);
+            if (locms(i-1) < minh) minh = locms(i-1);
+	  }
+	if (!locms.Size())
+	  { 
+            minh = 1; 
+            maxh = 10; 
+	  }
+      }
+    else if (build_select)
+    {
+      glDisable(GL_TEXTURE_1D);
+      glDisable(GL_TEXTURE_2D);
+      glDisable(GL_FOG);
+      glDisable(GL_LIGHTING);
+      glDisable (GL_COLOR_MATERIAL);
+    }
+    else
+    {
+      glDisable(GL_TEXTURE_1D);
+      glEnable(GL_TEXTURE_2D);
+      glEnable (GL_COLOR_MATERIAL);
+      glBindTexture(GL_TEXTURE_2D, colors.texture);
+    }
+
+    // GLfloat matcol[] = { 0, 1, 0, 1 };
+    // GLfloat matcolsel[] = { 1, 0, 0, 1 };
+
+    GLint rendermode;
+    glGetIntegerv (GL_RENDER_MODE, &rendermode);
+
+    auto face_init = [&](int i)
+      {
+        if(!build_select && !vispar.colormeshsize)
+        {
+          float x = (0.5+i%colors.width)/colors.width;
+          float y = (0.5+i/colors.width)/colors.height;
+          glTexCoord2f(x,y);
+        }
+        return true;
+      };
+
+    CurvedElements & curv = mesh->GetCurvedElements();
+
+    auto sel_init = [&](SurfaceElementIndex sei)
+      {
+        if (build_select)
+          {
+            GLushort r,g,b;
+            r = (sei+1) % (1<<16);
+            g = (sei+1) >> 16;
+            b = 0;
+            glColor3us(r,g,b);
+          }
+            
+        if (vispar.colormeshsize)
+        {
+          auto & el = (*mesh)[sei];
+          if(el.GetType() == TRIG && !curv.IsHighOrder()) {
+            if (vispar.colormeshsize)
+              SetOpenGlColor  (locms(el[0]-1), minh, maxh, 0);
+          }
+        }
+        return true;
+      };
+
+    RenderSurfaceElements(mesh, subdivisions, face_init, sel_init);
 
     glLoadName (0);
     glBindTexture(GL_TEXTURE_2D, 0);
@@ -1348,6 +1370,13 @@ namespace netgen
     if (id > 0)
       MyMPI_Send (list, 0, MPI_TAG_VIS);
 #endif
+    if(lock)
+      {
+        lock->UnLock();
+        delete lock;
+        lock = NULL;
+      }
+
   }
 
 
@@ -3291,42 +3320,40 @@ namespace netgen
 
 
 
-  bool VisualSceneMesh :: SelectSurfaceElement (int px, int py, Point<3> &p, bool select_on_clipping_plane)
+  bool VisualSelect :: SelectSurfaceElement (shared_ptr<Mesh> mesh, int px, int py, Point<3> &p, bool select_on_clipping_plane)
   {
     selelement = -1;
-    marker = nullopt;
-    shared_ptr<Mesh> mesh = GetMesh();
-    if(px != select.x || py != select.y)
+    // marker = nullopt;
+    if(px != x || py != y)
     {
-      select.x = px;
-      select.y = py;
-      locpi = -2;
+      x = px;
+      y = py;
     }
 
-    glGetIntegerv (GL_VIEWPORT, select.viewport);
+    glGetIntegerv (GL_VIEWPORT, viewport);
     // GLenum err;
-    if(select.framebuffer == 0 || select.viewport[2] != select.width || select.viewport[3] != select.height)
+    if(framebuffer == 0 || viewport[2] != width || viewport[3] != height)
     {
-      select.width = select.viewport[2];
-      select.height = select.viewport[3];
-      if(select.framebuffer != 0)
+      width = viewport[2];
+      height = viewport[3];
+      if(framebuffer != 0)
       {
-        glDeleteRenderbuffers(2, select.render_buffers);
-        glDeleteFramebuffers(1, &select.framebuffer);
+        glDeleteRenderbuffers(2, render_buffers);
+        glDeleteFramebuffers(1, &framebuffer);
       }
 
-      glGenFramebuffers(1, &select.framebuffer);
-      glBindFramebuffer(GL_FRAMEBUFFER, select.framebuffer);
+      glGenFramebuffers(1, &framebuffer);
+      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
       // create, reserve and attach color and depth renderbuffer
-      glGenRenderbuffers(2, select.render_buffers);
-      glBindRenderbuffer(GL_RENDERBUFFER, select.render_buffers[0]);
-      glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB16, select.width, select.height);
-      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, select.render_buffers[0]);
+      glGenRenderbuffers(2, render_buffers);
+      glBindRenderbuffer(GL_RENDERBUFFER, render_buffers[0]);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_RGB16, width, height);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, render_buffers[0]);
 
-      glBindRenderbuffer(GL_RENDERBUFFER, select.render_buffers[1]);
-      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, select.width, select.height);
-      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, select.render_buffers[1]);
+      glBindRenderbuffer(GL_RENDERBUFFER, render_buffers[1]);
+      glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
+      glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffers[1]);
 
       // check if framebuffer status is complete
       if(int fbstatus; (fbstatus = glCheckFramebufferStatus(GL_FRAMEBUFFER)) != GL_FRAMEBUFFER_COMPLETE)
@@ -3335,8 +3362,7 @@ namespace netgen
     }
       glFlush();
 
-      glBindFramebuffer(GL_FRAMEBUFFER, select.framebuffer);
-      BuildFilledList (true);
+      glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
       glEnable(GL_DEPTH_TEST);
       glClearColor(0, 0, 0, 1.0);
@@ -3348,10 +3374,9 @@ namespace netgen
       glMultMatrixd (transformationmat);
 
       glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-      auto hy = select.viewport[3] - py;
+      auto hy = viewport[3] - py;
 
-      SetClippingPlane();
-      if (vispar.clipping.enable)
+      if (enable_clipping_plane)
       {
         Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
         double len = Abs(n);
@@ -3375,41 +3400,27 @@ namespace netgen
           glEnd ();
         }
       }
-      glCallList (select.list);
+      glCallList (list);
       glFinish();
 
-      glGetDoublev (GL_PROJECTION_MATRIX, select.projmat);
+      glGetDoublev (GL_PROJECTION_MATRIX, projmat);
       auto found = Unproject(px, py, p);
       if(found)
       {
-        marker = p;
+        // marker = p;
         GLushort numbers[3];
         glReadPixels (px, hy, 1, 1, GL_RGB, GL_UNSIGNED_SHORT, numbers);
         selelement = numbers[0] + numbers[1]*(1<<16);
-        locpi++;
       }
       glBindFramebuffer(GL_FRAMEBUFFER, 0);
       glPopMatrix();
-
-    if(lock)
-      {
-	lock->UnLock();
-	delete lock;
-	lock = NULL;
-      }
 
     return found;
   }
 
   bool VisualSceneMesh :: Unproject(int px, int py, Point<3> &p)
   {
-    auto hy = select.viewport[3] - py;
-    float pz;
-    glReadPixels (px, hy, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &pz);
-    if(pz<1 && pz>0)
-      gluUnProject(px, hy, pz, transformationmat, select.projmat, select.viewport,
-          &p[0], &p[1], &p[2]);
-    return pz<1 && pz>0;
+    return select.Unproject(px, py, p);
   }
 
   ngcore::IVec<2> VisualSceneMesh :: Project(Point<3> p)
@@ -3421,6 +3432,18 @@ namespace netgen
     return ngcore::IVec<2>(pwin[0]+0.5, select.viewport[3]-pwin[1]+0.5);
   }
 
+
+  bool VisualSceneMesh :: SelectSurfaceElement(int px, int py, Point<3> &p, bool select_on_clipping_plane) {
+    BuildFilledList(true);
+    memcpy(select.transformationmat, transformationmat, sizeof(transformationmat));
+    memcpy(select.clipplane, clipplane, sizeof(clipplane));
+    select.center = center;
+    select.rad = rad;
+    select.enable_clipping_plane = vispar.clipping.enable;
+    bool found = select.SelectSurfaceElement(GetMesh(), px, py, p, select_on_clipping_plane);
+    selelement = select.selelement;
+    return found;
+  }
 
   void VisualSceneMesh :: MouseDblClick (int px, int py)
   {
@@ -3446,12 +3469,10 @@ namespace netgen
           marker = GetMesh()->Point(pi_nearest);
           selpoint = pi_nearest;
           cout << "select point " << pi_nearest << " at " << *marker << endl;
-          locpi = -2;
         }
         else
         {
-          if(locpi < 0)
-          {
+            marker = p;
             cout << endl << "select element " << selelement
               << " on face " << sel.GetIndex();
             // output face name
@@ -3478,12 +3499,6 @@ namespace netgen
             for (int i = 1; i <= sel.GetNP(); i++)
               cout << sel.PNum(i) << " ";
             cout << endl;
-          }
-          else {
-            auto pi = sel[locpi%sel.GetNP()];
-            marker = GetMesh()->Points()[pi];
-            cout << "select point " << pi << " at " << *marker << endl;
-          }
         }
       }
 
