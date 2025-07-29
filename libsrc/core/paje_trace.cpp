@@ -669,7 +669,7 @@ namespace ngcore
       for(auto & event : timer_events)
         {
           if(event.is_start)
-            paje.PushState( event.time, state_type_timer, timer_container_aliases[timerdepth++], timer_aliases[event.timer_id] );
+            paje.PushState( event.time, state_type_timer, timer_container_aliases[timerdepth++], timer_aliases[event.timer_id], event.custom_value );
           else
             paje.PopState( event.time, state_type_timer, timer_container_aliases[--timerdepth] );
         }
@@ -1222,8 +1222,8 @@ namespace ngcore
           else
               id = jobs_map[name];
 
-          events.push_back(TimerEvent{-1, job.start_time, true, id});
-          events.push_back(TimerEvent{-1, job.stop_time, false, id});
+          events.push_back(TimerEvent{job.start_time, -1, id, -1, true});
+          events.push_back(TimerEvent{job.stop_time, -1, id, -1, false});
           stop_time = std::max(job.stop_time, stop_time);
       }
 

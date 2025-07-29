@@ -202,21 +202,21 @@ namespace ngcore
     {
       Stop(TaskManager::GetThreadId());
     }
-    void Start (int tid) const
+    void Start (int tid, int trace_value = -1) const
     {
         if(tid==0)
         {
           if constexpr(do_timing)
             NgProfiler::StartTimer (timernr);
           if constexpr(do_tracing)
-            if(trace) trace->StartTimer(timernr);
+            if(trace) trace->StartTimer(timernr, trace_value);
         }
         else
         {
           if constexpr(do_timing)
             NgProfiler::StartThreadTimer(timernr, tid);
           if constexpr(do_tracing)
-            if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER);
+            if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER, trace_value);
         }
     }
     void Stop (int tid) const
@@ -262,10 +262,10 @@ namespace ngcore
     int tid;
   public:
     /// start timer
-    RegionTimer (const TTimer & atimer) : timer(atimer)
+    RegionTimer (const TTimer & atimer, int trace_value = -1) : timer(atimer)
     {
       tid = TaskManager::GetThreadId();
-      timer.Start(tid);
+      timer.Start(tid, trace_value);
     }
 
     /// stop timer

@@ -98,10 +98,11 @@ namespace ngcore
 
       struct TimerEvent
         {
-          int timer_id;
           TTimePoint time;
-          bool is_start;
+          int timer_id;
           int thread_id;
+          int custom_value = -1;
+          bool is_start;
 
           bool operator < (const TimerEvent & other) const { return time < other.time; }
         };
@@ -170,12 +171,12 @@ namespace ngcore
           if(!tracing_enabled) return;
           user_events.push_back(ue);
       }
-      void StartGPU(int timer_id = 0)
+      void StartGPU(int timer_id = 0, int user_value = -1)
         {
           if(!tracing_enabled) return;
           if(unlikely(gpu_events.size() == max_num_events_per_thread))
             StopTracing();
-          gpu_events.push_back(TimerEvent{timer_id, GetTimeCounter(), true});
+          gpu_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, user_value, true});
         }
 
       void StopGPU(int timer_id)
@@ -183,15 +184,15 @@ namespace ngcore
           if(!tracing_enabled) return;
           if(unlikely(gpu_events.size() == max_num_events_per_thread))
             StopTracing();
-          gpu_events.push_back(TimerEvent{timer_id, GetTimeCounter(), false});
+          gpu_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
         }
 
-      void StartTimer(int timer_id)
+      void StartTimer(int timer_id, int user_value = -1)
         {
           if(!tracing_enabled) return;
           if(unlikely(timer_events.size() == max_num_events_per_thread))
             StopTracing();
-          timer_events.push_back(TimerEvent{timer_id, GetTimeCounter(), true});
+          timer_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, user_value, true});
         }
 
       void StopTimer(int timer_id)
@@ -199,7 +200,7 @@ namespace ngcore
           if(!tracing_enabled) return;
           if(unlikely(timer_events.size() == max_num_events_per_thread))
             StopTracing();
-          timer_events.push_back(TimerEvent{timer_id, GetTimeCounter(), false});
+          timer_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
         }
 
       void AllocMemory(int id, size_t size)
