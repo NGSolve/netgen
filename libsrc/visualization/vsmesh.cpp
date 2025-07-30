@@ -3378,6 +3378,8 @@ namespace netgen
 
       if (enable_clipping_plane)
       {
+        glClipPlane(GL_CLIP_PLANE0, clipplane);
+        glEnable(GL_CLIP_PLANE0);
         Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
         double len = Abs(n);
         double mu = -clipplane[3] / (len*len);
