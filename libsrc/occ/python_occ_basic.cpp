@@ -132,6 +132,16 @@ DLL_HEADER void ExportNgOCCBasic(py::module &m)
         str << "(" << p.X() << ", " << p.Y() << ", " << p.Z() << ")";
         return str.str();
       })
+    .def("__getitem__", [](const gp_Dir& d, int index)
+    {
+      if(index == 0)
+        return d.X();
+      if(index == 1)
+        return d.Y();
+      if(index == 2)
+        return d.Z();
+      throw std::out_of_range("Direction index must be in range [0,3)!");
+    })
     ;
 
 
