@@ -607,6 +607,16 @@ namespace ngcore
       return SIMD<int64_t,N> (RoundI(x.Lo()), RoundI(x.Hi()));
   }
   
+  template <int S, int N>
+  SIMD<int64_t,S> operator<< (SIMD<int64_t,S> a, IC<N> n)
+  {
+    if constexpr (N == 1)
+      return SIMD<int64_t,1> (a.Data() << n);
+    else
+      return SIMD<int64_t,N> (a.Lo() << n, a.Hi() << n);
+  }
+
+
   
   template <typename T, int N>
   ostream & operator<< (ostream & ost, SIMD<T,N> simd)
