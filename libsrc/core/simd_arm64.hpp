@@ -30,6 +30,42 @@ namespace ngcore
     auto Hi() const { return mask[1]; }
   };
 
+
+  // *************************** int64 ***************************
+ 
+  template<>
+  class SIMD<int64_t,2>
+  {
+    int64x2_t data;
+  public:
+    static constexpr int Size() { return 2; }
+    SIMD() {}
+    SIMD (int64_t val) : data{val,val} {}
+    SIMD (int64_t v0, int64_t v1) : data{vcombine_s64(int64x1_t{v0}, int64x1_t{v1})} { }
+    SIMD (int64x2_t _data) { data = _data; }
+
+    NETGEN_INLINE auto Data() const { return data; }
+    NETGEN_INLINE auto & Data() { return data; }
+    
+    int64_t operator[] (int i) const { return data[i]; }
+    template <int I>
+    int64_t Get() const { return data[I]; }
+    
+    SIMD<mask64,2> operator== (SIMD<int64_t> b)
+    {
+      return vceqq_u64(data, b.Data());
+      // uint64x2_t mask = vceqq_s64(condition, vdupq_n_s64(0));
+      // Invert mask (1 where condition != 0)
+      //mask = vmvnq_u64(mask);
+    }
+  };
+
+  NETGEN_INLINE SIMD<int64_t,2> operator& (SIMD<int64_t,2> a, SIMD<int64_t,2> b)
+  {
+    return vandq_s64(a.Data(), b.Data());
+  }
+
+  // *************************** double ***************************
   
   template<>
   class SIMD<double,2>
@@ -187,6 +223,19 @@ namespace ngcore
   
   NETGEN_INLINE SIMD<double,2> operator/ (SIMD<double,2> a, SIMD<double,2> b)
   { return a.Data()/b.Data(); }
+
+
+  
+  NETGEN_INLINE SIMD<double,2> Round (SIMD<double,2> x)
+  {
+    return vrndnq_f64(x.Data());
+  }
+  
+  NETGEN_INLINE SIMD<int64_t,2> RoundI (SIMD<double,2> x)
+  {
+    return vcvtq_s64_f64(x.Data());
+  }
+  
 
 
   

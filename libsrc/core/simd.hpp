@@ -89,4 +89,7 @@ namespace ngcore
   }
 }
 
+
+#include "simd_math.hpp"
+
 #endif // NETGEN_CORE_SIMD_HPP
