@@ -580,6 +580,34 @@ namespace ngcore
   }
 
 
+  template <typename T, typename T1, int N>
+  SIMD<T, N> Reinterpret (SIMD<T1,N> a)
+  {
+    if constexpr (N == 1)
+      return SIMD<T,N> ( * (T*)(void*) & a.Data());
+    else
+      return SIMD<T,N> (Reinterpret<T> (a.Lo(), Reinterpret<T> (a.Hi())));
+  }
+
+  template <int N>
+  SIMD<double,N> Round (SIMD<double,N> x)
+  {
+    if constexpr (N == 1)
+      return round(x);
+    else
+      return SIMD<double,N> (Round(x.Lo()), Round(x.Hi()));
+  }
+
+  template <int N>  
+  SIMD<int64_t,N> RoundI (SIMD<double,N> x)
+  {
+    if constexpr (N == 1)
+      return SIMD<int64_t,1> (lround(x));
+    else
+      return SIMD<int64_t,N> (RoundI(x.Lo()), RoundI(x.Hi()));
+  }
+  
+  
   template <typename T, int N>
   ostream & operator<< (ostream & ost, SIMD<T,N> simd)
   {

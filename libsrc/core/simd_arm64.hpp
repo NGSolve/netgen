@@ -50,16 +50,6 @@ namespace ngcore
     int64_t operator[] (int i) const { return data[i]; }
     template <int I>
     int64_t Get() const { return data[I]; }
-    
-    SIMD<mask64,2> operator== (SIMD<int64_t> b)
-    {
-      return vceqq_u64(data, b.Data());
-    }
-
-    SIMD<mask64,2> operator> (SIMD<int64_t> b)
-    {
-      return vcgtq_s64(data, b.Data());
-    }
   };
 
   NETGEN_INLINE SIMD<int64_t,2> operator& (SIMD<int64_t,2> a, SIMD<int64_t,2> b)
@@ -71,6 +61,17 @@ namespace ngcore
   {
     return vaddq_s64(a.Data(), b.Data());
   }
+
+  NETGEN_INLINE SIMD<mask64,2> operator== (SIMD<int64_t> a, SIMD<int64_t> b)
+  {
+    return vceqq_u64(a.Data(), b.Data());
+  }
+  
+  NETGEN_INLINE SIMD<mask64,2> operator> (SIMD<int64_t> a, SIMD<int64_t> b)
+  {
+    return vcgtq_s64(a.Data(), b.Data());
+  }
+
   
   template <int N>
   SIMD<int64_t,2> operator<< (SIMD<int64_t,2> a, IC<N> n)
@@ -78,8 +79,6 @@ namespace ngcore
     return vshlq_n_s64(a.Data(), N);
   }
   
-  template <typename T, typename T1, int N>
-  SIMD<T, N> Reinterpret (SIMD<T1,N> a);
   
   
   // *************************** double ***************************
