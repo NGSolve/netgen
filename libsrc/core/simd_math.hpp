@@ -63,6 +63,83 @@ namespace ngcore
     return std::tuple{ s, c };
   }
 
+
+
+
+
+
+  
+  template <int N>
+  SIMD<double,N> exp_reduced (SIMD<double,N> x)
+  {
+    static constexpr double P[] = {
+      1.26177193074810590878E-4,
+      3.02994407707441961300E-2,
+      9.99999999999999999910E-1,
+    };
+  
+    static constexpr double Q[] = {
+      3.00198505138664455042E-6,
+      2.52448340349684104192E-3,
+      2.27265548208155028766E-1,
+      2.00000000000000000009E0,
+    };
+  
+    /*
+    // from:  https://www.netlib.org/cephes/
+    rational approximation for exponential
+    * of the fractional part:
+    * e**x = 1 + 2x P(x**2)/( Q(x**2) - x P(x**2) )
+
+    xx = x * x;
+    px = x * polevl( xx, P, 2 );
+    x =  px/( polevl( xx, Q, 3 ) - px );
+    x = 1.0 + 2.0 * x;
+    */
+
+    auto xx = x*x;
+    auto px = (P[0]*xx + P[1]) * xx + P[2];
+    auto qx = ((Q[0]*xx+Q[1])*xx+Q[2])*xx+Q[3];
+    return 1.0 + 2.0*x * px / (qx- x * px);
+  }  
+
+
+  template <int N>
+  SIMD<double,N> pow2_int64_to_float64(SIMD<int64_t,N> n)
+  {
+    // thx to deepseek
+    
+    // Step 1: Clamp the input to valid exponent range [-1022, 1023]
+    // (We use saturated operations to handle out-of-range values)
+    SIMD<int64_t> max_exp(1023);
+    SIMD<int64_t> min_exp(-1022);
+    n = If(n > max_exp, max_exp, n);
+    n = If(min_exp > n, min_exp, n);
+
+    // Step 2: Add exponent bias (1023)
+    n = n + SIMD<int64_t>(1023);
+
+    // Step 3: Shift to exponent bit position (bit 52)
+    auto shifted_exp = (n << IC<52>());
+  
+    // Step 4: Reinterpret as double
+    return Reinterpret<double> (shifted_exp);
+  }
+
+
+  template <int N>
+  SIMD<double,N> myexp (SIMD<double,N> x)
+  {
+    constexpr double log2 = 0.693147180559945286;  //  log(2.0);
+                     
+    auto r = Round(1/log2 * x);
+    auto rI = RoundI(r);
+    r *= log2;
+  
+    SIMD<double,N> pow2 = pow2_int64_to_float64 (rI);
+    return exp_reduced(x-r) * pow2;
+  }
+
 }
 
 #endif
