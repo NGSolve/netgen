@@ -46,10 +46,14 @@ namespace ngcore
 
     NETGEN_INLINE auto Data() const { return data; }
     NETGEN_INLINE auto & Data() { return data; }
+
+    int64_t Lo() const { return Get<0>(); } 
+    int64_t Hi() const { return Get<1>(); } 
     
     int64_t operator[] (int i) const { return data[i]; }
     template <int I>
     int64_t Get() const { return data[I]; }
+    static SIMD FirstInt(int n0=0) { return { n0+0, n0+1 }; }
   };
 
   NETGEN_INLINE SIMD<int64_t,2> operator& (SIMD<int64_t,2> a, SIMD<int64_t,2> b)
