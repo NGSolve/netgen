@@ -7,7 +7,10 @@ namespace ngcore
 {
 
   /*
-    base on:
+    based on:
+    Stephen L. Moshier: Methods and Programs For Mathematical Functions
+    https://www.moshier.net/methprog.pdf
+    
     CEPHES MATHEMATICAL FUNCTION LIBRARY
     https://www.netlib.org/cephes/
   */

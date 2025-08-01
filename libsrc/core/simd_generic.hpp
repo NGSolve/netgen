@@ -426,6 +426,20 @@ namespace ngcore
       else               return { a.Lo()!=b.Lo(), a.Hi()!=b.Hi() };
     }
 
+  template <int N>
+  NETGEN_INLINE SIMD<int64_t,N> operator& (SIMD<int64_t,N> a, SIMD<int64_t,N> b)
+    {
+      if constexpr(N==1) return a.Data() & b.Data();
+      else               return { a.Lo()&b.Lo(), a.Hi()&b.Hi() };
+    }
+  template <int N>
+  NETGEN_INLINE SIMD<int64_t,N> operator| (SIMD<int64_t,N> a, SIMD<int64_t,N> b)
+    {
+      if constexpr(N==1) return a.Data() & b.Data();
+      else               return { a.Lo()|b.Lo(), a.Hi()|b.Hi() };
+    }
+
+  
   // int64_t operators with scalar operand (implement overloads to allow implicit casts for second operand)
   template <int N>
   NETGEN_INLINE SIMD<int64_t,N> operator+ (SIMD<int64_t,N> a, int64_t b) { return a+SIMD<int64_t,N>(b); }
@@ -457,6 +471,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<int64_t,N> & operator*= (SIMD<int64_t,N> & a, int64_t b) { a*=SIMD<int64_t,N>(b); return a; }
   template <int N>
   NETGEN_INLINE SIMD<int64_t,N> & operator/= (SIMD<int64_t,N> & a, SIMD<int64_t,N> b) { a = a/b; return a; }
+
 
   // double operators with scalar operand (implement overloads to allow implicit casts for second operand)
   template <int N>
