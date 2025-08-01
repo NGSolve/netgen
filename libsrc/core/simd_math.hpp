@@ -114,13 +114,13 @@ namespace ngcore
     
     // Step 1: Clamp the input to valid exponent range [-1022, 1023]
     // (We use saturated operations to handle out-of-range values)
-    SIMD<int64_t> max_exp(1023);
-    SIMD<int64_t> min_exp(-1022);
+    SIMD<int64_t,N> max_exp(1023);
+    SIMD<int64_t,N> min_exp(-1022);
     n = If(n > max_exp, max_exp, n);
     n = If(min_exp > n, min_exp, n);
 
     // Step 2: Add exponent bias (1023)
-    n = n + SIMD<int64_t>(1023);
+    n = n + SIMD<int64_t,N>(1023);
 
     // Step 3: Shift to exponent bit position (bit 52)
     auto shifted_exp = (n << IC<52>());

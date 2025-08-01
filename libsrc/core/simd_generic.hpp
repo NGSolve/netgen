@@ -601,7 +601,7 @@ namespace ngcore
     if constexpr (N == 1)
       return SIMD<T,N> ( * (T*)(void*) & a.Data());
     else
-      return SIMD<T,N> (Reinterpret<T> (a.Lo(), Reinterpret<T> (a.Hi())));
+      return SIMD<T,N> (Reinterpret<T> (a.Lo()), Reinterpret<T> (a.Hi()));
   }
 
   template <int N>
@@ -625,10 +625,10 @@ namespace ngcore
   template <int S, int N>
   SIMD<int64_t,S> operator<< (SIMD<int64_t,S> a, IC<N> n)
   {
-    if constexpr (N == 1)
+    if constexpr (S == 1)
       return SIMD<int64_t,1> (a.Data() << n);
     else
-      return SIMD<int64_t,N> (a.Lo() << n, a.Hi() << n);
+      return SIMD<int64_t,S> (a.Lo() << n, a.Hi() << n);
   }
 
 
