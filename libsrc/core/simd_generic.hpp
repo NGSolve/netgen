@@ -430,13 +430,13 @@ namespace ngcore
   NETGEN_INLINE SIMD<int64_t,N> operator& (SIMD<int64_t,N> a, SIMD<int64_t,N> b)
     {
       if constexpr(N==1) return a.Data() & b.Data();
-      else               return { a.Lo()&b.Lo(), a.Hi()&b.Hi() };
+      else               return { (a.Lo()&b.Lo()), (a.Hi()&b.Hi()) };
     }
   template <int N>
   NETGEN_INLINE SIMD<int64_t,N> operator| (SIMD<int64_t,N> a, SIMD<int64_t,N> b)
     {
       if constexpr(N==1) return a.Data() & b.Data();
-      else               return { a.Lo()|b.Lo(), a.Hi()|b.Hi() };
+      else               return { (a.Lo()|b.Lo()), (a.Hi()|b.Hi()) };
     }
 
   
@@ -600,12 +600,16 @@ namespace ngcore
   {
     if constexpr (N == 1)
       return SIMD<T,N> ( * (T*)(void*) & a.Data());
+    else if constexpr (N == 2)
+      return SIMD<T,N> { static_cast<T> (a.Lo()),
+                         static_cast<T> (a.Hi()) };
     else
       return SIMD<T,N> (Reinterpret<T> (a.Lo()), Reinterpret<T> (a.Hi()));
   }
 
   
   // NETGEN_INLINE double Round (double x) { return round(x); }
+  using std::round;  
   template <int N>
   SIMD<double,N> round (SIMD<double,N> x)
   {
@@ -614,6 +618,7 @@ namespace ngcore
   }
 
   // NETGEN_INLINE int64_t RoundI (double x) { return lround(x); }
+  using std::lround;
   template <int N>  
   SIMD<int64_t,N> lround (SIMD<double,N> x)
   {

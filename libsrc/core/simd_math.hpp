@@ -3,6 +3,11 @@
 
 #include <tuple>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+
 namespace ngcore
 {
 
@@ -141,6 +146,9 @@ namespace ngcore
   
     SIMD<double,N> pow2 = pow2_int64_to_float64 (rI);
     return exp_reduced(x-r) * pow2;
+
+    // maybe better:
+    // x = ldexp( x, n );
   }
 
 
