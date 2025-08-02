@@ -604,6 +604,8 @@ namespace ngcore
       return SIMD<T,N> (Reinterpret<T> (a.Lo()), Reinterpret<T> (a.Hi()));
   }
 
+  
+  NETGEN_INLINE double Round (double x) { return round(x); }
   template <int N>
   SIMD<double,N> Round (SIMD<double,N> x)
   {
@@ -613,6 +615,7 @@ namespace ngcore
       return SIMD<double,N> (Round(x.Lo()), Round(x.Hi()));
   }
 
+  NETGEN_INLINE int64_t RoundI (double x) { return lround(x); }
   template <int N>  
   SIMD<int64_t,N> RoundI (SIMD<double,N> x)
   {
