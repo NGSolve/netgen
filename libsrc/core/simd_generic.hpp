@@ -605,24 +605,20 @@ namespace ngcore
   }
 
   
-  NETGEN_INLINE double Round (double x) { return round(x); }
+  // NETGEN_INLINE double Round (double x) { return round(x); }
   template <int N>
-  SIMD<double,N> Round (SIMD<double,N> x)
+  SIMD<double,N> round (SIMD<double,N> x)
   {
-    if constexpr (N == 1)
-      return round(x);
-    else
-      return SIMD<double,N> (Round(x.Lo()), Round(x.Hi()));
+    if constexpr (N == 1) return round(x);
+    else                  return { round(x.Lo()), round(x.Hi()) };
   }
 
-  NETGEN_INLINE int64_t RoundI (double x) { return lround(x); }
+  // NETGEN_INLINE int64_t RoundI (double x) { return lround(x); }
   template <int N>  
-  SIMD<int64_t,N> RoundI (SIMD<double,N> x)
+  SIMD<int64_t,N> lround (SIMD<double,N> x)
   {
-    if constexpr (N == 1)
-      return SIMD<int64_t,1> (lround(x));
-    else
-      return SIMD<int64_t,N> (RoundI(x.Lo()), RoundI(x.Hi()));
+    if constexpr (N == 1) return SIMD<int64_t,1> (lround(x));
+    else                  return { lround(x.Lo()), lround(x.Hi()) };
   }
   
   template <int S, int N>

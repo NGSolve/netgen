@@ -52,8 +52,8 @@ namespace ngcore
   template <int N>
   auto sincos (SIMD<double,N> x)
   {
-    auto y = Round(x / (M_PI/2));
-    auto q = RoundI(y);
+    auto y = round(x / (M_PI/2));
+    auto q = lround(y);
   
     auto [s1,c1] = sincos_reduced(x - y * (M_PI/2));
 
@@ -135,14 +135,35 @@ namespace ngcore
   {
     constexpr double log2 = 0.693147180559945286;  //  log(2.0);
                      
-    auto r = Round(1/log2 * x);
-    auto rI = RoundI(r);
+    auto r = round(1/log2 * x);
+    auto rI = lround(r);
     r *= log2;
   
     SIMD<double,N> pow2 = pow2_int64_to_float64 (rI);
     return exp_reduced(x-r) * pow2;
   }
 
+
+  inline auto Test1 (SIMD<double> x)
+  {
+    return myexp(x);
+  }
+
+  inline auto Test2 (SIMD<double> x)
+  {
+    return sincos(x);
+  }
+
+  inline auto Test3 (SIMD<double,4> x)
+  {
+    return myexp(x);
+  }
+
+  inline auto Test4 (SIMD<double,4> x)
+  {
+    return sincos(x);
+  }
+  
 }
 
 #endif
