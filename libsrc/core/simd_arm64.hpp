@@ -42,6 +42,8 @@ namespace ngcore
     SIMD() {}
     SIMD (int64_t val) : data{val,val} {}
     SIMD (int64_t v0, int64_t v1) : data{vcombine_s64(int64x1_t{v0}, int64x1_t{v1})} { }
+    SIMD (std::array<int64_t, 2> arr) : data{arr[0], arr[1]} { } 
+    
     SIMD (int64x2_t _data) { data = _data; }
 
     NETGEN_INLINE auto Data() const { return data; }
