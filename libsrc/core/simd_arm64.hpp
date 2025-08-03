@@ -53,6 +53,8 @@ namespace ngcore
     int64_t Hi() const { return Get<1>(); } 
     
     int64_t operator[] (int i) const { return data[i]; }
+    int64_t & operator[] (int i)  { return ((int64_t*)&data)[i]; }
+
     template <int I>
     int64_t Get() const { return data[I]; }
     static SIMD FirstInt(int n0=0) { return { n0+0, n0+1 }; }
@@ -246,6 +248,8 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,2> operator/ (SIMD<double,2> a, SIMD<double,2> b)
   { return a.Data()/b.Data(); }
 
+  NETGEN_INLINE SIMD<double,2> sqrt (SIMD<double,2> x)
+  { return vsqrtq_f64(x.Data()); }
 
   
   NETGEN_INLINE SIMD<double,2> round (SIMD<double,2> x)
@@ -257,6 +261,23 @@ namespace ngcore
   {
     return vcvtq_s64_f64(x.Data());
   }
+
+
+
+  NETGEN_INLINE SIMD<double,2> rsqrt (SIMD<double,2> x)
+  {
+    // return 1.0 / sqrt(x);
+  
+    SIMD<double,2> y = vrsqrteq_f64(x.Data());
+    auto x_half = 0.5*x;
+    y = y * (1.5 - (x_half * y * y));
+    y = y * (1.5 - (x_half * y * y));
+    // y = y * (1.5 - (x_half * y * y));
+    y = y + 0.5 * (x*y*y-1);
+    return y;
+  }
+  
+  
   
 
   template <>

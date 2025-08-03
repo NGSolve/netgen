@@ -608,7 +608,6 @@ namespace ngcore
   }
 
   
-  // NETGEN_INLINE double Round (double x) { return round(x); }
   using std::round;  
   template <int N>
   SIMD<double,N> round (SIMD<double,N> x)
@@ -625,6 +624,19 @@ namespace ngcore
     if constexpr (N == 1) return SIMD<int64_t,1> (lround(x));
     else                  return { lround(x.Lo()), lround(x.Hi()) };
   }
+
+  /*
+    reciprocal square root 
+    Quake III algorithm, or intrinsics 
+   */
+  NETGEN_INLINE double rsqrt (double x) { return 1.0/sqrt(x); }
+  template <int N>  
+  SIMD<double,N> rsqrt (SIMD<double,N> x)
+  {
+    if constexpr (N == 1) return 1.0/sqrt(x.Data()); 
+    else                  return { rsqrt(x.Lo()), rsqrt(x.Hi()) };
+  }
+
   
   template <int S, int N>
   SIMD<int64_t,S> operator<< (SIMD<int64_t,S> a, IC<N> n)
@@ -654,8 +666,11 @@ namespace ngcore
 
   using std::sqrt;
   template <int N>
-  NETGEN_INLINE ngcore::SIMD<double,N> sqrt (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double,N>([a](int i)->double { return sqrt(a[i]); } );
+  NETGEN_INLINE ngcore::SIMD<double,N> sqrt (ngcore::SIMD<double,N> a)
+  {
+    if constexpr (N == 1) return sqrt(a.Data());
+    else return { sqrt(a.Lo()), sqrt(a.Hi()) }; 
+    // return ngcore::SIMD<double,N>([a](int i)->double { return sqrt(a[i]); } );
   }
 
   using std::fabs;

@@ -316,6 +316,22 @@ namespace ngcore
   }
 
 
+  /*
+    // untested ...
+    NETGEN_INLINE SIMD<double,4> rsqrt (SIMD<double,4> x)
+  {
+    // return 1.0 / sqrt(x);
+    // SIMD<double,4> y = _mm256_rsqrt14_pd(x.Data());  // only avx512
+    SIMD<double,4> y = _mm256_cvtps_pd ( _mm_rsqrt_ps ( _mm256_cvtpd_ps (x.Data())));
+    auto x_half = 0.5*x;
+    y = y * (1.5 - (x_half * y * y));
+    y = y * (1.5 - (x_half * y * y));
+    return y;
+  }
+  */
+  
+    
+
   NETGEN_INLINE SIMD<int64_t,4> If (SIMD<mask64,4> a, SIMD<int64_t,4> b, SIMD<int64_t,4> c)
   { return _mm256_castpd_si256(_mm256_blendv_pd(_mm256_castsi256_pd(c.Data()), _mm256_castsi256_pd(b.Data()),
                                                 _mm256_castsi256_pd(a.Data()))); }
