@@ -505,6 +505,10 @@ namespace ngcore
   template <int N>
   NETGEN_INLINE SIMD<double,N> & operator/= (SIMD<double,N> & a, SIMD<double,N> b) { a = a/b; return a; }
 
+  template <int N>
+  NETGEN_INLINE auto operator> (SIMD<double,N> & a, double b) { return a > SIMD<double,N>(b); }
+
+  
   // double functions
 
   template <int N>
