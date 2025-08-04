@@ -21,6 +21,9 @@ namespace ngcore
       : mask(_mm_cmpgt_epi32(_mm_set1_epi32(i),
                              _mm_set_epi32(1, 1, 0, 0)))
     { ; }
+
+    SIMD (bool i0, bool i1) { mask = _mm_set_epi64x(i1?-1:0, i0?-1:0); }
+    
     SIMD (__m128i _mask) : mask(_mask) { ; }
     __m128i Data() const { return mask; }
     static constexpr int Size() { return 2; }
