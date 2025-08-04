@@ -599,14 +599,23 @@ namespace ngcore
   }
 
 
+  template<typename T2, typename T1>
+  T2 BitCast(T1 a)
+  {
+    T2 result;
+    static_assert(sizeof(T1) == sizeof(T2), "BitCast requires same size");
+    memcpy(&result, &a, sizeof(T1));
+    return result;
+  }
+
   template <typename T, typename T1, int N>
   SIMD<T, N> Reinterpret (SIMD<T1,N> a)
   {
     if constexpr (N == 1)
       return SIMD<T,N> ( * (T*)(void*) & a.Data());
     else if constexpr (N == 2)
-      return SIMD<T,N> { static_cast<T> (a.Lo()),
-                         static_cast<T> (a.Hi()) };
+      return SIMD<T,N> { BitCast<T> (a.Lo()),
+                         BitCast<T> (a.Hi()) };
     else
       return SIMD<T,N> (Reinterpret<T> (a.Lo()), Reinterpret<T> (a.Hi()));
   }

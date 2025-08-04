@@ -86,7 +86,7 @@ namespace ngcore
       : data{_mm256_set_epi64x(a[3],a[2],a[1],a[0])}
     {}
     SIMD (SIMD<int64_t,2> v0, SIMD<int64_t,2> v1)
-        : data(_mm256_set_m128i(v0.Data(),v1.Data()))
+        : data(_mm256_set_m128i(v1.Data(),v0.Data()))
       {}
     SIMD (__m256i _data) { data = _data; }
 
@@ -97,6 +97,13 @@ namespace ngcore
     SIMD<int64_t,2> Lo() const { return _mm256_extractf128_si256(data, 0); }
     SIMD<int64_t,2> Hi() const { return _mm256_extractf128_si256(data, 1); }
     static SIMD FirstInt(int n0=0) { return { n0+0, n0+1, n0+2, n0+3 }; }
+
+    template <int I>
+    double Get() const
+    {
+      static_assert(I>=0 && I<4, "Index out of range");
+      return (*this)[I];
+    }
   };
 
 
@@ -180,7 +187,11 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,4> floor (SIMD<double,4> a) { return _mm256_floor_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,4> ceil (SIMD<double,4> a) { return _mm256_ceil_pd(a.Data()); }
   NETGEN_INLINE SIMD<double,4> fabs (SIMD<double,4> a) { return _mm256_max_pd(a.Data(), (-a).Data()); }
-
+  NETGEN_INLINE SIMD<double,4> round(SIMD<double,4> a) { return _mm256_round_pd(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
+  NETGEN_INLINE SIMD<int64_t,4> lround (SIMD<double,4> a)
+  {
+    return _mm256_cvtepi32_epi64(_mm256_cvtpd_epi32(_mm256_round_pd(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)));
+  }
 
 #ifdef __FMA__
   NETGEN_INLINE SIMD<double,4> FMA (SIMD<double,4> a, SIMD<double,4> b, SIMD<double,4> c)
