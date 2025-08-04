@@ -746,7 +746,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #endif // OCC_HAVE_DUMP_JSON
            return str.str();
          })
-    .def("GenerateMesh", [](TopoDS_Shape & shape, int dim,
+    .def("GenerateMesh", [](TopoDS_Shape & shape,
+                            MeshingParameters* pars, int dim,
                             bool ngs_mesh, py::kwargs kwargs)
     {
       auto geo = py::cast(make_shared<OCCGeometry>(shape, dim));
@@ -762,7 +763,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         {
           throw Exception("ngsolve module not found, cannot convert to ngsolve mesh, you can use 'ngs_mesh=False' to return a Netgen mesh instead");
         }
-    }, py::arg("dim")=3, py::arg("ngs_mesh")=true)
+    }, py::arg("mp")=nullptr, py::arg("dim")=3, py::arg("ngs_mesh")=true)
     .def("ShapeType", [] (const TopoDS_Shape & shape)
          {
            throw Exception ("use 'shape.type' instead of 'shape.ShapeType()'");
