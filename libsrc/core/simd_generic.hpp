@@ -641,14 +641,14 @@ namespace ngcore
     else                  return { rsqrt(x.Lo()), rsqrt(x.Hi()) };
   }
 
+  template <int N>  
+  int64_t operator<< (int64_t a, IC<N> n) { return a << n.value; }
   
   template <int S, int N>
   SIMD<int64_t,S> operator<< (SIMD<int64_t,S> a, IC<N> n)
   {
-    if constexpr (S == 1)
-      return SIMD<int64_t,1> (a.Data() << n);
-    else
-      return SIMD<int64_t,S> (a.Lo() << n, a.Hi() << n);
+    if constexpr (S == 1) return SIMD<int64_t,1> (a.Data() << n);
+    else                  return SIMD<int64_t,S> (a.Lo() << n, a.Hi() << n);
   }
 
 
