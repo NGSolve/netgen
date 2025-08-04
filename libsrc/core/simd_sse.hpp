@@ -219,6 +219,7 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
   NETGEN_INLINE SIMD<mask64,2> operator!= (SIMD<double,2> a , SIMD<double,2> b)
   { return _mm_castpd_si128( _mm_cmpneq_pd(a.Data(),b.Data())); }
 
+#ifdef __SSE4_2__  
   NETGEN_INLINE SIMD<mask64,2> operator<= (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  _mm_xor_si128(_mm_cmpgt_epi64(a.Data(),b.Data()),_mm_set1_epi32(-1)); }
   NETGEN_INLINE SIMD<mask64,2> operator< (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
@@ -227,11 +228,13 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
   { return  _mm_xor_si128(_mm_cmpgt_epi64(b.Data(),a.Data()),_mm_set1_epi32(-1)); }
   NETGEN_INLINE SIMD<mask64,2> operator> (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  my_mm_cmpgt_epi64(a.Data(),b.Data()); }
+#endif
+#ifdef __SSE4_1__  
   NETGEN_INLINE SIMD<mask64,2> operator== (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  _mm_cmpeq_epi64(a.Data(),b.Data()); }
   NETGEN_INLINE SIMD<mask64,2> operator!= (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  _mm_xor_si128(_mm_cmpeq_epi64(a.Data(),b.Data()),_mm_set1_epi32(-1)); }
-
+#endif
 
 
  NETGEN_INLINE SIMD<mask64,2> operator&& (SIMD<mask64,2> a, SIMD<mask64,2> b)
