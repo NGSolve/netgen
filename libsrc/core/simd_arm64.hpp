@@ -295,7 +295,9 @@ namespace ngcore
   }
   NETGEN_INLINE SIMD<int64_t,2> If (SIMD<mask64,2> a, SIMD<int64_t,2> b, SIMD<int64_t,2> c)
   {
-    return SIMD<int64_t,2> (a[0] ? b[0] : c[0], a[1] ? b[1] : c[1]);
+    // return SIMD<int64_t,2> (a[0] ? b[0] : c[0], a[1] ? b[1] : c[1]);
+    uint64x2_t mask = vreinterpretq_u64_s64(a.Data());
+    return vbslq_s64(mask, b.Data(), c.Data());
   }
 
   NETGEN_INLINE SIMD<mask64,2> operator&& (SIMD<mask64,2> a, SIMD<mask64,2> b)
