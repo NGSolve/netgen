@@ -31,9 +31,9 @@ namespace ngcore
     return _mm256_cmpgt_epi64 (a,b);
   }
 
-  NETGEN_INLINE __m256i my_mm256_cvtepi32_epi64 (__mm128i a)
+  NETGEN_INLINE __m256i my_mm256_cvtepi32_epi64 (__m128i a)
   {
-    return mm256_cvtepi32_epi64 (a);
+    return _mm256_cvtepi32_epi64 (a);
   }
   
 #else
