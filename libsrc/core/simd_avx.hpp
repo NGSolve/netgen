@@ -317,6 +317,15 @@ namespace ngcore
   NETGEN_INLINE SIMD<mask64,4> operator! (SIMD<mask64,4> a)
   { return _mm256_castpd_si256(_mm256_xor_pd (_mm256_castsi256_pd(a.Data()),_mm256_castsi256_pd( _mm256_cmpeq_epi64(a.Data(),a.Data())))); }
 #endif
+
+  template <>
+  NETGEN_INLINE SIMD<double,4> Reinterpret (SIMD<int64_t,4> a)
+  {
+    return _mm256_castsi256_pd (a.Data());
+  }
+
+
+  
   NETGEN_INLINE SIMD<double,4> If (SIMD<mask64,4> a, SIMD<double,4> b, SIMD<double,4> c)
   { return _mm256_blendv_pd(c.Data(), b.Data(), _mm256_castsi256_pd(a.Data())); }
 
