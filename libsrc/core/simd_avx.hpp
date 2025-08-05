@@ -25,6 +25,12 @@ namespace ngcore
   {
     return _mm256_cmpgt_epi64 (a,b);
   }
+
+  NETGEN_INLINE __m256i my_mm256_cvtepi32_epi64 (__mm128i a)
+  {
+    return mm256_cvtepi32_epi64 (a);
+  }
+  
 #else
   NETGEN_INLINE __m256i my_mm256_cmpgt_epi64 (__m256i a, __m256i b)
   {
@@ -32,6 +38,13 @@ namespace ngcore
                                   _mm256_extractf128_si256(b, 0));
     __m128i rhi = _mm_cmpgt_epi64(_mm256_extractf128_si256(a, 1),
                                   _mm256_extractf128_si256(b, 1));
+    return _mm256_insertf128_si256 (_mm256_castsi128_si256(rlo), rhi, 1);
+  }
+
+  NETGEN_INLINE __m256i my_mm256_cvtepi32_epi64 (__mm128i a)
+  {
+    __m128i rlo = _mm_cvtepi32_epi64(_mm256_extractf128_si256(a, 0));
+    __m128i rhi = _mm_cvtepi32_epi64(_mm256_extractf128_si256(a, 1));
     return _mm256_insertf128_si256 (_mm256_castsi128_si256(rlo), rhi, 1);
   }
 #endif
@@ -190,7 +203,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,4> round(SIMD<double,4> a) { return _mm256_round_pd(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
   NETGEN_INLINE SIMD<int64_t,4> lround (SIMD<double,4> a)
   {
-    return _mm256_cvtepi32_epi64(_mm256_cvtpd_epi32(_mm256_round_pd(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)));
+    return my_mm256_cvtepi32_epi64(_mm256_cvtpd_epi32(_mm256_round_pd(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC)));
   }
 
 #ifdef __FMA__
