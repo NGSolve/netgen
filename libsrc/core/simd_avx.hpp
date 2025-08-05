@@ -41,7 +41,7 @@ namespace ngcore
     return _mm256_insertf128_si256 (_mm256_castsi128_si256(rlo), rhi, 1);
   }
 
-  NETGEN_INLINE __m256i my_mm256_cvtepi32_epi64 (__mm128i a)
+  NETGEN_INLINE __m256i my_mm256_cvtepi32_epi64 (__m128i a)
   {
     __m128i rlo = _mm_cvtepi32_epi64(_mm256_extractf128_si256(a, 0));
     __m128i rhi = _mm_cvtepi32_epi64(_mm256_extractf128_si256(a, 1));
