@@ -141,6 +141,9 @@ namespace ngcore
   NETGEN_INLINE SIMD<int64_t,4> operator- (SIMD<int64_t,4> a, SIMD<int64_t,4> b) { return _mm256_sub_epi64(a.Data(),b.Data()); }
   NETGEN_INLINE SIMD<int64_t,4> operator& (SIMD<int64_t,4> a, SIMD<int64_t,4> b)
   { return _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(a.Data()),_mm256_castsi256_pd( b.Data()))); }
+
+  template <int N>
+  SIMD<int64_t,4> operator<< (SIMD<int64_t,4> a, IC<N> n)  return _mm256_sll_epi64(a.Data(),_mm_set_epi32(0,0,0,N)); }
 #endif // __AVX2__
 
   template<>
