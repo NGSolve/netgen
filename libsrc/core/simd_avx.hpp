@@ -143,7 +143,7 @@ namespace ngcore
   { return _mm256_castpd_si256(_mm256_and_pd (_mm256_castsi256_pd(a.Data()),_mm256_castsi256_pd( b.Data()))); }
 
   template <int N>
-  SIMD<int64_t,4> operator<< (SIMD<int64_t,4> a, IC<N> n)  return _mm256_sll_epi64(a.Data(),_mm_set_epi32(0,0,0,N)); }
+  SIMD<int64_t,4> operator<< (SIMD<int64_t,4> a, IC<N> n) { return _mm256_sll_epi64(a.Data(),_mm_set_epi32(0,0,0,N)); }
 #endif // __AVX2__
 
   template<>
