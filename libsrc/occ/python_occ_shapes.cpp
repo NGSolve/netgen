@@ -70,6 +70,7 @@
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <GeomLProp_SLProps.hxx>
 #include <Geom_BezierCurve.hxx>
+#include <Geom_BezierSurface.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BSplineSurface.hxx>
 #include <Geom_Plane.hxx>
@@ -2473,6 +2474,36 @@ tangents : Dict[int, gp_Vec2d]
       Handle(Geom_Curve) curve = new Geom_BezierCurve(poles);
       return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("points"), "create Bezier curve");
+
+  m.def("BezierSurface", [](py::array_t<double> nppoles,
+                            optional<py::array_t<double>> npweights,
+                            double tol)
+  {
+    if(nppoles.ndim() != 3)
+      throw std::length_error("`poles` array must have dimension 3.");
+    if(nppoles.shape(2) != 3)
+      throw std::length_error("The third dimension must have size 3.");
+    if(npweights && npweights->ndim() != 2)
+      throw std::length_error("`weights` array must have dimension 2.");
+
+    auto deg_u = nppoles.shape(0) - 1;
+    auto deg_v = nppoles.shape(1) - 1;
+    TColgp_Array2OfPnt poles(1, deg_u + 1, 1, deg_v + 1);
+    TColStd_Array2OfReal weights(1, deg_u + 1, 1, deg_v + 1);
+    for(int i = 0; i < nppoles.shape(0); ++i)
+      for(int j = 0; j < nppoles.shape(1); ++j)
+        {
+          poles.SetValue(i + 1, j + 1, gp_Pnt(nppoles.at(i, j, 0), nppoles.at(i, j, 1), nppoles.at(i, j, 2)));
+          if(npweights)
+            weights.SetValue(i + 1, j + 1, npweights->at(i, j));
+          else
+            weights.SetValue(i + 1, j + 1, 1.0);
+        }
+    Handle(Geom_Surface) surface = new Geom_BezierSurface(poles, weights);
+    return BRepBuilderAPI_MakeFace(surface, tol).Face();
+  }, py::arg("poles"), py::arg("weights")=std::nullopt,
+        py::arg("tol")=1e-7,
+        "Creates a rational Bezier surface with the set of poles and the set of weights. The weights are defaulted to all being 1. If all the weights are identical the surface is considered as non rational. Raises ConstructionError if the number of poles in any direction is greater than MaxDegree + 1 or lower than 2 or CurvePoles and CurveWeights have not the same length or one weight value is lower or equal to Resolution. Returns an occ face with the given tolerance.");
 
 
   m.def("SplineApproximation", [](const std::vector<gp_Pnt> &points, Approx_ParametrizationType approx_type, int deg_min,
