@@ -7,9 +7,11 @@
 /* Date:   25. Mar. 16                                                    */
 /**************************************************************************/
 
+#include <array>
+#include <tuple>
 #include "ngcore_api.hpp"
-
 #include "simd_generic.hpp"
+
 
 #ifndef __CUDA_ARCH__
 
@@ -87,6 +89,69 @@ namespace ngcore
     // return SIMD<double,4>(HSum(s1), HSum(s2), HSum(s3), HSum(s4));
     return SIMD<double,4>(HSum(s1, s2), HSum(s3,s4));
   }
+
+
+
+  template <typename T, size_t S> class MakeSimdCl;
+  
+  template <typename T, size_t S>
+  auto MakeSimd (std::array<T,S> aa)  { return MakeSimdCl(aa).Get(); }
+
+  
+  template <typename T, size_t S>
+  class MakeSimdCl
+  {
+    std::array<T,S> a;
+  public:
+    MakeSimdCl (std::array<T,S> aa) : a(aa)  { ; }
+    auto Get() const
+    {
+      SIMD<T,S> sa( [this] (auto i) { return (this->a)[i]; });
+      return sa;
+    }
+  };
+  
+
+  
+  
+  template <typename Tfirst, size_t S, typename ...Trest>
+  class MakeSimdCl<std::tuple<Tfirst,Trest...>,S>
+  {
+    std::array<std::tuple<Tfirst,Trest...>,S> a;
+  public:
+    MakeSimdCl (std::array<std::tuple<Tfirst,Trest...>,S> aa) : a(aa)  { ; }
+    auto Get() const
+    {
+      std::array<Tfirst,S> a0;
+      for (int i = 0; i < S; i++)
+        a0[i] = std::get<0> (a[i]);
+      
+      if constexpr (std::tuple_size<std::tuple<Tfirst,Trest...>>::value == 1)
+        {
+          return std::tuple(MakeSimd(a0));
+        }
+      else
+        {
+          std::array<std::tuple<Trest...>,S> arest;
+          for (int i = 0; i < S; i++)
+            arest[i] = skip_first(a[i]);
+          
+          return std::tuple_cat ( std::tuple (MakeSimd(a0)), MakeSimd(arest) );
+        }
+    }
+
+    template <typename... Ts>
+    static auto skip_first(const std::tuple<Ts...>& t) {
+      return std::apply([](auto first, auto... rest) {
+        return std::make_tuple(rest...);
+      }, t);
+    }
+  };
+  
+
+  
+
+  
 }
 
 
