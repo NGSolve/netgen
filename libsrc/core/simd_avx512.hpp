@@ -59,6 +59,15 @@ namespace ngcore
       data = _mm512_set_epi64(func(7), func(6), func(5), func(4), func(3), func(2), func(1), func(0));
     }
 
+    SIMD (SIMD<int64_t,4> v0, SIMD<int64_t,4> v1)
+        : data(_mm512_castsi256_si512(v0.Data()))
+      {
+        data = _mm512_inserti64x4(data, v1.Data(), 1);
+      }
+
+    SIMD<int64_t,4> Lo() const { return _mm512_castsi512_si256(data); }
+    SIMD<int64_t,4> Hi() const { return _mm512_extracti64x4_epi64(data, 1); }
+
 
     NETGEN_INLINE auto operator[] (int i) const { return ((int64_t*)(&data))[i]; }
     NETGEN_INLINE auto & operator[] (int i) { return ((int64_t*)(&data))[i]; }
