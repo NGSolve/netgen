@@ -6952,6 +6952,14 @@ namespace netgen
                       },
                       [](auto a, auto b) { return a > b ?  a : b; },
                       numvertices);
+    numvertices =
+      ParallelReduce (LineSegments().Size(),
+                      [&](size_t nr)
+                      {
+                        return int(Max(LineSegments()[nr].Vertices()));
+                      },
+                      [](auto a, auto b) { return a > b ?  a : b; },
+                      numvertices);
     numvertices += 1-PointIndex::BASE;    
   }
 
