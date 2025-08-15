@@ -7210,6 +7210,7 @@ namespace netgen
                                NgTracer tracer)
   {
     static Timer t("Update Topology"); RegionTimer reg(t);
+    ComputeNVertices();
     topology.Update(tm, tracer);
     (*tracer)("call update clusters", false);
     clusters->Update();

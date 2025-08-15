@@ -1500,7 +1500,7 @@ namespace netgen
 	  }
 	PrintMessage(5, " Start with Update Topology ");
 	mesh.UpdateTopology();
-        mesh.ComputeNVertices();
+        // mesh.ComputeNVertices();
 	PrintMessage(5, " Mesh Update Topology done ");
 
 	act_ref++; 
