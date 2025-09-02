@@ -2313,6 +2313,43 @@ tangents : Dict[int, gp_Vec2d]
   Tangent vectors for the points indicated by the key value (0-based).
 
 )delimiter");
+
+  m.def("Sew", [] (const std::vector<TopoDS_Shape> & faces, double tol,
+                   bool non_manifold) -> TopoDS_Shape
+        {
+          if(faces.size() == 1)
+            return faces[0];
+          BRepBuilderAPI_Sewing sewer(tol);
+          sewer.SetNonManifoldMode(non_manifold);
+          for (auto & s : faces)
+            sewer.Add(s);
+          sewer.Perform();
+          for (auto & s : faces)
+            PropagateProperties (sewer, s);
+          auto sewn = sewer.SewedShape();
+          return sewn;
+        }, py::arg("faces"), py::arg("tolerance")=1e-6,
+        py::arg("non_manifold")=false,
+        R"doc(
+Stitch a list of faces into one or more connected shells.
+
+Parameters
+----------
+faces : list[TopoDS_Shape]
+    Faces or other shapes to sew together.
+tolerance : float, default=1e-6
+    Geometric tolerance for merging edges and vertices.
+non_manifold : bool, default=False
+    If True, allows edges shared by more than two faces (may produce
+    multiple shells). If False, creates only manifold shells suitable
+    for solids.
+
+Returns
+-------
+TopoDS_Shape
+    The sewed shape containing one or more shells.
+)doc");
+
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
