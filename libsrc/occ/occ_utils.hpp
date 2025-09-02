@@ -152,6 +152,10 @@ namespace netgen
       {
         return SubShapes(TopAbs_SOLID);
       }
+      ListOfShapes Shells() const
+      {
+        return SubShapes(TopAbs_SHELL);
+      }
       ListOfShapes Faces() const
       {
         return SubShapes(TopAbs_FACE);
@@ -195,6 +199,14 @@ namespace netgen
     {
       ListOfShapes sub;
       for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+        sub.push_back(e.Current());
+      return sub;
+    }
+
+    inline ListOfShapes GetShells(const TopoDS_Shape & shape)
+    {
+      ListOfShapes sub;
+      for (TopExp_Explorer e(shape, TopAbs_SHELL); e.More(); e.Next())
         sub.push_back(e.Current());
       return sub;
     }
