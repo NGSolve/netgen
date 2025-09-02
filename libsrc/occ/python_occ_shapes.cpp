@@ -351,7 +351,7 @@ public:
   }
 
   auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents,
-              bool start_from_localpos)
+              bool start_from_localpos, std::optional<string> name)
   {
     gp_Pnt2d P1 = start_from_localpos ? localpos.Location() : points.front();
     gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
@@ -413,6 +413,8 @@ public:
     lastvertex = endv;
     BRepLib::BuildCurves3d(edge);
     wire_builder.Add(edge);
+    if(name.has_value())
+      OCCGeometry::GetProperties(edge).name = name;
 
     // update localpos
     localpos.SetLocation(PLast);
@@ -783,6 +785,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def_property_readonly("solids", GetSolids,
             "returns all sub-shapes of type 'SOLID'")
+    .def_property_readonly("shells", GetShells,
+            "returns all sub-shapes of type 'SHELL'")
     .def_property_readonly("faces", GetFaces,
             "returns all sub-shapes of type 'FACE'")
     .def_property_readonly("edges", GetEdges,
@@ -1879,6 +1883,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return selected;
          })
     .def_property_readonly("solids", &ListOfShapes::Solids)
+    .def_property_readonly("shells", &ListOfShapes::Shells)
     .def_property_readonly("faces", &ListOfShapes::Faces)
     .def_property_readonly("wires", &ListOfShapes::Wires)
     .def_property_readonly("edges", &ListOfShapes::Edges)
@@ -2792,7 +2797,7 @@ degen_tol : double
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
-         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true,
+         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true, py::arg("name")=nullopt,
          "draw spline (default: starting from current position, which is implicitly added to given list of points), tangents can be specified for each point (0 refers to starting point)")
     .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), py::arg("name")=nullopt, "draw rectangle, with current position as corner, use current direction")
     .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), py::arg("name")=nullopt, "draw rectangle, with current position as center, use current direction")
