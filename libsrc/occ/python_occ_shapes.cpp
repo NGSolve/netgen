@@ -436,7 +436,8 @@ public:
     return shared_from_this();
   }
 
-  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt)
+  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt,
+              optional<double> maxh=nullopt)
   {
     gp_Pnt2d P1 = localpos.Location();
 
@@ -503,6 +504,8 @@ public:
     BRepLib::BuildCurves3d(edge);
     if(name.has_value())
       OCCGeometry::GetProperties(edge).name = name;
+    if(maxh.has_value())
+      OCCGeometry::GetProperties(edge).maxh = maxh.value();
     wire_builder.Add(edge);
 
     //compute angle of rotation
@@ -523,7 +526,8 @@ public:
     return shared_from_this();
   }
 
-  auto Arc(double radius, double angle, optional<string> name)
+  auto Arc(double radius, double angle, optional<string> name,
+           optional<double> maxh)
   {
     double newAngle = fmod(angle,360)*M_PI/180;
 
@@ -554,7 +558,7 @@ public:
     cout << IM(6) << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), t, name);
+    return ArcTo (oldp.X(), oldp.Y(), t, name, maxh);
   }
 
   auto Rectangle (double l, double w, optional<string> name)
@@ -2826,8 +2830,8 @@ degen_tol : double
     .def("LineTo", [](WorkPlane&wp, double x, double y, optional<string> name) { return wp.LineTo(x, y, name); },
          py::arg("h"), py::arg("v"), py::arg("name")=nullopt, "draw line to position (h,v)")
     .def("ArcTo", &WorkPlane::ArcTo, py::arg("h"), py::arg("v"),
-         py::arg("t"), py::arg("name")=nullopt)
-    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
+         py::arg("t"), py::arg("name")=nullopt, py::arg("maxh")=nullopt)
+    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, py::arg("maxh")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
     .def("Rotate", &WorkPlane::Rotate, py::arg("ang"), "rotate current direction by 'ang' degrees")
     .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); },
          py::arg("l"), py::arg("name")=nullopt)
