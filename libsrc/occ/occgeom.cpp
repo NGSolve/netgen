@@ -2318,10 +2318,14 @@ namespace netgen
 
             TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(item));
             string name = item->Name()->ToCString();
-            if (!transProc->IsBound(item))
+            if (!transProc->IsBound(item) || name == "")
               continue;
 
-            OCCGeometry::GetProperties(shape).name = name;
+            // we only allow names on SOLIDS, FACES, EDGES, VERTICES.
+            // if name is given on a compound, assume it should be on all subshapes
+            // of highest dimension
+            for(auto & s : GetHighestDimShapes(shape))
+              OCCGeometry::GetProperties(s).name = name;
           }
 
 
