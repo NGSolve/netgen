@@ -4798,6 +4798,12 @@ namespace netgen
         return true;
     };
 
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
+    glDisable(GL_LIGHTING);
+    glDisable (GL_COLOR_MATERIAL);
+
     RenderSurfaceElements(mesh, subdivisions, face_init, sel_init);
 
     glEndList();
