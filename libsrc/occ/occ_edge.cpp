@@ -1,9 +1,11 @@
+#include <StdFail_NotDone.hxx>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
+#include <GCPnts_AbscissaPoint.hxx>
 
 #pragma clang diagnostic pop
 
@@ -66,6 +68,39 @@ namespace netgen
         if(gi)
             gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);
         p = occ2ng(pnt);
+    }
+
+    void OCCEdge::PointBetween(const Point<3>& p1,
+                      const Point<3>& p2,
+                      double secpoint,
+                      const EdgePointGeomInfo& gi1,
+                      const EdgePointGeomInfo& gi2,
+                      Point<3>& newp,
+                      EdgePointGeomInfo& newgi) const
+    {
+      static Timer tim("OCCEdge::PointBetween");
+      RegionTimer rtim(tim);
+      // try {
+      //   GeometryEdge::PointBetween(p1, p2, secpoint, gi1, gi2, newp, newgi);
+      // }
+      // catch (const StdFail_NotDone &)
+      {
+        static Timer tim("OCCEdge::PointBetween-Fallback");
+        RegionTimer rtim(tim);
+
+        double t0 = gi1.dist;
+        double t1 = gi2.dist;
+        if (t0 > t1)
+        {
+          swap(t0, t1);
+          secpoint = 1.0 - secpoint;
+        }
+
+        GeomAdaptor_Curve adaptor(curve, t0, t1);
+        Standard_Real length = GCPnts_AbscissaPoint::Length(adaptor, t0, t1);
+        newgi.dist = GCPnts_AbscissaPoint(adaptor, secpoint * length, t0).Parameter();
+        newp = GetPoint(newgi.dist);
+      }
     }
 
     Vec<3> OCCEdge::GetTangent(double t) const

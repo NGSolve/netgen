@@ -37,6 +37,13 @@ namespace netgen
         Point<3> GetPoint(double t) const override;
         double CalcStep(double t, double sag) const override;
         void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const override;
+        void PointBetween(const Point<3>& p1,
+                          const Point<3>& p2,
+                          double secpoint,
+                          const EdgePointGeomInfo& gi1,
+                          const EdgePointGeomInfo& gi2,
+                          Point<3>& newp,
+                          EdgePointGeomInfo& newgi) const override;
         Vec<3> GetTangent(double t) const override;
         bool IsDegenerated(double) const override {
           return BRep_Tool::Degenerated(edge);
