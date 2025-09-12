@@ -189,6 +189,8 @@ enum HPREF_ELEMENT_TYPE {
   
   HP_TET_3F_0E_0V = 700,  // 3 singular faces, no additional points or edges  NEW   done 
 
+  HP_TET_ALFELD,
+  
   HP_PRISM = 1000,
   HP_PRISM_SINGEDGE,
   HP_PRISM_SINGEDGE_V12,

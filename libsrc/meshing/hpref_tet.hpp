@@ -4184,6 +4184,47 @@ HPRef_Struct reftet_3f_0e_0v =
 
 
 
+
+// HP_TET_ALFELD
+int reftet_Alfeld_splitedges[][3] =
+{
+  { 0, 0, 0 }
+};
+int reftet_Alfeld_splitfaces[][4] =
+{
+  { 0, 0, 0, 0 }
+};
+
+int reftet_Alfeld_splitelements[][5] =
+  {
+    { 1, 2, 3, 4, 5},
+    { 0 }
+  };
+
+HPREF_ELEMENT_TYPE reftet_Alfeld_newelstypes[] =
+{
+  HP_TET, HP_TET, HP_TET, HP_TET,
+  HP_NONE, 
+};
+
+int reftet_Alfeld_newels[][8] =
+{
+  { 1, 2, 3, 5 }, 
+  { 1, 4, 2, 5 }, 
+  { 1, 3, 4, 5 },
+  { 3, 2, 4, 5 }
+};
+HPRef_Struct reftet_Alfeld =
+{
+  HP_TET,
+  reftet_Alfeld_splitedges, 
+  reftet_Alfeld_splitfaces,
+  reftet_Alfeld_splitelements,  
+  reftet_Alfeld_newelstypes,
+  reftet_Alfeld_newels
+};
+
+
 /*
 
 */

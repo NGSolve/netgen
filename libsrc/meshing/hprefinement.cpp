@@ -429,6 +429,10 @@ namespace netgen
         hps = &reftet_2f_1e_0vb; break;
       case HP_TET_3F_0E_0V:
         hps = &reftet_3f_0e_0v; break;
+
+      case HP_TET_ALFELD:
+        hps = &reftet_Alfeld; break;
+
         
       case HP_PRISM:
 	hps = &refprism; break;
@@ -1952,6 +1956,9 @@ namespace netgen
               else
                 cout << "type = " << hpel.type << endl;
               */
+              if (split == SPLIT_ALFELD && mesh.GetDimension()==3)
+                hpel.type = HP_TET_ALFELD;
+
 	      break;
 	    }
 	  case HP_PRISM:
@@ -1982,9 +1989,9 @@ namespace netgen
               if (split == SPLIT_HP)
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                          faces, face_edges, surf_edges, facepoint, dim, fd);    
-              else if (split == SPLIT_ALFELD)
+              else if (split == SPLIT_ALFELD && mesh.GetDimension()==2)
                 hpel.type = HP_TRIG_ALFELD;
-              else if (split == SPLIT_POWELL)
+              else if (split == SPLIT_POWELL && mesh.GetDimension()==2)
                 hpel.type = HP_TRIG_POWELL;
 
 	      dd = 2;
