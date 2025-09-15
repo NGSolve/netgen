@@ -932,12 +932,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, py::arg("name"), "sets 'name' property to all solids of shape")
     
     .def_property("name", [](const TopoDS_Shape & self) -> optional<string> {
+        CheckValidPropertyType(self);
         if (auto name = OCCGeometry::GetProperties(self).name)
           return *name;
         else
           return nullopt;
       }, [](const TopoDS_Shape & self, optional<string> name) {
-        OCCGeometry::GetProperties(self).name = name;
         for (auto & s : GetHighestDimShapes(self))
           OCCGeometry::GetProperties(s).name = name;
       }, "'name' of shape")
@@ -945,11 +945,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("maxh",
                   [](const TopoDS_Shape& self)
                   {
+                    CheckValidPropertyType(self);
                     return OCCGeometry::GetProperties(self).maxh;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    OCCGeometry::GetProperties(self).maxh = val;
                     for(auto & s : GetHighestDimShapes(self))
                       OCCGeometry::GetProperties(s).maxh = val;
                   }, "maximal mesh-size for shape")
@@ -957,16 +957,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("hpref",
                   [](const TopoDS_Shape& self)
                   {
+                    CheckValidPropertyType(self);
                     return OCCGeometry::GetProperties(self).hpref;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    OCCGeometry::GetProperties(self).hpref = val;
                     for(auto & s : GetHighestDimShapes(self))
                       OCCGeometry::GetProperties(s).hpref = val;
                   }, "number of refinement levels for geometric refinement")
     
     .def_property("col", [](const TopoDS_Shape & self) -> py::object {
+      CheckValidPropertyType(self);
       if(!OCCGeometry::HaveProperties(self) || !OCCGeometry::GetProperties(self).col)
         return py::none();
       auto col = *OCCGeometry::GetProperties(self).col;
@@ -977,11 +978,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           Vec<4> col((*c)[0], (*c)[1], (*c)[2], 1.0);
           if(c->size() == 4)
             col[3] = (*c)[3];
-          OCCGeometry::GetProperties(self).col = col;
+          for(auto & s : GetHighestDimShapes(self))
+            OCCGeometry::GetProperties(s).col = col;
         }
       else
-        OCCGeometry :: GetProperties(self).col = nullopt;
-      }, "color of shape as RGB - tuple")
+        for(auto & s : GetHighestDimShapes(self))
+          OCCGeometry::GetProperties(s).col = nullopt;
+      }, "color of shape as RGB or RGBA - tuple")
     .def_property("layer", [](const TopoDS_Shape& self) {
     if (!OCCGeometry::HaveProperties(self))
       return 1;
