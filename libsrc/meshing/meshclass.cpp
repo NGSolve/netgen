@@ -12,6 +12,7 @@
 
 namespace netgen
 {
+  bool _debug_log = false;
   ElementIndex Find3dElement (const Mesh& mesh,
                               const netgen::Point<3> & p,
                               double * lami,
@@ -4641,6 +4642,7 @@ namespace netgen
     if(!boundaryedges)
       const_cast<Mesh *>(this)->BuildBoundaryEdges();
 
+    if(_debug_log) cout << "\tLegalTet2 called for " << el << endl;
 
     // non-tets are always legal
     if (el.GetType() != TET)
@@ -4664,6 +4666,7 @@ namespace netgen
           if (cnti >= 2)
             {
               el.SetLegal (1);
+              if(_debug_log) cout << "\t\tlegal inner point" << endl;
               return 1;
             }
         }
@@ -4717,6 +4720,7 @@ namespace netgen
             if (!segedge[pi3map[i][j]][pi4map[i][j]])
               {
                 // 2 boundary faces without edge in between
+                if(_debug_log) cout << "\t\tillegal 2 faces no edge" << endl;
                 el.SetLegal (0);
                 return 0;
               }
@@ -4737,6 +4741,7 @@ namespace netgen
             if (alledges)
               {
                 // cout << "tet illegal due to unmarked node" << endl;
+                if(_debug_log) cout << "\t\tillegal 3 bnd edges" << endl;
                 el.SetLegal (0);
                 return 0;
               }
@@ -4758,6 +4763,7 @@ namespace netgen
                   // two connected edges on surface, but no face
                   if (bedge[i][pi1] && bedge[i][pi2])
                     {
+                      if(_debug_log) cout << "\t\tillegal 2 edge no face" << endl;
                       el.SetLegal (0);
                       return 0;
                     }
@@ -4769,6 +4775,7 @@ namespace netgen
                   if ( (bedge[i][pi1] && segedge[i][pi2]) ||
                        (bedge[i][pi2] && segedge[i][pi1]) )
                     {
+                      if(_debug_log) cout << "\t\tillegal 2 edge no face" << endl;
                       el.SetLegal (0);
                       return 0;
                     }
@@ -4777,6 +4784,7 @@ namespace netgen
             }
 
 
+    if(_debug_log) cout << "\t\tlegal" << endl;
     el.SetLegal (1);
     return 1;
 

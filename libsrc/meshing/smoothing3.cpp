@@ -309,6 +309,7 @@ namespace netgen
     const MeshingParameters & mp;
     PointIndex actpind;
     double h;
+    Array<Vec<3>, PointIndex> normals;
   
   public:
     PointFunction (Mesh & mesh, const MeshingParameters & amp);
@@ -327,7 +328,7 @@ namespace netgen
 
 
   PointFunction :: PointFunction (const PointFunction & pf)
-    : points(pf.points), elements(pf.elements), elementsonpoint(pf.elementsonpoint), own_elementsonpoint(false), mp(pf.mp)
+    : points(pf.points), elements(pf.elements), elementsonpoint(pf.elementsonpoint), own_elementsonpoint(false), mp(pf.mp), normals(pf.normals)
   { }
 
   PointFunction :: PointFunction (Mesh & mesh, const MeshingParameters & amp)
@@ -348,6 +349,24 @@ namespace netgen
                   non_tet_points[pi] = true;
             }
        });
+
+    normals.SetSize(points.Size());
+    normals = Vec<3> (0,0,0);
+    auto geo = mesh.GetGeometry();
+    if(geo)
+      ParallelForRange(mesh.SurfaceElements().Range(), [&] (auto myrange) {
+          for (auto sei : myrange)
+            {
+              auto se = mesh[sei];
+              for(auto i : se.PNums().Range())
+                {
+                  auto pi = se.PNums()[i];
+                  if(non_tet_points[pi]) continue;
+                  normals[pi] = geo->GetNormal(se.GetIndex(), points[pi], &se.GeomInfo()[i]);
+                  normals[pi].Normalize();
+                }
+            }
+      });
 
     elementsonpoint = ngcore::CreateSortedTable<ElementIndex, PointIndex>( elements.Range(),
                [&](auto & table, ElementIndex ei)
@@ -383,6 +402,20 @@ namespace netgen
         const Element & el = elements[ei];
 	badness += CalcTetBadness (points[el[0]], points[el[1]], 
 				   points[el[2]], points[el[3]], -1, mp);
+        for(auto pi : el.PNums())
+          if(pi != actpind)
+            {
+              if(normals[pi] == Vec<3>(0,0,0)) continue;
+
+              Vec<3> v(points[pi], points[actpind]);
+              v.Normalize();
+              double bad = 100.0 / (abs(1. - v * normals[pi]) + 1e-10);
+              // if(bad > 2) {
+              //   cout << "el = " << el << endl;
+              //   cout << "bad = " << bad << endl;
+              // }
+              badness += bad;
+            }
       }
   
     points[actpind] = Point<3> (hp); 
@@ -408,8 +441,21 @@ namespace netgen
                                        points[el[2]], points[el[3]], 
                                        -1, k+1, vgradi, mp);
 
+              for(auto pi : el.PNums())
+                if(pi != actpind)
+                  {
+                    if(normals[pi] == Vec<3>(0,0,0)) continue;
+
+                    Vec<3> v(points[pi], points[actpind]);
+                    v.Normalize();
+                    double bad = (1. - v * normals[pi]);
+                    bad  = abs(bad+1e-10);
+                    bad = bad * bad;
+                    vgradi += 100.0 / bad * normals[pi];
+                  }
+
               vgrad += vgradi;
-	    }
+            }
       }
 
     points[actpind] = Point<3> (hp); 
@@ -439,6 +485,19 @@ namespace netgen
 				       points[el.PNum(2)], 
 				       points[el.PNum(3)], 
 				       points[el.PNum(4)], -1, k, vgradi, mp);
+
+              for(auto pi : el.PNums())
+                if(pi != actpind)
+                  {
+                    if(normals[pi] == Vec<3>(0,0,0)) continue;
+
+                    Vec<3> v(points[pi], points[actpind]);
+                    v.Normalize();
+                    double bad = 1.0 - v * normals[pi];
+                    bad  = abs(bad+1e-10);
+                    bad = bad * bad;
+                    vgradi += 100.0 / bad * normals[pi];
+                  }
 
 	      vgrad += vgradi;
 	    }

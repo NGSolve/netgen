@@ -4,7 +4,9 @@
 #include <core/taskmanager.hpp>
 #include <core/logging.hpp>
 
+#include "core/utils.hpp"
 #include "meshing.hpp"
+#include "meshing/meshtype.hpp"
 
 #ifdef SOLIDGEOM
 #include <csg.hpp>
@@ -13,6 +15,27 @@
 
 namespace netgen
 {
+extern bool _debug_log;
+static const ArrayMem<PointIndex,6> _dbgpoints = {1317, 1319};
+
+bool _DBG = false;
+
+typedef std::variant<size_t, int, double, std::string, Element> anytype;
+
+
+static string tostr(anytype a) {
+  if (std::holds_alternative<Element>(a)) return ToString(std::get<Element>(a));
+  if (std::holds_alternative<size_t>(a)) return std::to_string(std::get<size_t>(a));
+  if (std::holds_alternative<int>(a)) return std::to_string(std::get<int>(a));
+  if (std::holds_alternative<double>(a)) return std::to_string(std::get<double>(a));
+  if (std::holds_alternative<std::string>(a)) return std::get<std::string>(a);
+  return "";
+};
+
+static auto log = [](int line, bool indent, anytype a="", anytype b="", anytype c="", anytype d="", anytype e="", anytype f="") {
+  if(_DBG) cout << line <<"\t" << (indent? "\t" : "") << tostr(a) <<" " << tostr(b) << " " << tostr(c) << " " << tostr(d) << " " << tostr(e) << " " << tostr(f) << endl;
+};
+
 
 bool WrongOrientation(Point<3> p1, Point<3> p2, Point<3> p3, Point<3> p4)
 {
@@ -467,9 +490,14 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
   double d_badness = 0.0;
   // int cnt = 0;
 
+  // _DBG = _dbgpoints.Contains(pi1) && _dbgpoints.Contains(pi2);
+  log(__LINE__, false, "start", pi1, pi2);
+
   ArrayMem<ElementIndex, 20> hasbothpoints;
 
   if (mesh.BoundaryEdge (pi1, pi2)) return 0.0;
+
+  log(__LINE__, true, "no bnd edge", pi1, pi2);
 
   for (ElementIndex ei : elementsonnode[pi1])
     {
@@ -486,6 +514,8 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
               hasbothpoints.Append (ei);
     }
 
+  log(__LINE__, true, "found els", hasbothpoints.Size());
+
   if(mp.only3D_domain_nr)
       for(auto ei : hasbothpoints)
           if(mp.only3D_domain_nr != mesh[ei].GetIndex())
@@ -494,23 +524,34 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
   if (!NeedsOptimization(hasbothpoints))
     return 0.0;
 
+  log(__LINE__, true, "needs opt");
   double bad1 = 0.0;
   double bad1_max = 0.0;
   for (ElementIndex ei : hasbothpoints)
     {
       double bad = mesh[ei].GetBadness();
-      bad1 += bad;
+      auto el = mesh[ei];
+      el.Touch();
+      if(!mesh.LegalTet(el))
+          bad += GetLegalPenalty();
       bad1_max = max(bad1_max, bad);
+      bad1 += bad;
     }
 
-  if(bad1_max < 100.0)
+  if(bad1_max < 100.0) {
+      log(__LINE__, true, "not bad enough", bad1_max);
       return 0.0;
+  }
+
+  log(__LINE__, true, "bad1", bad1, bad1_max);
 
   bool puretet = 1;
   for (ElementIndex ei : hasbothpoints)
       if (mesh[ei].GetType() != TET)
           puretet = 0;
   if (!puretet) return 0.0;
+
+  log(__LINE__, true, "only tets");
 
   Point3d p1 = mesh[pi1];
   Point3d p2 = mesh[pi2];
@@ -543,7 +584,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
   px(1) = pnew.Y();
   px(2) = pnew.Z();
 
-  if (bad1_max > 0.1 * badmax)
+  // if (bad1_max > 0.1 * badmax)
     {
       int pok = pf.Func (px) < 1e10;
       if (!pok)
@@ -586,18 +627,28 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
             pel2[l] = pnew;
           }
         }
+      if (!mesh.LegalTet (newel1)) bad2 += GetLegalPenalty();
+      if (!mesh.LegalTet (newel2)) bad2 += GetLegalPenalty();
 
-      if (!mesh.LegalTet (oldel)) return 0.0;
-      if (!mesh.LegalTet (newel1)) return 0.0;
-      if (!mesh.LegalTet (newel2)) return 0.0;
+      // log(__LINE__, true, "oldel", oldel);
+      // if (!mesh.LegalTet (oldel)) return 0.0;
+      // log(__LINE__, true, "oldel is legal");
+      // if (!mesh.LegalTet (newel1)) return 0.0;
+      // log(__LINE__, true, "newel1 is legal");
+      // if (!mesh.LegalTet (newel2)) return 0.0;
+      // log(__LINE__, true, "newel2 is legal");
 
       if( WrongOrientation(pel1[0], pel1[1], pel1[2], pel1[3]) ||
           WrongOrientation(pel2[0], pel2[1], pel2[2], pel2[3]) )
         return 0.0;
+
+      log(__LINE__, true, "no wrong orientation");
     }
 
+  log(__LINE__, true, "bad2", bad2);
   if(bad2 >= 1e24) return 0.0;
   d_badness = bad2-bad1;
+  log(__LINE__, true, "badness", bad1, bad2, d_badness);
   if(check_only)
       return d_badness;
 
@@ -738,7 +789,11 @@ double MeshOptimize3d :: SwapImproveEdge (
   double d_badness = 0.0;
   if (pi2 < pi1) Swap (pi1, pi2);
 
+  log(__LINE__, false, "start", pi1, pi2);
+
   if (mesh.BoundaryEdge (pi1, pi2)) return 0.0;
+
+  log(__LINE__, true, "no bnd edge", pi1, pi2);
 
 
   hasbothpoints.SetSize (0);
@@ -767,6 +822,8 @@ double MeshOptimize3d :: SwapImproveEdge (
         }
     }
 
+  log(__LINE__, true, "found els", hasbothpoints.Size());
+
   for (ElementIndex ei : hasbothpoints)
     {
       if (mesh[ei].GetType () != TET)
@@ -791,8 +848,12 @@ double MeshOptimize3d :: SwapImproveEdge (
           return 0.0;
     }
 
+  log(__LINE__, true, "first checks passed");
+
   if(!NeedsOptimization(hasbothpoints))
     return 0.0;
+
+  log(__LINE__, true, "needs optimization");
 
   int nsuround = hasbothpoints.Size();
   int mattyp = mesh[hasbothpoints[0]].GetIndex();
@@ -817,17 +878,21 @@ double MeshOptimize3d :: SwapImproveEdge (
   };
 
   auto combined_badness = [&] (std::initializer_list<Element> els, bool apply_illegal_penalty = true) {
+    _debug_log = _DBG;
     double bad = 0.0;
-    bool have_illegal = false;
+    // bool have_illegal = false;
     for (auto el : els) {
       bad += CalcBad(mesh.Points(), el, 0);
-      if(apply_illegal_penalty && !have_illegal) {
+      if(apply_illegal_penalty) {
+        // log(__LINE__, true, "have illegal element ", el);
         el.Touch();
-        have_illegal = !mesh.LegalTet(el);
+        if(!mesh.LegalTet(el))
+          bad += GetLegalPenalty();
       }
     }
-    if(have_illegal && apply_illegal_penalty)
-      bad += GetLegalPenalty();
+    // if(have_illegal && apply_illegal_penalty)
+    //   bad += GetLegalPenalty();
+    log(__LINE__, true, "combined badness", bad);
     return bad;
   };
 
@@ -1080,8 +1145,13 @@ double MeshOptimize3d :: SwapImproveEdge (
 
 
       double bad1 = 0;
-      for (auto k : Range(nsuround))
-          bad1 += CalcBad (mesh.Points(), El(pi1, pi2, suroundpts[k], suroundpts[(k+1) % nsuround]), 0);
+      log(__LINE__, true, "calc bad1 now (old tets)");
+      log(__LINE__, true, "goal = ", int(goal), int(OPT_CONFORM));
+      for (auto k : Range(nsuround)) {
+          auto el = mesh[hasbothpoints[k]];
+          bad1 += combined_badness({el}, goal != OPT_CONFORM);
+      }
+      log(__LINE__, true, "bad1 =", bad1);
 
       //  (*testout) << "nsuround = " << nsuround << " bad1 = " << bad1 << endl;
 
@@ -1101,8 +1171,10 @@ double MeshOptimize3d :: SwapImproveEdge (
               PointIndex pik0 = suroundpts[k % nsuround];
               PointIndex pik1 = suroundpts[(k+1) % nsuround];
 
+              log(__LINE__, true, "calc bad2 part", l, k);
               bad2 += combined_badness({El(pil, pik0, pik1, pi2)});
               bad2 += combined_badness({El(pil, pik1, pik0, pi1)});
+              log(__LINE__, true, "bad2 = ", bad2);
             }
           // (*testout) << "bad2," << l << " = " << bad2 << endl;
 
@@ -1148,6 +1220,8 @@ double MeshOptimize3d :: SwapImproveEdge (
             }
         }
 
+      log(__LINE__, true, "confedge", confedge, "confface", confface, "bestl", bestl);
+
       if (confedge != -1)
           bestl = confedge;
       if (confface != -1)
@@ -1156,12 +1230,17 @@ double MeshOptimize3d :: SwapImproveEdge (
       if(confface != -1 || confedge != -1)
           badopt = bad1 + IMPROVEMENT_CONFORMING_EDGE;
 
+      log(__LINE__, true, "bestl", bestl, "badopt", badopt, "bad1", bad1);
+
       if (bestl != -1)
         {
           // (*mycout) << nsuround << "->" << 2 * (nsuround-2) << " " << flush;
           d_badness = badopt-bad1;
+          log(__LINE__, true, "d_badness", d_badness);
           if(check_only)
               return d_badness;
+
+          log(__LINE__, true, "apply swap");
 
           for (int k = bestl+1; k <= nsuround + bestl - 2; k++)
             {

@@ -729,6 +729,9 @@ namespace netgen
 	if (multithread.terminate)
 	  break;
 
+        int nillegal = mesh3d.MarkIllegalElements();
+	PrintMessage (5, nillegal, " illegal tets");
+
 	// teterrpow = mp.opterrpow;
 	// for (size_t j = 1; j <= strlen(mp.optimize3d); j++)
         for (auto j : Range(mp.optimize3d.size()))
@@ -956,6 +959,8 @@ namespace netgen
 	  break;
 
 	PrintMessage (5, nillegal, " illegal tets");
+        if(it<5)
+          optmesh.ImproveMesh ();
         optmesh.SplitImprove ();
 
 	mesh3d.MarkIllegalElements();  // test

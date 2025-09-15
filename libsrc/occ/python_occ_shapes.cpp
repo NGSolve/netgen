@@ -851,6 +851,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, py::arg("v"), "copy shape, and translate copy by vector 'v'")
 
 
+    .def("UpdateTolerances", [](TopoDS_Shape & shape)
+         {
+           BRepLib::UpdateTolerances(shape);
+         })
     .def("Rotate", [](const TopoDS_Shape & shape, const gp_Ax1 ax, double ang)
          {
            gp_Trsf trafo;
@@ -1605,7 +1609,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       auto curve = BRep_Tool::Curve(self, s0, s1);
       double tstart, t, dist;
       TopoDS_Vertex vstart, vend;
-      vstart = TopExp::FirstVertex(self);
+      vstart = BRepBuilderAPI_MakeVertex(curve->Value(s0));
+      // vstart = TopExp::FirstVertex(self);
       IntTools_Context context;
       tstart = s0;
       for(auto arg : args)
@@ -1629,7 +1634,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
       auto newE = TopoDS::Edge(self.EmptyCopied());
       t = s1;
-      vend = TopExp::LastVertex(self);
+      // vend = TopExp::LastVertex(self);
+      vend = BRepBuilderAPI_MakeVertex(curve->Value(s1));
       BOPTools_AlgoTools::MakeSplitEdge(self, vstart, tstart, vend, t, newE);
       new_edges.push_back(newE);
       return new_edges;

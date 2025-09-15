@@ -33,6 +33,8 @@ namespace netgen
             if(d01 < d00)
                 swap(start, end);
         }
+        static_cast<OCCVertex*>(start)->SetPoint(GetPoint(0));
+        static_cast<OCCVertex*>(end)->SetPoint(GetPoint(1));
     }
 
     double OCCEdge::GetLength() const
