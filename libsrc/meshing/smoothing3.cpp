@@ -1,6 +1,7 @@
 #include <mystdlib.h>
 
 #include "meshing.hpp"
+#include "meshing/meshtype.hpp"
 #ifdef SOLIDGEOM
 #include <csg.hpp>
 #endif
@@ -305,11 +306,13 @@ namespace netgen
     Mesh::T_POINTS & points;
     const Array<Element, ElementIndex> & elements;
     Table<ElementIndex, PointIndex> &elementsonpoint;
+    Table<SurfaceElementIndex, PointIndex> &selementsonpoint;
     bool own_elementsonpoint;
     const MeshingParameters & mp;
     PointIndex actpind;
     double h;
     Array<Vec<3>, PointIndex> normals;
+    Mesh & mesh;
   
   public:
     PointFunction (Mesh & mesh, const MeshingParameters & amp);
@@ -324,15 +327,121 @@ namespace netgen
     virtual double PointFunctionValueDeriv (const Point<3> & pp, const Vec<3> & dir, double & deriv) const;
 
     int MovePointToInner ();
+
+    double normal_badness(Element el, PointIndex actpind, Vec<3> * grad=nullptr) const{
+        ArrayMem<PointIndex, 4> surf_points;
+        for(auto pi : el.PNums())
+          if(points[pi].Type() <= SURFACEPOINT)
+            surf_points.Append(pi);
+
+        if(surf_points.Size() != 3 )
+          return 0.0;
+
+
+        SurfaceElementIndex sei = -1;
+
+        for (auto si : selementsonpoint[surf_points[0]])
+        {
+          auto sel = mesh[si];
+          auto pnums = sel.PNums();
+          if(pnums.Contains(surf_points[1]) && pnums.Contains(surf_points[2]))
+          {
+            sei = si;
+            break;
+          }
+        }
+
+        if (sei == -1) {
+          // cout << "Could not find surface element for normal calculation " << surf_points << endl;
+          return 0.0;
+        }
+
+        auto sel = mesh[sei];
+        auto sel_normal = -Cross(mesh[sel[1]] - mesh[sel[0]], mesh[sel[2]] - mesh[sel[0]]);
+
+        auto getn = [&](int i) {
+          auto pi = sel[i];
+          auto geo = mesh.GetGeometry();
+          auto n = geo->GetNormal(sel.GetIndex(), points[pi], &sel.GeomInfo()[i]);
+          n.Normalize();
+          if(n*sel_normal < 0)
+            n = -n;
+          return n;
+        };
+
+        // auto avg_normal = getn(0) + getn(1) + getn(2);
+        // avg_normal.Normalize();
+        //
+        // auto getndir = [&](int i) {
+        //   auto n = getn(i);
+        //   if(avg_normal*n < 0)
+        //     n = -n;
+        //   return n;
+        // };
+
+        // bool swap_normal = false;
+        // double maxval = 0;
+        // for (auto pi : surf_points) {
+        //   Vec<3> v(points[pi], points[actpind]);
+        //   double dot = v*normals[pi];
+        //   if(abs(dot) > maxval) {
+        //     maxval = abs(dot);
+        //     swap_normal = dot < 0;
+        //   }
+        // }
+
+        // Vec<3> avg = points[actpind] - Center(points[surf_points[0]], points[surf_points[1]], points[surf_points[2]]);
+
+        // Vec<3> avg_normal = (normals[surf_points[0]] + normals[surf_points[1]] + normals[surf_points[2]]);
+        // bool swap_normal = avg*avg_normal < 0;
+
+        double badness = 0.0;
+
+        for (auto i : Range(3))
+            {
+              auto pi = surf_points[i];
+              Vec<3> v(points[pi], points[actpind]);
+              auto normal = getn(i);
+              // auto normal = normals[pi];
+              // if (swap_normal)
+              // {
+              //   // cout << actpind << "/" << pi << "\tswap normal " << avg*normal << " " << avg << " " << normal << endl;
+              //   normal = -normal;
+              // }
+              try {
+                v.Normalize();
+                double dot = v*normal;
+                double denom = (v*normal + 1.0 + 1e-11);
+                if (denom<1e-11) {
+                  throw Exception("normals pointing in wrong direction " + ToString(dot) + " " + ToString(v) + " " + ToString(normal));
+                }
+                double bad = 1000 * 2.0 / pow(denom, 8);
+                badness += bad;
+                if(grad) {
+                  bad /= - 8/denom;
+                  (*grad) += bad * normal;
+                }
+              }
+              catch(const Exception & e)
+              {
+                cout <<"Issue with normals: " << e.what() << endl;
+                cout <<"actpind = " << actpind << ", pi = " << pi << endl;
+                // cout << "point types " << (int)points[surf_points[0]].Type() << " " << (int)points[surf_points[1]].Type() << " " << (int)points[surf_points[2]].Type() << endl;
+              }
+            }
+  
+    return badness;
+    }
   };
 
 
   PointFunction :: PointFunction (const PointFunction & pf)
-    : points(pf.points), elements(pf.elements), elementsonpoint(pf.elementsonpoint), own_elementsonpoint(false), mp(pf.mp), normals(pf.normals)
+    : points(pf.points), elements(pf.elements), elementsonpoint(pf.elementsonpoint), own_elementsonpoint(false), mp(pf.mp), normals(pf.normals), selementsonpoint(pf.selementsonpoint), mesh(pf.mesh)
   { }
 
-  PointFunction :: PointFunction (Mesh & mesh, const MeshingParameters & amp)
-    : points(mesh.Points()), elements(mesh.VolumeElements()), elementsonpoint(* new Table<ElementIndex,PointIndex>()), own_elementsonpoint(true), mp(amp)
+  PointFunction :: PointFunction (Mesh & mesh_, const MeshingParameters & amp)
+    : mesh(mesh_), points(mesh_.Points()), elements(mesh_.VolumeElements()), elementsonpoint(* new Table<ElementIndex,PointIndex>()), own_elementsonpoint(true), mp(amp),
+    selementsonpoint(*new Table<SurfaceElementIndex, PointIndex>())
   {
     static Timer tim("PointFunction - build elementsonpoint table"); RegionTimer reg(tim);
 
@@ -380,6 +489,7 @@ namespace netgen
                    if(!non_tet_points[pi])
                      table.Add (pi, ei);
                }, points.Size());
+    selementsonpoint = mesh.CreatePoint2SurfaceElementTable();
   }
 
   void PointFunction :: SetPointIndex (PointIndex aactpind)
@@ -402,20 +512,8 @@ namespace netgen
         const Element & el = elements[ei];
 	badness += CalcTetBadness (points[el[0]], points[el[1]], 
 				   points[el[2]], points[el[3]], -1, mp);
-        for(auto pi : el.PNums())
-          if(pi != actpind)
-            {
-              if(normals[pi] == Vec<3>(0,0,0)) continue;
 
-              Vec<3> v(points[pi], points[actpind]);
-              v.Normalize();
-              double bad = 100.0 / (abs(1. - v * normals[pi]) + 1e-10);
-              // if(bad > 2) {
-              //   cout << "el = " << el << endl;
-              //   cout << "bad = " << bad << endl;
-              // }
-              badness += bad;
-            }
+        badness += normal_badness(el, actpind);
       }
   
     points[actpind] = Point<3> (hp); 
@@ -440,19 +538,7 @@ namespace netgen
 	      f += CalcTetBadnessGrad (points[el[0]], points[el[1]], 
                                        points[el[2]], points[el[3]], 
                                        -1, k+1, vgradi, mp);
-
-              for(auto pi : el.PNums())
-                if(pi != actpind)
-                  {
-                    if(normals[pi] == Vec<3>(0,0,0)) continue;
-
-                    Vec<3> v(points[pi], points[actpind]);
-                    v.Normalize();
-                    double bad = (1. - v * normals[pi]);
-                    bad  = abs(bad+1e-10);
-                    bad = bad * bad;
-                    vgradi += 100.0 / bad * normals[pi];
-                  }
+              f += normal_badness(el, actpind, &vgradi);
 
               vgrad += vgradi;
             }
@@ -469,41 +555,7 @@ namespace netgen
 						   double & deriv) const
   {
     Vec<3> vgradi, vgrad(0,0,0);
-
-    Point<3> hp = points[actpind];
-    points[actpind] = pp;
-    double f = 0;
-
-    for (auto ei : elementsonpoint[actpind])
-      {
-        const Element & el = elements[ei];
-
-	for (int k = 1; k <= 4; k++)
-	  if (el.PNum(k) == actpind)
-	    {
-	      f += CalcTetBadnessGrad (points[el.PNum(1)], 
-				       points[el.PNum(2)], 
-				       points[el.PNum(3)], 
-				       points[el.PNum(4)], -1, k, vgradi, mp);
-
-              for(auto pi : el.PNums())
-                if(pi != actpind)
-                  {
-                    if(normals[pi] == Vec<3>(0,0,0)) continue;
-
-                    Vec<3> v(points[pi], points[actpind]);
-                    v.Normalize();
-                    double bad = 1.0 - v * normals[pi];
-                    bad  = abs(bad+1e-10);
-                    bad = bad * bad;
-                    vgradi += 100.0 / bad * normals[pi];
-                  }
-
-	      vgrad += vgradi;
-	    }
-      }
-
-    points[actpind] = Point<3> (hp); 
+    double f = PointFunctionValueGrad (pp, vgrad);
     deriv = dir * vgrad;
     return f;
   }
