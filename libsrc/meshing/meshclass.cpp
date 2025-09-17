@@ -5277,8 +5277,6 @@ namespace netgen
       // check again to see if some other thread built while waiting for lock
       if (elementsearchtreets[dim] == GetTimeStamp()) return;
 
-      elementsearchtreets[dim] = GetTimeStamp();
-
       PrintMessage (4, "Rebuild element searchtree dim " + ToString(dim));
           
 
@@ -5357,6 +5355,7 @@ namespace netgen
               elementsearchtree_surf -> Insert (box, ei);
             }
         }
+      elementsearchtreets[dim] = GetTimeStamp();
     }
   }
 
