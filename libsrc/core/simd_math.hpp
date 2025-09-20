@@ -57,7 +57,7 @@ namespace ngcore
   template <int N>
   auto sincos (SIMD<double,N> x)
   {
-    auto y = round(x / (M_PI/2));
+    auto y = round((2/M_PI) * x);
     auto q = lround(y);
   
     auto [s1,c1] = sincos_reduced(x - y * (M_PI/2));
