@@ -7323,7 +7323,7 @@ namespace netgen
   {
     // Copy the mesh into a new one, then delete unwanted elements
     // Unused points are deleted by the Compress() function at the end
-    auto mesh_ptr = make_unique<Mesh>();
+    auto mesh_ptr = make_shared<Mesh>();
     auto & mesh = *mesh_ptr;
     mesh = (*this);
 
@@ -7400,6 +7400,14 @@ namespace netgen
       auto pel = mesh.pointelements[npointelements-i-1];
       if(!keep_point[pel.pnum])
         mesh.pointelements.DeleteElement(npointelements-i-1);
+    }
+  
+    // Copy identifications to submesh. Redundant identifications are removed in Compress()
+    auto & ident_to = mesh.GetIdentifications();
+    const auto & ident_from = this->GetIdentifications();
+    for(const auto pair : ident_from.GetPairs())
+    {
+      ident_to.Add(pair.I1(), pair.I2(), ident_from.GetName(pair.I3()), ident_from.GetType(pair.I3()));
     }
 
     mesh.Compress();
