@@ -266,15 +266,24 @@ namespace ngcore
 
   NETGEN_INLINE SIMD<double,2> rsqrt (SIMD<double,2> x)
   {
-    // return 1.0 / sqrt(x);
+    return 1.0 / sqrt(x);
   
-    SIMD<double,2> y = vrsqrteq_f64(x.Data());
+    // SIMD<double,2> y = vrsqrteq_f64(x.Data());
+
+    /*
+    y = y * vrsqrtsq_f64( (x*y).Data(), y.Data());
+    y = y * vrsqrtsq_f64( (x*y).Data(), y.Data());
+    y = y * vrsqrtsq_f64( (x*y).Data(), y.Data());
+    */
+
+    /*
     auto x_half = 0.5*x;
     y = y * (1.5 - (x_half * y * y));
     y = y * (1.5 - (x_half * y * y));
-    // y = y * (1.5 - (x_half * y * y));
-    y = y + 0.5 * (x*y*y-1);
+    y = y * (1.5 - (x_half * y * y));
+    
     return y;
+    */
   }
   
   
