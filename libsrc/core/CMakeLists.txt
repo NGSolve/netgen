@@ -22,7 +22,6 @@ target_compile_options(ngcore PUBLIC ${ng_compile_flags_replace_sep})
 if(EMSCRIPTEN)
   set(PYTHON_MODULE_EXTENSION ".so")
   target_link_options(ngcore PUBLIC -sALLOW_MEMORY_GROWTH -sENVIRONMENT=web)
-  target_compile_options(ngcore PUBLIC -sNO_DISABLE_EXCEPTION_CATCHING)
 endif()
 
 if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND USE_PYTHON)
