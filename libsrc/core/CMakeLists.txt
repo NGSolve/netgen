@@ -13,6 +13,7 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   utils.cpp
   version.cpp
   ng_mpi_wrapper.cpp
+  statushandler.cpp
   )
 
 string(REPLACE "|" ";" ng_compile_flags_replace_sep "${NG_COMPILE_FLAGS}")
@@ -92,7 +93,7 @@ install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp 
   xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp ngstream.hpp
   simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_math.hpp simd_sse.hpp simd_arm64.hpp
   register_archive.hpp autodiff.hpp autodiffdiff.hpp
-  ng_mpi.hpp ng_mpi_generated_declarations.hpp mpi4py_pycapi.h ng_mpi_native.hpp
+  ng_mpi.hpp ng_mpi_generated_declarations.hpp mpi4py_pycapi.h ng_mpi_native.hpp statushandler.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)

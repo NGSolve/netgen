@@ -353,6 +353,7 @@ extern "C" {
 
   DLL_HEADER void RunParallel ( void * (*fun)(void *), void * in);
 
+  #define NG_STATUS_USES_STD_STRING
   DLL_HEADER void Ng_PushStatus (const std::string& str);
   DLL_HEADER void Ng_PopStatus ();
   DLL_HEADER void Ng_SetThreadPercentage (double percent);
