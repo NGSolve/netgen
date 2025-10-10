@@ -1887,9 +1887,9 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
 
 
 
-void Ng_PushStatus (const char * str)
+void Ng_PushStatus (const std::string& str)
 {
-  PushStatus (MyStr (str));
+  PushStatus (str);
 }
 
 void Ng_PopStatus ()
@@ -1902,12 +1902,15 @@ void Ng_SetThreadPercentage (double percent)
   SetThreadPercent (percent);
 }
 
-void Ng_GetStatus (char ** str, double & percent)
+void Ng_GetStatus (std::string & str, double & percent)
 {
+  /*
   MyStr s;
   GetStatus(s,percent);
   *str = new char[s.Length()+1];
-  strcpy(*str,s.c_str());  
+  strcpy(*str,s.c_str());
+  */
+  GetStatus (str, percent);
 }
 
 

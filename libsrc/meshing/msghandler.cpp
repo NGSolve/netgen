@@ -112,9 +112,9 @@ void PrintTime(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s
 }
 
 
-static NgArray<MyStr*> msgstatus_stack(0);
-static NgArray<double> threadpercent_stack(0);
-static MyStr msgstatus = "";
+  static NgArray<std::string> msgstatus_stack(0);
+  static NgArray<double> threadpercent_stack(0);
+  static std::string msgstatus = "";
 
 
 
@@ -123,8 +123,8 @@ void ResetStatus()
 {
   SetStatMsg("idle");
 
-  for (int i = 0; i < msgstatus_stack.Size(); i++)
-    delete msgstatus_stack[i];
+  // for (int i = 0; i < msgstatus_stack.Size(); i++)
+  // delete msgstatus_stack[i];
   msgstatus_stack.SetSize(0);
   threadpercent_stack.SetSize(0);
 
@@ -132,44 +132,44 @@ void ResetStatus()
   multithread.percent = 100.;
 }
 
-void PushStatus(const MyStr& s)
-{
-  msgstatus_stack.Append(new MyStr (s));  
-  SetStatMsg(s);
-  threadpercent_stack.Append(0);
-}
-
-void PushStatusF(const MyStr& s)
-{
-  msgstatus_stack.Append(new MyStr (s));
-  SetStatMsg(s);
-  threadpercent_stack.Append(0);
-  PrintFnStart(s);
-}
-
-void PopStatus()
-{
-  if (msgstatus_stack.Size())
-    {
-      if (msgstatus_stack.Size() > 1)
-	// SetStatMsg (*msgstatus_stack.Last());
-	SetStatMsg (*msgstatus_stack[msgstatus_stack.Size()-2]);
-      else
-	SetStatMsg ("");
-      delete msgstatus_stack.Last();
-      msgstatus_stack.DeleteLast();
-      threadpercent_stack.DeleteLast();
-      if(threadpercent_stack.Size() > 0)
-	multithread.percent = threadpercent_stack.Last();
-      else
-	multithread.percent = 100.;
-    }
-  else
-    {
-      PrintSysError("PopStatus failed");
-    }
-}
-
+  void PushStatus(const std::string& s)
+  {
+    msgstatus_stack.Append(s);  
+    SetStatMsg(s);
+    threadpercent_stack.Append(0);
+  }
+  
+  void PushStatusF(const std::string& s)
+  {
+    msgstatus_stack.Append(s);
+    SetStatMsg(s);
+    threadpercent_stack.Append(0);
+    PrintFnStart(s);
+  }
+  
+  void PopStatus()
+  {
+    if (msgstatus_stack.Size())
+      {
+        if (msgstatus_stack.Size() > 1)
+          // SetStatMsg (*msgstatus_stack.Last());
+          SetStatMsg (msgstatus_stack[msgstatus_stack.Size()-2]);
+        else
+          SetStatMsg ("");
+        // delete msgstatus_stack.Last();
+        msgstatus_stack.DeleteLast();
+        threadpercent_stack.DeleteLast();
+        if(threadpercent_stack.Size() > 0)
+          multithread.percent = threadpercent_stack.Last();
+        else
+          multithread.percent = 100.;
+      }
+    else
+      {
+        PrintSysError("PopStatus failed");
+      }
+  }
+  
 
 
 /*
@@ -180,32 +180,32 @@ void SetStatMsgF(const MyStr& s)
 }
 */
 
-void SetStatMsg(const MyStr& s)
-{
-  msgstatus = s;
-  multithread.task = msgstatus.c_str();  
-}
-
-void SetThreadPercent(double percent)
-{
-  multithread.percent = percent;
-  if(threadpercent_stack.Size() > 0)
-    threadpercent_stack.Last() = percent;
-}
-
-
-void GetStatus(MyStr & s, double & percentage)
-{
-  if(threadpercent_stack.Size() > 0)
-    percentage = threadpercent_stack.Last();
-  else
-    percentage = multithread.percent;
+  void SetStatMsg(const std::string& s)
+  {
+    msgstatus = s;
+    multithread.task = msgstatus.c_str();  
+  }
   
+  void SetThreadPercent(double percent)
+  {
+    multithread.percent = percent;
+    if(threadpercent_stack.Size() > 0)
+      threadpercent_stack.Last() = percent;
+  }
+
+
+  void GetStatus(std::string & s, double & percentage)
+  {
+    if(threadpercent_stack.Size() > 0)
+      percentage = threadpercent_stack.Last();
+    else
+      percentage = multithread.percent;
+    
   if ( msgstatus_stack.Size() )
-    s = *msgstatus_stack.Last();
+    s = msgstatus_stack.Last();
   else
     s = "idle";     
-}
+  }
 
 /*
 #ifdef SMALLLIB
