@@ -329,6 +329,7 @@ namespace netgen
     int MovePointToInner ();
 
     double normal_badness(Element el, PointIndex actpind, Vec<3> * grad=nullptr) const{
+        return 0.0;
         ArrayMem<PointIndex, 4> surf_points;
         for(auto pi : el.PNums())
           if(points[pi].Type() <= SURFACEPOINT)
