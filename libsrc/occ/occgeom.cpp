@@ -1222,7 +1222,8 @@ namespace netgen
           if(verts.size() == 0)
             continue;
           auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
-          occ_edge->properties = GetProperties(e);
+          if(HaveProperties(edge))
+            occ_edge->properties = GetProperties(e);
           edges.Append(std::move(occ_edge));
       }
 
