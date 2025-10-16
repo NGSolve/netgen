@@ -923,7 +923,7 @@ namespace netgen
          // Need do copy the face, otherwise replace is ignored
          BRepBuilderAPI_Copy copy(face);
          auto newface = copy.Shape().Reversed();
-         GetProperties(newface).Merge(GetProperties(face));
+         PropagateProperties(copy, face);
          rebuild->Replace(face, newface);
        }
      }
