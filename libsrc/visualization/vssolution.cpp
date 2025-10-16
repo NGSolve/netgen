@@ -977,6 +977,9 @@ namespace netgen
               {
                 const Element2d & el = (*mesh)[sei];
 
+                if(!SurfaceElementActive(sol, *mesh, el))
+                  continue;
+
                 bool curved = curv.IsHighOrder(); //  && curv.IsSurfaceElementCurved(sei);
               
                 if (el.GetType() == TRIG || el.GetType() == TRIG6)
