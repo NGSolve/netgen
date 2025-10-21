@@ -47,7 +47,7 @@ namespace ngcore
     /// copy flags 
     Flags (const Flags & flags);
     /// steal flags
-    Flags (Flags && flags);
+    Flags (Flags && flags) = default;
     ///
     Flags (std::initializer_list<std::string> list);
     /// 

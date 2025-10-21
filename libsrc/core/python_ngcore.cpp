@@ -9,6 +9,23 @@ namespace ngcore
 {
   bool ngcore_have_numpy = false;
   bool parallel_pickling = true;
+
+  template<>
+  Archive& Archive::Shallow(std::any& val)
+  {
+    if(shallow_to_python)
+      {
+        if(is_output)
+          ShallowOutPython(CastAnyToPy(val));
+        else
+          {
+            pybind11::object obj;
+            ShallowInPython(obj);
+            val = CastPyToAny(obj);
+          }
+      }
+    return *this;
+  }
   
   void SetFlag(Flags &flags, string s, py::object value) 
   {
@@ -21,20 +38,15 @@ namespace ngcore
         flags.SetFlag(s, nested_flags);
         return;
       }
-
-    if (py::isinstance<py::bool_>(value))
+    else if (py::isinstance<py::bool_>(value))
       flags.SetFlag(s, value.cast<bool>());
-
-    if (py::isinstance<py::float_>(value))
+    else if (py::isinstance<py::float_>(value))
       flags.SetFlag(s, value.cast<double>());
-
-    if (py::isinstance<py::int_>(value))
+    else if (py::isinstance<py::int_>(value))
       flags.SetFlag(s, double(value.cast<int>()));
-
-    if (py::isinstance<py::str>(value))
+    else if (py::isinstance<py::str>(value))
       flags.SetFlag(s, value.cast<string>());
-
-    if (py::isinstance<py::list>(value))
+    else if (py::isinstance<py::list>(value))
       {             
         auto vdl = py::cast<py::list>(value);
         if (py::len(vdl) > 0)
@@ -52,8 +64,7 @@ namespace ngcore
             flags.SetFlag(s,dummydbl);
           }
       }
-
-    if (py::isinstance<py::tuple>(value))
+    else if (py::isinstance<py::tuple>(value))
       {
         auto vdt = py::cast<py::tuple>(value);
         if (py::isinstance<py::float_>(value))
@@ -62,6 +73,10 @@ namespace ngcore
           flags.SetFlag(s, makeCArray<double>(vdt));
         if (py::isinstance<py::str>(value))
           flags.SetFlag(s, makeCArray<string>(vdt));
+      }
+    else
+      {
+        flags.SetFlag(s, CastPyToAny(value));
       }
   }
 

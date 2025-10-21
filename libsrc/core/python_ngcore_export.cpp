@@ -169,19 +169,33 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
             SetFlag(flags, d.first.cast<string>(), d.second.cast<py::object>());
           return flags;
         }), "Create flags from kwargs")
-    .def(py::pickle([] (const Flags& self)
+    // .def(NGSPickle<Flags>()) // in future versions we can kick out backward compatibility
+    .def(py::pickle([](Flags &f)
         {
-          std::stringstream str;
-          self.SaveFlags(str);
-          return py::make_tuple(py::cast(str.str()));
+          PyArchive<BinaryOutArchive> ar;
+          ar.SetParallel(parallel_pickling);
+          ar & f;
+          auto output = py::make_tuple(ar.WriteOut());
+          return output;
         },
-        [] (py::tuple state)
+        [](py::tuple& state)
         {
-          string s = state[0].cast<string>();
-          std::stringstream str(s);
-          Flags flags;
-          flags.LoadFlags(str);
-          return flags;
+          if(py::isinstance<py::list>(state[0]))
+            {
+              Flags flags;
+              PyArchive<BinaryInArchive> ar(state[0]);
+              ar & flags;
+              return flags;
+            }
+          else
+            {
+              // flags have been pickled with old Netgen version
+              string s = state[0].cast<string>();
+              std::stringstream str(s);
+              Flags flags;
+              flags.LoadFlags(str);
+              return flags;
+            }
         }
     ))
     .def("Set",[](Flags & self,const py::dict & aflags)->Flags&
@@ -215,6 +229,9 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
 	  if(self.FlagsFlagDefined(name))
 	    return py::cast(self.GetFlagsFlag(name));
+
+          if(self.AnyFlagDefined(name))
+            return CastAnyToPy(self.GetAnyFlag(name));
 
 	  return py::cast(self.GetDefineFlag(name));
       }, py::arg("name"), "Return flag by given name")
