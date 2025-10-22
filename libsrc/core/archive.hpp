@@ -238,7 +238,6 @@ namespace ngcore
     template<typename T>
     Archive& Shallow(T& val); // implemented in register_archive.hpp
 #ifndef __CUDACC__
-    template<>
     Archive& Shallow(std::any& val); // implemented in python_ngcore.cpp
 #endif // __CUDACC__
 #else // NETGEN_PYTHON

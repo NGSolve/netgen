@@ -10,7 +10,6 @@ namespace ngcore
   bool ngcore_have_numpy = false;
   bool parallel_pickling = true;
 
-  template<>
   Archive& Archive::Shallow(std::any& val)
   {
     if(shallow_to_python)
