@@ -59,11 +59,6 @@ namespace ngcore
       }
   }
   
-  Flags :: Flags (Flags && flags)
-    : strflags(flags.strflags), numflags(flags.numflags),
-      defflags(flags.defflags), strlistflags(flags.strlistflags),
-      numlistflags(flags.numlistflags) { ; }
-
   Flags :: Flags (std::initializer_list<string> list)
   {
     for (auto i = list.begin(); i < list.end(); i++)
@@ -371,6 +366,8 @@ namespace ngcore
       ost << numlistflags.GetName(i) << " = " << *numlistflags[i] << endl;
     for (int i = 0; i < flaglistflags.Size(); i++)
       ost << flaglistflags.GetName(i) << " = " << flaglistflags[i] << endl;
+    for (int i = 0; i < anyflags.Size(); i++)
+      ost << anyflags.GetName(i) << " = " << "[any]" << endl;
   }
 
   void Flags :: LoadFlags (const char * filename, SymbolTable<Flags> * sf)
@@ -478,7 +475,7 @@ namespace ngcore
 
   void Flags :: DoArchive(Archive & archive)
   {
-    archive & strflags & numflags & defflags & numlistflags & strlistflags & flaglistflags;
+    archive & strflags & numflags & defflags & numlistflags & strlistflags & flaglistflags & anyflags;
   }
 
   void Flags :: Update(const Flags& other)
