@@ -71,7 +71,7 @@ namespace ngcore
   
 #ifdef NETGEN_PYTHON
   NGCORE_API pybind11::object CastAnyToPy(const std::any& a);
-  std::any CastPyToAny(pybind11::object& h);
+  NGCORE_API std::any CastPyToAny(pybind11::object& h);
 #endif // NETGEN_PYTHON
 
   class NGCORE_API Archive;
