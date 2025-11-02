@@ -198,7 +198,7 @@ namespace ngcore
     }
 #else // defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
   public:
-    MemoryTracer() {}
+    NETGEN_INLINE MemoryTracer() {}
     MemoryTracer( std::string /* name */ ) {}
     template <typename... TRest>
     MemoryTracer( std::string /* name */, TRest & ... ) {}

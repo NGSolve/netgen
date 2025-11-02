@@ -151,7 +151,7 @@ namespace ngcore
     // x = ldexp( x, n );
   }
 
-
+  /*
   inline auto Test1 (SIMD<double> x)
   {
     return myexp(x);
@@ -171,6 +171,7 @@ namespace ngcore
   {
     return sincos(x);
   }
+  */
   
 }
 
