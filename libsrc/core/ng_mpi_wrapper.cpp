@@ -177,7 +177,7 @@ decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =
     imported_mpi4py = true;
   }
   PyObject *py_src = src.ptr();
-  auto type = Py_TYPE(py_src);
+  // auto type = Py_TYPE(py_src);
   if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
     dst = *PyMPIComm_Get(py_src);
     return !PyErr_Occurred();
