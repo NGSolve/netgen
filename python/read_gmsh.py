@@ -28,6 +28,8 @@ def ReadGmsh(filename):
                 3: { 0 : "default" } }
     materialmap = {}
     bbcmap = {}
+    bbbcmap = {}
+    
 
     segm = 1
     trig = 2
@@ -111,6 +113,45 @@ def ReadGmsh(filename):
                 nodenums = line[3 + numtags:3 + numtags + num_nodes]
                 nodenums2 = [pointmap[int(nn)] for nn in nodenums]
 
+
+                if elmtype in elem0d:
+                    if meshdim == 3:
+                        if tags[1] in bbbcmap:
+                            index = bbbcmap[tags[1]]
+                        else:
+                            index = len(bbbcmap) + 1
+                            if len(namemap):
+                                mesh.SetCD3Name(index, namemap[0][tags[0]])
+                            else:
+                                mesh.SetCD3Name(index, "point" + str(tags[1]))
+                            bbbcmap[tags[1]] = index
+                    elif meshdim == 2:
+                        if tags[1] in bbcmap:
+                            index = bbcmap[tags[1]]
+                        else:
+                            index = len(bbcmap) + 1
+                            if len(namemap):
+                                mesh.SetCD2Name(index, namemap[0][tags[0]])
+                            else:
+                                mesh.SetCD2Name(index, "point" + str(tags[1]))
+                            bbcmap[tags[1]] = index
+                    else:
+                        if tags[1] in facedescriptormap.keys():
+                            index = facedescriptormap[tags[1]]
+                        else:
+                            index = len(facedescriptormap) + 1
+                            fd = FaceDescriptor(bc=index)
+                            if len(namemap):
+                                fd.bcname = namemap[0][tags[0]]
+                            else:
+                                fd.bcname = 'point' + str(tags[1])
+                            mesh.SetBCName(index - 1, fd.bcname)
+                            mesh.Add(fd)
+                            facedescriptormap[tags[1]] = index
+
+                    mesh.Add(Element0D(nodenums2[0], index=index))
+
+                
                 if elmtype in elem1d:
                     if meshdim == 3:
                         if tags[1] in bbcmap:
