@@ -2,6 +2,8 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING INTERNAL)
 endif(NOT CMAKE_BUILD_TYPE)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded")
+
 cmake_minimum_required(VERSION 3.16)
 cmake_policy(VERSION 3.16)
 
@@ -705,8 +707,7 @@ add_custom_target(uninstall
 
 #######################################################################
 # Generate package config file
-get_directory_property(NETGEN_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
-get_target_property(NETGEN_MSVC_RUNTIME_LIBRARY ngcore MSVC_RUNTIME_LIBARARY)
+set(NETGEN_MSVC_RUNTIME_LIBRARY ${CMAKE_MSVC_RUNTIME_LIBRARY})
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY ESCAPE_QUOTES)
