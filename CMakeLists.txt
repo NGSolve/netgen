@@ -706,6 +706,7 @@ add_custom_target(uninstall
 #######################################################################
 # Generate package config file
 get_directory_property(NETGEN_COMPILE_DEFINITIONS COMPILE_DEFINITIONS)
+get_target_property(ngcore NETGEN_MSVC_RUNTIME_LIBRARY MSVC_RUNTIME_LIBARARY)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/NetgenConfig.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/NetgenConfig.cmake @ONLY ESCAPE_QUOTES)
