@@ -521,7 +521,9 @@ namespace ngcore
             // RegionTracer t(ti.thread_nr, tCASyield, ti.task_nr);
             while (ProcessTask()) no_job_counter = 0; // do the nested tasks
                    
-            if(sleep || no_job_counter > 10000)
+            if(sleep)
+              std::this_thread::sleep_for(std::chrono::microseconds(sleep_usecs));
+            else if(no_job_counter > 10000)
               std::this_thread::sleep_for(std::chrono::microseconds(10));
             else
               {
