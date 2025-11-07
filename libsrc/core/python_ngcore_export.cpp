@@ -317,6 +317,17 @@ threads : int
     .def("__timing__", &TaskManager::Timing)
     ;
 
+
+  py::class_<SuspendTaskManager>(m, "SuspendTaskManager")
+        .def(py::init<int>(),py::arg("sleep_usecs")=1000,
+             "sleep_usecs : int\n    number of microseconds the worker threads sleep")
+        .def("__enter__", [](SuspendTaskManager &self) -> SuspendTaskManager& {
+            return self;
+        })
+        .def("__exit__", [](SuspendTaskManager &self, py::object exc_type, py::object exc_value, py::object traceback) {
+            return false;
+        });
+
   py::class_<PajeTrace>(m, "PajeTrace")
     .def(py::init( [] (string filename, size_t size_mb, bool threads, bool thread_counter, bool memory)
           {
