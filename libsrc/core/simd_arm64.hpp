@@ -31,7 +31,93 @@ namespace ngcore
   };
 
 
-  // *************************** int64 ***************************
+  // *************************** int32 ***************************
+
+
+  
+  template<>
+  class SIMD<int32_t,2>
+  {
+    int32x2_t data;
+  public:
+    static constexpr int Size() { return 2; }
+    SIMD() {}
+    SIMD (int32_t val) : data{val,val} {}
+    SIMD (int32_t v0, int32_t v1) : data{v0,v1} { }
+    SIMD (SIMD<int32_t,1> lo, SIMD<int32_t,1> hi) : data{lo[0], hi[0] } { }     
+    SIMD (std::array<int32_t, 2> arr) : data{arr[0], arr[1]} { } 
+    
+    SIMD (int32x2_t _data) { data = _data; }
+
+    NETGEN_INLINE auto Data() const { return data; }
+    NETGEN_INLINE auto & Data() { return data; }
+
+    SIMD<int32_t,1> Lo() const { return Get<0>(); }
+    SIMD<int32_t,1> Hi() const { return Get<1>(); } 
+    
+    int32_t operator[] (int i) const { return data[i]; }
+    int32_t & operator[] (int i)  { return ((int32_t*)&data)[i]; }
+
+    template <int I>
+    int32_t Get() const { return data[I]; }
+    static SIMD FirstInt(int n0=0) { return { n0+0, n0+1 }; }
+  };
+
+
+  template<>
+  class SIMD<int32_t,4>
+  {
+    int32x4_t data;
+  public:
+    static constexpr int Size() { return 4; }
+    SIMD() {}
+    SIMD (int32_t val) : data{val,val,val,val} {}
+    SIMD (int32_t v0, int32_t v1, int32_t v2, int32_t v3) : data{v0,v1,v2,v3} { }
+    SIMD (std::array<int32_t, 4> arr) : data{arr[0], arr[1], arr[2], arr[3]} { } 
+    
+    SIMD (int32x4_t _data) { data = _data; }
+    SIMD (SIMD<int32_t,2> lo, SIMD<int32_t,2> hi) : data{vcombine_s32(lo.Data(), hi.Data())} {}
+    SIMD (int32_t * p) : data{vld1q_s32(p)} { }
+
+    NETGEN_INLINE auto Data() const { return data; }
+    NETGEN_INLINE auto & Data() { return data; }
+
+    SIMD<int32_t,2> Lo() const { return vget_low_s32(data); }
+    SIMD<int32_t,2> Hi() const { return vget_high_s32(data); }
+    
+    int32_t operator[] (int i) const { return data[i]; }
+    int32_t & operator[] (int i)  { return ((int32_t*)&data)[i]; }
+
+    void Store (int32_t * p) { vst1q_s32(p, data); }
+          
+    template <int I>
+    int32_t Get() const { return data[I]; }
+    static SIMD FirstInt(int n0=0) { return { n0+0, n0+1, n0+2, n0+3 }; }
+  };
+  
+
+  
+  NETGEN_INLINE auto Min (SIMD<int32_t,2> a, SIMD<int32_t,2> b) {
+    return SIMD<int32_t,2>(vmin_s32(a.Data(), b.Data()));
+  }
+  
+  NETGEN_INLINE auto Max (SIMD<int32_t,2> a, SIMD<int32_t,2> b) {
+    return SIMD<int32_t,2>(vmax_s32(a.Data(), b.Data()));
+  }
+
+  
+  NETGEN_INLINE auto Min (SIMD<int32_t,4> a, SIMD<int32_t,4> b) {
+    return SIMD<int32_t,4>(vminq_s32(a.Data(), b.Data()));
+  }
+  
+  NETGEN_INLINE auto Max (SIMD<int32_t,4> a, SIMD<int32_t,4> b) {
+    return SIMD<int32_t,4>(vmaxq_s32(a.Data(), b.Data()));
+  }
+
+
+  
+
+  // *************************** int64 ***************************  
  
   template<>
   class SIMD<int64_t,2>

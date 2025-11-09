@@ -48,6 +48,13 @@ namespace ngcore
       return k;
   }
 
+  constexpr size_t LargestPowerOfTwo (size_t x)
+  {
+    size_t y = 1;
+    while (2*y <= x) y *= 2;
+    return y;
+  }
+  
 
   template <typename T, int N=GetDefaultSIMDSize()> class SIMD;
 
@@ -89,7 +96,8 @@ namespace ngcore
   template <int N>
   class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<mask64,N>
   {
-    static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);
     static constexpr int N2 = N-N1;
 
     SIMD<mask64,N1> lo;
@@ -109,6 +117,113 @@ namespace ngcore
       if constexpr(N==1) return a.Data() && b.Data();
       else               return { a.Lo() && b.Lo(), a.Hi() && b.Hi() };
     }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // int32
+
+  template<>
+  class SIMD<int32_t,1>
+  {
+    int32_t data;
+
+  public:
+    static constexpr int Size() { return 1; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+    // SIMD (int val) : data{val} {}
+    SIMD (int32_t val) : data{val} {}
+    SIMD (size_t val) : data(val) {}
+    explicit SIMD (std::array<int32_t, 1> arr) : data{arr[0]} {}
+    
+
+    
+    int32_t operator[] (int i) const { return ((int32_t*)(&data))[i]; }
+    auto Data() const { return data; }
+    static SIMD FirstInt(int32_t n0=0) { return {n0}; }
+    template <int I>
+    int32_t Get()
+    {
+      static_assert(I==0);
+      return data;
+    }
+  };
+
+  template<int N>
+  class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<int32_t,N>
+  {
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);        
+    static constexpr int N2 = N-N1;
+
+    SIMD<int32_t,N1> lo;
+    SIMD<int32_t,N2> high;
+
+  public:
+    static constexpr int Size() { return N; }
+
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    // SIMD (int val) : lo{val}, high{val} { ; }
+    SIMD (int32_t val) : lo{val}, high{val} { ; }
+    SIMD (size_t val) : lo{val}, high{val} { ; }
+    SIMD (int32_t * p) : lo{p}, high{p+N1} { ; }
+    
+    SIMD (SIMD<int32_t,N1> lo_, SIMD<int32_t,N2> high_) : lo(lo_), high(high_) { ; }
+
+    explicit SIMD( std::array<int32_t, N> arr )
+        : lo(detail::array_range<N1>(arr, 0)),
+          high(detail::array_range<N2>(arr, N1))
+      {}
+
+
+    template<typename ...T>
+    explicit SIMD(const T... vals)
+      : lo(detail::array_range<N1>(std::array<int32_t, N>{vals...}, 0)),
+        high(detail::array_range<N2>(std::array<int32_t, N>{vals...}, N1))
+      {
+        static_assert(sizeof...(vals)==N, "wrong number of arguments");
+      }
+
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<int32_t(int)>>::value, int>::type = 0>
+      SIMD (const T & func)
+    {
+      for(auto i : IntRange(N1))
+          lo[i] = func(i);
+      for(auto i : IntRange(N2))
+          high[i] = func(N1+i);
+    }
+    
+    auto Lo() const { return lo; }
+    auto Hi() const { return high; }
+
+    int32_t operator[] (int i) const { return ((int32_t*)(&lo))[i]; }
+
+    void Store (int32_t * p) { lo.Store(p); high.Store(p+N1); }
+
+    
+    /*
+    operator tuple<int32_t&,int32_t&,int32_t&,int32_t&> ()
+    { return tuple<int32_t&,int32_t&,int32_t&,int32_t&>((*this)[0], (*this)[1], (*this)[2], (*this)[3]); }
+    */
+
+    /*
+    static SIMD FirstInt() { return { 0, 1, 2, 3 }; }
+    */
+    static SIMD FirstInt(int32_t n0=0) { return {SIMD<int32_t,N1>::FirstInt(n0), SIMD<int32_t,N2>::FirstInt(n0+N1)}; }
+    template <int I>
+    int32_t Get()
+    {
+      static_assert(I>=0 && I<N, "Index out of range");
+      if constexpr(I<N1) return lo.template Get<I>();
+      else               return high.template Get<I-N1>();
+    }
+  };
+
 
 
   ////////////////////////////////////////////////////////////////////////////
@@ -145,7 +260,8 @@ namespace ngcore
   template<int N>
   class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<int64_t,N>
   {
-    static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);        
     static constexpr int N2 = N-N1;
 
     SIMD<int64_t,N1> lo;
@@ -209,6 +325,7 @@ namespace ngcore
     }
   };
 
+  
 
   ////////////////////////////////////////////////////////////////////////////
   // double
@@ -262,7 +379,8 @@ namespace ngcore
   template<int N>
   class alignas(GetLargestNativeSIMDPart(N)*sizeof(double)) SIMD<double, N>
   {
-    static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);    
     static constexpr int N2 = N-N1;
 
     SIMD<double, N1> lo;
@@ -314,7 +432,7 @@ namespace ngcore
 
     template<typename ...T>
     explicit SIMD(const T... vals)
-    : lo(detail::array_range<N1>(std::array<double, N>{vals...}, 0)),
+      : lo(detail::array_range<N1>(std::array<double, N>{vals...}, 0)),
       high(detail::array_range<N2>(std::array<double, N>{vals...}, N1))
       {
         static_assert(sizeof...(vals)==N, "wrong number of arguments");
@@ -661,6 +779,29 @@ namespace ngcore
   }
 
 
+
+  
+  template <typename T, int N>
+  auto Min (SIMD<T,N> a, SIMD<T,N> b)
+  {
+    if constexpr (N==1)
+      return SIMD<T,1> (std::min(a[0], b[0]));
+    else
+      return SIMD<T,N> (Min(a.Lo(), b.Lo()), Min(a.Hi(), b.Hi()));
+  }
+  
+  template <typename T, int N>
+  auto Max (SIMD<T,N> a, SIMD<T,N> b)
+  {
+    if constexpr (N==1)
+      return SIMD<T,1> (std::max(a[0], b[0]));
+    else
+      return SIMD<T,N> (Max(a.Lo(), b.Lo()), Max(a.Hi(), b.Hi()));
+  }
+  
+
+
+  
   
   template <typename T, int N>
   ostream & operator<< (ostream & ost, SIMD<T,N> simd)
@@ -862,6 +1003,42 @@ namespace ngcore
                              FMAddSub(a.Hi(), b.Hi(), c.Hi()));
     }
   }
+
+
+
+
+  template <int BASE, typename Tuple, std::size_t ... Is>
+  auto subtuple (const Tuple& tup, std::index_sequence<Is...>)
+  {
+    return std::make_tuple(std::get<BASE+Is>(tup)...);
+  }
+  
+  template <typename ...Args, typename T, int M>
+  auto Concat (std::tuple<SIMD<T,M>, Args...> tup)
+  {
+    constexpr size_t N = std::tuple_size<std::tuple<SIMD<T,M>, Args...>>();
+    
+    if constexpr (N == 1)
+      return get<0>(tup);
+    else
+      {
+        static constexpr size_t N1 = LargestPowerOfTwo(N-1);
+        static constexpr int N2 = N-N1;
+        
+        auto SEQ1 = std::make_index_sequence<N1>();
+        auto sub1 = subtuple<0>(tup, SEQ1);
+        
+        auto SEQ2 = std::make_index_sequence<N2>();
+        auto sub2 = subtuple<N1>(tup, SEQ2);
+      
+        auto S1 = Concat(sub1);
+        auto S2 = Concat(sub2);
+        return SIMD<T,S1.Size()+S2.Size()>(S1, S2);
+      }
+  }
+  
+
+  
 }
 
 
