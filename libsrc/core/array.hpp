@@ -1442,8 +1442,24 @@ namespace ngcore
   template <class T, typename TLESS>
   void QuickSort (FlatArray<T> data, TLESS less)
   {
-    if (data.Size() <= 1) return;
+    constexpr size_t INSERTION_SORT_THRESHOLD = 16;
+    
+    if (data.Size() <= INSERTION_SORT_THRESHOLD) {
+      // insertion sort
+      for (ptrdiff_t k = 1; k < data.Size(); ++k)
+        {
+          auto newval = data[k];
+          ptrdiff_t l = k;
+          for ( ; l > 0 && less(newval, data[l-1]); --l)
+            data[l] = data[l-1];
+          data[l] = newval;
+        }
+      
+      return;
+    }
 
+    // if (data.Size() <= 1) return;
+    
     ptrdiff_t i = 0;
     ptrdiff_t j = data.Size()-1;
 
