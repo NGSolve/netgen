@@ -1153,23 +1153,23 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 edir = du^dv;
               }
             BRepPrimAPI_MakePrism builder(shape, h*edir, false);
-
-            for (auto typ : { TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX })
-              for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
-                {
-                  auto prop = OCCGeometry::GetProperties(e.Current());
-                  for (auto mods : builder.Generated(e.Current()))
-                    OCCGeometry::GetProperties(mods).Merge(prop);
-                }
             if(identify)
               {
                 Transformation<3> trsf(h * occ2ng(edir));
                 Identify(GetFaces(shape), GetFaces(builder.LastShape()),
                          idname, idtype, trsf);
             }
-            return builder.Shape();
+            auto result = builder.Shape();
+            PropagateProperties(builder, result);
+            return result;
           }
-        throw Exception("no face found for extrusion");
+        if (!dir.has_value())
+          throw Exception("shape does not contain a face to determine extrusion direction, please provide 'dir' argument");
+        gp_Vec edir = h * (*dir);
+        BRepPrimAPI_MakePrism builder(shape, edir, false);
+        auto result = builder.Shape();
+        PropagateProperties(builder, result);
+        return result;
     }, py::arg("h"), py::arg("dir")=nullopt, py::arg("identify")=false,
          py::arg("idtype")=Identifications::CLOSESURFACES,
          py::arg("idname") = "extrusion",
