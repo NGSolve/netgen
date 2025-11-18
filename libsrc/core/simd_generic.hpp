@@ -445,8 +445,8 @@ namespace ngcore
       high.Store(p+N1, mask.Hi());
     }
 
-    auto Lo() const { return lo; }
-    auto Hi() const { return high; }
+    NETGEN_INLINE auto Lo() const { return lo; }
+    NETGEN_INLINE auto Hi() const { return high; }
 
     double operator[] (int i) const { return ((double*)(&lo))[i]; }
 
@@ -760,7 +760,11 @@ namespace ngcore
     reciprocal square root 
     Quake III algorithm, or intrinsics 
    */
+  //
+#ifndef __CUDACC__
   NETGEN_INLINE double rsqrt (double x) { return 1.0/sqrt(x); }
+#endif
+  
   template <int N>  
   SIMD<double,N> rsqrt (SIMD<double,N> x)
   {
