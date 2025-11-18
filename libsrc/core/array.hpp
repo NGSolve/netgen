@@ -455,7 +455,7 @@ namespace ngcore
     using BaseArrayObject<FlatArray>::ILLEGAL_POSITION;
 
     /// initialize array 
-    NETGEN_INLINE FlatArray () = default;
+    FlatArray () = default;
     // { ; } // size = 0; data = 0; }
 
     /// copy constructor allows size-type conversion 
