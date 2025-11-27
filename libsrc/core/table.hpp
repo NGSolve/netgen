@@ -262,7 +262,7 @@ namespace ngcore
     const MemoryTracer& GetMemoryTracer() const { return mt; }
 
   private:
-    size_t GetMemUsage() const { return size == 0 ? 0 : sizeof(T)*index[size] + sizeof(IndexType) * size+1; }
+    INLINE size_t GetMemUsage() const { return size == 0 ? 0 : sizeof(T)*index[size] + sizeof(IndexType) * size+1; }
     MemoryTracer mt;
   };
 
