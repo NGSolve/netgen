@@ -9,7 +9,6 @@
 
 namespace ngcore
 {
-  using ngcore::IfPos;
 
 // Automatic differentiation datatype
 
@@ -247,7 +246,6 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> operator* (const AutoDiffVec<D,SCAL> & x, cons
 }
 
 /// AutoDiffVec times AutoDiffVec
-using ngcore::sqr;
 template<int D, typename SCAL>
 NETGEN_INLINE AutoDiffVec<D,SCAL> sqr (const AutoDiffVec<D,SCAL> & x) throw()
 {
