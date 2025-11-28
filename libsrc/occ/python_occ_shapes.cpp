@@ -1153,30 +1153,51 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 edir = du^dv;
               }
             BRepPrimAPI_MakePrism builder(shape, h*edir, false);
+            for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                              TopAbs_EDGE, TopAbs_VERTEX })
+              for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+                {
+                  auto prop = OCCGeometry::GetProperties(e.Current());
+                  for (auto mods : builder.Generated(e.Current()))
+                    OCCGeometry::GetProperties(mods).Merge(prop);
+                }
             if(identify)
               {
                 Transformation<3> trsf(h * occ2ng(edir));
                 Identify(GetFaces(shape), GetFaces(builder.LastShape()),
                          idname, idtype, trsf);
             }
-            auto result = builder.Shape();
-            PropagateProperties(builder, result);
-            return result;
+            return builder.Shape();
           }
         if (!dir.has_value())
           throw Exception("shape does not contain a face to determine extrusion direction, please provide 'dir' argument");
         gp_Vec edir = h * (*dir);
         BRepPrimAPI_MakePrism builder(shape, edir, false);
-        auto result = builder.Shape();
-        PropagateProperties(builder, result);
-        return result;
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                          TopAbs_EDGE, TopAbs_VERTEX })
+          for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+            {
+              auto prop = OCCGeometry::GetProperties(e.Current());
+              for (auto mods : builder.Generated(e.Current()))
+                OCCGeometry::GetProperties(mods).Merge(prop);
+            }
+        return builder.Shape();
     }, py::arg("h"), py::arg("dir")=nullopt, py::arg("identify")=false,
          py::arg("idtype")=Identifications::CLOSESURFACES,
          py::arg("idname") = "extrusion",
          "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
-        return BRepPrimAPI_MakePrism (face, vec).Shape();
+      BRepPrimAPI_MakePrism builder(face, vec);
+      for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                        TopAbs_EDGE, TopAbs_VERTEX })
+        for (TopExp_Explorer e(face, typ); e.More(); e.Next())
+          {
+            auto prop = OCCGeometry::GetProperties(e.Current());
+            for (auto mods : builder.Generated(e.Current()))
+              OCCGeometry::GetProperties(mods).Merge(prop);
+          }
+      return builder.Shape();
       }, py::arg("v"), "extrude shape by vector 'v'")
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
