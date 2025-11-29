@@ -347,7 +347,7 @@ namespace ngcore
 
    */
   template <typename T>
-  auto Range(const T & x)
+  NETGEN_INLINE auto Range(const T & x)
     -> typename std::enable_if<std::is_integral_v<T> || !has_range<T>,
                                decltype(Range_impl(x, std::is_integral<T>()))>::type {
     return Range_impl(x, std::is_integral<T>());
@@ -459,7 +459,7 @@ namespace ngcore
     // { ; } // size = 0; data = 0; }
 
     /// copy constructor allows size-type conversion 
-    NETGEN_INLINE FlatArray (const FlatArray & a2) = default;
+    FlatArray (const FlatArray & a2) = default;
     // : size(a2.Size()), data(a2.data) { ; } 
 
     /// provide size and memory
