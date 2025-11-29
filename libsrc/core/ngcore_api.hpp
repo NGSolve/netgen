@@ -57,6 +57,14 @@
   #define NETGEN_HD
 #endif // __CUDACC__
 
+
+#ifdef __CUDACC__
+// partial override of overloaded function (Archive, MultAdd)
+#pragma nv_diag_suppress 611
+#endif
+
+
+
 #ifdef __INTEL_COMPILER
   #define NETGEN_ALWAYS_INLINE __forceinline
   #define NETGEN_INLINE __forceinline inline

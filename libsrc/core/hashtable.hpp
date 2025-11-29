@@ -53,7 +53,7 @@ namespace ngcore
     
   public:
     ///
-    constexpr NETGEN_INLINE IVec () = default;
+    constexpr IVec () = default;
     constexpr NETGEN_INLINE IVec (const IVec & i1) : i(i1.i) { }
 
     constexpr NETGEN_INLINE IVec (T ai1) : i(ai1) { }

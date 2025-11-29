@@ -281,12 +281,14 @@ namespace ngcore
     virtual Archive & operator & (std::string & str) = 0;
     virtual Archive & operator & (char *& str) = 0;
 
+#ifdef NETGEN_PYTHON    
     Archive & operator &(std::any& a)
     {
       Shallow(a);
       return *this;
     }
-
+#endif
+    
     Archive & operator & (VersionInfo & version)
     {
         if(Output())
