@@ -269,7 +269,7 @@ namespace ngcore
 
   /// Print table
   template <class T, typename IndexType>
-  inline ostream & operator<< (ostream & s, const Table<T,IndexType> & table)
+  inline ostream & operator<< (ostream & s, FlatTable<T,IndexType> table)
   {
     for (auto i : table.Range())
       {
