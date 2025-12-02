@@ -182,4 +182,6 @@ namespace ngcore
           }
       }
   }
+  
+  auto * BitArray :: Data() const { return data; }
 } // namespace ngcore

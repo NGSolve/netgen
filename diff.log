@@ -1,0 +1,232 @@
+diff --git a/libsrc/core/CMakeLists.txt b/libsrc/core/CMakeLists.txt
+index 9367ce17..8c767633 100644
+--- a/libsrc/core/CMakeLists.txt
++++ b/libsrc/core/CMakeLists.txt
+@@ -52,14 +52,45 @@ if(USE_PYTHON)
+   target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON NG_PYTHON PYBIND11_SIMPLE_GIL_MANAGEMENT)
+ endif(USE_PYTHON)
+ 
+-if(WIN32)
+-  target_compile_options(ngcore PUBLIC /bigobj $<BUILD_INTERFACE:/MP;/W1;/wd4068>)
++#if(WIN32)
++#  target_compile_options(ngcore PUBLIC /bigobj /MP /W1 /wd4068)
++#  get_WIN32_WINNT(ver)
++#  target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
++#  target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
++#endif(WIN32)
++
++if(MSVC)
++  # MSVC 전용 컴파일/링크 옵션
++  target_compile_options(ngcore PUBLIC /bigobj /MP /W1 /wd4068)
+   get_WIN32_WINNT(ver)
+-  target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
++  target_compile_definitions(ngcore PUBLIC
++    _WIN32_WINNT=${ver}
++    WNT WNT_WINDOW
++    NOMINMAX
++    MSVC_EXPRESS
++    _CRT_SECURE_NO_WARNINGS
++    HAVE_STRUCT_TIMESPEC
++    WIN32
++  )
+   target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
+-else(WIN32)
++
++elseif(MINGW OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
++  # MinGW/GCC: MSVC 전용 플래그 제거, 필요한 최소 정의만 유지
++  # (필요하면 경고 억제 정도만)
++  target_compile_options(ngcore PUBLIC -Wno-unknown-pragmas -Wno-unused-parameter)
++  get_WIN32_WINNT(ver)
++  target_compile_definitions(ngcore PUBLIC
++    _WIN32_WINNT=${ver}
++    WNT WNT_WINDOW
++    NOMINMAX
++    WIN32
++  )
++  # MSVC 전용 /ignore:* 링커 옵션은 사용하지 않음
++
++else()
++  # 비(非)윈도우: POSIX dl 필요
+   target_link_libraries(ngcore PUBLIC dl)
+-endif(WIN32)
++endif()
+ 
+ target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
+ target_include_directories(ngcore INTERFACE $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}> $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}/include>)
+diff --git a/libsrc/core/bitarray.cpp b/libsrc/core/bitarray.cpp
+index 1c6f6ec4..d29f6c30 100644
+--- a/libsrc/core/bitarray.cpp
++++ b/libsrc/core/bitarray.cpp
+@@ -182,4 +182,6 @@ namespace ngcore
+           }
+       }
+   }
++  
++  auto * BitArray :: Data() const { return data; }
+ } // namespace ngcore
+diff --git a/libsrc/core/bitarray.hpp b/libsrc/core/bitarray.hpp
+index caa8345c..c08de792 100644
+--- a/libsrc/core/bitarray.hpp
++++ b/libsrc/core/bitarray.hpp
+@@ -153,7 +153,8 @@ public:
+ 
+   NGCORE_API void DoArchive(class Archive& archive);
+   
+-  NGCORE_API auto * Data() const { return data; }
++  //NGCORE_API auto * Data() const { return data; }
++  NGCORE_API auto * Data() const;
+ 
+   const size_t GetMemoryUsage() const { return owns_data ? (size+CHAR_BIT-1)/CHAR_BIT : 0; }
+   const MemoryTracer& GetMemoryTracer() const { return mt; }
+@@ -226,12 +227,18 @@ private:
+     
+     bool operator[] (IndexType i) const { return Test(i); } 
+     T_Range<IndexType> Range() const { return { IndexBASE<IndexType>(), IndexBASE<IndexType>()+Size() }; }
+-    NGCORE_API TBitArray & Or (const TBitArray & ba2)
++    /*
++	NGCORE_API TBitArray & Or (const TBitArray & ba2)
+     {
+       BitArray::Or(ba2);
+       return *this;
+     }
+-
++	*/
++	TBitArray & Or (const TBitArray & ba2)
++	{
++      BitArray::Or(ba2);
++      return *this;
++    }
+   };
+ 
+ } // namespace ngcore
+diff --git a/libsrc/core/utils.cpp b/libsrc/core/utils.cpp
+index 4ab08f36..5f69b99f 100644
+--- a/libsrc/core/utils.cpp
++++ b/libsrc/core/utils.cpp
+@@ -203,7 +203,8 @@ namespace ngcore
+   void* SharedLibrary :: GetRawSymbol( std::string func_name )
+   {
+ #ifdef WIN32
+-    void* func = GetProcAddress((HMODULE)lib, func_name.c_str());
++    // void* func = GetProcAddress((HMODULE)lib, func_name.c_str());
++	void* func = reinterpret_cast<void*>( GetProcAddress((HMODULE)lib, func_name.c_str()) );
+     if(func == nullptr)
+       throw std::runtime_error(std::string("Could not find function ") + func_name + " in library " + lib_name.string());
+ #else // WIN32
+diff --git a/libsrc/interface/writeuser.cpp b/libsrc/interface/writeuser.cpp
+index 5c85ef90..c2467d03 100644
+--- a/libsrc/interface/writeuser.cpp
++++ b/libsrc/interface/writeuser.cpp
+@@ -17,7 +17,7 @@
+ namespace netgen
+ {
+   extern MeshingParameters mparam;
+-
++/*
+   Array<UserFormatRegister::UserFormatEntry> UserFormatRegister::entries;
+   std::map<string, int> UserFormatRegister::format_to_entry_index;
+ 
+@@ -31,7 +31,20 @@ namespace netgen
+       extensions.Append (entry.extensions[0].c_str());
+     }
+ }
++  */
+   
++  void RegisterUserFormats (NgArray<const char*> & names,
++                          NgArray<const char*> & extensions)
++{
++  auto & entries = UserFormatRegister::Entries();
++  for (const auto & entry : entries)
++  {
++    names.Append(entry.format.c_str());
++    extensions.Append(entry.extensions[0].c_str());
++  }
++}
++
++
+ bool WriteUserFormat (const string & format,
+ 		      const Mesh & mesh,
+ 		      const filesystem::path & filename)
+diff --git a/libsrc/interface/writeuser.hpp b/libsrc/interface/writeuser.hpp
+index 99dc21e0..63a991df 100644
+--- a/libsrc/interface/writeuser.hpp
++++ b/libsrc/interface/writeuser.hpp
+@@ -28,6 +28,7 @@ struct UserFormatRegister {
+     optional<FRead> read;
+     optional<FWrite> write;
+   };
++  /*
+   DLL_HEADER static Array<UserFormatEntry> entries;
+   DLL_HEADER static std::map<string, int> format_to_entry_index;
+ 
+@@ -53,6 +54,51 @@ struct UserFormatRegister {
+     for(auto format : import_formats)
+       func(entries[format_to_entry_index[format]]);
+   }
++  */
++
++  static Array<UserFormatEntry> & Entries()
++  {
++    static Array<UserFormatEntry> entries;
++    return entries;
++  }
++
++  static std::map<string,int> & FormatToEntryIndex()
++  {
++    static std::map<string,int> format_to_entry_index;
++    return format_to_entry_index;
++  }
++
++  static void Register(UserFormatEntry && entry) {
++    auto & entries = Entries();
++    auto & format_to_entry_index = FormatToEntryIndex();
++    format_to_entry_index[entry.format] = entries.Size();
++    entries.Append( std::move(entry) );
++  }
++
++  static const bool HaveFormat(string format) {
++    auto & format_to_entry_index = FormatToEntryIndex();
++    return format_to_entry_index.count(format) > 0;
++  }
++
++  static const UserFormatEntry & Get(string format) {
++    auto & entries = Entries();
++    auto & format_to_entry_index = FormatToEntryIndex();
++    return entries[format_to_entry_index[format]];
++  }
++
++  template<typename TFunc>
++  static void IterateFormats(TFunc func, bool need_read=false, bool need_write=false) {
++    auto & entries = Entries();
++    auto & format_to_entry_index = FormatToEntryIndex();
++
++    Array<string> import_formats;
++    for(const auto & e: entries)
++      if((!need_read || e.read) && (!need_write || e.write))
++        import_formats.Append(e.format);
++    QuickSort(import_formats);
++    for(auto format : import_formats)
++      func(entries[format_to_entry_index[format]]);
++  }
+ 
+ };
+ 
+diff --git a/libsrc/meshing/meshclass.cpp b/libsrc/meshing/meshclass.cpp
+index 6dd9bc56..acfcb37a 100644
+--- a/libsrc/meshing/meshclass.cpp
++++ b/libsrc/meshing/meshclass.cpp
+@@ -375,12 +375,12 @@ namespace netgen
+     topology = MeshTopology (*this);
+     curvedelems = make_unique<CurvedElements> (*this);
+     clusters = make_unique<AnisotropicClusters> (*this);
+-
++/*
+     for ( int i = 0; i < bcnames.Size(); i++ )
+       if ( bcnames[i] ) delete bcnames[i];
+     for (int i= 0; i< cd2names.Size(); i++)
+       if (cd2names[i]) delete cd2names[i];
+-
++*/
+ #ifdef PARALLEL
+     paralleltop = make_unique<ParallelMeshTopology> (*this);
+ #endif

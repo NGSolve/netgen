@@ -52,14 +52,45 @@ if(USE_PYTHON)
   target_compile_definitions(ngcore PUBLIC NETGEN_PYTHON NG_PYTHON PYBIND11_SIMPLE_GIL_MANAGEMENT)
 endif(USE_PYTHON)
 
-if(WIN32)
-  target_compile_options(ngcore PUBLIC /bigobj $<BUILD_INTERFACE:/MP;/W1;/wd4068>)
+#if(WIN32)
+#  target_compile_options(ngcore PUBLIC /bigobj /MP /W1 /wd4068)
+#  get_WIN32_WINNT(ver)
+#  target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
+#  target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
+#endif(WIN32)
+
+if(MSVC)
+  # MSVC 전용 컴파일/링크 옵션
+  target_compile_options(ngcore PUBLIC /bigobj /MP /W1 /wd4068)
   get_WIN32_WINNT(ver)
-  target_compile_definitions(ngcore PUBLIC _WIN32_WINNT=${ver} WNT WNT_WINDOW NOMINMAX MSVC_EXPRESS _CRT_SECURE_NO_WARNINGS HAVE_STRUCT_TIMESPEC WIN32)
+  target_compile_definitions(ngcore PUBLIC
+    _WIN32_WINNT=${ver}
+    WNT WNT_WINDOW
+    NOMINMAX
+    MSVC_EXPRESS
+    _CRT_SECURE_NO_WARNINGS
+    HAVE_STRUCT_TIMESPEC
+    WIN32
+  )
   target_link_options(ngcore PUBLIC /ignore:4273 /ignore:4217 /ignore:4049)
-else(WIN32)
+
+elseif(MINGW OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+  # MinGW/GCC: MSVC 전용 플래그 제거, 필요한 최소 정의만 유지
+  # (필요하면 경고 억제 정도만)
+  target_compile_options(ngcore PUBLIC -Wno-unknown-pragmas -Wno-unused-parameter)
+  get_WIN32_WINNT(ver)
+  target_compile_definitions(ngcore PUBLIC
+    _WIN32_WINNT=${ver}
+    WNT WNT_WINDOW
+    NOMINMAX
+    WIN32
+  )
+  # MSVC 전용 /ignore:* 링커 옵션은 사용하지 않음
+
+else()
+  # 비(非)윈도우: POSIX dl 필요
   target_link_libraries(ngcore PUBLIC dl)
-endif(WIN32)
+endif()
 
 target_compile_definitions(ngcore PRIVATE NGCORE_EXPORTS)
 target_include_directories(ngcore INTERFACE $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}> $<INSTALL_INTERFACE:${NG_INSTALL_DIR_INCLUDE}/include>)
