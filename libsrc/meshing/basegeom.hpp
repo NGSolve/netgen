@@ -42,10 +42,7 @@ namespace netgen
     string GetName() const { return name ? *name : "default"; }
     Vec<4> GetColor() { return col ? *col : Vec<4>{0., 1., 0., 1.}; }
 
-    void DoArchive(Archive& ar)
-    {
-        ar & name & col & maxh & hpref & layer;
-    }
+    void DoArchive(Archive& ar);
   };
 
   class GeometryShape;

@@ -156,7 +156,7 @@ setup(
     license="LGPL2.1",
     packages=packages,
     #package_dir={'netgen': 'python'},
-    install_requires=[f"netgen-occt=={importlib.metadata.version('netgen-occt-devel')}"],
+    install_requires=[f"netgen-occt=={importlib.metadata.version('netgen-occt-devel')}", "numpy"],
     tests_require=['pytest'],
     #include_package_data=True,
     cmake_process_manifest_hook=install_filter,

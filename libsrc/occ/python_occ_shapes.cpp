@@ -436,7 +436,8 @@ public:
     return shared_from_this();
   }
 
-  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt)
+  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt,
+              optional<double> maxh=nullopt)
   {
     gp_Pnt2d P1 = localpos.Location();
 
@@ -503,6 +504,8 @@ public:
     BRepLib::BuildCurves3d(edge);
     if(name.has_value())
       OCCGeometry::GetProperties(edge).name = name;
+    if(maxh.has_value())
+      OCCGeometry::GetProperties(edge).maxh = maxh.value();
     wire_builder.Add(edge);
 
     //compute angle of rotation
@@ -523,7 +526,8 @@ public:
     return shared_from_this();
   }
 
-  auto Arc(double radius, double angle, optional<string> name)
+  auto Arc(double radius, double angle, optional<string> name,
+           optional<double> maxh)
   {
     double newAngle = fmod(angle,360)*M_PI/180;
 
@@ -554,7 +558,7 @@ public:
     cout << IM(6) << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), t, name);
+    return ArcTo (oldp.X(), oldp.Y(), t, name, maxh);
   }
 
   auto Rectangle (double l, double w, optional<string> name)
@@ -932,12 +936,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, py::arg("name"), "sets 'name' property to all solids of shape")
     
     .def_property("name", [](const TopoDS_Shape & self) -> optional<string> {
+        CheckValidPropertyType(self);
         if (auto name = OCCGeometry::GetProperties(self).name)
           return *name;
         else
           return nullopt;
       }, [](const TopoDS_Shape & self, optional<string> name) {
-        OCCGeometry::GetProperties(self).name = name;
         for (auto & s : GetHighestDimShapes(self))
           OCCGeometry::GetProperties(s).name = name;
       }, "'name' of shape")
@@ -945,11 +949,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("maxh",
                   [](const TopoDS_Shape& self)
                   {
+                    CheckValidPropertyType(self);
                     return OCCGeometry::GetProperties(self).maxh;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    OCCGeometry::GetProperties(self).maxh = val;
                     for(auto & s : GetHighestDimShapes(self))
                       OCCGeometry::GetProperties(s).maxh = val;
                   }, "maximal mesh-size for shape")
@@ -957,16 +961,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("hpref",
                   [](const TopoDS_Shape& self)
                   {
+                    CheckValidPropertyType(self);
                     return OCCGeometry::GetProperties(self).hpref;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    OCCGeometry::GetProperties(self).hpref = val;
                     for(auto & s : GetHighestDimShapes(self))
                       OCCGeometry::GetProperties(s).hpref = val;
                   }, "number of refinement levels for geometric refinement")
     
     .def_property("col", [](const TopoDS_Shape & self) -> py::object {
+      CheckValidPropertyType(self);
       if(!OCCGeometry::HaveProperties(self) || !OCCGeometry::GetProperties(self).col)
         return py::none();
       auto col = *OCCGeometry::GetProperties(self).col;
@@ -977,11 +982,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           Vec<4> col((*c)[0], (*c)[1], (*c)[2], 1.0);
           if(c->size() == 4)
             col[3] = (*c)[3];
-          OCCGeometry::GetProperties(self).col = col;
+          for(auto & s : GetHighestDimShapes(self))
+            OCCGeometry::GetProperties(s).col = col;
         }
       else
-        OCCGeometry :: GetProperties(self).col = nullopt;
-      }, "color of shape as RGB - tuple")
+        for(auto & s : GetHighestDimShapes(self))
+          OCCGeometry::GetProperties(s).col = nullopt;
+      }, "color of shape as RGB or RGBA - tuple")
     .def_property("layer", [](const TopoDS_Shape& self) {
     if (!OCCGeometry::HaveProperties(self))
       return 1;
@@ -1146,8 +1153,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 edir = du^dv;
               }
             BRepPrimAPI_MakePrism builder(shape, h*edir, false);
-
-            for (auto typ : { TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX })
+            for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                              TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
                 {
                   auto prop = OCCGeometry::GetProperties(e.Current());
@@ -1162,14 +1169,35 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             }
             return builder.Shape();
           }
-        throw Exception("no face found for extrusion");
+        if (!dir.has_value())
+          throw Exception("shape does not contain a face to determine extrusion direction, please provide 'dir' argument");
+        gp_Vec edir = h * (*dir);
+        BRepPrimAPI_MakePrism builder(shape, edir, false);
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                          TopAbs_EDGE, TopAbs_VERTEX })
+          for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+            {
+              auto prop = OCCGeometry::GetProperties(e.Current());
+              for (auto mods : builder.Generated(e.Current()))
+                OCCGeometry::GetProperties(mods).Merge(prop);
+            }
+        return builder.Shape();
     }, py::arg("h"), py::arg("dir")=nullopt, py::arg("identify")=false,
          py::arg("idtype")=Identifications::CLOSESURFACES,
          py::arg("idname") = "extrusion",
          "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
-        return BRepPrimAPI_MakePrism (face, vec).Shape();
+      BRepPrimAPI_MakePrism builder(face, vec);
+      for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                        TopAbs_EDGE, TopAbs_VERTEX })
+        for (TopExp_Explorer e(face, typ); e.More(); e.Next())
+          {
+            auto prop = OCCGeometry::GetProperties(e.Current());
+            for (auto mods : builder.Generated(e.Current()))
+              OCCGeometry::GetProperties(mods).Merge(prop);
+          }
+      return builder.Shape();
       }, py::arg("v"), "extrude shape by vector 'v'")
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
@@ -2826,8 +2854,8 @@ degen_tol : double
     .def("LineTo", [](WorkPlane&wp, double x, double y, optional<string> name) { return wp.LineTo(x, y, name); },
          py::arg("h"), py::arg("v"), py::arg("name")=nullopt, "draw line to position (h,v)")
     .def("ArcTo", &WorkPlane::ArcTo, py::arg("h"), py::arg("v"),
-         py::arg("t"), py::arg("name")=nullopt)
-    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
+         py::arg("t"), py::arg("name")=nullopt, py::arg("maxh")=nullopt)
+    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, py::arg("maxh")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
     .def("Rotate", &WorkPlane::Rotate, py::arg("ang"), "rotate current direction by 'ang' degrees")
     .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); },
          py::arg("l"), py::arg("name")=nullopt)

@@ -71,6 +71,20 @@ namespace netgen
         return gp_Pnt(p(0), p(1), p(2));
     }
 
+    inline void CheckValidPropertyType(const TopoDS_Shape & shape)
+    {
+        switch (shape.ShapeType())
+        {
+          case TopAbs_SOLID:
+          case TopAbs_FACE:
+          case TopAbs_EDGE:
+          case TopAbs_VERTEX:
+            break;
+          default:
+            throw Exception("Cannot query properties of compound shapes - setting properties sets property on all highest dimension subshape type");
+        }
+    }
+
     DLL_HEADER Box<3> GetBoundingBox( const TopoDS_Shape & shape );
 
     struct OCCIdentification

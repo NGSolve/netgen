@@ -977,6 +977,9 @@ namespace netgen
               {
                 const Element2d & el = (*mesh)[sei];
 
+                if(!SurfaceElementActive(sol, *mesh, el))
+                  continue;
+
                 bool curved = curv.IsHighOrder(); //  && curv.IsSurfaceElementCurved(sei);
               
                 if (el.GetType() == TRIG || el.GetType() == TRIG6)
@@ -4797,6 +4800,12 @@ namespace netgen
         glColor3us(r,g,b);
         return true;
     };
+
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
+    glDisable(GL_LIGHTING);
+    glDisable (GL_COLOR_MATERIAL);
 
     RenderSurfaceElements(mesh, subdivisions, face_init, sel_init);
 

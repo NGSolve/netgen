@@ -70,7 +70,8 @@ namespace ngcore
 
   
 #ifdef NETGEN_PYTHON
-  pybind11::object CastAnyToPy(const std::any& a);
+  NGCORE_API pybind11::object CastAnyToPy(const std::any& a);
+  NGCORE_API std::any CastPyToAny(pybind11::object& h);
 #endif // NETGEN_PYTHON
 
   class NGCORE_API Archive;
@@ -184,6 +185,7 @@ namespace ngcore
 #ifdef NETGEN_PYTHON
       // std::function<pybind11::object(const std::any&)> anyToPyCaster;
       pybind11::object (*anyToPyCaster)(const std::any&);
+      std::any (*pyToAnyCaster)(pybind11::object&);
 #endif // NETGEN_PYTHON
     };
   } // namespace detail
@@ -234,7 +236,10 @@ namespace ngcore
     // it archives the object normally.
 #ifdef NETGEN_PYTHON
     template<typename T>
-    Archive& Shallow(T& val); // implemented in python_ngcore.hpp
+    Archive& Shallow(T& val); // implemented in register_archive.hpp
+#ifndef __CUDACC__
+    Archive& Shallow(std::any& val); // implemented in python_ngcore.cpp
+#endif // __CUDACC__
 #else // NETGEN_PYTHON
     template<typename T>
     Archive& Shallow(T& val)
@@ -276,6 +281,14 @@ namespace ngcore
     virtual Archive & operator & (std::string & str) = 0;
     virtual Archive & operator & (char *& str) = 0;
 
+#ifdef NETGEN_PYTHON    
+    Archive & operator &(std::any& a)
+    {
+      Shallow(a);
+      return *this;
+    }
+#endif
+    
     Archive & operator & (VersionInfo & version)
     {
         if(Output())
@@ -505,7 +518,8 @@ namespace ngcore
     template <typename T>
     Archive& operator & (ngcore::Shallow<T>& shallow)
     {
-      this->Shallow(shallow.val);
+      if(shallow_to_python)
+        Shallow(shallow.val);
       return *this;
     }
       
@@ -763,6 +777,7 @@ namespace ngcore
 
 #ifdef NETGEN_PYTHON
     friend pybind11::object CastAnyToPy(const std::any&);
+    friend std::any CastPyToAny(pybind11::object&);
 #endif // NETGEN_PYTHON
 
     // Returns ClassArchiveInfo of Demangled typeid

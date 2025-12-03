@@ -9,7 +9,6 @@
 
 namespace ngcore
 {
-  using ngcore::IfPos;
 
 // Automatic differentiation datatype
 
@@ -247,7 +246,6 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> operator* (const AutoDiffVec<D,SCAL> & x, cons
 }
 
 /// AutoDiffVec times AutoDiffVec
-using ngcore::sqr;
 template<int D, typename SCAL>
 NETGEN_INLINE AutoDiffVec<D,SCAL> sqr (const AutoDiffVec<D,SCAL> & x) throw()
 {
@@ -645,10 +643,10 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
     SCAL last;
 
   public:
-    NETGEN_INLINE AutoDiffRec () = default;
-    NETGEN_INLINE AutoDiffRec (const AutoDiffRec &) = default;
+    AutoDiffRec () = default;
+    AutoDiffRec (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec (AutoDiffRec<D-1,SCAL> _rec, SCAL _last) : rec(_rec), last(_last) { ; }
-    NETGEN_INLINE AutoDiffRec & operator= (const AutoDiffRec &) = default;
+    AutoDiffRec & operator= (const AutoDiffRec &) = default;
 
     NETGEN_INLINE AutoDiffRec (SCAL aval) : rec(aval), last(0.0) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, int diffindex) : rec(aval, diffindex), last((diffindex==D-1) ? 1.0 : 0.0) { ; }
@@ -691,14 +689,14 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   {
     SCAL val;
   public:
-    NETGEN_INLINE AutoDiffRec () = default;
-    NETGEN_INLINE AutoDiffRec (const AutoDiffRec &) = default;
+    AutoDiffRec () = default;
+    AutoDiffRec (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec (SCAL _val) : val(_val) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL _val, SCAL /* _dummylast */) : val(_val) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, const SCAL * /* grad */)
       : val(aval) { } 
 
-    NETGEN_INLINE AutoDiffRec & operator= (const AutoDiffRec &) = default;
+    AutoDiffRec & operator= (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec & operator= (SCAL aval) { val = aval; return *this; }
 
     NETGEN_INLINE SCAL Value() const { return val; }
@@ -719,8 +717,8 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
     SCAL val;
     SCAL last;
   public:
-    NETGEN_INLINE AutoDiffRec () = default;
-    NETGEN_INLINE AutoDiffRec (const AutoDiffRec &) = default;
+    AutoDiffRec () = default;
+    AutoDiffRec (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec (SCAL _val) : val(_val), last(0.0) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL _val, SCAL _last) : val(_val), last(_last) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, int diffindex) : val(aval), last((diffindex==0) ? 1.0 : 0.0) { ; }
@@ -733,7 +731,7 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
       DValue(0) = ad.DValue(0);
     }
 
-    NETGEN_INLINE AutoDiffRec & operator= (const AutoDiffRec &) = default;
+    AutoDiffRec & operator= (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec & operator= (SCAL aval) { val = aval; last = 0.0; return *this; }
 
     NETGEN_INLINE SCAL Value() const { return val; }

@@ -156,7 +156,7 @@ public:
   //NGCORE_API auto * Data() const { return data; }
   NGCORE_API auto * Data() const;
 
-  const size_t GetMemoryUsage() const { return owns_data ? (size+CHAR_BIT-1)/CHAR_BIT : 0; }
+  size_t GetMemoryUsage() const { return owns_data ? (size+CHAR_BIT-1)/CHAR_BIT : 0; }
   const MemoryTracer& GetMemoryTracer() const { return mt; }
   void StartMemoryTracing() const
   {

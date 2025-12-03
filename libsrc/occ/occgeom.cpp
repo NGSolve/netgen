@@ -923,7 +923,7 @@ namespace netgen
          // Need do copy the face, otherwise replace is ignored
          BRepBuilderAPI_Copy copy(face);
          auto newface = copy.Shape().Reversed();
-         GetProperties(newface).Merge(GetProperties(face));
+         PropagateProperties(copy, face);
          rebuild->Replace(face, newface);
        }
      }
@@ -1222,7 +1222,8 @@ namespace netgen
           if(verts.size() == 0)
             continue;
           auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
-          occ_edge->properties = GetProperties(e);
+          if(HaveProperties(edge))
+            occ_edge->properties = GetProperties(e);
           edges.Append(std::move(occ_edge));
       }
 
@@ -2318,10 +2319,14 @@ namespace netgen
 
             TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(item));
             string name = item->Name()->ToCString();
-            if (!transProc->IsBound(item))
+            if (!transProc->IsBound(item) || name == "")
               continue;
 
-            OCCGeometry::GetProperties(shape).name = name;
+            // we only allow names on SOLIDS, FACES, EDGES, VERTICES.
+            // if name is given on a compound, assume it should be on all subshapes
+            // of highest dimension
+            for(auto & s : GetHighestDimShapes(shape))
+              OCCGeometry::GetProperties(s).name = name;
           }
 
 
