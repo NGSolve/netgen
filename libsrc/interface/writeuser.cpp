@@ -17,7 +17,7 @@
 namespace netgen
 {
   extern MeshingParameters mparam;
-
+/*
   Array<UserFormatRegister::UserFormatEntry> UserFormatRegister::entries;
   std::map<string, int> UserFormatRegister::format_to_entry_index;
 
@@ -31,7 +31,20 @@ namespace netgen
       extensions.Append (entry.extensions[0].c_str());
     }
 }
+  */
   
+  void RegisterUserFormats (NgArray<const char*> & names,
+                          NgArray<const char*> & extensions)
+{
+  auto & entries = UserFormatRegister::Entries();
+  for (const auto & entry : entries)
+  {
+    names.Append(entry.format.c_str());
+    extensions.Append(entry.extensions[0].c_str());
+  }
+}
+
+
 bool WriteUserFormat (const string & format,
 		      const Mesh & mesh,
 		      const filesystem::path & filename)
