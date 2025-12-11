@@ -23,76 +23,106 @@ push_github:
 ############################################
 # Windows
 ############################################
-
 .template_windows: &win
   tags:
     - windows
     - x64
   before_script:
-    - "echo off"
-    - call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64"
-    - set CI_DIR=C:\ci\%CI_PIPELINE_ID%
-    - set CCACHE_BASEDIR=C:\ci\%CI_PIPELINE_ID%
-    - set NETGEN_BUILD_DIR=%CI_DIR%\build
-    - set INSTALL_DIR=%CI_DIR%\install
-    - set SRC_DIR=%CI_DIR%\src
-    - set NETGENDIR=%INSTALL_DIR%\bin
-    - set PYTHONPATH=%INSTALL_DIR%\lib\site-packages
-    - echo %PATH%
-    - set PATH=%INSTALL_DIR%\bin;C:\python312;C:\python312\bin;C:\python312\Scripts;C:\tools\;%PATH%
-    - echo %PATH%
-    - set CCACHE_HARDLINK=1
-    - set CCACHE_NOHASHDIR=1
-    - C:\tools\ccache -s
-    - C:\tools\ccache -M 20G
-    - dir C:\python312
-    - python.exe --version
-    - python.exe -m pip install -U netgen-occt netgen-occt-devel
-    - cmake --version
+    - |
+        $ErrorActionPreference = "Stop"
+
+        # Import MSVC environment from vcvars64.bat into the current PowerShell process
+        $vcvars = '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"'
+        cmd /c "$vcvars && set" |
+          ForEach-Object {
+            if ($_ -match '^(.*?)=(.*)$') {
+              [System.Environment]::SetEnvironmentVariable($matches[1], $matches[2])
+              Set-Item -Path "env:$($matches[1])" -Value $matches[2] -ErrorAction SilentlyContinue
+            }
+          }
+
+        $env:CI_DIR           = "C:\ci\$env:CI_PIPELINE_ID"
+        $env:CCACHE_BASEDIR   = $env:CI_DIR
+        $env:NETGEN_BUILD_DIR = Join-Path $env:CI_DIR "build"
+        $env:INSTALL_DIR      = Join-Path $env:CI_DIR "install"
+        $env:SRC_DIR          = Join-Path $env:CI_DIR "src"
+        $env:NETGENDIR        = Join-Path $env:INSTALL_DIR "bin"
+        $env:PYTHONPATH       = Join-Path $env:INSTALL_DIR "lib\site-packages"
+
+        Write-Output $env:PATH
+        $env:PATH = @(
+          (Join-Path $env:INSTALL_DIR "bin")
+          "C:\python312"
+          "C:\python312\bin"
+          "C:\python312\Scripts"
+          "C:\tools"
+          $env:PATH
+        ) -join ";"
+        Write-Output $env:PATH
+
+        $env:CCACHE_HARDLINK  = "1"
+        $env:CCACHE_NOHASHDIR = "1"
+
+        & "C:\tools\ccache.exe" -s
+        & "C:\tools\ccache.exe" -M "20G"
+
+        python.exe --version
+        python.exe -m pip install -U netgen-occt netgen-occt-devel
+        cmake --version
 
 build_win:
   <<: *win
   stage: build
   script:
-    - mkdir %SRC_DIR%
-    - xcopy . %SRC_DIR%\ /O /X /E /H /K /Q
-    - cd %SRC_DIR%
-    - git submodule update --init --recursive
-    - rd /s /q %NETGEN_BUILD_DIR%
-    - mkdir %NETGEN_BUILD_DIR%
-    - cd %NETGEN_BUILD_DIR%
-    - >-
-        cmake %SRC_DIR%
-        -G Ninja
-        -DCMAKE_PREFIX=C:/python312
-        -DPython3_ROOT_DIR=C:/python312
-        -DCMAKE_INSTALL_PREFIX=%INSTALL_DIR%
-        -DCHECK_RANGE=ON
-        -DUSE_CGNS=ON
-        -DUSE_OCC=ON
-        -DUSE_CCACHE=ON
-        -DENABLE_UNIT_TESTS=OFF
-        -DCMAKE_BUILD_TYPE=Release
-    - cmake --build . --target install --config Release
+    - |
+        New-Item -ItemType Directory -Force -Path $env:SRC_DIR | Out-Null
+        Get-ChildItem -Force | Copy-Item -Destination $env:SRC_DIR -Recurse -Force
+
+        Set-Location $env:SRC_DIR
+        git submodule update --init --recursive
+
+        if (Test-Path $env:NETGEN_BUILD_DIR) {
+          Remove-Item $env:NETGEN_BUILD_DIR -Recurse -Force
+        }
+
+        New-Item -ItemType Directory -Force -Path $env:NETGEN_BUILD_DIR | Out-Null
+        Set-Location $env:NETGEN_BUILD_DIR
+
+        $installDir = $env:INSTALL_DIR -replace '\\','/'
+
+        cmake $env:SRC_DIR `
+          -G Ninja `
+          -DCMAKE_PREFIX=C:/python312 `
+          -DPython3_ROOT_DIR=C:/python312 `
+          -DCMAKE_INSTALL_PREFIX=$installDir `
+          -DCHECK_RANGE=ON `
+          -DUSE_CGNS=ON `
+          -DUSE_OCC=ON `
+          -DUSE_CCACHE=ON `
+          -DENABLE_UNIT_TESTS=OFF `
+          -DCMAKE_BUILD_TYPE=Release
+
+        cmake --build . --target install --config Release
 
 test_win:
   <<: *win
   stage: test
   script:
-    - pip install pytest-check
-    - cd tests\pytest
-    - cd %NETGEN_BUILD_DIR%\netgen
-    - ctest -C Release -V --output-on-failure
-    - cd ..
+    - |
+        pip install pytest-check
+        Set-Location (Join-Path $env:NETGEN_BUILD_DIR "netgen")
+        ctest -C Release -V --output-on-failure
+        Set-Location ..
   needs: ["build_win"]
 
 generate_results:
   <<: *win
   stage: test
   script:
-    - pip install pytest-check
-    - cd tests\pytest
-    - python test_tutorials.py new_results.json
+    - |
+        pip install pytest-check
+        Set-Location "tests\pytest"
+        python test_tutorials.py "new_results.json"
   needs: ["build_win"]
   when: manual
   artifacts:
@@ -101,6 +131,7 @@ generate_results:
     when: always
     expire_in: 1 week
 
+
 cleanup_win:
   <<: *win
   stage: cleanup
@@ -108,8 +139,11 @@ cleanup_win:
     - windows
     - x64
   script:
-    - cd %CI_PROJECT_DIR%
-    - rd /s /q %CI_DIR%
+    - |
+        Set-Location $env:CI_PROJECT_DIR
+        if (Test-Path $env:CI_DIR) {
+          Remove-Item $env:CI_DIR -Recurse -Force
+        }
   when: always
   allow_failure: true
   needs: ["test_win"]
