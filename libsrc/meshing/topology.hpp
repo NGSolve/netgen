@@ -390,7 +390,7 @@ inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
       // default:
       // cerr << "Ng_ME_GetNEdges, illegal element type " << et << endl;
     }
-  return -99;
+  return 0;
 }
 
 
@@ -431,7 +431,7 @@ inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
       return 6;
 
     default:
-      return -99;
+      return 0;
       // default:
       // cerr << "Ng_ME_GetNVertices, illegal element type " << et << endl;
     }
