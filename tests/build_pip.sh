@@ -23,7 +23,7 @@ do
     $PYDIR/pip install -i https://pypi.anaconda.org/mpi4py/simple/ --pre mpi4py
 
     rm -rf _skbuild
-    NETGEN_ARCH=avx2 $PYDIR/pip wheel .
+    NETGEN_ARCH=avx2 $PYDIR/pip wheel --no-build-isolation .
     mkdir -p wheelhouse
     rename linux_x86_64 manylinux_2_17_x86_64.manylinux2014_x86_64 netgen_mesher*-cp${pyversion}-*.whl
     mv netgen_mesher*-cp${pyversion}-*.whl wheelhouse/
