@@ -23,7 +23,9 @@
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepAlgoAPI_Section.hxx>
 #include <BRepAlgo_NormalProjection.hxx>
+#include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
@@ -220,6 +222,11 @@ py::object CastShape(const TopoDS_Shape & s)
     }
     throw Exception("Invalid Shape type");
 };
+
+namespace netgen {
+TopoDS_Shape CrossSection(const TopoDS_Shape & shape,
+                          const gp_Ax3 & axis);
+}
 
 
 class WorkPlane : public enable_shared_from_this<WorkPlane>
@@ -1218,6 +1225,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
         // throw Exception("no face found for revolve");
     }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
+    .def("CrossSection", &CrossSection, py::arg("plane_axes"),
+         "Create cross section of shape with plane defined by 'plane_axes' and transfer properties to dim-1 entities")
     .def("MakeFillet", [](const TopoDS_Shape& shape, const std::vector<std::pair<TopoDS_Shape, double>>& fillets) -> TopoDS_Shape
     {
       if (shape.ShapeType() == TopAbs_FACE) {
