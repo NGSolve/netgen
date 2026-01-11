@@ -557,7 +557,9 @@ namespace netgen
      }
 
      mesh.VolumeElements().DeleteAll();
-     mesh.GetIdentifications().GetIdentifiedPoints().DeleteData();
+     // Note: Do not delete identification points here - the original mesh contains
+     // identifications set before meshing (e.g., via Identify+Glue), while subdomain
+     // meshes typically do not have them. Deleting here loses periodic BC info.
 
      for(auto & m_ : md)
      {
