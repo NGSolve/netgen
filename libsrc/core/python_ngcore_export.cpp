@@ -1,3 +1,4 @@
+#include "archive.hpp"
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
@@ -413,6 +414,23 @@ threads : int
 	return c.SubCommunicator(procs);
       }, py::arg("procs"));
   ;
+
+  m.def("_GetArchiveRegisteredClasses", []() {
+      const auto & reg = GetTypeRegister();
+      py::dict class_dict;
+      for (const auto & [name, info] : reg)
+      {
+        class_dict[py::str(name)] = py::make_tuple(
+            (uintptr_t)info.creator,
+            (uintptr_t)info.upcaster,
+            (uintptr_t)info.downcaster,
+            (uintptr_t)info.cargs_archiver,
+            (uintptr_t)info.anyToPyCaster,
+            (uintptr_t)info.pyToAnyCaster
+        );
+      }
+      return class_dict;
+  });
 
     
 #ifdef PARALLEL

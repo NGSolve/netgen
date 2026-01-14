@@ -1253,6 +1253,7 @@ namespace ngcore
     }
   };
 
+  NGCORE_API std::map<std::string, detail::ClassArchiveInfo> & GetTypeRegister();
 } // namespace ngcore
 
 #endif // NETGEN_CORE_ARCHIVE_HPP
