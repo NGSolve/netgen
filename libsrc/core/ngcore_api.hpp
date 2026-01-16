@@ -39,9 +39,6 @@
 #ifdef WIN32
         #define NGCORE_API_EXPORT __declspec(dllexport)
         #define NGCORE_API_IMPORT __declspec(dllimport)
-#elif EMSCRIPTEN
-        #define NGCORE_API_EXPORT __attribute__((visibility("default"))) __attribute__((used))
-        #define NGCORE_API_IMPORT
 #else
         #define NGCORE_API_EXPORT __attribute__((visibility("default")))
         #define NGCORE_API_IMPORT __attribute__((visibility("default")))
