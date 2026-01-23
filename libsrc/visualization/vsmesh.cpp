@@ -318,12 +318,11 @@ namespace netgen
 
   void VisualSceneMesh :: BuildScene (int zoomall)
   {
-    try
-      {
-        shared_ptr<Mesh> mesh = GetMesh();
+        auto mesh = GetGlobalMesh();
         
         if (!mesh)
       {
+        PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
 	VisualScene::BuildScene (zoomall);
 	return;
       }
@@ -900,12 +899,6 @@ namespace netgen
       }
 
     vstimestamp = meshtimestamp;
-      }
-    catch (const bad_weak_ptr & e)
-      {
-        PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
-        VisualScene::BuildScene (zoomall);
-      }
 
   }
 

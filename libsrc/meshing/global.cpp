@@ -43,6 +43,15 @@ namespace netgen
     PrintMessage(5, "set global mesh");
     global_mesh = m;
   }
+
+  shared_ptr<Mesh> GetGlobalMesh ()
+  {
+    try {
+      return global_mesh.lock();
+    } catch (const bad_weak_ptr & e) {
+      return nullptr;
+    }
+  }
   
   // true if netgen was started using the netgen executable
   // false if netgen.gui was imported from python

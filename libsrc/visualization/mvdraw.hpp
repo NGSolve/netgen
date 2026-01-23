@@ -2,6 +2,7 @@
 #define FILE_MVDRAW
 
 
+#include "meshing/global.hpp"
 namespace netgen
 {
 
@@ -235,7 +236,7 @@ namespace netgen
 
     // void SetMesh (shared_ptr<Mesh> mesh) { wp_mesh = mesh; }
     // shared_ptr<Mesh> GetMesh () { return shared_ptr<Mesh>(wp_mesh); }
-    shared_ptr<Mesh> GetMesh () const { return shared_ptr<Mesh>(global_mesh); }
+    shared_ptr<Mesh> GetMesh () const { return GetGlobalMesh(); }
 
     void SetMouseEventHandler (MouseEventHandler * handler)
     { user_me_handler = handler; }

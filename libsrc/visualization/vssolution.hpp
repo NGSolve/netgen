@@ -207,7 +207,7 @@ public:
 
   // void SetMesh (shared_ptr<Mesh> amesh);
   // shared_ptr<Mesh> GetMesh () { return shared_ptr<Mesh>(wp_mesh); }
-  shared_ptr<Mesh> GetMesh () const { return shared_ptr<Mesh>(global_mesh); }
+  shared_ptr<Mesh> GetMesh () const { return GetGlobalMesh(); }
 
   void BuildFieldLinesPlot ();
 
