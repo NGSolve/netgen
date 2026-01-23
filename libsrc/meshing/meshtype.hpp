@@ -1801,6 +1801,9 @@ namespace netgen
 
     DLL_HEADER void Delete ();
 
+    // Removes identifications if one point is an INNERPOINT
+    DLL_HEADER void DeleteInnerPointIdentifications ();
+
     /*
       Identify points pi1 and pi2, due to
       identification nr identnr
