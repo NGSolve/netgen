@@ -327,7 +327,7 @@ namespace ngcore
       (*this) & size;
       if(Input())
         v.resize(size);
-      Do(&v[0], size);
+      Do(v.data(), size);
       return (*this);
     }
  
