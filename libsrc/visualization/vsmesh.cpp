@@ -2,6 +2,7 @@
 
 #include <myadt.hpp>
 #include <meshing.hpp>
+#include "../meshing/global.hpp"
 // #include <csg.hpp>
 
 #ifdef STLGEOM
@@ -33,6 +34,7 @@ namespace netgen
     minh = 0.0;
     maxh = 0.0;
     user_me_handler = NULL;
+    mesh = nullptr;
   }
 
   VisualSceneMesh :: ~VisualSceneMesh ()
@@ -3523,8 +3525,12 @@ namespace netgen
   }
 
 
-
-
+  static bool dummy_init_var = [] () {
+    on_set_global_mesh = [](shared_ptr<Mesh> mesh) {
+      vsmesh.SetMesh(mesh);
+    };
+    return true;
+  }();
 }
 
 

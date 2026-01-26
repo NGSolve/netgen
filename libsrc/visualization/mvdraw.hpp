@@ -223,8 +223,7 @@ namespace netgen
     //  int seledge;
 
     double minh, maxh; // for meshsize coloring
-
-    // weak_ptr<Mesh> wp_mesh;
+    mutable shared_ptr<Mesh> mesh;
 
   public:
     NGGUI_API VisualSceneMesh ();
@@ -234,9 +233,8 @@ namespace netgen
 	NGGUI_API virtual void DrawScene ();
 	NGGUI_API virtual void MouseDblClick (int px, int py);
 
-    // void SetMesh (shared_ptr<Mesh> mesh) { wp_mesh = mesh; }
-    // shared_ptr<Mesh> GetMesh () { return shared_ptr<Mesh>(wp_mesh); }
-    shared_ptr<Mesh> GetMesh () const { return GetGlobalMesh(); }
+    NGGUI_API void SetMesh (shared_ptr<Mesh> m) { mesh = m; }
+    NGGUI_API shared_ptr<Mesh> GetMesh () const { return mesh; }
 
     void SetMouseEventHandler (MouseEventHandler * handler)
     { user_me_handler = handler; }
