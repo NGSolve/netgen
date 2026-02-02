@@ -247,6 +247,15 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   ;
   py::implicitly_convertible<py::dict, Flags>();
 
+  py::class_<xbool>(m, "xbool")
+    .def(py::init<>())
+    .def(py::init<bool>(), py::arg("b"))
+    .def("__str__", &ToString<xbool>)
+    .def_property_readonly("is_true", &xbool::IsTrue)
+    .def_property_readonly("is_false", &xbool::IsFalse)
+    .def_property_readonly("is_maybe", &xbool::IsMaybe)
+    ;
+
   
   py::enum_<level::level_enum>(m, "LOG_LEVEL", "Logging level")
     .value("Trace", level::trace)
