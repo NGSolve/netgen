@@ -217,7 +217,7 @@ namespace netgen
                                    double tol=1e-4) const;
     DLL_HEADER bool PointContainedIn3DElementOld(const Point3d & p,
 				      double lami[3],
-                                      const int element,
+                                      ElementIndex element,
                                       double tol=1e-4) const;
 
   public:

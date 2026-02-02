@@ -5967,7 +5967,7 @@ namespace netgen
 
   bool Mesh :: PointContainedIn3DElementOld(const Point3d & p,
                                             double lami[3],
-                                            const int element,
+                                            ElementIndex element,
                                             double eps) const
   {
     Vec3d col1, col2, col3;
