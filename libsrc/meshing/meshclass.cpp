@@ -7343,7 +7343,7 @@ namespace netgen
     if(dimension == 3) {
       for(auto dom : Range(ndomains))
         if(regex_match(mesh.GetMaterial(dom+1), regex_domains))
-          keep_domain.SetBit(dom);
+          keep_domain.SetBit(dom+1);
 
       for(auto fi : Range(nfaces))
       {
