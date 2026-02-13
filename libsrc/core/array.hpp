@@ -992,6 +992,22 @@ namespace ngcore
       this->size--;
     }
 
+    template <typename FUNC>
+    NETGEN_INLINE void RemoveElementIf (FUNC func)
+    {
+      ptrdiff_t move_forward = 0;
+      for (size_t j = 0; j < this->size; j++)
+        {
+          if (func(this->data[j]))
+            move_forward++;
+          else
+            {
+              if (move_forward > 0)
+                this->data[j-move_forward] = this->data[j];
+            }
+        }
+      this->size -= move_forward;
+    }
 
     /// Delete last element. 
     NETGEN_INLINE void DeleteLast ()
