@@ -7583,6 +7583,17 @@ namespace netgen
       }
   }
   
+  FlatArray<string*> Mesh :: GetRegionNamesCD (int codim) const
+  {
+    switch (codim)
+      {
+      case 0: return materials;
+      case 1: return bcnames;
+      case 2: return cd2names;
+      case 3: return cd3names;
+      default: throw Exception("don't have regions of co-dimension "+ToString(codim));
+      }
+  }
 
   std::string_view Mesh :: GetRegionName (const Segment & el) const
   {
@@ -7591,7 +7602,16 @@ namespace netgen
 
   std::string_view Mesh :: GetRegionName (const Element2d & el) const
   {
-    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-2)[GetFaceDescriptor(el).BCProperty()-1];
+    // return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-2)[GetFaceDescriptor(el).BCProperty()-1];
+
+    auto ind = GetFaceDescriptor(el).BCProperty()-1;
+    auto names = this->GetRegionNamesCD(GetDimension()-2);
+
+    if (!names.Range().Contains(ind))
+      return defaultstring;
+    if (!names[ind])
+      return defaultstring;
+    return *names[ind];
   }
 
   std::string_view Mesh :: GetRegionName (const Element & el) const
