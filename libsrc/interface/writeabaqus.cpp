@@ -40,6 +40,7 @@ static inline const AbaqusElementType & GetAbaqusType(int dim, int num_nodes)
     // 2D
     AbaqusElementTypes{
       {3, AbaqusElementType{"CPS3", vector{0,1,2}}},
+      {6, AbaqusElementType{"CPS6", vector{0,1,2,5,6,4}}},      
     },
     // 3D
     AbaqusElementTypes{
