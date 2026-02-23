@@ -434,6 +434,9 @@ if (USE_JPEG)
     find_package(JPEG REQUIRED)
     add_definitions(-DJPEGLIB)
     include_directories(${JPEG_INCLUDE_DIR})
+    if(USE_GUI)
+      target_link_libraries(nggui INTERFACE ${JPEG_LIBRARIES})
+    endif(USE_GUI)
 endif (USE_JPEG)
 
 #######################################################################
