@@ -1,5 +1,9 @@
 
+#ifdef CATCH2_v3
+#include "catch2/catch_all.hpp"
+#else
 #include <catch2/catch.hpp>
+#endif
 #include <../core/ngcore.hpp>
 using namespace ngcore;
 using namespace std;
