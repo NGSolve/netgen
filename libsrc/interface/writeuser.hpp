@@ -28,32 +28,23 @@ struct UserFormatRegister {
     optional<FRead> read;
     optional<FWrite> write;
   };
-  DLL_HEADER static Array<UserFormatEntry> entries;
-  DLL_HEADER static std::map<string, int> format_to_entry_index;
+  static void Register(UserFormatEntry && entry);
 
-  static void Register(UserFormatEntry && entry) {
-    format_to_entry_index[entry.format] = entries.Size();
-    entries.Append( std::move(entry) );
-  }
-
-  static const bool HaveFormat(string format) {
-    return format_to_entry_index.count(format) > 0;
-  }
-  static const UserFormatEntry & Get(string format) {
-    return entries[format_to_entry_index[format]];
-  }
+  static const bool HaveFormat(string format);
+  DLL_HEADER static const UserFormatEntry & Get(string format);
 
   template<typename TFunc>
   static void IterateFormats(TFunc func, bool need_read=false, bool need_write=false) {
     Array<string> import_formats;
-    for(const auto & e: entries)
-    if((!need_read || e.read) && (!need_write || e.write))
-      import_formats.Append(e.format);
+    for(const auto & e: getFormats())
+    if((!need_read || e.second.read) && (!need_write || e.second.write))
+      import_formats.Append(e.second.format);
     QuickSort(import_formats);
     for(auto format : import_formats)
-      func(entries[format_to_entry_index[format]]);
+      func(Get(format));
   }
 
+  DLL_HEADER static std::map<std::string, UserFormatEntry>& getFormats();
 };
 
 struct RegisterUserFormat {
