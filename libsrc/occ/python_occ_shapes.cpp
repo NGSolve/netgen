@@ -91,6 +91,19 @@
 
 #pragma clang diagnostic pop
 
+// code for handling chnaged faces in cut booleand operation  
+// used in __sub__, get_all_cut_faces and get_cut_faces
+namespace {
+    // global static map for storing builders
+    static uint64_t ShapeID(const TopoDS_Shape& s)
+    {
+        Handle(Standard_Transient) tsh = s.TShape();
+        return reinterpret_cast<uint64_t>(tsh.get());
+    }
+    static std::map<uint64_t, std::shared_ptr<BRepAlgoAPI_Cut>> shape_builder_map;
+}
+
+
 using namespace netgen;
 
 void ExtractEdgeData( const TopoDS_Edge & edge, int index, std::vector<double> * p, Box<3> & box )
@@ -1108,28 +1121,95 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         return builder.Shape();
       }, "common of shapes")
     
-    .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
-        
-        BRepAlgoAPI_Cut builder(shape1, shape2);
-        /*
-#ifdef OCC_HAVE_HISTORY        
-        Handle(BRepTools_History) history = builder.History ();
-        
-        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
-          for (auto & s : { shape1, shape2 })
-            for (TopExp_Explorer e(s, typ); e.More(); e.Next())
+
+  .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
+
+      auto builder = std::make_shared<BRepAlgoAPI_Cut>(shape1, shape2);
+      builder->Build();
+
+      PropagateProperties(*builder, shape1);
+      PropagateProperties(*builder, shape2);
+
+      TopoDS_Shape result = builder->Shape();
+
+      // stable key, which persists after sub is finished and allows to recognize changed faces 
+      uint64_t id = ShapeID(result);
+      shape_builder_map[id] = builder;
+
+      return result;
+  }, "subtract shapes")
+      
+  .def("get_all_cut_faces", [] (const TopoDS_Shape & result_shape) {
+        // find all faces modified by cut 
+      std::vector<TopoDS_Face> cut_faces;
+
+      // find builder
+      uint64_t id = ShapeID(result_shape);
+      auto it = shape_builder_map.find(id);
+      if (it == shape_builder_map.end())
+          return cut_faces;
+
+      BRepAlgoAPI_Cut & builder = *(it->second);
+
+      const TopoDS_Shape & shape1 = builder.Shape1();
+      const TopoDS_Shape & shape2 = builder.Shape2();
+
+      // 1 map faces of input
+      TopTools_IndexedMapOfShape input_faces;
+      TopExp::MapShapes(shape1, TopAbs_FACE, input_faces);
+      TopExp::MapShapes(shape2, TopAbs_FACE, input_faces);
+
+      // 2 go through faces of output
+      for (TopExp_Explorer e(result_shape, TopAbs_FACE); e.More(); e.Next()) {
+          const TopoDS_Face & f = TopoDS::Face(e.Current());
+
+          // 3 if face is not in input - it is cut face
+          if (!input_faces.Contains(f)) {
+            cut_faces.push_back(f);
+          }
+      }
+
+      return cut_faces;
+  }, "get all faces created by boolean cut")
+
+  .def("get_cut_faces", [] (const TopoDS_Shape & result_shape) {
+      // find faces changed by cut, but only those correspongding to cutting object
+      std::vector<TopoDS_Face> cut_faces;
+
+      uint64_t id = ShapeID(result_shape);
+      auto it = shape_builder_map.find(id);
+      if (it == shape_builder_map.end())
+          return cut_faces;
+
+      BRepAlgoAPI_Cut & builder = *(it->second);
+
+      // Build a map of original faces from Shape1 to filter out unchanged faces
+      TopTools_IndexedMapOfShape original_faces;
+      TopExp::MapShapes(builder.Shape1(), TopAbs_FACE, original_faces);
+
+      // Iterate over faces of cutting object (Shape2)
+      for (TopExp_Explorer e(builder.Shape2(), TopAbs_FACE); e.More(); e.Next())
+      {
+          TopoDS_Face f = TopoDS::Face(e.Current());
+
+          TopTools_ListOfShape mods = builder.Modified(f);
+
+          for (TopTools_ListIteratorOfListOfShape it2(mods); it2.More(); it2.Next())
+          {
+              TopoDS_Shape sf = it2.Value();
+
+              if (sf.ShapeType() == TopAbs_FACE && !original_faces.Contains(sf))
               {
-                auto prop = OCCGeometry::GetProperties(e.Current());
-                for (auto mods : history->Modified(e.Current()))
-                  OCCGeometry::GetProperties(mods).Merge(prop);
+                  // Only include faces not present in original shape
+                  cut_faces.push_back(TopoDS::Face(sf));
               }
-#endif // OCC_HAVE_HISTORY
-        */
-        PropagateProperties (builder, shape1);
-        PropagateProperties (builder, shape2);
-        
-        return builder.Shape();        
-      }, "cut of shapes")
+          }
+      }
+
+      return cut_faces;
+  }, "find faces created by boolean cut, but only those corresponding to cutting object")
+
+
     .def("__eq__", [] (const TopoDS_Shape& shape1, const TopoDS_Shape& shape2) {
       return shape1.IsSame(shape2);
     })
