@@ -469,6 +469,21 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         li.append(py::make_tuple(pgi.trignum, pgi.u, pgi.v));
       return li;
     })
+    .def("SetGeomInfo", [](Element2d& self, int vertex_index, double u, double v, int trignum)
+    {
+      int np = self.GetNP();
+      if (vertex_index < 0 || vertex_index >= np)
+        throw NgException("vertex_index out of range [0, " + std::to_string(np-1) + "]");
+      auto& gi = self.GeomInfoPi(vertex_index + 1);
+      gi.u = u;
+      gi.v = v;
+      gi.trignum = trignum;
+    }, py::arg("vertex_index"), py::arg("u"), py::arg("v"), py::arg("trignum")=0,
+       "Set geometry info (UV parameters) for a vertex of this surface element. "
+       "This is useful for external meshes where geominfo is not automatically set. "
+       "Parameters: vertex_index (0-based index), u/v (surface parametric coordinates), "
+       "trignum (triangle number for STL meshing, default: 0)"
+    )
     .def_property_readonly("vertices",
                   FunctionPointer([](const Element2d & self) -> py::list
                                   {
