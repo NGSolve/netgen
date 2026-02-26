@@ -557,7 +557,13 @@ namespace netgen
      }
 
      mesh.VolumeElements().DeleteAll();
-     mesh.GetIdentifications().GetIdentifiedPoints().DeleteData();
+
+     // Keep identifications in the mesh, except the ones containing inner points
+     // Inner points will be renumbered, the identifcations will not be valid anymore
+     // These inner identifications are inserted at boundary layers when
+     // 4 or more faces meet at a vertex -> insert pyramids to fill the gap
+     // But pyramids are only inserted if the quad edges are identified
+     mesh.GetIdentifications().DeleteInnerPointIdentifications();
 
      for(auto & m_ : md)
      {

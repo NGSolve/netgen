@@ -75,5 +75,11 @@ set(NETGEN_INSTALL_DIR_INCLUDE @NG_INSTALL_DIR_INCLUDE@)
 set(NETGEN_INSTALL_DIR_CMAKE @NG_INSTALL_DIR_CMAKE@)
 set(NETGEN_INSTALL_DIR_RES @NG_INSTALL_DIR_RES@)
 
+if (NETGEN_USE_PYTHON)
+  # Make sure we are finding the same Python version Netgen was built with
+  set(Python3_FIND_VERSION_MAJOR @Python3_VERSION_MAJOR@)
+  set(Python3_FIND_VERSION_MINOR @Python3_VERSION_MINOR@)
+endif()
+
 include(${CMAKE_CURRENT_LIST_DIR}/netgen-targets.cmake)
 message(STATUS "Found Netgen: ${CMAKE_CURRENT_LIST_DIR}")

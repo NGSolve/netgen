@@ -9,10 +9,7 @@
 
 namespace ngcore
 {
-  // clang-tidy should ignore this static object
-  // static std::map<std::string, detail::ClassArchiveInfo> type_register;  // NOLINT
-
-  auto& GetTypeRegister()
+  std::map<std::string, detail::ClassArchiveInfo> & GetTypeRegister()
   {
     static std::map<std::string, detail::ClassArchiveInfo> type_register;
     return type_register;

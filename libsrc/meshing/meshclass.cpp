@@ -5975,7 +5975,7 @@ namespace netgen
 
   bool Mesh :: PointContainedIn3DElementOld(const Point3d & p,
                                             double lami[3],
-                                            const int element,
+                                            ElementIndex element,
                                             double eps) const
   {
     Vec3d col1, col2, col3;
@@ -7351,7 +7351,7 @@ namespace netgen
     if(dimension == 3) {
       for(auto dom : Range(ndomains))
         if(regex_match(mesh.GetMaterial(dom+1), regex_domains))
-          keep_domain.SetBit(dom);
+          keep_domain.SetBit(dom+1);
 
       for(auto fi : Range(nfaces))
       {
@@ -7591,6 +7591,17 @@ namespace netgen
       }
   }
   
+  FlatArray<string*> Mesh :: GetRegionNamesCD (int codim) const
+  {
+    switch (codim)
+      {
+      case 0: return materials;
+      case 1: return bcnames;
+      case 2: return cd2names;
+      case 3: return cd3names;
+      default: throw Exception("don't have regions of co-dimension "+ToString(codim));
+      }
+  }
 
   std::string_view Mesh :: GetRegionName (const Segment & el) const
   {
@@ -7599,7 +7610,16 @@ namespace netgen
 
   std::string_view Mesh :: GetRegionName (const Element2d & el) const
   {
-    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-2)[GetFaceDescriptor(el).BCProperty()-1];
+    // return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-2)[GetFaceDescriptor(el).BCProperty()-1];
+
+    auto ind = GetFaceDescriptor(el).BCProperty()-1;
+    auto names = this->GetRegionNamesCD(GetDimension()-2);
+
+    if (!names.Range().Contains(ind))
+      return defaultstring;
+    if (!names[ind])
+      return defaultstring;
+    return *names[ind];
   }
 
   std::string_view Mesh :: GetRegionName (const Element & el) const

@@ -25,7 +25,7 @@ namespace netgen
   extern VisualSceneMesh vsmesh;
 
   VisualSceneSolution :: SolData :: SolData ()
-    : data (0), solclass(0)
+    : data (0), solclass(0), draw_volumes(nullptr), draw_surfaces(nullptr) 
   { ; }
 
   VisualSceneSolution :: SolData :: ~SolData ()

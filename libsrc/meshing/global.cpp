@@ -38,10 +38,25 @@ namespace netgen
   // DLL_HEADER NgMPI_Comm ng_comm;
   
   weak_ptr<Mesh> global_mesh;
+  void(*on_set_global_mesh)(shared_ptr<Mesh>) = nullptr;
+
   void SetGlobalMesh (shared_ptr<Mesh> m)
   {
+    if(GetGlobalMesh() == m)
+      return;
     PrintMessage(5, "set global mesh");
     global_mesh = m;
+    if (on_set_global_mesh)
+      on_set_global_mesh(m);
+  }
+
+  shared_ptr<Mesh> GetGlobalMesh ()
+  {
+    try {
+      return global_mesh.lock();
+    } catch (const bad_weak_ptr & e) {
+      return nullptr;
+    }
   }
   
   // true if netgen was started using the netgen executable

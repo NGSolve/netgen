@@ -8,38 +8,55 @@ extern double minother;
 extern double minwithoutother;
 
 
+  static double TetBadnessFromPoints (const Point3d & p1,
+                                      const Point3d & p2,
+                                      const Point3d & p3,
+                                      const Point3d & p4)
+  {
+    Vec3d v1 = p2 - p1;
+    Vec3d v2 = p3 - p1;
+    Vec3d v3 = p4 - p1;
+
+    double vol = -(Cross(v1, v2) * v3);
+    if (vol < 1e-8) return 1e10;
+
+    double l4 = Dist(p2, p3);
+    double l5 = Dist(p2, p4);
+    double l6 = Dist(p3, p4);
+    double l  = v1.Length() + v2.Length() + v3.Length() + l4 + l5 + l6;
+
+    return pow(l*l*l/vol, 1.0/3.0) / 12.0;
+  }
+
   static double CalcElementBadness (const Array<Point3d, PointIndex> & points,
                                     const Element & elem)
 {
   double vol, l, l4, l5, l6;
-  if (elem.GetNP() != 4) 
+  if(elem.GetNP() == 4)
+    return TetBadnessFromPoints (points[elem.PNum(1)],
+                                 points[elem.PNum(2)],
+                                 points[elem.PNum(3)],
+                                 points[elem.PNum(4)]);
+  if (elem.GetNP() == 5)
     {
-      if (elem.GetNP() == 5)
-	{
-	  double z = points[elem.PNum(5)].Z();
-	  if (z > -1e-8) return 1e8;
-	  return (-1 / z) - z; //  - 2;
-	}
-      return 0;
-    }
-  
-  Vec3d v1 = points[elem.PNum(2)] - points[elem.PNum(1)];
-  Vec3d v2 = points[elem.PNum(3)] - points[elem.PNum(1)];
-  Vec3d v3 = points[elem.PNum(4)] - points[elem.PNum(1)];
-  
-  vol = - (Cross (v1, v2) * v3);
-  l4 = Dist (points[elem.PNum(2)], points[elem.PNum(3)]);
-  l5 = Dist (points[elem.PNum(2)], points[elem.PNum(4)]);
-  l6 = Dist (points[elem.PNum(3)], points[elem.PNum(4)]);
+      auto p1 = points[elem.PNum(1)];
+      auto p2 = points[elem.PNum(2)];
+      auto p3 = points[elem.PNum(3)];
+      auto p4 = points[elem.PNum(4)];
+      auto p5 = points[elem.PNum(5)];
+      double a1 = TetBadnessFromPoints(p1,p2,p3,p5);
+      double a2 = TetBadnessFromPoints(p1,p3,p4,p5);
+      double splitA = std::max(a1,a2);
 
-  l = v1.Length() + v2.Length() + v3.Length() + l4 + l5 + l6;
-  
-  //  testout << "vol = " << vol << " l = " << l << endl;
-  if (vol < 1e-8) return 1e10;
-  //  (*testout) << "l^3/vol = " << (l*l*l / vol) << endl;
-  
-  double err = pow (l*l*l/vol, 1.0/3.0) / 12;
-  return err;
+      double b1 = TetBadnessFromPoints(p1,p2,p4,p5);
+      double b2 = TetBadnessFromPoints(p2,p3,p4,p5);
+      double splitB = std::max(b1,b2);
+
+      double best = std::min(splitA, splitB);
+
+      return best;
+    }
+  return 0.;
 }
 
 

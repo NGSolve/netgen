@@ -654,8 +654,6 @@ namespace netgen
          sfwf->Load (shape);
          sfwf->ModeDropSmallEdges() = Standard_True;
 
-         sfwf->SetPrecision(boundingbox.Diam());
-
          if (sfwf->FixWireGaps())
          {
             cout << endl << "- fixing wire gaps" << endl;
@@ -665,9 +663,6 @@ namespace netgen
             if (sfwf->StatusWireGaps(ShapeExtend_FAIL1)) cout << "failed to fix some 2D gaps" << endl;
             if (sfwf->StatusWireGaps(ShapeExtend_FAIL2)) cout << "failed to fix some 3D gaps" << endl;
          }
-
-         sfwf->SetPrecision(tolerance);
-
 
          {
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())

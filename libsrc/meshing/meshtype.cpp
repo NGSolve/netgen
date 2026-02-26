@@ -2705,6 +2705,25 @@ namespace netgen
     maxidentnr = 0;
   }
 
+  void Identifications :: DeleteInnerPointIdentifications ()
+  {
+    Array<std::tuple<PointIndex, PointIndex, int>> entries;
+    for(auto [pis, nr]: identifiedpoints)
+      {
+        PointIndex pi0 = pis[0];
+        PointIndex pi1 = pis[1];
+        if(mesh[pi0].Type() != INNERPOINT || mesh[pi1].Type() != INNERPOINT)
+            entries.Append( { pi0, pi1, nr } );
+      }
+
+    identifiedpoints.DeleteData();
+    identifiedpoints_nr.DeleteData();
+    idpoints_table.SetSize(0);
+
+    for (auto [pi0, pi1, nr]: entries)
+        Add(pi0, pi1, nr);
+  }
+
     void Identifications :: DoArchive (Archive & ar)
     {
       ar & maxidentnr;

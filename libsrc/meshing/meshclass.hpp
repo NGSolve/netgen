@@ -217,7 +217,7 @@ namespace netgen
                                    double tol=1e-4) const;
     DLL_HEADER bool PointContainedIn3DElementOld(const Point3d & p,
 				      double lami[3],
-                                      const int element,
+                                      ElementIndex element,
                                       double tol=1e-4) const;
 
   public:
@@ -779,6 +779,7 @@ namespace netgen
 
 
     DLL_HEADER Array<string*> & GetRegionNamesCD (int codim);
+    DLL_HEADER FlatArray<string*> GetRegionNamesCD (int codim) const;
 
     DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
     DLL_HEADER std::string_view GetRegionName(const Element2d & el) const;

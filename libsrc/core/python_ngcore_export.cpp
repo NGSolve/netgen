@@ -1,3 +1,4 @@
+#include "archive.hpp"
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
@@ -246,6 +247,15 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
   ;
   py::implicitly_convertible<py::dict, Flags>();
 
+  py::class_<xbool>(m, "xbool")
+    .def(py::init<>())
+    .def(py::init<bool>(), py::arg("b"))
+    .def("__str__", &ToString<xbool>)
+    .def_property_readonly("is_true", &xbool::IsTrue)
+    .def_property_readonly("is_false", &xbool::IsFalse)
+    .def_property_readonly("is_maybe", &xbool::IsMaybe)
+    ;
+
   
   py::enum_<level::level_enum>(m, "LOG_LEVEL", "Logging level")
     .value("Trace", level::trace)
@@ -413,6 +423,23 @@ threads : int
 	return c.SubCommunicator(procs);
       }, py::arg("procs"));
   ;
+
+  m.def("_GetArchiveRegisteredClasses", []() {
+      const auto & reg = GetTypeRegister();
+      py::dict class_dict;
+      for (const auto & [name, info] : reg)
+      {
+        class_dict[py::str(name)] = py::make_tuple(
+            (uintptr_t)info.creator,
+            (uintptr_t)info.upcaster,
+            (uintptr_t)info.downcaster,
+            (uintptr_t)info.cargs_archiver,
+            (uintptr_t)info.anyToPyCaster,
+            (uintptr_t)info.pyToAnyCaster
+        );
+      }
+      return class_dict;
+  });
 
     
 #ifdef PARALLEL

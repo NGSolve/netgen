@@ -12,7 +12,7 @@ namespace ngcore
 {
   // an extended bool with values false/maybe/true
 
-  enum TMAYBE { maybe };
+  struct TMAYBE { }; constexpr TMAYBE maybe;
   
   class xbool
   {

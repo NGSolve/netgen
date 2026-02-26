@@ -2,6 +2,7 @@
 
 #include <myadt.hpp>
 #include <meshing.hpp>
+#include "../meshing/global.hpp"
 // #include <csg.hpp>
 
 #ifdef STLGEOM
@@ -33,6 +34,7 @@ namespace netgen
     minh = 0.0;
     maxh = 0.0;
     user_me_handler = NULL;
+    mesh = nullptr;
   }
 
   VisualSceneMesh :: ~VisualSceneMesh ()
@@ -318,12 +320,11 @@ namespace netgen
 
   void VisualSceneMesh :: BuildScene (int zoomall)
   {
-    try
-      {
-        shared_ptr<Mesh> mesh = GetMesh();
+        auto mesh = GetGlobalMesh();
         
         if (!mesh)
       {
+        PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
 	VisualScene::BuildScene (zoomall);
 	return;
       }
@@ -900,12 +901,6 @@ namespace netgen
       }
 
     vstimestamp = meshtimestamp;
-      }
-    catch (const bad_weak_ptr & e)
-      {
-        PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
-        VisualScene::BuildScene (zoomall);
-      }
 
   }
 
@@ -3530,8 +3525,12 @@ namespace netgen
   }
 
 
-
-
+  static bool dummy_init_var = [] () {
+    on_set_global_mesh = [](shared_ptr<Mesh> mesh) {
+      vsmesh.SetMesh(mesh);
+    };
+    return true;
+  }();
 }
 
 
