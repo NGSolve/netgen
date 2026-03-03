@@ -932,6 +932,20 @@ namespace ngcore
     return ngcore::SIMD<double,N>([a](int i)->double { return cosh(a[i]); } );
   }
 
+  using std::asinh;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> asinh (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double,N>([a](int i)->double { return asinh(a[i]); } );
+  }
+
+  using std::acosh;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> acosh (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double,N>([a](int i)->double { return acosh(a[i]); } );
+  }
+
+
+  
   template<int N, typename T>
   using MultiSIMD = SIMD<T, N*GetDefaultSIMDSize()>;
 
