@@ -602,7 +602,7 @@ endif (USE_PYTHON)
 #######################################################################
 # Debian packager
 
-if(UNIX)
+if(UNIX AND NOT NETGEN_NO_DEB_PACKAGER)
     set(CPACK_SOURCE_GENERATOR "TGZ")
     set(CPACK_SOURCE_IGNORE_FILES "/cmake/;/build/;/.gz/;~$;${CPACK_SOURCE_IGNORE_FILES}")
     set(CPACK_PACKAGE_VERSION ${PACKAGE_VERSION} )
