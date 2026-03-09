@@ -13,6 +13,7 @@
 */
 
 #include <mydefs.hpp>
+#include <mutex>
 
 namespace netgen
 {
