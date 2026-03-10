@@ -4110,7 +4110,7 @@ namespace netgen
 	T lami[4];
 	TFlatVector<T> vlami(4, lami);
 
-	NgArrayMem<Point<2,T>, 50> coarse_xi (npts);
+	ArrayMem<Point<2,T>, 50> coarse_xi (npts);
 	
 	for (int pi = 0; pi < npts; pi++)
 	  {
@@ -4128,7 +4128,7 @@ namespace netgen
 
 	mesh.coarsemesh->GetCurvedElements().
 	  CalcMultiPointSurfaceTransformation<DIM_SPACE,T> (hpref_el.coarse_elnr, npts,
-                                                            &coarse_xi[0](0), &coarse_xi[1](0)-&coarse_xi[0](0), 
+                                                            &coarse_xi[0](0), sizeof(Point<2,T>),
                                                             x, sx, dxdxi, sdxdxi);
 
 	// Mat<3,2> dxdxic;
