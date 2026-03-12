@@ -4128,7 +4128,7 @@ namespace netgen
 
 	mesh.coarsemesh->GetCurvedElements().
 	  CalcMultiPointSurfaceTransformation<DIM_SPACE,T> (hpref_el.coarse_elnr, npts,
-                                                            &coarse_xi[0](0), sizeof(Point<2,T>),
+                                                            &coarse_xi[0](0), sizeof(Point<2,T>)/sizeof(T),
                                                             x, sx, dxdxi, sdxdxi);
 
 	// Mat<3,2> dxdxic;
