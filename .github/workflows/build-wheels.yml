@@ -1,0 +1,130 @@
+name: Build Patched Netgen Wheels
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+jobs:
+  build:
+    name: Build wheel (Python ${{ matrix.python-version }})
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: add-setgeominfo-api
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install scikit-build wheel numpy pybind11-stubgen>=2.5
+          pip install netgen-occt-devel==7.8.1 netgen-occt==7.8.1
+          pip install packaging requests
+
+      - name: Build wheel
+        run: pip wheel . --no-deps -w dist -v
+
+      - name: Install and test
+        run: |
+          pip install numpy
+          pip install (Get-ChildItem -Path dist/*.whl).FullName
+          python -c "
+          import netgen
+          from netgen.meshing import Mesh as NGMesh, Element2d, FaceDescriptor, MeshPoint, Pnt
+          m = NGMesh()
+          m.Add(FaceDescriptor(surfnr=1, domin=0, domout=0, bc=1))
+          pnums = [m.Add(MeshPoint(Pnt(0,0,0))),
+                   m.Add(MeshPoint(Pnt(1,0,0))),
+                   m.Add(MeshPoint(Pnt(0,1,0)))]
+          el = Element2d(1, pnums)
+          el.SetGeomInfo(0, 0.0, 0.0)
+          el.SetGeomInfo(1, 1.0, 0.0)
+          el.SetGeomInfo(2, 0.0, 1.0)
+          print('SetGeomInfo API: OK')
+          print(f'netgen version: {netgen.__version__}')
+          "
+        shell: pwsh
+
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.python-version }}
+          path: dist/*.whl
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: add-setgeominfo-api
+
+      - name: Get netgen version
+        id: version
+        run: |
+          VER=$(python -c "
+          import re
+          with open('CMakeLists.txt') as f:
+              content = f.read()
+          m = re.search(r'NETGEN_VERSION_MAJOR\s+(\d+)', content)
+          major = m.group(1) if m else '6'
+          m = re.search(r'NETGEN_VERSION_MINOR\s+(\d+)', content)
+          minor = m.group(1) if m else '2'
+          m = re.search(r'NETGEN_VERSION_PATCH\s+(\d+)', content)
+          patch = m.group(1) if m else '0'
+          print(f'{major}.{minor}.{patch}')
+          " 2>/dev/null || echo "unknown")
+          echo "version=$VER" >> $GITHUB_OUTPUT
+
+      - name: Download all wheel artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: setgeominfo-${{ steps.version.outputs.version }}
+          name: "Netgen ${{ steps.version.outputs.version }} + SetGeomInfo API"
+          body: |
+            Patched `netgen-mesher` wheels with [SetGeomInfo API](https://github.com/NGSolve/netgen/pull/232).
+
+            Based on official Netgen ${{ steps.version.outputs.version }}.
+
+            ## Install
+
+            ```bash
+            # Install official ngsolve first
+            pip install ngsolve
+
+            # Overwrite netgen with SetGeomInfo-patched version
+            pip install netgen-mesher --force-reinstall \
+              --find-links https://github.com/ksugahar/netgen/releases/latest
+            ```
+
+            ## What is SetGeomInfo?
+
+            `Element2d.SetGeomInfo(vertex_index, u, v)` sets UV parametric coordinates
+            on surface mesh elements, enabling `mesh.Curve(order)` for externally imported
+            meshes (Coreform Cubit, GMSH, etc.).
+
+            PR: https://github.com/NGSolve/netgen/pull/232
+          files: dist/*.whl
+          make_latest: true

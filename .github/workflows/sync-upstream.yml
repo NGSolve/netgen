@@ -1,0 +1,72 @@
+name: Sync Upstream Netgen
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'  # Every Monday 9:00 UTC
+  workflow_dispatch:
+    inputs:
+      upstream_tag:
+        description: 'Upstream tag to sync to (e.g. v6.2.2602). Leave empty for latest.'
+        required: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout fork
+        uses: actions/checkout@v4
+        with:
+          ref: add-setgeominfo-api
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Add upstream remote
+        run: git remote add upstream https://github.com/NGSolve/netgen.git
+
+      - name: Fetch upstream
+        run: git fetch upstream --tags
+
+      - name: Determine target tag
+        id: target
+        run: |
+          if [ -n "${{ github.event.inputs.upstream_tag }}" ]; then
+            TAG="${{ github.event.inputs.upstream_tag }}"
+          else
+            TAG=$(git tag -l 'v6.*' --sort=-version:refname | head -1)
+          fi
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "Target upstream tag: $TAG"
+
+      - name: Rebase SetGeomInfo patch onto upstream
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Find the SetGeomInfo commits (2 commits on top of upstream)
+          PATCH_COMMITS=$(git log --oneline --format='%H' upstream/master..HEAD | tac)
+          echo "Patch commits to rebase:"
+          echo "$PATCH_COMMITS"
+
+          # Rebase onto the target tag
+          git rebase ${{ steps.target.outputs.tag }} || {
+            echo "::warning::Rebase conflict detected. Manual intervention required."
+            git rebase --abort
+            exit 1
+          }
+
+          echo "Rebase successful onto ${{ steps.target.outputs.tag }}"
+
+      - name: Push rebased branch
+        run: git push --force-with-lease origin add-setgeominfo-api
+
+      - name: Create summary
+        run: |
+          echo "## Upstream Sync Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Target tag**: ${{ steps.target.outputs.tag }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch**: add-setgeominfo-api" >> $GITHUB_STEP_SUMMARY
+          echo "- **Patch commits**:" >> $GITHUB_STEP_SUMMARY
+          git log --oneline -3 >> $GITHUB_STEP_SUMMARY
