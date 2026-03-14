@@ -49,13 +49,13 @@ jobs:
           pip install (Get-ChildItem -Path dist/*.whl).FullName --force-reinstall
           python -c "
           import netgen
-          from netgen.meshing import Mesh as NGMesh, Element2d, FaceDescriptor, MeshPoint, Pnt
+          from netgen.meshing import Mesh as NGMesh, Element2D, FaceDescriptor, MeshPoint, Pnt
           m = NGMesh()
           m.Add(FaceDescriptor(surfnr=1, domin=0, domout=0, bc=1))
           pnums = [m.Add(MeshPoint(Pnt(0,0,0))),
                    m.Add(MeshPoint(Pnt(1,0,0))),
                    m.Add(MeshPoint(Pnt(0,1,0)))]
-          el = Element2d(1, pnums)
+          el = Element2D(1, pnums)
           el.SetGeomInfo(0, 0.0, 0.0)
           el.SetGeomInfo(1, 1.0, 0.0)
           el.SetGeomInfo(2, 0.0, 1.0)
@@ -129,7 +129,7 @@ jobs:
 
             ## What is SetGeomInfo?
 
-            `Element2d.SetGeomInfo(vertex_index, u, v)` sets UV parametric coordinates
+            `Element2D.SetGeomInfo(vertex_index, u, v)` sets UV parametric coordinates
             on surface mesh elements, enabling `mesh.Curve(order)` for externally imported
             meshes (Coreform Cubit, GMSH, etc.).
 
