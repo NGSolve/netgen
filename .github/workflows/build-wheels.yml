@@ -19,6 +19,12 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: add-setgeominfo-api
+          fetch-depth: 0
+
+      - name: Fetch upstream tags
+        run: |
+          git remote add upstream https://github.com/NGSolve/netgen.git || true
+          git fetch upstream --tags
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
