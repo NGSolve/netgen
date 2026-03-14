@@ -60,7 +60,6 @@ jobs:
           el.SetGeomInfo(1, 1.0, 0.0)
           el.SetGeomInfo(2, 0.0, 1.0)
           print('SetGeomInfo API: OK')
-          print(f'netgen version: {netgen.__version__}')
           "
         shell: pwsh
 
