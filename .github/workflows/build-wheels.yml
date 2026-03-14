@@ -39,12 +39,14 @@ jobs:
           pip install packaging requests
 
       - name: Build wheel
-        run: pip wheel . --no-deps -w dist -v
+        run: python setup.py bdist_wheel
+        env:
+          NETGEN_ARCH: avx2
 
       - name: Install and test
         run: |
-          pip install numpy
-          pip install (Get-ChildItem -Path dist/*.whl).FullName
+          pip install numpy netgen-occt==7.8.1
+          pip install (Get-ChildItem -Path dist/*.whl).FullName --force-reinstall
           python -c "
           import netgen
           from netgen.meshing import Mesh as NGMesh, Element2d, FaceDescriptor, MeshPoint, Pnt
