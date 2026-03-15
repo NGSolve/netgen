@@ -42,9 +42,15 @@ def is_dev_build():
         return False
     return True
 
-git_version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-git-version']).decode('utf-8').strip()
-version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-version']).decode('utf-8').strip()
-# Allow CI to override the Python package version (e.g. to match official netgen-mesher PyPI version)
+try:
+    git_version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-git-version']).decode('utf-8').strip()
+except Exception:
+    git_version = os.environ.get('NETGEN_VERSION_PYTHON', 'unknown')
+try:
+    version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-version']).decode('utf-8').strip()
+except Exception:
+    version = os.environ.get('NETGEN_VERSION_PYTHON', 'unknown')
+# Allow CI to override the Python package version (to match official netgen-mesher PyPI version)
 if 'NETGEN_VERSION_PYTHON' in os.environ:
     version = os.environ['NETGEN_VERSION_PYTHON']
 
