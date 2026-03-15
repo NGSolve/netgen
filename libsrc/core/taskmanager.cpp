@@ -523,6 +523,10 @@ namespace ngcore
                    
             if(sleep)
               std::this_thread::sleep_for(std::chrono::microseconds(sleep_usecs));
+            else if(no_job_counter > 30000)
+              std::this_thread::sleep_for(std::chrono::microseconds(1000));
+            else if(no_job_counter > 20000)
+              std::this_thread::sleep_for(std::chrono::microseconds(100));
             else if(no_job_counter > 10000)
               std::this_thread::sleep_for(std::chrono::microseconds(10));
             else
