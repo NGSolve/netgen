@@ -1,5 +1,9 @@
 name: Build Patched Netgen Wheels
 
+# NETGEN_VERSION: update this when syncing upstream (match official netgen-mesher PyPI version)
+env:
+  NETGEN_VERSION: "6.2.2602.post1"
+
 on:
   workflow_dispatch:
   push:
@@ -12,19 +16,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.12']
+        python-version: ['3.10', '3.11', '3.12']
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           ref: add-setgeominfo-api
-          fetch-depth: 0
-
-      - name: Fetch upstream tags
-        run: |
-          git remote add upstream https://github.com/NGSolve/netgen.git || true
-          git fetch upstream --tags
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
@@ -42,6 +40,7 @@ jobs:
         run: python setup.py bdist_wheel
         env:
           NETGEN_ARCH: avx2
+          NETGEN_VERSION_PYTHON: ${{ env.NETGEN_VERSION }}
 
       - name: Install and test
         run: |
@@ -77,54 +76,53 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: add-setgeominfo-api
-
-      - name: Get netgen version
-        id: version
-        run: |
-          VER=$(python -c "
-          import re
-          with open('CMakeLists.txt') as f:
-              content = f.read()
-          m = re.search(r'NETGEN_VERSION_MAJOR\s+(\d+)', content)
-          major = m.group(1) if m else '6'
-          m = re.search(r'NETGEN_VERSION_MINOR\s+(\d+)', content)
-          minor = m.group(1) if m else '2'
-          m = re.search(r'NETGEN_VERSION_PATCH\s+(\d+)', content)
-          patch = m.group(1) if m else '0'
-          print(f'{major}.{minor}.{patch}')
-          " 2>/dev/null || echo "unknown")
-          echo "version=$VER" >> $GITHUB_OUTPUT
-
       - name: Download all wheel artifacts
         uses: actions/download-artifact@v4
         with:
           path: dist
           merge-multiple: true
 
+      - name: Generate install instructions
+        id: install_body
+        run: |
+          VER="${{ env.NETGEN_VERSION }}"
+          TAG="v${VER}-setgeominfo"
+          BASE_URL="https://github.com/ksugahar/netgen/releases/download/${TAG}"
+          WHEELS=$(ls dist/*.whl | xargs -I{} basename {} | sed "s|^|${BASE_URL}/|")
+          WHEEL_LINES=""
+          for w in $WHEELS; do
+            PY=$(basename $w | grep -oP 'cp\d+' | head -1 | sed 's/cp//')
+            PY_VER="${PY:0:1}.${PY:1}"
+            WHEEL_LINES="${WHEEL_LINES}- Python ${PY_VER}: \`pip install ${w} --force-reinstall\`\n"
+          done
+          echo "wheel_lines<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$WHEEL_LINES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: setgeominfo-${{ steps.version.outputs.version }}
-          name: "Netgen ${{ steps.version.outputs.version }} + SetGeomInfo API"
+          tag_name: v${{ env.NETGEN_VERSION }}-setgeominfo
+          name: "Netgen ${{ env.NETGEN_VERSION }} + SetGeomInfo API"
           body: |
             Patched `netgen-mesher` wheels with [SetGeomInfo API](https://github.com/NGSolve/netgen/pull/232).
 
-            Based on official Netgen ${{ steps.version.outputs.version }}.
+            Same version as official `netgen-mesher==${{ env.NETGEN_VERSION }}` — satisfies ngsolve's version requirement.
 
             ## Install
 
             ```bash
-            # Install official ngsolve first
+            # 1. Install official ngsolve (installs official netgen-mesher)
             pip install ngsolve
 
-            # Overwrite netgen with SetGeomInfo-patched version
-            pip install netgen-mesher --force-reinstall \
-              --find-links https://github.com/ksugahar/netgen/releases/latest
+            # 2. Replace netgen-mesher with patched version (direct URL, no source build)
+            #    Choose your Python version:
             ```
+
+            ${{ steps.install_body.outputs.wheel_lines }}
+
+            > **Note**: Do NOT use `--find-links` with GitHub releases URL — it triggers a source build that fails.
+            > Always use the direct wheel URL above.
 
             ## What is SetGeomInfo?
 

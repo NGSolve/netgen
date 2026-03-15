@@ -44,6 +44,9 @@ def is_dev_build():
 
 git_version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-git-version']).decode('utf-8').strip()
 version = check_output([sys.executable, os.path.join('tests', 'utils.py'), '--get-version']).decode('utf-8').strip()
+# Allow CI to override the Python package version (e.g. to match official netgen-mesher PyPI version)
+if 'NETGEN_VERSION_PYTHON' in os.environ:
+    version = os.environ['NETGEN_VERSION_PYTHON']
 
 py_install_dir = os.path.relpath(sysconfig.get_path('platlib'), sysconfig.get_path('data')).replace('\\','/')
 
