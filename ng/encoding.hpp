@@ -3,6 +3,9 @@
 
 #ifdef FFMPEG
 
+#include <mystdlib.h>
+using namespace std;
+
 extern "C" {
 #include <libavutil/avassert.h>
 #include <libavcodec/avcodec.h>
