@@ -375,12 +375,12 @@ namespace netgen
     topology = MeshTopology (*this);
     curvedelems = make_unique<CurvedElements> (*this);
     clusters = make_unique<AnisotropicClusters> (*this);
-
+/*
     for ( int i = 0; i < bcnames.Size(); i++ )
       if ( bcnames[i] ) delete bcnames[i];
     for (int i= 0; i< cd2names.Size(); i++)
       if (cd2names[i]) delete cd2names[i];
-
+*/
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
