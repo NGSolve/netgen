@@ -484,6 +484,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
        "Parameters: vertex_index (0-based index), u/v (surface parametric coordinates), "
        "trignum (triangle number for STL meshing, default: 0)"
     )
+    .def("Invert", [](Element2d& self)
+    {
+      self.Invert();
+    },
+       "Invert the orientation of this surface element (swap vertices 2 and 3 for triangles). "
+       "Use this to fix element orientation for BEM (HDivSurface edge element) computations "
+       "when the winding order doesn't match the expected convention."
+    )
+    .def("NormalizeNumbering", [](Element2d& self)
+    {
+      self.NormalizeNumbering();
+    },
+       "Rotate vertex numbering so that the smallest vertex index comes first, "
+       "preserving the winding direction. This normalizes the element representation "
+       "for consistent edge orientation in HDivSurface spaces."
+    )
     .def_property_readonly("vertices",
                   FunctionPointer([](const Element2d & self) -> py::list
                                   {
