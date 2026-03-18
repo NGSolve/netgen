@@ -1588,6 +1588,15 @@ py::arg("point_tolerance") = -1.)
           {
             self.SetNextTimeStamp();
           })
+    .def ("CalcSurfacesOfNode", &Mesh::CalcSurfacesOfNode,
+          "Rebuild surface element lookup tables (surface-on-node, "
+          "surface element hash table, boundary edges). "
+          "Call this after manually adding surface elements to ensure "
+          "consistent mesh topology for HDivSurface and BEM computations."
+    )
+    .def ("RebuildSurfaceElementLists", &Mesh::RebuildSurfaceElementLists,
+          "Rebuild internal linked lists of surface elements per FaceDescriptor."
+    )
     .def ("CalcTotalBadness", &Mesh::CalcTotalBad)
     .def ("GetQualityHistogram", &Mesh::GetQualityHistogram)
     .def("Mirror", &Mesh::Mirror)
