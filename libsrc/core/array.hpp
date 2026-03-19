@@ -322,12 +322,13 @@ namespace ngcore
     -> typename std::enable_if<has_range<T>, decltype(std::declval<T>().Range())>::type
   { return ao.Range(); }
 
+  /*
   template <typename T>
   NETGEN_INLINE auto Range (FlatArray<T> fa)
   {
     return fa.Range();
   }
-
+  */
   
   template <typename T>
   NETGEN_INLINE T_Range<T> Range_impl (T n, std::true_type)
