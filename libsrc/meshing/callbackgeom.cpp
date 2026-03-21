@@ -137,4 +137,22 @@ namespace netgen
     }
   }
 
+  Vec<3> CallbackGeometry::GetTangent(const Point<3> & p, int surfi1,
+                                       int surfi2,
+                                       const EdgePointGeomInfo & egi) const
+  {
+    if (!tangent_func)
+    {
+      // Fallback: use base class (throws exception if rational mode is used)
+      return NetgenGeometry::GetTangent(p, surfi1, surfi2, egi);
+    }
+
+    auto [tx, ty, tz] = tangent_func(surfi1, surfi2, p[0], p[1], p[2]);
+    Vec<3> t(tx, ty, tz);
+    double len = t.Length();
+    if (len > 1e-15)
+      t /= len;
+    return t;
+  }
+
 } // namespace netgen

@@ -1999,6 +1999,12 @@ normal : callable
 num_surfaces : int
     Number of surfaces in the geometry.
 
+tangent : callable, optional
+    Function (surfnr1, surfnr2, x, y, z) -> (tx, ty, tz)
+    Returns edge tangent at intersection of two surfaces.
+    Only needed for rational curving mode. If None, falls back
+    to base class behavior.
+
 Example (with Cubit ACIS)::
 
     def cubit_project(surfnr, x, y, z, u_hint, v_hint):
@@ -2016,7 +2022,8 @@ Example (with Cubit ACIS)::
     mesh = Mesh(ngmesh)
     mesh.Curve(3)
 )raw_string")
-    .def(py::init([](py::object py_project, py::object py_normal, int num_surfaces)
+    .def(py::init([](py::object py_project, py::object py_normal, int num_surfaces,
+                     py::object py_tangent)
                   {
                     CallbackGeometry::ProjectFunc project =
                       [py_project](int surfnr, double x, double y, double z,
@@ -2039,9 +2046,24 @@ Example (with Cubit ACIS)::
                         return {res[0].cast<double>(), res[1].cast<double>(),
                                 res[2].cast<double>()};
                       };
-                    return make_shared<CallbackGeometry>(project, normal, num_surfaces);
+                    CallbackGeometry::TangentFunc tangent = nullptr;
+                    if (!py_tangent.is_none())
+                    {
+                      tangent = [py_tangent](int surfnr1, int surfnr2,
+                                             double x, double y, double z)
+                        -> std::tuple<double,double,double>
+                        {
+                          py::gil_scoped_acquire aq;
+                          py::tuple res = py_tangent(surfnr1, surfnr2, x, y, z)
+                                            .cast<py::tuple>();
+                          return {res[0].cast<double>(), res[1].cast<double>(),
+                                  res[2].cast<double>()};
+                        };
+                    }
+                    return make_shared<CallbackGeometry>(project, normal, num_surfaces, tangent);
                   }),
-         py::arg("project"), py::arg("normal"), py::arg("num_surfaces"))
+         py::arg("project"), py::arg("normal"), py::arg("num_surfaces"),
+         py::arg("tangent") = py::none())
     ;
 
     py::class_<ClearSolutionClass> (m, "ClearSolutionClass")
