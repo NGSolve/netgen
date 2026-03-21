@@ -59,6 +59,12 @@ jobs:
           el.SetGeomInfo(1, 1.0, 0.0)
           el.SetGeomInfo(2, 0.0, 1.0)
           print('SetGeomInfo API: OK')
+
+          from netgen.meshing import CallbackGeometry
+          def proj(s,x,y,z,u,v): return x,y,z,u,v
+          def norm(s,x,y,z): return 0,0,1
+          geo = CallbackGeometry(proj, norm, 1)
+          print('CallbackGeometry: OK')
           "
         shell: pwsh
 
@@ -103,9 +109,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ env.NETGEN_VERSION }}-setgeominfo
-          name: "Netgen ${{ env.NETGEN_VERSION }} + SetGeomInfo API"
+          name: "Netgen ${{ env.NETGEN_VERSION }} + SetGeomInfo + CallbackGeometry"
           body: |
-            Patched `netgen-mesher` wheels with [SetGeomInfo API](https://github.com/NGSolve/netgen/pull/232).
+            Patched `netgen-mesher` wheels with [SetGeomInfo API](https://github.com/NGSolve/netgen/pull/232)
+            and **CallbackGeometry** for Cubit ACIS direct high-order curving.
 
             Same version as official `netgen-mesher==${{ env.NETGEN_VERSION }}` — satisfies ngsolve's version requirement.
 
@@ -124,12 +131,16 @@ jobs:
             > **Note**: Do NOT use `--find-links` with GitHub releases URL — it triggers a source build that fails.
             > Always use the direct wheel URL above.
 
-            ## What is SetGeomInfo?
+            ## What's included?
 
+            ### SetGeomInfo API
             `Element2D.SetGeomInfo(vertex_index, u, v)` sets UV parametric coordinates
-            on surface mesh elements, enabling `mesh.Curve(order)` for externally imported
-            meshes (Coreform Cubit, GMSH, etc.).
-
+            on surface mesh elements, enabling `mesh.Curve(order)` for externally imported meshes.
             PR: https://github.com/NGSolve/netgen/pull/232
+
+            ### CallbackGeometry
+            `CallbackGeometry(project, normal, num_surfaces)` delegates surface projection
+            to Python callbacks, enabling `mesh.Curve(order)` with any CAD kernel
+            (e.g. Cubit ACIS) without OCC or STEP files.
           files: dist/*.whl
           make_latest: true
