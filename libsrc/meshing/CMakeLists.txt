@@ -10,7 +10,7 @@ target_sources(nglib PRIVATE
         smoothing2.cpp smoothing3.cpp specials.cpp
         topology.cpp validate.cpp bcfunctions.cpp   
         parallelmesh.cpp  paralleltop.cpp  basegeom.cpp
-        python_mesh.cpp surfacegeom.cpp
+        python_mesh.cpp surfacegeom.cpp callbackgeom.cpp
         debugging.cpp fieldlines.cpp visual_interface.cpp
         boundarylayer2d.cpp boundarylayer_interpolate.cpp
 )

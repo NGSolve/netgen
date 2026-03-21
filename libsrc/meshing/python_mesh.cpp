@@ -9,6 +9,7 @@
 #include <mystdlib.h>
 #include "meshing.hpp"
 #include "boundarylayer.hpp"
+#include "callbackgeom.hpp"
 // #include <csg.hpp>
 // #include <geometry2d.hpp>
 #include <../interface/rw_medit.hpp>
@@ -1974,6 +1975,73 @@ project_boundaries : Optional[str] = None
     boundarylayer : dict
       If not None it expects a dictionary of the form { "boundaryname" : [t1,...,tn], "quads" : False } where ti denote the thickness of layer i. The number of layers are included in nx/ny. After the layers are placed the remaining number of cells are used to divide the remaining grid uniformly. If quads are set to True quadrilaterals are used inside the boundarylayer. If set False the value of "quads" of the function call is used.
       )raw_string");*/
+    ;
+
+    py::class_<CallbackGeometry, NetgenGeometry, shared_ptr<CallbackGeometry>>
+      (m, "CallbackGeometry",
+       R"raw_string(
+Geometry with Python callback-based surface projection.
+
+Enables mesh.Curve(order) with any CAD kernel (e.g. Cubit ACIS)
+without requiring OCC or STEP files.
+
+Parameters
+----------
+project : callable
+    Function (surfnr, x, y, z, u_hint, v_hint) -> (x_proj, y_proj, z_proj, u, v)
+    Projects a 3D point onto the surface identified by surfnr.
+    Returns projected coordinates and UV parameters.
+
+normal : callable
+    Function (surfnr, x, y, z) -> (nx, ny, nz)
+    Returns outward normal vector at the given point on surfnr.
+
+num_surfaces : int
+    Number of surfaces in the geometry.
+
+Example (with Cubit ACIS)::
+
+    def cubit_project(surfnr, x, y, z, u_hint, v_hint):
+        coords = [x, y, z]
+        uv = cubit.surface(surfnr).u_v_from_position(coords)
+        pos = cubit.surface(surfnr).position_from_u_v(uv[0], uv[1])
+        return pos[0], pos[1], pos[2], uv[0], uv[1]
+
+    def cubit_normal(surfnr, x, y, z):
+        n = cubit.surface(surfnr).normal_at([x, y, z])
+        return n[0], n[1], n[2]
+
+    geo = CallbackGeometry(cubit_project, cubit_normal, cubit.get_surface_count())
+    ngmesh.SetGeometry(geo)
+    mesh = Mesh(ngmesh)
+    mesh.Curve(3)
+)raw_string")
+    .def(py::init([](py::object py_project, py::object py_normal, int num_surfaces)
+                  {
+                    CallbackGeometry::ProjectFunc project =
+                      [py_project](int surfnr, double x, double y, double z,
+                                   double u_hint, double v_hint)
+                      -> std::tuple<double,double,double,double,double>
+                      {
+                        py::gil_scoped_acquire aq;
+                        py::tuple res = py_project(surfnr, x, y, z, u_hint, v_hint)
+                                          .cast<py::tuple>();
+                        return {res[0].cast<double>(), res[1].cast<double>(),
+                                res[2].cast<double>(), res[3].cast<double>(),
+                                res[4].cast<double>()};
+                      };
+                    CallbackGeometry::NormalFunc normal =
+                      [py_normal](int surfnr, double x, double y, double z)
+                      -> std::tuple<double,double,double>
+                      {
+                        py::gil_scoped_acquire aq;
+                        py::tuple res = py_normal(surfnr, x, y, z).cast<py::tuple>();
+                        return {res[0].cast<double>(), res[1].cast<double>(),
+                                res[2].cast<double>()};
+                      };
+                    return make_shared<CallbackGeometry>(project, normal, num_surfaces);
+                  }),
+         py::arg("project"), py::arg("normal"), py::arg("num_surfaces"))
     ;
 
     py::class_<ClearSolutionClass> (m, "ClearSolutionClass")
