@@ -9,10 +9,7 @@
 
 namespace ngcore
 {
-  // clang-tidy should ignore this static object
-  // static std::map<std::string, detail::ClassArchiveInfo> type_register;  // NOLINT
-
-  auto& GetTypeRegister()
+  std::map<std::string, detail::ClassArchiveInfo> & GetTypeRegister()
   {
     static std::map<std::string, detail::ClassArchiveInfo> type_register;
     return type_register;
@@ -42,6 +39,15 @@ namespace ngcore
   {
     auto info = Archive::GetArchiveRegister(Demangle(a.type().name()));
     return info.anyToPyCaster(a);
+  }
+
+  std::any CastPyToAny(pybind11::object& obj)
+  {
+    auto name = Demangle(pybind11::detail::get_type_info((PyTypeObject*) pybind11::type::of(obj).ptr())->cpptype->name());
+    auto info = Archive::GetArchiveRegister(name);
+    if(!info.pyToAnyCaster)
+      throw Exception("Need to register class " + name + " for Archive using std::any");
+    return info.pyToAnyCaster(obj);
   }
 #endif // NETGEN_PYTHON
 

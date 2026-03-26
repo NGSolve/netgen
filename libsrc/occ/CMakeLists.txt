@@ -4,6 +4,7 @@ target_sources(nglib PRIVATE
         occgenmesh.cpp occgeom.cpp occmeshsurf.cpp python_occ.cpp
         python_occ_basic.cpp python_occ_shapes.cpp
         occ_face.cpp occ_edge.cpp occ_vertex.cpp occ_utils.cpp
+        cross_section.cpp
 )
 
 if(USE_GUI)

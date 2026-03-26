@@ -9,6 +9,25 @@
 
 namespace netgen
 {
+  inline int GetVolElement(const Mesh& mesh, const Point<3>& p,
+                           double* lami)
+  {
+    if(mesh.GetDimension() == 3)
+      {
+        auto ei = mesh.GetElementOfPoint(p, lami, true);
+        if(!ei.IsValid())
+          return -1;
+        return ei;
+      }
+    else
+      {
+        auto ei = mesh.GetSurfaceElementOfPoint(p, lami, true);
+        if(!ei.IsValid())
+          return -1;
+        return ei;
+      }
+  }
+
   RKStepper :: ~RKStepper() 
   {
     delete a;
@@ -190,9 +209,9 @@ namespace netgen
 	
 	for(int i=0; i<potential_startpoints.Size(); i++)
 	  {
-	    int elnr = mesh.GetElementOfPoint(potential_startpoints[i],lami,true) - 1;
-	    if(elnr == -1)
-	      continue;
+	    int elnr = GetVolElement(mesh, potential_startpoints[i], lami);
+            if (elnr == -1)
+              continue;
 
 	    mesh.SetPointSearchStartElement(elnr);
 	    
@@ -289,8 +308,7 @@ namespace netgen
     dirstart.SetSize(0);
     dirstart.Append(0);
 
-
-    int startelnr = mesh.GetElementOfPoint(startpoint,startlami,true) - 1;
+    int startelnr = GetVolElement(mesh, startpoint,startlami);
     (*testout) << "p = " << startpoint << "; elnr = " << startelnr << endl;
     if (startelnr == -1)
       return;
@@ -342,7 +360,7 @@ namespace netgen
             Point<3> newp;
 	    while(!stepper.GetNextData(newp,dummyt,h) && elnr != -1)
 	      {
-		elnr = mesh.GetElementOfPoint(newp,lami,true) - 1;
+		elnr = GetVolElement(mesh, newp, lami);
 		if(elnr != -1)
 		  {
 		    mesh.SetPointSearchStartElement(elnr);

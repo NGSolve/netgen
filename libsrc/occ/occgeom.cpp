@@ -654,8 +654,6 @@ namespace netgen
          sfwf->Load (shape);
          sfwf->ModeDropSmallEdges() = Standard_True;
 
-         sfwf->SetPrecision(boundingbox.Diam());
-
          if (sfwf->FixWireGaps())
          {
             cout << endl << "- fixing wire gaps" << endl;
@@ -665,9 +663,6 @@ namespace netgen
             if (sfwf->StatusWireGaps(ShapeExtend_FAIL1)) cout << "failed to fix some 2D gaps" << endl;
             if (sfwf->StatusWireGaps(ShapeExtend_FAIL2)) cout << "failed to fix some 3D gaps" << endl;
          }
-
-         sfwf->SetPrecision(tolerance);
-
 
          {
             for (exp1.Init (shape, TopAbs_EDGE); exp1.More(); exp1.Next())
@@ -923,7 +918,7 @@ namespace netgen
          // Need do copy the face, otherwise replace is ignored
          BRepBuilderAPI_Copy copy(face);
          auto newface = copy.Shape().Reversed();
-         GetProperties(newface).Merge(GetProperties(face));
+         PropagateProperties(copy, face);
          rebuild->Replace(face, newface);
        }
      }
@@ -1222,7 +1217,8 @@ namespace netgen
           if(verts.size() == 0)
             continue;
           auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
-          occ_edge->properties = GetProperties(e);
+          if(HaveProperties(edge))
+            occ_edge->properties = GetProperties(e);
           edges.Append(std::move(occ_edge));
       }
 
@@ -1772,8 +1768,19 @@ namespace netgen
         ar & has_identifications;
         if(has_identifications)
           {
-            auto & idents = GetIdentifications(s);
-            auto n_idents = idents.size();
+            int n_idents;
+            std::vector<OCCIdentification> used_idents;
+            if(ar.Output())
+              {
+                // only use identifications that are used within the geometry
+                for(auto& id : GetIdentifications(s))
+                  {
+                    if(shape_map.Contains(id.from) && shape_map.Contains(id.to))
+                      used_idents.push_back(id);
+                  }
+                n_idents = used_idents.size();
+              }
+            auto & idents = ar.Output() ? used_idents : GetIdentifications(s);
             ar & n_idents;
             idents.resize(n_idents);
             for(auto i : Range(n_idents))
@@ -2277,10 +2284,22 @@ namespace netgen
             XCAFPrs::CollectStyleSettings(label, loc, set);
             XCAFPrs_Style aStyle;
             set.FindFromKey(e.Current(), aStyle);
-
-            auto & prop = OCCGeometry::GetProperties(e.Current());
             if(aStyle.IsSetColorSurf())
-                prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+              {
+                for(TopExp_Explorer e2(e.Current(), TopAbs_FACE); e2.More(); e2.Next())
+                  {
+                    auto & prop = OCCGeometry::GetProperties(e2.Current());
+                    prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+                  }
+              }
+            if(aStyle.IsSetColorCurv())
+              {
+                for(TopExp_Explorer e2(e.Current(), TopAbs_EDGE); e2.More(); e2.Next())
+                  {
+                    auto & prop = OCCGeometry::GetProperties(e2.Current());
+                    prop.col = step_utils::ReadColor(aStyle.GetColorSurfRGBA());
+                  }
+              }
           }
 
         // load names
@@ -2295,10 +2314,14 @@ namespace netgen
 
             TopoDS_Shape shape = TransferBRep::ShapeResult(transProc->Find(item));
             string name = item->Name()->ToCString();
-            if (!transProc->IsBound(item))
+            if (!transProc->IsBound(item) || name == "")
               continue;
 
-            OCCGeometry::GetProperties(shape).name = name;
+            // we only allow names on SOLIDS, FACES, EDGES, VERTICES.
+            // if name is given on a compound, assume it should be on all subshapes
+            // of highest dimension
+            for(auto & s : GetHighestDimShapes(shape))
+              OCCGeometry::GetProperties(s).name = name;
           }
 
 

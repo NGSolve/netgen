@@ -109,6 +109,7 @@ if(APPLE)
            -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}/Contents/MacOS
 	   -DTCL_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tcl.framework/Headers
 	   -DTK_INCLUDE_PATH=${CMAKE_INSTALL_PREFIX}/Contents/Frameworks/Tk.framework/Headers
+     -DCMAKE_POLICY_VERSION_MINIMUM=3.5
     ${SUBPROJECT_ARGS}
   )
 

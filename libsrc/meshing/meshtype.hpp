@@ -27,7 +27,6 @@ namespace netgen
   */
 
 
-
   enum ELEMENT_TYPE : unsigned char { 
     SEGMENT = 1, SEGMENT3 = 2,
     TRIG = 10, QUAD=11, TRIG6 = 12, QUAD6 = 13, QUAD8 = 14,
@@ -36,25 +35,10 @@ namespace netgen
     HEX = 25, HEX20 = 26, HEX7 = 29
   };
 
-  /*
-  typedef int ELEMENT_EDGE[2];      // initial point, end point
-  typedef int ELEMENT_FACE[4];      // points, last one is -1 for trig
-  */
 
-  struct ELEMENT_EDGE
-  {
-    int vals[2];
-    int & operator[] (size_t i) { return vals[i]; }
-    int operator[] (size_t i) const { return vals[i]; }
-  };
-  
-  struct ELEMENT_FACE
-  {
-    int vals[4];
-    int & operator[] (size_t i) { return vals[i]; }
-    int operator[] (size_t i) const { return vals[i]; }
-  };
-  
+  using ELEMENT_EDGE = std::array<int,2>;
+  using ELEMENT_FACE = std::array<int,4>;
+
 
 #define ELEMENT_MAXPOINTS 20
 #define ELEMENT2D_MAXPOINTS 8
@@ -77,10 +61,6 @@ namespace netgen
     return timestamp;
   }
   
-  /*
-  extern DLL_HEADER int GetTimeStamp();
-  extern DLL_HEADER int NextTimeStamp();
-  */
   class PointGeomInfo
   {
   public:
@@ -88,12 +68,10 @@ namespace netgen
     double u, v;   // for OCC Meshing
 
     PointGeomInfo () = default;
-    // : trignum(-1), u(0), v(0) { ; }
     PointGeomInfo (const PointGeomInfo&) = default;
     PointGeomInfo (PointGeomInfo &&) = default;
     PointGeomInfo & operator= (const PointGeomInfo&) = default;
     PointGeomInfo & operator= (PointGeomInfo&&) = default;
-    
   };
 
   inline ostream & operator<< (ostream & ost, const PointGeomInfo & gi)
@@ -149,178 +127,310 @@ namespace netgen
   }
 
 
-
-
-  /*
-  class PointIndex
+  template <typename T, typename TIndex, int BASE_>
+  class Index
   {
-    int i;
   public:
+    T i;
+
+    static constexpr int BASE = BASE_;
+    static constexpr TIndex Base() { return TIndex(BASE_); } 
+
     class t_invalid { public: constexpr t_invalid() = default; };
     static constexpr t_invalid INVALID{};
+
+    typedef decltype( declval<T>()-declval<T>() ) T_diff;
     
-    PointIndex () = default;
-    PointIndex (const PointIndex&) = default;
-    PointIndex (PointIndex &&) = default;
-    PointIndex & operator= (const PointIndex&) = default;
-    PointIndex & operator= (PointIndex&&) = default;
-     
-    constexpr PointIndex (int ai) : i(ai)
-    {
-#ifdef DEBUG
-      if (ai < PointIndex::BASE)
-        cout << "illegal PointIndex, use PointIndex::INVALID instead" << endl;
-        // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
-#endif
-    }
-    constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
-    // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
-    constexpr operator const int& () const { return i; }
-    explicit constexpr operator int& () { return i; }
-    PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
-    PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
-    PointIndex & operator++ () { i++; return *this; }
-    PointIndex operator-- () { i--; return *this; }
-    PointIndex operator+= (int add) { i += add; return *this; }
-    void Invalidate() { i = PointIndex::BASE-1; }
-    bool IsValid() const { return i != PointIndex::BASE-1; }
-#ifdef BASE0
-    static constexpr size_t BASE = 0;
-#else
-    static constexpr size_t BASE = 1;
-#endif  
-
-    void DoArchive (Archive & ar) { ar & i; }
-  }
-    */
-
-  
-  class PointIndex
-  {
-    int i;
   public:
-    class t_invalid { public: constexpr t_invalid() = default; };
-    static constexpr t_invalid INVALID{};
-    
-    PointIndex () = default;
-    PointIndex (const PointIndex&) = default;
-    PointIndex (PointIndex &&) = default;
-    PointIndex & operator= (const PointIndex&) = default;
-    PointIndex & operator= (PointIndex&&) = default;
+    constexpr Index () = default;
+    constexpr Index (const Index& i2) = default;
+    constexpr Index (Index &&) = default;
+    Index & operator= (const Index&) = default;
+    Index & operator= (Index&&) = default;
 
     // private:
-    constexpr PointIndex (int ai) : i(ai)
+    constexpr Index (T ai) : i(ai)
     {
 #ifdef DEBUG
-      if (ai < PointIndex::BASE)
-        cout << "illegal PointIndex, use PointIndex::INVALID instead" << endl;
-        // throw Exception("illegal PointIndex, use PointIndex::INVALID instead");
+      if (ai < BASE_)
+        cout << "illegal Index, use Index::INVALID instead" << endl;
 #endif
     }
-    friend constexpr netgen::PointIndex ngcore::IndexBASE<netgen::PointIndex> ();
-    friend istream & operator>> (istream &, PointIndex &);    
-    friend ostream & operator<< (ostream &, const PointIndex &);
-    template <int N> friend class PointIndices;
+
+
     /*
-    friend PointIndex operator+ (PointIndex, int);
-    friend PointIndex operator+ (PointIndex, size_t);    
-    friend PointIndex operator+ (int, PointIndex);
-    friend PointIndex operator+ (size_t, PointIndex);
-    friend PointIndex operator- (PointIndex, int);
-    friend int operator- (PointIndex, PointIndex);
-    friend bool operator< (PointIndex a, PointIndex b);
-    friend bool operator> (PointIndex a, PointIndex b);
-    friend bool operator>= (PointIndex a, PointIndex b);
-    friend bool operator== (PointIndex a, PointIndex b);
-    friend bool operator!= (PointIndex a, PointIndex b);
+      // didn't manage constexpr friend functions so far ???
+    friend auto operator+ (Index, int) -> TIndex;
+    friend TIndex operator+ (Index, size_t);    
+    friend TIndex operator+ (int, Index);
+    friend TIndex operator+ (size_t, Index);
+    friend constexpr TIndex operator- (Index, int);
+    friend int operator- (Index, Index);
+    friend bool operator< (Index a, Index b);
+    friend bool operator> (Index a, Index b);
+    friend bool operator>= (Index a, Index b);
+    friend bool operator<= (Index a, Index b);
+    friend bool operator== (Index a, Index b);
+    friend bool operator!= (Index a, Index b);
     */
+    
   public:
-    constexpr PointIndex (t_invalid inv) : i(PointIndex::BASE-1) { ; }
-    // PointIndex & operator= (const PointIndex &ai) { i = ai.i; return *this; }
-    // private:
-    constexpr operator const int& () const { return i; }
-    explicit constexpr operator int& () { return i; }
+    constexpr Index (t_invalid inv) : i(long(BASE)-1) { ; }
+    // protected:
+    constexpr operator T () const { return i; }
+    explicit constexpr operator T& () { return i; }
   public:
-    PointIndex operator++ (int) { PointIndex hi(*this); i++; return hi; }
-    PointIndex operator-- (int) { PointIndex hi(*this); i--; return hi; }
-    PointIndex & operator++ () { i++; return *this; }
-    PointIndex operator-- () { i--; return *this; }
-    PointIndex operator+= (int add) { i += add; return *this; }
-    void Invalidate() { i = PointIndex::BASE-1; }
-    bool IsValid() const { return i != PointIndex::BASE-1; }
+    TIndex operator++ (int) { TIndex hi{*this}; i++; return hi; }
+    TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
+    TIndex & operator++ () { i++; return static_cast<TIndex&>(*this); }
+    TIndex & operator-- () { i--; return static_cast<TIndex&>(*this); }
+
+    /*
+    constexpr TIndex operator+= (int add) { i += add; return TIndex{*this}; }
+    constexpr TIndex operator+= (size_t add) { i += add; return TIndex{*this}; }
+    constexpr TIndex operator-= (int add) { i -= add; return TIndex{*this}; }
+    constexpr TIndex operator-= (size_t add) { i -= add; return TIndex{*this}; }
+    */
+    constexpr TIndex operator+= (T_diff add) { i += add; return TIndex{*this}; }
+    constexpr TIndex operator-= (T_diff add) { i -= add; return TIndex{*this}; }
+    
+    constexpr auto operator- (Index i2) const { return i-i2.i; }
+
+    // bool operator== (Index i2) const { return i==i2.i; }
+    // bool operator!= (Index i2) const { return i!=i2.i; }
+    void Invalidate() { i = long(TIndex::BASE)-1; }
+    bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
-#ifdef BASE0
-    static constexpr size_t BASE = 0;
-#else
-    static constexpr size_t BASE = 1;
-#endif  
 
     void DoArchive (Archive & ar) { ar & i; }
   };
 
-  /*
-  inline PointIndex operator+ (PointIndex pi, int i) { return PointIndex(pi.i+i); }
-  inline PointIndex operator+ (PointIndex pi, size_t i) { return PointIndex(pi.i+i); }  
-  inline PointIndex operator+ (int i, PointIndex pi) { return PointIndex(pi.i+i); }
-  inline PointIndex operator+ (size_t i, PointIndex pi) { return PointIndex(pi.i+i); }
-  inline PointIndex operator- (PointIndex pi, int i) { return PointIndex(pi.i-i); }
-  inline int operator- (PointIndex pa, PointIndex pb) { return PointIndex(pa.i-pb.i); }
-  inline bool operator< (PointIndex a, PointIndex b) { return a.i < b.i; }
-  inline bool operator> (PointIndex a, PointIndex b) { return a.i > b.i; }
-  inline bool operator>= (PointIndex a, PointIndex b) { return a.i >= b.i; }
-  inline bool operator== (PointIndex a, PointIndex b) { return a.i == b.i; }
-  inline bool operator!= (PointIndex a, PointIndex b) { return a.i != b.i; }
-  */
+
+  template <typename T, typename TIndex, int Base>  
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, int i) { Index<T,TIndex,Base> res(ind); return res += i; }
+  template <typename T, typename TIndex, int Base>
+  constexpr auto operator+ (Index<T,TIndex,Base> ind, size_t i) { Index<T,TIndex,Base> res(ind); return res += i; }
+  template <typename T, typename TIndex, int Base>    
+  constexpr TIndex operator+ (int i, Index<T,TIndex,Base> ind) { return ind+i; } // Indexx<T,TIndex,Base> res(ind); return res += i; 
+  template <typename T, typename TIndex, int Base>    
+  inline TIndex operator+ (size_t i, Index<T,TIndex,Base> ind) { return ind+i; } //  TIndex res(ind); res += i; return res; }
+  
+  template <typename T, typename TIndex, int Base>    
+  constexpr inline auto operator- (Index<T,TIndex,Base> ind, int i) { Index<T,TIndex,Base> res(ind); return res -= i; }  
+  // template <typename T, typename TIndex, int Base>    
+  // constexpr inline auto operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
+  
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator< (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b < 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator> (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b > 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator>= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b >= 0; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator<= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b <= 0; }
+
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator== (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i == b.i; }
+  template <typename T, typename TIndex, int Base>      
+  inline bool operator!= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i != b.i; }
+
+
+  template <typename T, typename TIndex, int Base>      
+  inline void SetInvalid (Index<T,TIndex,Base> & id) { id.Invalidate(); }
+  template <typename T, typename TIndex, int Base>        
+  inline bool IsInvalid (const Index<T,TIndex,Base> & id) { return !id.IsValid(); }
+
+
+  
+  class PointIndex : public Index<int,PointIndex,1>
+  {
+  public:
+    using Index::Index;
+    template <int N> friend class PointIndices;    
+  };
+
 }
 
 namespace ngcore
 {
   template<> 
-  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex(netgen::PointIndex::BASE); }
+  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex::Base(); }
 }
 
 namespace netgen
 {
 
-  
+  // input-output is 1-based
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
-    int i; ist >> i; pi = PointIndex(i); return ist;
+    // int i; ist >> i; pi = PointIndex(i); return ist;
+    int i; ist >> i;
+    pi = IndexBASE<PointIndex>()+i-1;
+    return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const PointIndex & pi)
   {
-    return (ost << int(pi));
+    // return (ost << int(pi));
+    int intpi = pi - IndexBASE<PointIndex>() + 1;
+    return (ost << intpi);    
   }
 
+
+
+  /*
+    PointIndices<2> etc are derived from historic INDEX_2 etc to be useable in old HASHTABLEs.
+    Will change to IVec<2> or std::array when INDEX_2 is not needed anymore
+   */
+  
   template <int N> class PointIndices;
   template <> class PointIndices<2> : public INDEX_2
   {
   public:
     PointIndices () = default;
-    PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
-    PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
-    PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
+    constexpr PointIndices (const PointIndices&) = default;
+    constexpr PointIndices (PointIndices&&) = default;
+    PointIndices & operator= (const PointIndices&) = default;
+    PointIndices & operator= (PointIndices&&) = default;
+    
+    constexpr PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
+    constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
+
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 2); }
+    
+    PointIndex & I1 () { return (*this)[0]; }
+    PointIndex & I2 () { return (*this)[1]; }
+    PointIndex I1 () const { return (*this)[0]; }
+    PointIndex I2 () const { return (*this)[1]; }
+    
     using INDEX_2::Sort;
     static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
+  
   template <> class PointIndices<3> : public INDEX_3
   {
   public:
     PointIndices () = default;
-    PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
-    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; } 
+    PointIndices (const PointIndices&) = default;
+    PointIndices (PointIndices&&) = default;
+    PointIndices & operator= (const PointIndices&) = default;
+    PointIndices & operator= (PointIndices&&) = default;
+    constexpr PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; }
     PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
+
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 3); }
+    
+    PointIndex & I1 () { return (*this)[0]; }
+    PointIndex & I2 () { return (*this)[1]; }
+    PointIndex & I3 () { return (*this)[2]; }
+    PointIndex I1 () const { return (*this)[0]; }
+    PointIndex I2 () const { return (*this)[1]; }
+    PointIndex I3 () const { return (*this)[2]; }
+
     using INDEX_3::Sort;
     static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(i1, i2, i3); }
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
   };
+  
+  template <> class PointIndices<4> : public INDEX_4
+  {
+  public:
+    PointIndices () = default;
+    PointIndices (INDEX_4 i4) : INDEX_4(i4) { ; }
+    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(i1,i2,i3,i4) { ; } 
+    PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
+    PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
+
+    template <typename ARCHIVE>
+    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 4); }
+    
+    PointIndex & I1 () { return (*this)[0]; }
+    PointIndex & I2 () { return (*this)[1]; }
+    PointIndex & I3 () { return (*this)[2]; }
+    PointIndex & I4 () { return (*this)[3]; }
+    PointIndex I1 () const { return (*this)[0]; }
+    PointIndex I2 () const { return (*this)[1]; }
+    PointIndex I3 () const { return (*this)[2]; }
+    PointIndex I4 () const { return (*this)[3]; }
+    
+    using INDEX_4::Sort;
+    // static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) { return INDEX_4::Sort(i1, i2, i3, i4); }
+    template <size_t J>
+    PointIndex get() const { return PointIndex(INDEX_4::operator[](J)); }    
+  };
+
+
+  template <int N>
+  class SortedPointIndices : public PointIndices<N>
+  {
+    using PointIndices<N>::Sort;
+  public:
+    constexpr SortedPointIndices (PointIndices<N> pnts)
+      : PointIndices<N>(pnts.Sort()) { } 
+    
+      template <typename ...Pnts>
+    constexpr SortedPointIndices (Pnts ...pnts)
+      : PointIndices<N>(pnts...)
+    { Sort(); }
+  };
+  
 }
+
+
+
+namespace ngcore
+{
+
+  template <>
+  struct CHT_trait<netgen::PointIndex>
+  {
+    constexpr static inline netgen::PointIndex Invalid() { return netgen::PointIndex::INVALID; }
+    constexpr static inline size_t HashValue (const netgen::PointIndex & hash, size_t mask)
+    { return (hash-IndexBASE<netgen::PointIndex>()) & mask; }
+  };
+
+
+  template <>
+  struct CHT_trait<netgen::PointIndices<2>>
+  {
+    constexpr static inline netgen::PointIndices<2> Invalid() { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID} ; }
+    constexpr static inline size_t HashValue (const netgen::PointIndices<2> & hash, size_t mask)
+    { return HashValue2(IVec<2>(hash[0]-IndexBASE<netgen::PointIndex>(),
+                                hash[1]-IndexBASE<netgen::PointIndex>()), mask); }
+  };
+  
+
+  template <>
+  struct CHT_trait<netgen::SortedPointIndices<2>>
+  {
+    constexpr static inline netgen::SortedPointIndices<2> Invalid() { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID} ; }
+    constexpr static inline size_t HashValue (const netgen::SortedPointIndices<2> & hash, size_t mask)
+    // { return HashValue2(IVec<2,netgen::INDEX>(hash[0], hash[1]), mask); }
+    { return CHT_trait<netgen::PointIndices<2>>::HashValue (hash, mask); }
+  };
+  
+
+  template <>
+  constexpr inline netgen::PointIndices<3> InvalidHash<netgen::PointIndices<3>> ()
+  { return netgen::PointIndices<3>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
+
+  /*
+  template <>
+  constexpr inline netgen::SortedPointIndices<2> InvalidHash<netgen::SortedPointIndices<2>> ()
+  //   { return InvalidHash<netgen::PointIndices<2>>(); }
+  { return CHT_trait<netgen::PointIndices<2>>::Invalid(); }    
+  */
+}
+
 
 namespace std
 {
@@ -333,84 +443,81 @@ namespace std
 namespace netgen
 {
 
-  class ElementIndex
+  class ElementIndex : public Index<int,ElementIndex,0>
   {
-    int i;
   public:
-    ElementIndex () = default;
-    constexpr ElementIndex (int ai) : i(ai) { ; }
-    ElementIndex & operator= (const ElementIndex & ai) { i = ai.i; return *this; }
-    ElementIndex & operator= (int ai) { i = ai; return *this; }
-    constexpr operator int () const { return i; }
-    ElementIndex operator++ (int) { return ElementIndex(i++); }    
-    ElementIndex operator-- (int) { return ElementIndex(i--); }
-    ElementIndex & operator++ () { ++i; return *this; }
-    ElementIndex & operator-- () { --i; return *this; }
-  };
-
-  inline istream & operator>> (istream & ist, ElementIndex & pi)
-  {
-    int i; ist >> i; pi = i; return ist;
-  }
-
-  inline ostream & operator<< (ostream & ost, const ElementIndex & pi)
-  {
-    return (ost << int(pi));
-  }
-
-
-  class SurfaceElementIndex
-  {
-    int i;
-  public:
-    SurfaceElementIndex () = default;
-    constexpr SurfaceElementIndex (int ai) : i(ai) { ; }
-    /*
-    SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) 
-    { i = ai.i; return *this; }
-    */
-    SurfaceElementIndex & operator= (const SurfaceElementIndex & ai) = default;
-    SurfaceElementIndex & operator= (int ai) { i = ai; return *this; }
-    constexpr operator int () const { return i; }
-    SurfaceElementIndex operator++ (int) { SurfaceElementIndex hi(*this); i++; return hi; }
-    SurfaceElementIndex operator-- (int) { SurfaceElementIndex hi(*this); i--; return hi; }
-    SurfaceElementIndex & operator++ () { ++i; return *this; }
-    SurfaceElementIndex & operator-- () { --i; return *this; }
-    SurfaceElementIndex & operator+= (int inc) { i+=inc; return *this; }
-    void DoArchive (Archive & ar) { ar & i; }
+    using Index::Index; // <int,ElementIndex,0>::Index;
   };
   
-  inline void SetInvalid (SurfaceElementIndex & id) { id = -1; }
-  inline bool IsInvalid (SurfaceElementIndex & id) { return id == -1; }
+  inline istream & operator>> (istream & ist, ElementIndex & ei)
+  {
+    int i; ist >> i; ei = ElementIndex::Base()+i; return ist;
+  }
+
+  inline ostream & operator<< (ostream & ost, const ElementIndex & ei)
+  {
+    return ost << int(ei-ElementIndex::Base());
+  }
+
+
+  /*
+  // these should not be needed soon
+  inline bool operator== (Index<int,ElementIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
+  inline bool operator< (size_t s, Index<int,ElementIndex,0> ei2) { return int(s) < int(ei2); };    
+  inline bool operator< ( Index<int,ElementIndex,0> ei1, size_t s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator< ( Index<int,ElementIndex,0> ei1, int s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator>= (size_t s,  Index<int,ElementIndex,0> ei2) { return int(s) >= int(ei2); };
+  */
+
+  class SurfaceElementIndex : public Index<int,SurfaceElementIndex,0>
+  {
+  public:
+    using Index::Index;
+  };
+
+  
+  // these should not be needed soon
+  /*
+  inline bool operator== (Index<int, SurfaceElementIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };
+  inline bool operator== (int ei2, Index<int, SurfaceElementIndex,0> ei1) { return int(ei1) == int(ei2); };
+  inline bool operator!= (Index<int, SurfaceElementIndex,0> ei1, int ei2) { return int(ei1) != int(ei2); };    
+  inline bool operator< (size_t s, Index<int, SurfaceElementIndex,0> ei2) { return int(s) < int(ei2); };    
+  inline bool operator< (Index<int, SurfaceElementIndex,0> ei1, size_t s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator< (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) < int(s); };   // should not need
+  inline bool operator>= (size_t s, Index<int, SurfaceElementIndex,0> ei2) { return int(s) >= int(ei2); };
+  inline bool operator>= (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) >= int(s); };
+  */
+  
+  // inline void SetInvalid (SurfaceElementIndex & id) { id.Invalidate(); }
+  // inline bool IsInvalid (SurfaceElementIndex & id) { return !id.IsValid(); }
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
   {
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & pi)
+  inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & si)
   {
-    return (ost << int(pi));
+    return ost << (si-IndexBASE(si));
   }
 
-  class SegmentIndex
+
+  class SegmentIndex : public Index<int,SegmentIndex,0>
   {
-    int i;
   public:
-    SegmentIndex () = default;
-    constexpr SegmentIndex (int ai) : i(ai) { ; }
-    SegmentIndex & operator= (const SegmentIndex & ai) 
-    { i = ai.i; return *this; }
-    SegmentIndex & operator= (int ai) { i = ai; return *this; }
-    constexpr operator int () const { return i; }
-    SegmentIndex& operator++ () { ++i; return *this; }
-    SegmentIndex& operator-- () { --i; return *this; }
-    SegmentIndex operator++ (int) { return i++; }
-    SegmentIndex operator-- (int) { return i--; }
+    using Index::Index;
   };
 
-  inline void SetInvalid (SegmentIndex & id) { id = -1; }
-  inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
+  // these should not be needed soon
+  /*
+  inline bool operator== (Index<int, SegmentIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
+  inline bool operator< (size_t s, Index<int,SegmentIndex,0> ei2) { return int(s) < int(ei2); };
+  inline bool operator< (Index<int, SegmentIndex,0> ei1, size_t s) { return int(ei1) < int(s); };
+  inline bool operator< (Index<int, SegmentIndex,0> ei1, int s) { return int(ei1) < int(s); };   
+  */
+  
+  // inline void SetInvalid (SegmentIndex & id) { id = -1; }
+  // inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
 
 
   inline istream & operator>> (istream & ist, SegmentIndex & pi)
@@ -418,10 +525,10 @@ namespace netgen
     int i; ist >> i; pi = i; return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const SegmentIndex & pi)
+  inline ostream & operator<< (ostream & ost, const SegmentIndex & si)
   {
-    return (ost << int(pi));
-  }
+    return ost << (si - IndexBASE(si));
+  } 
 
 
 
@@ -570,9 +677,9 @@ namespace netgen
     ///
     DLL_HEADER Element2d (ELEMENT_TYPE type);
     ///
-    DLL_HEADER Element2d (int pi1, int pi2, int pi3);
+    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3);
     ///
-    DLL_HEADER Element2d (int pi1, int pi2, int pi3, int pi4);
+    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4);
     ///
     ELEMENT_TYPE GetType () const { return typ; }
     /// 
@@ -755,14 +862,14 @@ namespace netgen
     
     void Delete ()
     {
-      deleted = 1;
+      deleted = true;
       // for (PointIndex & p : pnum) p.Invalidate(); 
     }
     
     bool IsDeleted () const 
     {
 #ifdef DEBUG
-      if (pnum[0] < PointIndex::BASE && !deleted)
+      if ((pnum[0]-IndexBASE<PointIndex>() < 0) && !deleted)
 	cerr << "Surfelement has illegal pnum, but not marked as deleted" << endl;
 #endif    
       return deleted; 
@@ -796,7 +903,7 @@ namespace netgen
     int HasFace(const Element2d& el) const;
   };
 
-  ostream & operator<<(ostream  & s, const Element2d & el);
+  DLL_HEADER ostream & operator<<(ostream  & s, const Element2d & el);
 
 
 
@@ -1142,7 +1249,7 @@ namespace netgen
     bool IsDeleted () const 
     { 
 #ifdef DEBUG
-      if (pnum[0] < PointIndex::BASE && !flags.deleted)
+      if (pnum[0]-IndexBASE<PointIndex>() < 0 && !flags.deleted)
 	cerr << "Volelement has illegal pnum, but not marked as deleted" << endl;
 #endif    
 
@@ -1227,6 +1334,7 @@ namespace netgen
     auto PNums() const { return FlatArray<const PointIndex> (GetNP(), &pnums[0]); }
     auto PNums() { return FlatArray<PointIndex> (GetNP(), &pnums[0]); }
     
+    auto Vertices() const { return FlatArray<const PointIndex> (2, &pnums[0]); }
     
     ELEMENT_TYPE GetType() const
     {
@@ -1369,18 +1477,16 @@ namespace netgen
 
   struct BoundaryLayerParameters
   {
-    std::variant<string, int, std::vector<int>> boundary;
     std::variant<double, std::vector<double>> thickness;
-    std::variant<string, std::map<string, string>> new_material;
     std::variant<string, int, std::vector<int>> domain;
-    bool outside;
-    std::optional<std::variant<string, std::vector<int>>> project_boundaries;
-    bool grow_edges;
-    bool limit_growth_vectors;
-    bool sides_keep_surfaceindex;
-    bool keep_surfaceindex;
-
-    double limit_safety = 0.3; // alloow only 30% of the growth vector length
+    std::variant<string, int, std::vector<int>> boundary = ".*";
+    std::optional<std::variant<string, std::map<string, string>>> new_material = nullopt;
+    std::optional<std::variant<string, std::vector<int>>> project_boundaries = nullopt;
+    bool outside = false;
+    bool grow_edges = true;
+    bool limit_growth_vectors = false; // automatic reduction of layer thickness to avoid intersections
+    std::optional<bool> sides_keep_surfaceindex = nullopt; // !outside by default
+    bool disable_curving = true; // disable curving affected boundaries/edges (could lead to self-intersecting volume elements)
   };
 
 
@@ -1530,7 +1636,7 @@ namespace netgen
       Point<3> pnt;
       double h;
       int layer = 1;
-      MeshSizePoint (Point<3> _pnt, double _h) : pnt(_pnt), h(_h) { ; }
+      MeshSizePoint (Point<3> pnt_, double h_, int layer_ = 1) : pnt(pnt_), h(h_), layer(layer_) { ; }
       MeshSizePoint () = default;
       MeshSizePoint (const MeshSizePoint &) = default;
       MeshSizePoint (MeshSizePoint &&) = default;
@@ -1571,9 +1677,9 @@ namespace netgen
     ///
     int haltnode;
     ///
-    int haltsegmentp1;
+    PointIndex haltsegmentp1;
     ///
-    int haltsegmentp2;
+    PointIndex haltsegmentp2;
     ///
     int haltexistingline;
     ///
@@ -1653,8 +1759,9 @@ namespace netgen
 
 
 
-
-
+  // typedef NgArray<PointIndex,PointIndex::BASE> idmap_type;
+  typedef Array<PointIndex,PointIndex> idmap_type;
+  
 
 
   /**
@@ -1670,13 +1777,15 @@ namespace netgen
     class Mesh & mesh;
 
     /// identify points (thin layers, periodic b.c.)  
-    INDEX_2_HASHTABLE<int> identifiedpoints;
+    // INDEX_2_HASHTABLE<int> identifiedpoints;
+    ClosedHashTable<PointIndices<2>, int> identifiedpoints;
   
     /// the same, with info about the id-nr
-    INDEX_3_HASHTABLE<int> identifiedpoints_nr;
+    // INDEX_3_HASHTABLE<int> identifiedpoints_nr;
+    ClosedHashTable<std::tuple<PointIndices<2>, int>, int> identifiedpoints_nr;
 
     /// sorted by identification nr
-    TABLE<INDEX_2> idpoints_table;
+    TABLE<PointIndices<2>> idpoints_table;
 
     NgArray<ID_TYPE> type;
 
@@ -1691,6 +1800,9 @@ namespace netgen
     DLL_HEADER ~Identifications ();
 
     DLL_HEADER void Delete ();
+
+    // Removes identifications if one point is an INNERPOINT
+    DLL_HEADER void DeleteInnerPointIdentifications ();
 
     /*
       Identify points pi1 and pi2, due to
@@ -1712,7 +1824,7 @@ namespace netgen
 
     // bool HasIdentifiedPoints() const { return identifiedpoints != nullptr; } 
     ///
-    INDEX_3_HASHTABLE<int> & GetIdentifiedPoints ()
+    auto & GetIdentifiedPoints ()
     { 
       return identifiedpoints_nr;
     }
@@ -1731,7 +1843,7 @@ namespace netgen
     }
 
     ///
-    void GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric = false) const;
+    void GetMap (int identnr, idmap_type & identmap, bool symmetric = false) const;
     ///
     ID_TYPE GetType(int identnr) const
     {

@@ -1,15 +1,17 @@
 #ifndef FILE_OCC_UTILS_INCLUDED
 #define FILE_OCC_UTILS_INCLUDED
 
+
+
 #include <variant>
 
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+// #pragma clang diagnostic push
+// #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+#include <Standard_Version.hxx>
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
 #include <GProp_GProps.hxx>
-#include <Standard_Version.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <TopoDS.hxx>
@@ -17,11 +19,17 @@
 #include <gp_Trsf.hxx>
 #include <gp_GTrsf.hxx>
 
-#pragma clang diagnostic pop
+#define NETGEN_OCC_VERSION_AT_LEAST(MAJOR, MINOR) \
+  ((OCC_VERSION_MAJOR > MAJOR) ||                               \
+   ((OCC_VERSION_MAJOR == MAJOR) && (OCC_VERSION_MINOR >= MINOR)))
+#define NETGEN_OCC_VERSION_AT_LEAST_MAJOR(MAJOR) \
+  (NETGEN_OCC_VERSION_AT_LEAST(MAJOR, 0))
+
+// #pragma clang diagnostic pop
 
 #include "meshing.hpp"
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
 #define OCC_HAVE_DUMP_JSON
 #endif
 
@@ -61,6 +69,20 @@ namespace netgen
     inline gp_Pnt ng2occ (const Point<3> & p)
     {
         return gp_Pnt(p(0), p(1), p(2));
+    }
+
+    inline void CheckValidPropertyType(const TopoDS_Shape & shape)
+    {
+        switch (shape.ShapeType())
+        {
+          case TopAbs_SOLID:
+          case TopAbs_FACE:
+          case TopAbs_EDGE:
+          case TopAbs_VERTEX:
+            break;
+          default:
+            throw Exception("Cannot query properties of compound shapes - setting properties sets property on all highest dimension subshape type");
+        }
     }
 
     DLL_HEADER Box<3> GetBoundingBox( const TopoDS_Shape & shape );
@@ -144,6 +166,10 @@ namespace netgen
       {
         return SubShapes(TopAbs_SOLID);
       }
+      ListOfShapes Shells() const
+      {
+        return SubShapes(TopAbs_SHELL);
+      }
       ListOfShapes Faces() const
       {
         return SubShapes(TopAbs_FACE);
@@ -187,6 +213,14 @@ namespace netgen
     {
       ListOfShapes sub;
       for (TopExp_Explorer e(shape, TopAbs_SOLID); e.More(); e.Next())
+        sub.push_back(e.Current());
+      return sub;
+    }
+
+    inline ListOfShapes GetShells(const TopoDS_Shape & shape)
+    {
+      ListOfShapes sub;
+      for (TopExp_Explorer e(shape, TopAbs_SHELL); e.More(); e.Next())
         sub.push_back(e.Current());
       return sub;
     }

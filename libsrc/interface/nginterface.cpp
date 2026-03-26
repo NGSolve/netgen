@@ -71,9 +71,9 @@ void Ng_LoadGeometry (const char * filename)
       return;
     }
 
-  for (int i = 0; i < geometryregister.Size(); i++)
+  for (auto loader : GeometryRegister())
     {
-      NetgenGeometry * hgeom = geometryregister[i]->Load (filename);
+      NetgenGeometry * hgeom = loader->Load (filename);
       if (hgeom)
 	{
           ng_geometry.reset (hgeom);
@@ -94,7 +94,7 @@ void Ng_LoadMeshFromStream ( istream & input )
   mesh -> Load(input);
 
   SetGlobalMesh (mesh);
-  ng_geometry = geometryregister.LoadFromMeshFile (input);
+  ng_geometry = GeometryRegister().LoadFromMeshFile (input);
 
   if (!ng_geometry)
     ng_geometry = make_shared<NetgenGeometry>();
@@ -249,7 +249,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
   shared_ptr<NetgenGeometry> geo;
   if(buf.Size()) { // if we had geom-info in the file, take it
     istringstream geom_infile(string((const char*)&buf[0], buf.Size()));
-    geo = geometryregister.LoadFromMeshFile(geom_infile);
+    geo = GeometryRegister().LoadFromMeshFile(geom_infile);
   }
   if(geo!=nullptr) {
     ng_geometry = geo;
@@ -507,7 +507,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
     {
       const Segment & seg = mesh->LineSegment (ei);
 
-      if (seg[2] < 0)
+      if (!seg[2].IsValid())
 	{
 	  epi[0] = seg[0];
 	  epi[1] = seg[1];
@@ -651,14 +651,14 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
     {
       Point3d p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0);
+	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
     }
   else
     {
       double lam3[3];
       Point3d p2d(p[0], p[1], 0);
       ind = 
-	mesh->GetElementOfPoint(p2d, lam3, dummy, build_searchtree != 0);
+	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0) + 1;
 
       if (ind > 0)
 	{
@@ -697,7 +697,7 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
     {
       Point3d p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0);
+	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
     }
   else
     {
@@ -866,7 +866,7 @@ NG_ELEMENT_TYPE Ng_GetSegment (int ei, int * epi, int * np)
   epi[0] = seg[0];
   epi[1] = seg[1];
 
-  if (seg[2] < 0)
+  if (!seg[2].IsValid())
     {
       if (np) *np = 2;
       return NG_SEGM;
@@ -1571,10 +1571,11 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 {
   if (mesh->GetDimension() == 3)
     {
+      SurfaceElementIndex sei = selnr-1;
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
 	*orient = topology.GetSurfaceElementFaceOrientation (selnr);
-      return topology.GetSurfaceElementFace (selnr);
+      return topology.GetFace(sei);
     }
   return -1;
 }
@@ -1605,7 +1606,10 @@ void Ng_GetEdge_Vertices (int ednr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
   // topology.GetEdgeVertices (ednr, vert[0], vert[1]);
-  tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
+  // tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
+  auto [v1,v2] = topology.GetEdgeVertices(ednr-1);
+  vert[0] = v1-IndexBASE<PointIndex>()+1;
+  vert[1] = v2-IndexBASE<PointIndex>()+1;
 }
 
 
@@ -1736,8 +1740,8 @@ void Ng_GetParentNodes (int ni, int * parents)
 {
   if (ni <= mesh->mlbetweennodes.Size())
     {
-      parents[0] = mesh->mlbetweennodes.Get(ni).I1();
-      parents[1] = mesh->mlbetweennodes.Get(ni).I2();
+      parents[0] = mesh->mlbetweennodes[ni].I1();
+      parents[1] = mesh->mlbetweennodes[ni].I2();
     }
   else
     parents[0] = parents[1] = 0;
@@ -1749,12 +1753,12 @@ int Ng_GetParentElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentelement.Size())
-	return mesh->mlparentelement.Get(ei);
+	return mesh->mlparentelement[ei-1]+1;
     }
   else
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement.Get(ei);
+	return mesh->mlparentsurfaceelement[ei-1]+1;
     }
   return 0;
 }
@@ -1765,7 +1769,7 @@ int Ng_GetParentSElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement.Get(ei);
+	return mesh->mlparentsurfaceelement[ei-1]+1;
     }
   else
     {
@@ -1827,7 +1831,7 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
 
 int Ng_GetNPeriodicEdges (int idnr)
 {
-  NgArray<int,PointIndex::BASE> map;
+  idmap_type map;
   //const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1854,7 +1858,7 @@ int Ng_GetNPeriodicEdges (int idnr)
 
 void Ng_GetPeriodicEdges (int idnr, int * pairs)
 {
-  NgArray<int,PointIndex::BASE> map;
+  idmap_type map;
   const MeshTopology & top = mesh->GetTopology();
   int nse = mesh->GetNSeg();
 
@@ -1883,9 +1887,9 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
 
 
 
-void Ng_PushStatus (const char * str)
+void Ng_PushStatus (const std::string& str)
 {
-  PushStatus (MyStr (str));
+  PushStatus (str);
 }
 
 void Ng_PopStatus ()
@@ -1898,12 +1902,15 @@ void Ng_SetThreadPercentage (double percent)
   SetThreadPercent (percent);
 }
 
-void Ng_GetStatus (char ** str, double & percent)
+void Ng_GetStatus (std::string & str, double & percent)
 {
+  /*
   MyStr s;
   GetStatus(s,percent);
   *str = new char[s.Length()+1];
-  strcpy(*str,s.c_str());  
+  strcpy(*str,s.c_str());
+  */
+  GetStatus (str, percent);
 }
 
 
@@ -1945,8 +1952,10 @@ int Ng_GetVertex_Elements( int vnr, int* elems )
 }
 
 ///// Added by Roman Stainko ....
-int Ng_GetVertex_SurfaceElements( int vnr, int* elems )
+int Ng_GetVertex_SurfaceElements( int vnr_, int* elems )
 {
+  PointIndex vnr = vnr_ + IndexBASE<PointIndex>()-1;
+  
   switch (mesh->GetDimension())
     {
     case 3:
@@ -1994,8 +2003,9 @@ int Ng_GetVertex_NElements( int vnr )
 }
 
 ///// Added by Roman Stainko ....
-int Ng_GetVertex_NSurfaceElements( int vnr )
+int Ng_GetVertex_NSurfaceElements( int vnr_ )
 {
+  PointIndex vnr = vnr_ + IndexBASE<PointIndex>()-1;
   switch (mesh->GetDimension())
     {
     case 3:
@@ -2240,7 +2250,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
-                nodes[cnt++] = el[i] - PointIndex::BASE;
+                nodes[cnt++] = el[i] - IndexBASE<PointIndex>();
               }
           }
 
@@ -2322,7 +2332,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
-                nodes[cnt++] = el[i] - PointIndex::BASE;
+                nodes[cnt++] = el[i] - IndexBASE<PointIndex>();
               }
           }
 
@@ -2340,7 +2350,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
 
         if (nodeset & 4)  // Faces
           {
-            int face = mesh->GetTopology().GetSurfaceElementFace (elementnr+1);
+            int face = mesh->GetTopology().GetFace (SurfaceElementIndex(elementnr))+1;
             nodes[cnt++] = 2;
             nodes[cnt++] = face-1;
           }

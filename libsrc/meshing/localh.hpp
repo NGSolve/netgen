@@ -54,6 +54,7 @@ namespace netgen
 
     Point<3> PMid() const { return Point<3> (xmid[0], xmid[1], xmid[2]); }
     double H2() const { return h2; }
+    double HOpt() const { return hopt; }
 
     bool HasChilds() const
     {
@@ -119,12 +120,14 @@ namespace netgen
 
     void CutBoundary (const Box<3> & box)
     { CutBoundaryRec (box.PMin(), box.PMax(), root); }
+
+    GradingBox * Find(Point<3> p) const;
   
     /// find inner boxes
-    void FindInnerBoxes (class AdFront3 * adfront,
+    void FindInnerBoxes (const class AdFront3 & adfront,
 			 int (*testinner)(const Point3d & p1));
 
-    void FindInnerBoxes (class AdFront2 * adfront,
+    void FindInnerBoxes (const class AdFront2 & adfront,
 			 int (*testinner)(const Point<2> & p1));
 
 
@@ -166,7 +169,7 @@ namespace netgen
 
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
-			     class AdFront3 * adfront,
+			     const class AdFront3 & adfront,
 			     NgArray<Box3d> & faceboxes,
 			     NgArray<int> & finds, int nfinbox);
 
@@ -177,7 +180,7 @@ namespace netgen
 
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
-			     class AdFront2 * adfront,
+			     const class AdFront2 & adfront,
 			     FlatArray<Box<2>> faceboxes,
 			     FlatArray<int> finds); // , int nfinbox);
 

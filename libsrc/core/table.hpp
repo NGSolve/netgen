@@ -17,6 +17,7 @@
 #include "ngcore_api.hpp"
 #include "profiler.hpp"
 
+
 namespace ngcore
 {
 
@@ -93,6 +94,7 @@ namespace ngcore
     Iterator end() const { return Iterator(*this, BASE+size); }
   };
 
+  /*
   NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<unsigned int> entrysize);
   NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<size_t> entrysize);
 
@@ -105,7 +107,20 @@ namespace ngcore
   { return TablePrefixSum32 (FlatArray<unsigned> (entrysize.Size(), (unsigned int*)(std::atomic<int>*)entrysize.Addr(0))); }
   NETGEN_INLINE size_t * TablePrefixSum (FlatArray<size_t> entrysize)
   { return TablePrefixSum64 (entrysize); }
+  */
 
+  NGCORE_API extern size_t * TablePrefixSum32 (FlatArray<uint32_t> entrysize);
+  NGCORE_API extern size_t * TablePrefixSum64 (FlatArray<uint64_t> entrysize);
+
+  template <typename T> // TODO: enable_if T is integral
+  NETGEN_INLINE size_t * TablePrefixSum (FlatArray<T> entrysize)
+  {
+    if constexpr (sizeof(T) == 4)
+      return TablePrefixSum32 ( { entrysize.Size(), (uint32_t*)(void*)entrysize.Addr(0) });
+    else
+      return TablePrefixSum64 ( { entrysize.Size(), (uint64_t*)(void*)entrysize.Addr(0) });
+  }
+  
 
   /**
      A compact Table container.
@@ -247,14 +262,14 @@ namespace ngcore
     const MemoryTracer& GetMemoryTracer() const { return mt; }
 
   private:
-    size_t GetMemUsage() const { return size == 0 ? 0 : sizeof(T)*index[size] + sizeof(IndexType) * size+1; }
+    NETGEN_INLINE size_t GetMemUsage() const { return size == 0 ? 0 : sizeof(T)*index[size] + sizeof(IndexType) * size+1; }
     MemoryTracer mt;
   };
 
 
   /// Print table
   template <class T, typename IndexType>
-  inline ostream & operator<< (ostream & s, const Table<T,IndexType> & table)
+  inline ostream & operator<< (ostream & s, FlatTable<T,IndexType> table)
   {
     for (auto i : table.Range())
       {
@@ -329,8 +344,8 @@ namespace ngcore
 	case 1:
           {
             size_t oldval = nd;
-            while (blocknr+1>nd) {
-              nd.compare_exchange_weak (oldval, blocknr+1);
+            while (blocknr-IndexBASE<IndexType>()+1>nd) {
+              nd.compare_exchange_weak (oldval, blocknr-IndexBASE<IndexType>()+1);
               oldval = nd;
             }
             break;
@@ -406,7 +421,7 @@ namespace ngcore
           pcreator = std::make_unique<TableCreator<TEntry, TIndex>>(*cnt);
       else
           pcreator = std::make_unique<TableCreator<TEntry, TIndex>>();
-
+      
       auto & creator = *pcreator;
 
       for ( ; !creator.Done(); creator++)
@@ -447,12 +462,15 @@ namespace ngcore
       : TableCreator<int>(), takedofs(atakedofs) { };
     FilteredTableCreator(int acnt, const BitArray* atakedofs)
       : TableCreator<int>(acnt),takedofs(atakedofs) { };
+    void SetFilter (const BitArray * atakedofs) { takedofs = atakedofs; } 
     void Add (size_t blocknr, int data);
     void Add (size_t blocknr, IntRange range);
     void Add (size_t blocknr, FlatArray<int> dofs);
   };
 
+  
 
+  
 
   /**
      A dynamic table class.

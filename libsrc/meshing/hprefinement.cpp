@@ -429,6 +429,10 @@ namespace netgen
         hps = &reftet_2f_1e_0vb; break;
       case HP_TET_3F_0E_0V:
         hps = &reftet_3f_0e_0v; break;
+
+      case HP_TET_ALFELD:
+        hps = &reftet_Alfeld; break;
+
         
       case HP_PRISM:
 	hps = &refprism; break;
@@ -603,19 +607,21 @@ namespace netgen
     return hps;
   }
 
-  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoiclt_dom, 
+  template <typename HT_EDGEPOINT_DOM>
+  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, HT_EDGEPOINT_DOM & edgepoiclt_dom, 
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref); 
+			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
 
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   
   
   void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
   { 
-    for(ElementIndex i = 0; i < mesh.GetNE(); i++) 
+    // for(ElementIndex i = 0; i < mesh.GetNE(); i++)
+    for(ElementIndex i : mesh.VolumeElements().Range())
       {
 	HPRefElement hpel(mesh[i]); 
-	hpel.coarse_elnr = i; 
+	hpel.coarse_elnr = int(i); 
 	
 	switch (mesh[i].GetType()) 
 	  { 
@@ -1498,6 +1504,7 @@ namespace netgen
 	  }
 	PrintMessage(5, " Start with Update Topology ");
 	mesh.UpdateTopology();
+        // mesh.ComputeNVertices();
 	PrintMessage(5, " Mesh Update Topology done ");
 
 	act_ref++; 
@@ -1509,7 +1516,8 @@ namespace netgen
 
     if(act_ref>=1)
       { 
-	for(ElementIndex i=0;i<mesh.GetNE(); i++) 
+	// for(ElementIndex i=0;i<mesh.GetNE(); i++)
+        for (ElementIndex i : mesh.VolumeElements().Range())
 	  { 
 	    // Element el = mesh[i] ;
 	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
@@ -1632,9 +1640,10 @@ namespace netgen
       }
   }
 
-bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int & levels, int & act_ref)
+  template <typename HT_EDGEPOINT_DOM>
+  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
+		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref)
 {
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
@@ -1670,7 +1679,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	  {
 	    if (mesh.Point(i).Singularity() * levels >= act_ref)
 	      {
-		cornerpoint.Set(i);
+		cornerpoint.SetBit(i);
 		sing = 1; 
 	      } 
 	  }
@@ -1695,16 +1704,17 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	      edges.Set (i2s, 1);
 
 
-	      edgepoint.Set (i2.I1());
-	      edgepoint.Set (i2.I2());
+	      edgepoint.SetBit (i2.I1());
+	      edgepoint.SetBit (i2.I2());
 	      sing = 1; 
 	    }
 
 	// if 2 adjacent edges of an element are singular, the 
 	// common point must be a singular point
-	for (int i = 1; i <= mesh.GetNE(); i++)
+	// for (int i = 1; i <= mesh.GetNE(); i++)
+        for (auto ei : mesh.VolumeElements().Range())
 	  {
-	    const Element & el = mesh.VolumeElement(i);
+	    const Element & el = mesh[ei]; 
 	    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (el.GetType());
 	    int nedges = MeshTopology::GetNEdges (el.GetType());
 	    for (int j = 0; j < nedges; j++)
@@ -1717,10 +1727,10 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 		    ek.Sort();
 		    if (edges.Used(ej) && edges.Used(ek))
 		      {
-			if (ej.I1() == ek.I1()) cornerpoint.Set (ek.I1());
-			if (ej.I1() == ek.I2()) cornerpoint.Set (ek.I2());
-			if (ej.I2() == ek.I1()) cornerpoint.Set (ek.I1());
-			if (ej.I2() == ek.I2()) cornerpoint.Set (ek.I2());
+			if (ej.I1() == ek.I1()) cornerpoint.SetBit (ek.I1());
+			if (ej.I1() == ek.I2()) cornerpoint.SetBit (ek.I2());
+			if (ej.I2() == ek.I1()) cornerpoint.SetBit (ek.I1());
+			if (ej.I2() == ek.I2()) cornerpoint.SetBit (ek.I2());
 		      }
 		  }
 	  }
@@ -1800,33 +1810,33 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    if (seg.singedge_left * levels >= act_ref)
 	      {
 		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
-			    mesh.LineSegment(i)[1]);
+                                           mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
-		edgepoint.Set(i2.I1());
-		edgepoint.Set(i2.I2());
+		edgepoint.SetBit(i2.I1());
+		edgepoint.SetBit(i2.I2());
 		*testout << " singleft " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
 		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domin, i2.I1()), 1);
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domin, i2.I2()), 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domin, i2.I1() }, 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domin, i2.I2() }, 1);
 		sing = 1; 
 		
 	      }
 	    
 	    if (seg.singedge_right * levels >= act_ref)
 	      {
-		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
-			    mesh.LineSegment(i)[0]);  
+		PointIndices<2> i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
+                                                   mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
-		edgepoint.Set(i2.I1());
-		edgepoint.Set(i2.I2());
+		edgepoint.SetBit(i2.I1());
+		edgepoint.SetBit(i2.I2());
 		
 		*testout << " singright " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
 		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
 		
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domout, i2.I1()), 1);
-		edgepoint_dom.Set (INDEX_2(mesh.LineSegment(i).domout, i2.I2()), 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domout, i2.I1() }, 1);
+		edgepoint_dom.Set ( { mesh.LineSegment(i).domout, i2.I2() }, 1);
 		sing = 1;
 	      }
 	    
@@ -1857,14 +1867,14 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
 	    if (surfonpoint.Get(i).I1())
 	      {
 		// cornerpoint.Set(i);    // disabled by JS, Aug 2009
-		edgepoint.Set(i);
+		edgepoint.SetBit(i);
 	      }
 	
 	    // mark points for refinement that are explicitly specified in input file
 	    if (mesh.Point(i).Singularity()*levels >= act_ref)
 	      {
-		cornerpoint.Set(i);
-		edgepoint.Set(i);
+		cornerpoint.SetBit(i);
+		edgepoint.SetBit(i);
 		sing =  1; 
 	      }
 	  }
@@ -1889,11 +1899,13 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
   {
     INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
-    NgBitArray edgepoint(mesh.GetNP());
-    INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
+    TBitArray<PointIndex> edgepoint(mesh.GetNP());
+    // INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
 
+    HT_EDGEPOINT_DOM edgepoint_dom;
+    
     edgepoint.Clear();
-    NgBitArray cornerpoint(mesh.GetNP());
+    TBitArray<PointIndex> cornerpoint(mesh.GetNP());
     cornerpoint.Clear();
 
     // value = nr > 0 ... refine elements in domain nr
@@ -1901,7 +1913,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     INDEX_3_HASHTABLE<int> faces(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> face_edges(mesh.GetNSE()+1);
     INDEX_2_HASHTABLE<int> surf_edges(mesh.GetNSE()+1);
-    NgArray<int, PointIndex::BASE> facepoint(mesh.GetNP());
+    Array<int, PointIndex> facepoint(mesh.GetNP());
 
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
 			      cornerpoint, edgepoint, faces, face_edges, 
@@ -1917,7 +1929,7 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
     NgArray<int> misses(10000);
     misses = 0;
 
-    (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;
+    // (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;
 
     
     for( int i = 0; i<elements.Size(); i++) 
@@ -1944,6 +1956,9 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
               else
                 cout << "type = " << hpel.type << endl;
               */
+              if (split == SPLIT_ALFELD && mesh.GetDimension()==3)
+                hpel.type = HP_TET_ALFELD;
+
 	      break;
 	    }
 	  case HP_PRISM:
@@ -1974,9 +1989,9 @@ bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HAS
               if (split == SPLIT_HP)
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                          faces, face_edges, surf_edges, facepoint, dim, fd);    
-              else if (split == SPLIT_ALFELD)
+              else if (split == SPLIT_ALFELD && mesh.GetDimension()==2)
                 hpel.type = HP_TRIG_ALFELD;
-              else if (split == SPLIT_POWELL)
+              else if (split == SPLIT_POWELL && mesh.GetDimension()==2)
                 hpel.type = HP_TRIG_POWELL;
 
 	      dd = 2;

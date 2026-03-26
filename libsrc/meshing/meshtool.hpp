@@ -4,8 +4,9 @@
 // #include "../general/ngarray.hpp"
 // #include "../gprim/geom3d.hpp"
 // #include "../gprim/geomobjects.hpp"
-// #include "meshtype.hpp"
-// #include "meshclass.hpp"
+
+#include "meshtype.hpp"
+#include "meshclass.hpp"
 
 namespace netgen {
 ///

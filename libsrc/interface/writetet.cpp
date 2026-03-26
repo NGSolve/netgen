@@ -366,12 +366,12 @@ namespace netgen
       uidpid = "UID";
     
 
-    NgArray< NgArray<int,PointIndex::BASE>* > idmaps;
+    NgArray< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
 	  {
-	    idmaps.Append(new NgArray<int,PointIndex::BASE>);
+	    idmaps.Append(new idmap_type);
 	    mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
 	  }
       }
@@ -502,7 +502,7 @@ namespace netgen
 		<< mesh[i](0) << " "
 		<< mesh[i](1) << " "
 		<< mesh[i](2) << " " << id_type[i] << " ";
-	if(i-PointIndex::BASE < point_ids.Size())
+	if(i-IndexBASE<PointIndex>() < point_ids.Size())
 	  outfile << point_ids[i];
 	else
 	  outfile << "0";
@@ -1066,13 +1066,13 @@ namespace netgen
     //     for(PointIndex i = mesh.Points().Begin(); i < mesh.Points().End(); i++)
     for(PointIndex i : mesh.Points().Range())
       {
-	if(i-PointIndex::BASE < point_ids.Size())
+	if(i-IndexBASE<PointIndex>() < point_ids.Size())
 	  {
 	    if(uid_to_group_0D[point_ids[i]] >= 0)
-	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-PointIndex::BASE);
+	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-IndexBASE<PointIndex>());
 	  }
 	else
-	  groups[uid_to_group_0D[0]]->Append(i+1-PointIndex::BASE);
+	  groups[uid_to_group_0D[0]]->Append(i+1-IndexBASE<PointIndex>());
       }
 
 

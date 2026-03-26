@@ -861,9 +861,10 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
   for (int i = 0; i < ht.Size(); i++)
     if (ht.UsedPos(i))
       {
-	INDEX_2 hash;
-	T data;
-	ht.GetData0 (i, hash, data);
+	// INDEX_2 hash;
+	// T data;
+	// ht.GetData0 (i, hash, data);
+        auto [hash,data] = ht.GetBoth(i);
 	ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
@@ -880,7 +881,8 @@ protected:
   size_t mask;
 
 protected: 
-  BASE_INDEX_3_CLOSED_HASHTABLE (size_t size)
+  BASE_INDEX_3_CLOSED_HASHTABLE (size_t size);
+  /*
     : hash(RoundUp2(size))
   {
     // cout << "orig size = " << size
@@ -892,6 +894,7 @@ protected:
     for (size_t i = 0; i < size; i++)
       hash[i].I1() = invalid;
   }
+  */
 
 public:
   int Size() const 
@@ -1073,9 +1076,12 @@ inline ostream & operator<< (ostream & ost, const INDEX_3_CLOSED_HASHTABLE<T> & 
   for (int i = 0; i < ht.Size(); i++)
     if (ht.UsedPos(i))
       {
+        /*
 	INDEX_3 hash;
 	T data;
-	ht.GetData (i, hash, data);
+        ht.GetData (i, hash, data);
+        */
+        auto [hash, data] = ht.GetBoth();
 	ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;

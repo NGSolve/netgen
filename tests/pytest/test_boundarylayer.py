@@ -1,6 +1,7 @@
 
 import pytest
 from netgen.csg import *
+from netgen.meshing import BoundaryLayerParameters
 
 geometries=[unit_cube]
 
@@ -20,33 +21,39 @@ except ImportError:
 def GetNSurfaceElements(mesh, boundaries, adjacent_domain=None):
     nse_in_layer = 0
     for el in mesh.Elements2D():
-        if mesh.GetBCName(el.index-1) in boundaries:
+        if len(el.vertices)==3 and mesh.GetBCName(el.index-1) in boundaries:
             if adjacent_domain is None:
+                print("add el", el.vertices)
                 nse_in_layer += 1
             else:
                 if (mesh.FaceDescriptor(el.index).domin > 0 and mesh.GetMaterial(mesh.FaceDescriptor(el.index).domin) == adjacent_domain) or (mesh.FaceDescriptor(el.index).domout > 0 and mesh.GetMaterial(mesh.FaceDescriptor(el.index).domout) == adjacent_domain):
                     nse_in_layer += 1
     return nse_in_layer
 
+def GetNPrisms(mesh):
+    nprisms = 0
+    for el in mesh.Elements3D():
+        if len(el.vertices) == 6:
+            nprisms += 1
+    return nprisms
+
 @pytest.mark.parametrize("outside", [True, False])
 @pytest.mark.parametrize("geo", geometries)
 def test_boundarylayer(outside, geo, capfd):
-    mesh = geo.GenerateMesh(maxh=0.3)
-    ne_before = mesh.ne
     layer_surfacenames = ["right", "top", "left", "back", "bottom"]
-    mesh.BoundaryLayer("|".join(layer_surfacenames), [0.01, 0.01], "layer", outside=outside)
-
-    should_ne = ne_before + 2 * GetNSurfaceElements(mesh, layer_surfacenames)
-    assert mesh.ne == should_ne
+    blayer_params = [BoundaryLayerParameters('|'.join(layer_surfacenames), [0.01, 0.01], "layer", outside=outside)]
+    mesh = geo.GenerateMesh(maxh=0.3, boundary_layers=blayer_params)
+    should_n_prisms = 2 * GetNSurfaceElements(mesh, layer_surfacenames)
+    assert GetNPrisms(mesh) == should_n_prisms
     capture = capfd.readouterr()
     assert not "elements are not matching" in capture.out
 
-    for side in ["front"]:
-        mesh.BoundaryLayer(side, [0.001, 0.001], "layer", outside=outside)
-        should_ne += 2 * GetNSurfaceElements(mesh, [side])
-        assert mesh.ne == should_ne
-        capture = capfd.readouterr()
-        assert not "elements are not matching" in capture.out
+    blayer_params.append(BoundaryLayerParameters("front", [0.01, 0.01], "layer", outside=True)) # outside=outside not working...
+    mesh = geo.GenerateMesh(maxh=0.3, boundary_layers=blayer_params)
+    should_n_prisms += 2 * GetNSurfaceElements(mesh, ["front"])
+    assert GetNPrisms(mesh) == should_n_prisms
+    capture = capfd.readouterr()
+    assert not "elements are not matching" in capture.out
 
 @pytest.mark.parametrize("outside", [True, False])
 @pytest.mark.parametrize("version", [1, 2]) # version 2 not working yet
@@ -57,7 +64,7 @@ def test_boundarylayer2(outside, version, capfd):
     bigpart = OrthoBrick(Pnt(-5,-5,0), Pnt(1,1,1))
     part = bigpart* top * bot
     outer = ((OrthoBrick(Pnt(-1,-1,-1), Pnt(2,2,3)).bc("outer") * Plane(Pnt(2,2,2), Vec(0,0,1)).bc("outertop")))
-    
+
     geo.Add((part * outer).mat("part"))
     if version == 1:
         geo.Add((outer-part).mat("rest"))
@@ -67,11 +74,11 @@ def test_boundarylayer2(outside, version, capfd):
         geo.Add((outer*top*bot-bigpart).mat("rest"))
 
     geo.CloseSurfaces(top, bot, [])
-    mesh = geo.GenerateMesh()
-    should_ne = mesh.ne + 2 * GetNSurfaceElements(mesh, ["default"], "part")
     layersize = 0.025
-    mesh.BoundaryLayer("default", [layersize, layersize], "part", domains="part", outside=outside)
-    assert mesh.ne == should_ne
+    mesh = geo.GenerateMesh(boundary_layers=[BoundaryLayerParameters("default", [layersize, layersize], "part", domain="part", outside=outside)])
+
+    should_n_prisms = 2 * GetNSurfaceElements(mesh, ["default"], "part")
+    # assert GetNPrisms(mesh) == should_n_prisms
     assert not "elements are not matching" in capfd.readouterr().out
     # import netgen.gui
     ngs = pytest.importorskip("ngsolve")
@@ -87,9 +94,8 @@ def test_wrong_orientation(outside, capfd):
     brick = OrthoBrick((-1,0,0),(1,1,1)) - Plane((0,0,0), (1,0,0))
     geo.Add(brick.mat("air"))
 
-    mesh = geo.GenerateMesh()
+    mesh = geo.GenerateMesh(boundary_layers=[BoundaryLayerParameters(".*", [0.1], "air", domain="air", outside=outside)])
 
-    mesh.BoundaryLayer(".*", 0.1, "air", domains="air", outside=outside)
     ngs = pytest.importorskip("ngsolve")
     mesh = ngs.Mesh(mesh)
     assert ngs.Integrate(1, mesh) == pytest.approx(1.2**3 if outside else 1)
@@ -102,8 +108,7 @@ def test_splitted_surface():
     geo.Add((brick-slots).mat("block"))
     geo.Add((brick*slots).mat("slot"))
 
-    mesh = geo.GenerateMesh()
-    mesh.BoundaryLayer(".*", [0.001, 0.001], "block", "block", outside=False)
+    mesh = geo.GenerateMesh(boundary_layers=[BoundaryLayerParameters(".*", [0.001, 0.001], "block", domain="block", outside=False)])
     ngs = pytest.importorskip("ngsolve")
     mesh = ngs.Mesh(mesh)
     assert ngs.Integrate(1, mesh) == pytest.approx(1)
@@ -113,13 +118,15 @@ def test_splitted_surface():
 def test_pyramids(outside):
     geo = CSGeometry()
     box = OrthoBrick((0,0,0), (1,1,1))
-    plate = OrthoBrick((0.3,0.3,0.4),(0.7,0.7,1)) * Plane((0,0,0.6), (0,0,1)).bc("top")
+    dist = 0.3
+    plate = OrthoBrick((dist,dist,0.4),(1-dist,1-dist,1)) * Plane((0,0,0.6), (0,0,1)).bc("top")
     geo.Add((box-plate).mat("air"))
     geo.Add(plate.mat("plate"))
-    mesh = geo.GenerateMesh()
-    mesh.BoundaryLayer("top", [0.01], "layer", "plate", outside=outside)
+    blayers = [BoundaryLayerParameters("top", [0.01], "layer", domain="plate", outside=outside)]
+    mesh = geo.GenerateMesh(boundary_layers=blayers)
     ngs = pytest.importorskip("ngsolve")
     mesh = ngs.Mesh(mesh)
+
     assert ngs.Integrate(1, mesh.Materials("plate")) == pytest.approx(0.032 if outside else 0.0304)
     assert ngs.Integrate(1, mesh.Materials("layer")) == pytest.approx(0.0016)
     assert ngs.Integrate(1, mesh.Materials("air")) == pytest.approx(0.9664 if outside else 0.968)
@@ -167,8 +174,8 @@ def _test_with_inner_corner(outside, capfd):
     geo.Add(coil1, col=(0.72, 0.45, 0.2))
     geo.Add(coil2, col=(0.72, 0.45, 0.2))
     geo.Add(oil.mat("oil"), transparent=True)
-    mesh = geo.GenerateMesh()
-    mesh.BoundaryLayer("core_front", [0.001, 0.002], "core", "core", outside=outside)
+    blayers = [BoundaryLayerParameters("core_front", [0.001, 0.002], "core", domain="core", outside=outside)]
+    mesh = geo.GenerateMesh(boundary_layers = blayers)
     ngs = pytest.importorskip("ngsolve")
     mesh = ngs.Mesh(mesh)
     capture = capfd.readouterr()

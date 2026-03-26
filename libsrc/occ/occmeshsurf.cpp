@@ -296,6 +296,8 @@ namespace netgen
 			      Point<2> & pplane, 
 			      double h, int & zone) const
   {
+    // static Timer t("ToPlane"); RegionTimer reg(t);
+    
     if (projecttype == PLANESPACE)
       {
 	Vec<3> p1p, n;
@@ -338,7 +340,7 @@ namespace netgen
 				PointGeomInfo & gi,
 				double h) 
   {
-    static Timer t("FromPlane"); RegionTimer reg(t);
+    // static Timer t("FromPlane"); RegionTimer reg(t);
     
     if (projecttype == PLANESPACE)
       {
@@ -365,6 +367,9 @@ namespace netgen
   void OCCSurface :: Project (Point<3> & ap, PointGeomInfo & gi)
   {
     static Timer t("OccSurface::Project"); RegionTimer reg(t);
+    static Timer tanal("OccSurface::Project analysis"); 
+    static Timer ttol("OccSurface::Project approximation"); 
+
     static Timer t2("OccSurface::Project actual"); 
 
 
@@ -470,9 +475,14 @@ namespace netgen
     */
 
     // double u,v;
+    // JS : shouldn't we move these 2 lines to the constructor ?
+    // tanal.Start();
     Handle( ShapeAnalysis_Surface ) su = new ShapeAnalysis_Surface( occface );
+    // ShapeAnalysis_Surface su( occface );    
+    // tanal.Stop();
+    ttol.Start();
     auto toltool =  BRep_Tool::Tolerance( topods_face );
-
+    ttol.Stop();
     // gp_Pnt2d suval = su->ValueOfUV ( pnt, toltool);
     t2.Start();
     gp_Pnt2d suval = su->NextValueOfUV (gp_Pnt2d(u,v), pnt, toltool);

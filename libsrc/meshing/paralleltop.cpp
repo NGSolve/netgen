@@ -93,7 +93,7 @@ namespace netgen
     comm.AllGather (num_master_points, first_master_point);
     auto max_oldv = comm.AllReduce (Max (glob_vert.Range(0, oldnv)), NG_MPI_MAX);
     if (comm.AllReduce (oldnv, NG_MPI_SUM) == 0)
-      max_oldv = PointIndex::BASE-1;
+      max_oldv = long(PointIndex::BASE)-1;
     
     size_t num_glob_points = max_oldv+1;
     for (int i = 0; i < comm.Size(); i++)
@@ -184,7 +184,7 @@ namespace netgen
 
         if (mesh.mlbetweennodes.Size() == mesh.Points().Size())
           {
-            NgArray<PointIndices<2>,PointIndex::BASE> hml { mesh.mlbetweennodes };
+            Array<PointIndices<2>,PointIndex> hml { mesh.mlbetweennodes };
             for (PointIndex pi : Range(mesh.Points()))
               mesh.mlbetweennodes[inv_index[pi]] = hml[pi];
           }
@@ -436,7 +436,7 @@ namespace netgen
 	      for (int dist : GetDistantProcs(pi))
 		dest2vert.Add (dist, pi);
             
-	    for (PointIndex pi = PointIndex::BASE; pi < newnv+PointIndex::BASE; pi++)
+	    for (PointIndex pi = IndexBASE<PointIndex>(); pi < newnv+IndexBASE<PointIndex>(); pi++)
               if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())              
                 {
                   auto procs1 = GetDistantProcs(v1);

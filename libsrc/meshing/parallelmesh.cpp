@@ -329,7 +329,9 @@ namespace netgen
     /** The same table as per_verts, but TRANSITIVE!! **/
     auto iterate_per_verts_trans = [&](auto f){
       NgArray<int> allvs;
-      for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
+      // for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
+      for (PointIndex k = IndexBASE<PointIndex>();
+           k < GetNV()+IndexBASE<PointIndex>(); k++)      
 	{
 	  allvs.SetSize(0);
 	  allvs.Append(per_verts[k]);
@@ -438,7 +440,8 @@ namespace netgen
 	local vertex numbers on distant procs 
 	(I think this was only used for debugging??) 
     **/
-    for (int vert = 1; vert <= GetNP(); vert++ )
+    // for (int vert = 1; vert <= GetNP(); vert++ )
+    for (PointIndex vert : Points().Range())
       {
 	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
@@ -446,7 +449,7 @@ namespace netgen
 	    int dest = procs[j];
 	    // !! we also use this as offsets for MPI-type, if this is changed, also change ReceiveParallelMesh
 	    verts_of_proc.Add (dest, vert - IndexBASE<T_POINTS::index_type>());
-	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size());
+	    loc_num_of_vert.Add (vert, verts_of_proc[dest].Size() -1+IndexBASE<T_POINTS::index_type>());
 	  }
       }
     tbuildvertex.Stop();    
@@ -544,8 +547,8 @@ namespace netgen
     tbuilddistpnums.Start();
     Array<int> num_distpnums(ntasks);
     num_distpnums = 0;
-    
-    for (int vert = 1; vert <= GetNP(); vert++)
+    // for (int vert = 1; vert <= GetNP(); vert++)
+    for (PointIndex vert : Points().Range())
       {
 	FlatArray<int> procs = procs_of_vert[vert];
 	for (auto p : procs)
@@ -553,8 +556,8 @@ namespace netgen
       }
 
     DynamicTable<int> distpnums (num_distpnums);
-
-    for (int vert = 1; vert <= GetNP(); vert++)
+    // for (int vert = 1; vert <= GetNP(); vert++)
+    for (PointIndex vert : Points().Range())
       {
 	NgFlatArray<int> procs = procs_of_vert[vert];
 	for (int j = 0; j < procs.Size(); j++)
@@ -579,27 +582,27 @@ namespace netgen
     tbuildelementtable.Start();
     Array<int> elarraysize (ntasks);
     elarraysize = 0;
-    for ( int ei = 1; ei <= GetNE(); ei++)
+    // for (int ei = 1; ei <= GetNE(); ei++)
+    for (ElementIndex ei : VolumeElements().Range())
       {
 	const Element & el = VolumeElement (ei);
 	// int dest = el.GetPartition();
-        int dest = vol_partition[ei-1];
+        int dest = vol_partition[ei];
 	elarraysize[dest] += 3 + el.GetNP();
       }
 
     DynamicTable<int> elementarrays(elarraysize);
-
-    for (int ei = 1; ei <= GetNE(); ei++)
+    
+    for (ElementIndex ei : VolumeElements().Range())    
       {
 	const Element & el = VolumeElement (ei);
-	// int dest = el.GetPartition();
-        int dest = vol_partition[ei-1];
+        int dest = vol_partition[ei];
         
-	elementarrays.Add (dest, ei);
+	elementarrays.Add (dest, int(ei+1));
 	elementarrays.Add (dest, el.GetIndex());
 	elementarrays.Add (dest, el.GetNP());
-	for (int i = 0; i < el.GetNP(); i++)
-	  elementarrays.Add (dest, el[i]);
+        for (PointIndex pi : el.PNums())
+	  elementarrays.Add (dest, pi);
       }
     tbuildelementtable.Stop();
     
@@ -955,15 +958,15 @@ namespace netgen
     self.openelements = NgArray<Element2d>(0);
     self.opensegments = NgArray<Segment>(0);
     self.numvertices = 0;
-    self.mlbetweennodes = NgArray<PointIndices<2>,PointIndex::BASE> (0);
-    self.mlparentelement = NgArray<int>(0);
-    self.mlparentsurfaceelement = NgArray<int>(0);
+    self.mlbetweennodes = Array<PointIndices<2>,PointIndex> (0);
+    self.mlparentelement = Array<ElementIndex, ElementIndex>(0);
+    self.mlparentsurfaceelement = Array<SurfaceElementIndex, SurfaceElementIndex>(0);
     self.curvedelems = make_unique<CurvedElements> (self);
     self.clusters = make_unique<AnisotropicClusters> (self);
     self.ident = make_unique<Identifications> (self);
     self.topology = MeshTopology(*this);
     self.topology.Update();
-    self.BuildElementSearchTree();
+    self.BuildElementSearchTree(3);
     
     // const_cast<Mesh&>(*this).DeleteMesh();
 
@@ -1017,10 +1020,10 @@ namespace netgen
 
     for (int vert = 0; vert < numvert; vert++)
       {
-	int globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
+	PointIndex globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
         // paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
         paralleltop->L2G (PointIndex(vert+PointIndex::BASE)) = globvert;
-	glob2loc_vert_ht.Set (globvert, vert+1);
+	glob2loc_vert_ht.Set (globvert, vert+PointIndex::BASE);
       }
     
     for (int i = 0; i < numvert; i++)
@@ -1158,7 +1161,7 @@ namespace netgen
 	  
 	  seg.domin = seg.surfnr1;
 	  seg.domout = seg.surfnr2;
-	  if ( seg.pnums[0] >0 && seg.pnums[1] > 0 )
+	  if ( seg.pnums[0].IsValid() && seg.pnums[1].IsValid() )
 	    {
 	      paralleltop-> SetLoc2Glob_Segm ( segi,  globsegi );
 	      
@@ -1225,7 +1228,7 @@ namespace netgen
     auto write_names = [&] (auto & array) {
       for (int k = 0; k < array.Size(); k++) {
 	int s = name_sizes[tot_nn];
-	array[k] = s ? new string(&compiled_names[tot_size], s) : nullptr;
+	array[k] = s ? new string(&compiled_names[tot_size], s) : new string("");
 	tot_nn++;
 	tot_size += s;
       }
@@ -1315,21 +1318,21 @@ namespace netgen
 	eptr.Append (eind.Size());
 	const Element & el = VolumeElement(i+1);
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-1);
+	  eind.Append (el[j]-IndexBASE<PointIndex>());
       }
     for (int i = 0; i < GetNSE(); i++)
       {
 	eptr.Append (eind.Size());
 	const Element2d & el = SurfaceElement(i+1);
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-1);
+	  eind.Append (el[j]-IndexBASE<PointIndex>());
       }
     for (int i = 0; i < GetNSeg(); i++)
       {
 	eptr.Append (eind.Size());
 	const Segment & el = LineSegment(i+1);
-	eind.Append (el[0]-1);
-	eind.Append (el[1]-1);
+	eind.Append (el[0]-IndexBASE<PointIndex>());
+	eind.Append (el[1]-IndexBASE<PointIndex>());
       }
     eptr.Append (eind.Size());
     NgArray<idx_t> epart(ne), npart(nn);
@@ -1342,13 +1345,10 @@ namespace netgen
     if (nparts == 1)
       {
         for (int i = 0; i < GetNE(); i++)
-          // VolumeElement(i+1).SetPartition(1);
           vol_partition[i]= 1;
         for (int i = 0; i < GetNSE(); i++)
-          // SurfaceElement(i+1).SetPartition(1);
           surf_partition[i] = 1;
         for (int i = 0; i < GetNSeg(); i++)
-          // LineSegment(i+1).SetPartition(1);
           seg_partition[i] = 1;
       }
 
@@ -1367,23 +1367,14 @@ namespace netgen
                             NULL, NULL,
                             &edgecut, &epart[0], &npart[0]);
         tm.Stop();
-        
-        /*
-          METIS_PartMeshNodal (&ne, &nn, &eptr[0], &eind[0], NULL, NULL, &nparts,
-          NULL, NULL,
-          &edgecut, &epart[0], &npart[0]);
-        */
+
         PrintMessage (3, "metis complete");
-        // cout << "done" << endl;
         
         for (int i = 0; i < GetNE(); i++)
-          // VolumeElement(i+1).SetPartition(epart[i] + 1);
           vol_partition[i]= epart[i] + 1;
         for (int i = 0; i < GetNSE(); i++)
-          // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
           surf_partition[i] = epart[i+GetNE()] + 1;
         for (int i = 0; i < GetNSeg(); i++)
-          // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
           seg_partition[i] = epart[i+GetNE()+GetNSE()] + 1;
       }
     

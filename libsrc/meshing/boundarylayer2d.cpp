@@ -1,5 +1,5 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+#include "boundarylayer.hpp"
 #include "meshing2.hpp"
 #include "../geom2d/csg2d.hpp"
 
@@ -243,10 +243,6 @@ namespace netgen
 
      Array<SegmentIndex> segments;
 
-    // surface index map
-    Array<int> si_map(mesh.GetNFD()+2);
-    si_map = -1;
-
     // int fd_old = mesh.GetNFD();
 
     int max_edge_nr = -1;
@@ -254,8 +250,8 @@ namespace netgen
 
     for(const auto& seg : line_segments)
     {
-      if(seg.epgeominfo[0].edgenr > max_edge_nr)
-        max_edge_nr = seg.epgeominfo[0].edgenr;
+      if(seg.edgenr > max_edge_nr)
+        max_edge_nr = seg.edgenr;
       if(seg.domin > max_domain)
          max_domain = seg.domin;
       if(seg.domout > max_domain)
@@ -263,6 +259,7 @@ namespace netgen
     }
 
     int new_domain = max_domain+1;
+    int new_edge_nr = max_edge_nr+1;
 
     BitArray active_boundaries(max_edge_nr+1);
     BitArray active_segments(nseg);
@@ -283,12 +280,15 @@ namespace netgen
     }
 
     {
-        FaceDescriptor new_fd(0, 0, 0, -1);
+      FaceDescriptor new_fd(0, 0, 0, -1);
         new_fd.SetBCProperty(new_domain);
         // int new_fd_index =
         mesh.AddFaceDescriptor(new_fd);
         if(should_make_new_domain)
-           mesh.SetBCName(new_domain-1, "mapped_" + mesh.GetBCName(domain-1));
+          {
+           mesh.SetMaterial(new_domain, "layer_" + mesh.GetMaterial(domain));
+           mesh.SetBCName(new_edge_nr - 1, "moved");
+          }
     }
 
     for(auto segi : Range(line_segments))
@@ -329,7 +329,7 @@ namespace netgen
         auto current_si = si;
 
         auto first = current_seg[0];
-        auto current = -1;
+        PointIndex current(PointIndex::INVALID);
         auto next =  current_seg[1];
 
         if(points_done.Test(first))
@@ -354,7 +354,7 @@ namespace netgen
                  current_si = sj;
                  current_seg = mesh[sj];
 
-                 next = current_seg[0] + current_seg[1] - current;
+                 next = current_seg[0]-current + current_seg[1];
                  break;
               }
            }
@@ -493,7 +493,7 @@ namespace netgen
            if(growthvectors[pi].Length2() == 0.0)
               continue;
 
-           PointIndex pi1 = seg0[0] + seg0[1] - pi;
+           PointIndex pi1 = seg0[0] - pi + seg0[1];
            auto p1 = mesh[pi1];
            auto p = mesh[pi];
 
@@ -584,13 +584,15 @@ namespace netgen
         auto p2 = [](Point<3> p) { return Point<2>{p[0], p[1]}; };
 
         auto seg = line_segments[segi];
-        double alpha,beta;
-        intersect( p2(mesh[seg[0]]), p2(mesh[seg[0]]+total_thickness*growthvectors[seg[0]]), p2(mesh[seg[1]]), p2(mesh[seg[1]]+total_thickness*growthvectors[seg[1]]), alpha, beta );
-
-        if(beta>0 && alpha>0 && alpha<1.1)
-           growth[seg[0]] = min(growth[seg[0]], 0.8*alpha);
-        if(alpha>0 && beta>0 && beta<1.1)
-           growth[seg[1]] = min(growth[seg[1]], 0.8*beta);
+        double alpha=0.0;
+        double beta=0.0;
+        if (intersect(p2(mesh[seg[0]]), p2(mesh[seg[0]] + total_thickness * growthvectors[seg[0]]), p2(mesh[seg[1]]), p2(mesh[seg[1]] + total_thickness * growthvectors[seg[1]]), alpha, beta))
+          {
+            if (beta > 0 && alpha > 0 && alpha < 1.1)
+              growth[seg[0]] = min(growth[seg[0]], 0.8 * alpha);
+            if (alpha > 0 && beta > 0 && beta < 1.1)
+              growth[seg[1]] = min(growth[seg[1]], 0.8 * beta);
+          }
 
         for (auto segj : Range(mesh.LineSegments()))
            if(segi!=segj)
@@ -616,8 +618,6 @@ namespace netgen
            }
         }
 
-     map<pair<PointIndex, PointIndex>, int> seg2edge;
-
      // insert new elements ( and move old ones )
      for(auto si : moved_segs)
      {
@@ -627,19 +627,17 @@ namespace netgen
         auto & pm0 = mapto[seg[0]];
         auto & pm1 = mapto[seg[1]];
 
-        // auto newindex = si_map[domain];
-
         Segment s = seg;
         s.geominfo[0] = {};
         s.geominfo[1] = {};
         s[0] = pm0.Last();
         s[1] = pm1.Last();
         s[2] = PointIndex::INVALID;
-        auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
-        if(seg2edge.find(pair) == seg2edge.end())
-           seg2edge[pair] = ++max_edge_nr;
-        s.edgenr = seg2edge[pair];
-        s.si = seg.si;
+        // auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
+        s.edgenr = new_edge_nr;
+        s.epgeominfo[0].edgenr = -1;
+        s.epgeominfo[1].edgenr = -1;
+        s.si = s.edgenr;
         mesh.AddSegment(s);
 
         for ( auto i : Range(thicknesses))

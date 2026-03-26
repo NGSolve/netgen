@@ -215,7 +215,8 @@ namespace netgen
             // Check if the face is a surface element (boundary face)
             // if not, add the current volume element and the corresponding face into 
             // the owner list
-            int surfelem = meshtopo.GetFace2SurfaceElement(absfacenr);
+            // int surfelem = meshtopo.GetFace2SurfaceElement1(absfacenr);
+            int surfelem = meshtopo.GetFace2SurfaceElement(absfacenr-1)+1;
             if(!surfelem)
             {
                // If it is a new face which has not been listed before, 
@@ -606,7 +607,7 @@ namespace netgen
       const_cast<Mesh&> (mesh).Compress();
       const_cast<Mesh&> (mesh).CalcSurfacesOfNode();
       const_cast<Mesh&> (mesh).RebuildSurfaceElementLists();
-      const_cast<Mesh&> (mesh).BuildElementSearchTree();
+      const_cast<Mesh&> (mesh).BuildElementSearchTree(3);
 
 
       int np = mesh.GetNP();

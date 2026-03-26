@@ -50,6 +50,6 @@ extern "C" int Ng_geom2d_Init (Tcl_Interp * interp);
 
 int Ng_geom2d_Init (Tcl_Interp * interp)
 {
-  geometryregister.Append (new SplineGeometryVisRegister);
+  GeometryRegister().Append(new SplineGeometryVisRegister);
   return TCL_OK;
 }

@@ -57,7 +57,7 @@ set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_C_COMPILER)
 set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_CXX_COMPILER)
 set_vars(SUBPROJECT_CMAKE_ARGS CMAKE_BUILD_TYPE)
 
-set(SUBPROJECT_CMAKE_ARGS "${SUBPROJECT_CMAKE_ARGS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON" CACHE INTERNAL "")
+set(SUBPROJECT_CMAKE_ARGS "${SUBPROJECT_CMAKE_ARGS};-DCMAKE_POSITION_INDEPENDENT_CODE=ON;-DCMAKE_POLICY_VERSION_MINIMUM=3.5" CACHE INTERNAL "")
 
 if(USE_CCACHE)
   find_program(CCACHE_FOUND NAMES ccache ccache.bat)
@@ -123,7 +123,7 @@ else(BUILD_OCC)
     find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
     if(NOT OpenCascade_FOUND)
       message(FATAL_ERROR "Opencascade not found, either\n\
-      - install pip packages netgen-occt-devel netgen-occ\n\
+      - install pip packages netgen-occt-devel netgen-occt\n\
       - set OpenCascade_DIR to a directory containting opencascadeConfig.cmake\n\
       - build OpenCascade automatically by passing -DBUILD_OCC=ON\n\
       - disable OpenCascade by passing -DUSE_OCC=OFF\n\

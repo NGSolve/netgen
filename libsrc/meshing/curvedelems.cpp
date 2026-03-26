@@ -1,7 +1,6 @@
 #include <mystdlib.h>
 
 #include "meshing.hpp"
-
 // #include "../general/autodiff.hpp"
 
 
@@ -614,7 +613,7 @@ namespace netgen
     
     if (aorder <= 1) 
       {
-	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  if (mesh[ei].GetType() == TET10)
 	    ishighorder = 1;
 	return; 
@@ -1279,7 +1278,7 @@ namespace netgen
 			 with MPI and an interior surface element between volume elements assigned to different
 			 procs, only one of them has the surf-el
 		      **/
-                      SurfaceElementIndex sei = top.GetFace2SurfaceElement (f+1)-1;
+                      SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
 		      if (sei != SurfaceElementIndex(-1)) {
 			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
                         // use improved initial guess
@@ -1667,12 +1666,21 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
+
+        /*
 	top.GetSurfaceElementEdges (elnr+1, info.edgenrs);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.edgenrs[i]--;
-	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
-
+        */
+        /*
+        auto edgs = top.GetEdges(SurfaceElementIndex(elnr));
+        info.edgenrs.SetSize(edgs.Size());
+        for (auto [i,nr] : Enumerate(edgs))
+          info.edgenrs[i] = nr;
+        */
+        info.SetEdges (top.GetEdges(SurfaceElementIndex(elnr)));
+        
+	info.facenr = top.GetFace(elnr);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
 	info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
@@ -1748,11 +1756,14 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
+
+        /*
 	top.GetSurfaceElementEdges (elnr+1, info.edgenrs);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.edgenrs[i]--;
-	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
+        */
+        info.SetEdges(top.GetEdges(SurfaceElementIndex(elnr)));
+	info.facenr = top.GetFace(elnr);
 
 
 	bool firsttry = true;
@@ -2439,7 +2450,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
-	return mesh.coarsemesh->GetCurvedElements().IsElementCurved (hpref_el.coarse_elnr);
+	return mesh.coarsemesh->GetCurvedElements().IsElementCurved (ElementIndex(hpref_el.coarse_elnr));
       }
 
     const Element & el = mesh[elnr];
@@ -2491,7 +2502,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
-	return mesh.coarsemesh->GetCurvedElements().IsElementHighOrder (hpref_el.coarse_elnr);
+	return mesh.coarsemesh->GetCurvedElements().IsElementHighOrder (ElementIndex(hpref_el.coarse_elnr));
       }
 
     const Element & el = mesh[elnr];
@@ -2555,7 +2566,8 @@ namespace netgen
 	  for (int j = 0; j < 3; j++)
 	    coarse_xi(j) += hpref_el.param[i][j] * lami[i];
 
-	mesh.coarsemesh->GetCurvedElements().CalcElementTransformation (coarse_xi, hpref_el.coarse_elnr, x, &dxdxic /* , curved */);
+	mesh.coarsemesh->GetCurvedElements().
+          CalcElementTransformation (coarse_xi, ElementIndex(hpref_el.coarse_elnr), x, &dxdxic /* , curved */);
 
 	if (dxdxi)
 	  *dxdxi = dxdxic * trans;
@@ -4098,7 +4110,7 @@ namespace netgen
 	T lami[4];
 	TFlatVector<T> vlami(4, lami);
 
-	NgArrayMem<Point<2,T>, 50> coarse_xi (npts);
+	ArrayMem<Point<2,T>, 50> coarse_xi (npts);
 	
 	for (int pi = 0; pi < npts; pi++)
 	  {
@@ -4116,7 +4128,7 @@ namespace netgen
 
 	mesh.coarsemesh->GetCurvedElements().
 	  CalcMultiPointSurfaceTransformation<DIM_SPACE,T> (hpref_el.coarse_elnr, npts,
-                                                            &coarse_xi[0](0), &coarse_xi[1](0)-&coarse_xi[0](0), 
+                                                            &coarse_xi[0](0), sizeof(Point<2,T>)/sizeof(T),
                                                             x, sx, dxdxi, sdxdxi);
 
 	// Mat<3,2> dxdxic;
@@ -4192,11 +4204,14 @@ namespace netgen
     if (info.order > 1)
       {
 	const MeshTopology & top = mesh.GetTopology();
-	
+
+        /*
 	top.GetSurfaceElementEdges (elnr+1, info.edgenrs);
 	for (int i = 0; i < info.edgenrs.Size(); i++)
 	  info.edgenrs[i]--;
-	info.facenr = top.GetSurfaceElementFace (elnr+1)-1;
+        */
+        info.SetEdges(top.GetEdges(elnr));  
+	info.facenr = top.GetFace (elnr);
 
 
 	bool firsttry = true;
@@ -4354,7 +4369,7 @@ namespace netgen
 					  const double * xi, size_t sxi,
 					  double * x, size_t sx,
 					  double * dxdxi, size_t sdxdxi);
-
+  
 
   template void CurvedElements :: 
   CalcMultiPointSurfaceTransformation<2> (SurfaceElementIndex elnr, int npts,
@@ -4584,7 +4599,7 @@ namespace netgen
 	  }
 
 	mesh.coarsemesh->GetCurvedElements().
-	  CalcMultiPointElementTransformation (hpref_el.coarse_elnr, n, 
+	  CalcMultiPointElementTransformation (ElementIndex(hpref_el.coarse_elnr), n, 
 					       &coarse_xi[0], 3, 
 					       x, sx, 
 					       dxdxi, sdxdxi);

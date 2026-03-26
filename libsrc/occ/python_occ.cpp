@@ -21,6 +21,9 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_MaterialTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <TopoDS_Edge.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <GCPnts_TangentialDeflection.hxx>
 
 using namespace netgen;
 
@@ -101,7 +104,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     */
     .def(py::init([] (const TopoDS_Shape& shape, int occdim, bool copy)
                   {
-                    auto geo = make_shared<OCCGeometry> (shape, occdim);
+                    auto geo = make_shared<OCCGeometry> (shape, occdim, copy);
                     // ng_geometry = geo;
                     
                     // geo->BuildFMap();
@@ -165,10 +168,40 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     {
       ng_geometry = geo;
     })
+    .def_property_readonly("solids", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes solids;
+           for (int i = 1; i <= geo->somap.Extent(); i++)
+             solids.push_back(geo->somap(i));
+           return solids;
+         }, "Get solids in order that they will be in the mesh")
+    .def_property_readonly("faces", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes faces;
+           for (int i = 1; i <= geo->fmap.Extent(); i++)
+             faces.push_back(geo->fmap(i));
+           return faces;
+         }, "Get faces in order that they will be in the mesh")
+    .def_property_readonly("edges", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes edges;
+           for (int i = 1; i <= geo->emap.Extent(); i++)
+             edges.push_back(geo->emap(i));
+           return edges;
+         }, "Get edges in order that they will be in the mesh")
+    .def_property_readonly("vertices", [](shared_ptr<OCCGeometry> geo)
+         {
+           ListOfShapes vertices;
+           for (int i = 1; i <= geo->vmap.Extent(); i++)
+             vertices.push_back(geo->vmap(i));
+           return vertices;
+         }, "Get vertices in order that they will be in the mesh")
     .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
          {
            std::vector<float> vertices;
-           std::vector<int> trigs;
+           std::vector<uint32_t> indices;
+           std::vector<float> edges;
+           std::vector<uint32_t> edge_indices;
            std::vector<float> normals;
            std::vector<float> min = {std::numeric_limits<float>::max(),
                                std::numeric_limits<float>::max(),
@@ -176,7 +209,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            std::vector<float> max = {std::numeric_limits<float>::lowest(),
                                std::numeric_limits<float>::lowest(),
                                std::numeric_limits<float>::lowest()};
-           std::vector<string> surfnames;
+           std::vector<float> face_colors;
+           std::vector<float> edge_colors;
            auto box = occ_geo->GetBoundingBox();
            for(int i = 0; i < 3; i++)
              {
@@ -188,11 +222,92 @@ DLL_HEADER void ExportNgOCC(py::module &m)
            gp_Pnt pnt;
            gp_Vec n;
            gp_Pnt p[3];
-           int count = 0;
+           for(int edge_index = 1; edge_index <= occ_geo->emap.Extent();
+               edge_index++)
+             {
+               auto edge = TopoDS::Edge(occ_geo->emap(edge_index));
+               if(OCCGeometry::HaveProperties(edge))
+                 {
+                   const auto& props = OCCGeometry::GetProperties(edge);
+                   if(props.col)
+                     edge_colors.insert(edge_colors.end(),
+                                        {float((*props.col)[0]),
+                                         float((*props.col)[1]),
+                                         float((*props.col)[2]),
+                                         float((*props.col)[3])});
+                   else
+                     edge_colors.insert(edge_colors.end(),{0.f,0.f,0.f,1.f});
+                 }
+               else
+                 {
+                   edge_colors.insert(edge_colors.end(),{0.f,0.f,0.f,1.f});
+                 }
+
+               Handle(Poly_PolygonOnTriangulation) poly;
+               Handle(Poly_Triangulation) T;
+               TopLoc_Location loc;
+               BRep_Tool::PolygonOnTriangulation(edge, poly, T, loc);
+               if(poly.IsNull())
+                 {
+                   cout << IM(2) << "No polygon on triangulation for edge " << edge_index << endl;
+                   BRepAdaptor_Curve adapt_crv = BRepAdaptor_Curve(edge);
+                   GCPnts_TangentialDeflection discretizer;
+                   discretizer.Initialize(adapt_crv, 0.09, 0.01);
+                   if (discretizer.NbPoints() > 1)
+                     {
+                       for (int j = 1; j <= discretizer.NbPoints()-1; ++j)
+                         {
+                           gp_Pnt p_0 = discretizer.Value(j);
+                           gp_Pnt p_1 = discretizer.Value(j+1);
+                           edges.insert(edges.end(),
+                                        {float(p_0.X()),
+                                         float(p_0.Y()),
+                                         float(p_0.Z()),
+                                         float(p_1.X()),
+                                         float(p_1.Y()),
+                                         float(p_1.Z())});
+                           edge_indices.push_back(uint32_t(edge_index-1));
+                         }
+                     }
+                 }
+               else
+                 {
+                   int nbnodes = poly -> NbNodes();
+                   for (int j = 1; j < nbnodes; j++)
+                     {
+                       auto p0 = occ2ng((T -> Node(poly->Nodes()(j))).Transformed(loc));
+                       auto p1 = occ2ng((T -> Node(poly->Nodes()(j+1))).Transformed(loc));
+                       for(auto k : Range(3))
+                         edges.push_back(p0[k]);
+                       for(auto k : Range(3))
+                         edges.push_back(p1[k]);
+                       edge_indices.push_back(uint32_t(edge_index-1));
+                       box.Add(p0);
+                       box.Add(p1);
+                     }
+                 }
+             }
            for (int i = 1; i <= occ_geo->fmap.Extent(); i++)
              {
-               surfnames.push_back("occ_surface" + to_string(i));
                auto face = TopoDS::Face(occ_geo->fmap(i));
+               if (OCCGeometry::HaveProperties(face))
+                 {
+                   const auto& props = OCCGeometry::GetProperties(face);
+                   if(props.col)
+                     face_colors.insert(face_colors.end(),
+                                        {float((*props.col)[0]),
+                                         float((*props.col)[1]),
+                                         float((*props.col)[2]),
+                                         float((*props.col)[3])});
+                    else
+                      {
+                        face_colors.insert(face_colors.end(),{0.7,0.7,0.7,1.});
+                      }
+                 }
+               else
+                 {
+                   face_colors.insert(face_colors.end(),{0.7,0.7,0.7,1.});
+                 }
                auto surf = BRep_Tool::Surface(face);
                TopLoc_Location loc;
                BRepAdaptor_Surface sf(face, Standard_False);
@@ -200,7 +315,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
                if (triangulation.IsNull())
                  cout << "cannot visualize face " << i << endl;
-               trigs.reserve(trigs.size() + triangulation->NbTriangles()*4);
+               indices.reserve(indices.size() + triangulation->NbTriangles());
                vertices.reserve(vertices.size() + triangulation->NbTriangles()*3*3);
                normals.reserve(normals.size() + triangulation->NbTriangles()*3*3);
                for (int j = 1; j < triangulation->NbTriangles()+1; j++)
@@ -208,11 +323,13 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                    auto triangle = triangulation->Triangle(j);
                    for (int k = 1; k < 4; k++)
                      p[k-1] = triangulation->Node(triangle(k)).Transformed(loc);
+                   indices.push_back(uint32_t(i-1));
                    for (int k = 1; k < 4; k++)
                      {
-                       vertices.insert(vertices.end(),{float(p[k-1].X()), float(p[k-1].Y()), float(p[k-1].Z())});
-                       trigs.insert(trigs.end(),{count, count+1, count+2,i});
-                       count += 3;
+                       vertices.insert(vertices.end(),{
+                           float(p[k-1].X()),
+                           float(p[k-1].Y()),
+                           float(p[k-1].Z())});
                        uv = triangulation->UVNode(triangle(k));
                        prop.SetParameters(uv.X(), uv.Y());
                        if (prop.IsNormalDefined())
@@ -231,12 +348,13 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             py::gil_scoped_acquire ac;
             py::dict res;
             py::list snames;
-            for(auto name : surfnames)
-              snames.append(py::cast(name));
             res["vertices"] = MoveToNumpy(vertices);
-            res["triangles"] = MoveToNumpy(trigs);
+            res["edges"] = MoveToNumpy(edges);
+            res["edge_indices"] = MoveToNumpy(edge_indices);
+            res["edge_colors"] = MoveToNumpy(edge_colors);
+            res["indices"] = MoveToNumpy(indices);
             res["normals"] = MoveToNumpy(normals);
-            res["surfnames"] = snames;
+            res["face_colors"] = MoveToNumpy(face_colors);
             res["min"] = MoveToNumpy(min);
             res["max"] = MoveToNumpy(max);
             return res;

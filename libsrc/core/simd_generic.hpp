@@ -48,6 +48,13 @@ namespace ngcore
       return k;
   }
 
+  constexpr size_t LargestPowerOfTwo (size_t x)
+  {
+    size_t y = 1;
+    while (2*y <= x) y *= 2;
+    return y;
+  }
+  
 
   template <typename T, int N=GetDefaultSIMDSize()> class SIMD;
 
@@ -89,7 +96,8 @@ namespace ngcore
   template <int N>
   class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<mask64,N>
   {
-    static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);
     static constexpr int N2 = N-N1;
 
     SIMD<mask64,N1> lo;
@@ -109,6 +117,113 @@ namespace ngcore
       if constexpr(N==1) return a.Data() && b.Data();
       else               return { a.Lo() && b.Lo(), a.Hi() && b.Hi() };
     }
+
+
+  ////////////////////////////////////////////////////////////////////////////
+  // int32
+
+  template<>
+  class SIMD<int32_t,1>
+  {
+    int32_t data;
+
+  public:
+    static constexpr int Size() { return 1; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+    // SIMD (int val) : data{val} {}
+    SIMD (int32_t val) : data{val} {}
+    SIMD (size_t val) : data(val) {}
+    explicit SIMD (std::array<int32_t, 1> arr) : data{arr[0]} {}
+    
+
+    
+    int32_t operator[] (int i) const { return ((int32_t*)(&data))[i]; }
+    auto Data() const { return data; }
+    static SIMD FirstInt(int32_t n0=0) { return {n0}; }
+    template <int I>
+    int32_t Get()
+    {
+      static_assert(I==0);
+      return data;
+    }
+  };
+
+  template<int N>
+  class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<int32_t,N>
+  {
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);        
+    static constexpr int N2 = N-N1;
+
+    SIMD<int32_t,N1> lo;
+    SIMD<int32_t,N2> high;
+
+  public:
+    static constexpr int Size() { return N; }
+
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    // SIMD (int val) : lo{val}, high{val} { ; }
+    SIMD (int32_t val) : lo{val}, high{val} { ; }
+    SIMD (size_t val) : lo{val}, high{val} { ; }
+    SIMD (int32_t * p) : lo{p}, high{p+N1} { ; }
+    
+    SIMD (SIMD<int32_t,N1> lo_, SIMD<int32_t,N2> high_) : lo(lo_), high(high_) { ; }
+
+    explicit SIMD( std::array<int32_t, N> arr )
+        : lo(detail::array_range<N1>(arr, 0)),
+          high(detail::array_range<N2>(arr, N1))
+      {}
+
+
+    template<typename ...T>
+    explicit SIMD(const T... vals)
+      : lo(detail::array_range<N1>(std::array<int32_t, N>{vals...}, 0)),
+        high(detail::array_range<N2>(std::array<int32_t, N>{vals...}, N1))
+      {
+        static_assert(sizeof...(vals)==N, "wrong number of arguments");
+      }
+
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<int32_t(int)>>::value, int>::type = 0>
+      SIMD (const T & func)
+    {
+      for(auto i : IntRange(N1))
+          lo[i] = func(i);
+      for(auto i : IntRange(N2))
+          high[i] = func(N1+i);
+    }
+    
+    auto Lo() const { return lo; }
+    auto Hi() const { return high; }
+
+    int32_t operator[] (int i) const { return ((int32_t*)(&lo))[i]; }
+
+    void Store (int32_t * p) { lo.Store(p); high.Store(p+N1); }
+
+    
+    /*
+    operator tuple<int32_t&,int32_t&,int32_t&,int32_t&> ()
+    { return tuple<int32_t&,int32_t&,int32_t&,int32_t&>((*this)[0], (*this)[1], (*this)[2], (*this)[3]); }
+    */
+
+    /*
+    static SIMD FirstInt() { return { 0, 1, 2, 3 }; }
+    */
+    static SIMD FirstInt(int32_t n0=0) { return {SIMD<int32_t,N1>::FirstInt(n0), SIMD<int32_t,N2>::FirstInt(n0+N1)}; }
+    template <int I>
+    int32_t Get()
+    {
+      static_assert(I>=0 && I<N, "Index out of range");
+      if constexpr(I<N1) return lo.template Get<I>();
+      else               return high.template Get<I-N1>();
+    }
+  };
+
 
 
   ////////////////////////////////////////////////////////////////////////////
@@ -145,7 +260,8 @@ namespace ngcore
   template<int N>
   class alignas(GetLargestNativeSIMDPart(N)*sizeof(int64_t)) SIMD<int64_t,N>
   {
-    static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);        
     static constexpr int N2 = N-N1;
 
     SIMD<int64_t,N1> lo;
@@ -209,6 +325,7 @@ namespace ngcore
     }
   };
 
+  
 
   ////////////////////////////////////////////////////////////////////////////
   // double
@@ -262,7 +379,8 @@ namespace ngcore
   template<int N>
   class alignas(GetLargestNativeSIMDPart(N)*sizeof(double)) SIMD<double, N>
   {
-    static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    // static constexpr int N1 = GetLargestNativeSIMDPart(N);
+    static constexpr size_t N1 = LargestPowerOfTwo(N-1);    
     static constexpr int N2 = N-N1;
 
     SIMD<double, N1> lo;
@@ -314,7 +432,7 @@ namespace ngcore
 
     template<typename ...T>
     explicit SIMD(const T... vals)
-    : lo(detail::array_range<N1>(std::array<double, N>{vals...}, 0)),
+      : lo(detail::array_range<N1>(std::array<double, N>{vals...}, 0)),
       high(detail::array_range<N2>(std::array<double, N>{vals...}, N1))
       {
         static_assert(sizeof...(vals)==N, "wrong number of arguments");
@@ -327,8 +445,8 @@ namespace ngcore
       high.Store(p+N1, mask.Hi());
     }
 
-    auto Lo() const { return lo; }
-    auto Hi() const { return high; }
+    NETGEN_INLINE auto Lo() const { return lo; }
+    NETGEN_INLINE auto Hi() const { return high; }
 
     double operator[] (int i) const { return ((double*)(&lo))[i]; }
 
@@ -426,6 +544,20 @@ namespace ngcore
       else               return { a.Lo()!=b.Lo(), a.Hi()!=b.Hi() };
     }
 
+  template <int N>
+  NETGEN_INLINE SIMD<int64_t,N> operator& (SIMD<int64_t,N> a, SIMD<int64_t,N> b)
+    {
+      if constexpr(N==1) return a.Data() & b.Data();
+      else               return { (a.Lo()&b.Lo()), (a.Hi()&b.Hi()) };
+    }
+  template <int N>
+  NETGEN_INLINE SIMD<int64_t,N> operator| (SIMD<int64_t,N> a, SIMD<int64_t,N> b)
+    {
+      if constexpr(N==1) return a.Data() & b.Data();
+      else               return { (a.Lo()|b.Lo()), (a.Hi()|b.Hi()) };
+    }
+
+  
   // int64_t operators with scalar operand (implement overloads to allow implicit casts for second operand)
   template <int N>
   NETGEN_INLINE SIMD<int64_t,N> operator+ (SIMD<int64_t,N> a, int64_t b) { return a+SIMD<int64_t,N>(b); }
@@ -457,6 +589,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<int64_t,N> & operator*= (SIMD<int64_t,N> & a, int64_t b) { a*=SIMD<int64_t,N>(b); return a; }
   template <int N>
   NETGEN_INLINE SIMD<int64_t,N> & operator/= (SIMD<int64_t,N> & a, SIMD<int64_t,N> b) { a = a/b; return a; }
+
 
   // double operators with scalar operand (implement overloads to allow implicit casts for second operand)
   template <int N>
@@ -490,6 +623,10 @@ namespace ngcore
   template <int N>
   NETGEN_INLINE SIMD<double,N> & operator/= (SIMD<double,N> & a, SIMD<double,N> b) { a = a/b; return a; }
 
+  template <int N>
+  NETGEN_INLINE auto operator> (SIMD<double,N> & a, double b) { return a > SIMD<double,N>(b); }
+
+  
   // double functions
 
   template <int N>
@@ -580,6 +717,96 @@ namespace ngcore
   }
 
 
+  template<typename T2, typename T1>
+  T2 BitCast(T1 a)
+  {
+    T2 result;
+    static_assert(sizeof(T1) == sizeof(T2), "BitCast requires same size");
+    memcpy(&result, &a, sizeof(T1));
+    return result;
+  }
+
+  template <typename T, typename T1, int N>
+  SIMD<T, N> Reinterpret (SIMD<T1,N> a)
+  {
+    if constexpr (N == 1)
+      return SIMD<T,N> ( * (T*)(void*) & a.Data());
+    else if constexpr (N == 2)
+      return SIMD<T,N> { BitCast<T> (a.Lo()),
+                         BitCast<T> (a.Hi()) };
+    else
+      return SIMD<T,N> (Reinterpret<T> (a.Lo()), Reinterpret<T> (a.Hi()));
+  }
+
+  
+  using std::round;  
+  template <int N>
+  SIMD<double,N> round (SIMD<double,N> x)
+  {
+    if constexpr (N == 1) return round(x);
+    else                  return { round(x.Lo()), round(x.Hi()) };
+  }
+
+  // NETGEN_INLINE int64_t RoundI (double x) { return lround(x); }
+  using std::lround;
+  template <int N>  
+  SIMD<int64_t,N> lround (SIMD<double,N> x)
+  {
+    if constexpr (N == 1) return SIMD<int64_t,1> (lround(x));
+    else                  return { lround(x.Lo()), lround(x.Hi()) };
+  }
+
+  /*
+    reciprocal square root 
+    Quake III algorithm, or intrinsics 
+   */
+  //
+#ifndef __CUDACC__
+  NETGEN_INLINE double rsqrt (double x) { return 1.0/sqrt(x); }
+#endif
+  
+  template <int N>  
+  SIMD<double,N> rsqrt (SIMD<double,N> x)
+  {
+    if constexpr (N == 1) return 1.0/sqrt(x.Data()); 
+    else                  return { rsqrt(x.Lo()), rsqrt(x.Hi()) };
+  }
+
+  template <int N>  
+  int64_t operator<< (int64_t a, IC<N> n) { return a << n.value; }
+  
+  template <int S, int N>
+  SIMD<int64_t,S> operator<< (SIMD<int64_t,S> a, IC<N> n)
+  {
+    if constexpr (S == 1) return SIMD<int64_t,1> (a.Data() << n);
+    else                  return SIMD<int64_t,S> (a.Lo() << n, a.Hi() << n);
+  }
+
+
+
+  
+  template <typename T, int N>
+  auto Min (SIMD<T,N> a, SIMD<T,N> b)
+  {
+    if constexpr (N==1)
+      return SIMD<T,1> (std::min(a[0], b[0]));
+    else
+      return SIMD<T,N> (Min(a.Lo(), b.Lo()), Min(a.Hi(), b.Hi()));
+  }
+  
+  template <typename T, int N>
+  auto Max (SIMD<T,N> a, SIMD<T,N> b)
+  {
+    if constexpr (N==1)
+      return SIMD<T,1> (std::max(a[0], b[0]));
+    else
+      return SIMD<T,N> (Max(a.Lo(), b.Lo()), Max(a.Hi(), b.Hi()));
+  }
+  
+
+
+  
+  
   template <typename T, int N>
   ostream & operator<< (ostream & ost, SIMD<T,N> simd)
   {
@@ -597,8 +824,11 @@ namespace ngcore
 
   using std::sqrt;
   template <int N>
-  NETGEN_INLINE ngcore::SIMD<double,N> sqrt (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double,N>([a](int i)->double { return sqrt(a[i]); } );
+  NETGEN_INLINE ngcore::SIMD<double,N> sqrt (ngcore::SIMD<double,N> a)
+  {
+    if constexpr (N == 1) return sqrt(a.Data());
+    else return { sqrt(a.Lo()), sqrt(a.Hi()) }; 
+    // return ngcore::SIMD<double,N>([a](int i)->double { return sqrt(a[i]); } );
   }
 
   using std::fabs;
@@ -702,6 +932,20 @@ namespace ngcore
     return ngcore::SIMD<double,N>([a](int i)->double { return cosh(a[i]); } );
   }
 
+  using std::asinh;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> asinh (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double,N>([a](int i)->double { return asinh(a[i]); } );
+  }
+
+  using std::acosh;
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<double,N> acosh (ngcore::SIMD<double,N> a) {
+    return ngcore::SIMD<double,N>([a](int i)->double { return acosh(a[i]); } );
+  }
+
+
+  
   template<int N, typename T>
   using MultiSIMD = SIMD<T, N*GetDefaultSIMDSize()>;
 
@@ -777,6 +1021,42 @@ namespace ngcore
                              FMAddSub(a.Hi(), b.Hi(), c.Hi()));
     }
   }
+
+
+
+
+  template <int BASE, typename Tuple, std::size_t ... Is>
+  auto subtuple (const Tuple& tup, std::index_sequence<Is...>)
+  {
+    return std::make_tuple(std::get<BASE+Is>(tup)...);
+  }
+  
+  template <typename ...Args, typename T, int M>
+  auto Concat (std::tuple<SIMD<T,M>, Args...> tup)
+  {
+    constexpr size_t N = std::tuple_size<std::tuple<SIMD<T,M>, Args...>>();
+    
+    if constexpr (N == 1)
+      return get<0>(tup);
+    else
+      {
+        static constexpr size_t N1 = LargestPowerOfTwo(N-1);
+        static constexpr int N2 = N-N1;
+        
+        auto SEQ1 = std::make_index_sequence<N1>();
+        auto sub1 = subtuple<0>(tup, SEQ1);
+        
+        auto SEQ2 = std::make_index_sequence<N2>();
+        auto sub2 = subtuple<N1>(tup, SEQ2);
+      
+        auto S1 = Concat(sub1);
+        auto S2 = Concat(sub2);
+        return SIMD<T,S1.Size()+S2.Size()>(S1, S2);
+      }
+  }
+  
+
+  
 }
 
 

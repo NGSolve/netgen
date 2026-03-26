@@ -12,13 +12,28 @@
     (Elements, Faces, Edges, Vertices
 */
 
+#include "meshtype.hpp"
+
 namespace netgen
 {
+  // typedef int T_EDGE;
+  // typedef int T_FACE;
+
+  class EdgeIndex : public Index<int,EdgeIndex,0>
+  {
+  public:
+    using Index::Index;
+  };
+
+  class FaceIndex : public Index<int,FaceIndex,0>
+  {
+  public:
+    using Index::Index;
+  };
+
+  typedef EdgeIndex T_EDGE;  
+  typedef FaceIndex T_FACE;  
   
-  typedef int T_EDGE;
-  typedef int T_FACE;
-
-
 class MeshTopology
 {
   const Mesh * mesh;
@@ -32,14 +47,16 @@ class MeshTopology
   Array<std::array<PointIndex,2>> edge2vert;
   Array<std::array<PointIndex,4>> face2vert;
 
-  NgArray<std::array<T_EDGE,12>> edges;
-  NgArray<std::array<T_FACE,6>> faces;
-  NgArray<std::array<T_EDGE,4>> surfedges;
+  Array<std::array<EdgeIndex,12>, ElementIndex> edges;
+  Array<std::array<FaceIndex,6>, ElementIndex> faces;
+  Array<std::array<EdgeIndex,4>, SurfaceElementIndex> surfedges;
   
-  NgArray<T_EDGE> segedges;
-  NgArray<T_FACE> surffaces;
-  NgArray<INDEX_2> surf2volelement;
-  NgArray<int> face2surfel;
+  Array<EdgeIndex,SegmentIndex> segedges;
+  Array<FaceIndex,SurfaceElementIndex> surffaces;
+  // Array<INDEX_2, SurfaceElementIndex> surf2volelement;
+  Array<std::array<ElementIndex,2>, SurfaceElementIndex> surf2volelement;
+  Array<SurfaceElementIndex> face2surfel;
+  
   Array<SegmentIndex> edge2segment;
   Table<ElementIndex, PointIndex> vert2element;
   Table<SurfaceElementIndex, PointIndex> vert2surfelement;
@@ -47,8 +64,6 @@ class MeshTopology
   Table<int,PointIndex> vert2pointelement;
   int timestamp;
 public:
-  int GetNSurfedges() const {return surfedges.Size();}
-
   MeshTopology () = default;
   MeshTopology (MeshTopology && top) = default;
   DLL_HEADER MeshTopology (const Mesh & amesh);
@@ -61,7 +76,7 @@ public:
   void SetBuildParentEdges (bool bh) { build_parent_edges = bh; }
   void SetBuildParentFaces (bool bh) { build_parent_faces = bh; }
 
-  void EnableTable (string name, bool set);
+  DLL_HEADER void EnableTable (string name, bool set);
   static void EnableTableStatic (string name, bool set);
 
   bool HasEdges () const  { return buildedges; }
@@ -72,8 +87,8 @@ public:
   bool NeedsUpdate() const;
 
 
-  int GetNEdges () const { return edge2vert.Size(); }
-  int GetNFaces () const { return face2vert.Size(); }
+  size_t GetNEdges () const { return edge2vert.Size(); }
+  size_t GetNFaces () const { return face2vert.Size(); }
 
   static inline short int GetNVertices (ELEMENT_TYPE et);
   static inline short int GetNPoints (ELEMENT_TYPE et);
@@ -88,19 +103,12 @@ public:
   inline static const ELEMENT_FACE * GetFaces0 (ELEMENT_TYPE et);
 
   [[deprecated("use GetEdge(SegmentIndex) instead")]]                    
-  int GetSegmentEdge (int segnr) const { return segedges[segnr-1]+1; }
+  EdgeIndex GetSegmentEdge (int segnr) const { return segedges[segnr-1]+1; }
   
-  int GetEdge (SegmentIndex segnr) const { return segedges[segnr]; }
+  EdgeIndex GetEdge (SegmentIndex segnr) const { return segedges[segnr]; }
 
   [[deprecated("use GetEdge(SegmentIndex) instead")]]                      
   void GetSegmentEdge (int segnr, int & enr, int & orient) const;
-  /*
-  {
-    enr = segedges.Get(segnr)+1;
-    // orient = segedges.Get(segnr).orient;
-    orient = GetSegmentEdgeOrientation(segnr);
-    }
-  */
 
   [[deprecated("use GetEdges (ElementIndex) -> FlatArray")]]                          
   void GetElementEdges (int elnr, NgArray<int> & edges) const;
@@ -109,8 +117,8 @@ public:
   void GetElementFaces (int elnr, NgArray<int> & faces, bool withorientation) const;  
 
   // definition in meshclass.hpp 
-  inline FlatArray<T_EDGE> GetEdges (ElementIndex elnr) const;
-  inline FlatArray<T_FACE> GetFaces (ElementIndex elnr) const;    
+  inline FlatArray<EdgeIndex> GetEdges (ElementIndex elnr) const;
+  inline FlatArray<FaceIndex> GetFaces (ElementIndex elnr) const;    
 
   
   // [[deprecated("use GetElementEdge instead")]]                        
@@ -143,17 +151,18 @@ public:
   DLL_HEADER void GetEdgeVertices (int enr, int & v1, int & v2) const;
   [[deprecated("use GetEdgeVertices -> tupe(v0,v1) instead")]]
   DLL_HEADER void GetEdgeVertices (int enr, PointIndex & v1, PointIndex & v2) const;
-  auto GetEdgeVertices (int enr) const { return tuple(edge2vert[enr][0], edge2vert[enr][1]); }
+  auto GetEdgeVertices (int enr) const { return std::array{edge2vert[enr][0], edge2vert[enr][1]}; }
   auto GetEdgeVerticesPtr (int enr) const { return &edge2vert[enr][0]; }
   auto GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
   DLL_HEADER void GetFaceEdges (int fnr, NgArray<int> & edges, bool withorientation = false) const;
 
   ELEMENT_TYPE GetFaceType (int fnr) const
-  // { return (face2vert.Get(fnr)[3] == 0) ? TRIG : QUAD; }
   { return (!face2vert[fnr-1][3].IsValid()) ? TRIG : QUAD; }    
 
+  [[deprecated("use GetEdges (SurfaceElementIndex) -> FlatArray")]]  
   void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
-  int GetSurfaceElementFace (int elnr) const;
+  [[deprecated("use GetFace(SurfaceElementIndex")]]                            
+  int GetSurfaceElementFace1 (int elnr) const { return surffaces[elnr-1]+1; }    
   [[deprecated("orientation is outdated")]]                          
   void GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
   // [[deprecated("orientation is outdated")]]                            
@@ -162,29 +171,38 @@ public:
   [[deprecated("use GetEdge -> FlatArray instead")]]                        
   void GetEdges (SurfaceElementIndex elnr, NgArray<int> & edges) const;
 
-  inline FlatArray<T_EDGE> GetEdges (SurfaceElementIndex elnr) const;
-  // { return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]); }
+  inline FlatArray<EdgeIndex> GetEdges (SurfaceElementIndex elnr) const;
+  // { return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]); }
   
   int GetFace (SurfaceElementIndex elnr) const
   { return surffaces[elnr]; }
 
   int GetSurfaceElementEdges (int elnr, int * edges, int * orient) const;
 
-  const T_EDGE * GetElementEdgesPtr (int elnr) const { return &edges[elnr][0]; }
-  const T_EDGE * GetSurfaceElementEdgesPtr (int selnr) const { return &surfedges[selnr][0]; }
-  const T_EDGE * GetSegmentElementEdgesPtr (int selnr) const { return &segedges[selnr]; }
+  int GetNSurfedges() const {return surfedges.Size();}
+  [[deprecated("use GetEdges(ElementIndex) instead")]]
+  const EdgeIndex * GetElementEdgesPtr (int elnr) const { return &edges[IndexBASE<ElementIndex>()+elnr][0]; }
+  const EdgeIndex * GetSurfaceElementEdgesPtr (int selnr) const { return &surfedges[selnr][0]; }
+  const EdgeIndex * GetSegmentElementEdgesPtr (int selnr) const { return &segedges[selnr]; }
 
-  const T_FACE * GetElementFacesPtr (int elnr) const { return &faces[elnr][0]; }
-  const T_FACE * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[selnr]; }
+  const FaceIndex * GetElementFacesPtr (int elnr) const { return &faces[IndexBASE<ElementIndex>()+elnr][0]; }
+  const FaceIndex * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[selnr]; }
 
 
   void GetSurface2VolumeElement (int selnr, int & elnr1, int & elnr2) const
   { 
-    elnr1 = surf2volelement.Get(selnr)[0];
-    elnr2 = surf2volelement.Get(selnr)[1];
+    elnr1 = surf2volelement[SurfaceElementIndex::Base() + selnr-1][0]+1  - ElementIndex::Base(); 
+    elnr2 = surf2volelement[SurfaceElementIndex::Base() + selnr-1][1]+1  - ElementIndex::Base();
   }
 
-  int GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr-1]; }
+  std::array<ElementIndex,2> GetSurface2VolumeElement (SurfaceElementIndex sei) 
+  {
+    return surf2volelement[sei];
+  }
+
+  [[deprecated("use GetSurfaceEleement -> SurfaceElementIndex")]]
+  int GetFace2SurfaceElement1 (int fnr) const { return face2surfel[fnr-1]+1 - SurfaceElementIndex::Base(); }
+  SurfaceElementIndex GetFace2SurfaceElement (int fnr) const { return face2surfel[fnr]; }
 
   SegmentIndex GetSegmentOfEdge(int edgenr) const { return edge2segment[edgenr-1]; }
 
@@ -207,7 +225,7 @@ public:
   FlatArray<int> GetVertexPointElements (PointIndex vnr) const
   { return vert2pointelement[vnr]; }
   
-  DLL_HEADER int GetVerticesEdge ( int v1, int v2) const;
+  DLL_HEADER int GetVerticesEdge ( PointIndex v1, PointIndex v2) const;
   void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
   void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
 
@@ -372,7 +390,7 @@ inline short int MeshTopology :: GetNEdges (ELEMENT_TYPE et)
       // default:
       // cerr << "Ng_ME_GetNEdges, illegal element type " << et << endl;
     }
-  return -99;
+  return 0;
 }
 
 
@@ -413,7 +431,7 @@ inline short int MeshTopology :: GetNFaces (ELEMENT_TYPE et)
       return 6;
 
     default:
-      return -99;
+      return 0;
       // default:
       // cerr << "Ng_ME_GetNVertices, illegal element type " << et << endl;
     }

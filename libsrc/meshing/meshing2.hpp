@@ -7,6 +7,11 @@
 /* Date:   01. Okt. 95                                                    */
 /**************************************************************************/
 
+
+#include "adfront2.hpp"
+#include "ruler2.hpp"
+#include "basegeom.hpp"
+
 namespace netgen
 {
 

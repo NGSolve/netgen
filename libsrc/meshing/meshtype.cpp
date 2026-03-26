@@ -237,7 +237,7 @@ namespace netgen
   {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-	pnum[i] = 0;
+	pnum[i].Invalidate();
 	geominfo[i].trignum = 0;
       }
     np = 3;
@@ -299,7 +299,7 @@ namespace netgen
 
 
 
-  Element2d :: Element2d (int pi1, int pi2, int pi3)
+  Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3)
   {
     pnum[0] = pi1;
     pnum[1] = pi2;
@@ -322,7 +322,7 @@ namespace netgen
     is_curved = false;
   }
 
-  Element2d :: Element2d (int pi1, int pi2, int pi3, int pi4)
+  Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4)
   {
     pnum[0] = pi1;
     pnum[1] = pi2;
@@ -331,8 +331,8 @@ namespace netgen
     np = 4;
     typ = QUAD;
 
-    pnum[4] = 0;
-    pnum[5] = 0;
+    pnum[4].Invalidate();
+    pnum[5].Invalidate();
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
@@ -1038,7 +1038,7 @@ namespace netgen
   {
     s << "np = " << el.GetNP();
     for (int j = 0; j < el.GetNP(); j++)
-      s << " " << int(el[j]);
+      s << " " << el[j];
     return s;
   }
 
@@ -2705,12 +2705,31 @@ namespace netgen
     maxidentnr = 0;
   }
 
+  void Identifications :: DeleteInnerPointIdentifications ()
+  {
+    Array<std::tuple<PointIndex, PointIndex, int>> entries;
+    for(auto [pis, nr]: identifiedpoints)
+      {
+        PointIndex pi0 = pis[0];
+        PointIndex pi1 = pis[1];
+        if(mesh[pi0].Type() != INNERPOINT || mesh[pi1].Type() != INNERPOINT)
+            entries.Append( { pi0, pi1, nr } );
+      }
+
+    identifiedpoints.DeleteData();
+    identifiedpoints_nr.DeleteData();
+    idpoints_table.SetSize(0);
+
+    for (auto [pi0, pi1, nr]: entries)
+        Add(pi0, pi1, nr);
+  }
+
     void Identifications :: DoArchive (Archive & ar)
     {
       ar & maxidentnr;
       ar & identifiedpoints & identifiedpoints_nr;
-
       ar & idpoints_table;
+      
       if (ar.Output())
         {
           size_t s = type.Size();
@@ -2735,11 +2754,11 @@ namespace netgen
   void Identifications :: Add (PointIndex pi1, PointIndex pi2, int identnr)
   {
     //  (*testout) << "Identification::Add, pi1 = " << pi1 << ", pi2 = " << pi2 << ", identnr = " << identnr << endl;
-    INDEX_2 pair (pi1, pi2);
+    PointIndices<2> pair (pi1, pi2);
     identifiedpoints.Set (pair, identnr);
 
-    INDEX_3 tripl (pi1, pi2, identnr);
-    identifiedpoints_nr.Set (tripl, 1);
+    // INDEX_3 tripl (pi1, pi2, identnr);
+    identifiedpoints_nr.Set ( { { pi1, pi2 }, identnr }, 1);
 
     if (identnr > maxidentnr) maxidentnr = identnr;
     names.SetSize(maxidentnr);
@@ -2762,8 +2781,9 @@ namespace netgen
 
   bool Identifications :: Get (PointIndex pi1, PointIndex pi2, int nr) const
   {
-    INDEX_3 tripl(pi1, pi2, nr);
-    if (identifiedpoints_nr.Used (tripl))
+    // INDEX_3 tripl(pi1, pi2, nr);
+    // if (identifiedpoints_nr.Used (tripl))
+    if (identifiedpoints_nr.Used ( { { pi1, pi1 }, nr } ) )
       return 1;
     else
       return 0;
@@ -2785,7 +2805,7 @@ namespace netgen
   }
 
 
-  void Identifications :: GetMap (int identnr, NgArray<int,PointIndex::BASE> & identmap, bool symmetric) const
+  void Identifications :: GetMap (int identnr, idmap_type & identmap, bool symmetric) const
   {
     identmap.SetSize (mesh.GetNP());
     identmap = 0;
@@ -2803,18 +2823,30 @@ namespace netgen
       {
         cout << "getmap, identnr = " << identnr << endl;
 
+        /*
         for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
           for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
+        */
+        for (auto [hash, val] : identifiedpoints_nr)
             {
+              /*
               INDEX_3 i3;
               int dummy;
               identifiedpoints_nr.GetData (i, j, i3, dummy);
-	    
-              if (i3.I3() == identnr || !identnr)
+              */
+
+              auto [hash_pts, hash_nr] = hash;
+              
+              if (hash_nr == identnr || !identnr)
                 {
+                  /*
                   identmap.Elem(i3.I1()) = i3.I2();
                   if(symmetric)
                     identmap.Elem(i3.I2()) = i3.I1();
+                  */
+                  identmap[hash_pts.I1()] = hash_pts.I2();
+                  if(symmetric)
+                    identmap[hash_pts.I2()] = hash_pts.I1();
                 }
             }  
       }
@@ -2825,8 +2857,12 @@ namespace netgen
   Array<INDEX_3> Identifications :: GetPairs () const
   {
     Array<INDEX_3> pairs;
-    for(auto [i3, dummy] : identifiedpoints_nr)
-      pairs.Append(i3);
+    for(auto [hash, dummy] : identifiedpoints_nr)
+      // pairs.Append(i3);
+      {
+        auto [pts,nr] = hash;
+        pairs.Append ( { pts[0], pts[1], nr } );
+      }
     return pairs;
   }
 
@@ -2836,6 +2872,8 @@ namespace netgen
     identpairs.SetSize(0);
   
     if (identnr == 0)
+      {
+        /*
       for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
           {
@@ -2843,8 +2881,14 @@ namespace netgen
             int nr;
             identifiedpoints.GetData (i, j, i2, nr);
             identpairs.Append (i2);
-          }  
+          }
+        */
+        for (auto [hash,val] : identifiedpoints)
+          identpairs.Append (hash);
+      }
     else
+      {
+        /*
       for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
           {
@@ -2854,12 +2898,21 @@ namespace netgen
 	  
             if (i3.I3() == identnr)
               identpairs.Append (INDEX_2(i3.I1(), i3.I2()));
-          }  
+          }
+        */
+        for (auto [hash,val] : identifiedpoints_nr)
+          {
+            auto [hash_pts, hash_nr] = hash;
+            if (hash_nr == identnr)
+              identpairs.Append (hash_pts);
+          }
+      }
   }
 
 
   void Identifications :: SetMaxPointNr (int maxpnum)
   {
+    /*
     for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
       for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
         {
@@ -2873,6 +2926,18 @@ namespace netgen
               identifiedpoints.SetData (i, j, i2, -1);	    
             }
         }
+    */
+
+    // can we get data by reference ? 
+    for (auto [hash,data] : identifiedpoints)
+      {
+        if (hash.I1() > IndexBASE<PointIndex>()+maxpnum-1 ||
+            hash.I2() > IndexBASE<PointIndex>()+maxpnum-1)
+          {
+            identifiedpoints[hash] = -1;
+          }
+            
+      }
   }
 
   // Map points in the identifications to new point numbers
@@ -2895,7 +2960,11 @@ namespace netgen
   {
     ost << "Identifications:" << endl;
     ost << "pairs: " << endl << identifiedpoints << endl;
-    ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
+    // ost << "pairs and nr: " << endl << identifiedpoints_nr << endl;
+    ost << "pairs and nr: " << endl;
+    for (auto [key,val] : identifiedpoints_nr)
+      ost << get<0>(key) << "," << get<1>(key) << ": " << val << endl;
+    
     ost << "table: " << endl << idpoints_table << endl;
   }
 
@@ -2922,14 +2991,17 @@ namespace netgen
         case 1: print_vec(std::get<1>(mp.thickness)); break;
       }
     ost <<"\n  new_material: ";
-    switch(mp.new_material.index())
-      {
-        case 0: ost << std::get<0>(mp.new_material); break;
-        case 1:
-        for (const auto & [key, value] : std::get<1>(mp.new_material))
-          ost << key << " -> " << value << ", ";
-        break;
-      }
+    if(!mp.new_material) ost << "nullopt";
+    else {
+      switch(mp.new_material->index())
+        {
+          case 0: ost << std::get<0>(*mp.new_material); break;
+          case 1:
+          for (const auto & [key, value] : std::get<1>(*mp.new_material))
+            ost << key << " -> " << value << ", ";
+          break;
+        }
+    }
     ost << "\n  domain: ";
     switch(mp.domain.index())
       {
@@ -2951,9 +3023,8 @@ namespace netgen
       ost << "nullopt";
     ost << "\n  grow_edges: " << mp.grow_edges;
     ost << "\n  limit_growth_vectors: " << mp.limit_growth_vectors;
-    ost << "\n  sides_keep_surfaceindex: " << mp.sides_keep_surfaceindex;
-    ost << "\n  keep_surfaceindex: " << mp.keep_surfaceindex;
-    ost << "\n  limit_safety: " << mp.limit_safety;
+    ost << "\n  sides_keep_surfaceindex: " << (mp.sides_keep_surfaceindex ? ToString(*mp.sides_keep_surfaceindex) : "nullopt");
+    ost << "\n  disable_curving: " << mp.disable_curving;
     ost << endl;
     return ost;
   }

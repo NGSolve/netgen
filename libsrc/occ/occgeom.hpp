@@ -146,6 +146,14 @@ namespace netgen
 
     static ShapeProperties& GetProperties(const TopoDS_Shape& shape)
     {
+      try
+        {
+          CheckValidPropertyType(shape);
+        }
+      catch(Exception& e)
+        {
+          cerr << "WARNING: " << e.what() << endl;
+        }
       auto index = OCCGeometry::global_shape_property_indices.FindIndex(shape);
       if(index > 0)
         return OCCGeometry::global_shape_properties

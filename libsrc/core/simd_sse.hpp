@@ -21,6 +21,9 @@ namespace ngcore
       : mask(_mm_cmpgt_epi32(_mm_set1_epi32(i),
                              _mm_set_epi32(1, 1, 0, 0)))
     { ; }
+
+    SIMD (bool i0, bool i1) { mask = _mm_set_epi64x(i1?-1:0, i0?-1:0); }
+    
     SIMD (__m128i _mask) : mask(_mask) { ; }
     __m128i Data() const { return mask; }
     static constexpr int Size() { return 2; }
@@ -66,6 +69,10 @@ namespace ngcore
     NETGEN_INLINE auto operator[] (int i) const { return ((int64_t*)(&data))[i]; }
     NETGEN_INLINE __m128i Data() const { return data; }
     NETGEN_INLINE __m128i & Data() { return data; }
+    // NETGEN_INLINE int64_t Lo() const { return _mm_extract_epi64(data, 0); }
+    // NETGEN_INLINE int64_t Hi() const { return _mm_extract_epi64(data, 1); }
+    NETGEN_INLINE int64_t Lo() const { return ((int64_t*)(&data))[0]; }
+    NETGEN_INLINE int64_t Hi() const { return ((int64_t*)(&data))[1]; }
     static SIMD FirstInt(int n0=0) { return { n0, n0+1 }; }
   };
 
@@ -215,6 +222,7 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
   NETGEN_INLINE SIMD<mask64,2> operator!= (SIMD<double,2> a , SIMD<double,2> b)
   { return _mm_castpd_si128( _mm_cmpneq_pd(a.Data(),b.Data())); }
 
+#ifdef __SSE4_2__  
   NETGEN_INLINE SIMD<mask64,2> operator<= (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  _mm_xor_si128(_mm_cmpgt_epi64(a.Data(),b.Data()),_mm_set1_epi32(-1)); }
   NETGEN_INLINE SIMD<mask64,2> operator< (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
@@ -223,11 +231,13 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
   { return  _mm_xor_si128(_mm_cmpgt_epi64(b.Data(),a.Data()),_mm_set1_epi32(-1)); }
   NETGEN_INLINE SIMD<mask64,2> operator> (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  my_mm_cmpgt_epi64(a.Data(),b.Data()); }
+#endif
+#ifdef __SSE4_1__  
   NETGEN_INLINE SIMD<mask64,2> operator== (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  _mm_cmpeq_epi64(a.Data(),b.Data()); }
   NETGEN_INLINE SIMD<mask64,2> operator!= (SIMD<int64_t,2> a , SIMD<int64_t,2> b)
   { return  _mm_xor_si128(_mm_cmpeq_epi64(a.Data(),b.Data()),_mm_set1_epi32(-1)); }
-
+#endif
 
 
  NETGEN_INLINE SIMD<mask64,2> operator&& (SIMD<mask64,2> a, SIMD<mask64,2> b)

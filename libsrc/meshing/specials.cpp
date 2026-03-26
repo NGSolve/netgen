@@ -62,13 +62,13 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     }
   cout << endl;
 
-  NgBitArray connected(mesh.GetNP());
+  TBitArray<PointIndex> connected(mesh.GetNP());
   connected.Clear();
   for (i = 1; i <= mesh.GetNSE(); i++)
     {
       const Element2d & el = mesh.SurfaceElement(i);
       for (j = 1; j <= 3; j++)
-	connected.Set(el.PNum(j));
+	connected.SetBit(el.PNum(j));
     }
   
   bool changed;
@@ -92,7 +92,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 		{
 		  changed = 1;
 		  for (j = 0; j < 4; j++)
-		    connected.Set (el[j]);
+		    connected.SetBit (el[j]);
 		}
 	    }
 	}
@@ -120,13 +120,14 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   mesh.Compress();
   
   mesh.FindOpenElements();
-  NgBitArray locked(mesh.GetNP());
+  TBitArray<PointIndex> locked(mesh.GetNP());
   locked.Set();
   for (i = 1; i <= mesh.GetNOpenElements(); i++)
     for (j = 1; j <= 3; j++)
       locked.Clear (mesh.OpenElement(i).PNum(j));
 
-  for (PointIndex i (1); i <= locked.Size(); i++)
+  // for (PointIndex i (1); i <= locked.Size(); i++)
+  for (PointIndex i : locked.Range())
     if (locked.Test(i))
       {
 	mesh.AddLockedPoint (i);

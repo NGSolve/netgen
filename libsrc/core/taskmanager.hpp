@@ -94,10 +94,14 @@ namespace ngcore
     NGCORE_API void StartWorkers();
     NGCORE_API void StopWorkers();
 
-    void SuspendWorkers(int asleep_usecs = 1000 )
+    bool IsSleeping() const { return sleep; }
+
+    int SuspendWorkers(int asleep_usecs = 1000 )
       {
+        int old_sleep_usecs = sleep_usecs;
         sleep_usecs = asleep_usecs;
         sleep = true;
+        return old_sleep_usecs;
       }
     void ResumeWorkers() { sleep = false; }
 
@@ -176,6 +180,35 @@ namespace ngcore
           ExitTaskManager(nthreads);
           TaskManager::SetNumThreads(nthreads_before);
         }
+    }
+  };
+
+  class SuspendTaskManager
+  {
+    int old_sleep_usecs = 0;
+    bool old_sleep = false;
+    TaskManager * tm = nullptr;
+
+  public:
+    SuspendTaskManager(int asleep_usecs=1000)
+      : tm(task_manager)
+    {
+      if(!tm)
+          return;
+
+      old_sleep = tm->IsSleeping();
+      old_sleep_usecs = tm->SuspendWorkers(asleep_usecs);
+    }
+
+    ~SuspendTaskManager()
+    {
+      if(!tm)
+          return;
+
+      if(old_sleep) // restore old sleep time
+          tm->SuspendWorkers(old_sleep_usecs);
+      else
+          tm->ResumeWorkers();
     }
   };
 
@@ -317,6 +350,7 @@ namespace ngcore
     
   public:
     SharedLoop (IntRange ar) : r(ar) { cnt = r.begin(); }
+    SharedLoop (size_t s) : SharedLoop (IntRange{s}) { ; }
     SharedIterator begin() { return SharedIterator (cnt, r.end(), true); }
     SharedIterator end()   { return SharedIterator (cnt, r.end(), false); }
   };
@@ -623,6 +657,8 @@ public:
       Reset (r);
     }
 
+    SharedLoop2 (size_t s) : SharedLoop2 (IntRange{s}) { } 
+    
     void Reset (IntRange r)
     {
       for (size_t i = 0; i < ranges.Size(); i++)
@@ -632,6 +668,9 @@ public:
       participants.store(0, std::memory_order_relaxed);
       processed.store(0, std::memory_order_release);
     }
+
+    void Reset (size_t s) { Reset(IntRange{s}); }
+      
     
     SharedIterator begin()
     {

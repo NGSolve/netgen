@@ -13,6 +13,7 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   utils.cpp
   version.cpp
   ng_mpi_wrapper.cpp
+  statushandler.cpp
   )
 
 string(REPLACE "|" ";" ng_compile_flags_replace_sep "${NG_COMPILE_FLAGS}")
@@ -20,11 +21,11 @@ target_compile_options(ngcore PUBLIC ${ng_compile_flags_replace_sep})
 
 if(EMSCRIPTEN)
   set(PYTHON_MODULE_EXTENSION ".so")
-  target_link_options(ngcore PUBLIC -sALLOW_MEMORY_GROWTH -sENVIRONMENT=web)
-  target_compile_options(ngcore PUBLIC -sNO_DISABLE_EXCEPTION_CATCHING)
+  target_link_options(ngcore PUBLIC -sALLOW_MEMORY_GROWTH -sENVIRONMENT=web -sWASM_BIGINT -fwasm-exceptions)
+  target_compile_options(ngcore PUBLIC -fwasm-exceptions)
 endif()
 
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND USE_PYTHON)
   # Python packages on Linux are compiled with the old ABI,
   # make sure that the same ABI is used in plugins aswell
   try_run(
@@ -33,19 +34,18 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     RUN_OUTPUT_VARIABLE use_glibcxx_cxx11_abi
     )
   target_compile_definitions(ngcore PUBLIC -D_GLIBCXX_USE_CXX11_ABI=${use_glibcxx_cxx11_abi})
-  if(USE_PYTHON)
-    try_run(
-      ret_val can_compile
-      ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/_get_gxx_abi.cpp
-      RUN_OUTPUT_VARIABLE cxx_abi_version
-      )
-    if(${can_compile} AND (${ret_val} EQUAL 0))
-      # Different python modules using pybind11 need to use the same C++ ABI version
-      # for compatibility
-      message(STATUS "GNU C++ ABI version: ${cxx_abi_version}")
-      target_compile_options(ngcore PUBLIC "-fabi-version=${cxx_abi_version}")
-    endif()
-  endif(USE_PYTHON)
+  try_run(
+    ret_val can_compile
+    ${CMAKE_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/_get_gxx_abi.cpp
+    RUN_OUTPUT_VARIABLE default_cxx_abi_version
+    )
+  if(${can_compile} AND (${ret_val} EQUAL 0))
+    # Different python modules using pybind11 need to use the same C++ ABI version
+    # for compatibility
+    set(cxx_abi_version 17)
+    message(STATUS "GNU C++ ABI version: ${cxx_abi_version}")
+    target_compile_options(ngcore PUBLIC "-fabi-version=${cxx_abi_version}")
+  endif()
 endif()
 
 if(USE_PYTHON)
@@ -91,9 +91,9 @@ install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp 
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
   xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp ngstream.hpp
-  simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_sse.hpp simd_arm64.hpp
+  simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_math.hpp simd_sse.hpp simd_arm64.hpp
   register_archive.hpp autodiff.hpp autodiffdiff.hpp
-  ng_mpi.hpp ng_mpi_generated_declarations.hpp mpi4py_pycapi.h ng_mpi_native.hpp
+  ng_mpi.hpp ng_mpi_generated_declarations.hpp mpi4py_pycapi.h ng_mpi_native.hpp statushandler.hpp
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/core COMPONENT netgen_devel)
 
 if(ENABLE_CPP_CORE_GUIDELINES_CHECK)
@@ -104,10 +104,10 @@ add_dependencies(ngcore ng_generate_version_file)
 
 if(USE_PYTHON)
   pybind11_add_module(pyngcore MODULE python_ngcore_export.cpp)
-  target_link_libraries(pyngcore PUBLIC ngcore PRIVATE netgen_python)
+  target_link_libraries(pyngcore PUBLIC ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>")
   set_target_properties(pyngcore PROPERTIES INSTALL_RPATH "${NG_RPATH_TOKEN}/../${NETGEN_PYTHON_RPATH}")
   if(EMSCRIPTEN)
-    target_compile_definitions(pyngcore PRIVATE NGCORE_EXPORTS)
+    target_link_options(pyngcore PUBLIC -sALLOW_MEMORY_GROWTH -sENVIRONMENT=web -sWASM_BIGINT -fwasm-exceptions)
   endif(EMSCRIPTEN)
   install(TARGETS pyngcore DESTINATION ${NG_INSTALL_DIR_PYTHON}/pyngcore COMPONENT netgen)
 endif(USE_PYTHON)
@@ -117,7 +117,7 @@ function (build_mpi_variant)
   set(include_dir ${ARGV1})
   message("1Building MPI variant: ${ARGV0} ${ARGV1}")
   add_library(${target} SHARED ng_mpi.cpp)
-  target_link_libraries(${target} PUBLIC ngcore PRIVATE netgen_python)
+  target_link_libraries(${target} PUBLIC ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>")
   target_compile_definitions(${target} PUBLIC PARALLEL NG_MPI_WRAPPER)
   target_include_directories(${target} PRIVATE ${include_dir})
   set_target_properties(${target} PROPERTIES PREFIX "")

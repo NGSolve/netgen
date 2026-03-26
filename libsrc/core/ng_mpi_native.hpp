@@ -16,6 +16,10 @@ MPI_Comm NG_MPI_Native(NgMPI_Comm comm) {
   return reinterpret_cast<MPI_Comm>(static_cast<NG_MPI_Comm>(comm).value);
 }
 
+NG_MPI_Comm NG_MPI_From_Native (MPI_Comm comm) {
+  return {reinterpret_cast<uintptr_t>(comm)};
+}
+
 }  // namespace ngcore
 
 #endif  // NG_MPI_NATIVE_HPP

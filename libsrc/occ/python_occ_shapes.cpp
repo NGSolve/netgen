@@ -1,3 +1,4 @@
+#include <Geom_Curve.hxx>
 #ifdef NG_PYTHON
 #ifdef OCCGEOMETRY
 
@@ -14,12 +15,17 @@
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 6)
+#include <BinTools_ShapeWriter.hxx>
+#endif // NETGEN_OCC_VERSION_AT_LEAST(7, 6)
 #include <BOPAlgo_Builder.hxx>
 #include <BOPTools_AlgoTools.hxx>
 #include <BRepAlgoAPI_Common.hxx>
 #include <BRepAlgoAPI_Cut.hxx>
 #include <BRepAlgoAPI_Fuse.hxx>
+#include <BRepAlgoAPI_Section.hxx>
 #include <BRepAlgo_NormalProjection.hxx>
+#include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_MakeEdge.hxx>
 #include <BRepBuilderAPI_MakeFace.hxx>
 #include <BRepBuilderAPI_MakePolygon.hxx>
@@ -46,8 +52,10 @@
 #include <BRepPrimAPI_MakePrism.hxx>
 #include <BRepPrimAPI_MakeRevol.hxx>
 #include <BRepPrimAPI_MakeSphere.hxx>
+#include <BRepTools.hxx>
 #include <GCE2d_MakeArcOfCircle.hxx>
 #include <GCE2d_MakeCircle.hxx>
+#include <GCE2d_MakeEllipse.hxx>
 #include <GCE2d_MakeSegment.hxx>
 #include <GC_MakeArcOfCircle.hxx>
 #include <GC_MakeCircle.hxx>
@@ -64,6 +72,7 @@
 #include <GeomAPI_PointsToBSplineSurface.hxx>
 #include <GeomLProp_SLProps.hxx>
 #include <Geom_BezierCurve.hxx>
+#include <Geom_BezierSurface.hxx>
 #include <Geom_BSplineCurve.hxx>
 #include <Geom_BSplineSurface.hxx>
 #include <Geom_Plane.hxx>
@@ -71,11 +80,14 @@
 #include <IntTools_Context.hxx>
 #include <ShapeAnalysis_FreeBounds.hxx>
 #include <ShapeUpgrade_UnifySameDomain.hxx>
+#include <ShapeFix_ShapeTolerance.hxx>
 #include <gp_Ax1.hxx>
 #include <gp_Ax2.hxx>
 #include <gp_Ax2d.hxx>
 #include <gp_Pln.hxx>
 #include <gp_Trsf.hxx>
+#include <GeomLib.hxx>
+#include <Geom_BoundedCurve.hxx>
 
 #pragma clang diagnostic pop
 
@@ -211,6 +223,11 @@ py::object CastShape(const TopoDS_Shape & s)
     throw Exception("Invalid Shape type");
 };
 
+namespace netgen {
+TopoDS_Shape CrossSection(const TopoDS_Shape & shape,
+                          const gp_Ax3 & axis);
+}
+
 
 class WorkPlane : public enable_shared_from_this<WorkPlane>
 {
@@ -341,7 +358,7 @@ public:
   }
 
   auto Spline(const std::vector<gp_Pnt2d> &points, bool periodic, double tol, const std::map<int, gp_Vec2d> &tangents,
-              bool start_from_localpos)
+              bool start_from_localpos, std::optional<string> name)
   {
     gp_Pnt2d P1 = start_from_localpos ? localpos.Location() : points.front();
     gp_Pnt P13d = surf->Value(P1.X(), P1.Y());
@@ -403,6 +420,8 @@ public:
     lastvertex = endv;
     BRepLib::BuildCurves3d(edge);
     wire_builder.Add(edge);
+    if(name.has_value())
+      OCCGeometry::GetProperties(edge).name = name;
 
     // update localpos
     localpos.SetLocation(PLast);
@@ -424,7 +443,8 @@ public:
     return shared_from_this();
   }
 
-  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt)
+  auto ArcTo (double h, double v, const gp_Vec2d t, optional<string> name=nullopt,
+              optional<double> maxh=nullopt)
   {
     gp_Pnt2d P1 = localpos.Location();
 
@@ -491,6 +511,8 @@ public:
     BRepLib::BuildCurves3d(edge);
     if(name.has_value())
       OCCGeometry::GetProperties(edge).name = name;
+    if(maxh.has_value())
+      OCCGeometry::GetProperties(edge).maxh = maxh.value();
     wire_builder.Add(edge);
 
     //compute angle of rotation
@@ -511,7 +533,8 @@ public:
     return shared_from_this();
   }
 
-  auto Arc(double radius, double angle, optional<string> name)
+  auto Arc(double radius, double angle, optional<string> name,
+           optional<double> maxh)
   {
     double newAngle = fmod(angle,360)*M_PI/180;
 
@@ -542,29 +565,29 @@ public:
     cout << IM(6) << "t = (" << t.X() << ", " << t.Y() << ")" << endl;
 
     //add arc
-    return ArcTo (oldp.X(), oldp.Y(), t, name);
+    return ArcTo (oldp.X(), oldp.Y(), t, name, maxh);
   }
 
-  auto Rectangle (double l, double w)
+  auto Rectangle (double l, double w, optional<string> name)
   {
-    Line (l);
+    Line (l, name);
     Rotate (90);
-    Line(w);
+    Line(w, name);
     Rotate (90);
-    Line (l);
+    Line (l, name);
     Rotate (90);
-    Line(w);
+    Line(w, name);
     Rotate (90);
     return shared_from_this();            
   }
 
-  auto RectangleCentered (double l, double w)
+  auto RectangleCentered (double l, double w, optional<string> name)
   {
     Move(-l/2);
     Rotate(-90);
     Move(w/2);
     Rotate(90);
-    Rectangle(l,w);
+    Rectangle(l,w, name);
     Rotate(-90);
     Move(-w/2);
     Rotate(90);
@@ -595,6 +618,19 @@ public:
     wires.push_back (wire_builder.Wire());
     wire_builder = BRepBuilderAPI_MakeWire();
     return shared_from_this();    
+  }
+
+  auto Ellipse(double major, double minor)
+  {
+    Handle(Geom2d_Ellipse) ell_curve = GCE2d_MakeEllipse(localpos, major, minor).Value();
+
+    auto edge = BRepBuilderAPI_MakeEdge(ell_curve, surf).Edge();
+    BRepLib::BuildCurves3d(edge);
+
+    wire_builder.Add(edge);
+    wires.push_back (wire_builder.Wire());
+    wire_builder = BRepBuilderAPI_MakeWire();
+    return shared_from_this();
   }
 
   auto NameVertex (string name)
@@ -688,6 +724,32 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     OCCGeometry::global_shape_properties.clear();
     OCCGeometry::global_shape_property_indices.Clear();
   });
+
+  struct SwigTypeInfo
+  {
+    const char* name;  // SWIG's type name string
+    // Other fields...
+  };
+
+  struct SwigPyObject{
+    PyObject_HEAD
+    void *ptr;
+    SwigTypeInfo* ty; // SWIG type information
+    int own; // ownership flag
+  };
+
+  m.def("From_PyOCC", [](py::object shape)
+  {
+    py::object py_this = shape.attr("this");
+    PyObject* obj = py_this.ptr();
+    SwigPyObject* swig_obj = reinterpret_cast<SwigPyObject*>(obj);
+    if (!swig_obj->ptr || !swig_obj->ty || !swig_obj->ty->name) {
+        throw std::runtime_error("SWIG object does not contain a valid pointer");
+    }
+    if(strcmp(swig_obj->ty->name, "_p_TopoDS_Shape") != 0)
+      throw std::runtime_error("Does not contain TopoDS_Shape from pyocc!");
+    return py::cast(static_cast<TopoDS_Shape*>(swig_obj->ptr));
+  }, py::return_value_policy::reference, py::keep_alive<0,1>());
   
   py::class_<TopoDS_Shape> (m, "TopoDS_Shape")
     .def("__str__", [] (const TopoDS_Shape & shape)
@@ -698,7 +760,24 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #endif // OCC_HAVE_DUMP_JSON
            return str.str();
          })
-    
+    .def("GenerateMesh", [](TopoDS_Shape & shape,
+                            MeshingParameters* pars, int dim,
+                            bool ngs_mesh, py::kwargs kwargs)
+    {
+      auto geo = py::cast(make_shared<OCCGeometry>(shape, dim));
+      auto mesh = geo.attr("GenerateMesh")(**kwargs);
+      if(!ngs_mesh)
+        return mesh;
+      try
+        {
+          auto ngsolve = py::module::import("ngsolve");
+          return ngsolve.attr("Mesh")(mesh);
+        }
+      catch (py::import_error &)
+        {
+          throw Exception("ngsolve module not found, cannot convert to ngsolve mesh, you can use 'ngs_mesh=False' to return a Netgen mesh instead");
+        }
+    }, py::arg("mp")=nullptr, py::arg("dim")=3, py::arg("ngs_mesh")=true)
     .def("ShapeType", [] (const TopoDS_Shape & shape)
          {
            throw Exception ("use 'shape.type' instead of 'shape.ShapeType()'");
@@ -717,6 +796,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def_property_readonly("solids", GetSolids,
             "returns all sub-shapes of type 'SOLID'")
+    .def_property_readonly("shells", GetShells,
+            "returns all sub-shapes of type 'SHELL'")
     .def_property_readonly("faces", GetFaces,
             "returns all sub-shapes of type 'FACE'")
     .def_property_readonly("edges", GetEdges,
@@ -730,6 +811,20 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                auto box = GetBoundingBox(shape);
                return py::make_tuple( ng2occ(box.PMin()), ng2occ(box.PMax()) );
             }, "returns bounding box (pmin, pmax)")
+
+    .def("LimitTolerance", [](TopoDS_Shape& self, double tmin,
+                              double tmax, TopAbs_ShapeEnum type)
+    {
+      ShapeFix_ShapeTolerance fix;
+      fix.LimitTolerance(self, tmin, tmax, type);
+    }, py::arg("tmin"), py::arg("tmax")=0., py::arg("type")=TopAbs_SHAPE,
+         "limit tolerance of shape to range [tmin, tmax]")
+    .def("SetTolerance", [](TopoDS_Shape& self, double tol,
+                            TopAbs_ShapeEnum stype)
+    {
+      ShapeFix_ShapeTolerance fix;
+      fix.SetTolerance(self, tol, stype);
+    }, py::arg("tol"), py::arg("stype")=TopAbs_SHAPE, "set (enforce) tolerance of shape to 't'")
 
     .def("Properties", [] (const TopoDS_Shape & shape)
          {
@@ -806,7 +901,33 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def("WriteStep", [](const TopoDS_Shape & shape, string & filename)
             { step_utils::WriteSTEP(shape, filename); }
          , py::arg("filename"), "export shape in STEP - format")
-
+    .def("WriteBrep", [](const TopoDS_Shape & shape, const string& filename,
+                         bool withTriangles, bool withNormals,
+                         optional<int> version, bool binary)
+    {
+      if(binary)
+        {
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 6)
+          BinTools_FormatVersion v = version ? BinTools_FormatVersion(*version) : BinTools_FormatVersion_CURRENT;
+          BinTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
+# else // NETGEN_OCC_VERSION_AT_LEAST(7, 6)
+          throw Exception("Binary BREP export not supported in this version of OpenCascade");
+#endif // NETGEN_OCC_VERSION_AT_LEAST(7, 6)
+        }
+      else
+        {
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 6)
+          TopTools_FormatVersion v = version ? (TopTools_FormatVersion)(*version) : TopTools_FormatVersion_CURRENT;
+          BRepTools::Write(shape, filename.c_str(), withTriangles, withNormals, v);
+#else // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+          BRepTools::Write(shape, filename.c_str());
+#endif // OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=6
+        }
+    }, py::arg("filename"), py::arg("withTriangles")=true,
+       py::arg("withNormals")=false,
+         py::arg("version")=py::none(),
+         py::arg("binary")=false,
+       "export shape in BREP - format")
     .def("bc", [](const TopoDS_Shape & shape, const string & name)
          {
            for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
@@ -822,12 +943,12 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          }, py::arg("name"), "sets 'name' property to all solids of shape")
     
     .def_property("name", [](const TopoDS_Shape & self) -> optional<string> {
+        CheckValidPropertyType(self);
         if (auto name = OCCGeometry::GetProperties(self).name)
           return *name;
         else
           return nullopt;
       }, [](const TopoDS_Shape & self, optional<string> name) {
-        OCCGeometry::GetProperties(self).name = name;
         for (auto & s : GetHighestDimShapes(self))
           OCCGeometry::GetProperties(s).name = name;
       }, "'name' of shape")
@@ -835,11 +956,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("maxh",
                   [](const TopoDS_Shape& self)
                   {
+                    CheckValidPropertyType(self);
                     return OCCGeometry::GetProperties(self).maxh;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    OCCGeometry::GetProperties(self).maxh = val;
                     for(auto & s : GetHighestDimShapes(self))
                       OCCGeometry::GetProperties(s).maxh = val;
                   }, "maximal mesh-size for shape")
@@ -847,28 +968,34 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     .def_property("hpref",
                   [](const TopoDS_Shape& self)
                   {
+                    CheckValidPropertyType(self);
                     return OCCGeometry::GetProperties(self).hpref;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
-                    OCCGeometry::GetProperties(self).hpref = val;
                     for(auto & s : GetHighestDimShapes(self))
                       OCCGeometry::GetProperties(s).hpref = val;
                   }, "number of refinement levels for geometric refinement")
     
     .def_property("col", [](const TopoDS_Shape & self) -> py::object {
+      CheckValidPropertyType(self);
       if(!OCCGeometry::HaveProperties(self) || !OCCGeometry::GetProperties(self).col)
         return py::none();
       auto col = *OCCGeometry::GetProperties(self).col;
       return py::cast(std::vector<double>({ col(0), col(1), col(2), col(3) }));
-    }, [](const TopoDS_Shape & self, std::vector<double> c) {
-        Vec<4> col(c[0], c[1], c[2], 1.0);
-        if(c.size() == 4)
-          col[3] = c[3];
-        OCCGeometry::GetProperties(self).col = col;
+    }, [](const TopoDS_Shape & self, std::optional<std::vector<double>> c) {
+      if(c.has_value())
+        {
+          Vec<4> col((*c)[0], (*c)[1], (*c)[2], 1.0);
+          if(c->size() == 4)
+            col[3] = (*c)[3];
+          for(auto & s : GetHighestDimShapes(self))
+            OCCGeometry::GetProperties(s).col = col;
+        }
+      else
         for(auto & s : GetHighestDimShapes(self))
-          OCCGeometry::GetProperties(s).col = col;
-      }, "color of shape as RGB - tuple")
+          OCCGeometry::GetProperties(s).col = nullopt;
+      }, "color of shape as RGB or RGBA - tuple")
     .def_property("layer", [](const TopoDS_Shape& self) {
     if (!OCCGeometry::HaveProperties(self))
       return 1;
@@ -1033,8 +1160,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                 edir = du^dv;
               }
             BRepPrimAPI_MakePrism builder(shape, h*edir, false);
-
-            for (auto typ : { TopAbs_SOLID, TopAbs_FACE, TopAbs_EDGE, TopAbs_VERTEX })
+            for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                              TopAbs_EDGE, TopAbs_VERTEX })
               for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
                 {
                   auto prop = OCCGeometry::GetProperties(e.Current());
@@ -1049,14 +1176,35 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
             }
             return builder.Shape();
           }
-        throw Exception("no face found for extrusion");
+        if (!dir.has_value())
+          throw Exception("shape does not contain a face to determine extrusion direction, please provide 'dir' argument");
+        gp_Vec edir = h * (*dir);
+        BRepPrimAPI_MakePrism builder(shape, edir, false);
+        for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                          TopAbs_EDGE, TopAbs_VERTEX })
+          for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
+            {
+              auto prop = OCCGeometry::GetProperties(e.Current());
+              for (auto mods : builder.Generated(e.Current()))
+                OCCGeometry::GetProperties(mods).Merge(prop);
+            }
+        return builder.Shape();
     }, py::arg("h"), py::arg("dir")=nullopt, py::arg("identify")=false,
          py::arg("idtype")=Identifications::CLOSESURFACES,
          py::arg("idname") = "extrusion",
          "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
-        return BRepPrimAPI_MakePrism (face, vec).Shape();
+      BRepPrimAPI_MakePrism builder(face, vec);
+      for (auto typ : { TopAbs_SOLID, TopAbs_FACE,
+                        TopAbs_EDGE, TopAbs_VERTEX })
+        for (TopExp_Explorer e(face, typ); e.More(); e.Next())
+          {
+            auto prop = OCCGeometry::GetProperties(e.Current());
+            for (auto mods : builder.Generated(e.Current()))
+              OCCGeometry::GetProperties(mods).Merge(prop);
+          }
+      return builder.Shape();
       }, py::arg("v"), "extrude shape by vector 'v'")
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
@@ -1077,6 +1225,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
         // throw Exception("no face found for revolve");
     }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
+    .def("CrossSection", &CrossSection, py::arg("plane_axes"),
+         "Create cross section of shape with plane defined by 'plane_axes' and transfer properties to dim-1 entities")
     .def("MakeFillet", [](const TopoDS_Shape& shape, const std::vector<std::pair<TopoDS_Shape, double>>& fillets) -> TopoDS_Shape
     {
       if (shape.ShapeType() == TopAbs_FACE) {
@@ -1514,6 +1664,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       new_edges.push_back(newE);
       return new_edges;
     }, "Splits edge at given parameters. Parameters can either be floating values in (0,1), then edge parametrization is used. Or it can be points, then the projection of these points are used for splitting the edge.")
+    .def("Extend", [](const TopoDS_Edge & edge, gp_Pnt pnt, int continuity, bool after)
+    {
+      double s0, s1;
+      auto curve = BRep_Tool::Curve(edge, s0, s1);
+      if (continuity < 0 || continuity > 2)
+        throw Exception("continuity must be 0, 1 or 2");
+
+      auto bounded_curve = opencascade::handle<Geom_BoundedCurve>::DownCast(curve);
+      GeomLib::ExtendCurveToPoint(bounded_curve, pnt, continuity, after);
+      return BRepBuilderAPI_MakeEdge(bounded_curve).Edge();
+
+    }, py::arg("point"), py::arg("continuity") = 1, py::arg("after") = true)
     ;
   
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "Wire")
@@ -1611,6 +1773,17 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       builder.Build();
       return builder.Projection();
     })
+    .def("Extend", [](const TopoDS_Face & face, double length, int continuity, bool inU, bool after)
+    {
+      if (continuity < 0 || continuity > 2)
+        throw Exception("continuity must be 0, 1 or 2");
+
+      auto surf = BRep_Tool::Surface (face);
+      auto bounded_surface = opencascade::handle<Geom_BoundedSurface>::DownCast(surf);
+      GeomLib::ExtendSurfByLength(bounded_surface, length, continuity, inU, after);
+      return BRepBuilderAPI_MakeFace(bounded_surface, 1e-7).Face();
+
+    }, py::arg("length"), py::arg("continuity") = 1, py::arg("u_direction") = true, py::arg("after") = true)
     ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid")
     .def(py::init([](const TopoDS_Shape& faces)
@@ -1747,6 +1920,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return selected;
          })
     .def_property_readonly("solids", &ListOfShapes::Solids)
+    .def_property_readonly("shells", &ListOfShapes::Shells)
     .def_property_readonly("faces", &ListOfShapes::Faces)
     .def_property_readonly("wires", &ListOfShapes::Wires)
     .def_property_readonly("edges", &ListOfShapes::Edges)
@@ -1894,21 +2068,21 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       })
     .def("Edge", [](Handle(Geom2d_Curve) curve) {
         // static Geom_Plane surf{gp_Ax3()}; // crashes in nbconvert ???
-        static auto surf = new Geom_Plane{gp_Ax3()};          
+        static auto surf = Handle(Geom_Plane)(new Geom_Plane{gp_Ax3()});
         auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
         BRepLib::BuildCurves3d(edge);
         return edge;
       })
     .def("Wire", [](Handle(Geom2d_Curve) curve) {
         // static Geom_Plane surf{gp_Ax3()}; // crashes in nbconvert ???
-        static auto surf = new Geom_Plane{gp_Ax3()};          
+        static auto surf = Handle(Geom_Plane)(new Geom_Plane{gp_Ax3()});
         auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
         BRepLib::BuildCurves3d(edge);
         return BRepBuilderAPI_MakeWire(edge).Wire();                
       })
     .def("Face", [](Handle(Geom2d_Curve) curve) {
         // static Geom_Plane surf{gp_Ax3()};  // crashes in nbconvert ???
-        static auto surf = new Geom_Plane{gp_Ax3()};
+        static auto surf = Handle(Geom_Plane)(new Geom_Plane{gp_Ax3()});
         auto edge = BRepBuilderAPI_MakeEdge(curve, surf).Edge();
         BRepLib::BuildCurves3d(edge);        
         auto wire = BRepBuilderAPI_MakeWire(edge).Wire();        
@@ -2042,14 +2216,19 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return BRepOffsetAPI_MakePipe (spine, profile).Shape();
         }, py::arg("spine"), py::arg("profile"), py::arg("twist")=nullopt, py::arg("auxspine")=nullopt);
   
-  m.def("PipeShell", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile, const TopoDS_Wire & auxspine) {
+  m.def("PipeShell", [] (const TopoDS_Wire & spine, variant<TopoDS_Shape, std::vector<TopoDS_Shape>> profile, std::optional<TopoDS_Wire> auxspine) {
       try
         {
           BRepOffsetAPI_MakePipeShell builder(spine);
-          builder.SetMode (auxspine, Standard_True);
-          builder.Add (profile);
-          // builder.Build();
-          // builder.MakeSolid();
+          if(auxspine)
+            builder.SetMode (*auxspine, Standard_True);
+          if(std::holds_alternative<TopoDS_Shape>(profile))
+            builder.Add (std::get<TopoDS_Shape>(profile));
+          else
+            {
+              for(auto s : std::get<std::vector<TopoDS_Shape>>(profile))
+                builder.Add(s);
+            }
           return builder.Shape();
         }
       catch (Standard_Failure & e)
@@ -2058,13 +2237,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           e.Print(errstr);
           throw NgException("cannot create PipeShell: "+errstr.str());
         }
-    }, py::arg("spine"), py::arg("profile"), py::arg("auxspine"));
+    }, py::arg("spine"), py::arg("profile"), py::arg("auxspine")=nullopt);
 
 
   // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
   m.def("Ellipse", [] (const gp_Ax2d & ax, double major, double minor) -> Handle(Geom2d_Curve)
         {
-          return new Geom2d_Ellipse(ax, major, minor);
+          return Handle(Geom2d_Ellipse) (GCE2d_MakeEllipse(ax, major, minor));
         }, py::arg("axes"), py::arg("major"), py::arg("minor"), "create 2d ellipse curve");
   
   m.def("Segment", [](gp_Pnt2d p1, gp_Pnt2d p2) -> Handle(Geom2d_Curve) {
@@ -2176,6 +2355,43 @@ tangents : Dict[int, gp_Vec2d]
   Tangent vectors for the points indicated by the key value (0-based).
 
 )delimiter");
+
+  m.def("Sew", [] (const std::vector<TopoDS_Shape> & faces, double tol,
+                   bool non_manifold) -> TopoDS_Shape
+        {
+          if(faces.size() == 1)
+            return faces[0];
+          BRepBuilderAPI_Sewing sewer(tol);
+          sewer.SetNonManifoldMode(non_manifold);
+          for (auto & s : faces)
+            sewer.Add(s);
+          sewer.Perform();
+          for (auto & s : faces)
+            PropagateProperties (sewer, s);
+          auto sewn = sewer.SewedShape();
+          return sewn;
+        }, py::arg("faces"), py::arg("tolerance")=1e-6,
+        py::arg("non_manifold")=false,
+        R"doc(
+Stitch a list of faces into one or more connected shells.
+
+Parameters
+----------
+faces : list[TopoDS_Shape]
+    Faces or other shapes to sew together.
+tolerance : float, default=1e-6
+    Geometric tolerance for merging edges and vertices.
+non_manifold : bool, default=False
+    If True, allows edges shared by more than two faces (may produce
+    multiple shells). If False, creates only manifold shells suitable
+    for solids.
+
+Returns
+-------
+TopoDS_Shape
+    The sewed shape containing one or more shells.
+)doc");
+
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
         {
@@ -2337,6 +2553,36 @@ tangents : Dict[int, gp_Vec2d]
       Handle(Geom_Curve) curve = new Geom_BezierCurve(poles);
       return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("points"), "create Bezier curve");
+
+  m.def("BezierSurface", [](py::array_t<double> nppoles,
+                            optional<py::array_t<double>> npweights,
+                            double tol)
+  {
+    if(nppoles.ndim() != 3)
+      throw std::length_error("`poles` array must have dimension 3.");
+    if(nppoles.shape(2) != 3)
+      throw std::length_error("The third dimension must have size 3.");
+    if(npweights && npweights->ndim() != 2)
+      throw std::length_error("`weights` array must have dimension 2.");
+
+    auto deg_u = nppoles.shape(0) - 1;
+    auto deg_v = nppoles.shape(1) - 1;
+    TColgp_Array2OfPnt poles(1, deg_u + 1, 1, deg_v + 1);
+    TColStd_Array2OfReal weights(1, deg_u + 1, 1, deg_v + 1);
+    for(int i = 0; i < nppoles.shape(0); ++i)
+      for(int j = 0; j < nppoles.shape(1); ++j)
+        {
+          poles.SetValue(i + 1, j + 1, gp_Pnt(nppoles.at(i, j, 0), nppoles.at(i, j, 1), nppoles.at(i, j, 2)));
+          if(npweights)
+            weights.SetValue(i + 1, j + 1, npweights->at(i, j));
+          else
+            weights.SetValue(i + 1, j + 1, 1.0);
+        }
+    Handle(Geom_Surface) surface = new Geom_BezierSurface(poles, weights);
+    return BRepBuilderAPI_MakeFace(surface, tol).Face();
+  }, py::arg("poles"), py::arg("weights")=std::nullopt,
+        py::arg("tol")=1e-7,
+        "Creates a rational Bezier surface with the set of poles and the set of weights. The weights are defaulted to all being 1. If all the weights are identical the surface is considered as non rational. Raises ConstructionError if the number of poles in any direction is greater than MaxDegree + 1 or lower than 2 or CurvePoles and CurveWeights have not the same length or one weight value is lower or equal to Resolution. Returns an occ face with the given tolerance.");
 
 
   m.def("SplineApproximation", [](const std::vector<gp_Pnt> &points, Approx_ParametrizationType approx_type, int deg_min,
@@ -2617,21 +2863,23 @@ degen_tol : double
     .def("LineTo", [](WorkPlane&wp, double x, double y, optional<string> name) { return wp.LineTo(x, y, name); },
          py::arg("h"), py::arg("v"), py::arg("name")=nullopt, "draw line to position (h,v)")
     .def("ArcTo", &WorkPlane::ArcTo, py::arg("h"), py::arg("v"),
-         py::arg("t"), py::arg("name")=nullopt)
-    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
+         py::arg("t"), py::arg("name")=nullopt, py::arg("maxh")=nullopt)
+    .def("Arc", &WorkPlane::Arc, py::arg("r"), py::arg("ang"), py::arg("name")=nullopt, py::arg("maxh")=nullopt, "draw arc tangential to current pos/dir, of radius 'r' and angle 'ang', draw to the left/right if ang is positive/negative")
     .def("Rotate", &WorkPlane::Rotate, py::arg("ang"), "rotate current direction by 'ang' degrees")
     .def("Line", [](WorkPlane&wp,double l, optional<string> name) { return wp.Line(l, name); },
          py::arg("l"), py::arg("name")=nullopt)
     .def("Line", [](WorkPlane&wp,double h,double v, optional<string> name) { return wp.Line(h,v,name); },
          py::arg("dx"), py::arg("dy"), py::arg("name")=nullopt)
     .def("Spline", &WorkPlane::Spline, py::arg("points"), py::arg("periodic")=false, py::arg("tol")=1e-8,
-         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true,
+         py::arg("tangents")=std::map<int, gp_Vec2d>{}, py::arg("start_from_localpos")=true, py::arg("name")=nullopt,
          "draw spline (default: starting from current position, which is implicitly added to given list of points), tangents can be specified for each point (0 refers to starting point)")
-    .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), "draw rectangle, with current position as corner, use current direction")
-    .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), "draw rectangle, with current position as center, use current direction")
+    .def("Rectangle", &WorkPlane::Rectangle, py::arg("l"), py::arg("w"), py::arg("name")=nullopt, "draw rectangle, with current position as corner, use current direction")
+    .def("RectangleC", &WorkPlane::RectangleCentered, py::arg("l"), py::arg("w"), py::arg("name")=nullopt, "draw rectangle, with current position as center, use current direction")
     .def("Circle", [](WorkPlane&wp, double x, double y, double r) {
         return wp.Circle(x,y,r); }, py::arg("h"), py::arg("v"), py::arg("r"), "draw circle with center (h,v) and radius 'r'")
     .def("Circle", [](WorkPlane&wp, double r) { return wp.Circle(r); }, py::arg("r"), "draw circle with center in current position")
+    .def("Ellipse", [](WorkPlane& wp, double major, double minor)
+    { return wp.Ellipse(major, minor); }, py::arg("major"), py::arg("minor"), "draw ellipse with current position as center")
     .def("NameVertex", &WorkPlane::NameVertex, py::arg("name"), "name vertex at current position")
     .def("Offset", &WorkPlane::Offset, py::arg("d"), "replace current wire by offset curve of distance 'd'")
     .def("Reverse", &WorkPlane::Reverse, "revert orientation of current wire")

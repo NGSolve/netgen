@@ -1,3 +1,4 @@
+#include "archive.hpp"
 #include "python_ngcore.hpp"
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
@@ -169,19 +170,33 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
             SetFlag(flags, d.first.cast<string>(), d.second.cast<py::object>());
           return flags;
         }), "Create flags from kwargs")
-    .def(py::pickle([] (const Flags& self)
+    // .def(NGSPickle<Flags>()) // in future versions we can kick out backward compatibility
+    .def(py::pickle([](Flags &f)
         {
-          std::stringstream str;
-          self.SaveFlags(str);
-          return py::make_tuple(py::cast(str.str()));
+          PyArchive<BinaryOutArchive> ar;
+          ar.SetParallel(parallel_pickling);
+          ar & f;
+          auto output = py::make_tuple(ar.WriteOut());
+          return output;
         },
-        [] (py::tuple state)
+        [](py::tuple& state)
         {
-          string s = state[0].cast<string>();
-          std::stringstream str(s);
-          Flags flags;
-          flags.LoadFlags(str);
-          return flags;
+          if(py::isinstance<py::list>(state[0]))
+            {
+              Flags flags;
+              PyArchive<BinaryInArchive> ar(state[0]);
+              ar & flags;
+              return flags;
+            }
+          else
+            {
+              // flags have been pickled with old Netgen version
+              string s = state[0].cast<string>();
+              std::stringstream str(s);
+              Flags flags;
+              flags.LoadFlags(str);
+              return flags;
+            }
         }
     ))
     .def("Set",[](Flags & self,const py::dict & aflags)->Flags&
@@ -216,6 +231,9 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 	  if(self.FlagsFlagDefined(name))
 	    return py::cast(self.GetFlagsFlag(name));
 
+          if(self.AnyFlagDefined(name))
+            return CastAnyToPy(self.GetAnyFlag(name));
+
 	  return py::cast(self.GetDefineFlag(name));
       }, py::arg("name"), "Return flag by given name")
     .def("ToDict", [](const Flags& flags)
@@ -228,6 +246,15 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     })
   ;
   py::implicitly_convertible<py::dict, Flags>();
+
+  py::class_<xbool>(m, "xbool")
+    .def(py::init<>())
+    .def(py::init<bool>(), py::arg("b"))
+    .def("__str__", &ToString<xbool>)
+    .def_property_readonly("is_true", &xbool::IsTrue)
+    .def_property_readonly("is_false", &xbool::IsFalse)
+    .def_property_readonly("is_maybe", &xbool::IsMaybe)
+    ;
 
   
   py::enum_<level::level_enum>(m, "LOG_LEVEL", "Logging level")
@@ -299,6 +326,17 @@ threads : int
     .def("__exit__", &ParallelContextManager::Exit)
     .def("__timing__", &TaskManager::Timing)
     ;
+
+
+  py::class_<SuspendTaskManager>(m, "SuspendTaskManager")
+        .def(py::init<int>(),py::arg("sleep_usecs")=1000,
+             "sleep_usecs : int\n    number of microseconds the worker threads sleep")
+        .def("__enter__", [](SuspendTaskManager &self) -> SuspendTaskManager& {
+            return self;
+        })
+        .def("__exit__", [](SuspendTaskManager &self, py::object exc_type, py::object exc_value, py::object traceback) {
+            return false;
+        });
 
   py::class_<PajeTrace>(m, "PajeTrace")
     .def(py::init( [] (string filename, size_t size_mb, bool threads, bool thread_counter, bool memory)
@@ -385,6 +423,23 @@ threads : int
 	return c.SubCommunicator(procs);
       }, py::arg("procs"));
   ;
+
+  m.def("_GetArchiveRegisteredClasses", []() {
+      const auto & reg = GetTypeRegister();
+      py::dict class_dict;
+      for (const auto & [name, info] : reg)
+      {
+        class_dict[py::str(name)] = py::make_tuple(
+            (uintptr_t)info.creator,
+            (uintptr_t)info.upcaster,
+            (uintptr_t)info.downcaster,
+            (uintptr_t)info.cargs_archiver,
+            (uintptr_t)info.anyToPyCaster,
+            (uintptr_t)info.pyToAnyCaster
+        );
+      }
+      return class_dict;
+  });
 
     
 #ifdef PARALLEL

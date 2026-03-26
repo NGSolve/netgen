@@ -84,6 +84,14 @@ namespace ngcore {
         return pybind11::cast(val);
       }
     };
+    info.pyToAnyCaster = [](pybind11::object &obj)
+    {
+      if constexpr(has_shared_from_this2<T>::value || !std::is_copy_constructible<T>::value)
+        return std::any { obj.cast<std::shared_ptr<T>>() };
+      else
+        return std::any { obj.cast<T>() };
+    };
+
 #endif // NETGEN_PYTHON
     Archive::SetArchiveRegister(std::string(Demangle(typeid(T).name())),info);
   }

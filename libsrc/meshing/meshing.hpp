@@ -1,8 +1,6 @@
 #ifndef FILE_MESHING
 #define FILE_MESHING
 
-
-
 #include "../include/myadt.hpp"
 #include "../include/gprim.hpp"
 #include "../include/linalg.hpp"
@@ -19,12 +17,12 @@ namespace netgen
 }
   
   
-#include "msghandler.hpp"
-#include "meshtype.hpp"
-#include "localh.hpp"
-#include "topology.hpp"
-#include "meshclass.hpp"
-#include "global.hpp"
+// #include "msghandler.hpp"
+// #include "meshtype.hpp"
+// #include "localh.hpp"
+// #include "topology.hpp"
+// #include "meshclass.hpp"
+// #include "global.hpp"
 
 #include "meshtool.hpp"
 
@@ -53,7 +51,6 @@ namespace netgen
 #include "bisect.hpp"
 #include "hprefinement.hpp"
 
-#include "boundarylayer.hpp"
 #include "specials.hpp"
 #include "validate.hpp"
 #include "basegeom.hpp"

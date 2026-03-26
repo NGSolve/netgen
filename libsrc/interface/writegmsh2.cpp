@@ -58,7 +58,7 @@ namespace netgen
       int np = mesh.GetNP();  /// number of points in mesh
       int ne = mesh.GetNE();  /// number of 3D elements in mesh
       int nse = mesh.GetNSE();  /// number of surface elements (BC)
-      int i, j, k, l;
+      // int i, j, k, l;
 
 
       /*
@@ -66,8 +66,8 @@ namespace netgen
       */
 
       if ((ne > 0)
-         && (mesh.VolumeElement(1).GetNP() <= 10)
-         && (mesh.SurfaceElement(1).GetNP() <= 6))
+          && (mesh.VolumeElements().First().GetNP() <= 10)
+          && (mesh.SurfaceElements().First().GetNP() <= 6))
       {
          cout << "Write GMSH v2.xx Format \n";
          cout << "The GMSH v2.xx export is currently available for elements upto 2nd Order\n" << endl;
@@ -86,7 +86,7 @@ namespace netgen
          outfile << "$Nodes\n";
          outfile << np << "\n";
 
-         for (i = 1; i <= np; i++)
+         for (int i = 1; i <= np; i++)
          {
             const Point3d & p = mesh.Point(i);
             outfile << i << " "; /// node number
@@ -101,13 +101,13 @@ namespace netgen
          outfile << "$Elements\n";
          outfile << ne + nse << "\n";  ////  number of elements + number of surfaces BC
 
-         for (i = 1; i <= nse; i++)
+         for (auto sei : Range(mesh.SurfaceElements()))
          {
             int elType = 0;
 
-            Element2d el = mesh.SurfaceElement(i);
+            Element2d el = mesh[sei]; // .SurfaceElement(i);
             if(invertsurf) el.Invert();
-
+            
             if(el.GetNP() == 3) elType = GMSH_TRIG;	//// GMSH Type for a 3 node triangle
             if(el.GetNP() == 6) elType = GMSH_TRIG6;  //// GMSH Type for a 6 node triangle
             if(elType == 0)
@@ -116,7 +116,7 @@ namespace netgen
                return;
             }
 
-            outfile << i;
+            outfile << sei-IndexBASE(sei)+1;  
             outfile << " ";
             outfile << elType;
             outfile << " ";
@@ -125,7 +125,7 @@ namespace netgen
             outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << " ";
             /// that means that physical entity = elementary entity (arbitrary approach)
             outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << " ";
-            for (j = 1; j <= el.GetNP(); j++)
+            for (int j = 1; j <= el.GetNP(); j++)
             {
                outfile << " ";
                outfile << el.PNum(triGmsh[j]);
@@ -133,12 +133,12 @@ namespace netgen
             outfile << "\n";
          }
 
-
-         for (i = 1; i <= ne; i++)
+         for (ElementIndex ei : Range(mesh.VolumeElements()))
          {
+           int i = ei-IndexBASE(ei)+1;
             int elType = 0;
 
-            Element el = mesh.VolumeElement(i);
+            Element el = mesh[ei];
             if (inverttets) el.Invert();
 
             if(el.GetNP() == 4) elType = GMSH_TET;    //// GMSH Element type for 4 node tetrahedron
@@ -160,7 +160,7 @@ namespace netgen
             outfile << " ";
             outfile << 100000 + el.GetIndex();   /// volume number
             outfile << " ";
-            for (j = 1; j <= el.GetNP(); j++)
+            for (int j = 1; j <= el.GetNP(); j++)
             {
                outfile << " ";
                outfile << el.PNum(tetGmsh[j]);
@@ -193,7 +193,7 @@ namespace netgen
          outfile << "$Nodes\n";
          outfile << np << "\n";
 
-         for (i = 1; i <= np; i++)
+         for (int i = 1; i <= np; i++)
          {
             const Point3d & p = mesh.Point(i);
             outfile << i << " "; /// node number
@@ -207,7 +207,7 @@ namespace netgen
          outfile << "$Elements\n";
          outfile << nse << "\n";
 
-         for (k = 1; k <= nse; k++)
+         for (int k = 1; k <= nse; k++)
          {
             int elType = 0;
 
@@ -232,7 +232,7 @@ namespace netgen
             outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << " ";
             /// that means that physical entity = elementary entity (arbitrary approach)
             outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << " ";
-            for (l = 1; l <= el.GetNP(); l++)
+            for (int l = 1; l <= el.GetNP(); l++)
             {
                outfile << " ";
                if((elType == GMSH_TRIG) || (elType == GMSH_TRIG6))

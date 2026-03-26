@@ -64,18 +64,6 @@ def get_git_version(cwd):
     return check_output(["git", "describe", "--tags"], cwd=cwd).decode("utf-8").strip()
 
 
-def get_dev_extension(cwd):
-    if not is_dev_build():
-        return ""
-
-    # if the current commit does not belong to master, build a .dev1 package to avoid name conflicts for subsequent nightly builds from master
-    try:
-        check_output(["git", "merge-base", "--is-ancestor", "HEAD", "master"], cwd=cwd)
-        return ".dev0"
-    except:
-        return ".dev1"
-
-
 def get_version(cwd):
     git_version = get_git_version(cwd)
 
@@ -84,7 +72,8 @@ def get_version(cwd):
         version = version[:2]
     if len(version) > 1:
         version = ".post".join(version)
-        version += get_dev_extension(cwd)
+        if is_dev_build():
+            version += ".dev0"
     else:
         version = version[0]
 

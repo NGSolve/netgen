@@ -40,6 +40,7 @@ static inline const AbaqusElementType & GetAbaqusType(int dim, int num_nodes)
     // 2D
     AbaqusElementTypes{
       {3, AbaqusElementType{"CPS3", vector{0,1,2}}},
+      {6, AbaqusElementType{"CPS6", vector{0,1,2,5,6,4}}},      
     },
     // 3D
     AbaqusElementTypes{
@@ -60,7 +61,7 @@ static void WritePoints ( const Mesh & mesh, ostream & out )
   out << "*Node" << endl;
   for(auto pi : mesh.Points().Range() )
   {
-    out << pi+1-PointIndex::BASE << ", ";
+    out << pi+1-IndexBASE<PointIndex>() << ", ";
     auto p = mesh[pi];
     out << p[0] << ", " << p[1] << ", " << p[2] << '\n';
   }
@@ -73,7 +74,7 @@ static void WriteElement(ostream & out, const Mesh& mesh, ElIndex ei, const vect
   auto el = mesh[ei];
   out << el_counter;
   for(auto i : Range(el.PNums()))
-    out << ", " << el[permutation[i]]+1-PointIndex::BASE;
+    out << ", " << el[permutation[i]]+1-IndexBASE<PointIndex>();
   out << '\n';
 }
 

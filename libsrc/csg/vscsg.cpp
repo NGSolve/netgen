@@ -472,7 +472,8 @@ namespace netgen
 	box = Box3d (Point3d (0,0,0), Point3d (1,1,1));
       }
   
-    if (zoomall == 2 && ((vispar.centerpoint >= 1 && vispar.centerpoint <= mesh->GetNP()) ||
+    if (zoomall == 2 && ((vispar.centerpoint-IndexBASE<PointIndex>() >= 0 &&
+                          vispar.centerpoint-IndexBASE<PointIndex>() < mesh->GetNP()) ||
 			 vispar.use_center_coords))
       {
 	if (vispar.use_center_coords)

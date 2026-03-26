@@ -3750,7 +3750,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
   public:
     STLInit()
     {
-      geometryregister.Append (new STLGeometryRegister);
+      GeometryRegister().Append (new STLGeometryRegister);
     }
   };
 

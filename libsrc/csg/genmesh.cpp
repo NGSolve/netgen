@@ -35,7 +35,7 @@ namespace netgen
         auto up = geom.GetUserPoint(i);
 	auto pnum = mesh.AddPoint(up);
 	mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
-	mesh.AddLockedPoint (PointIndex (i+1));
+	mesh.AddLockedPoint (pnum);
         int index = up.GetIndex();
         if (index == -1)
           index = mesh.AddCD3Name (up.GetName())+1;
@@ -443,7 +443,7 @@ namespace netgen
 	meshing.SetStartTime (starttime);
 
         double eps = 1e-8 * geom.MaxSize();
-	for (PointIndex pi = PointIndex::BASE; pi < noldp+PointIndex::BASE; pi++)
+	for (PointIndex pi = IndexBASE<PointIndex>(); pi < noldp+IndexBASE<PointIndex>(); pi++)
 	  { 
 	    // if(surf->PointOnSurface(mesh[pi]))
 	    meshing.AddPoint (mesh[pi], pi, NULL,
@@ -473,8 +473,8 @@ namespace netgen
 	  {
 	    PointGeomInfo gi;
 	    gi.trignum = k;
-	    meshing.AddBoundaryElement (segments[si][0] + 1 - PointIndex::BASE, 
-					segments[si][1] + 1 - PointIndex::BASE, 
+	    meshing.AddBoundaryElement (segments[si][0] + 1 - IndexBASE<PointIndex>(), 
+					segments[si][1] + 1 - IndexBASE<PointIndex>(), 
 					gi, gi);
 	  }
 
@@ -718,7 +718,7 @@ namespace netgen
 
 	    mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
             for (auto mspnt : mparam.meshsize_points)
-              mesh -> RestrictLocalH (mspnt.pnt, mspnt.h);
+              mesh -> RestrictLocalH (mspnt.pnt, mspnt.h, mspnt.layer);
 	  }
 
 	spoints.SetSize(0);
@@ -826,6 +826,9 @@ namespace netgen
       {
 	multithread.task = "Volume meshing";
 
+	for (int i = 0; i < geom.GetNTopLevelObjects(); i++)
+	  mesh->SetMaterial (i+1, geom.GetTopLevelObject(i)->GetMaterial().c_str());
+
 	MESHING3_RESULT res =
 	  MeshVolume (mparam, *mesh);
 
@@ -838,10 +841,6 @@ namespace netgen
 
 	MeshQuality3d (*mesh);
       
-	for (int i = 0; i < geom.GetNTopLevelObjects(); i++)
-	  mesh->SetMaterial (i+1, geom.GetTopLevelObject(i)->GetMaterial().c_str());
-      
-
 #ifdef STAT_STREAM
 	(*statout) << GetTime() << " & ";
 #endif      

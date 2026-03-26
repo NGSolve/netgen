@@ -12,7 +12,7 @@ target_sources(nglib PRIVATE
         parallelmesh.cpp  paralleltop.cpp  basegeom.cpp
         python_mesh.cpp surfacegeom.cpp
         debugging.cpp fieldlines.cpp visual_interface.cpp
-        boundarylayer2d.cpp
+        boundarylayer2d.cpp boundarylayer_interpolate.cpp
 )
 
 target_link_libraries( nglib PRIVATE $<BUILD_INTERFACE:netgen_metis> $<BUILD_INTERFACE:netgen_python> )

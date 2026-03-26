@@ -1,13 +1,14 @@
 #include <mystdlib.h>
-#include "meshing.hpp"
+
+#include "meshing3.hpp"
+#include "findip.hpp"
+#include "findip2.hpp"
 
 namespace netgen
 {
 
 double minother;
 double minwithoutother;
-
-
 
 
 
@@ -24,13 +25,14 @@ Meshing3 :: Meshing3 (const string & rulefilename)
   tolfak = 1;
 
   LoadRules (rulefilename.c_str(), NULL);
-  adfront = new AdFront3;
+  adfront = make_unique<AdFront3>();
 
   problems.SetSize (rules.Size());
   foundmap.SetSize (rules.Size());
   canuse.SetSize (rules.Size());
   ruleused.SetSize (rules.Size());
 
+  /*
   for (int i = 1; i <= rules.Size(); i++)
     {
       problems.Elem(i) = new char[255];
@@ -38,6 +40,11 @@ Meshing3 :: Meshing3 (const string & rulefilename)
       canuse.Elem(i) = 0;
       ruleused.Elem(i) = 0;
     }
+  */
+
+  foundmap = 0;
+  canuse = 0;
+  ruleused = 0;
 }
 
 
@@ -46,13 +53,14 @@ Meshing3 :: Meshing3 (const char ** rulep)
   tolfak = 1;
 
   LoadRules (NULL, rulep);
-  adfront = new AdFront3;
+  adfront = make_unique<AdFront3>();
 
   problems.SetSize (rules.Size());
   foundmap.SetSize (rules.Size());
   canuse.SetSize (rules.Size());
   ruleused.SetSize (rules.Size());
 
+  /*
   for (int i = 0; i < rules.Size(); i++)
     {
       problems[i] = new char[255];
@@ -60,16 +68,22 @@ Meshing3 :: Meshing3 (const char ** rulep)
       canuse[i]   = 0;
       ruleused[i] = 0;
     }
+  */
+  foundmap = 0;
+  canuse = 0;
+  ruleused = 0;
 }
 
 Meshing3 :: ~Meshing3 ()
 {
-  delete adfront;
+  // delete adfront;
+  /*
   for (int i = 0; i < rules.Size(); i++)
     {
       delete [] problems[i];
       delete rules[i];
     }
+  */
 }
 
 
@@ -184,12 +198,13 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   Array<Point3d, PointIndex> locpoints;      // local points
   Array<MiniElement2d> locfaces;                   // local faces
   Array<PointIndex, PointIndex> pindex;      // mapping from local to front point numbering
-  Array<int, PointIndex> allowpoint;         // point is allowed ?
+  Array<int, PointIndex> allowpoint;         // point is allowed (0/1/2) ?
   Array<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
   Array<Point3d, PointIndex> plainpoints;    // points in reference coordinates
-  NgArray<int> delpoints, delfaces;   // points and lines to be deleted
+  // NgArray<int> delpoints;   // points to be deleted
+  NgArray<int> delfaces;    // lines to be deleted
   NgArray<Element> locelements;       // new generated elements
 
   int j, oldnp, oldnf;
@@ -378,9 +393,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	    {
 	      (*testout) << "inner point found" << endl;
 
-	      for(int i = 1; i <= groupfaces.Size(); i++)
-		adfront -> DeleteFace (groupfindex[i-1]);
-	      
+	      for(int i = 0; i < groupfaces.Size(); i++)
+		adfront -> DeleteFace (groupfindex[i]);
+              
 	      for(int i = 1; i <= groupfaces.Size(); i++)
 		for (j = 1; j <= locfaces.Size(); j++)
 		  if (findex[j-1] == groupfindex[i-1])
@@ -389,10 +404,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      
 	      delfaces.SetSize (0);
 	      
-	      INDEX npi;
 	      Element newel(TET);
 	      
-	      npi = mesh.AddPoint (inp);
+	      PointIndex npi = mesh.AddPoint (inp);
 	      newel.SetNP(4);
 	      newel.PNum(4) = npi;
 	      
@@ -470,12 +484,12 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  if (stat.cnttrials % 100 == 0)
 	    {
 	      (*testout) << "\n";
-	      for(int i = 1; i <= canuse.Size(); i++)
-	      {
-		(*testout) << foundmap.Get(i) << "/" 
-			   << canuse.Get(i) << "/"
-			   << ruleused.Get(i) << " map/can/use rule " << rules.Get(i)->Name() << "\n";
-	      }
+	      for(int i : canuse.Range()) 
+                {
+                  (*testout) << foundmap[i] << "/" 
+                             << canuse[i] << "/"
+                             << ruleused[i] << " map/can/use rule " << rules[i]->Name() << "\n";
+                }
 	      (*testout) << endl;
 	    }
 
@@ -546,8 +560,8 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
 
 	  if (found)
-	    ruleused.Elem(found)++;
-
+	    ruleused[found-1]++;
+          
 
 	  // plotstat->Plot(stat);
 	  
@@ -711,7 +725,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	}
 
       locelements.SetSize (0);
-      delpoints.SetSize(0);
+      // delpoints.SetSize(0);
       delfaces.SetSize(0);
 
       if (stat.qualclass >= mp.giveuptol)
@@ -720,9 +734,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   
   PrintMessage (5, "");  // line feed after statistics
 
-  for(int i = 1; i <= ruleused.Size(); i++)
-    (*testout) << setw(4) << ruleused.Get(i)
-	       << " times used rule " << rules.Get(i) -> Name() << endl;
+  for(int i : ruleused.Range())
+    (*testout) << setw(4) << ruleused[i]
+	       << " times used rule " << rules[i] -> Name() << endl;
 
 
   if (!mp.baseelnp && adfront->Empty())
@@ -1185,7 +1199,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       tbox.Stop();
 
       //      locadfront = adfront;
-      loch.FindInnerBoxes (adfront, NULL);
+      loch.FindInnerBoxes (*adfront, NULL);
 
       npoints.SetSize(0);
       loch.GetInnerPoints (npoints);
@@ -1271,7 +1285,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
   tloch2.Stop();
 
   // locadfront = adfront;
-  loch2.FindInnerBoxes (adfront, NULL);
+  loch2.FindInnerBoxes (*adfront, NULL);
 
   npoints.SetSize(0);
   loch2.GetOuterPoints (npoints);

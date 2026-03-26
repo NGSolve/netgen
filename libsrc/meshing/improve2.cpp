@@ -212,7 +212,7 @@ namespace netgen
     }
 
     Array<Neighbour> neighbors(mesh.GetNSE());
-    auto elements_on_node = mesh.CreatePoint2SurfaceElementTable(faceindex);
+    auto elements_on_node = mesh.CreateCompressedPoint2SurfaceElementTable(faceindex);
 
     Array<bool> swapped(mesh.GetNSE());
     Array<int,PointIndex> pdef(mesh.GetNP());
@@ -353,7 +353,7 @@ namespace netgen
                     improvement_candidates[cnt++]= std::make_pair(t1,o1);
           });
 
-        auto elements_with_improvement = improvement_candidates.Range(cnt.load());
+        auto elements_with_improvement = improvement_candidates.Range(0, cnt.load());
         QuickSort(elements_with_improvement);
 
         for (auto [t1,o1] : elements_with_improvement)
@@ -366,9 +366,9 @@ namespace netgen
 
 
 
-
+  template <typename T_PI2SEI>
   double CombineImproveEdge( Mesh & mesh,
-                           const Table<SurfaceElementIndex, PointIndex> & elementsonnode,
+                           const T_PI2SEI & elementsonnode,
                            Array<Vec<3>, PointIndex> & normals,
                            Array<bool, PointIndex> & fixed,
                            PointIndex pi1, PointIndex pi2,
@@ -601,7 +601,7 @@ namespace netgen
 
     int np = mesh.GetNP();
 
-    auto elementsonnode = mesh.CreatePoint2SurfaceElementTable(faceindex);
+    auto elementsonnode = mesh.CreateCompressedPoint2SurfaceElementTable(faceindex);
 
     // int ntasks = ngcore::TaskManager::GetMaxThreads();
     Array<std::tuple<PointIndex, PointIndex>> edges;
@@ -713,7 +713,7 @@ namespace netgen
 
             if (mesh.IsSegment (pi1, pi2)) continue;
 
-            INDEX_2 ii2 (pi1, pi2);
+            PointIndices<2> ii2 (pi1, pi2);
             ii2.Sort();
             if (els_on_edge.Used (ii2))
               {
@@ -739,7 +739,7 @@ namespace netgen
         if (mesh.LegalTrig(sel)) continue;
 
         // find longest edge
-        INDEX_2 edge;
+        PointIndices<2> edge;
         double edge_len = 0;
         PointIndex pi1, pi2, pi3, pi4;
         PointGeomInfo gi1, gi2, gi3, gi4;

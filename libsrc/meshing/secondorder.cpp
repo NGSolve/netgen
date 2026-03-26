@@ -174,8 +174,8 @@ namespace netgen
 	int nnp = newel.GetNP();
 	for (int j = 0; j < nnp-onp; j++)
 	  {
-	    int pi1 = newel[betw[j][0]];
-	    int pi2 = newel[betw[j][1]];
+	    PointIndex pi1 = newel[betw[j][0]];
+	    PointIndex pi2 = newel[betw[j][1]];
 	  
 	    INDEX_2 i2 = INDEX_2::Sort (pi1, pi2);
 	  
@@ -207,9 +207,10 @@ namespace netgen
 
 
     // refine volume elements
-    for (int i = 1; i <= mesh.GetNE(); i++)
+    // for (int i = 1; i <= mesh.GetNE(); i++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-	const Element & el = mesh.VolumeElement(i);
+	const Element & el = mesh.VolumeElement(ei);
 	int onp = 0;
 
 	Element newel(TET);
@@ -342,7 +343,7 @@ namespace netgen
 	      }
 	  }
 
-	mesh.VolumeElement (i) = newel;
+	mesh.VolumeElement (ei) = newel;
       }
 
 
@@ -351,17 +352,17 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	NgArray<int,PointIndex::BASE> identmap;
+	idmap_type identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
 	for (INDEX_2_HASHTABLE<PointIndex>::Iterator it = between.Begin();
 	     it != between.End(); it++)
 	  {
-	      INDEX_2 i2;
+              PointIndices<2> i2;
 	      PointIndex newpi;
 	      between.GetData (it, i2, newpi);
-	      INDEX_2 oi2(identmap.Get(i2.I1()),
-			  identmap.Get(i2.I2()));
+	      PointIndices<2> oi2(identmap[i2[0]], 
+                                  identmap[i2[1]]);
 	      oi2.Sort();
 	      if (between.Used (oi2))
 		{
@@ -423,16 +424,16 @@ namespace netgen
   {
     PrintMessage (3, "Validate mesh");
     int np = mesh.GetNP();
-    int ne = mesh.GetNE();
     // int i, j;
     NgArray<INDEX_2> parents(np);
   
     for (int i = 1; i <= np; i++)
       parents.Elem(i) = INDEX_2(0,0);
 
-    for (int i = 1; i <= ne; i++)
+    // for (int i = 1; i <= ne; i++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-	const Element & el = mesh.VolumeElement(i);
+	const Element & el = mesh[ei];
 	if (el.GetType() == TET10)
 	  {
 	    static int betweentab[6][3] =
@@ -469,19 +470,20 @@ namespace netgen
 
     int cnttrials = 100;
     int wrongels = 0;
-    for (int i = 1; i <= ne; i++)
-      if (mesh.VolumeElement(i).CalcJacobianBadness (mesh.Points()) > 1e10)
+    // for (int i = 1; i <= ne; i++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
+      if (mesh.VolumeElement(ei).CalcJacobianBadness (mesh.Points()) > 1e10)
 	{
 	  wrongels++;
-	  mesh.VolumeElement(i).Flags().badel = 1;
+	  mesh.VolumeElement(ei).Flags().badel = 1;
 	}
       else
-	mesh.VolumeElement(i).Flags().badel = 0;
+	mesh.VolumeElement(ei).Flags().badel = 0;
 
     double facok = 0;
     double factry;
 
-    NgBitArray illegalels(ne);
+    BitArray illegalels(ne+1);
     illegalels.Clear();
 
       
@@ -505,14 +507,17 @@ namespace netgen
 				    can.Elem(parents.Get(i).I2()));
 	  }
 
-	NgBitArray boundp(np);
+	TBitArray<PointIndex> boundp(np);
 	boundp.Clear();
+        /*
 	for (int i = 1; i <= mesh.GetNSE(); i++)
 	  {
 	    const Element2d & sel = mesh.SurfaceElement(i);
-	    for (int j = 1; j <= sel.GetNP(); j++)
-	      boundp.Set(sel.PNum(j));
-	  }
+        */
+        for (auto & sel : mesh.SurfaceElements())
+          for (int j = 1; j <= sel.GetNP(); j++)
+            boundp.SetBit(sel.PNum(j));
+        // }
 
 
 	(*testout) << "bpoints:" << endl;
@@ -552,6 +557,7 @@ namespace netgen
 		//	      (*testout) << "bad els: " << endl;
 		wrongels = 0;
 		for (int i = 1; i <= ne; i++)
+                  
 		  {
 		    if (!illegalels.Test(i) && 
 			mesh.VolumeElement(i).
@@ -563,7 +569,7 @@ namespace netgen
 		     
 		      
 			if (lam < 1e-4)
-			  illegalels.Set(i);
+			  illegalels.SetBit(i);
  
 
 			/*

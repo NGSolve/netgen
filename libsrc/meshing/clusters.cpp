@@ -87,16 +87,18 @@ namespace netgen
        [&] (auto myrange)
        {
          NgArray<int> nnums; // , ednums, fanums;
-         for (int i_ : myrange)
+         for (auto i_ : myrange)
            {
-             int i = i_+1;
-             const Element & el = mesh.VolumeElement(i);
+             int i = i_-IndexBASE<ElementIndex>()+1;
+             const Element & el = mesh.VolumeElement(i_);
              ELEMENT_TYPE typ = el.GetType();
              
              // top.GetElementEdges (i, ednums);
-             auto ednums = top.GetEdges (ElementIndex(i_));
+             // auto ednums = top.GetEdges (ElementIndex(i_));
+             auto ednums = top.GetEdges (i_);
              // top.GetElementFaces (i, fanums);
-             auto fanums = top.GetFaces (ElementIndex(i_));
+             // auto fanums = top.GetFaces (ElementIndex(i_));
+             auto fanums = top.GetFaces (i_);
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
@@ -141,22 +143,24 @@ namespace netgen
 	  cluster_reps.Elem(nnums[j]) = nnums[j];
       }
     */
+
+    
     ngcore::ParallelForRange
       (mesh.SurfaceElements().Range(),
        [&] (auto myrange)
        {
          NgArrayMem<int,9> nnums; // , ednums;
-         for (int i_ : myrange)
+         for (SurfaceElementIndex i_ : myrange)
            {
-             int i = i_+1;
-             const Element2d & el = mesh.SurfaceElement(i);
+             // int i = i_+1;
+             const Element2d & el = mesh[i_]; // .SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
              // top.GetSurfaceElementEdges (i, ednums);
-             auto ednums = top.GetEdges (SurfaceElementIndex(i_));
+             auto ednums = top.GetEdges (i_);
              // cout << "ednums = " << ednums << endl;
              
-             int fanum = top.GetSurfaceElementFace (i);             
+             int fanum = top.GetFace(i_)+1;
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
@@ -229,7 +233,9 @@ namespace netgen
       
 	for (int i = 1; i <= ne; i++)
 	  {
-	    const Element & el = mesh.VolumeElement(i);
+            ElementIndex ei(i-1);
+            
+	    const Element & el = mesh[ei];
 	    ELEMENT_TYPE typ = el.GetType();
 	  	  
 	    const int * clustertab = NULL;
@@ -277,8 +283,8 @@ namespace netgen
               {
                 // top.GetElementEdges (i, ednums);
                 // top.GetElementFaces (i, fanums);
-                auto ednums = top.GetEdges (ElementIndex(i-1));
-                auto fanums = top.GetFaces (ElementIndex(i-1));                
+                auto ednums = top.GetEdges (ei);
+                auto fanums = top.GetFaces (ei);
                 
                 int elnv = top.GetNVertices (typ);
                 int elned = ednums.Size();

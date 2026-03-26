@@ -9,6 +9,7 @@
 
 #include <string>
 #include <tuple>
+#include <optional>
 
 // #include "mpi_wrapper.hpp"
 #include "ngcore_api.hpp"
@@ -52,7 +53,7 @@ namespace ngcore
     
   public:
     ///
-    constexpr NETGEN_INLINE IVec () = default;
+    constexpr IVec () = default;
     constexpr NETGEN_INLINE IVec (const IVec & i1) : i(i1.i) { }
 
     constexpr NETGEN_INLINE IVec (T ai1) : i(ai1) { }
@@ -168,7 +169,7 @@ namespace ngcore
     template <size_t J>
     constexpr T get() const { return i[J]; }
     
-    operator FlatArray<T> () { return FlatArray<T> (N, &i[0]); } 
+    operator FlatArray<T> () { return FlatArray<T> (N, i.Ptr()); }
 
     NETGEN_INLINE IVec<N,T> & operator= (T value)
     {
@@ -299,7 +300,7 @@ namespace ngcore
 
   
   template <int N, typename TI>
-  NETGEN_INLINE size_t HashValue2 (const IVec<N,TI> & ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<N,TI> & ind, size_t mask)
   {
     IVec<N,size_t> lind = ind;    
     size_t sum = 0;
@@ -310,14 +311,14 @@ namespace ngcore
 
   /// hash value of 1 int
   template <typename TI>
-  NETGEN_INLINE size_t HashValue2 (const IVec<1,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<1,TI> & ind, size_t mask) 
   {
     return ind[0] & mask;
   }
 
   /// hash value of 2 int
   template <typename TI>  
-  NETGEN_INLINE size_t HashValue2 (const IVec<2,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<2,TI> & ind, size_t mask) 
   {
     IVec<2,size_t> lind = ind;
     return (113*lind[0]+lind[1]) & mask;
@@ -325,17 +326,17 @@ namespace ngcore
 
   /// hash value of 3 int
   template <typename TI>    
-  NETGEN_INLINE size_t HashValue2 (const IVec<3,TI> & ind, size_t mask) 
+  NETGEN_INLINE constexpr size_t HashValue2 (const IVec<3,TI> & ind, size_t mask) 
   {
     IVec<3,size_t> lind = ind;
     return (113*lind[0]+59*lind[1]+lind[2]) & mask;
   }
 
-  NETGEN_INLINE size_t HashValue2 (size_t ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (size_t ind, size_t mask)
   {
     return ind & mask;
   }
-  NETGEN_INLINE size_t HashValue2 (int ind, size_t mask)
+  NETGEN_INLINE constexpr size_t HashValue2 (int ind, size_t mask)
   {
     return size_t(ind) & mask;
   }
@@ -590,7 +591,27 @@ namespace ngcore
     return res; 
   }
 
+  template <typename T>
+  constexpr inline T InvalidHash() { return T(-1); }
 
+  template <typename T_HASH>
+  struct CHT_trait
+  {
+    constexpr static inline T_HASH Invalid() { return InvalidHash<T_HASH>(); }
+    constexpr static inline size_t HashValue (const T_HASH & hash, size_t mask) { return HashValue2(hash, mask); }
+  };
+
+  template <typename T1, typename T2>
+  struct CHT_trait<std::tuple<T1,T2>>
+  {
+    constexpr static inline std::tuple<T1,T2> Invalid() { return { CHT_trait<T1>::Invalid(), CHT_trait<T2>::Invalid() } ; }
+    constexpr static inline size_t HashValue (const std::tuple<T1,T2> & hash, size_t mask)
+    {
+      return (CHT_trait<T1>::HashValue(std::get<0>(hash), mask) + CHT_trait<T2>::HashValue(std::get<1>(hash),mask)) & mask;
+    }
+  };
+
+  
 
   /**
      A closed hash-table.
@@ -611,14 +632,18 @@ namespace ngcore
     ///
     Array<T> cont;
     ///
-    T_HASH invalid = -1;
+    // T_HASH invalid = -1;
+    // static constexpr T_HASH invalid = InvalidHash<T_HASH>();
+    static constexpr T_HASH invalid = CHT_trait<T_HASH>::Invalid();
   public:
     ///
     ClosedHashTable (size_t asize = 128)
       : size(RoundUp2(asize)), hash(size), cont(size)
     {
       mask = size-1;
-      hash = T_HASH(invalid);
+      // hash = T_HASH(invalid);
+      // hash = InvalidHash<T_HASH>();
+      hash = CHT_trait<T_HASH>::Invalid();
     }
 
     ClosedHashTable (ClosedHashTable && ht2) = default;
@@ -627,7 +652,8 @@ namespace ngcore
     ClosedHashTable (size_t asize, LocalHeap & lh)
       : size(RoundUp2(asize)), mask(size-1), hash(size, lh), cont(size, lh)
     {
-      hash = T_HASH(invalid);
+      // hash = T_HASH(invalid);
+      hash = InvalidHash<T_HASH>();
     }
 
     ClosedHashTable & operator= (ClosedHashTable && ht2) = default;
@@ -652,7 +678,8 @@ namespace ngcore
 
     size_t Position (const T_HASH ind) const
     {
-      size_t i = HashValue2(ind, mask);
+      // size_t i = HashValue2(ind, mask);
+      size_t i = CHT_trait<T_HASH>::HashValue(ind, mask);
       while (true)
 	{
 	  if (hash[i] == ind) return i;
@@ -674,7 +701,8 @@ namespace ngcore
     {
       if (UsedElements()*2 > Size()) DoubleSize();
       
-      size_t i = HashValue2 (ind, mask);
+      // size_t i = HashValue2 (ind, mask);
+      size_t i = CHT_trait<T_HASH>::HashValue (ind, mask);
 
       while (true)
 	{
@@ -718,6 +746,16 @@ namespace ngcore
     {
       return (Position (ahash) != size_t(-1));
     }
+
+    inline std::optional<T> GetIfUsed (const T_HASH & ahash) const
+    {
+      size_t pos = Position (ahash);
+      if (pos != size_t(-1))
+        return cont[pos];
+      else
+        return std::nullopt;
+    }
+    
 
     void SetData (size_t pos, const T_HASH & ahash, const T & acont)
     {
@@ -796,6 +834,15 @@ namespace ngcore
       hash = T_HASH(invalid);
       used = 0;
     }
+
+    template <typename ARCHIVE>
+    void DoArchive (ARCHIVE& ar)
+    {
+      ar & hash & cont;
+      ar & size & mask & used;
+    }    
+
+    struct EndIterator { };
     
     class Iterator
     {
@@ -813,24 +860,21 @@ namespace ngcore
         while (nr < tab.Size() && !tab.UsedPos(nr)) nr++;
         return *this;
       }
-      bool operator!= (const Iterator & it2) { return nr != it2.nr; }
-      auto operator* () const
-      {
-        T_HASH hash;
-        T val;
-        tab.GetData(nr, hash,val);
-        return std::make_pair(hash,val);
-      }
+
+      bool operator!= (EndIterator it2) { return nr != tab.Size(); }
+      
+      auto operator* () const { return tab.GetBoth(nr); }
     };
 
     Iterator begin() const { return Iterator(*this, 0); }
-    Iterator end() const { return Iterator(*this, Size()); } 
+    EndIterator end() const { return EndIterator(); }
   };
 
   template <class T_HASH, class T>  
   ostream & operator<< (ostream & ost,
                         const ClosedHashTable<T_HASH,T> & tab)
   {
+    /*
     for (size_t i = 0; i < tab.Size(); i++)
       if (tab.UsedPos(i))
         {
@@ -839,6 +883,9 @@ namespace ngcore
           tab.GetData (i, key, val);
           ost << key << ": " << val << ", ";
         }
+    */
+    for (auto [key,val] : tab)
+      ost << key << ": " << val << ", ";      
     return ost;
   }
 
@@ -1083,6 +1130,106 @@ namespace ngcore
     return ost;
   }
 
+
+
+
+
+
+
+
+
+  template <class T, class IndexType>
+  class CompressedTable
+  {
+    Table<T, size_t> table;
+    ClosedHashTable<IndexType, size_t> idmap;
+    
+  public:
+    CompressedTable (Table<T, size_t> && atable, ClosedHashTable<IndexType, size_t> && aidmap)
+      : table(std::move(atable)), idmap(std::move(aidmap)) { }
+
+    FlatArray<T> operator[](IndexType id) const
+    {
+      if (auto nr = idmap.GetIfUsed(id))
+        return table[*nr];
+      else
+        return { 0, nullptr };
+    }
+    auto & GetTable() { return table; }
+  };
+
+
+  template <class T, typename IndexType>
+  class CompressedTableCreator
+  {
+  protected:
+    int mode;    // 1 .. cnt, 2 .. cnt entries, 3 .. fill table
+    size_t nd;   // number of entries;
+    ClosedHashTable<IndexType, size_t> idmap;
+    Array<int,size_t> cnt;
+    Table<T,size_t> table;
+  public:
+    CompressedTableCreator()
+    { nd = 0; mode = 1; }
+
+    CompressedTable<T,IndexType> MoveTable()
+    {
+      return { std::move(table), std::move(idmap) };
+    }
+
+    bool Done () { return mode > 3; }
+    void operator++(int) { SetMode (mode+1); }
+
+    int GetMode () const { return mode; }
+    void SetMode (int amode)
+    {
+      mode = amode;
+      if (mode == 2)
+	{
+          cnt.SetSize(nd);  
+          cnt = 0;
+	}
+      if (mode == 3)
+	{
+          table = Table<T,size_t> (cnt);
+          cnt = 0;
+	}
+    }
+
+    void Add (IndexType blocknr, const T & data)
+    {
+      switch (mode)
+	{
+	case 1:
+          {
+            if (!idmap.Used (blocknr))
+              idmap[blocknr] = nd++;
+            break;
+          }
+	case 2:
+	  cnt[idmap.Get(blocknr)]++;
+	  break;
+	case 3:
+          size_t cblock = idmap.Get(blocknr);
+          int ci = cnt[cblock]++;
+          table[cblock][ci] = data;
+	  break;
+	}
+    }
+  };
+
+
+  
+
+
+
+
+
+
+
+
+
+  
 } // namespace ngcore
 
 

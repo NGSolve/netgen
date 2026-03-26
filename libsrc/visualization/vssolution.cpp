@@ -25,7 +25,7 @@ namespace netgen
   extern VisualSceneMesh vsmesh;
 
   VisualSceneSolution :: SolData :: SolData ()
-    : data (0), solclass(0)
+    : data (0), solclass(0), draw_volumes(nullptr), draw_surfaces(nullptr) 
   { ; }
 
   VisualSceneSolution :: SolData :: ~SolData ()
@@ -49,6 +49,7 @@ namespace netgen
     clipplane_isolinelist = 0;
     surface_vector_list = 0;
     isosurface_list = 0;
+    select_sel_list = 0;
     numtexturecols = 8;
 
     fieldlineslist = 0;
@@ -232,7 +233,7 @@ namespace netgen
 		 << "DATASET UNSTRUCTURED_GRID\n\n";
 
         surf_ost << "POINTS " << mesh->GetNP() << " float\n";
-        for (PointIndex pi = PointIndex::BASE; pi < mesh->GetNP()+PointIndex::BASE; pi++)
+        for (PointIndex pi = IndexBASE<PointIndex>(); pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
           {
             const MeshPoint & mp = (*mesh)[pi];
             surf_ost << mp(0) << " " << mp(1) << " " << mp(2) << "\n";
@@ -248,7 +249,7 @@ namespace netgen
             const Element2d & el = (*mesh)[sei];
             surf_ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
-              surf_ost << " " << el[j] - PointIndex::BASE;
+              surf_ost << " " << el[j] - IndexBASE<PointIndex>();
             surf_ost << "\n";
           }
         surf_ost << "\nCELL_TYPES " << mesh->GetNSE() << "\n";
@@ -275,7 +276,7 @@ namespace netgen
             << "DATASET UNSTRUCTURED_GRID\n\n";
 
         ost << "POINTS " << mesh->GetNP() << " float\n";
-        for (PointIndex pi = PointIndex::BASE; pi < mesh->GetNP()+PointIndex::BASE; pi++)
+        for (PointIndex pi = IndexBASE<PointIndex>(); pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
           {
             const MeshPoint & mp = (*mesh)[pi];
             ost << mp(0) << " " << mp(1) << " " << mp(2) << "\n";
@@ -291,7 +292,7 @@ namespace netgen
             const Element & el = (*mesh)[ei];
             ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
-              ost << " " << el[j] - PointIndex::BASE;
+              ost << " " << el[j] - IndexBASE<PointIndex>();
             ost << "\n";
           }
         ost << "\nCELL_TYPES " << mesh->GetNE() << "\n";
@@ -841,7 +842,7 @@ namespace netgen
         if (vispar.clipping.enable && clipsolution == 2)      
           {
             mesh->Mutex().unlock();
-            mesh->BuildElementSearchTree();
+            mesh->BuildElementSearchTree(3);
             mesh->Mutex().lock();
           }
 
@@ -975,6 +976,9 @@ namespace netgen
             for (SurfaceElementIndex sei = 0; sei < nse; sei++)
               {
                 const Element2d & el = (*mesh)[sei];
+
+                if(!SurfaceElementActive(sol, *mesh, el))
+                  continue;
 
                 bool curved = curv.IsHighOrder(); //  && curv.IsSurfaceElementCurved(sei);
               
@@ -2667,6 +2671,8 @@ namespace netgen
                   for (int i=first; i<next; i++)
                     {
                       double val;
+                      if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex(i)]))
+                        continue;
                       bool considerElem = GetValue (sol, i, 0.333, 0.333, 0.333, comp, val);
                       if (considerElem)
                         {
@@ -2698,6 +2704,8 @@ namespace netgen
               // for (int i = 0; i < nse; i++)
               for (SurfaceElementIndex i : mesh->SurfaceElements().Range())
                 {
+                  if(!SurfaceElementActive(sol, *mesh, (*mesh)[i]))
+                    continue;
                   ELEMENT_TYPE type = (*mesh)[i].GetType();
                   double val;
                   bool considerElem = (type == QUAD) 
@@ -3891,12 +3899,13 @@ namespace netgen
     return def;
   }
 
-  void VisualSceneSolution :: GetPointDeformation (int pnum, Point<3> & p, 
+  void VisualSceneSolution :: GetPointDeformation (PointIndex pnum, Point<3> & p, 
                                                    SurfaceElementIndex elnr) const
   {
     shared_ptr<Mesh> mesh = GetMesh();
-
-    p = mesh->Point (pnum+1);
+    auto pnum_ = pnum-IndexBASE<PointIndex>();
+    
+    p = mesh->Point (pnum);
     if (deform && vecfunction != -1)
       {
         const SolData * vsol = soldata[vecfunction];
@@ -3904,15 +3913,15 @@ namespace netgen
         Vec<3> v(0,0,0);
         if (vsol->soltype == SOL_NODAL)
           {
-            v = Vec3d(vsol->data[pnum * vsol->dist],
-                      vsol->data[pnum * vsol->dist+1],
-                      vsol->data[pnum * vsol->dist+2]);
+            v = Vec3d(vsol->data[pnum_ * vsol->dist],
+                      vsol->data[pnum_ * vsol->dist+1],
+                      vsol->data[pnum_ * vsol->dist+2]);
           }
         else if (vsol->soltype == SOL_SURFACE_NONCONTINUOUS)
           {
             const Element2d & el = (*mesh)[elnr];
             for (int j = 0; j < el.GetNP(); j++)
-              if (el[j] == pnum+1)
+              if (el[j] == pnum)
                 {
                   int base = (4*elnr+j-1) * vsol->dist;
                   v = Vec3d(vsol->data[base],
@@ -4336,7 +4345,7 @@ namespace netgen
             }
 
           double lami[3];
-          int elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex)-1;
+          int elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex);
 
           if (elnr != -1)
             {
@@ -4441,7 +4450,7 @@ namespace netgen
     for (int i = 0; i < trigs.Size(); i++)
       {
         const ClipPlaneTrig & trig = trigs[i];
-	if (trig.elnr != lastelnr)
+	if (trig.elnr != ElementIndex(lastelnr))
 	  {
 	    lastelnr = trig.elnr;
 	    nlp = -1;
@@ -4722,7 +4731,7 @@ namespace netgen
 
 
   bool VisualSceneSolution ::
-  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el)
+  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el) const
   {
     if(data == nullptr) return true;
     bool is_active = true;
@@ -4741,14 +4750,15 @@ namespace netgen
           }
       }
 
-    if(data->draw_surfaces)
+    if(data->draw_surfaces) {
       is_active = is_active && (*data->draw_surfaces)[el.GetIndex()-1];
+    }
 
     return is_active;
   }
 
   bool VisualSceneSolution ::
-  VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & el)
+  VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & el) const
   {
     bool is_active = true;
     if(data->draw_volumes)
@@ -4762,11 +4772,51 @@ namespace netgen
 
 
 
+  void VisualSceneSolution :: BuildSelectionList()
+  {
+    shared_ptr<Mesh> mesh = GetMesh();
+
+    if(select.list_timestamp == GetTimeStamp())
+      return;
+
+    if(select.list)
+      glDeleteLists(select.list, 1);
+
+    select.list = glGenLists(1);
+    glNewList(select.list, GL_COMPILE);
+
+    SolData *sol = nullptr;
+    if (scalfunction != -1)
+      sol = soldata[scalfunction];
+
+    auto face_init = [](int i) {return true;};
+    auto sel_init = [&](SurfaceElementIndex sei) {
+        if(!SurfaceElementActive(sol, *mesh, (*mesh)[sei]))
+          return false;
+        GLushort r,g,b;
+        r = (sei+1) % (1<<16);
+        g = (sei+1) >> 16;
+        b = 0;
+        glColor3us(r,g,b);
+        return true;
+    };
+
+    glDisable(GL_TEXTURE_1D);
+    glDisable(GL_TEXTURE_2D);
+    glDisable(GL_FOG);
+    glDisable(GL_LIGHTING);
+    glDisable (GL_COLOR_MATERIAL);
+
+    RenderSurfaceElements(mesh, subdivisions, face_init, sel_init);
+
+    glEndList();
+  }
 
 
 
   void VisualSceneSolution :: MouseDblClick (int px, int py)
   {
+    BuildSelectionList();
     auto mesh = GetMesh();
     // auto dim = mesh->GetDimension();
     marker = nullopt;
@@ -4812,11 +4862,19 @@ namespace netgen
       };
 
     Point<3> p;
-    bool found_point = vsmesh.SelectSurfaceElement(px, py, p, showclipsolution && clipsolution);
+
+    memcpy(select.transformationmat, transformationmat, sizeof(transformationmat));
+    memcpy(select.clipplane, clipplane, sizeof(clipplane));
+    select.center = center;
+    select.rad = rad;
+    select.enable_clipping_plane = vispar.clipping.enable;
+    bool found_point = select.SelectSurfaceElement(GetMesh(), px, py, p, showclipsolution && clipsolution);
+    selelement = select.selelement;
+
     if(!found_point)
         return;
 
-    // marker = p;
+    marker = p;
 
     // found point on clipping plane
     if(selelement==0)
@@ -4857,18 +4915,18 @@ namespace netgen
             if(sol.iscomplex && rcomponent != 0)
             {
               rcomponent = 2 * ((rcomponent-1)/2) + 1;
-              GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent+1,
+              GetValue(&sol, el3d,  lami[0], lami[1], lami[2], rcomponent+1,
                   imag);
               comp = (scalcomp-1)/2 + 1;
             }
-            GetValue(&sol, el3d-1,  lami[0], lami[1], lami[2], rcomponent, val);
+            GetValue(&sol, el3d,  lami[0], lami[1], lami[2], rcomponent, val);
             printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
           }
           if(vecfunction!=-1 && soldata[vecfunction]->draw_volume)
           {
             auto & sol = *soldata[vecfunction];
             ArrayMem<double, 10> values(sol.components);
-            GetValues(&sol, el3d-1,  lami[0], lami[1], lami[2], &values[0]);
+            GetValues(&sol, el3d,  lami[0], lami[1], lami[2], &values[0]);
             printVecValue(sol, values);
           }
           return;
@@ -4879,7 +4937,7 @@ namespace netgen
     double lami[3] = {0.0, 0.0, 0.0};
     // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
     bool found_2del = false;
-    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement, false && fabs(lami[2])<1e-3))
+    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement-1, false && fabs(lami[2])<1e-3))
       {
         // Found it, use coordinates of point projected to surface element
         mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);

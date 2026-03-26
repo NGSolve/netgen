@@ -57,6 +57,13 @@ namespace netgen
       return opengl_text_width;
   }
 
+  void MyOpenGLLines(FlatArray<Point<3>> points)
+  {
+    glBegin(GL_LINES);
+    for (auto p : points)
+      glVertex3dv(&p[0]);
+    glEnd();
+  }
 
   // texture for color decoding
   // GLubyte * VisualScene :: colortexture = NULL;

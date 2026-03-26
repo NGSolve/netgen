@@ -289,8 +289,16 @@ class WebGLScene(BaseWebGuiScene):
                         )
                     d["clipping_" + name] = val
 
-        if "js_code" in kwargs:
-            d["on_init"] = kwargs["js_code"]
+        id_ = kwargs.get("id", None)
+        js_code = kwargs.get("js_code", "")
+        if id_ is not None:
+            js_code += f"""
+                if(window._webgui_scenes === undefined)
+                    window._webgui_scenes = {{}};
+                window._webgui_scenes['{id_}'] = scene;
+            """
+        if js_code:
+            d["on_init"] = js_code
 
         if "min" in kwargs:
             d["funcmin"] = kwargs["min"]
@@ -350,6 +358,34 @@ class WebGLScene(BaseWebGuiScene):
             d["mesh_radius"] = kwargs['radius']
 
         return d
+
+    def DownloadScreenshot(self, filename="image.jpg"):
+        from IPython.display import Javascript, display
+
+        if "id" not in self.kwargs:
+            raise Exception(
+                "To make a screenshot, please provide an id='some_unique_id' argument to Draw()"
+            )
+        format = filename.split(".")[-1].lower()
+        display(
+            Javascript(
+                f"""
+        {{
+            var scene = window._webgui_scenes['{self.kwargs['id']}'];
+            console.log("screenshot of scene", scene);
+            const toimage = () => {{
+                var link = document.createElement('a');
+                link.href = scene.renderer.domElement.toDataURL('image/{format}');
+                link.download = '{filename}';
+                link.click();
+                scene.event_handlers['afterrender'].pop(toimage);
+            }};
+            scene.on('afterrender', toimage);
+            scene.render();
+        }}
+        """
+            )
+        )
 
 
 bezier_trig_trafos = {}  # cache trafos for different orders

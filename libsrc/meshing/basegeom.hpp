@@ -42,10 +42,7 @@ namespace netgen
     string GetName() const { return name ? *name : "default"; }
     Vec<4> GetColor() { return col ? *col : Vec<4>{0., 1., 0., 1.}; }
 
-    void DoArchive(Archive& ar)
-    {
-        ar & name & col & maxh & hpref & layer;
-    }
+    void DoArchive(Archive& ar);
   };
 
   class GeometryShape;
@@ -271,7 +268,7 @@ namespace netgen
 
   virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const
   {
-    if(gi && gi->edgenr < edges.Size())
+    if(gi && gi->edgenr < edges.Size() && gi->edgenr >= 0)
       edges[gi->edgenr]->ProjectPoint(p, gi);
   }
 
@@ -365,8 +362,7 @@ namespace netgen
     virtual shared_ptr<NetgenGeometry> LoadFromMeshFile (istream & ist) const;
   };
 
-  // extern DLL_HEADER NgArray<GeometryRegister*> geometryregister; 
-  extern DLL_HEADER GeometryRegisterArray geometryregister; 
+  DLL_HEADER GeometryRegisterArray& GeometryRegister();
 }
 
 

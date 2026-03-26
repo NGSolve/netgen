@@ -1,6 +1,7 @@
 #ifndef FILE_MESHING3
 #define FILE_MESHING3
 
+#include "meshclass.hpp"
 #include "adfront3.hpp"
 #include "ruler3.hpp"
 
@@ -22,13 +23,13 @@ enum MESHING3_RESULT
 class Meshing3
 {
   /// current state of front
-  AdFront3 * adfront;
+  unique_ptr<AdFront3> adfront;
   /// 3d generation rules
-  NgArray<vnetrule*> rules;
+  Array<unique_ptr<vnetrule>> rules;
   /// counts how often a rule is used
-  NgArray<int> ruleused, canuse, foundmap;
+  Array<int> ruleused, canuse, foundmap;
   /// describes, why a rule is not applied
-  NgArray<char*> problems;
+  Array<string> problems;
   /// tolerance criterion
   double tolfak;
 public:

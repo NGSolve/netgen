@@ -189,6 +189,8 @@ enum HPREF_ELEMENT_TYPE {
   
   HP_TET_3F_0E_0V = 700,  // 3 singular faces, no additional points or edges  NEW   done 
 
+  HP_TET_ALFELD,
+  
   HP_PRISM = 1000,
   HP_PRISM_SINGEDGE,
   HP_PRISM_SINGEDGE_V12,
@@ -333,7 +335,7 @@ public:
   int levely;
   int levelz;
   int np; 
-  int coarse_elnr;
+  int coarse_elnr;  // issue (JS): same class is for ElementIndex, SurfaceElementIndex, SegmentIndex 
   int domin, domout; // he: needed for segment!! in 3d there should be surf1, surf2!!
   // int coarse_hpelnr; 
   PointIndex & operator[](int i) { return(pnums[i]);}

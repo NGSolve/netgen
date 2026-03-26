@@ -45,13 +45,16 @@ namespace netgen
 			     const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintTime(const MyStr& s1="", const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
 			const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
-  extern DLL_HEADER void SetStatMsg(const MyStr& s);
 
-  extern DLL_HEADER void PushStatus(const MyStr& s);
-  extern DLL_HEADER void PushStatusF(const MyStr& s);
-  extern DLL_HEADER void PopStatus();
-  extern DLL_HEADER void SetThreadPercent(double percent);
-  extern DLL_HEADER void GetStatus(MyStr & s, double & percentage);
+
+
+
+  inline void PushStatusF(const std::string& s)
+  {
+    PushStatus (s);
+    PrintFnStart(s);
+  }
+
 }
 
 

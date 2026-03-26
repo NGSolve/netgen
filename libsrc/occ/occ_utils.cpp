@@ -69,7 +69,7 @@ namespace netgen
        IMeshTools_Parameters aMeshParams;
        aMeshParams.Deflection               = 0.01;
        aMeshParams.Angle                    = 0.5;
-       aMeshParams.Relative                 = Standard_False;
+       aMeshParams.Relative                 = Standard_True;
        aMeshParams.InParallel               = Standard_True;
        aMeshParams.MinSize                  = Precision::Confusion();
        aMeshParams.InternalVerticesMode     = Standard_True;

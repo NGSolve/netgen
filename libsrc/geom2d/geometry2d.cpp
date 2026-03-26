@@ -1100,7 +1100,7 @@ namespace netgen
   public:
     SplineGeoInit()
     {
-      geometryregister.Append (new SplineGeometryRegister);
+      GeometryRegister().Append(new SplineGeometryRegister);
     }
   };
 

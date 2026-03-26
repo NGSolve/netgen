@@ -228,9 +228,15 @@ namespace ngcore
           bool value_is_int = true;
 
           bool operator < (const PajeEvent & other) const {
+            /*
               // Same start and stop times can occur for very small tasks -> take "starting" events first (eg. PajePushState before PajePopState)
-              if(time == other.time)
-                return event_type < other.event_type;
+              if(time == other.time) {
+                if(value == other.value)  // same timer - first start, then stop
+                  return event_type < other.event_type;
+                else                              // different timers - first stop, then start
+                  return event_type > other.event_type;
+              }
+            */
               return (time < other.time);
           }
 
@@ -406,7 +412,7 @@ namespace ngcore
       void WriteEvents()
         {
           logger->info("Sorting traces...");
-          std::sort (events.begin(), events.end());
+          // std::stable_sort (events.begin(), events.end());
 
           logger->info("Writing traces... ");
           for (auto & event : events)
@@ -663,7 +669,7 @@ namespace ngcore
       for(auto & event : timer_events)
         {
           if(event.is_start)
-            paje.PushState( event.time, state_type_timer, timer_container_aliases[timerdepth++], timer_aliases[event.timer_id] );
+            paje.PushState( event.time, state_type_timer, timer_container_aliases[timerdepth++], timer_aliases[event.timer_id], event.custom_value );
           else
             paje.PopState( event.time, state_type_timer, timer_container_aliases[--timerdepth] );
         }
@@ -682,7 +688,7 @@ namespace ngcore
 
       if(user_events.size())
         {
-          std::sort (user_events.begin(), user_events.end());
+          // std::stable_sort (user_events.begin(), user_events.end());
 
           std::map<int, int> containers;
 
@@ -1216,12 +1222,12 @@ namespace ngcore
           else
               id = jobs_map[name];
 
-          events.push_back(TimerEvent{-1, job.start_time, true, id});
-          events.push_back(TimerEvent{-1, job.stop_time, false, id});
+          events.push_back(TimerEvent{job.start_time, -1, id, -1, true});
+          events.push_back(TimerEvent{job.stop_time, -1, id, -1, false});
           stop_time = std::max(job.stop_time, stop_time);
       }
 
-      std::sort (events.begin(), events.end());
+      std::stable_sort (events.begin(), events.end());
 
       root.size = 1000.0*static_cast<double>(stop_time) * seconds_per_tick;
       root.calls = 1;

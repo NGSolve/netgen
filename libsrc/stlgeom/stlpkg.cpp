@@ -526,8 +526,8 @@ namespace netgen
 			 Tcl_Interp * interp,
 			 int argc, tcl_const char *argv[])
   {
-    for (int i = 0; i < geometryregister.Size(); i++)
-      geometryregister[i] -> SetParameters (interp);
+    for (auto loader : GeometryRegister())
+      loader -> SetParameters (interp);
 
 
     Ng_SetMeshingParameters (clientData, interp, argc, argv);
@@ -569,7 +569,7 @@ using namespace netgen;
 extern "C" int Ng_stl_Init (Tcl_Interp * interp);
 int Ng_stl_Init (Tcl_Interp * interp)
 {
-  geometryregister.Append (new STLGeometryVisRegister);
+  GeometryRegister().Append (new STLGeometryVisRegister);
 
   Tcl_CreateCommand (interp, "Ng_SetSTLParameters", Ng_SetSTLParameters,
 		     (ClientData)NULL,

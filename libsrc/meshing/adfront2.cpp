@@ -282,7 +282,7 @@ namespace netgen
 			     NgArray<INDEX> & lindex,
 			     double xh)
   {
-    static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
+    // static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
     
     int pstind;
     Point<3>  midp, p0;

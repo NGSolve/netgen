@@ -198,17 +198,17 @@ namespace ngcore
     }
 #else // defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
   public:
-    MemoryTracer() {}
-    MemoryTracer( std::string /* name */ ) {}
+    NETGEN_INLINE MemoryTracer() {}
+    NETGEN_INLINE MemoryTracer( std::string /* name */ ) {}
     template <typename... TRest>
-    MemoryTracer( std::string /* name */, TRest & ... ) {}
+    NETGEN_INLINE MemoryTracer( std::string /* name */, TRest & ... ) {}
 
-    void Alloc(size_t /* size */) const {}
-    void Free(size_t /* size */) const {}
-    int GetId() const { return 0; }
+    NETGEN_INLINE void Alloc(size_t /* size */) const {}
+    NETGEN_INLINE void Free(size_t /* size */) const {}
+    NETGEN_INLINE int GetId() const { return 0; }
 
     template <typename... TRest>
-    void Track(TRest&...) const {}
+    NETGEN_INLINE void Track(TRest&...) const {}
 
     static std::string GetName(int /* id */) { return ""; }
     std::string GetName() const { return ""; }

@@ -817,21 +817,29 @@ namespace netgen
 
      if(strcmp(argv[1], "showall") == 0)
      {
+       /*
         for(int i = 1; i <= mesh->GetNSE(); i++)
         {
-           mesh->SurfaceElement(i).Visible(1);
+          mesh->SurfaceElement(i).Visible(1);
         }
-
-        mesh->SetNextTimeStamp();
+       */
+       for (auto & el : mesh->SurfaceElements())
+         el.Visible(1);
+       
+       mesh->SetNextTimeStamp();
      }
 
      if(strcmp(argv[1], "hideall") == 0)
      {
+       /*
         for(int i = 1; i <= mesh->GetNSE(); i++)
         {
-           mesh->SurfaceElement(i).Visible(0);
+          mesh->SurfaceElement(i).Visible(0);
         }
-
+       */
+       for (auto & el : mesh->SurfaceElements())
+         el.Visible(0);
+       
         mesh->SetNextTimeStamp();
      }
 
@@ -944,7 +952,7 @@ using namespace netgen;
 
 int Ng_occ_Init (Tcl_Interp * interp)
 {
-  geometryregister.Append (new OCCGeometryRegister);
+  GeometryRegister().Append (new OCCGeometryRegister);
 
 
     Tcl_CreateCommand (interp, "Ng_SetOCCVisParameters",
