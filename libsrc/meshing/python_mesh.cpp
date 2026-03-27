@@ -970,15 +970,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             { sizeof(self.Points()[PointIndex::BASE]), sizeof(double) } )
            );
       })
-    .def_property_readonly("parentelements", [](Mesh & self) {
-      // return FlatArray<int>(self.mlparentelement.Size(), &self.mlparentelement[0]);
+    .def_property_readonly("parentelements", py::cpp_function([](Mesh & self) {
       return FlatArray(self.mlparentelement);
-    }, py::keep_alive<0,1>())
-    .def_property_readonly("parentsurfaceelements", [](Mesh & self) {
-      // return FlatArray<int>(self.mlparentsurfaceelement.Size(),
-      // &self.mlparentsurfaceelement[0]);
+    }, py::keep_alive<0,1>()))
+    .def_property_readonly("parentsurfaceelements", py::cpp_function([](Mesh & self) {
       return FlatArray(self.mlparentsurfaceelement);      
-    }, py::keep_alive<0,1>())
+    }, py::keep_alive<0,1>()))
     .def_property_readonly("macromesh", [](Mesh & self) {
       auto coarsemesh = make_shared<Mesh>();
       *coarsemesh = *self.coarsemesh;
