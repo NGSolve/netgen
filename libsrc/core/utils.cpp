@@ -203,7 +203,8 @@ namespace ngcore
   void* SharedLibrary :: GetRawSymbol( std::string func_name )
   {
 #ifdef WIN32
-    void* func = GetProcAddress((HMODULE)lib, func_name.c_str());
+    // void* func = GetProcAddress((HMODULE)lib, func_name.c_str());
+	void* func = reinterpret_cast<void*>( GetProcAddress((HMODULE)lib, func_name.c_str()) );
     if(func == nullptr)
       throw std::runtime_error(std::string("Could not find function ") + func_name + " in library " + lib_name.string());
 #else // WIN32

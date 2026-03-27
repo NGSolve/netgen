@@ -15,11 +15,21 @@
 #define PACKAGE_VERSION "6.2-dev"
 
 // #define DEBUG
-
+/*
 #if defined(nglib_EXPORTS)
    #define DLL_HEADER   NGCORE_API_EXPORT
 #else
    #define DLL_HEADER   NGCORE_API_IMPORT
+#endif
+*/
+#if defined(__MINGW32__) && !defined(nglib_EXPORTS) && !defined(ngcore_EXPORTS)
+   #define DLL_HEADER
+#else
+  #if defined(nglib_EXPORTS) || defined(ngcore_EXPORTS)
+     #define DLL_HEADER   NGCORE_API_EXPORT
+  #else
+     #define DLL_HEADER   NGCORE_API_IMPORT
+  #endif
 #endif
 
 
