@@ -120,11 +120,11 @@ namespace netgen
 	NG_MPI_Aint displ[] =
           { (char*)&hel.pnums[0] - (char*)&hel,
             (char*)&hel.edgenr - (char*)&hel,
-            (char*)&hel.cd2i - (char*)&hel,
+            (char*)&hel.index - (char*)&hel,
             (char*)&hel.si - (char*)&hel
           };
 	NG_MPI_Datatype types[] = {
-          GetMPIType<PointIndex>(), GetMPIType(hel.edgenr), GetMPIType(hel.cd2i), GetMPIType(hel.si)
+          GetMPIType<PointIndex>(), GetMPIType(hel.edgenr), GetMPIType(hel.index), GetMPIType(hel.si)
         };
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
@@ -185,7 +185,7 @@ namespace netgen
     pnums[0] = PointIndex::INVALID;
     pnums[1] = PointIndex::INVALID;
     edgenr = -1;
-
+    index = -1;
     singedge_left = 0.;
     singedge_right = 0.;
     seginfo = 0;
@@ -203,12 +203,10 @@ namespace netgen
     geominfo[0].trignum=-1;
     geominfo[1].trignum=-1;
 
-    /*
-      epgeominfo[0].edgenr = 1;
-      epgeominfo[0].dist = 0;
-      epgeominfo[1].edgenr = 1;
-      epgeominfo[1].dist = 0;
-    */
+    epgeominfo[0].edgenr = -1;
+    epgeominfo[0].dist = 0;
+    epgeominfo[1].edgenr = -1;
+    epgeominfo[1].dist = 0;
   }    
 
   void Segment :: DoArchive (Archive & ar)
@@ -216,7 +214,7 @@ namespace netgen
     string * bcname_dummy = nullptr;
     ar & pnums[0] & pnums[1] & pnums[2]
       & edgenr & singedge_left & singedge_right
-      & si & cd2i & domin & domout & tlosurf
+      & si & index & domin & domout & tlosurf
       & surfnr1 & surfnr2
       & bcname_dummy // keep this for backward compatibility
       & epgeominfo[0].edgenr & epgeominfo[1].edgenr;

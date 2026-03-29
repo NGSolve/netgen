@@ -416,7 +416,10 @@ namespace netgen
 
 
 	for (int i = 0; i < refedges.Size(); i++)
-	  refedges[i].edgenr = cntedge;
+          {
+            refedges[i].edgenr = cntedge;
+            refedges[i].index = cntedge;
+          }
 
 	
 #ifdef DEVELOP
@@ -1452,6 +1455,7 @@ namespace netgen
 	    seg.domout = refedges.Get(k).domout;
 	    seg.tlosurf = refedges.Get(k).tlosurf;
 	    seg.edgenr = refedges.Get(k).edgenr;
+	    seg.index = refedges.Get(k).index;            
 	    seg.surfnr1 = refedges.Get(k).surfnr1;
 	    seg.surfnr2 = refedges.Get(k).surfnr2;
 	    seg.seginfo = 0;
@@ -1620,6 +1624,7 @@ namespace netgen
 	seg.domout = refedges.Get(k).domout;
 	seg.tlosurf = refedges.Get(k).tlosurf;
 	seg.edgenr = refedges.Get(k).edgenr;
+	seg.index = refedges.Get(k).index;        
 	seg.surfnr1 = refedges.Get(k).surfnr1;
 	seg.surfnr2 = refedges.Get(k).surfnr2;
 	seg.seginfo = 0;
@@ -1751,6 +1756,7 @@ namespace netgen
 	    seg.domout = refedges.Get(k).domout;
 	    seg.tlosurf = refedges.Get(k).tlosurf;
 	    seg.edgenr = refedges.Get(k).edgenr;
+	    seg.index = refedges.Get(k).index;            
 	    seg.surfnr1 = refedges.Get(k).surfnr1;
 	    seg.surfnr2 = refedges.Get(k).surfnr2;
 	    seg.seginfo = 0;

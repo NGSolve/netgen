@@ -1270,7 +1270,48 @@ namespace netgen
 
   /**
      Edge segment.
+
+     How indices are used up to 2026-03-29
+
+     edgenr:
+     OCC: the geometry edge, 1-based
+     Spline2D:  edge-nr, 1-based
+     CSG:  edge counter 
+     
+     si:
+     CSG: one surface of the edge
+     Spline2d: bc-number
+     OCC: edgenr, 1-based
+     
+     cd2i:
+     ????
+     
+     epgeominfo:
+     OCC: geometry  edgenr, 0-based
+     Spline2D: edgenr, 1-based
+     
+
+     NGSoleve Interface:
+     GetIndex
+     mesh.dim == 3 ->  edgenr
+     mesh.dim == 2 ->  si
+
+     
+     Python interface:
+     edgenr -> segmnr
+     index -> si
+     
+     Python ctor:
+     index -> si, segmnr
+     edgenr -> epgeominfo DECREMENT 1
+
+
+
+     NEW from 2026-03-29
+     GetEdgeNr()  -> the geometry edge
+     GetIndex()  -> the index for boundary conditions
   */
+  
   class Segment
   {
   public:
@@ -1293,7 +1334,10 @@ namespace netgen
     /// surface decoding index
     int si;
     /// co dim 2 decoding index
-    int cd2i;
+    // int cd2i
+    /// index for boundary conditions (1-based)
+    int index; 
+    
     /// domain number inner side
     int domin;
     /// domain number outer side
@@ -1347,6 +1391,13 @@ namespace netgen
 
     bool IsCurved () const { return is_curved; }
     void SetCurved (bool acurved) { is_curved = acurved; }
+
+
+    int GetEdgeNr() const { return epgeominfo[0].edgenr; }  // 0 or 1-based (geometry dependent)
+    void SetEdgeNr (int nr) { epgeominfo[0].edgenr=nr; }   
+
+    int GetIndex() const { return index; }   // 1-based
+    void SetIndex (int i) { index=i; }   // 1-based
     
     void DoArchive (Archive & ar);
 #ifdef PARALLEL

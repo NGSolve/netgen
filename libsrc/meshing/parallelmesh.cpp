@@ -830,7 +830,7 @@ namespace netgen
     iterate_segs2([&](auto segi, const auto & seg, int dest)
 		  {
 		    nloc_seg[dest]++;
-		    bufsize[dest] += 14;
+		    bufsize[dest] += 15;
 		  });
     DynamicTable<double> segm_buf(bufsize);
     iterate_segs2([&](auto segi, const auto & seg, int dest)
@@ -844,6 +844,7 @@ namespace netgen
 		    segm_buf.Add (dest, seg.surfnr1);
 		    segm_buf.Add (dest, seg.surfnr2);
 		    segm_buf.Add (dest, seg.edgenr);
+		    segm_buf.Add (dest, seg.index);                    
 		    segm_buf.Add (dest, seg.epgeominfo[0].dist);
 		    segm_buf.Add (dest, seg.epgeominfo[1].edgenr);
 		    segm_buf.Add (dest, seg.epgeominfo[1].dist);
@@ -1150,6 +1151,7 @@ namespace netgen
 	  seg.surfnr1 = int ( segmbuf[ii++]);
 	  seg.surfnr2 = int ( segmbuf[ii++]);
 	  seg.edgenr = int ( segmbuf[ii++]);
+	  seg.index = int ( segmbuf[ii++]);          
 	  seg.epgeominfo[0].dist = segmbuf[ii++];
 	  seg.epgeominfo[1].edgenr = int (segmbuf[ii++]);
 	  seg.epgeominfo[1].dist = segmbuf[ii++];

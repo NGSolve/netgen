@@ -526,6 +526,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     newel -> epgeominfo[0].edgenr = edgenr;
                     newel -> epgeominfo[1].edgenr = edgenr;
                     newel -> edgenr = index;
+                    newel -> index = index;
                     for(auto i : Range(len(trignums)))
                       newel->geominfo[i].trignum = py::cast<int>(trignums[i]);
                     if (len(surfaces))
@@ -570,20 +571,20 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("index",
                   [](const Segment &self) -> size_t
                   {
-                    return self.si;
+                    return self.GetIndex();
                   },
                   [](Segment& self, int index)
                   {
-                    self.si = index;
+                    self.SetIndex(index);
                   })
     .def_property("edgenr",
                   [](const Segment & self) -> size_t
                   {
-                    return self.edgenr;
+                    return self.GetEdgeNr();
                   },
                   [](Segment& self, int edgenr)
                   {
-                    self.edgenr = edgenr;
+                    self.SetEdgeNr(edgenr); 
                   })
     .def_property("singular",
                   [](const Segment & seg) { return seg.singedge_left; },

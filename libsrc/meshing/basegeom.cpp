@@ -741,6 +741,7 @@ namespace netgen
             seg[0] = pnums[i];
             seg[1] = pnums[i+1];
             seg.edgenr = edgenr+1;
+            seg.index = edgenr+1;
             seg.si = edgenr+1;
             seg.epgeominfo[0].dist = params[i];
             seg.epgeominfo[1].dist = params[i+1];

@@ -172,6 +172,7 @@ namespace netgen
 
 	      Segment seg;
 	      seg.edgenr = segnr;
+	      seg.index = spline.bc;
 	      seg.si = spline.bc; // segnr;
 	      seg[0] = pi1;
 	      seg[1] = pi2;
@@ -401,6 +402,7 @@ namespace netgen
 	    Segment nseg;
 	    nseg.edgenr = to;
 	    nseg.si = GetSpline(to-1).bc;      // splines.Get(to)->bc;
+	    nseg.index = GetSpline(to-1).bc;   // ???
 	    nseg[0] = mappoints[seg[0]];
 	    nseg[1] = mappoints[seg[1]];
 	    nseg.domin = GetSpline(to-1).leftdom;
