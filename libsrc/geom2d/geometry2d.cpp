@@ -21,6 +21,39 @@ namespace netgen
       delete [] materials[i];
   }
 
+
+  void SplineGeometry2d :: ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi) const
+  {
+    if (!gi) return;
+    
+    // copied from PointBetween, but should work easier
+    auto spline = GetSplines().Get(gi->edgenr);
+    const SplineSeg3<2> * ss3;
+    const LineSeg<2> * ls;
+    auto ext = dynamic_cast<const SplineSegExt *>(spline);
+    if(ext)
+      {
+        ss3 = dynamic_cast<const SplineSeg3<2> *>(ext->seg);
+        ls = dynamic_cast<const LineSeg<2> *>(ext->seg);
+      }
+    else
+      {
+        ss3 = dynamic_cast<const SplineSeg3<2> *>(spline);
+        ls = dynamic_cast<const LineSeg<2> *>(spline);
+      }
+    
+    Point<2> p2d(p(0),p(1));
+    Point<2> p_proj(0.0,0.0);
+    double t_proj = 0.0;
+
+    if(ss3)
+      ss3->Project(p2d,p_proj,t_proj);
+    else if(ls)
+      ls->Project(p2d,p_proj,t_proj);
+
+    gi->dist = t_proj;
+  }
+  
   void SplineGeometry2d :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
                                          int surfi1, int surfi2,
                                          const EdgePointGeomInfo & ap1,

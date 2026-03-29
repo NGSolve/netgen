@@ -163,6 +163,9 @@ namespace netgen
       return true;
     }
 
+    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const override;
+
+
     void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
                       int surfi,
                       const PointGeomInfo & gi1,
