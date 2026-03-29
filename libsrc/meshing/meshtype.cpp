@@ -18,6 +18,64 @@ namespace netgen
 
 
 #ifdef PARALLEL
+
+  /*
+    working locally, but not too much at once ...
+     
+  template <int N>
+  NG_MPI_Datatype NgMPI_CommitType ( std::array<int,N> ablocklen,
+                                     std::array<std::ptrdiff_t,N> adispl,
+                                     std::array<NG_MPI_Datatype,N> atypes,
+                                     size_t aext )
+  {
+    std::array<NG_MPI_Aint,N> displ;
+    for (int i = 0; i < N; i++)
+      displ[i] = adispl[i];
+    
+    NG_MPI_Datatype htype, type;
+    NG_MPI_Type_create_struct (N, &ablocklen[0], &displ[0], &atypes[0], &htype);
+    NG_MPI_Type_commit ( &htype );
+
+    NG_MPI_Aint lb, ext;
+    ext = aext;
+    
+    NG_MPI_Type_get_extent (htype, &lb, &ext);
+
+    NG_MPI_Type_create_resized (htype, lb, ext, &type);
+    NG_MPI_Type_commit ( &type );
+
+    return type;
+  }
+                                     
+                                     
+
+  NG_MPI_Datatype MeshPoint :: MyGetMPIType ( )
+  { 
+    static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
+    if (type != NG_MPI_DATATYPE_NULL) return type;
+
+    MeshPoint hp;
+    
+    array<int,3> ablocklen = { 3, 1, 1 };
+    
+    array<ptrdiff_t,3>  adispl =
+      {
+        (char*)&hp.x[0] - (char*)&hp,
+        (char*)&hp.layer - (char*)&hp,
+        (char*)&hp.singular - (char*)&hp
+      };
+        
+    array<NG_MPI_Datatype,3> atypes = { GetMPIType(hp.x[0]),
+                                        GetMPIType(hp.layer),
+                                        GetMPIType(hp.singular) };
+    
+    type = NgMPI_CommitType<3> ( ablocklen, adispl, atypes, sizeof(MeshPoint) ); 
+    return type;
+  }
+  */
+  
+  
+
   NG_MPI_Datatype MeshPoint :: MyGetMPIType ( )
   { 
     static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
@@ -25,11 +83,15 @@ namespace netgen
     if (type == NG_MPI_DATATYPE_NULL)
       {
 	MeshPoint hp;
-	int blocklen[] = { 3, 1, 1 };
+        
+        int blocklen[] = { 3, 1, 1 };
+
 	NG_MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
-			     (char*)&hp.layer - (char*)&hp,
-			     (char*)&hp.singular - (char*)&hp };
-	NG_MPI_Datatype types[] = { NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_DOUBLE };
+                                (char*)&hp.layer - (char*)&hp,
+                                (char*)&hp.singular - (char*)&hp };
+        
+        NG_MPI_Datatype types[] = { NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_DOUBLE };
+
 	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
 	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
 	NG_MPI_Type_create_struct (3, blocklen, displ, types, &htype);
@@ -41,12 +103,12 @@ namespace netgen
 	ext = sizeof (MeshPoint);
 	NG_MPI_Type_create_resized (htype, lb, ext, &type);
 	NG_MPI_Type_commit ( &type );
-	
       }
     return type;
   }
 
 
+  
   NG_MPI_Datatype Element2d :: MyGetMPIType ( )
   { 
     static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
