@@ -421,7 +421,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   }
 
   py::class_<Element2d>(m, "Element2D")
-    .def(py::init ([](int index, std::vector<PointIndex> vertices)
+    .def(py::init ([](int index, std::vector<PointIndex> vertices,
+                      std::optional<std::vector<std::array<double,2>>> uv)
                    {
                      Element2d * newel = nullptr;
                      if (vertices.size() == 3)
@@ -454,14 +455,49 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                        }
                      else 
                        throw NgException("Inconsistent number of vertices in Element2D");
+                     if (uv.has_value())
+                       {
+                         auto vecuv = *uv;
+                         if (vecuv.size() != vertices.size())
+                           throw NgException("wrong number of uv-parameters");
+                         for (int i = 0; i < vertices.size(); i++)
+                           {
+                             PointGeomInfo gi;
+                             gi.u = vecuv[i][0];
+                             gi.v = vecuv[i][1];
+                             newel->GeomInfo()[i] = gi;
+                           }
+                       }
                      return newel;
                    }),
-                   py::arg("index")=1,py::arg("vertices"),
+         py::arg("index")=1,py::arg("vertices"), py::arg("uv")=std::nullopt,
          "create surface element"
          )
     .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
     .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
+    .def_property("uv",
+                  [](const Element2d & self) {
+                    std::vector<std::array<double,2>> uv(self.GetNP());
+                    for (int i = 0; i < uv.size(); i++)
+                      {
+                        double u = self.GeomInfo()[i].u;
+                        double v = self.GeomInfo()[i].v;
+                        uv[i] = std::array<double,2>{u,v};
+                      }
+                    return uv;
+                  },
+                  [](Element2d & self, const std::vector<std::array<double,2>> & uv) {
+                    if (uv.size() != self.GetNP())
+                      throw NgException("wrong number of uv-parameters");
+                    for (int i = 0; i < uv.size(); i++)
+                      {
+                        PointGeomInfo gi;
+                        gi.u = uv[i][0];
+                        gi.v = uv[i][1];
+                        self.GeomInfo()[i] = gi;
+                      }
+                  })
     .def_property_readonly("geominfo", [](const Element2d& self) -> py::list
     {
       py::list li;
@@ -1557,6 +1593,11 @@ py::arg("point_tolerance") = -1.)
           {
             self.SetNextTimeStamp();
           })
+    .def ("UpdateTopology", [](Mesh & self) {
+      self.CalcSurfacesOfNode();
+      self.RebuildSurfaceElementLists();
+      self.UpdateTopology();
+    })
     .def ("CalcTotalBadness", &Mesh::CalcTotalBad)
     .def ("GetQualityHistogram", &Mesh::GetQualityHistogram)
     .def("Mirror", &Mesh::Mirror)

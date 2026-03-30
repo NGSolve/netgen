@@ -595,10 +595,7 @@ namespace netgen
 
 
 
-
-  // typedef NgArray<MeshPoint, PointIndex::BASE, PointIndex> T_POINTS;
   typedef Array<MeshPoint, PointIndex> T_POINTS;
-
 
 
   /**
@@ -632,7 +629,7 @@ namespace netgen
     unsigned int orderx:6;
     unsigned int ordery:6;
 
-    /// a linked list for all segments in the same face
+    /// a linked list for all elements in the same face
     SurfaceElementIndex next;
     ///
     int hp_elnr;
