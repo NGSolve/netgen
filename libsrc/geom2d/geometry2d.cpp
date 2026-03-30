@@ -51,6 +51,8 @@ namespace netgen
     else if(ls)
       ls->Project(p2d,p_proj,t_proj);
 
+    p(0) = p_proj(0);
+    p(1) = p_proj(1);
     gi->dist = t_proj;
   }
   
