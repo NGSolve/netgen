@@ -116,7 +116,7 @@ namespace netgen
   public:
     EdgePointGeomInfo ()
       : edgenr(-1), body(0), dist(0.0), u(0.0), v(0.0) { ; }
-
+    EdgePointGeomInfo (const EdgePointGeomInfo&) = default;
     EdgePointGeomInfo & operator= (const EdgePointGeomInfo & gi2) = default;
   };
 

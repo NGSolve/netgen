@@ -605,7 +605,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                      return li;
                                    }))
     .def_property("index",
-                  [](const Segment &self) -> size_t
+                  [](const Segment &self)
                   {
                     return self.GetIndex();
                   },
@@ -614,7 +614,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     self.SetIndex(index);
                   })
     .def_property("edgenr",
-                  [](const Segment & self) -> size_t
+                  [](const Segment & self)
                   {
                     return self.GetEdgeNr();
                   },
