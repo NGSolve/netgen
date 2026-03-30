@@ -330,7 +330,8 @@ public:
   PointIndex pnums[8];
   double param[8][3];
   int index;
-  int si;
+  // int si;
+  int edgenr;
   int levelx;
   int levely;
   int levelz;

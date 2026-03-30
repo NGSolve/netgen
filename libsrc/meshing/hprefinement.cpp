@@ -83,7 +83,7 @@ namespace netgen
   }
   
   HPRefElement :: HPRefElement(HPRefElement & el) :
-    type(el.type), index(el.index), si(el.si), levelx(el.levelx), levely(el.levely), levelz(el.levelz), np(el.np), coarse_elnr(el.coarse_elnr), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
+    type(el.type), index(el.index), edgenr(el.edgenr), levelx(el.levelx), levely(el.levely), levelz(el.levelz), np(el.np), coarse_elnr(el.coarse_elnr), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
     
   {
     //Reset();
@@ -660,8 +660,8 @@ namespace netgen
 	hpel.coarse_elnr = i; 
 	hpel.type = HP_SEGM; 
 	// hpel.index = seg.edgenr + 10000*seg.si;
-        hpel.index = seg.edgenr;
-        hpel.si = seg.si;
+        hpel.index = seg.GetIndex();
+        hpel.edgenr = seg.GetEdgeNr();
         /*
 	if(seg.edgenr >= 10000)
 	  {
@@ -993,7 +993,7 @@ namespace netgen
 	    for (int k = 0; k < 8; k++)
 	      newel.pnums[k] = newpnums[hprs->newels[j][k]-1];
 	    newel.index = el.index;
-            newel.si = el.si;
+            newel.edgenr = el.edgenr;
 	    newel.coarse_elnr = el.coarse_elnr;
 	    newel.levelx = newel.levely = newel.levelz = newlevel;
 
@@ -1433,8 +1433,8 @@ namespace netgen
 		    // NOTE: only for less than 10000 elements (HACK) !!!
 		    // seg.edgenr = hpel.index % 10000;
 		    // seg.si     = hpel.index / 10000;
-                    seg.edgenr = hpel.index;
-                    seg.si = hpel.si;
+                    seg.SetEdgeNr (hpel.edgenr);
+                    seg.SetIndex (hpel.index);
 
                     /*
                     seg.epgeominfo[0].dist = hpel.param[0][0]; // he: war hpel.param[0][0]
