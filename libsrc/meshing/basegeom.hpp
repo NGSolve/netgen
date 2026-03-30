@@ -322,6 +322,8 @@ namespace netgen
           return;
         }
       newp = p1+secpoint*(p2-p1);
+      newgi.edgenr = ap1.edgenr;
+      newgi.dist = ap1.dist + secpoint*(ap2.dist-ap1.dist);
     }
 
     virtual Vec<3> GetTangent(const Point<3> & p, int surfi1,
