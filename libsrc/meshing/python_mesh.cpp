@@ -1319,12 +1319,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                         // find some point in the mid of trig/quad for
                         // quick + stable uv-projection of all points
                         auto startp = Center(self[el[0]], self[el[1]], self[el[2]]);
-                        PointGeomInfo gi = self.GetGeometry()->ProjectPoint(index,
+			int surfnr = self.GetFaceDescriptor(index).SurfNr();
+                        PointGeomInfo gi = self.GetGeometry()->ProjectPoint(surfnr,
                                                                             startp);
                         for(auto i : Range(np))
                           {
                             el.GeomInfo()[i] = gi;
-                            self.GetGeometry()->ProjectPointGI(index,
+                            self.GetGeometry()->ProjectPointGI(surfnr,
                                                                self[el[i]],
                                                                el.GeomInfo()[i]);
                           }
