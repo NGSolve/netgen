@@ -1402,17 +1402,15 @@ namespace netgen
                         **/
                         SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
 
-                        /*
                         if (sei != SurfaceElementIndex(-1)) {
                           PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
-                          // use improved initial guess
-                          gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
-                          gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
+                          // use improved initial guess TODO JOACHIM
+                          // gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
+                          // gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
                           
                           geo.ProjectPointGI(surfnr[facenr], pp, gi);
                         }
                         else
-                        */
                           geo.ProjectPoint(surfnr[facenr], pp);
                         
                         Vec<3> dist = pp-xa[jj];
