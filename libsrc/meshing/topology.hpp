@@ -156,8 +156,10 @@ public:
   auto GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
   DLL_HEADER void GetFaceEdges (int fnr, NgArray<int> & edges, bool withorientation = false) const;
 
-  ELEMENT_TYPE GetFaceType (int fnr) const
-  { return (!face2vert[fnr-1][3].IsValid()) ? TRIG : QUAD; }    
+  // ELEMENT_TYPE GetFaceType (int fnr) const
+  // { return (!face2vert[fnr-1][3].IsValid()) ? TRIG : QUAD; }    
+  ELEMENT_TYPE GetFaceType0 (SurfaceElementIndex fnr) const
+  { return (!face2vert[fnr][3].IsValid()) ? TRIG : QUAD; }    
 
   [[deprecated("use GetEdges (SurfaceElementIndex) -> FlatArray")]]  
   void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;

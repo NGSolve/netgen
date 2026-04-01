@@ -2334,7 +2334,7 @@ namespace netgen
 	const Element & el = (*mesh)[els[i]];
 	int nref_faces = GetNFaces (el.GetType());
 	const ELEMENT_FACE * ref_faces = GetFaces1 (el.GetType());
-	int nfa_ref_edges = GetNEdges (GetFaceType(fnr));
+	int nfa_ref_edges = GetNEdges (GetFaceType0(fnr-1));
       
 	int cntv = 0,fa=-1; 
 	for(int m=0;m<nref_faces;m++)
@@ -2355,7 +2355,7 @@ namespace netgen
      
 	if(fa>=0)
 	  {
-	    const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType(fnr)); 
+	    const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType0(fnr-1)); 
 	    fedges.SetSize(nfa_ref_edges);
 	    // GetElementEdges (els[i]+1, eledges);
             auto eledges = GetEdges (els[i]);
