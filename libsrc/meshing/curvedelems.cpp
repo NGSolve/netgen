@@ -605,6 +605,13 @@ namespace netgen
   }
 
 
+  void CurvedElements :: DoArchive(Archive& ar)
+  {
+    ar & edgeorder & faceorder & edgecoeffsindex & facecoeffsindex & edgecoeffs & facecoeffs
+      & edgeweight & order & rational & ishighorder;
+  }
+
+  
   void CurvedElements :: BuildCurvedElements(const Refinement * ref, int aorder,
                                              bool arational)
   {

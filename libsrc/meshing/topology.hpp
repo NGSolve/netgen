@@ -82,6 +82,7 @@ public:
   bool HasEdges () const  { return buildedges; }
   bool HasFaces () const  { return buildfaces; }
   bool HasParentEdges () const { return build_parent_edges; }
+  bool HasParentFaces () const { return build_parent_faces; }
 
   void Update(NgTaskManager tm = &DummyTaskManager, NgTracer tracer = &DummyTracer);
   bool NeedsUpdate() const;

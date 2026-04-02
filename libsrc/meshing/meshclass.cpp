@@ -1131,6 +1131,21 @@ namespace netgen
          }
     }
 
+
+    if (curvedelems && curvedelems->IsHighOrder())
+      {
+        if (level_nv.Size() > 1 && (MeshTopology().HasParentEdges() || MeshTopology().HasParentFaces()))
+          cerr << "Waring: cannot store curvedelements on refined meshes with full hierarchy" << endl;
+        else
+          {
+            outfile << "curvedelements" << endl;
+            shared_ptr<std::ostream> spoutfile(&outfile,  [](void*) noexcept {});
+            TextOutArchive out(std::move(spoutfile));
+            out & (*curvedelems);
+          }
+      }
+
+    
     outfile << endl << endl << "endmesh" << endl << endl;
     if (geometry)
       geometry -> SaveToMeshFile (outfile);
@@ -1223,6 +1238,7 @@ namespace netgen
     while (infile.good() && !endmesh)
       {
         infile >> str;
+
         if (strcmp (str, "dimension") == 0)
           {
             infile >> dimension;
@@ -1694,7 +1710,23 @@ namespace netgen
                   }
               }
           }
+        
+        if (strcmp (str, "curvedelements") == 0)	      
+          {
+            topology.Update();
+            shared_ptr<std::istream> spinfile(&infile,  [](void*) noexcept {});
+            TextInArchive in(std::move(spinfile));
+            in & (*curvedelems);
 
+            for (SegmentIndex seg = 0; seg < GetNSeg(); seg++)
+              (*this)[seg].SetCurved (GetCurvedElements().IsSegmentCurved (seg));
+            for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+              (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
+            for (ElementIndex ei = 0; ei < GetNE(); ei++)
+              (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
+          }
+
+        
         if (strcmp (str, "endmesh") == 0)
           endmesh = true;
 
