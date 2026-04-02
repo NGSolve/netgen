@@ -1421,8 +1421,6 @@ namespace netgen
                   for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
                     for (int jy = 0; jy < xi.Size(); jy++, jj++)
                       {
-                        double x = xi[jx];
-                        double y = xi[jy];
                         double wi = weight[jx]*weight[jy];
 
                         double lami[4];
@@ -4157,7 +4155,8 @@ namespace netgen
           };
 	  // int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
-	  
+	  const ELEMENT_FACE * faces = MeshTopology::GetFaces0 (HEX);
+          
 	  for (int i = 0; i < 12; i++)
 	    {
 	      int eorder = edgeorder[info.edgenrs[i]];
@@ -4178,6 +4177,35 @@ namespace netgen
                   
 		}
 	    }
+
+
+	  for (int i = 0; i < 6; i++)
+	    {
+	      int forder = faceorder[info.facenrs[i]];
+	      if (forder >= 2)
+		{
+                  int first = facecoeffsindex[info.facenrs[i]];
+                  
+                  int fmin = 0;
+                  for (int j = 1; j < 4; j++)
+                    if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+
+                  int fx = (fmin+1)%4;
+                  int fy = (fmin+3)%4;
+                  if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+
+                  auto lamf = lami[faces[i][0]] + lami[faces[i][1]] + lami[faces[i][2]] + lami[faces[i][3]];
+                  CalcQuadShapeLambda (forder,
+                                       mu[faces[i][fx]]-mu[faces[i][fmin]],
+                                       mu[faces[i][fy]]-mu[faces[i][fmin]],
+                                       [&](int i, AutoDiff<3,T> shape)
+                                       {
+                                         for (int k = 0; k < 3; k++)
+                                           mapped_x[k] += facecoeffs[first+i](k) * lamf * shape;
+                                       });
+                }
+            }
+
           
           break;
         }
