@@ -46,6 +46,7 @@ namespace netgen
   
 
   // compute edge bubbles up to order n, x \in (-1, 1)
+  // integrated Legendre pols, starting with order 2
   template <typename T>
   static void CalcEdgeShape (int n, T x, T * shape)
   {
@@ -370,9 +371,8 @@ namespace netgen
 	}
     }
   };
-
-
-
+  
+  /*
   template <class S, class T>
   inline void JacobiPolynomial (int n, S x, double alpha, double beta, T * values)
   {
@@ -397,18 +397,14 @@ namespace netgen
         values[i+1] = p1;
       }
   }
-
+  */
   
-  
-
+  /*
   template <class S, class St, class T>
   inline void ScaledJacobiPolynomial (int n, S x, St t, double alpha, double beta, T * values)
   {
-    /*
-      S p1 = 1.0, p2 = 0.0, p3;
-
-      if (n >= 0) values[0] = 1.0;
-    */
+  // S p1 = 1.0, p2 = 0.0, p3;
+  // if (n >= 0) values[0] = 1.0;
 
     S p1(1.0), p2(0.0), p3;
 
@@ -431,7 +427,9 @@ namespace netgen
         values[i+1] = p1;
       }
   }
-
+  */
+  
+  // Jacobi polynomials alpah, beta=2
   struct JacobiRecPols
   {
     static constexpr size_t N = 100;
@@ -450,6 +448,10 @@ namespace netgen
   };
 
   static JacobiRecPols jacpols2;
+  
+  static JacobiRecPol jacpol00(100,0,0);
+  static JacobiRecPol jacpol11(100,1,1);
+  static JacobiRecPol jacpol22(100,2,2);
 
   // compute face bubbles up to order n, 0 < y, y-x < 1, x+y < 1
   template <class Tx, class Ty, class Ts>
@@ -505,6 +507,7 @@ namespace netgen
   {
     if (n < 3) return;
 
+    /*
     Tx hx[50], hy[50];
     ScaledJacobiPolynomial (n-3, x, t-y, 2, 2, hx);
 
@@ -516,7 +519,22 @@ namespace netgen
         for (int iy = 0; iy <= n-3-ix; iy++)
           shape[ii++] = bub * hx[ix]*hy[iy];
       }
+    */
+
+    
+    int ii = 0;
+    Tx bub = (t+x-y)*y*(t-x-y);
+    jacpols2[2]->EvaluateScaledLambda
+      (n-3, x, t-y,
+       [&](int ix, Tx valx)
+       {
+         jacpols2[2*ix+5] -> EvaluateScaledLambda (n-3-ix, 2*y-1, t, [&](int iy, Ty valy)
+         {
+                                                     shape[ii++] = bub*valx*valy;
+                                                   });
+       });
   }
+
 
   template <class Tx, class Ty, class Tt, typename FUNC>
   static void CalcScaledTrigShapeLambda (int n, Tx x, Ty y, Tt t, FUNC func)
@@ -577,15 +595,12 @@ namespace netgen
     if (n < 2) return;
     int ii = 0;
     Tx bub = (1-x*x)*(1-y*y);
-    jacpols2[2]->EvaluateLambda
-      (n-2, x,
-       [&](int ix, Tx valx)
-       {
-         jacpols2[2] -> EvaluateLambda (n-2, y, [&](int iy, Ty valy)
-         {
-           func(ii++, bub*valx*valy);
-         });
-       });
+    jacpol22.EvaluateLambda
+      (n-2, x, [&](int ix, Tx valx) {
+        jacpol22.EvaluateLambda (n-2, y, [&](int iy, Ty valy) {
+          func(ii++, bub*valx*valy);
+        });
+      });
   }
 
   
@@ -1255,14 +1270,24 @@ namespace netgen
 	      {
                 auto verts = top.GetFaceVertices(facenr);
                                                  
-		int fnums[] = { 0, 1, 2 };
+		int fnums[] = { 0, 1, 2, 4 };
                 if (face_type == TRIG)
                   {
                     if (verts[fnums[0]] > verts[fnums[1]]) swap (fnums[0], fnums[1]);
                     if (verts[fnums[1]] > verts[fnums[2]]) swap (fnums[1], fnums[2]);
                     if (verts[fnums[0]] > verts[fnums[1]]) swap (fnums[0], fnums[1]);
                   }
-                
+                else
+                  {
+                    int fmin = 0;
+                    for (int j = 1; j < 4; j++)
+                      if (verts[j] < verts[fmin]) fmin = j;
+                    fnums[0] = fmin;
+                    fnums[1] = (fmin+1)%4;
+                    fnums[2] = (fmin+2)%4;
+                    fnums[3] = (fmin+3)%4;
+                    if (verts[fnums[3]] < verts[fnums[1]]) swap (fnums[1], fnums[3]);
+                  }
 		int order1 = faceorder[facenr];
 		int ndof = max (0, (face_type==TRIG) ? (order1-1)*(order1-2)/2 : sqr(order1-1));
 	    
@@ -1271,7 +1296,7 @@ namespace netgen
 	    
 		rhs = 0.0;
 		dmat = 0.0;
-
+                
 		int np = sqr(xi.Size());
 		NgArray<Point<2> > xia(np);
 		NgArray<Point<3> > xa(np);
@@ -1386,7 +1411,7 @@ namespace netgen
                         
                         for (int k = 0; k < ndof; k++)
                           dmat(k) += wi * shape(k) * shape(k);
-                        
+
                         dist *= wi;
                         for (int k = 0; k < ndof; k++)
                           for (int l = 0; l < 3; l++)
@@ -1396,10 +1421,21 @@ namespace netgen
                   for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
                     for (int jy = 0; jy < xi.Size(); jy++, jj++)
                       {
-                        double y = xi[jy];
                         double x = xi[jx];
-                        // double lami[] = { x, y, 1-x-y };
+                        double y = xi[jy];
                         double wi = weight[jx]*weight[jy];
+
+                        double lami[4];
+                        lami[0] = (1-xia[jj](0))*(1-xia[jj](1));
+                        lami[1] = (  xia[jj](0))*(1-xia[jj](1));                        
+                        lami[2] = (  xia[jj](0))*(  xia[jj](1));
+                        lami[3] = (1-xia[jj](0))*(  xia[jj](1));                        
+                        double mui[4];
+                        mui[0] = (1-xia[jj](0))+(1-xia[jj](1));
+                        mui[1] = (  xia[jj](0))+(1-xia[jj](1));                        
+                        mui[2] = (  xia[jj](0))+(  xia[jj](1));
+                        mui[3] = (1-xia[jj](0))+(  xia[jj](1));                        
+
                         
                         Point<3> pp = xa[jj];
                         // ref -> ProjectToSurface (pp, mesh.GetFaceDescriptor(el.GetIndex()).SurfNr());
@@ -1412,9 +1448,13 @@ namespace netgen
                         if (sei != SurfaceElementIndex(-1)) {
                           PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
                           // use improved initial guess TODO JOACHIM
-                          // gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
-                          // gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
-                          
+                          gi.u = 0;
+                          gi.v = 0;
+                          for (int k = 0; k < 4; k++)
+                            {
+                              gi.u += lami[k] * mesh[sei].GeomInfoPi(k+1).u;
+                              gi.v += lami[k] * mesh[sei].GeomInfoPi(k+1).v;
+                            }
                           geo.ProjectPointGI(surfnr[facenr], pp, gi);
                         }
                         else
@@ -1426,16 +1466,17 @@ namespace netgen
                         CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],
                                        1-lami[fnums[1]]-lami[fnums[0]], &shape(0));
                         */
-                        CalcQuadShapeLambda (order1, 2*x-1, 2*y-1, [&](int i, double val) { shape(i) = val; });
+                        // CalcQuadShapeLambda (order1, 2*x-1, 2*y-1, [&](int i, double val) { shape(i) = val; });
+                        CalcQuadShapeLambda (order1, mui[fnums[1]]-mui[fnums[0]], mui[fnums[3]]-mui[fnums[0]], [&](int i, double val) { shape(i) = val; });                        
                         for (int k = 0; k < ndof; k++)
                           dmat(k) += wi * shape(k) * shape(k);
-                        
+
                         dist *= wi;
                         for (int k = 0; k < ndof; k++)
                           for (int l = 0; l < 3; l++)
                             rhs(k,l) += shape(k) * dist(l);
                       }
-                  
+                
                 for (int i = 0; i < ndof; i++)
                   for (int j = 0; j < 3; j++)
                     sol(i,j) = rhs(i,j) / dmat(i);   // Orthogonal basis !
@@ -2523,15 +2564,27 @@ namespace netgen
           if (forder >= 2)
             {
               int first = facecoeffsindex[info.facenr];
-              // todo JOACHIM ... orientation ?
-              /*
-              int fnums[] = { 0, 1, 2 };
-              if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
-              if (el[fnums[1]] > el[fnums[2]]) swap (fnums[1], fnums[2]);
-              if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
-              */
+
+              int fnums[4];
+              int fmin = 0;
+              for (int j = 1; j < 4; j++)
+                if (el[j] < el[fmin]) fmin = j;
+              fnums[0] = fmin;
+              fnums[1] = (fmin+1)%4;
+              fnums[2] = (fmin+2)%4;
+              fnums[3] = (fmin+3)%4;
+              if (el[fnums[3]] < el[fnums[1]]) swap (fnums[1], fnums[3]);
+              
+              AutoDiff<2,T>  mui[4];
+              mui[0] = (1-x)+(1-y);
+              mui[1] = (  x)+(1-y);
+              mui[2] = (  x)+(  y);
+              mui[3] = (1-x)+(  y);
+              
               CalcQuadShapeLambda (forder,
-                                   1-2*x, 1-2*y, 
+                                   // 1-2*x, 1-2*y,
+                                   mui[fnums[1]]-mui[fnums[0]],
+                                   mui[fnums[3]]-mui[fnums[0]], 
                                    [&](int i, AutoDiff<2,T> shape)
                                    {
                                      for (int k = 0; k < DIM_SPACE; k++)
