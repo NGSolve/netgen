@@ -95,17 +95,23 @@ namespace ngcore
   }
 
 
-  void GetStatus(std::string & s, double & percentage)
+  void GetStatus (std::string& s, double& percentage)
   {
-    if(threadpercent_stack.Size() > 0)
+    if (threadpercent_stack.Size() > 0)
       percentage = threadpercent_stack.Last();
     else
       percentage = multithread.percent;
-    
-    if ( msgstatus_stack.Size() )
+
+    if (msgstatus_stack.Size())
       s = msgstatus_stack.Last();
     else
-      s = "idle";     
+      {
+        // netgen writes directly to multithread.task
+        if (percentage > 0.0)
+          s = multithread.task;
+        else
+          s = "idle";
+      }
   }
 }
 
