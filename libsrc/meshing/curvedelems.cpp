@@ -4123,7 +4123,7 @@ namespace netgen
         }
       case HEX:
         {
-          if (info.order >= 2) return false; // not yet supported          
+          // if (info.order >= 2) return false; // not yet supported          
           AutoDiff<3,T> lami[8] =
             { (1-x)*(1-y)*(1-z),
               (  x)*(1-y)*(1-z),
