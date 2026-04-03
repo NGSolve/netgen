@@ -1,0 +1,93 @@
+tstart (must be vertically): (0, 1.82574)
+tend (must be vertically): (0, -1.82574)
+sin (must not be 0) = 0.447214sin (must not be 0) = 0.447214tstart (must be vertically): (0, 1.82574)
+tend (must be vertically): (0, -1.82574)
+sin (must not be 0) = 0.447214sin (must not be 0) = 0.447214tstart (must be vertically): (0, 1.82574)
+tend (must be vertically): (0, -1.82574)
+sin (must not be 0) = 0.447214sin (must not be 0) = 0.447214tstart (must be vertically): (0, 1.82574)
+tend (must be vertically): (0, -1.82574)
+sin (must not be 0) = 0.447214sin (must not be 0) = 0.447214tstart (must be vertically): (0, 1.82574)
+tend (must be vertically): (0, -1.82574)
+sin (must not be 0) = 0.447214sin (must not be 0) = 0.447214tstart (must be vertically): (0, 1.82574)
+tend (must be vertically): (0, -1.82574)
+generate boundarycondition.geo
+needed 0.12342000007629395 seconds
+generate boxcyl.geo
+needed 0.801245927810669 seconds
+generate circle_on_cube.geo
+needed 0.48620080947875977 seconds
+generate cone.geo
+needed 1.186929702758789 seconds
+generate cube.geo
+needed 0.09043073654174805 seconds
+generate cubeandring.geo
+needed 2.1420021057128906 seconds
+generate cubeandspheres.geo
+needed 0.26427721977233887 seconds
+generate cubemcyl.geo
+needed 18.373886108398438 seconds
+generate cubemsphere.geo
+needed 3.6954052448272705 seconds
+generate cylinder.geo
+needed 0.44164204597473145 seconds
+generate cylsphere.geo
+needed 0.8774328231811523 seconds
+generate ellipsoid.geo
+needed 1.4510962963104248 seconds
+generate ellipticcone.geo
+needed 3.0906074047088623 seconds
+generate ellipticcyl.geo
+needed 2.0780415534973145 seconds
+generate extrusion.geo
+needed 0.40680599212646484 seconds
+generate fichera.geo
+needed 0.1265270709991455 seconds
+generate hinge.stl
+needed 5.519087553024292 seconds
+generate lense.in2d
+needed 0.05641365051269531 seconds
+generate lshape3d.geo
+needed 0.09937620162963867 seconds
+generate manyholes.geo
+needed 9.43863034248352 seconds
+generate manyholes2.geo
+needed 7.40019965171814 seconds
+generate matrix.geo
+needed 3.734792709350586 seconds
+generate ortho.geo
+needed 0.09516167640686035 seconds
+generate part1.stl
+needed 2.6940107345581055 seconds
+generate period.geo
+needed 2.709449291229248 seconds
+generate revolution.geo
+needed 7.7064368724823 seconds
+generate sculpture.geo
+needed 0.6283819675445557 seconds
+generate shaft.geo
+needed 2.921243190765381 seconds
+generate shell.geo
+generate sphere.geo
+needed 0.18424725532531738 seconds
+generate sphereincube.geo
+needed 0.6060984134674072 seconds
+generate square.in2d
+needed 0.021883487701416016 seconds
+generate squarecircle.in2d
+needed 0.04081606864929199 seconds
+generate squarehole.in2d
+needed 0.03681302070617676 seconds
+generate torus.geo
+needed 6.590093612670898 seconds
+generate trafo.geo
+needed 3.2712368965148926 seconds
+generate twobricks.geo
+needed 0.13849091529846191 seconds
+generate twocubes.geo
+needed 0.13361692428588867 seconds
+generate twocyl.geo
+needed 0.8036918640136719 seconds
+generate plane.stl
+needed 15.712460041046143 seconds
+done
+sin (must not be 0) = 0.447214sin (must not be 0) = 0.447214

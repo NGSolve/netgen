@@ -1,0 +1,58 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 4eb497c..cd22a67 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -43,17 +43,18 @@ IF ( WIN32 )
+ ELSE  ( WIN32 )
+   ## Unix and OS X...
+   IF ( APPLE )
+-    SET ( CMAKE_OSX_ARCHITECTURES "x86_64;i386" )
++    SET ( CMAKE_OSX_ARCHITECTURES "x86_64")
++    SET( TK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../project_tk/)
++    SET( TCL_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../project_tcl/)
+     FIND_LIBRARY ( COCOA_LIBRARY Cocoa )
+     INCLUDE_DIRECTORIES ( macosx )
+-    INCLUDE_DIRECTORIES ( /Library/Frameworks/Tk.framework/Versions/8.6/PrivateHeaders )
+-    INCLUDE_DIRECTORIES ( /System/Library/Frameworks/Tk.framework/Versions/8.5/Headers/tk-private )
+-    INCLUDE_DIRECTORIES ( /System/Library/Frameworks/Tk.framework/Versions/8.5/Headers/tk-private )
++    INCLUDE_DIRECTORIES ( ${TCL_DIR}/macosx ${TCL_DIR}/generic )
++    INCLUDE_DIRECTORIES ( ${TK_DIR}/macosx ${TK_DIR}/generic ${TK_DIR}/xlib )
+     ADD_DEFINITIONS     ( -DMAC_TK_COCOA -DMAC_OSX_TK)
+     ADD_DEFINITIONS     ( -DMAC_OSX_TK )
+     ADD_DEFINITIONS     ( -std=gnu99 )
+     ADD_DEFINITIONS     ( -x objective-c )
+-    ADD_DEFINITIONS     ( -fobjc-gc  )
++#   ADD_DEFINITIONS     ( -fobjc-gc  )
+     ADD_DEFINITIONS     ( -fno-objc-arc )
+ #   ADD_DEFINITIONS     ( -fobjc-arc )
+     LINK_LIBRARIES      ( ${COCOA_LIBRARY} )
+@@ -125,8 +126,8 @@ SET ( CP           ${CMAKE_COMMAND} -E copy )
+ ##  Locate Tcl/Tk
+ ## ===========================================================================
+ MESSAGE ( STATUS "Searching for Tcl/Tk..." )
+-FIND_PACKAGE ( TCL REQUIRED )
+-FIND_PACKAGE ( TclStub REQUIRED )
++#FIND_PACKAGE ( TCL REQUIRED )
++#FIND_PACKAGE ( TclStub REQUIRED )
+ 
+ ## Tcl/Tk info (useful for debug purposes)...
+ # MESSAGE ( STATUS "  TCL_TCLSH:               " ${TCL_TCLSH} )
+@@ -139,13 +140,14 @@ FIND_PACKAGE ( TclStub REQUIRED )
+ # MESSAGE ( STATUS "  TK_LIBRARY:              " ${TK_LIBRARY} )
+ 
+ ## Enable Tcl/Tk stubs globally...
+-ADD_DEFINITIONS     ( -DUSE_TCL_STUBS )
+-ADD_DEFINITIONS     ( -DUSE_TK_STUBS )
++#ADD_DEFINITIONS     ( -DUSE_TCL_STUBS )
++#ADD_DEFINITIONS     ( -DUSE_TK_STUBS )
+ ADD_DEFINITIONS     ( -DTCL_THREADS )
+ INCLUDE_DIRECTORIES ( ${TCL_INCLUDE_PATH} )
+ INCLUDE_DIRECTORIES ( ${TK_INCLUDE_PATH} )
+-LINK_LIBRARIES      ( ${TCL_STUB_LIBRARY} )
+-LINK_LIBRARIES      ( ${TK_STUB_LIBRARY} )
++#LINK_LIBRARIES      ( ${TCL_LIBRARY} )
++#LINK_LIBRARIES      ( ${TK_LIBRARY} )
++SET ( CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -undefined dynamic_lookup" )
+ 
+ IF ( WIN32 AND NO_MSVCRT )
+   STRING ( REPLACE /MD  /MT  CMAKE_C_FLAGS_RELEASE   ${CMAKE_C_FLAGS_RELEASE}  )
