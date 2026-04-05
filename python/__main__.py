@@ -24,11 +24,25 @@ def _stl_handler(f):
     geo = STLGeometry(f)
     geo.Draw()
 
+def _vol_handler(f):
+    print("load", f)
+    from .gui import win
+    def _load():
+        fp = f.replace('\\', '/')
+        win.tk.eval('Ng_LoadMesh "' + fp + '"')
+        win.tk.eval('set selectvisual mesh')
+        win.tk.eval('Ng_SetVisParameters')
+        win.tk.eval('redraw')
+        win.tk.eval('Ng_ReadStatus')
+    win.after(100, _load)
+
 _file_handler = {}
 _file_handler['.py'] = _py_handler
 _file_handler['.geo'] = _geo_handler
 _file_handler['.step'] = _step_handler
 _file_handler['.stl'] = _stl_handler
+_file_handler['.vol'] = _vol_handler
+_file_handler['.vol.gz'] = _vol_handler
 
 def handle_arguments():
     import __main__
