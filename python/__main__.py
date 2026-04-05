@@ -24,11 +24,18 @@ def _stl_handler(f):
     geo = STLGeometry(f)
     geo.Draw()
 
+def _vol_handler(f):
+    from ngsolve import Mesh, Draw
+    print("load", f)
+    Draw(Mesh(f))
+
 _file_handler = {}
 _file_handler['.py'] = _py_handler
 _file_handler['.geo'] = _geo_handler
 _file_handler['.step'] = _step_handler
 _file_handler['.stl'] = _stl_handler
+_file_handler['.vol'] = _vol_handler
+_file_handler['.vol.gz'] = _vol_handler
 
 def handle_arguments():
     import __main__
