@@ -26,13 +26,13 @@ push_github:
 .template_windows: &win
   tags:
     - windows
-    - x64
+    - pip
   before_script:
     - |
         $ErrorActionPreference = "Stop"
 
         # Import MSVC environment from vcvars64.bat into the current PowerShell process
-        $vcvars = '"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvars64.bat"'
+        $vcvars = '"C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Auxiliary\Build\vcvars64.bat"'
         cmd /c "$vcvars && set" |
           ForEach-Object {
             if ($_ -match '^(.*?)=(.*)$') {
@@ -52,9 +52,9 @@ push_github:
         Write-Output $env:PATH
         $env:PATH = @(
           (Join-Path $env:INSTALL_DIR "bin")
-          "C:\python312"
-          "C:\python312\bin"
-          "C:\python312\Scripts"
+          "C:\python314"
+          "C:\python314\bin"
+          "C:\python314\Scripts"
           "C:\tools"
           $env:PATH
         ) -join ";"
@@ -67,7 +67,6 @@ push_github:
         & "C:\tools\ccache.exe" -M "20G"
 
         python.exe --version
-        python.exe -m pip install -U netgen-occt netgen-occt-devel
         cmake --version
 
 build_win:
@@ -78,6 +77,7 @@ build_win:
         New-Item -ItemType Directory -Force -Path $env:SRC_DIR | Out-Null
         Get-ChildItem -Force | Copy-Item -Destination $env:SRC_DIR -Recurse -Force
 
+        python.exe -m pip install -U netgen-occt netgen-occt-devel ninja cmake
         Set-Location $env:SRC_DIR
         git submodule update --init --recursive
 
@@ -88,15 +88,13 @@ build_win:
         New-Item -ItemType Directory -Force -Path $env:NETGEN_BUILD_DIR | Out-Null
         Set-Location $env:NETGEN_BUILD_DIR
 
-        $installDir = $env:INSTALL_DIR -replace '\\','/'
-
         cmake $env:SRC_DIR `
           -G Ninja `
-          -DCMAKE_PREFIX=C:/python312 `
-          -DPython3_ROOT_DIR=C:/python312 `
-          -DCMAKE_INSTALL_PREFIX=$installDir `
+          -DCMAKE_PREFIX=C:/python314 `
+          -DPython3_ROOT_DIR=C:/python314 `
+          -DCMAKE_INSTALL_PREFIX="$($env:INSTALL_DIR)" `
           -DCHECK_RANGE=ON `
-          -DUSE_CGNS=ON `
+          -DUSE_CGNS=OFF `
           -DUSE_OCC=ON `
           -DUSE_CCACHE=ON `
           -DENABLE_UNIT_TESTS=OFF `
@@ -135,9 +133,6 @@ generate_results:
 cleanup_win:
   <<: *win
   stage: cleanup
-  tags:
-    - windows
-    - x64
   script:
     - |
         Set-Location $env:CI_PROJECT_DIR
@@ -261,9 +256,10 @@ cleanup_ubuntu:
 
 .template_mac: &mac
   tags:
-    - mac
-    - x64
+    - macosx
+    - m1
   before_script:
+    - export PATH=/Library/Frameworks/Python.framework/Versions/3.14/bin:$PATH
     - export ROOT_DIR=/tmp/$CI_PIPELINE_ID
     - export SRC_DIR=$ROOT_DIR/src
     - export BUILD_DIR=$ROOT_DIR/build
@@ -275,6 +271,7 @@ build_mac:
   <<: *mac
   stage: build
   script:
+    - python3 -m pip install -U netgen-occt netgen-occt-devel cmake pytest-check
     - git submodule update --init --recursive
     - rm -rf $BUILD_DIR
     - mkdir -p $BUILD_DIR
@@ -287,14 +284,14 @@ build_mac:
         -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX
         -DCMAKE_BUILD_TYPE=Release
         -DCHECK_RANGE=ON
-        -DUSE_NATIVE_ARCH=OFF
+        -DUSE_NATIVE_ARCH=ON
         -DUSE_CCACHE=ON
         -DENABLE_UNIT_TESTS=ON
         -DCMAKE_OSX_DEPLOYMENT_TARGET=10.15
         -DCMAKE_OSX_SYSROOT=/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk
-        -DUSE_CGNS=ON
+        -DUSE_CGNS=OFF
+        -DPython3_ROOT_DIR=/Library/Frameworks/Python.framework/Versions/3.14
         -DUSE_OCC=ON
-        -DPython3_ROOT_DIR=/Library/Frameworks/Python.framework/Versions/3.8/
     - make -j5 install
 
 test_mac:
