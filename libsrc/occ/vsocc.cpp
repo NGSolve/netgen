@@ -412,7 +412,6 @@ namespace netgen
             }
          }
 
-         CalcTransformationMatrices();
       }
 
       // Clear lists
@@ -630,6 +629,8 @@ namespace netgen
       }
       glEndList ();
 
+      if(zoomall)
+         CalcTransformationMatrices();
    }
 
    void SelectFaceInOCCDialogTree (int facenr);
