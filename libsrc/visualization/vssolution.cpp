@@ -397,6 +397,7 @@ namespace netgen
     glEnable (GL_POLYGON_OFFSET_FILL);
 
     glEnable (GL_COLOR_MATERIAL);
+    glDisable(GL_BLEND);
 
     if (usetexture)
       {
@@ -440,9 +441,6 @@ namespace netgen
 	// orig:
 	SetClippingPlane ();  
 
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);   
-	// glEnable(GL_BLEND); 
-	glDisable(GL_BLEND); 
 	glCallList (surfellist);
         
 #ifdef USE_BUFFERS
@@ -458,7 +456,6 @@ namespace netgen
         // NgProfiler::StopTimer(timer);
 #endif
         
-	glDisable(GL_BLEND); 
 	/*
 	// transparent test ...
 	glColor4f (1, 0, 0, 0.1);
@@ -596,6 +593,7 @@ namespace netgen
 
     if (vispar.drawedges)
       {
+        SetClippingPlane ();
         glCallList (element1dlist);
       }
 

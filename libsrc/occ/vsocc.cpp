@@ -52,6 +52,7 @@ namespace netgen
          BuildScene();
          occgeometry -> changed = 0;
       }
+      glDisable(GL_TEXTURE_2D);
 
       glClearColor(backcolor, backcolor, backcolor, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

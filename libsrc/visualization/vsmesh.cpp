@@ -80,10 +80,8 @@ namespace netgen
     glGetDoublev (GL_PROJECTION_MATRIX, projmat);
 
 
-#ifdef PARALLEL
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#endif
 
 
     glInitNames ();
@@ -199,6 +197,8 @@ namespace netgen
     glLineWidth (1.0f);
     glColor3f (0.0f, 0.0f, 0.0f);
     glDisable (GL_LINE_SMOOTH);
+
+    glDisable(GL_BLEND);
 
 
     if (vispar.drawoutline)
