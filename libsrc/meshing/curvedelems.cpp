@@ -604,6 +604,20 @@ namespace netgen
   }
 
   
+  template <class Tx, class Ty, class Tsx, class Tsy, typename FUNC>
+  static void CalcScaledQuadShapeLambda (int n, Tx x, Ty y, Tsx sx, Tsy sy, FUNC func)
+  {
+    if (n < 2) return;
+    int ii = 0;
+    Tx bub = (1-x*x)*(1-y*y);
+    jacpol22.EvaluateScaledLambda
+      (n-2, x, sx, [&](int ix, Tx valx) {
+        jacpol22.EvaluateScaledLambda (n-2, y, sy, [&](int iy, Ty valy) {
+          func(ii++, bub*valx*valy);
+        });
+      });
+  }
+
       
 
   CurvedElements :: CurvedElements (const Mesh & amesh)
@@ -4205,10 +4219,128 @@ namespace netgen
                                        });
                 }
             }
-
           
           break;
         }
+      case PRISM:
+	{
+	  AutoDiff<3,T> lami[6] = { x, y,1-x-y, x, y, 1-x-y };
+	  AutoDiff<3,T> lamiz[6] = { 1-z, 1-z, 1-z, z, z, z };
+          AutoDiff<3,T> sigma[6];
+          for (int i = 0; i < 6; i++) sigma[i] = lami[i] + lamiz[i];
+
+	  for (int j = 0; j < 6; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < 3; k++)
+                mapped_x[k] += p(k) * (lami[j]*lamiz[j]);
+            }
+
+	  if (info.order == 1) break;
+
+	  auto edges = MeshTopology::GetEdges (PRISM);
+	  for (int i = 0; i < 6; i++)    // horizontal edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+
+		  CalcScaledEdgeShapeLambda (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2],
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = edgecoeffs[first+j];
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * (lamiz[vi1]*shape);
+                                             });
+		}
+	    }
+
+	  for (int i = 6; i < 9; i++)    // vertical edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+		  auto bubxy = lami[vi1];
+                  
+		  CalcEdgeShapeLambda (eorder, lamiz[vi1]-lamiz[vi2],
+                                       [&](int j, AutoDiff<3,T> shape)
+                                       {
+                                         Vec<3> coef = edgecoeffs[first+j];
+                                         for (int k = 0; k < 3; k++)
+                                           mapped_x[k] += coef(k) * (bubxy*shape);
+                                       });
+		}
+	    }
+
+	  // FACE SHAPES
+	  auto faces = MeshTopology::GetFaces0 (PRISM);
+	  for (int i = 0; i < 2; i++)   // triangular faces
+	    {
+	      int forder = faceorder[info.facenrs[i]];
+	      if ( forder < 3 ) continue;
+              
+              int first = facecoeffsindex[info.facenrs[i]];              
+	      int fav[3] = { faces[i][0], faces[i][1], faces[i][2] };
+	      if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 
+	      if(el[fav[1]] > el[fav[2]]) swap(fav[1],fav[2]);
+	      if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 	
+
+              auto lamf = lamiz[fav[0]];
+	      CalcScaledTrigShapeLambda (forder, 
+                                         lami[fav[2]]-lami[fav[1]], lami[fav[0]], AutoDiff<3,T>(1.0),
+                                         [&](int j, AutoDiff<3,T> shape)
+                                         {
+                                           Vec<3> coef = facecoeffs[first+j];            
+                                           for (int k = 0; k < 3; k++)
+                                             mapped_x[k] += coef(k) * lamf * shape;
+                                         });
+	    }
+
+	  for (int i = 2; i < 5; i++)  // quad faces
+	    {
+	      int forder = faceorder[info.facenrs[i]];
+	      if (forder >= 2)
+		{
+                  int first = facecoeffsindex[info.facenrs[i]];
+                  
+                  int fmin = 0;
+                  for (int j = 1; j < 4; j++)
+                    if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+
+                  int fx = (fmin+1)%4;
+                  int fy = (fmin+3)%4;
+                  if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+                  
+                  auto xi = sigma[faces[i][fx]]-sigma[faces[i][fmin]];
+                  auto eta = sigma[faces[i][fy]]-sigma[faces[i][fmin]];
+                    
+                  AutoDiff<3,T> scalexi(1.0), scaleeta(1.0);
+                  if (faces[i][fmin] / 3 == faces[i][fx] / 3)  
+                    scalexi = lami[faces[i][fmin]]+lami[faces[i][fx]];  // xi is horizontal
+                  else
+                    scaleeta = lami[faces[i][fmin]]+lami[faces[i][fy]];
+                  
+                  CalcScaledQuadShapeLambda (forder, 
+                                             xi, eta, scalexi, scaleeta, 
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = facecoeffs[first+j];            
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * shape;
+                                             });
+                }
+            }
+
+          
+	  break;
+	}
+        
       default:
         return false;
       }
