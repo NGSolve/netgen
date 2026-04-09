@@ -31,7 +31,6 @@ extern double minwithoutother;
   static double CalcElementBadness (const Array<Point3d, PointIndex> & points,
                                     const Element & elem)
 {
-  double vol, l, l4, l5, l6;
   if(elem.GetNP() == 4)
     return TetBadnessFromPoints (points[elem.PNum(1)],
                                  points[elem.PNum(2)],
