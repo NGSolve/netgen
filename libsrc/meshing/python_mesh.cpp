@@ -1341,11 +1341,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                 switch (np)
                   {
                   case 4: type = TET; break;
-                    /* // have to check ordering of points
-                       case 10: type = TET10; break;
-                       case 8: type = HEX; break;
-                       case 6: type = PRISM; break;
-                    */
+                  case 5: type = PYRAMID; break;                    
+                  case 6: type = PRISM; break;
+                  case 8: type = HEX; break;
+                  case 10: type = TET10; break;
                   default:
                     throw Exception("unsupported 3D element with "+ToString(np)+" points");
                   }
