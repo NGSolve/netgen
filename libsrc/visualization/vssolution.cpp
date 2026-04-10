@@ -750,14 +750,9 @@ namespace netgen
     glDisable(GL_CLIP_PLANE0);
     
     
-    SolData * sol = NULL;
-    SolData * vsol = NULL;
+    SolData * sol = GetScalFunction();
+    SolData * vsol = GetVecFunction();
   
-    if (scalfunction != -1) 
-      sol = soldata[scalfunction];
-    if (vecfunction != -1)
-      vsol = soldata[vecfunction];
-
     if (mesh->GetTimeStamp () > solutiontimestamp)
       {
         sol = NULL;
@@ -967,6 +962,8 @@ namespace netgen
 
         CurvedElements & curv = mesh->GetCurvedElements();
 
+        auto sol_active = GetScalOrVecFunction();
+
         if (sol)
           {
             glBegin (GL_LINES);
@@ -975,7 +972,7 @@ namespace netgen
               {
                 const Element2d & el = (*mesh)[sei];
 
-                if(!SurfaceElementActive(sol, *mesh, el))
+                if(!SurfaceElementActive(sol_active, *mesh, el))
                   continue;
 
                 bool curved = curv.IsHighOrder(); //  && curv.IsSurfaceElementCurved(sei);
@@ -1339,12 +1336,13 @@ namespace netgen
     
     
     // NgProfiler::StopTimer(timerstart);
+    auto sol_active = GetScalOrVecFunction();
     
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
         const Element2d & el = (*mesh)[sei];
 
-        if(!SurfaceElementActive(sol, *mesh, el))
+        if(!SurfaceElementActive(sol_active, *mesh, el))
           continue;
 
         if ( el.GetType() == QUAD || el.GetType() == QUAD6 || el.GetType() == QUAD8 )
@@ -1515,7 +1513,7 @@ namespace netgen
         const Element2d & el = (*mesh)[sei];
 	// if (el.GetIndex() <= 1) continue;
 
-        if(!SurfaceElementActive(sol, *mesh, el))
+        if(!SurfaceElementActive(sol_active, *mesh, el))
           continue;
         
         if ( el.GetType() == TRIG || el.GetType() == TRIG6 )
@@ -1819,12 +1817,13 @@ namespace netgen
     double quadpts[4][2]  = { { 0, 0 },  { 1, 1 }, { 0, 1}, { 1, 0 } };
     double quadvecs[4][2] = { { 1, 0 },  { -1, 0}, { 0, -1}, { 0, 1 } };
 
+    auto sol_active = GetScalOrVecFunction();
+
     for (SurfaceElementIndex sei = 0; sei < nse; sei++)
       {
         Element2d & el = (*mesh)[sei];
 
-        if(scalfunction != -1)
-          if(!SurfaceElementActive(soldata[scalfunction], *mesh, el))
+        if(!SurfaceElementActive(sol_active, *mesh, el))
             continue;
 
         int nv = (el.GetType() == TRIG || el.GetType() == TRIG6) ? 3 : 4;
@@ -2700,9 +2699,10 @@ namespace netgen
               
               // int nse = mesh->GetNSE();
               // for (int i = 0; i < nse; i++)
+              auto sol_active = GetScalOrVecFunction();
               for (SurfaceElementIndex i : mesh->SurfaceElements().Range())
                 {
-                  if(!SurfaceElementActive(sol, *mesh, (*mesh)[i]))
+                  if(!SurfaceElementActive(sol_active, *mesh, (*mesh)[i]))
                     continue;
                   ELEMENT_TYPE type = (*mesh)[i].GetType();
                   double val;
