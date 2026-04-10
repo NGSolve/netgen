@@ -1,6 +1,11 @@
 #include <mystdlib.h>
 
-#include "meshing.hpp"
+
+#include "curvedelems.hpp"
+#include "basegeom.hpp"
+#include "hprefinement.hpp"
+
+// #include "meshing.hpp"
 // #include "../general/autodiff.hpp"
 
 
@@ -1576,7 +1581,7 @@ namespace netgen
       {
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
-	
+        
 	return mesh.coarsemesh->GetCurvedElements().IsSegmentCurved (hpref_el.coarse_elnr);
       }
 
@@ -4339,7 +4344,76 @@ namespace netgen
 
           
 	  break;
-	}
+        }
+          
+      case PYRAMID:
+	{
+          z *= (1-1e-10);
+          
+          auto xt = x / (1-z);
+          auto yt = y / (1-z);
+          
+          AutoDiff<3,T> sigma[4]  = { (1-xt)+(1-yt), xt+(1-yt), xt+yt, (1-xt)+yt };
+          AutoDiff<3,T> lambda[4] = { (1-xt)*(1-yt), xt*(1-yt), xt*yt, (1-xt)*yt };
+          AutoDiff<3,T> lambda3d[5];
+          
+          for (int i = 0; i < 4; i++)  
+            lambda3d[i] = lambda[i] * (1-z);
+          lambda3d[4] = z;
+          
+	  for (int j = 0; j < 5; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < 3; k++)
+                mapped_x[k] += p(k) * lambda3d[j];
+            }
+
+	  if (info.order == 1) break;
+
+	  auto edges = MeshTopology::GetEdges (PYRAMID);
+	  for (int i = 0; i < 4; i++)    // horizontal edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+                  
+		  CalcScaledEdgeShapeLambda (eorder, (sigma[vi1]-sigma[vi2])*(1-z),
+                                             1-z,
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = edgecoeffs[first+j];
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * shape;
+                                             });
+		}
+	    }
+
+	  for (int i = 4; i < 8; i++)    // vertical edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+                  
+		  CalcScaledEdgeShapeLambda (eorder, lambda3d[vi1]-lambda3d[vi2],
+                                             lambda3d[vi1]+lambda3d[vi2],
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = edgecoeffs[first+j];
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * shape;
+                                             });
+		}
+	    }
+          
+          // TODO: face dofs
+          break;
+        }
         
       default:
         return false;
