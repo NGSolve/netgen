@@ -563,7 +563,9 @@ namespace netgen
 
     if(drawpointcurves)
       {
-	glCallList(pointcurvelist);
+        SetClippingPlane();
+        glCallList(pointcurvelist);
+        glDisable(GL_CLIP_PLANE0);
       }
 
 
