@@ -1177,14 +1177,13 @@ namespace netgen
                 // points[j](1) += scaledeform * mvalues[1];
               }
           }
-        else if (sol)
+        else if (sol && meshdim <= 2)
           {
             for (int j = 0; j < npt; j++)
               {
                 sol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
                 values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
-                if (meshdim <= 2)
-                  points[j](meshdim) += scaledeform * values[j];
+                points[j](meshdim) += scaledeform * values[j];
               }
           }
 
