@@ -146,14 +146,14 @@ SpecialBoundaryPoint ::SpecialBoundaryPoint (
   growth_groups.Append(GrowthGroup(g2_faces, normals2));
 }
 
-Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int edgenr, FlatArray<Segment*> segs)
+Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int index, FlatArray<Segment*> segs)
 {
   Vec<3> tangent = 0.0;
   ArrayMem<PointIndex, 2> pts;
   for (auto* p_seg : segs)
     {
       auto& seg = *p_seg;
-      if (seg.edgenr != edgenr)
+      if (seg.index != index)
         continue;
       PointIndex other = seg[0] - pi + seg[1];
       if (!pts.Contains(other))
@@ -161,7 +161,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int edgenr, FlatArray<
     }
   if (pts.Size() != 2)
     {
-      cout << "getEdgeTangent pi = " << pi << ", edgenr = " << edgenr << endl;
+      cout << "getEdgeTangent pi = " << pi << ", index = " << index << endl;
       cout << pts << endl;
       for (auto* p_seg : segs)
         cout << *p_seg << endl;
@@ -271,7 +271,7 @@ void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Seg
     SortedPointIndices<2> i2(seg[0], seg[1]);
     if (!already_added.Used(i2))
       {
-        seg.si = seg.edgenr + 1;
+        seg.si = seg.index + 1;
         mesh.AddSegment(seg);
         already_added.Set(i2, true);
       }
@@ -493,7 +493,7 @@ BoundaryLayerTool ::BuildSegMap ()
       segs_done.SetBit(si);
       segmap[si].Append(make_pair(si, 0));
       moved_segs.Append(si);
-      is_edge_moved.SetBit(segi.edgenr);
+      is_edge_moved.SetBit(segi.index);
       for (auto sj : Range(segments))
         {
           if (segs_done.Test(sj))
@@ -692,7 +692,7 @@ void BoundaryLayerTool ::InsertNewElements (
   map<pair<PointIndex, PointIndex>, int> seg2edge;
   map<int, int> edge_map;
   int edge_nr = max_edge_nr;
-  auto getEdgeNr = [&] (int ei) {
+  auto getIndex = [&] (int ei) {
     if (edge_map.count(ei) == 0)
       edge_map[ei] = ++edge_nr;
     return edge_map[ei];
@@ -717,9 +717,9 @@ void BoundaryLayerTool ::InsertNewElements (
                     [[maybe_unused]] auto pair =
                       s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
                     if (extra_edge_nr)
-                      s.edgenr = ++edge_nr;
+                      s.index = ++edge_nr;
                     else
-                      s.edgenr = getEdgeNr(segj.edgenr);
+                      s.index = getIndex(segj.index);
                     s.si = si_map[segj.si];
                     new_segments.Append(s);
                     // cout << __LINE__ <<"\t" << s << endl;
@@ -761,7 +761,7 @@ void BoundaryLayerTool ::InsertNewElements (
                   s0[0] = p1;
                   s0[1] = p2;
                   s0[2] = PointIndex::INVALID;
-                  s0.edgenr = segj.edgenr;
+                  s0.index = segj.index;
                   s0.si = segj.si;
                   new_segments.Append(s0);
                   if (type == 3)
@@ -793,7 +793,7 @@ void BoundaryLayerTool ::InsertNewElements (
                       s1[1] = p3;
                       s1[2] = PointIndex::INVALID;
                       auto pair = make_pair(p2, p3);
-                      s1.edgenr = getEdgeNr(segj.edgenr);
+                      s1.index = getIndex(segj.index);
                       s1.si = segj.si;
                       // new_segments.Append(s1);
                       Segment s2;
@@ -801,7 +801,7 @@ void BoundaryLayerTool ::InsertNewElements (
                       s2[1] = p1;
                       s2[2] = PointIndex::INVALID;
                       pair = make_pair(p1, p4);
-                      s2.edgenr = getEdgeNr(segj.edgenr);
+                      s2.index = getIndex(segj.index);
                       s2.si = segj.si;
                       // new_segments.Append(s2);
                       p1 = p4;
@@ -812,7 +812,7 @@ void BoundaryLayerTool ::InsertNewElements (
                   s3[1] = p4;
                   s3[2] = PointIndex::INVALID;
                   // auto pair = p3 < p4 ? make_pair(p3, p4) : make_pair(p4, p3);
-                  s3.edgenr = getEdgeNr(segj.edgenr);
+                  s3.index = getIndex(segj.index);
                   s3.si = segj.si;
                   new_segments.Append(s3);
                   if (type == 3)
@@ -953,10 +953,7 @@ void BoundaryLayerTool ::InsertNewElements (
               {
                 p = newPoint(p);
                 if (params.disable_curving)
-                  {
-                    seg.epgeominfo[0].edgenr = -1;
-                    seg.epgeominfo[1].edgenr = -1;
-                  }
+                    seg.SetEdgeNr(-1);
               }
         }
     }
@@ -1166,10 +1163,7 @@ void BoundaryLayerTool ::AddSegments ()
           };
           for (auto& seg : old_segments)
             if (is_mapped(seg[0]) || is_mapped(seg[1]))
-              {
-                seg.epgeominfo[0].edgenr = -1;
-                seg.epgeominfo[1].edgenr = -1;
-              }
+                seg.SetEdgeNr(-1);
         }
     }
 
@@ -1183,23 +1177,14 @@ void BoundaryLayerTool ::AddSegments ()
       };
       for (auto& seg : segments)
         if (is_mapped(seg[0]) || is_mapped(seg[1]))
-          {
-            seg.epgeominfo[0].edgenr = -1;
-            seg.epgeominfo[1].edgenr = -1;
-          }
+            seg.SetEdgeNr(-1);
 
       for (auto& seg : segments)
-        if (is_edge_moved[seg.edgenr])
-          {
-            seg.epgeominfo[0].edgenr = -1;
-            seg.epgeominfo[1].edgenr = -1;
-          }
+        if (is_edge_moved[seg.index])
+            seg.SetEdgeNr(-1);
 
       for (auto& seg : new_segs)
-        {
-          seg.epgeominfo[0].edgenr = -1;
-          seg.epgeominfo[1].edgenr = -1;
-        }
+          seg.SetEdgeNr(-1);
     }
 
   if (have_single_segments)
@@ -1342,8 +1327,8 @@ void BoundaryLayerTool ::ProcessParameters ()
 
   max_edge_nr = -1;
   for (const auto& seg : mesh.LineSegments())
-    if (seg.edgenr > max_edge_nr)
-      max_edge_nr = seg.edgenr;
+    if (seg.index > max_edge_nr)
+      max_edge_nr = seg.index;
 
   int ndom = mesh.GetNDomains();
   ndom_old = ndom;
