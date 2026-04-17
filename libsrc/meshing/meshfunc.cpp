@@ -646,9 +646,12 @@ namespace netgen
        {
          try {
              auto & mesh = *md[i].mesh;
-             mesh.ClearFaceDescriptors();
-             for(auto face_descriptor : mesh3d.FaceDescriptors())
-                 mesh.AddFaceDescriptor(face_descriptor);
+             if(&mesh != &mesh3d)
+             {
+                mesh.ClearFaceDescriptors();
+                for(auto face_descriptor : mesh3d.FaceDescriptors())
+                    mesh.AddFaceDescriptor(face_descriptor);
+             }
 
            if (mp.checkoverlappingboundary)
              if (mesh.CheckOverlappingBoundary())
@@ -662,7 +665,8 @@ namespace netgen
               FillCloseSurface( md[i] );
            CloseOpenQuads( md[i] );
            MeshDomain(md[i]);
-           mesh.FreeFaceDescriptors();
+           if(&mesh != &mesh3d)
+               mesh.FreeFaceDescriptors();
          }
          catch (const Exception & e) {
            if(debugparam.write_mesh_on_error)
