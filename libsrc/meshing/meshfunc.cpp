@@ -81,9 +81,6 @@ namespace netgen
           ipmap[i] = state0;   // 0; // PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
           m.SetGeometry( mesh.GetGeometry() );
-
-          for(auto i : Range(1, num_facedescriptors+1))
-              m.AddFaceDescriptor( mesh.GetFaceDescriptor(i) );
       }
 
       // mark interior edge points
@@ -648,18 +645,24 @@ namespace netgen
      ParallelFor( md.Range(), [&](int i)
        {
          try {
+             auto & mesh = *md[i].mesh;
+             mesh.ClearFaceDescriptors();
+             for(auto face_descriptor : mesh3d.FaceDescriptors())
+                 mesh.AddFaceDescriptor(face_descriptor);
+
            if (mp.checkoverlappingboundary)
-             if (md[i].mesh->CheckOverlappingBoundary())
+             if (mesh.CheckOverlappingBoundary())
              {
                if(debugparam.write_mesh_on_error)
-                 md[i].mesh->Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
+                 mesh.Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
                throw NgException ("Stop meshing since boundary mesh is overlapping");
              }
 
-           if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
+           if(mesh.GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
               FillCloseSurface( md[i] );
            CloseOpenQuads( md[i] );
            MeshDomain(md[i]);
+           mesh.FreeFaceDescriptors();
          }
          catch (const Exception & e) {
            if(debugparam.write_mesh_on_error)

@@ -802,6 +802,9 @@ namespace netgen
     void ClearFaceDescriptors()
     { facedecoding.SetSize(0); }
 
+    void FreeFaceDescriptors()
+    { facedecoding = Array<FaceDescriptor>(); }
+
     ///
     int GetNFD () const
     { return facedecoding.Size(); }
