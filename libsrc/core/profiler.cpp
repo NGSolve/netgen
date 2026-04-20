@@ -113,10 +113,5 @@ namespace ngcore
 
   NgProfiler prof; // NOLINT
 
-#ifdef NETGEN_TRACE_MEMORY
-  std::vector<std::string> MemoryTracer::names{"all"};
-  std::vector<int> MemoryTracer::parents{-1};
-  std::atomic<size_t> MemoryTracer::total_memory{0};
-#endif // NETGEN_TRACE_MEMORY
 
 } // namespace ngcore
