@@ -1196,12 +1196,14 @@ namespace netgen
       {
         std::getline(infile, line);
         iline = std::istringstream{line};
-        iline >> i;
-
-        if(iline)
+        if(iline >> i)
+          {
             empty_line = false;
-
-        iline >> s;
+            // skip a single whitespace character after the number, then read the rest
+            if(iline.peek() == ' ' || iline.peek() == '\t')
+              iline.get();
+            std::getline(iline, s);
+          }
       }
 
     if(!infile)
