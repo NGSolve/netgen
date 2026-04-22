@@ -364,6 +364,7 @@ namespace netgen
    {
      if (occgeometry -> changed == OCCGEOMETRYVISUALIZATIONFULLCHANGE)
        {
+         zoomall = 1;
          occgeometry -> BuildVisualizationMesh (vispar.occdeflection);
 
          center = occgeometry -> Center();
