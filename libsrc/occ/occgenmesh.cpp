@@ -638,7 +638,7 @@ namespace netgen
                 if (geom.shape.Infinite())
                   throw Exception("Cannot generate mesh for an infinite geometry");
                 else
-                  throw Exception("OCC-Triangulation could not be built");
+                  throw Exception("OCC-Triangulation could not be built for face " + to_string(i));
               }
             
             BRepAdaptor_Surface sf(face, Standard_True);
