@@ -72,7 +72,7 @@ namespace netgen
     return hret;
     */
     // return min(mparam.maxh, 1/kappa);
-    return (mparam.maxh*kappa < 1) ? mparam.maxh : 1/kappa;
+    return max2(mparam.minh, (mparam.maxh*kappa < 1) ? mparam.maxh : 1/kappa);
   }
 
 
@@ -571,6 +571,7 @@ namespace netgen
 
             const auto & props = gedge.properties;
             localh = min2(localh, props.maxh);
+            localh = max2(localh, mparam.minh);
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
             int maxj = max((int) ceil(len/localh)*2, 2);
