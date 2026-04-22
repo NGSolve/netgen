@@ -706,14 +706,18 @@ namespace netgen
                 BRepLProp_CLProps prop(brepc, 1, 1e-5);
                 prop.SetParameter (s0);
 
-                gp_Vec d0 = prop.D1().Normalized();
+                gp_Vec d0 = prop.D1();
+                if(d0.Magnitude() > gp::Resolution())
+                    d0 = d0.Normalized();
                 double s_start = s0;
                 // int count = 0;
                 for (int j = 1; j <= sections; j++)
                   {
                     double s = s0 + (s1-s0)*(double)j/(double)sections;
                     prop.SetParameter (s);
-                    gp_Vec d1 = prop.D1().Normalized();
+                    gp_Vec d1 = prop.D1();
+                    if(d1.Magnitude() > gp::Resolution())
+                        d1 = d1.Normalized();
                     double cosalpha = fabs(d0*d1);
                     if ((j == sections) || (cosalpha < cos(10.0/180.0*M_PI)))
                       {
