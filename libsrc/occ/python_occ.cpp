@@ -63,6 +63,15 @@ void CreateOCCParametersFromKwargs(OCCParameters& occparam, py::dict kwargs)
 
 extern py::object CastShape(const TopoDS_Shape & s);
 
+static std::string OccExceptionString(const Standard_Failure& e)
+{
+#if NETGEN_OCC_VERSION_AT_LEAST(8, 0)
+  return std::string(e.ExceptionType()) + ": " + e.what();
+#else
+  return std::string(e.DynamicType()->Name()) + ": " + e.GetMessageString();
+#endif
+}
+
 DLL_HEADER void ExportNgOCCBasic(py::module &m);
 DLL_HEADER void ExportNgOCCShapes(py::module &m);
 
@@ -74,11 +83,16 @@ DLL_HEADER void ExportNgOCC(py::module &m)
 
   // suppress info messages from occ (like statistics on Transfer)
   Message_Gravity aGravity = Message_Alarm;
+#if NETGEN_OCC_VERSION_AT_LEAST(8, 0)
+  for (auto& aPrinter : Message::DefaultMessenger()->Printers())
+    aPrinter->SetTraceLevel(aGravity);
+#else
   for (Message_SequenceOfPrinters::Iterator aPrinterIter (Message::DefaultMessenger()->Printers());
        aPrinterIter.More(); aPrinterIter.Next())
   {
     aPrinterIter.Value()->SetTraceLevel (aGravity);
   }
+#endif
 
   ExportNgOCCBasic(m);
   ExportNgOCCShapes(m);
@@ -90,9 +104,9 @@ DLL_HEADER void ExportNgOCC(py::module &m)
       if(p) std::rethrow_exception(p);
     } catch (const Standard_Failure& e) {
 #if (PYBIND11_VERSION_MAJOR == 2 && PYBIND11_VERSION_MINOR < 12)
-      exc((string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+      exc(OccExceptionString(e).c_str());
 #else
-      py::set_error(PyExc_RuntimeError, (string(e.DynamicType()->Name()) + ": " + e.GetMessageString()).c_str());
+      py::set_error(PyExc_RuntimeError, OccExceptionString(e).c_str());
 #endif
     }
   });

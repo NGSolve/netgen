@@ -1,6 +1,4 @@
 target_sources(nglib PRIVATE
-        Partition_Inter2d.cxx Partition_Inter3d.cxx 
-        Partition_Loop.cxx Partition_Loop2d.cxx Partition_Loop3d.cxx Partition_Spliter.cxx 
         occgenmesh.cpp occgeom.cpp occmeshsurf.cpp python_occ.cpp
         python_occ_basic.cpp python_occ_shapes.cpp
         occ_face.cpp occ_edge.cpp occ_vertex.cpp occ_utils.cpp

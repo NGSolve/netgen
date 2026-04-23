@@ -61,6 +61,18 @@
 #include <GC_MakeCircle.hxx>
 #include <GC_MakeSegment.hxx>
 #include <GProp_GProps.hxx>
+#include <BRep_Builder.hxx>
+#include <TColgp_Array1OfVec.hxx>
+#include <TColgp_Array1OfVec2d.hxx>
+#include <TColgp_HArray1OfPnt.hxx>
+#include <TColgp_HArray1OfPnt2d.hxx>
+#include <TColStd_HArray1OfBoolean.hxx>
+#include <TColStd_HArray1OfReal.hxx>
+#include <TColStd_HArray1OfInteger.hxx>
+#include <TColgp_Array2OfPnt.hxx>
+#include <TColStd_Array2OfReal.hxx>
+#include <TopTools_HSequenceOfShape.hxx>
+#include <TopTools_ListOfShape.hxx>
 #include <Geom2d_BSplineCurve.hxx>
 #include <Geom2d_Curve.hxx>
 #include <Geom2d_Ellipse.hxx>
@@ -1276,7 +1288,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
   
     .def("MakeChamfer", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double d) {
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4        
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
         BRepFilletAPI_MakeChamfer mkChamfer(shape);
         for (auto e : edges)
           mkChamfer.Add (d, TopoDS::Edge(e));
@@ -2723,7 +2735,7 @@ tangents : Dict[int, gp_Vec]
           points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
 
       GeomAPI_PointsToBSplineSurface builder;
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
       builder.Init(points, approx_type, deg_min, deg_max, continuity, tol, periodic);
 #else
       if(periodic)
@@ -2793,7 +2805,7 @@ degen_tol : double
                   points.SetValue(i+1, j+1, gp_Pnt(pnts_unchecked(i, j, 0), pnts_unchecked(i, j, 1), pnts_unchecked(i, j, 2)));
 
           GeomAPI_PointsToBSplineSurface builder;
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
           builder.Interpolate(points, approx_type, periodic);
 #else
           if(periodic)
