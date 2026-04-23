@@ -1391,7 +1391,7 @@ namespace netgen
 
 
     int GetEdgeNr() const { return epgeominfo[0].edgenr; }  // 0 or 1-based (geometry dependent)
-    void SetEdgeNr (int nr) { epgeominfo[0].edgenr=nr; }   
+    void SetEdgeNr (int nr) { epgeominfo[0].edgenr=nr; epgeominfo[1].edgenr=nr; }
 
     int GetIndex() const { return index; }   // 1-based
     void SetIndex (int i) { index=i; }   // 1-based

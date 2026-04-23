@@ -1413,7 +1413,7 @@ namespace netgen
 
                 seg.epgeominfo[0].edgenr = seg.epgeominfo[1].edgenr;
                 if (geomtype == GEOM_OCC)
-                  seg.index = seg.epgeominfo[0].edgenr+1;
+                  seg.index = seg.edgenr;
                 else if (geomtype == GEOM_CSG)
                   seg.index = seg.edgenr;
                 else
