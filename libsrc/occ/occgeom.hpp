@@ -24,14 +24,16 @@
 #include <StepBasic_MeasureValueMember.hxx>
 #include <StepRepr_CompoundRepresentationItem.hxx>
 #include <StepRepr_IntegerRepresentationItem.hxx>
+#include <StepRepr_HArray1OfRepresentationItem.hxx>
 #include <StepRepr_ValueRepresentationItem.hxx>
 #include <TCollection_HAsciiString.hxx>
 #include <TDocStd_Document.hxx>
+#include <TopTools_MapOfShape.hxx>
 #include <TopoDS.hxx>
 #include <TopoDS_Shape.hxx>
 #include <Transfer_FinderProcess.hxx>
 
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=4
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
 #define OCC_HAVE_HISTORY
 #endif
 

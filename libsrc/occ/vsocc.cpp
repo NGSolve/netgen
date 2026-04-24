@@ -8,6 +8,7 @@
 #include <meshing.hpp>
 
 #include <occgeom.hpp>
+#include "occ_utils.hpp"
 
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
@@ -599,7 +600,7 @@ namespace netgen
 
             for (int k = 1; k <= 3; k++)
             {
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5              
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 5)
               uv = triangulation -> UVNode(triangle(k));
 #else              
               uv = triangulation -> UVNodes()(triangle(k));
