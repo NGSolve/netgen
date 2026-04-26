@@ -394,7 +394,8 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
           new_fd.SetBCProperty(new_si);
           mesh.AddFaceDescriptor(new_fd);
           si_map[facei] = new_si;
-          mesh.SetBCName(new_si - 1, fd.GetBCName());
+          // AddFaceDescriptor may reallocate, fd is invalidated
+          mesh.SetBCName(new_si - 1, mesh.GetFaceDescriptor(facei).GetBCName());
           face_done.SetBit(facei);
         }
     }
@@ -620,15 +621,37 @@ void BoundaryLayerTool ::InsertNewElements (
     double height = 0.0;
     for (auto i : Range(par_heights))
       {
-        height += par_heights[i];
-        auto pi_new = mesh.AddPoint(p);
-        // mesh.AddLockedPoint(pi_new);
-        mapfrom.Append(pi);
-        new_points.Append(pi_new);
-        growth_vector_map[pi_new] = {&growth_vector, height};
-        // if (special_boundary_points.count(pi) > 0)
-        //   mesh.AddLockedPoint(pi_new);
-        pi_last = pi_new;
+        auto facei = sel.GetIndex();
+        if(face_done.Test(facei))
+          continue;
+        bool point_moved = false;
+        // bool point_fixed = false;
+        for(auto pi : sel.PNums())
+          {
+            if(growthvectors[pi].Length() > 0)
+              point_moved = true;
+            /*
+            else
+              point_fixed = true;
+            */
+          }
+        if(point_moved && !moved_surfaces.Test(facei))
+          {
+            int new_si = mesh.GetNFD()+1;
+            const auto& fd = mesh.GetFaceDescriptor(facei);
+            // auto isIn = domains.Test(fd.DomainIn());
+            // auto isOut = domains.Test(fd.DomainOut());
+            int si = params.sides_keep_surfaceindex ? facei : -1;
+            // domin and domout can only be set later
+            FaceDescriptor new_fd(si, -1,
+                                  -1, si);
+            new_fd.SetBCProperty(new_si);
+            mesh.AddFaceDescriptor(new_fd);
+            si_map[facei] = new_si;
+            // AddFaceDescriptor may reallocate, fd is invalidated
+            mesh.SetBCName(new_si-1, mesh.GetFaceDescriptor(facei).GetBCName());
+            face_done.SetBit(facei);
+          }
       }
   };
 
