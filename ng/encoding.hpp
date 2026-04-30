@@ -3,6 +3,11 @@
 
 #ifdef FFMPEG
 
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS
+#endif
+#include <cinttypes>
+
 extern "C" {
 #include <libavutil/avassert.h>
 #include <libavcodec/avcodec.h>
