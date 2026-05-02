@@ -1142,6 +1142,22 @@ namespace netgen
           }
       }
 
+    {
+      int bl_count = 0;
+      for (auto i : boundary_layer_point_map.Range())
+        if (boundary_layer_point_map[i].base_pi.IsValid())
+          bl_count++;
+      if (bl_count > 0)
+        {
+          outfile << "\n\nboundarylayerpointmap" << endl << bl_count << endl;
+          for (auto i : boundary_layer_point_map.Range())
+            if (boundary_layer_point_map[i].base_pi.IsValid())
+              outfile << i << " " << boundary_layer_point_map[i].base_pi << " "
+                      << boundary_layer_point_map[i].height << endl;
+          outfile << endl << endl;
+        }
+    }
+
     
     outfile << endl << endl << "endmesh" << endl << endl;
     if (geometry)
@@ -1796,6 +1812,21 @@ namespace netgen
               (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
             for (ElementIndex ei = 0; ei < GetNE(); ei++)
               (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
+          }
+
+        if (strcmp (str, "boundarylayerpointmap") == 0)
+          {
+            infile >> n;
+            for (int i = 0; i < n; i++)
+              {
+                int pi_offset, pi_base;
+                double height;
+                infile >> pi_offset >> pi_base >> height;
+                PointIndex pio(pi_offset);
+                if (pio >= boundary_layer_point_map.Range().Next())
+                  boundary_layer_point_map.SetSize(pio+1-IndexBASE<PointIndex>());
+                boundary_layer_point_map[pio] = { PointIndex(pi_base), height };
+              }
           }
 
         

@@ -4,6 +4,7 @@
 #include "curvedelems.hpp"
 #include "basegeom.hpp"
 #include "hprefinement.hpp"
+#include "meshclass.hpp"
 
 // #include "meshing.hpp"
 // #include "../general/autodiff.hpp"
@@ -1503,6 +1504,112 @@ namespace netgen
 	  }
       }
 
+
+    // Prolong curved element coefficients to boundary layer offset edges/faces
+    {
+      auto & bl_map = mesh.GetBoundaryLayerPointMap();
+      if (bl_map.Size() > 0)
+        {
+          auto bl_valid = [&](PointIndex pi) -> bool {
+            return pi < bl_map.Range().Next() && bl_map[pi].base_pi.IsValid();
+          };
+
+          PrintMessage (3, "Prolonging curvature to boundary layer edges");
+          for (int e = 0; e < nedges; e++)
+            {
+              auto [p1, p2] = top.GetEdgeVertices(e);
+              if (!bl_valid(p1) || !bl_valid(p2)) continue;
+
+              PointIndex base_p1 = bl_map[p1].base_pi;
+              PointIndex base_p2 = bl_map[p2].base_pi;
+              if (base_p1 == p1 && base_p2 == p2) continue;  // not an offset edge
+
+              int base_edge = top.GetVerticesEdge(base_p1, base_p2);
+              if (base_edge < 0) continue;
+
+              int ndof = edgecoeffsindex[e+1] - edgecoeffsindex[e];
+              int base_ndof = edgecoeffsindex[base_edge+1] - edgecoeffsindex[base_edge];
+              if (base_ndof == 0 || ndof == 0) continue;
+
+              int first = edgecoeffsindex[e];
+              int base_first = edgecoeffsindex[base_edge];
+              int copy_ndof = min(ndof, base_ndof);
+
+              // Scale by edge length ratio: naturally handles (R-h)/R scaling
+              double base_len = Dist(mesh[base_p1], mesh[base_p2]);
+              double offset_len = Dist(mesh[p1], mesh[p2]);
+              double scale = (base_len > 1e-16) ? offset_len / base_len : 1.0;
+
+              for (int j = 0; j < copy_ndof; j++)
+                edgecoeffs[first+j] = scale * edgecoeffs[base_first+j];
+            }
+
+          PrintMessage (3, "Prolonging curvature to boundary layer faces");
+          for (int f = 0; f < nfaces; f++)
+            {
+              auto verts = top.GetFaceVertices(f);
+              bool all_bl = true;
+              for (int k = 0; k < verts.Size(); k++)
+                if (!bl_valid(verts[k]))
+                  { all_bl = false; break; }
+              if (!all_bl) continue;
+
+              // Find base face: map all vertices to base vertices
+              ArrayMem<PointIndex, 4> base_verts(verts.Size());
+              bool is_offset = false;
+              for (int k = 0; k < verts.Size(); k++)
+                {
+                  base_verts[k] = bl_map[verts[k]].base_pi;
+                  if (base_verts[k] != verts[k]) is_offset = true;
+                }
+              if (!is_offset) continue;
+
+              // Find base face by iterating faces of first base vertex
+              int base_face = -1;
+              for (auto sei : top.GetVertexSurfaceElements(base_verts[0]))
+                {
+                  auto bfverts = top.GetFaceVertices(top.GetFace(sei));
+                  if (bfverts.Size() != verts.Size()) continue;
+                  bool match = true;
+                  for (int k = 0; k < base_verts.Size() && match; k++)
+                    {
+                      bool found = false;
+                      for (int l = 0; l < bfverts.Size(); l++)
+                        if (bfverts[l] == base_verts[k]) { found = true; break; }
+                      if (!found) match = false;
+                    }
+                  if (match) { base_face = top.GetFace(sei); break; }
+                }
+              if (base_face < 0) continue;
+
+              int ndof = facecoeffsindex[f+1] - facecoeffsindex[f];
+              int base_ndof = facecoeffsindex[base_face+1] - facecoeffsindex[base_face];
+              if (base_ndof == 0 || ndof == 0) continue;
+
+              int first = facecoeffsindex[f];
+              int base_first = facecoeffsindex[base_face];
+              int copy_ndof = min(ndof, base_ndof);
+
+              // Scale by characteristic length ratio (sqrt of area ratio)
+              // For trig: area = 0.5 * |cross(v1-v0, v2-v0)|
+              auto face_area = [&](FlatArray<PointIndex> fv) -> double {
+                Vec<3> e1 = mesh[fv[1]] - mesh[fv[0]];
+                Vec<3> e2 = mesh[fv[2]] - mesh[fv[0]];
+                return Cross(e1, e2).Length();
+              };
+              ArrayMem<PointIndex, 4> bv_arr(base_verts.Size());
+              for (int k = 0; k < base_verts.Size(); k++) bv_arr[k] = base_verts[k];
+              double base_area = face_area(FlatArray<PointIndex>(verts.Size(), &bv_arr[0]));
+              ArrayMem<PointIndex, 4> ov_arr(verts.Size());
+              for (int k = 0; k < verts.Size(); k++) ov_arr[k] = verts[k];
+              double offset_area = face_area(FlatArray<PointIndex>(verts.Size(), &ov_arr[0]));
+              double scale = (base_area > 1e-30) ? sqrt(offset_area / base_area) : 1.0;
+
+              for (int j = 0; j < copy_ndof; j++)
+                facecoeffs[first+j] = scale * facecoeffs[base_first+j];
+            }
+        }
+    }
 
     // compress edge and face tables
     int newbase = 0;

@@ -778,6 +778,30 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<FaceDescriptor>(m);
   ExportArray<EdgeDescriptor>(m);
 
+  py::class_<BoundaryLayerPointInfo>(m, "BoundaryLayerPointInfo")
+    .def_readonly("base_pi", &BoundaryLayerPointInfo::base_pi)
+    .def_readonly("height", &BoundaryLayerPointInfo::height)
+    .def("IsValid", [](const BoundaryLayerPointInfo & self) {
+        return self.base_pi.IsValid();
+      })
+    .def("__repr__", [](const BoundaryLayerPointInfo & self) {
+        if (!self.base_pi.IsValid()) return string("BoundaryLayerPointInfo(invalid)");
+        return string("BoundaryLayerPointInfo(base_pi=") + to_string((int)self.base_pi)
+          + ", height=" + to_string(self.height) + ")";
+      })
+    ;
+
+  using BLPArray = Array<BoundaryLayerPointInfo, PointIndex>;
+  py::class_<BLPArray>(m, "BoundaryLayerPointInfoArray")
+    .def("__len__", [](BLPArray & a) { return a.Size(); })
+    .def("__getitem__", [](BLPArray & a, PointIndex i) -> BoundaryLayerPointInfo & {
+        return a[i];
+      }, py::return_value_policy::reference)
+    .def("__iter__", [](BLPArray & a) {
+        return py::make_iterator(&a[a.Range().First()], &a[a.Range().First()] + a.Size());
+      }, py::keep_alive<0, 1>())
+    ;
+
   string export_docu = "Export mesh to other file format. Supported formats are:\n";
   Array<string> export_formats;
   for(auto & kv : UserFormatRegister::getFormats()) {
@@ -1181,6 +1205,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
+    .def("GetBoundaryLayerPointMap", [](Mesh & self) -> auto & {
+        return self.GetBoundaryLayerPointMap();
+      }, py::return_value_policy::reference, "Get boundary layer point map array indexed by PointIndex")
     .def("RestrictLocalH", [](Mesh& self, const Point<3>& pnt, double maxh,
                               int layer)
     {

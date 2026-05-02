@@ -1430,6 +1430,17 @@ void BoundaryLayerTool ::Perform ()
 
   FixSurfaceElements();
 
+  // Populate boundary layer point map for curved element generation
+  {
+    auto & bl_map = mesh.GetBoundaryLayerPointMap();
+    bl_map.SetSize(mesh.GetNP());
+    for (auto [pi, data] : growth_vector_map)
+      {
+        auto [gw, height] = data;
+        bl_map[pi] = { mapfrom[pi], height };
+      }
+  }
+
   for (auto [pi, data] : growth_vector_map)
     {
       auto [gw, height] = data;
