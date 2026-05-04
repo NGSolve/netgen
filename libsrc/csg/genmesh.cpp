@@ -96,26 +96,30 @@ namespace netgen
     for (int i = 0; i < geom.singpoints.Size(); i++)
       geom.singpoints[i]->FindPoints (mesh);
 
-    for (int i = 1; i <= mesh.GetNSeg(); i++)
+    for (int edi = 1; edi <= mesh.GetNED(); edi++)
       {
-	//(*testout) << "segment " << mesh.LineSegment(i) << endl;
+	auto & ed = mesh.GetEdgeDescriptor(edi);
+	int surf_rep = ed.GetIndex();  // staged surface representant from CalcEdges1
+	if (surf_rep < 0) continue;
 	int ok = 0;
 	for (int k = 1; k <= mesh.GetNFD(); k++)
-	  if (mesh.GetFaceDescriptor(k).SegmentFits (mesh.LineSegment(i)))
-	    {
-	      ok = k;
-	      //(*testout) << "fits to " << k << endl;
-	    }
+	  {
+	    const auto & fd = mesh.GetFaceDescriptor(k);
+	    if (fd.SurfNr() == surf_rep &&
+	        fd.DomainIn() == ed.DomainIn()+1 &&
+	        fd.DomainOut() == ed.DomainOut()+1 &&
+	        fd.TLOSurface() == ed.TLOSurface()+1)
+	      {
+	        ok = k;
+	      }
+	  }
 
 	if (!ok)
 	  {
-	    ok = mesh.AddFaceDescriptor (FaceDescriptor (mesh.LineSegment(i)));
-	    //(*testout) << "did not find, now " << ok << endl;
+	    ok = mesh.AddFaceDescriptor (FaceDescriptor (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1));
 	  }
 
-	//(*testout) << "change from " << mesh.LineSegment(i).si;
-	mesh.LineSegment(i).si = ok;
-	//(*testout) << " to " << mesh.LineSegment(i).si << endl;
+	ed.SetIndex(ok);
       }
 
     for(int k = 1; k<=mesh.GetNFD(); k++)
@@ -148,7 +152,7 @@ namespace netgen
     
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
-	if (mesh[si].seginfo)
+	if (ec.seg_seginfo[si])
 	  {
 	    Box<3> hbox;
 	    hbox.Set (mesh[mesh[si][0]]);
@@ -161,7 +165,7 @@ namespace netgen
     if (!ec.point_on_edge_problem)
       for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
 	{
-	  if (!mesh[si].seginfo) continue;
+	  if (!ec.seg_seginfo[si]) continue;
 
 	  Box<3> hbox;
 	  hbox.Set (mesh[mesh[si][0]]);
@@ -174,7 +178,7 @@ namespace netgen
 	    {
 	      SegmentIndex sj = loc[j];
 	      if (sj >= si) continue;
-	      if (!mesh[si].seginfo || !mesh[sj].seginfo) continue;
+	      if (!ec.seg_seginfo[si] || !ec.seg_seginfo[sj]) continue;
 	      if (mesh[mesh[si][0]].GetLayer() != mesh[mesh[sj][1]].GetLayer()) continue;
 	      
 	      Point<3> pi1 = mesh[mesh[si][0]];
@@ -211,14 +215,14 @@ namespace netgen
 		  //(*testout) << "ip " << ip << endl;
 
 		  Point<3> pip = ip;
-		  ProjectToEdge (geom.GetSurface (mesh[si].surfnr1),
-				 geom.GetSurface (mesh[si].surfnr2), pip);
+		  ProjectToEdge (geom.GetSurface (mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(0)),
+				 geom.GetSurface (mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(1)), pip);
 		  
 		  //(*testout) << "Dist (ip, pip_si) " << Dist (ip, pip) << endl;
 		  if (Dist (ip, pip) > 1e-6*geom.MaxSize()) continue;
 		  pip = ip;
-		  ProjectToEdge (geom.GetSurface (mesh[sj].surfnr1),
-				 geom.GetSurface (mesh[sj].surfnr2), pip);
+		  ProjectToEdge (geom.GetSurface (mesh.GetEdgeDescriptor(mesh[sj].GetIndex()).SurfNr(0)),
+				 geom.GetSurface (mesh.GetEdgeDescriptor(mesh[sj].GetIndex()).SurfNr(1)), pip);
 
 		  //(*testout) << "Dist (ip, pip_sj) " << Dist (ip, pip) << endl;
 		  if (Dist (ip, pip) > 1e-6*geom.MaxSize()) continue;
@@ -453,13 +457,17 @@ namespace netgen
 	segments.SetSize (0);
 
 	for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
-	  if (mesh[si].si == k)
+	  {
+	    const auto & seg_i = mesh[si];
+	    int fdi = (seg_i.GetIndex() >= 1 && seg_i.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg_i.GetIndex()).GetIndex() : -1;
+	    if (fdi == k)
 	    {
 	      segments.Append (mesh[si]);
 	      (*testout) << "appending segment " << mesh[si] << endl;
 	      //<< " from " << mesh[mesh[si][0]]
 	      //	 << " to " <<mesh[mesh[si][1]]<< endl;
 	    }
+	  }
 
 	(*testout) << "num-segments " << segments.Size() << endl;
 
@@ -629,8 +637,12 @@ namespace netgen
 	    for (int i = 1; i <= mesh.GetNSeg(); i++)
 	      {
 		Segment * seg = &mesh.LineSegment(i);
-		if (seg->si == k)
-		  segments.Append (*seg);
+		{
+		  int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED())
+		                 ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
+		  if (seg_face == k)
+		    segments.Append (*seg);
+		}
 	      }
 
 	    for (int i = 1; i <= geom.identifications.Size(); i++)

@@ -1761,10 +1761,11 @@ namespace netgen
 	for (int i = 1; i <= mesh->GetNSeg(); i++)
 	  {
 	    Segment & seg = mesh->LineSegment(i);
-	    if (seg.edgenr == edgenr)
+	    auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
+	    if (ed.EdgeNr() == edgenr)
 	      {
-		seg.singedge_left = 1 - seg.singedge_left;
-		seg.singedge_right = 1 - seg.singedge_right;
+		ed.SetSingEdgeLeft(1 - ed.SingEdgeLeft());
+		ed.SetSingEdgeRight(1 - ed.SingEdgeRight());
 	      }
 	  }
       }

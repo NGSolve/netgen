@@ -183,8 +183,9 @@ namespace netgen
 	    Point<3> pnew;
 	    geo.PointBetweenEdge(mesh.Point (el[0]),
                                  mesh.Point (el[1]), 0.5,
-                                 el.surfnr1, el.surfnr2,
-                                 el.epgeominfo[0], el.epgeominfo[1],
+                                 mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(0),
+                                 mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(1),
+                                 el.EPGeomInfo(0), el.EPGeomInfo(1),
                                  pnew, ngi);
 
 	    // pinew = mesh.AddPoint (pnew);
@@ -199,9 +200,9 @@ namespace netgen
 	Segment ns1 = el;
 	Segment ns2 = el;
 	ns1[1] = pinew;
-	ns1.epgeominfo[1] = ngi;
+	ns1.EPGeomInfo(1) = ngi;
 	ns2[0] = pinew;
-	ns2.epgeominfo[0] = ngi;
+	ns2.EPGeomInfo(0) = ngi;
 
 	mesh.LineSegment(si) = ns1;
 	mesh.AddSegment (ns2);

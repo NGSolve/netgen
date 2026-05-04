@@ -343,7 +343,7 @@ namespace netgen
 	    const Point3d p = Center (p1, p2);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	  
-	    snprintf (buf, sizeof(buf), "%d", seg.edgenr);
+	    snprintf (buf, sizeof(buf), "%d", mesh->GetEdgeDescriptor(seg.GetIndex()).EdgeNr());
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	    MyOpenGLText (buf);
 	  }

@@ -159,7 +159,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
     }
 
   // ret.is_curved = mesh->GetCurvedElements().IsSegmentCurved(nr);
-  ret.is_curved = el.IsCurved();
+  ret.is_curved = el.GetIndex() >= 1 && el.GetIndex() <= mesh->GetNED() && mesh->GetEdgeDescriptor(el.GetIndex()).EdgeNr() > 0;
 
   return ret;
 }

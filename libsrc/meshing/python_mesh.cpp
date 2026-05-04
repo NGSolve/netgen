@@ -559,23 +559,18 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     Segment * newel = new Segment();
                     for (int i = 0; i < 2; i++)
                       (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                    newel -> si = index;
-                    newel -> epgeominfo[0].edgenr = edgenr;
-                    newel -> epgeominfo[1].edgenr = edgenr;
-                    newel -> edgenr = index;
-                    newel -> index = index;
+                    newel -> SetIndex(index);
                     for(auto i : Range(len(trignums)))
-                      newel->geominfo[i].trignum = py::cast<int>(trignums[i]);
+                      newel->GeomInfo(i).trignum = py::cast<int>(trignums[i]);
                     if (len(surfaces))
                       {
-                        newel->surfnr1 = py::extract<int>(surfaces[0])();
-                        newel->surfnr2 = py::extract<int>(surfaces[1])();
+                        // surfnr1/surfnr2 removed from Segment - surfaces are on EdgeDescriptor
                       }
                     return newel;
                   }),
           py::arg("vertices"),
            py::arg("surfaces")=py::list(),
-           py::arg("index")=1,
+           py::arg("index")=0,
            py::arg("edgenr")=1,
            py::arg("trignums")=py::list(), // for stl
          "create segment element"
@@ -600,10 +595,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property_readonly("surfaces", 
                   FunctionPointer ([](const Segment & self) -> py::list
                                    {
-                                     py::list li;
-                                     li.append (py::cast(self.surfnr1));
-                                     li.append (py::cast(self.surfnr2));
-                                     return li;
+                                     throw py::attribute_error("'surfaces' removed from Segment - use mesh.EdgeDescriptor(seg.edsi).surfnr instead");
+                                     return py::list();
                                    }))
     .def_property("index",
                   [](const Segment &self)
@@ -615,35 +608,40 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     self.SetIndex(index);
                   })
     .def_property("edgenr",
-                  [](const Segment & self)
+                  [](const Segment & self) -> int
                   {
-                    return self.GetEdgeNr();
+                    throw py::attribute_error("'edgenr' removed from Segment - use mesh.EdgeDescriptor(seg.index).edgenr instead");
+                    return 0;
                   },
                   [](Segment& self, int edgenr)
                   {
-                    self.SetEdgeNr(edgenr); 
+                    throw py::attribute_error("'edgenr' removed from Segment - use mesh.EdgeDescriptor(seg.index).edgenr instead");
                   })
     .def_property("singular",
-                  [](const Segment & seg) { return seg.singedge_left; },
-                  [](Segment & seg, double sing) { seg.singedge_left = sing; seg.singedge_right=sing; })
+                  [](const Segment & seg) -> double {
+                    // singedge_left/right now live on the EdgeDescriptor; access via mesh.GetEdgeDescriptor(seg.edsi)
+                    throw py::attribute_error("singular is now on EdgeDescriptor, use mesh.GetEdgeDescriptor(seg.edsi).SingEdgeLeft()");
+                    return 0;
+                  },
+                  [](Segment & seg, double sing) {
+                    throw py::attribute_error("singular is now on EdgeDescriptor, use mesh.GetEdgeDescriptor(seg.edsi).SetSingEdgeLeft/Right()");
+                  })
     ;
 
   if(ngcore_have_numpy)
   {
     py::detail::npy_format_descriptor<Segment>::register_dtype({
         py::detail::field_descriptor {
-          "nodes", offsetof(Segment, pnums),
+          "nodes", (pybind11::ssize_t)Segment::OffsetPnums(),
           3 * sizeof(PointIndex),
           py::format_descriptor<int[3]>::format(),
           py::detail::npy_format_descriptor<int[3]>::dtype() },
+        // index is 1-based (0 = invalid)
         py::detail::field_descriptor {
-          "index", offsetof(Segment, si), sizeof(int),
+          "index", (pybind11::ssize_t)Segment::OffsetIndex(), sizeof(int),
           py::format_descriptor<int>::format(),
           py::detail::npy_format_descriptor<int>::dtype() },
-        py::detail::field_descriptor {
-          "edgenr", offsetof(Segment, edgenr), sizeof(int),
-          py::format_descriptor<int>::format(),
-          py::detail::npy_format_descriptor<int>::dtype() },
+
       });
   }
 
@@ -732,6 +730,35 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   })
     ;
 
+  py::class_<EdgeDescriptor>(m, "EdgeDescriptor")
+    .def(py::init<>())
+    .def("__repr__", [](const EdgeDescriptor & self) {
+      return string("EdgeDescriptor(edgenr=") + to_string(self.EdgeNr()) +
+             ", surfnr=(" + to_string(self.SurfNr(0)) + "," + to_string(self.SurfNr(1)) +
+             "), domin=" + to_string(self.DomainIn()) +
+             ", domout=" + to_string(self.DomainOut()) +
+             ", name=" + self.GetName() + ")";
+    })
+    .def_property("edgenr", &EdgeDescriptor::EdgeNr, &EdgeDescriptor::SetEdgeNr)
+    .def_property("surfnr",
+                  [](const EdgeDescriptor & self) {
+                    return py::make_tuple(self.SurfNr(0), self.SurfNr(1));
+                  },
+                  [](EdgeDescriptor & self, py::tuple s) {
+                    self.SetSurfNr(0, py::cast<int>(s[0]));
+                    self.SetSurfNr(1, py::cast<int>(s[1]));
+                  })
+    .def_property("name", &EdgeDescriptor::GetName, &EdgeDescriptor::SetName)
+    .def_property("singedge_left", &EdgeDescriptor::SingEdgeLeft, &EdgeDescriptor::SetSingEdgeLeft)
+    .def_property("singedge_right", &EdgeDescriptor::SingEdgeRight, &EdgeDescriptor::SetSingEdgeRight)
+    .def_property("tlosurf", &EdgeDescriptor::TLOSurface, &EdgeDescriptor::SetTLOSurface)
+    .def_property("domin", &EdgeDescriptor::DomainIn, &EdgeDescriptor::SetDomainIn)
+    .def_property("domout", &EdgeDescriptor::DomainOut, &EdgeDescriptor::SetDomainOut)
+    .def_property("index", &EdgeDescriptor::GetIndex, &EdgeDescriptor::SetIndex)
+    .def_property("fdindex", &EdgeDescriptor::GetIndex, &EdgeDescriptor::SetIndex)
+
+    ;
+
   py::implicitly_convertible< int, SurfaceElementIndex>();
   PYBIND11_NUMPY_DTYPE(SurfaceElementIndex, i);
   ExportArray<SurfaceElementIndex, SurfaceElementIndex>(m);
@@ -746,6 +773,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex>(m);
   ExportArray<FaceDescriptor>(m);
+  ExportArray<EdgeDescriptor>(m);
 
   string export_docu = "Export mesh to other file format. Supported formats are:\n";
   Array<string> export_formats;
@@ -774,10 +802,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<EdgePointGeomInfo>(m, "EdgePointGeomInfo")
     .def(py::init<>())
-    .def_readwrite("edgenr", &EdgePointGeomInfo::edgenr)
     .def_readwrite("dist", &EdgePointGeomInfo::dist)
-    .def_readwrite("u", &EdgePointGeomInfo::u)
-    .def_readwrite("v", &EdgePointGeomInfo::v)
+    .def_property("u", [](EdgePointGeomInfo &self) { return self.gi.u; }, [](EdgePointGeomInfo &self, double val) { self.gi.u = val; })
+    .def_property("v", [](EdgePointGeomInfo &self) { return self.gi.v; }, [](EdgePointGeomInfo &self, double val) { self.gi.v = val; })
   ;
 
   class NetgenGeometryTrampoline : public NetgenGeometry {
@@ -804,7 +831,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       }
 
       void ProjectPointEdge(int surfind, int surfind2, Point<3> & p,
-                                    EdgePointGeomInfo* gi = nullptr) const override {
+                                    EdgePointGeomInfo* gi = nullptr, int edgenr = -1) const override {
         py::gil_scoped_acquire gil;
         if (auto overload = pybind11::get_overload(this, "ProjectPointEdge"))
           overload(surfind, surfind2,
@@ -839,7 +866,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                     const EdgePointGeomInfo & ap1,
                                     const EdgePointGeomInfo & ap2,
                                     Point<3> & newp,
-                                    EdgePointGeomInfo & newgi) const override {
+                                    EdgePointGeomInfo & newgi,
+                                    int edgenr = -1) const override {
         py::gil_scoped_acquire gil;
         if (auto overload = pybind11::get_overload(this, "PointBetweenEdge"))
           overload(p1, p2, secpoint, surfi1, surfi2, ap1, ap2,
@@ -867,7 +895,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
       Vec<3> GetTangent(const Point<3> & p, int surfi1,
                                 int surfi2,
-                                const EdgePointGeomInfo & egi) const override {
+                                const EdgePointGeomInfo & egi,
+                                int edgenr = -1) const override {
         py::gil_scoped_acquire gil;
         if (auto overload = pybind11::get_overload(this, "GetTangent"))
           return py::cast<Vec<3>> (overload(p, surfi1, surfi2, egi));
@@ -1158,6 +1187,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          // static_cast<Array<Element>&(Mesh::*)()> (&Mesh::FaceDescriptors),
          &Mesh::FaceDescriptors,         
          py::return_value_policy::reference)
+    .def("EdgeDescriptor", [](Mesh & self, int i) -> EdgeDescriptor& {
+           return self.GetEdgeDescriptor(i);
+         }, py::arg("i"), py::return_value_policy::reference)
+    .def("EdgeDescriptors",
+         static_cast<Array<EdgeDescriptor>&(Mesh::*)()>(&Mesh::EdgeDescriptors),
+         py::return_value_policy::reference)
     
     
     .def("GetNDomains", &Mesh::GetNDomains)
@@ -1170,6 +1205,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                 }, "Returns element nrs of volume element connected to surface element, -1 if no volume element")
 
     .def("GetNCD2Names", &Mesh::GetNCD2Names)
+    .def("GetNED", &Mesh::GetNED)
     
 
     .def("__getitem__", [](const Mesh & self, PointIndex id) { return self[id]; })
@@ -1203,10 +1239,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                 auto geo = self.GetGeometry();
                 geo->ProjectPointEdge
                   (0,0,p1,
-                   const_cast<EdgePointGeomInfo*>(&el.epgeominfo[0]));
+                   const_cast<EdgePointGeomInfo*>(&el.EPGeomInfo(0)));
                 geo->ProjectPointEdge
                   (0,0,p2,
-                   const_cast<EdgePointGeomInfo*>(&el.epgeominfo[1]));
+                   const_cast<EdgePointGeomInfo*>(&el.EPGeomInfo(1)));
               }
             return self.AddSegment (el);
           }, py::arg("el"), py::arg("project_geominfo")=false)
@@ -1219,6 +1255,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("Add", [](Mesh & self, const FaceDescriptor & fd)
           {
             return self.AddFaceDescriptor (fd);
+          })
+
+    .def ("Add", [](Mesh & self, const EdgeDescriptor & ed)
+          {
+            return self.AddEdgeDescriptor (ed);
           })
 
     .def ("AddSingularity", [](Mesh & self, PointIndex pi, double factor)
@@ -1289,7 +1330,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     Segment el;
                     for (int j = 0; j < np; j++)
                       el[j] = ptr[j]+PointIndex::BASE-base;
-                    el.si = index;
+                    el.SetIndex(index);
                     self.AddSegment(el);
                     ptr += info.strides[0]/sizeof(int);
                   }
@@ -1376,7 +1417,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           
     .def ("AddRegion", [] (Mesh & self, string name, int dim) -> int
          {
-           auto & regionnames = self.GetRegionNamesCD(self.GetDimension()-dim);
+           int codim = self.GetDimension()-dim;
+           if (codim == 2)
+             {
+               EdgeDescriptor ed;
+               ed.SetName(name);
+               self.AddEdgeDescriptor(ed);
+               return self.GetNCD2Names();
+             }
+           auto & regionnames = self.GetRegionNamesCD(codim);
            regionnames.Append (new string(name));
            int idx = regionnames.Size();
            if (dim == 2)
@@ -1399,15 +1448,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             else
               throw Exception("either 'dim' or 'codim' must be specified");
             
-            Array<string*> & codimnames = self.GetRegionNamesCD (codim);
-            
             std::vector<string> names;
-            for (auto name : codimnames)
+            if (codim == 2)
               {
-                if (name)
-                  names.push_back(*name);
-                else
-                  names.push_back("");
+                for (size_t i = 0; i < self.GetNCD2Names(); i++)
+                  names.push_back(string(self.GetCD2Name(i)));
+              }
+            else
+              {
+                Array<string*> & codimnames = self.GetRegionNamesCD (codim);
+                for (auto name : codimnames)
+                  {
+                    if (name)
+                      names.push_back(*name);
+                    else
+                      names.push_back("");
+                  }
               }
             return names;               
           }, py::arg("dim")=nullopt, py::arg("codim")=nullopt)

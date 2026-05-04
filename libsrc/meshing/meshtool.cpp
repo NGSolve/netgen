@@ -651,7 +651,8 @@ namespace netgen
       {
 	seg = &mesh.LineSegment(i);
 
-	of << (*seg)[1] << " " << (*seg)[0] << " " << seg->si << "\n";
+	int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
+	of << (*seg)[1] << " " << (*seg)[0] << " " << seg_face << "\n";
       }
    
   }
@@ -710,7 +711,7 @@ namespace netgen
     outfile << endl;
     outfile << mesh2d.GetNSeg() << endl;
     for (i = 1; i <= mesh2d.GetNSeg(); i++)
-      outfile << mesh2d.LineSegment(i).si << "        "
+      outfile << mesh2d.LineSegment(i).GetIndex() << "        "
 	      << mesh2d.LineSegment(i)[0] << " "
 	      << mesh2d.LineSegment(i)[1] << "  " << endl;
   

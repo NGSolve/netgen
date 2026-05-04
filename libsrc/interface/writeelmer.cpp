@@ -76,17 +76,29 @@ void WriteElmerFormat (const Mesh &mesh,
 
   for( auto codim : IntRange(0, mesh.GetDimension()-1) )
   {
-    auto & names = const_cast<Mesh&>(mesh).GetRegionNamesCD(codim);
-
-    for (auto i0 : Range(names) )
-    {
-      if(names[i0] == nullptr)
-        continue;
-      string name = *names[i0];
-      if(name == "" || name == "default")
-        continue;
-      outfile_names << "$" << name << "=" << i0+1 << "\n";
-    }
+    if (codim == 2)
+      {
+        for (auto i0 : Range(mesh.GetNCD2Names()))
+          {
+            string name = mesh.GetCD2Name(i0);
+            if(name == "" || name == "default")
+              continue;
+            outfile_names << "$" << name << "=" << i0+1 << "\n";
+          }
+      }
+    else
+      {
+        auto & names = const_cast<Mesh&>(mesh).GetRegionNamesCD(codim);
+        for (auto i0 : Range(names) )
+          {
+            if(names[i0] == nullptr)
+              continue;
+            string name = *names[i0];
+            if(name == "" || name == "default")
+              continue;
+            outfile_names << "$" << name << "=" << i0+1 << "\n";
+          }
+      }
   }
 
   auto get3FacePoints = [](const Element2d & el)

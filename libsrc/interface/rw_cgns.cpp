@@ -200,6 +200,11 @@ namespace netgen::cg
 
   int WriteCGNSRegion( const Mesh & mesh, int dim, int index, int fn, int base, int zone, int ne_before )
   {
+    auto seg_fdi = [&mesh](const Segment& s) -> int {
+        if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+          return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+        return -1;
+    };
     int meshdim = mesh.GetDimension();
     int codim = meshdim-dim;
 
@@ -235,7 +240,7 @@ namespace netgen::cg
 
     if(dim==1)
       for(const auto el : mesh.LineSegments())
-        if(el.si==index)
+        if(seg_fdi(el)==index)
         {
           ne++;
           WriteCGNSElement(el, data);
@@ -402,7 +407,7 @@ namespace netgen::cg
         {
           static Timer tall("CGNS::ReadMesh-Zone"); RegionTimer rtall(tall);
           static Timer tsection("CGNS::ReadMesh-Section");
-          first_index_1d = mesh.GetRegionNamesCD(2).Size();
+          first_index_1d = mesh.GetNCD2Names();
           first_index_2d = mesh.GetRegionNamesCD(1).Size();
           first_index_3d = mesh.GetRegionNamesCD(0).Size();
 
@@ -494,7 +499,7 @@ namespace netgen::cg
                             names_1d.Append(ngname);
                           }
                           auto el = ReadCGNSElement1D(type, vertices.Range(vi, vertices.Size()));
-                          el.si = index_1d;
+                          el.SetIndex(index_1d);
                           mesh.AddSegment(el);
                           vi += el.GetNP();
                           ne_1d++;
@@ -556,7 +561,7 @@ namespace netgen::cg
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement1D(type, vertices.Range(np*i, np*(i+1)));
-                          el.si = index_1d;
+                          el.SetIndex(index_1d);
                           mesh.AddSegment(el);
                         }
                       ne_1d += ne_section;
@@ -591,10 +596,9 @@ namespace netgen::cg
                 }
             }
 
-          mesh.GetRegionNamesCD(2).SetSize(index_1d);
+          mesh.SetNCD2Names(index_1d);
           mesh.GetRegionNamesCD(1).SetSize(index_2d);
           mesh.GetRegionNamesCD(0).SetSize(index_3d);
-          mesh.GetRegionNamesCD(2) = nullptr;
           mesh.GetRegionNamesCD(1) = nullptr;
           mesh.GetRegionNamesCD(0) = nullptr;
         }
@@ -695,6 +699,7 @@ namespace netgen
             fd.SetDomainOut(i1);
         }
       }
+      mesh.ReconstructEdgeDescriptors();
       return fn;
     }
 
@@ -757,9 +762,14 @@ namespace netgen
       for(const auto & el : mesh.SurfaceElements())
         imax2 = max(imax2, el.GetIndex());
 
+      auto seg_fdi = [&mesh](const Segment& s) -> int {
+          if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+            return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+          return -1;
+      };
       int imax1 = 0;
       for(const auto & el : mesh.LineSegments())
-        imax1 = max(imax1, el.si);
+        imax1 = max(imax1, seg_fdi(el));
 
       int ne_written = 0;
       // int meshdim = mesh.GetDimension();

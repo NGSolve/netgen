@@ -701,8 +701,6 @@ namespace netgen
         Segment seg;
         for (int j = 0; j < 2; j++)
           seg[j] = icompress [adfront.GetGlobalIndex (line.L()[j])];
-        seg.domin = domainnr;
-        seg.domout = 0;
         tempmesh.AddSegment(seg);
       }
            
@@ -826,7 +824,7 @@ namespace netgen
         bool is_left = ::netgen::Area(P2(tempmesh[seg[0]]), P2(tempmesh[seg[1]]), P2(tempmesh[pi2]))>0.0;
         POSITION pos;
 
-        if(is_left == (seg.domin==domainnr))
+        if(is_left)
           pos = INSIDE;
         else
           pos = OUTSIDE;

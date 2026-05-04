@@ -163,7 +163,7 @@ void WriteNeutralFormat (const Mesh & mesh,
 	{
 	  const Segment & seg = mesh.LineSegment(i);
 	  outfile.width(4);
-	  outfile << seg.si << "    ";
+	outfile << seg.GetIndex() << "    ";
 
           for (int j = 0; j < seg.GetNP(); j++)
             {
@@ -245,12 +245,12 @@ void WriteSTLFormat (const Mesh & mesh,
   cout << "\nWrite STL Surface Mesh" << endl;
 
   auto ext = filename.extension();
-  ostream *outfile;
+  unique_ptr<ostream> outfile;
 
   if(ext == ".gz")
-	  outfile = new ogzstream(filename);
+	  outfile = make_unique<ogzstream>(filename);
   else
-	  outfile = new ofstream(filename);
+	  outfile = make_unique<ofstream>(filename);
 
   int i;
 
@@ -303,12 +303,12 @@ void WriteSTLExtFormat (const Mesh & mesh,
   cout << "\nWrite STL Surface Mesh (with separated boundary faces)" << endl;
 
   auto ext = filename.extension();
-  ostream *outfile;
+  unique_ptr<ostream> outfile;
 
   if(ext == ".gz")
-	  outfile = new ogzstream(filename);
+	  outfile = make_unique<ogzstream>(filename);
   else
-	  outfile = new ofstream(filename);
+	  outfile = make_unique<ofstream>(filename);
 
   outfile->precision(10);
 

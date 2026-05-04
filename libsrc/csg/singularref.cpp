@@ -70,8 +70,11 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	}
       */
 
-      if (domnr != -1 && domnr != mesh[si].domin && domnr != mesh[si].domout)
-	continue;
+      {
+        const auto & ed = mesh.GetEdgeDescriptor(mesh[si].GetIndex());
+        if (domnr != -1 && domnr != ed.DomainIn() && domnr != ed.DomainOut())
+	  continue;
+      }
 
       /*
       bool onedge = 1;
@@ -83,8 +86,8 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	    onedge = 0;
 	}
       */
-      int surfi1 = geom.GetSurfaceClassRepresentant(mesh[si].surfnr1);
-      int surfi2 = geom.GetSurfaceClassRepresentant(mesh[si].surfnr2);
+      int surfi1 = geom.GetSurfaceClassRepresentant(mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(0));
+      int surfi2 = geom.GetSurfaceClassRepresentant(mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(1));
 
       if ( (si1.Contains(surfi1) && si2.Contains(surfi2)) ||
            (si1.Contains(surfi2) && si2.Contains(surfi1)) )
@@ -95,8 +98,8 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	  //	  PrintMessage (5, "sing segment ", i2.I1(), " - ", i2.I2());
 	  points.Append (mesh[i2.I1()]);
 	  points.Append (mesh[i2.I2()]);
-	  mesh[si].singedge_left = factor;
-	  mesh[si].singedge_right = factor;
+	  mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SetSingEdgeLeft(factor);
+	  mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SetSingEdgeRight(factor);
 	}	    
     }
   

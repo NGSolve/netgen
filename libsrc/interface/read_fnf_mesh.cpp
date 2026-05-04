@@ -321,7 +321,6 @@ namespace netgen
                                 seg[0] = enums[j];
                                 seg[1] = enums[j+2];
                                 seg[2] = enums[j+1];
-                                seg.edgenr = nr;
                                 mesh.AddSegment (seg);
                               }
                           }
@@ -470,6 +469,7 @@ namespace netgen
           PrintMessage(3, "parse line: (", buf, ")");
       }
     mesh.ComputeNVertices();
+    mesh.ReconstructEdgeDescriptors();
   }
 static RegisterUserFormat reg_fnf ("Pro/ENGINEER Format", {".fnf"}, ReadFNFFormat, nullopt);
 }

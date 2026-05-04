@@ -324,10 +324,10 @@ namespace netgen
             {
               PointGeomInfo gi0, gi1;
               gi0.trignum = gi1.trignum = k;
-              gi0.u = seg.epgeominfo[0].u;
-              gi0.v = seg.epgeominfo[0].v;
-              gi1.u = seg.epgeominfo[1].u;
-              gi1.v = seg.epgeominfo[1].v;
+              gi0.u = seg.GeomInfo(0).u;
+              gi0.v = seg.GeomInfo(0).v;
+              gi1.u = seg.GeomInfo(1).u;
+              gi1.v = seg.GeomInfo(1).v;
               
               //if(orientation & 1)
               meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
@@ -346,14 +346,14 @@ namespace netgen
         Box<2> uv_box(Box<2>::EMPTY_BOX);
         for(auto & seg : segments)
             for(auto i : Range(2))
-                uv_box.Add( {seg.epgeominfo[i].u, seg.epgeominfo[i].v } );
+                uv_box.Add( {seg.GeomInfo(i).u, seg.GeomInfo(i).v } );
 
         BoxTree<2> uv_tree(uv_box);
         double tol = 1e99;
         for(auto& seg : segments)
           {
-            Point<2> p1 = { seg.epgeominfo[0].u, seg.epgeominfo[0].v };
-            Point<2> p2 = { seg.epgeominfo[1].u, seg.epgeominfo[1].v };
+            Point<2> p1 = { seg.GeomInfo(0).u, seg.GeomInfo(0).v };
+            Point<2> p2 = { seg.GeomInfo(1).u, seg.GeomInfo(1).v };
             tol = min2(tol, Dist(p1, p2));
           }
         uv_tree.SetTolerance(0.9 * tol);
@@ -363,10 +363,10 @@ namespace netgen
         {
             PointGeomInfo gi[2];
             gi[0].trignum = gi[1].trignum = k;
-            gi[0].u = seg.epgeominfo[0].u;
-            gi[0].v = seg.epgeominfo[0].v;
-            gi[1].u = seg.epgeominfo[1].u;
-            gi[1].v = seg.epgeominfo[1].v;
+            gi[0].u = seg.GeomInfo(0).u;
+            gi[0].v = seg.GeomInfo(0).v;
+            gi[1].u = seg.GeomInfo(1).u;
+            gi[1].v = seg.GeomInfo(1).v;
 
             int locpnum[2] = {0, 0};
 

@@ -17,6 +17,8 @@
 namespace netgen
 {
 
+class Mesh;
+
 
 enum HPREF_ELEMENT_TYPE {
   HP_NONE=0,
@@ -291,7 +293,7 @@ public:
   HPRefElement (); 
   HPRefElement(Element & el);
   HPRefElement(Element2d & el);
-  HPRefElement(Segment & el);	
+  HPRefElement(Segment & el, const Mesh & mesh);	
   HPRefElement(HPRefElement & el);
 
   void SetType( HPREF_ELEMENT_TYPE t);

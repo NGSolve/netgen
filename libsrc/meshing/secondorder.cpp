@@ -102,15 +102,14 @@ namespace netgen
 	    EdgePointGeomInfo ngi;
             geo.PointBetweenEdge(mesh.Point (el[0]),
                                  mesh.Point (el[1]), 0.5,
-                                 el.surfnr1, el.surfnr2,
-                                 el.epgeominfo[0], el.epgeominfo[1],
+                                 mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(0), mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(1),
+                                 el.EPGeomInfo(0), el.EPGeomInfo(1),
                                  pb, ngi);
 	  
 	    el[2] = mesh.AddPoint (pb, mesh.Point(el[0]).GetLayer(), 
 				   EDGEPOINT);
 	    between.Set (i2, el[2]);
 	  }
-        el.SetCurved(true);
       }
 
     // refine surface elements
@@ -169,7 +168,10 @@ namespace netgen
 	  }
 
 	for (int j = 0; j < onp; j++)
-	  newel[j] = el[j];
+	  {
+	    newel[j] = el[j];
+	    newel.GeomInfoPi(j+1) = el.GeomInfoPi(j+1);
+	  }
       
 	int nnp = newel.GetNP();
 	for (int j = 0; j < nnp-onp; j++)
@@ -180,7 +182,15 @@ namespace netgen
 	    INDEX_2 i2 = INDEX_2::Sort (pi1, pi2);
 	  
 	    if (between.Used(i2))
-	      newel[onp+j] = between.Get(i2);
+	      {
+		newel[onp+j] = between.Get(i2);
+		// interpolate GeomInfo for the midpoint
+		PointGeomInfo gi;
+		gi.trignum = el.GeomInfoPi(betw[j][0]+1).trignum;
+		gi.u = 0.5 * (el.GeomInfoPi(betw[j][0]+1).u + el.GeomInfoPi(betw[j][1]+1).u);
+		gi.v = 0.5 * (el.GeomInfoPi(betw[j][0]+1).v + el.GeomInfoPi(betw[j][1]+1).v);
+		newel.GeomInfoPi(onp+j+1) = gi;
+	      }
 	    else
 	      {
 		Point<3> pb;
@@ -194,6 +204,7 @@ namespace netgen
 
 		newel[onp+j] = mesh.AddPoint (pb, mesh.Point(pi1).GetLayer(), 
 					      SURFACEPOINT);
+		newel.GeomInfoPi(onp+j+1) = newgi;
 		between.Set (i2, newel[onp+j]);
 	      }
 	  }
