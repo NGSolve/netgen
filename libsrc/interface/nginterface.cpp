@@ -534,7 +534,7 @@ int Ng_GetSurfaceElementIndex (int ei)
   if (mesh->GetDimension() == 3)
     return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).BCProperty();
   else
-    return mesh->LineSegment(ei).si;
+    return mesh->LineSegment(ei).GetIndex();
 }
 
 int Ng_GetSurfaceElementSurfaceNumber (int ei)
@@ -542,7 +542,7 @@ int Ng_GetSurfaceElementSurfaceNumber (int ei)
   if (mesh->GetDimension() == 3)
     return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).SurfNr();
   else
-    return mesh->LineSegment(ei).si;
+    return mesh->LineSegment(ei).GetIndex();
 }
 int Ng_GetSurfaceElementFDNumber (int ei)
 {
@@ -558,7 +558,7 @@ char * Ng_GetSurfaceElementBCName (int ei)
   if ( mesh->GetDimension() == 3 )
     return const_cast<char *>(mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).GetBCName().c_str());
   else
-    return const_cast<char *>(mesh->GetBCName(mesh->LineSegment(ei).si).c_str());
+    return const_cast<char *>(mesh->GetBCName(mesh->LineSegment(ei).GetIndex()).c_str());
 }
 
 
@@ -855,7 +855,7 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
 int Ng_GetSegmentIndex (int ei)
 {
   const Segment & seg = mesh->LineSegment (ei);
-  return seg.edgenr;
+  return mesh->GetEdgeDescriptor(seg).EdgeNr();
 }
 
 
@@ -893,8 +893,10 @@ void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & ou
     }
   else
     {
-      in = mesh -> LineSegment(selnr) . domin;
-      out = mesh -> LineSegment(selnr) . domout;
+      const auto & seg = mesh -> LineSegment(selnr);
+      const auto & ed = mesh -> GetEdgeDescriptor(seg.GetIndex());
+      in = ed.DomainIn();
+      out = ed.DomainOut();
     }
 }
 

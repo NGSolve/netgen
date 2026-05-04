@@ -758,36 +758,28 @@ namespace netgen
           {
             seg[0] = (*segmentdata[i])[0];
             seg[1] = (*segmentdata[i])[1];
-            seg.edgenr = (*segmentdata[i])[2];
-            seg.epgeominfo[0].edgenr = (*segmentdata[i])[2];
-            seg.epgeominfo[1].edgenr = (*segmentdata[i])[2];
-            seg.si = (*segmentdata[i])[3]-minId2D+1;
-            seg.surfnr1 = -1;//(*segmentdata[i])[3];
-            seg.surfnr2 = -1;//(*segmentdata[i])[4];
-            seg.geominfo[0].trignum = (*segmentdata[i])[5];
-            seg.geominfo[1].trignum = (*segmentdata[i])[5];
+            // (*segmentdata[i])[2] was edgenr, no longer stored in EPGeomInfo
+            seg.SetIndex((*segmentdata[i])[3]-minId2D + 1);
+
+            seg.GeomInfo(0).trignum = (*segmentdata[i])[5];
+            seg.GeomInfo(1).trignum = (*segmentdata[i])[5];
             mesh.AddSegment(seg);
 
             seg[0] = (*segmentdata[i])[1];
             seg[1] = (*segmentdata[i])[0];
-            seg.si = (*segmentdata[i])[4]-minId2D+1;
-            seg.surfnr1 = -1;//(*segmentdata[i])[3];
-            seg.surfnr2 = -1;//(*segmentdata[i])[4];
-            seg.geominfo[0].trignum = (*segmentdata[i])[6];
-            seg.geominfo[1].trignum = (*segmentdata[i])[6];
+            seg.SetIndex((*segmentdata[i])[4]-minId2D + 1);
+
+            seg.GeomInfo(0).trignum = (*segmentdata[i])[6];
+            seg.GeomInfo(1).trignum = (*segmentdata[i])[6];
             mesh.AddSegment(seg);
           }
         delete segmentdata[i];
       }
 
-    /*
-      for(int i=mesh.GetNSeg(); i>=1; i--)
-      if(mesh.LineSegment(i).epgeominfo[0].edgenr == 0 ||
-      mesh.LineSegment(i).epgeominfo[1].edgenr == 0)
-      mesh.FullDeleteSegment(i);
-    */	
+
   
     mesh.CalcSurfacesOfNode();
+    mesh.ReconstructEdgeDescriptors();
       
   }
 }

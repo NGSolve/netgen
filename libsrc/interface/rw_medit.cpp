@@ -20,6 +20,10 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
     if(index_map.count({eldim,index})==0) {
       auto n = ++index_cnt[eldim];
       index_map[{eldim, index}] = n;
+      if(eldim==1) {
+        auto ed = EdgeDescriptor{};
+        mesh.AddEdgeDescriptor(ed);
+      }
       if(eldim==2) {
         auto fd = FaceDescriptor(n-1,1,0,0);
         fd.SetBCProperty(n);
@@ -64,9 +68,10 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       for([[maybe_unused]] auto k : Range(nedge)) {
         for(auto i : Range(2))
           fin >> seg[i];
-        fin >> seg.edgenr;
-        seg.edgenr = getIndex(1, seg.edgenr);
-        seg.si = seg.edgenr;
+        int edgenr_tmp;
+        fin >> edgenr_tmp;
+        edgenr_tmp = getIndex(1, edgenr_tmp);
+        seg.SetIndex(edgenr_tmp);
         mesh.AddSegment(seg);
       }
     }
@@ -168,6 +173,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
         fin >> s; // read one line
     }
   }
+  mesh.ReconstructEdgeDescriptors();
 }
 
 void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename)
@@ -204,7 +210,7 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map
   base_index = max_index;
   fout << "Edges\n" << mesh.GetNSeg() << endl;
   for(const auto & seg : mesh.LineSegments())
-    fout << seg[0] << ' ' << seg[1] << ' ' << getIndex(seg.edgenr, 1) << endl;
+    fout << seg[0] << ' ' << seg[1] << ' ' << getIndex((seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1, 1) << endl;
 
   base_index = max_index;
   fout << "Triangles\n" << mesh.GetNSE() << endl;

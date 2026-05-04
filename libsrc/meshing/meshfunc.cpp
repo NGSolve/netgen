@@ -86,10 +86,11 @@ namespace netgen
       // mark interior edge points
       for(const auto& seg : mesh.LineSegments())
         {
-          if(seg.domin > 0 && seg.domin == seg.domout)
+          const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+          if(ed.DomainIn() > 0 && ed.DomainIn() == ed.DomainOut())
             {
-              ipmap[seg.domin-1][seg[0]] = state1; // 1;
-              ipmap[seg.domin-1][seg[1]] = state1; // 1;
+              ipmap[ed.DomainIn()-1][seg[0]] = state1; // 1;
+              ipmap[ed.DomainIn()-1][seg[1]] = state1; // 1;
             }
         }
 
@@ -144,6 +145,14 @@ namespace netgen
               ipmap[i][pi] = pi_new;
               pmap.Append( pi );
             }
+      }
+
+      // copy edge descriptors to sub-meshes so ED lookups work there too
+      for(auto i : Range(ret))
+      {
+          auto & m = *ret[i].mesh;
+          for(auto j : Range(1, mesh.GetNED()+1))
+            m.AddEdgeDescriptor(mesh.GetEdgeDescriptor(j));
       }
 
       // add segments
@@ -792,8 +801,11 @@ namespace netgen
 
     Array<SegmentIndex> free_segs;
     for (auto segi : Range(mesh.LineSegments()))
-      if(mesh[segi].domin == domain && mesh[segi].domout == domain)
+    {
+      const auto & ed = mesh.GetEdgeDescriptor(mesh[segi].GetIndex());
+      if(ed.DomainIn() == domain && ed.DomainOut() == domain)
         free_segs.Append(segi);
+    }
 
     auto get_nonconforming = [&] (const auto & p2el) {
       Array<SegmentIndex> nonconforming;

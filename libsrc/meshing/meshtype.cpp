@@ -178,19 +178,15 @@ namespace netgen
     if (type == NG_MPI_DATATYPE_NULL)
       {
 	Segment hel;
-	int blocklen[] = { 3, 1, 1, 1 };
+	int blocklen[] = { 3, 1 };
 	NG_MPI_Aint displ[] =
           { (char*)&hel.pnums[0] - (char*)&hel,
-            (char*)&hel.edgenr - (char*)&hel,
-            (char*)&hel.index - (char*)&hel,
-            (char*)&hel.si - (char*)&hel
+            (char*)&hel.index - (char*)&hel
           };
 	NG_MPI_Datatype types[] = {
-          GetMPIType<PointIndex>(), GetMPIType(hel.edgenr), GetMPIType(hel.index), GetMPIType(hel.si)
+          GetMPIType<PointIndex>(), GetMPIType(hel.index)
         };
-	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
-	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+	NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
 	NG_MPI_Type_commit ( &htype );
 	NG_MPI_Aint lb, ext;
 	NG_MPI_Type_get_extent (htype, &lb, &ext);
@@ -242,53 +238,43 @@ namespace netgen
  }
 
   Segment :: Segment() 
-    : is_curved(false)
+    : hp_elnr(0)
   {
     pnums[0] = PointIndex::INVALID;
     pnums[1] = PointIndex::INVALID;
-    edgenr = -1;
-    index = -1;
-    singedge_left = 0.;
-    singedge_right = 0.;
-    seginfo = 0;
-
-    si = -1;
-
-    domin = -1;
-    domout = -1;
-    tlosurf = -1;
-
-    surfnr1 = -1;
-    surfnr2 = -1;
     pnums[2] = PointIndex::INVALID;
-    meshdocval = 0;
-    geominfo[0].trignum=-1;
-    geominfo[1].trignum=-1;
-
-    epgeominfo[0].edgenr = -1;
-    epgeominfo[0].dist = 0;
-    epgeominfo[1].edgenr = -1;
-    epgeominfo[1].dist = 0;
+    index = 0;
   }    
 
   void Segment :: DoArchive (Archive & ar)
   {
     string * bcname_dummy = nullptr;
+    int index_compat = ar.Output() ? GetIndex() : 0; // archive stores 1-based
+    int domin_compat = -1, domout_compat = -1;
+    int tlosurf_compat = -1;
+    double singedge_left_compat = 0, singedge_right_compat = 0;
+    int surfnr1_compat = -1, surfnr2_compat = -1;
+    int edgenr_compat = -1;
+    int si_compat = -1; // backward compat: archive still has si field
+    int epgi_edgenr_compat = -1; // backward compat: edgenr removed from EdgePointGeomInfo
     ar & pnums[0] & pnums[1] & pnums[2]
-      & edgenr & singedge_left & singedge_right
-      & si & index & domin & domout & tlosurf
-      & surfnr1 & surfnr2
+      & edgenr_compat & singedge_left_compat & singedge_right_compat
+      & si_compat & index_compat & domin_compat & domout_compat & tlosurf_compat
+      & surfnr1_compat & surfnr2_compat
       & bcname_dummy // keep this for backward compatibility
-      & epgeominfo[0].edgenr & epgeominfo[1].edgenr;
+      & epgi_edgenr_compat & epgi_edgenr_compat;
+    if (!ar.Output())
+      {
+        SetIndex(index_compat); // archive stores 1-based, same as in-memory
+      }
   }
 
 
   ostream & operator<<(ostream  & s, const Segment & seg)
   {
-    s << seg[0] << "(gi=" << seg.geominfo[0].trignum << ") - "
-      << seg[1] << "(gi=" << seg.geominfo[1].trignum << ")"
-      << " domin = " << seg.domin << ", domout = " << seg.domout 
-      << " si = " << seg.si << ", edgenr = " << seg.edgenr;
+    s << seg[0] << "(gi=" << seg.GeomInfo(0).trignum << ") - "
+      << seg[1] << "(gi=" << seg.GeomInfo(1).trignum << ")"
+      << ", index = " << seg.GetIndex();
     return s;
   }
 
@@ -2668,29 +2654,7 @@ namespace netgen
     firstelement = -1;
   }
 
-  FaceDescriptor :: FaceDescriptor(const Segment & seg)
-  { 
-    surfnr = seg.si; 
-    domin = seg.domin+1;
-    domout = seg.domout+1;
-    // Philippose - 06/07/2009
-    // Initialise surface colour
-    surfcolour = Vec<4>(0.0,1.0,0.0,1.0);
-    tlosurf = seg.tlosurf+1;
-    bcprop = 0;
-    domin_singular = domout_singular = 0.;
-    // bcname = 0;
-    firstelement = -1;
-  }
 
-  int FaceDescriptor ::  SegmentFits (const Segment & seg)
-  {
-    return
-      surfnr == seg.si &&
-      domin == seg.domin+1 &&
-      domout == seg.domout+1  &&
-      tlosurf == seg.tlosurf+1;
-  }
 
   // string FaceDescriptor :: default_bcname = "default";
   /*

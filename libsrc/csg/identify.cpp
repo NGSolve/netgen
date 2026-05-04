@@ -360,6 +360,12 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 
 void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 {
+  auto seg_fdi = [&mesh](const Segment& s) -> int {
+    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+    return -1;
+  };
+
   int i, j, k, l;
   int fi1, fi2, side;
   for (i = 1; i <= mesh.GetNFD(); i++)
@@ -394,14 +400,14 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 	    for (k = 1; k <= mesh.GetNSeg(); k++)
 	      {
 		const Segment & seg1 = mesh.LineSegment(k);
-		if (seg1.si != fi1)
+		if (seg_fdi(seg1) != fi1)
 		  continue;
 
 		int foundother = 0;
 		for (l = 1; l <= mesh.GetNSeg(); l++)
 		  {
 		    const Segment & seg2 = mesh.LineSegment(l);
-		    if (seg2.si != fi2)
+		    if (seg_fdi(seg2) != fi2)
 		      continue;
 		    
 		    //		    (*testout) << "seg1 = " << seg1[0] << "-" << seg1[1] << ", seg2 = " << seg2[0] << "-" << seg2[1];
@@ -465,10 +471,16 @@ void PeriodicIdentification ::
 BuildSurfaceElements (NgArray<Segment> & segs,
 		      Mesh & mesh, const Surface * surf)
 {
+  auto seg_fdi = [&mesh](const Segment& s) -> int {
+    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+    return -1;
+  };
+
   int found = 0;
   int fother = -1;
 
-  int facei = segs.Get(1).si;
+  int facei = seg_fdi(segs.Get(1));
   int surfnr = mesh.GetFaceDescriptor(facei).SurfNr();
 
   if (geom.GetSurface(surfnr) == s1 ||
@@ -1089,6 +1101,12 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 
 void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 {
+  auto seg_fdi = [&mesh](const Segment& s) -> int {
+    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+    return -1;
+  };
+
   int fi1, fi2, side;
   int s1rep = -1, s2rep = -1;
 
@@ -1156,9 +1174,9 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 
 	      for (int k = 1; k <= mesh.GetNSeg(); k++)
 		{
-		  if (mesh.LineSegment(k).si == fi1)
+		  if (seg_fdi(mesh.LineSegment(k)) == fi1)
 		    segs_on_face1.Append (k);
-		  if (mesh.LineSegment(k).si == fi2)
+		  if (seg_fdi(mesh.LineSegment(k)) == fi2)
 		    segs_on_face2.Append (k);
 		}
 
@@ -1166,7 +1184,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 	      for (int k = 1; k <= mesh.GetNSeg(); k++)
 		{
 		  const Segment & seg1 = mesh.LineSegment(k);
-		  if (seg1.si != fi1)
+		  if (seg_fdi(seg1) != fi1)
 		    continue;
 		  
 		  int foundother = 0;
@@ -1242,6 +1260,12 @@ void CloseSurfaceIdentification ::
 BuildSurfaceElements (NgArray<Segment> & segs,
 		      Mesh & mesh, const Surface * surf)
 {
+  auto seg_fdi = [&mesh](const Segment& s) -> int {
+    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+    return -1;
+  };
+
   bool found = 0;
   int cntquads = 0;
 
@@ -1273,10 +1297,10 @@ BuildSurfaceElements (NgArray<Segment> & segs,
 	    const Segment & s2 = segs[i2];
 	    //(*testout) << "checking " << s1 << " and " << s2 << " for ident." << endl;
 
-	    if(domain && !((s1.domin == dom_nr ||
-			    s1.domout == dom_nr) &&
-			   (s2.domin == dom_nr ||
-			    s2.domout == dom_nr)))
+	    if(domain && !((mesh.GetEdgeDescriptor(s1.GetIndex()).DomainIn() == dom_nr ||
+			    mesh.GetEdgeDescriptor(s1.GetIndex()).DomainOut() == dom_nr) &&
+			   (mesh.GetEdgeDescriptor(s2.GetIndex()).DomainIn() == dom_nr ||
+			    mesh.GetEdgeDescriptor(s2.GetIndex()).DomainOut() == dom_nr)))
 	      continue;
 	 
 	    if ((mesh.GetIdentifications().Get (s1[0], s2[1], nr) && 
@@ -1294,7 +1318,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
                 if (nst1 * dvec < 0) continue;
                 
 		Element2d el(s1[0], s1[1], s2[0], s2[1]);
-                el.SetIndex(s1.si);
+                el.SetIndex(seg_fdi(s1));
 
 		Vec<3> n = Cross (mesh[el[1]] - mesh[el[0]],
 				  mesh[el[3]] - mesh[el[0]]);
@@ -1320,7 +1344,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   if (found)
     {
       PrintMessage(3, "insert quad layer of ", cntquads,
-		   " elements at face ", segs.Get(1).si);
+		   " elements at face ", seg_fdi(segs.Get(1)));
       //NgArray<Segment> aux;
       //for(int i=0; i<segs.Size();i++)
       //	if(!foundseg[i])
@@ -1342,6 +1366,12 @@ void CloseSurfaceIdentification ::
 BuildSurfaceElements2 (NgArray<Segment> & segs,
 		       Mesh & mesh, const Surface * surf)
 {
+  auto seg_fdi = [&mesh](const Segment& s) -> int {
+    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+    return -1;
+  };
+
   // copy mesh
 
 
@@ -1353,7 +1383,7 @@ BuildSurfaceElements2 (NgArray<Segment> & segs,
   bool found = 0;
   int fother = -1;
 
-  int facei = segs[0].si;
+  int facei = seg_fdi(segs[0]);
   int surfnr = mesh.GetFaceDescriptor(facei).SurfNr();
 
   

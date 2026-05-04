@@ -83,6 +83,11 @@ namespace netgen
 
 
     CalcEdges1 (h, mesh);
+
+    // Initialize seginfo array for all segments (pre-existing ones get 0)
+    seg_seginfo.SetSize(mesh.GetNSeg());
+    seg_seginfo = 0;
+
     SplitEqualOneSegEdges (mesh);
     FindClosedSurfaces (h, mesh);
     PrintMessage (3, cntedge, " edges found");
@@ -406,7 +411,7 @@ namespace netgen
 	  }
 
       
-	NgArray<Segment> refedges;
+	NgArray<RefEdge> refedges;
 	NgArray<bool> refedgesinv;
       
 
@@ -418,10 +423,25 @@ namespace netgen
 	for (int i = 0; i < refedges.Size(); i++)
           {
             refedges[i].edgenr = cntedge;
-            refedges[i].index = cntedge;
+            refedges[i].SetIndex(cntedge);
           }
 
-	
+	// create one edge descriptor per refedge
+	for (int i = 0; i < refedges.Size(); i++)
+	{
+	  EdgeDescriptor ed;
+	  ed.SetEdgeNr(cntedge);
+	  ed.SetSurfNr(0, refedges[i].surfnr1);
+	  ed.SetSurfNr(1, refedges[i].surfnr2);
+	  ed.SetTLOSurface(refedges[i].tlosurf);
+	  ed.SetDomainIn(refedges[i].domin);
+	  ed.SetDomainOut(refedges[i].domout);
+	  // fdindex staged with surface representant, FindEdges will overwrite with real FD index
+	  ed.SetIndex(refedges[i].si);
+	  int edsi = mesh.AddEdgeDescriptor(ed);
+	  refedges[i].index_ = edsi;
+	}
+
 #ifdef DEVELOP
 	(*testout) << "edge " << cntedge << endl
 		   << "startp: " << specpoints[startpoints.Last()].p 
@@ -532,20 +552,20 @@ namespace netgen
 	    
 	  }
 
-	/*
-	  // not available ...
-	for (int i = 0; i < refedges.Size(); i++)
-	  {
-	    EdgeDescriptor ed;
-	    ed.SetSurfNr(0, refedges[i].surfnr1);
-	    ed.SetSurfNr(1, refedges[i].surfnr2);
-	    int hnr = mesh.AddEdgeDescriptor(ed);
-	    if (hnr != refedges[i].edgenr)
-	      {
-		cerr << "edgedescriptor index wrong: new : " << hnr << " old = " << refedges[i].edgenr << endl;
-	      }
-	  }
-	*/
+	// update edge descriptor with final surfnrs and name
+	if (refedges.Size() > 0 && refedges[0].index_ >= 0)
+	{
+	  auto & ed = mesh.GetEdgeDescriptor(refedges[0].index_);
+	  ed.SetSurfNr(0, refedges[0].surfnr1);
+	  ed.SetSurfNr(1, refedges[0].surfnr2);
+	  int ednr = refedges[0].edgenr;
+	  if (ednr > 0 && ednr-1 < mesh.GetNCD2Names())
+	    {
+	      const string & name = mesh.GetCD2Name(ednr-1);
+	      if (name != "default")
+		ed.SetName(name);
+	    }
+	}
 
 
 
@@ -581,8 +601,9 @@ namespace netgen
     for (si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & seg = mesh[si];
-	if (seg.seginfo && seg.edgenr >= 1 && seg.edgenr <= cntedge)
-	  osedges.Elem(seg.edgenr)--;
+	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+	if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
+	  osedges.Elem(seg_ednr)--;
       }
 
     // flag one segment edges
@@ -592,9 +613,10 @@ namespace netgen
     for (si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & seg = mesh[si];
-	if (seg.seginfo && seg.edgenr >= 1 && seg.edgenr <= cntedge)
+	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+	if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
-	    if (osedges.Get(seg.edgenr))
+	    if (osedges.Get(seg_ednr))
 	      {
 		INDEX_2 i2(seg[0], seg[1]);
 		i2.Sort ();
@@ -659,41 +681,45 @@ namespace netgen
     for (si = 0; si < nseg; si++)
       {
 	const Segment & seg = mesh[si];
-	if (seg.seginfo && seg.edgenr >= 1 && seg.edgenr <= cntedge)
+	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+	if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
 	    INDEX_2 i2(seg[0], seg[1]);
 	    i2.Sort ();
 	    if (osedgesht.Used (i2) &&
 		osedgesht.Get (i2) == 2 &&
-		osedges.Elem(seg.edgenr) == -1)
+		osedges.Elem(seg_ednr) == -1)
 	      {
 		Point<3> newp = Center (mesh[PointIndex(seg[0])],
 					mesh[PointIndex(seg[1])]);
 
-		ProjectToEdge (geometry.GetSurface(seg.surfnr1), 
-			       geometry.GetSurface(seg.surfnr2), 
+		const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+		ProjectToEdge (geometry.GetSurface(ed.SurfNr(0)), 
+			       geometry.GetSurface(ed.SurfNr(1)), 
 			       newp);
 
-		osedges.Elem(seg.edgenr) = 
+		osedges.Elem(seg_ednr) = 
 		  mesh.AddPoint (newp, mesh[PointIndex(seg[0])].GetLayer(), EDGEPOINT);
-		meshpoint_tree -> Insert (newp, osedges.Elem(seg.edgenr));
+		meshpoint_tree -> Insert (newp, osedges.Elem(seg_ednr));
 	      }
 	  }
       }
     
 
     // for (int i = 1; i <= nseg; i++)
-    for (Segment & seg : mesh.LineSegments())
+    for (SegmentIndex si = 0; si < nseg; si++)
       {
-	// Segment & seg = mesh.LineSegment (i);
-	if (seg.edgenr >= 1 && seg.edgenr <= cntedge)
+	Segment & seg = mesh[si];
+	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+	if (seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
-	    if (osedges.Get(seg.edgenr) != -1)
+	    if (osedges.Get(seg_ednr) != -1)
 	      {
 		Segment newseg = seg;
-		newseg[0] = osedges.Get(seg.edgenr);
-		seg[1] = osedges.Get(seg.edgenr);
+		newseg[0] = osedges.Get(seg_ednr);
+		seg[1] = osedges.Get(seg_ednr);
 		mesh.AddSegment (newseg);
+		seg_seginfo.Append(seg_seginfo[si]);
 	      }
 	  }
       }
@@ -931,10 +957,10 @@ namespace netgen
   void EdgeCalculation :: 
   AnalyzeEdge (int s1, int s2, int s1_rep, int s2_rep, int pos, int layer,
 	       const NgArray<Point<3> > & edgepoints,
-	       NgArray<Segment> & refedges,
+	       NgArray<RefEdge> & refedges,
 	       NgArray<bool> & refedgesinv)
   {
-    Segment seg;
+    RefEdge re;
     NgArray<int> locsurfind, locsurfind2;
 
     NgArray<int> edges_priority;
@@ -1189,16 +1215,16 @@ namespace netgen
 		  
 		    if (!hi)
 		      {
-			 seg.si = rlsi;  // JS Sept 2006
-			 // seg.si = lsi;
-			seg.domin = -1;
-			seg.domout = -1;
-			seg.tlosurf = -1;
-			//seg.surfnr1 = s1_rep;
-			//seg.surfnr2 = s2_rep;
-			seg.surfnr1 = s1;
-			seg.surfnr2 = s2;
-                        refedges.Append (seg);
+			 re.si = rlsi;  // JS Sept 2006
+			 // re.si = lsi;
+			re.domin = -1;
+			re.domout = -1;
+			re.tlosurf = -1;
+			//re.surfnr1 = s1_rep;
+			//re.surfnr2 = s2_rep;
+			re.surfnr1 = s1;
+			re.surfnr2 = s2;
+                        refedges.Append (re);
                         hi = refedges.Size();
 			refedgesinv.Append (edgeinv);
 			edges_priority.Append((pre_ok[k-1]) ? 1 : 0);
@@ -1336,7 +1362,7 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  StoreEdge (const NgArray<Segment> & refedges,
+  StoreEdge (const NgArray<RefEdge> & refedges,
 	     const NgArray<bool> & refedgesinv,
 	     const NgArray<Point<3> > & edgepoints,
 	     const NgArray<double> & curvelength,
@@ -1450,44 +1476,39 @@ namespace netgen
 		seg[0] = thispi;
 		seg[1] = lastpi;
 	      }
-	    seg.si = refedges.Get(k).si;
-	    seg.domin = refedges.Get(k).domin;
-	    seg.domout = refedges.Get(k).domout;
-	    seg.tlosurf = refedges.Get(k).tlosurf;
-	    seg.edgenr = refedges.Get(k).edgenr;
-	    seg.index = refedges.Get(k).index;            
-	    seg.surfnr1 = refedges.Get(k).surfnr1;
-	    seg.surfnr2 = refedges.Get(k).surfnr2;
-	    seg.seginfo = 0;
-	    if (k == 1) seg.seginfo = (refedgesinv.Get(k)) ? 2 : 1;
+	    seg.SetIndex(refedges.Get(k).GetIndex());
+	    char si_val = 0;
+	    if (k == 1) si_val = (refedgesinv.Get(k)) ? 2 : 1;
 	    mesh.AddSegment (seg);
+	    seg_seginfo.Append(si_val);
 	    //(*testout) << "add seg " << mesh[seg.p1] << "-" << mesh[seg.p2] << endl;
 	    //(*testout) << "refedge " << k << " surf1 " << seg.surfnr1 << " surf2 " << seg.surfnr2 << " inv " << refedgesinv.Get(k) << endl;
 	  
-	    double maxh = min2 (geometry.GetSurface(seg.surfnr1)->GetMaxH(),
-				geometry.GetSurface(seg.surfnr2)->GetMaxH());
+	    const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+	    double maxh = min2 (geometry.GetSurface(ed.SurfNr(0))->GetMaxH(),
+				geometry.GetSurface(ed.SurfNr(1))->GetMaxH());
 			      
-	    if (seg.domin != -1)
+	    if (ed.DomainIn() != -1)
 	      {
 		const Solid * s1 = 
-		  geometry.GetTopLevelObject(seg.domin) -> GetSolid();
+		  geometry.GetTopLevelObject(ed.DomainIn()) -> GetSolid();
 		maxh = min2 (maxh, s1->GetMaxH());
-		maxh = min2 (maxh, geometry.GetTopLevelObject(seg.domin)->GetMaxH());
+		maxh = min2 (maxh, geometry.GetTopLevelObject(ed.DomainIn())->GetMaxH());
 		mesh.RestrictLocalH (p, maxh);
 		mesh.RestrictLocalH (np, maxh);
 	      }
-	    if (seg.domout != -1)
+	    if (ed.DomainOut() != -1)
 	      {
 		const Solid * s1 = 
-		  geometry.GetTopLevelObject(seg.domout) -> GetSolid();
+		  geometry.GetTopLevelObject(ed.DomainOut()) -> GetSolid();
 		maxh = min2 (maxh, s1->GetMaxH());
-		maxh = min2 (maxh, geometry.GetTopLevelObject(seg.domout)->GetMaxH());
+		maxh = min2 (maxh, geometry.GetTopLevelObject(ed.DomainOut())->GetMaxH());
 		mesh.RestrictLocalH (p, maxh);
 		mesh.RestrictLocalH (np, maxh);
 	      }
-	    if (seg.tlosurf != -1)
+	    if (ed.TLOSurface() != -1)
 	      {
-		double hi = geometry.GetTopLevelObject(seg.tlosurf) -> GetMaxH();
+		double hi = geometry.GetTopLevelObject(ed.TLOSurface()) -> GetMaxH();
 		maxh = min2 (maxh, hi);
 		mesh.RestrictLocalH (p, maxh);
 		mesh.RestrictLocalH (np, maxh);
@@ -1509,7 +1530,7 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  StoreShortEdge (const NgArray<Segment> & refedges,
+  StoreShortEdge (const NgArray<RefEdge> & refedges,
 		  const NgArray<bool> & refedgesinv,
 		  const NgArray<Point<3> > & edgepoints,
 		  const NgArray<double> & curvelength,
@@ -1619,17 +1640,11 @@ namespace netgen
 	    seg[1] = pi1;
 	  }
 
-	seg.si = refedges.Get(k).si;
-	seg.domin = refedges.Get(k).domin;
-	seg.domout = refedges.Get(k).domout;
-	seg.tlosurf = refedges.Get(k).tlosurf;
-	seg.edgenr = refedges.Get(k).edgenr;
-	seg.index = refedges.Get(k).index;        
-	seg.surfnr1 = refedges.Get(k).surfnr1;
-	seg.surfnr2 = refedges.Get(k).surfnr2;
-	seg.seginfo = 0;
-	if (k == 1) seg.seginfo = (refedgesinv.Get(k)) ? 2 : 1;
+	seg.SetIndex(refedges.Get(k).GetIndex());
+	char si_val = 0;
+	if (k == 1) si_val = (refedgesinv.Get(k)) ? 2 : 1;
 	mesh.AddSegment (seg);
+	seg_seginfo.Append(si_val);
 	//	  (*testout) << "add seg " << seg[0] << "-" << seg[1] << endl;
       }
   }
@@ -1641,7 +1656,7 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  CopyEdge (const NgArray<Segment> & refedges,
+  CopyEdge (const NgArray<RefEdge> & refedges,
 	    const NgArray<bool> & refedgesinv,
 	    int copyfromedge, 
 	    const Point<3> & fromstart, const Point<3> & fromend,
@@ -1652,6 +1667,12 @@ namespace netgen
   {
     int k;
     // PointIndex pi;
+
+    auto seg_fdi = [&mesh](const Segment& s) -> int {
+      if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+        return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return -1;
+    };
 
     double size = geometry.MaxSize();
     
@@ -1714,9 +1735,10 @@ namespace netgen
       {
 	// real copy, since array might be reallocated !!
 	const Segment oldseg = mesh.LineSegment(i);
-	if (oldseg.edgenr != copyfromedge)
+	int oldseg_ednr = (oldseg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(oldseg.GetIndex()).EdgeNr() : -1;
+	if (oldseg_ednr != copyfromedge)
 	  continue;
-	if (oldseg.seginfo == 0)
+	if (seg_seginfo[i-1] == 0)
 	  continue;
 
 	PointIndex pi1 = oldseg[0];
@@ -1736,7 +1758,7 @@ namespace netgen
 	    bool inv = refedgesinv.Get(k);
 
 	    // other edge is inverse
-	    if (oldseg.seginfo == 1)
+	    if (seg_seginfo[i-1] == 1)
 	      inv = !inv;
 
 	    //	  (*testout) << "inv, now = " << inv << endl;
@@ -1751,21 +1773,15 @@ namespace netgen
 		seg[0] = npi2;
 		seg[1] = npi1;
 	      }
-	    seg.si = refedges.Get(k).si;
-	    seg.domin = refedges.Get(k).domin;
-	    seg.domout = refedges.Get(k).domout;
-	    seg.tlosurf = refedges.Get(k).tlosurf;
-	    seg.edgenr = refedges.Get(k).edgenr;
-	    seg.index = refedges.Get(k).index;            
-	    seg.surfnr1 = refedges.Get(k).surfnr1;
-	    seg.surfnr2 = refedges.Get(k).surfnr2;
-	    seg.seginfo = 0;
-	    if (k == 1) seg.seginfo = refedgesinv.Get(k) ? 2 : 1;
+	    seg.SetIndex(refedges.Get(k).GetIndex());
+	    char si_val = 0;
+	    if (k == 1) si_val = refedgesinv.Get(k) ? 2 : 1;
 	    mesh.AddSegment (seg);
+	    seg_seginfo.Append(si_val);
 	    //	  (*testout) << "copy seg " << seg[0] << "-" << seg[1] << endl;
 #ifdef DEVELOP
 
-	    (*testout) << "copy seg, face = " << seg.si << ": " 
+	    (*testout) << "copy seg, face = " << seg_fdi(seg) << ": " 
 		       << " inv = " << inv << ", refinv = " << refedgesinv.Get(k)
 		       << mesh.Point(seg[0]) << ", " << mesh.Point(seg[1]) << endl;
 #endif
@@ -1786,6 +1802,12 @@ namespace netgen
   {
     // if there is no special point at a sphere, one has to add a segment pair
   
+    auto seg_fdi = [&mesh](const Segment& s) -> int {
+      if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+        return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return -1;
+    };
+
     int nsurf = geometry.GetNSurf();
     int layer = 0;
 
@@ -1804,9 +1826,12 @@ namespace netgen
 	const Segment & seg = mesh.LineSegment(i);
 
 #ifdef DEVELOP      
-	(*testout) << seg.surfnr1 << ", " << seg.surfnr2 << ", si = " << seg.si << endl;
+	{
+	  const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+	  (*testout) << ed.SurfNr(0) << ", " << ed.SurfNr(1) << ", si = " << seg_fdi(seg) << endl;
+	}
 #endif
-	int classrep = geometry.GetSurfaceClassRepresentant (seg.si);
+	int classrep = geometry.GetSurfaceClassRepresentant (seg_fdi(seg));
 	pointatsurface.Set (classrep);
       }
 
@@ -1827,19 +1852,10 @@ namespace netgen
 	  
 		    
 	    Segment seg1;
-	    seg1.si = i;
-	    seg1.domin = -1;
-	    seg1.domout = -1;
 
 	    Segment seg2;
-	    seg2.si = i;
-	    seg2.domin = -1;
-	    seg2.domout = -1;
 
-	    seg1.surfnr1 = i;
-	    seg2.surfnr1 = i;
-	    seg1.surfnr2 = i;
-	    seg2.surfnr2 = i;
+	    int domin = -1, domout = -1;
 
 	    for (int j = 0; j < nsol; j++)
 	      {
@@ -1862,17 +1878,11 @@ namespace netgen
 
 			if (!tansol->VectorIn(p1, nv))
 			  {
-			    seg1.domin = j;
-			    seg2.domin = j;
-			    seg1.tlosurf = -1;
-			    seg2.tlosurf = -1;
+			    domin = j;
 			  }
 			else
 			  {
-			    seg1.domout = j;
-			    seg2.domout = j;
-			    seg1.tlosurf = -1;
-			    seg2.tlosurf = -1;
+			    domout = j;
 			  }
 			//        seg.s2 = i;
 			//        seg.invs1 = surfaces[i] -> Inverse();
@@ -1889,18 +1899,31 @@ namespace netgen
 	    s->Project (p2);
 
 
-	    if (seg1.domin != -1 || seg1.domout != -1)
+	    if (domin != -1 || domout != -1)
 	      {
                 seg1[0] = mesh.AddPoint (p1, layer, EDGEPOINT);
                 seg1[1] = mesh.AddPoint (p2, layer, EDGEPOINT);
                 seg2[0] = seg1[1];
                 seg2[1] = seg1[0];
-		seg1.geominfo[0].trignum = 1;
-		seg1.geominfo[1].trignum = 1;
-		seg2.geominfo[0].trignum = 1;
-		seg2.geominfo[1].trignum = 1;
+		seg1.GeomInfo(0).trignum = 1;
+		seg1.GeomInfo(1).trignum = 1;
+		seg2.GeomInfo(0).trignum = 1;
+		seg2.GeomInfo(1).trignum = 1;
+		EdgeDescriptor ed;
+		ed.SetEdgeNr(-1);
+		ed.SetSurfNr(0, i);
+		ed.SetSurfNr(1, i);
+		ed.SetTLOSurface(-1);
+		ed.SetDomainIn(domin);
+		ed.SetDomainOut(domout);
+		int edsi = mesh.AddEdgeDescriptor(ed);
+		mesh.GetEdgeDescriptor(edsi).SetIndex(i);
+		seg1.SetIndex(edsi);
+		seg2.SetIndex(edsi);
 		mesh.AddSegment (seg1);
+		seg_seginfo.Append(0);
 		mesh.AddSegment (seg2);
+		seg_seginfo.Append(0);
 
 		PrintMessage (5, "Add line segment to smooth surface");
 

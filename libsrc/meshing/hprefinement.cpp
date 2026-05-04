@@ -61,8 +61,12 @@ namespace netgen
 	param[i][l] = points[i].X(l+1); 
   }
 
-  HPRefElement :: HPRefElement(Segment & el) :
-    type(HP_NONE), levelx(0), levely(0), levelz(0), np(2), domin(el.domin), domout(el.domout), singedge_left(el.singedge_left), singedge_right(el.singedge_right)
+  HPRefElement :: HPRefElement(Segment & el, const Mesh & mesh) :
+    type(HP_NONE), levelx(0), levely(0), levelz(0), np(2),
+    domin( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).DomainIn() : -1 ),
+    domout( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).DomainOut() : -1 ),
+    singedge_left( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).SingEdgeLeft() : 0 ),
+    singedge_right( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).SingEdgeRight() : 0 )
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -656,12 +660,12 @@ namespace netgen
     for(SegmentIndex i = 0; i < mesh.GetNSeg(); i++) 
       { 
 	Segment & seg = mesh[i];
-	HPRefElement hpel(mesh[i]);
+	HPRefElement hpel(mesh[i], mesh);
 	hpel.coarse_elnr = i; 
 	hpel.type = HP_SEGM; 
 	// hpel.index = seg.edgenr + 10000*seg.si;
         hpel.index = seg.GetIndex();
-        hpel.edgenr = seg.GetEdgeNr();
+        hpel.edgenr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
         /*
 	if(seg.edgenr >= 10000)
 	  {
@@ -1433,32 +1437,16 @@ namespace netgen
 		    // NOTE: only for less than 10000 elements (HACK) !!!
 		    // seg.edgenr = hpel.index % 10000;
 		    // seg.si     = hpel.index / 10000;
-                    seg.SetEdgeNr (hpel.edgenr);
                     seg.SetIndex (hpel.index);
 
-                    /*
-                    seg.epgeominfo[0].dist = hpel.param[0][0]; // he: war hpel.param[0][0]
-                    seg.epgeominfo[1].dist = hpel.param[1][0]; // he: war hpel.param[1][0]
-                    */
-                    
                     const Segment & coarseseg = mesh.coarsemesh->LineSegment(hpel.coarse_elnr+1);
-                    double d1 = coarseseg.epgeominfo[0].dist;
-                    double d2 = coarseseg.epgeominfo[1].dist;
+                    double d1 = coarseseg.EPGeomInfo(0).dist;
+                    double d2 = coarseseg.EPGeomInfo(1).dist;
 
-                    // seg.epgeominfo[0].dist = hpel.param[0][0]; // he: war hpel.param[0][0]
-                    // seg.epgeominfo[1].dist = hpel.param[1][0]; // he: war hpel.param[1][0]
+                    seg.EPGeomInfo(0).dist = d1 + hpel.param[0][0] * (d2-d1);
+                    seg.EPGeomInfo(1).dist = d1 + hpel.param[1][0] * (d2-d1);
 
-                    seg.epgeominfo[0].dist = d1 + hpel.param[0][0] * (d2-d1); // JS, June 08
-                    seg.epgeominfo[1].dist = d1 + hpel.param[1][0] * (d2-d1); 
-
-
-		    seg.epgeominfo[0].edgenr = seg.edgenr;
-		    seg.epgeominfo[1].edgenr = seg.edgenr;
-                    seg.domin = hpel.domin; seg.domout=hpel.domout; // he: needed for segments!
-		    seg.hp_elnr = i;
-		    seg.singedge_left = hpel.singedge_left; 
-		    seg.singedge_right = hpel.singedge_right;
-                    seg.SetCurved (coarseseg.IsCurved());
+		    seg.SetHpElnr(i);
 		    mesh.AddSegment (seg); 
 		    break;
 		  }
@@ -1686,7 +1674,7 @@ namespace netgen
 	// cout << endl; 
 
 	for (int i = 1; i <= mesh.GetNSeg(); i++)
-	  if (mesh.LineSegment(i).singedge_left * levels >= act_ref)
+	  if (mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).SingEdgeLeft() * levels >= act_ref)
 	    {
 	      INDEX_2 i2 (mesh.LineSegment(i)[0], 
 			  mesh.LineSegment(i)[1]);
@@ -1805,9 +1793,10 @@ namespace netgen
 	for (int i = 1; i <= mesh.GetNSeg(); i++)
 	  {
 	    const Segment & seg = mesh.LineSegment(i);
-	    int ind = seg.edgenr;
+	    const EdgeDescriptor & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+	    int ind = ed.EdgeNr();
 	    
-	    if (seg.singedge_left * levels >= act_ref)
+	    if (ed.SingEdgeLeft() * levels >= act_ref)
 	      {
 		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
                                            mesh.LineSegment(i)[1]);
@@ -1815,15 +1804,15 @@ namespace netgen
 		edgepoint.SetBit(i2.I1());
 		edgepoint.SetBit(i2.I2());
 		*testout << " singleft " << endl;  
-		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
-		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
-		edgepoint_dom.Set ( { mesh.LineSegment(i).domin, i2.I1() }, 1);
-		edgepoint_dom.Set ( { mesh.LineSegment(i).domin, i2.I2() }, 1);
+		*testout << " mesh.LineSegment(i).domout " << ed.DomainOut() << endl;      
+		*testout << " mesh.LineSegment(i).domin " << ed.DomainIn() << endl;      
+		edgepoint_dom.Set ( { ed.DomainIn(), i2.I1() }, 1);
+		edgepoint_dom.Set ( { ed.DomainIn(), i2.I2() }, 1);
 		sing = 1; 
 		
 	      }
 	    
-	    if (seg.singedge_right * levels >= act_ref)
+	    if (ed.SingEdgeRight() * levels >= act_ref)
 	      {
 		PointIndices<2> i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
                                                    mesh.LineSegment(i)[0]);  
@@ -1832,19 +1821,19 @@ namespace netgen
 		edgepoint.SetBit(i2.I2());
 		
 		*testout << " singright " << endl;  
-		*testout << " mesh.LineSegment(i).domout " << mesh.LineSegment(i).domout << endl;      
-		*testout << " mesh.LineSegment(i).domin " << mesh.LineSegment(i).domin << endl;      
+		*testout << " mesh.LineSegment(i).domout " << ed.DomainOut() << endl;      
+		*testout << " mesh.LineSegment(i).domin " << ed.DomainIn() << endl;      
 		
-		edgepoint_dom.Set ( { mesh.LineSegment(i).domout, i2.I1() }, 1);
-		edgepoint_dom.Set ( { mesh.LineSegment(i).domout, i2.I2() }, 1);
+		edgepoint_dom.Set ( { ed.DomainOut(), i2.I1() }, 1);
+		edgepoint_dom.Set ( { ed.DomainOut(), i2.I2() }, 1);
 		sing = 1;
 	      }
 	    
 	    // (*testout) << "seg = " << ind << ", " << seg[0] << "-" << seg[1] << endl;
 	    
 
-	    if (seg.singedge_left * levels >= act_ref
-		|| seg.singedge_right* levels >= act_ref)
+	    if (ed.SingEdgeLeft() * levels >= act_ref
+		|| ed.SingEdgeRight() * levels >= act_ref)
 	      {
 		for (int j = 0; j < 2; j++)
 		  {

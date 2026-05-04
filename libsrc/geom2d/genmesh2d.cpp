@@ -116,6 +116,20 @@ namespace netgen
     NgArray<double> curvepoints;
     double edgelength, edgelengthold;
 
+    // create edge descriptor for this spline edge
+    EdgeDescriptor ed;
+    ed.SetEdgeNr(segnr);
+    ed.SetSurfNr(0, spline.leftdom);
+    ed.SetSurfNr(1, spline.rightdom);
+    ed.SetDomainIn(spline.leftdom);
+    ed.SetDomainOut(spline.rightdom);
+    ed.SetName(spline.GetBCName());
+    ed.SetSingEdgeLeft(spline.hpref_left);
+    ed.SetSingEdgeRight(spline.hpref_right);
+
+    int edsi = mesh.AddEdgeDescriptor(ed);
+    mesh.GetEdgeDescriptor(edsi).SetIndex(spline.bc);
+
     CalcPartition (spline, mp, mesh, elto0, curvepoints);
 
     double dt = 1.0 / n;
@@ -171,19 +185,11 @@ namespace netgen
 		}
 
 	      Segment seg;
-	      seg.edgenr = segnr;
-	      seg.index = spline.bc;
-	      seg.si = spline.bc; // segnr;
 	      seg[0] = pi1;
 	      seg[1] = pi2;
-	      seg.domin = spline.leftdom;
-	      seg.domout = spline.rightdom;
-	      seg.epgeominfo[0].edgenr = segnr;
-	      seg.epgeominfo[0].dist = edgelengthold;
-	      seg.epgeominfo[1].edgenr = segnr;
-	      seg.epgeominfo[1].dist = edgelength;
-	      seg.singedge_left = spline.hpref_left;
-	      seg.singedge_right = spline.hpref_right;
+	      seg.EPGeomInfo(0).dist = edgelengthold;
+	      seg.EPGeomInfo(1).dist = edgelength;
+	      seg.SetIndex(edsi);
 	      mesh.AddSegment (seg);
 	    }
 	
@@ -353,13 +359,13 @@ namespace netgen
   
     for (const auto& seg : mesh.LineSegments())
       {
-	if (seg.edgenr == from)
+	if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
 	  {
 	    mappoints[seg[0]] = 1;
-	    param[seg[0]] = seg.epgeominfo[0].dist;
+	    param[seg[0]] = seg.EPGeomInfo(0).dist;
 
 	    mappoints[seg[1]] = 1;
-	    param[seg[1]] = seg.epgeominfo[1].dist;
+	    param[seg[1]] = seg.EPGeomInfo(1).dist;
 	  }
       }
 
@@ -392,26 +398,32 @@ namespace netgen
     if(mapped)
       mesh.GetIdentifications().SetType(to,Identifications::PERIODIC);
 
+    // create edge descriptor for the copied edge
+    EdgeDescriptor ed;
+    ed.SetEdgeNr(to);
+    ed.SetSurfNr(0, GetSpline(to-1).leftdom);
+    ed.SetSurfNr(1, GetSpline(to-1).rightdom);
+    ed.SetDomainIn(GetSpline(to-1).leftdom);
+    ed.SetDomainOut(GetSpline(to-1).rightdom);
+    ed.SetName(GetSpline(to-1).GetBCName());
+
+    int copy_edsi = mesh.AddEdgeDescriptor(ed);
+    mesh.GetEdgeDescriptor(copy_edsi).SetIndex(GetSpline(to-1).bc);
+
     // copy segments
     int oldnseg = mesh.GetNSeg();
     for (int i = 1; i <= oldnseg; i++)
       {
 	const Segment & seg = mesh.LineSegment(i);
-	if (seg.edgenr == from)
+	if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
 	  {
 	    Segment nseg;
-	    nseg.edgenr = to;
-	    nseg.si = GetSpline(to-1).bc;      // splines.Get(to)->bc;
-	    nseg.index = GetSpline(to-1).bc;   // ???
 	    nseg[0] = mappoints[seg[0]];
 	    nseg[1] = mappoints[seg[1]];
-	    nseg.domin = GetSpline(to-1).leftdom;
-	    nseg.domout = GetSpline(to-1).rightdom;
 	  
-	    nseg.epgeominfo[0].edgenr = to;
-	    nseg.epgeominfo[0].dist = param[seg[0]];
-	    nseg.epgeominfo[1].edgenr = to;
-	    nseg.epgeominfo[1].dist = param[seg[1]];
+	    nseg.EPGeomInfo(0).dist = param[seg[0]];
+	    nseg.EPGeomInfo(1).dist = param[seg[1]];
+	    nseg.SetIndex(copy_edsi);
 	    mesh.AddSegment (nseg);
 	  }
       }
@@ -482,17 +494,19 @@ namespace netgen
     int maxdomnr = 0;
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
       {
-	if ( (*mesh)[si].domin > maxdomnr) maxdomnr = (*mesh)[si].domin;
-	if ( (*mesh)[si].domout > maxdomnr) maxdomnr = (*mesh)[si].domout;
+	const auto & ed = mesh->GetEdgeDescriptor((*mesh)[si].GetIndex());
+	if ( ed.DomainIn() > maxdomnr) maxdomnr = ed.DomainIn();
+	if ( ed.DomainOut() > maxdomnr) maxdomnr = ed.DomainOut();
       }
 
     TableCreator<const Segment*> dom2seg_creator(maxdomnr+1);
     for ( ; !dom2seg_creator.Done(); dom2seg_creator++)
       for (const Segment & seg : mesh->LineSegments())
         {
-          dom2seg_creator.Add (seg.domin, &seg);
-          if (seg.domin != seg.domout)
-            dom2seg_creator.Add (seg.domout, &seg);
+          const auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
+          dom2seg_creator.Add (ed.DomainIn(), &seg);
+          if (ed.DomainIn() != ed.DomainOut())
+            dom2seg_creator.Add (ed.DomainOut(), &seg);
         }
     auto dom2seg = dom2seg_creator.MoveTable();
     
@@ -504,12 +518,24 @@ namespace netgen
     // number of bcnames
     int maxsegmentindex = 0;
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
-      if ( (*mesh)[si].si > maxsegmentindex) maxsegmentindex = (*mesh)[si].si;
+      if ( (*mesh)[si].GetIndex() > maxsegmentindex) maxsegmentindex = (*mesh)[si].GetIndex();
 
     mesh->SetNBCNames(maxsegmentindex);
 
     for ( int sindex = 0; sindex < maxsegmentindex; sindex++ )
       mesh->SetBCName ( sindex, geometry.GetBCName( sindex+1 ) );
+
+    // Fix EdgeDescriptor names: Partition() uses spline.GetBCName() which returns
+    // "default" because SplineSeg::bcname is never set from geometry.bcnames.
+    // Match EDs to splines by edgenr (1-based spline index) since placeholder EDs
+    // from SetCD2Name may occupy the first indices.
+    for (int edi = 1; edi <= mesh->GetNED(); edi++)
+      {
+        auto & ed = mesh->GetEdgeDescriptor(edi);
+        int enr = ed.EdgeNr();  // 1-based spline index set by Partition()
+        if (enr >= 1 && enr <= (int)geometry.GetNSplines())
+          ed.SetName(geometry.GetBCName(geometry.GetSpline(enr-1).bc));
+      }
 
     mesh->CalcLocalH(mp.grading);
     t_h.Stop();
@@ -536,16 +562,17 @@ namespace netgen
             {
               int p1 = -1, p2 = -2;
 
-              if ( (*mesh)[si].domin == domnr)
+              const auto & ed = mesh->GetEdgeDescriptor((*mesh)[si].GetIndex());
+              if ( ed.DomainIn() == domnr)
                 { p1 = (*mesh)[si][0]; p2 = (*mesh)[si][1]; }
-              if ( (*mesh)[si].domout == domnr)
+              if ( ed.DomainOut() == domnr)
                 { p1 = (*mesh)[si][1]; p2 = (*mesh)[si][0]; }
               
               if (p1 == -1) continue;
 
               nextpi[p1] = p2;       // counter-clockwise
               
-              int index = (*mesh)[si].si;
+              int index = (*mesh)[si].GetIndex();
               if (si1[p1] != index && si2[p1] != index)
                 { si2[p1] = si1[p1]; si1[p1] = index; }
               if (si1[p2] != index && si2[p2] != index)
@@ -660,7 +687,9 @@ namespace netgen
         }
         */
         for (const Segment * seg : dom2seg[domnr])
-          if (seg->domin==domnr || seg->domout==domnr )
+        {
+          const auto & ed = mesh->GetEdgeDescriptor(seg->GetIndex());
+          if (ed.DomainIn()==domnr || ed.DomainOut()==domnr )
             for (auto pi : {(*seg)[0], (*seg)[1]})
               if (compress[pi]==-1)
                 {
@@ -668,6 +697,7 @@ namespace netgen
                   cnt++;
                   compress[pi] = cnt;
                 }
+        }
 
 
 	PointGeomInfo gi;
@@ -690,11 +720,12 @@ namespace netgen
 
 	for (const Segment * seg : dom2seg[domnr])
 	  {
-	    if (seg->domin == domnr)
+	    const auto & ed = mesh->GetEdgeDescriptor(seg->GetIndex());
+	    if (ed.DomainIn() == domnr)
               meshing.AddBoundaryElement (compress[(*seg)[0]], 
                                           compress[(*seg)[1]], gi, gi);
             
-	    if (seg->domout == domnr)
+	    if (ed.DomainOut() == domnr)
               meshing.AddBoundaryElement (compress[(*seg)[1]],
                                           compress[(*seg)[0]], gi, gi);
 	  }

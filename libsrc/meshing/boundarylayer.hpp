@@ -72,6 +72,7 @@ public:
 
   bool have_single_segments;
   Array<Segment> old_segments, free_segments, segments, new_segments, new_segments_on_moved_bnd;
+  Array<int> seg_face;  // per-segment face descriptor index (replaces seg.si usage in BL)
   Array<Element2d, SurfaceElementIndex> new_sels, new_sels_on_moved_bnd;
   Array<Array<PointIndex>, PointIndex> mapto;
   Array<PointIndex, PointIndex> mapfrom;

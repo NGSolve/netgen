@@ -836,20 +836,22 @@ namespace netgen
     iterate_segs2([&](auto segi, const auto & seg, int dest)
 		  {
 		    segm_buf.Add (dest, segi);
-		    segm_buf.Add (dest, seg.si);
-		    segm_buf.Add (dest, seg.pnums[0]);
-		    segm_buf.Add (dest, seg.pnums[1]);
-		    segm_buf.Add (dest, seg.geominfo[0].trignum);
-		    segm_buf.Add (dest, seg.geominfo[1].trignum);
-		    segm_buf.Add (dest, seg.surfnr1);
-		    segm_buf.Add (dest, seg.surfnr2);
-		    segm_buf.Add (dest, seg.edgenr);
-		    segm_buf.Add (dest, seg.index);                    
-		    segm_buf.Add (dest, seg.epgeominfo[0].dist);
-		    segm_buf.Add (dest, seg.epgeominfo[1].edgenr);
-		    segm_buf.Add (dest, seg.epgeominfo[1].dist);
-		    segm_buf.Add (dest, seg.singedge_right);
-		    segm_buf.Add (dest, seg.singedge_left);
+		    bool has_ed = seg.GetIndex() >= 1 && seg.GetIndex() <= GetNED();
+		    int fdi = has_ed ? GetEdgeDescriptor(seg.GetIndex()).GetIndex() : -1;
+		    segm_buf.Add (dest, fdi);
+		    segm_buf.Add (dest, seg[0]);
+		    segm_buf.Add (dest, seg[1]);
+		    segm_buf.Add (dest, seg.GeomInfo(0).trignum);
+		    segm_buf.Add (dest, seg.GeomInfo(1).trignum);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(0) : -1);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(1) : -1);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
+		    segm_buf.Add (dest, seg.GetIndex());
+		    segm_buf.Add (dest, seg.EPGeomInfo(0).dist);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
+		    segm_buf.Add (dest, seg.EPGeomInfo(1).dist);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SingEdgeRight() : 0.0);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SingEdgeLeft() : 0.0);
 		  });
     // distribute segment data
     for (int dest = 1; dest < ntasks; dest++)
@@ -904,7 +906,7 @@ namespace netgen
     auto iterate_names = [&](auto func) {
       for (int k = 0; k < nnames[0]; k++) func(materials[k]);
       for (int k = 0; k < nnames[1]; k++) func(bcnames[k]);
-      for (int k = 0; k < nnames[2]; k++) func(cd2names[k]);
+      for (int k = 0; k < nnames[2]; k++) func(GetCD2NamePtr(k));
       for (int k = 0; k < nnames[3]; k++) func(cd3names[k]);
     };
     // sizes of names
@@ -1136,34 +1138,30 @@ namespace netgen
       int globsegi;
       int ii = 0;
       int segi = 1;
-      int nsegloc = int ( segmbuf.Size() / 14 ) ;
+      int nsegloc = int ( segmbuf.Size() / 15 ) ;
       paralleltop -> SetNSegm ( nsegloc );
 
       while ( ii < segmbuf.Size() )
 	{
 	  globsegi = int (segmbuf[ii++]);
-	  seg.si = int (segmbuf[ii++]);
+	  ii++; // fdi (now on EdgeDescriptor)
 	  
-	  seg.pnums[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-	  seg.pnums[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-	  seg.geominfo[0].trignum = int( segmbuf[ii++] );
-	  seg.geominfo[1].trignum = int ( segmbuf[ii++]);
-	  seg.surfnr1 = int ( segmbuf[ii++]);
-	  seg.surfnr2 = int ( segmbuf[ii++]);
-	  seg.edgenr = int ( segmbuf[ii++]);
-	  seg.index = int ( segmbuf[ii++]);          
-	  seg.epgeominfo[0].dist = segmbuf[ii++];
-	  seg.epgeominfo[1].edgenr = int (segmbuf[ii++]);
-	  seg.epgeominfo[1].dist = segmbuf[ii++];
+	  seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
+	  seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
+	  seg.GeomInfo(0).trignum = int( segmbuf[ii++] );
+	  seg.GeomInfo(1).trignum = int ( segmbuf[ii++]);
+	  ii++; // surfnr1 (on EdgeDescriptor)
+	  ii++; // surfnr2 (on EdgeDescriptor)
+	  ii++; // edgenr (on EdgeDescriptor)
+	  seg.SetIndex(int ( segmbuf[ii++]));
+	  seg.EPGeomInfo(0).dist = segmbuf[ii++];
+	  ii++; // edgenr (now on EdgeDescriptor)
+	  seg.EPGeomInfo(1).dist = segmbuf[ii++];
 	  
-	  seg.singedge_left = segmbuf[ii++];
-	  seg.singedge_right = segmbuf[ii++];
+	  ii++; // singedge_right (on EdgeDescriptor)
+	  ii++; // singedge_left (on EdgeDescriptor)
 	  
-	  seg.epgeominfo[0].edgenr = seg.epgeominfo[1].edgenr;
-	  
-	  seg.domin = seg.surfnr1;
-	  seg.domout = seg.surfnr2;
-	  if ( seg.pnums[0].IsValid() && seg.pnums[1].IsValid() )
+	  if ( seg[0].IsValid() && seg[1].IsValid() )
 	    {
 	      paralleltop-> SetLoc2Glob_Segm ( segi,  globsegi );
 	      
@@ -1204,7 +1202,7 @@ namespace netgen
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
     bcnames.SetSize(nnames[1]);
-    cd2names.SetSize(nnames[2]);
+    edgedecoding.SetSize(nnames[2]);
     cd3names.SetSize(nnames[3]);
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
@@ -1237,7 +1235,16 @@ namespace netgen
     };
     write_names(materials);
     write_names(bcnames);
-    write_names(cd2names);
+    {
+      // cd2 names are stored in edgedecoding
+      for (int k = 0; k < nnames[2]; k++) {
+	int s = name_sizes[tot_nn];
+	string nm = s ? string(&compiled_names[tot_size], s) : string("");
+	edgedecoding[k].SetName(nm);
+	tot_nn++;
+	tot_size += s;
+      }
+    }
     write_names(cd3names);
     
     comm.Barrier();
@@ -1650,7 +1657,7 @@ namespace netgen
 	
 	const Segment & el = LineSegment(i+1);	
 	
-	int ind = el.si;
+	int ind = el.GetIndex();
 	if (segment_weights.Size()<ind)
 	    nwgt.Append(0);
 	else

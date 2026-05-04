@@ -207,7 +207,7 @@ namespace netgen
                             element_map[label] = std::make_tuple(nr+1, 2);
                           }
                           else if(dim == 2){
-		            el.si = -1; // add label to segment, will be changed later when BC's are assigned
+                            el.SetIndex(-1);
                             auto nr = mesh.AddSegment(el);
                             element_map[label] = std::make_tuple(nr+1, 2);
                           }
@@ -227,7 +227,7 @@ namespace netgen
                             element_map[label] = std::make_tuple(nr+1, 2);
                           }
                           else if(dim == 2){
-		            el.si = -1; // add label to segment, will be changed later when BC's are assigned
+                            el.SetIndex(-1);
                             auto nr = mesh.AddSegment(el);
                             element_map[label] = std::make_tuple(nr+1, 2);
                           }
@@ -347,12 +347,11 @@ namespace netgen
                             ednr = mesh.AddEdgeDescriptor(ed);
                             mesh.SetCD2Name(bcpr, name);
                             auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                            mesh[nr].edgenr = ednr+1;
                           }
                           else if(dim == 2)
                           {
                             Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
-			    seg.si = bccounter + 1;
+			    seg.SetIndex(bccounter + 1);
 			    mesh.SetBCName(bccounter, name);
 		            bccounter++;
                           }
@@ -384,12 +383,11 @@ namespace netgen
 	   		    if(dim == 3)
                             {
                               auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                              mesh[nr].edgenr = ednr+1;
                             }
 			    else if(dim == 2)
 			    {
-	 			    Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
-			            seg.si = bccounter;
+ 				    Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
+			            seg.SetIndex(bccounter);
 			    }
                             break;
                           default:
@@ -415,8 +413,8 @@ namespace netgen
 		int bccounter_tmp = bccounter;
 		for(int index=1; index <= mesh.GetNSeg(); index++){
                 	Segment & seg = mesh.LineSegment(index);
-			if(seg.si == -1){
-			  seg.si = bccounter + 1;
+			if(seg.GetIndex() <= 0){
+				  seg.SetIndex(bccounter + 1);
 			  if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
 			  bccounter_tmp++;
 			}
@@ -424,6 +422,9 @@ namespace netgen
 		if(bccounter_tmp > bccounter) bccounter++;
 	}
       
+
+	if(dim == 2)
+		mesh.ReconstructEdgeDescriptors();
 
 	cout << IM(5)  << "Finalize mesh" << endl;
         Point3d pmin, pmax;
@@ -702,6 +703,7 @@ namespace netgen
           mesh.AddSurfaceElement(el);
         }
       }
+    mesh.ReconstructEdgeDescriptors();
   }
 
   void ReadUserFormat(Mesh & mesh, const filesystem::path & filename, const string & format)

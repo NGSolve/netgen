@@ -1025,7 +1025,9 @@ namespace netgen
     NgArray<int> swap_edge(nedges);
     NgArray<EdgePointGeomInfo> edge_gi0(nedges);
     NgArray<EdgePointGeomInfo> edge_gi1(nedges);
+    NgArray<int> edge_geoedgenr(nedges);
     use_edge = 0;
+    edge_geoedgenr = -1;
 
     if (working)
       for (SegmentIndex i = 0; i < mesh.GetNSeg(); i++)
@@ -1033,10 +1035,11 @@ namespace netgen
 	  const Segment & seg = mesh[i];
 	  int edgenr = top.GetEdge (i);
 	  use_edge[edgenr] = 1;
-	  edge_surfnr1[edgenr] = seg.surfnr1;
-	  edge_surfnr2[edgenr] = seg.surfnr2;
-	  edge_gi0[edgenr] = seg.epgeominfo[0];
-	  edge_gi1[edgenr] = seg.epgeominfo[1];
+	  edge_surfnr1[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0);
+	  edge_surfnr2[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1);
+	  edge_gi0[edgenr] = seg.EPGeomInfo(0);
+	  edge_gi1[edgenr] = seg.EPGeomInfo(1);
+	  edge_geoedgenr[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
 	  swap_edge[edgenr] = int (seg[0] > seg[1]);
 	}
 
@@ -1056,16 +1059,13 @@ namespace netgen
                   {
                     senddata.Add (proc, edge_surfnr1[e]);
                     senddata.Add (proc, edge_surfnr2[e]);
-                    senddata.Add (proc, edge_gi0[e].edgenr);
-                    senddata.Add (proc, edge_gi0[e].body);
+                    senddata.Add (proc, edge_geoedgenr[e]);
                     senddata.Add (proc, edge_gi0[e].dist);
-                    senddata.Add (proc, edge_gi0[e].u);
-                    senddata.Add (proc, edge_gi0[e].v);
-                    senddata.Add (proc, edge_gi1[e].edgenr);
-                    senddata.Add (proc, edge_gi1[e].body);
+                    senddata.Add (proc, edge_gi0[e].gi.u);
+                    senddata.Add (proc, edge_gi0[e].gi.v);
                     senddata.Add (proc, edge_gi1[e].dist);
-                    senddata.Add (proc, edge_gi1[e].u);
-                    senddata.Add (proc, edge_gi1[e].v);
+                    senddata.Add (proc, edge_gi1[e].gi.u);
+                    senddata.Add (proc, edge_gi1[e].gi.v);
                     senddata.Add (proc, swap_edge[e]);
                   }
               }
@@ -1085,16 +1085,13 @@ namespace netgen
                     use_edge[e] = 1;
                     edge_surfnr1[e] = int (recvdata[proc][cnt[proc]++]);
                     edge_surfnr2[e] = int (recvdata[proc][cnt[proc]++]);
-                    edge_gi0[e].edgenr = int (recvdata[proc][cnt[proc]++]);
-                    edge_gi0[e].body = int (recvdata[proc][cnt[proc]++]);
+                    edge_geoedgenr[e] = int (recvdata[proc][cnt[proc]++]);
                     edge_gi0[e].dist = recvdata[proc][cnt[proc]++];
-                    edge_gi0[e].u = recvdata[proc][cnt[proc]++];
-                    edge_gi0[e].v = recvdata[proc][cnt[proc]++];
-                    edge_gi1[e].edgenr = int (recvdata[proc][cnt[proc]++]);
-                    edge_gi1[e].body = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi0[e].gi.u = recvdata[proc][cnt[proc]++];
+                    edge_gi0[e].gi.v = recvdata[proc][cnt[proc]++];
                     edge_gi1[e].dist = recvdata[proc][cnt[proc]++];
-                    edge_gi1[e].u = recvdata[proc][cnt[proc]++];
-                    edge_gi1[e].v = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].gi.u = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].gi.v = recvdata[proc][cnt[proc]++];
                     swap_edge[e] = recvdata[proc][cnt[proc]++];
                   }
               }
@@ -1125,9 +1122,9 @@ namespace netgen
 	  if (rational)
 	    {
 	      Vec<3> tau1 = geo.GetTangent(p1, edge_surfnr2[edgenr], edge_surfnr1[edgenr],
-                                           edge_gi0[edgenr]);
+                                           edge_gi0[edgenr], edge_geoedgenr[edgenr]);
 	      Vec<3> tau2 = geo.GetTangent(p2, edge_surfnr2[edgenr], edge_surfnr1[edgenr],
-                                           edge_gi1[edgenr]);
+                                           edge_gi1[edgenr], edge_geoedgenr[edgenr]);
 	      // p1 + alpha1 tau1 = p2 + alpha2 tau2;
 
 	      Mat<3,2> mat;
@@ -1154,7 +1151,7 @@ namespace netgen
 		  v05 /= 1 + (w-1) * 0.5;
 		  Point<3> p05 (v05), pp05(v05);
 		  geo.ProjectPointEdge(edge_surfnr1[edgenr], edge_surfnr2[edgenr], pp05,
-                                       &edge_gi0[edgenr]);
+                                       &edge_gi0[edgenr], edge_geoedgenr[edgenr]);
 		  double d = Dist (pp05, p05);
 
 		  if (d < dold)
@@ -1201,7 +1198,7 @@ namespace netgen
 		      geo.PointBetweenEdge(p1, p2, xi[j],
                                            edge_surfnr2[edgenr], edge_surfnr1[edgenr],
                                            edge_gi0[edgenr], edge_gi1[edgenr],
-                                           pp, ppgi);
+                                           pp, ppgi, edge_geoedgenr[edgenr]);
 		    }
 		  else
 		    {
@@ -1209,7 +1206,7 @@ namespace netgen
 		      geo.PointBetweenEdge(p2, p1, xi[j],
 					   edge_surfnr2[edgenr], edge_surfnr1[edgenr],
 					   edge_gi1[edgenr], edge_gi0[edgenr],
-					   pp, ppgi);
+					   pp, ppgi, edge_geoedgenr[edgenr]);
 		    }
 	    
 		  Vec<3> dist = pp - p;
@@ -1580,7 +1577,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
 	const HPRefElement & hpref_el =
-	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
+	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
         
 	return mesh.coarsemesh->GetCurvedElements().IsSegmentCurved (hpref_el.coarse_elnr);
       }
@@ -1610,7 +1607,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
 	const HPRefElement & hpref_el =
-	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
+	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
 	// xi umrechnen
 	T lami[2] = { xi, 1-xi };
@@ -4889,7 +4886,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
 	const HPRefElement & hpref_el =
-	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
+	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
 	// xi umrechnen
 	double lami[8];
