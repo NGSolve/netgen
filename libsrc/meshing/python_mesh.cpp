@@ -82,6 +82,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .value("PERIODIC", Identifications::PERIODIC)
     .value("CLOSESURFACES", Identifications::CLOSESURFACES)
     .value("CLOSEEDGES", Identifications::CLOSEEDGES)
+    .value("OFFSET_POINT", Identifications::OFFSET_POINT)
     ;
 
   py::implicitly_convertible<int, Identifications::ID_TYPE>();
@@ -778,29 +779,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<FaceDescriptor>(m);
   ExportArray<EdgeDescriptor>(m);
 
-  py::class_<BoundaryLayerPointInfo>(m, "BoundaryLayerPointInfo")
-    .def_readonly("base_pi", &BoundaryLayerPointInfo::base_pi)
-    .def_readonly("height", &BoundaryLayerPointInfo::height)
-    .def("IsValid", [](const BoundaryLayerPointInfo & self) {
-        return self.base_pi.IsValid();
-      })
-    .def("__repr__", [](const BoundaryLayerPointInfo & self) {
-        if (!self.base_pi.IsValid()) return string("BoundaryLayerPointInfo(invalid)");
-        return string("BoundaryLayerPointInfo(base_pi=") + to_string((int)self.base_pi)
-          + ", height=" + to_string(self.height) + ")";
-      })
-    ;
 
-  using BLPArray = Array<BoundaryLayerPointInfo, PointIndex>;
-  py::class_<BLPArray>(m, "BoundaryLayerPointInfoArray")
-    .def("__len__", [](BLPArray & a) { return a.Size(); })
-    .def("__getitem__", [](BLPArray & a, PointIndex i) -> BoundaryLayerPointInfo & {
-        return a[i];
-      }, py::return_value_policy::reference)
-    .def("__iter__", [](BLPArray & a) {
-        return py::make_iterator(&a[a.Range().First()], &a[a.Range().First()] + a.Size());
-      }, py::keep_alive<0, 1>())
-    ;
 
   string export_docu = "Export mesh to other file format. Supported formats are:\n";
   Array<string> export_formats;
@@ -1205,9 +1184,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
-    .def("GetBoundaryLayerPointMap", [](Mesh & self) -> auto & {
-        return self.GetBoundaryLayerPointMap();
-      }, py::return_value_policy::reference, "Get boundary layer point map array indexed by PointIndex")
+
     .def("RestrictLocalH", [](Mesh& self, const Point<3>& pnt, double maxh,
                               int layer)
     {
@@ -1529,10 +1506,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::list points;
            for(const auto& pair : self.GetIdentifications().GetIdentifiedPoints())
              {
-               // py::tuple pnts = py::make_tuple(pair.first.I1(), pair.first.I2());
-               
-               auto [pi1, pi2] = get<0> (pair.first);
-               py::tuple pnts = py::make_tuple(pi1, pi2);
+               auto [pts, nr] = pair.first;
+               py::tuple pnts = py::make_tuple(pts.I1(), pts.I2(), nr);
                points.append(pnts);
              }
            return points;
@@ -1561,6 +1536,10 @@ py::arg("point_tolerance") = -1.)
                                  {
                                    return self.GetIdentifications().GetMaxNr();
                                  })
+    .def("GetIdentificationType", [](Mesh& self, int identnr)
+                                 {
+                                   return self.GetIdentifications().GetType(identnr);
+                                 }, py::arg("identnr"))
     .def ("CalcLocalH", &Mesh::CalcLocalH)
     .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
           {

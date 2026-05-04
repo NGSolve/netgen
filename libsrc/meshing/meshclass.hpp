@@ -62,18 +62,6 @@ namespace netgen
     ~BisectionInfo();
   };
   
-  /// boundary layer curving data: maps offset point -> (base point, cumulative height)
-  struct BoundaryLayerPointInfo {
-      PointIndex base_pi = PointIndex::INVALID;
-      double height = 0;
-  };
-
-  inline ostream & operator<< (ostream & ost, const BoundaryLayerPointInfo & info)
-  {
-    ost << info.base_pi << " " << info.height;
-    return ost;
-  }
-
   /// 2d/3d mesh
   class Mesh
   {
@@ -142,8 +130,6 @@ namespace netgen
        this table.
     */
     Array<EdgeDescriptor> edgedecoding;
-
-    Array<BoundaryLayerPointInfo, PointIndex> boundary_layer_point_map;
 
     Array<string*> region_name_cd[4];
     Array<string*> & materials = region_name_cd[0];
@@ -872,9 +858,6 @@ namespace netgen
 
     auto & EdgeDescriptors () const { return edgedecoding; }
     auto & EdgeDescriptors () { return edgedecoding; }
-
-    const auto & GetBoundaryLayerPointMap() const { return boundary_layer_point_map; }
-    auto & GetBoundaryLayerPointMap() { return boundary_layer_point_map; }
 
     void ClearEdgeDescriptors()
     { edgedecoding.SetSize(0); }

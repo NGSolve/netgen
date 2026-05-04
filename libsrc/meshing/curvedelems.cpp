@@ -728,6 +728,45 @@ namespace netgen
 	  edgeorder[top.GetEdge (i)] = aorder;
       }
 
+    // Build offset-point map (boundary layers, z-refine) and set orders
+    // for interior offset edges/faces that would otherwise stay at order 1
+    idmap_type offset_map;
+    bool have_offset = false;
+    for (int identnr = 1; identnr <= mesh.GetIdentifications().GetMaxNr(); identnr++)
+      if (mesh.GetIdentifications().GetType(identnr) == Identifications::OFFSET_POINT)
+        {
+          idmap_type tmp;
+          mesh.GetIdentifications().GetMap(identnr, tmp);
+          if (!have_offset)
+            { offset_map = std::move(tmp); have_offset = true; }
+          else
+            for (auto pi : tmp.Range())
+              if (tmp[pi].IsValid())
+                offset_map[pi] = tmp[pi];
+        }
+
+    if (have_offset && working)
+      {
+        auto bl_valid = [&](PointIndex pi) -> bool {
+          return pi < offset_map.Range().Next() && offset_map[pi].IsValid();
+        };
+        for (int e = 0; e < nedges; e++)
+          {
+            auto [p1, p2] = top.GetEdgeVertices(e);
+            if (bl_valid(p1) || bl_valid(p2))
+              edgeorder[e] = max(edgeorder[e], aorder);
+          }
+        for (int f = 0; f < nfaces; f++)
+          {
+            auto verts = top.GetFaceVertices(f);
+            bool any_bl = false;
+            for (int k = 0; k < verts.Size(); k++)
+              if (bl_valid(verts[k])) { any_bl = true; break; }
+            if (any_bl)
+              faceorder[f] = max(faceorder[f], aorder);
+          }
+      }
+
     if (rational)
       {
         edgeorder = 2;
@@ -1505,24 +1544,22 @@ namespace netgen
       }
 
 
-    // Prolong curved element coefficients to boundary layer offset edges/faces
-    {
-      auto & bl_map = mesh.GetBoundaryLayerPointMap();
-      if (bl_map.Size() > 0)
-        {
-          auto bl_valid = [&](PointIndex pi) -> bool {
-            return pi < bl_map.Range().Next() && bl_map[pi].base_pi.IsValid();
-          };
+    // Prolong curvature to offset-point edges/faces (boundary layers, z-refine)
+    if (have_offset)
+      {
+        auto bl_valid = [&](PointIndex pi) -> bool {
+          return pi < offset_map.Range().Next() && offset_map[pi].IsValid();
+        };
 
-          PrintMessage (3, "Prolonging curvature to boundary layer edges");
+          PrintMessage (3, "Prolonging curvature to offset-point edges");
           for (int e = 0; e < nedges; e++)
             {
               auto [p1, p2] = top.GetEdgeVertices(e);
               if (!bl_valid(p1) || !bl_valid(p2)) continue;
 
-              PointIndex base_p1 = bl_map[p1].base_pi;
-              PointIndex base_p2 = bl_map[p2].base_pi;
-              if (base_p1 == p1 && base_p2 == p2) continue;  // not an offset edge
+              PointIndex base_p1 = offset_map[p1];
+              PointIndex base_p2 = offset_map[p2];
+              if (base_p1 == p1 && base_p2 == p2) continue;
 
               int base_edge = top.GetVerticesEdge(base_p1, base_p2);
               if (base_edge < 0) continue;
@@ -1535,7 +1572,6 @@ namespace netgen
               int base_first = edgecoeffsindex[base_edge];
               int copy_ndof = min(ndof, base_ndof);
 
-              // Scale by edge length ratio: naturally handles (R-h)/R scaling
               double base_len = Dist(mesh[base_p1], mesh[base_p2]);
               double offset_len = Dist(mesh[p1], mesh[p2]);
               double scale = (base_len > 1e-16) ? offset_len / base_len : 1.0;
@@ -1544,7 +1580,7 @@ namespace netgen
                 edgecoeffs[first+j] = scale * edgecoeffs[base_first+j];
             }
 
-          PrintMessage (3, "Prolonging curvature to boundary layer faces");
+          PrintMessage (3, "Prolonging curvature to offset-point faces");
           for (int f = 0; f < nfaces; f++)
             {
               auto verts = top.GetFaceVertices(f);
@@ -1554,17 +1590,15 @@ namespace netgen
                   { all_bl = false; break; }
               if (!all_bl) continue;
 
-              // Find base face: map all vertices to base vertices
               ArrayMem<PointIndex, 4> base_verts(verts.Size());
               bool is_offset = false;
               for (int k = 0; k < verts.Size(); k++)
                 {
-                  base_verts[k] = bl_map[verts[k]].base_pi;
+                  base_verts[k] = offset_map[verts[k]];
                   if (base_verts[k] != verts[k]) is_offset = true;
                 }
               if (!is_offset) continue;
 
-              // Find base face by iterating faces of first base vertex
               int base_face = -1;
               for (auto sei : top.GetVertexSurfaceElements(base_verts[0]))
                 {
@@ -1590,8 +1624,6 @@ namespace netgen
               int base_first = facecoeffsindex[base_face];
               int copy_ndof = min(ndof, base_ndof);
 
-              // Scale by characteristic length ratio (sqrt of area ratio)
-              // For trig: area = 0.5 * |cross(v1-v0, v2-v0)|
               auto face_area = [&](FlatArray<PointIndex> fv) -> double {
                 Vec<3> e1 = mesh[fv[1]] - mesh[fv[0]];
                 Vec<3> e2 = mesh[fv[2]] - mesh[fv[0]];
@@ -1608,8 +1640,7 @@ namespace netgen
               for (int j = 0; j < copy_ndof; j++)
                 facecoeffs[first+j] = scale * facecoeffs[base_first+j];
             }
-        }
-    }
+      }
 
     // compress edge and face tables
     int newbase = 0;

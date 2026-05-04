@@ -1430,14 +1430,17 @@ void BoundaryLayerTool ::Perform ()
 
   FixSurfaceElements();
 
-  // Populate boundary layer point map for curved element generation
+  // Store offset point identifications for curved element generation
+  if (!params.disable_curving)
   {
-    auto & bl_map = mesh.GetBoundaryLayerPointMap();
-    bl_map.SetSize(mesh.GetNP());
+    auto & ident = mesh.GetIdentifications();
+    int ident_nr = ident.GetNr("offset_points");
+    ident.SetType(ident_nr, Identifications::OFFSET_POINT);
     for (auto [pi, data] : growth_vector_map)
       {
-        auto [gw, height] = data;
-        bl_map[pi] = { mapfrom[pi], height };
+        PointIndex base_pi = mapfrom[pi];
+        if (base_pi.IsValid() && base_pi != pi)
+          ident.Add(pi, base_pi, ident_nr);  // inverse map: offset -> base
       }
   }
 

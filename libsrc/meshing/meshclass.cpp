@@ -1142,21 +1142,7 @@ namespace netgen
           }
       }
 
-    {
-      int bl_count = 0;
-      for (auto i : boundary_layer_point_map.Range())
-        if (boundary_layer_point_map[i].base_pi.IsValid())
-          bl_count++;
-      if (bl_count > 0)
-        {
-          outfile << "\n\nboundarylayerpointmap" << endl << bl_count << endl;
-          for (auto i : boundary_layer_point_map.Range())
-            if (boundary_layer_point_map[i].base_pi.IsValid())
-              outfile << i << " " << boundary_layer_point_map[i].base_pi << " "
-                      << boundary_layer_point_map[i].height << endl;
-          outfile << endl << endl;
-        }
-    }
+
 
     
     outfile << endl << endl << "endmesh" << endl << endl;
@@ -1814,20 +1800,7 @@ namespace netgen
               (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
           }
 
-        if (strcmp (str, "boundarylayerpointmap") == 0)
-          {
-            infile >> n;
-            for (int i = 0; i < n; i++)
-              {
-                int pi_offset, pi_base;
-                double height;
-                infile >> pi_offset >> pi_base >> height;
-                PointIndex pio(pi_offset);
-                if (pio >= boundary_layer_point_map.Range().Next())
-                  boundary_layer_point_map.SetSize(pio+1-IndexBASE<PointIndex>());
-                boundary_layer_point_map[pio] = { PointIndex(pi_base), height };
-              }
-          }
+
 
         
         if (strcmp (str, "endmesh") == 0)
@@ -6876,6 +6849,19 @@ namespace netgen
           }
         ipts.Append(hash_pts.I2());
       }
+
+    // Store offset-point identifications for curving
+    {
+      auto & ident = GetIdentifications();
+      int offset_nr = ident.GetNr("offset_points");
+      ident.SetType(offset_nr, Identifications::OFFSET_POINT);
+      for (const auto& [pair, chain] : inserted_points)
+        {
+          PointIndex base_pi = pair.first;
+          for (auto i : Range(size_t(1), chain.Size()-1))  // skip endpoints
+            ident.Add(chain[i], base_pi, offset_nr);  // inverse: offset -> base
+        }
+    }
 
     // Split segments
     for(auto si : Range(segments))
