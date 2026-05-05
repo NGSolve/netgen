@@ -621,16 +621,13 @@ namespace netgen
     Array<Array<double>> all_params(nedges);
 
     // Build edge→face mapping: for each edge, store the first two faces that use it (1-based)
-    Array<int> edge_first_face(edges.Size()), edge_second_face(edges.Size());
+    Array<int> edge_first_face(edges.Size());
     edge_first_face = -1;
-    edge_second_face = -1;
     for (int k = 0; k < (int)faces.Size(); k++)
         for (auto * edge_ptr : faces[k]->edges)
           {
             if (edge_first_face[edge_ptr->nr] < 0)
                 edge_first_face[edge_ptr->nr] = k + 1;
-            else if (edge_second_face[edge_ptr->nr] < 0)
-                edge_second_face[edge_ptr->nr] = k + 1;
           }
 
     for (auto edgenr : Range(edges))
@@ -759,26 +756,12 @@ namespace netgen
         // (FaceDescriptors don't exist yet - they're created in MeshSurface.)
         int fdi = (edgenr < edge_first_face.Size() && edge_first_face[edgenr] > 0)
                   ? edge_first_face[edgenr] : edgenr + 1;
-        int face_idx = fdi - 1;  // 0-based index into faces array
-        int face2 = (edgenr < edge_second_face.Size()) ? edge_second_face[edgenr] : -1;
-        if (face_idx >= 0 && face_idx < (int)faces.Size())
-          {
-            // surfnr on the future FD will be face_idx+1 (set in MeshSurface)
-            ed.SetSurfNr(0, face_idx + 1);
-            ed.SetSurfNr(1, (face2 > 0) ? face2 : 0);
-            ed.SetDomainIn(faces[face_idx]->domin);
-            ed.SetDomainOut(faces[face_idx]->domout);
-          }
-        else
-          {
-            ed.SetSurfNr(0, edge->domin+1);
-            ed.SetSurfNr(1, edge->domout+1);
-            ed.SetDomainIn(edge->domin+1);
-            ed.SetDomainOut(edge->domout+1);
-          }
-
-        int edsi = mesh.AddEdgeDescriptor(ed);
-        mesh.GetEdgeDescriptor(edsi).SetIndex(fdi);
+        ed.SetSurfNr(0, edge->domin+1);
+        ed.SetSurfNr(1, edge->domout+1);
+        ed.SetDomainIn(edge->domin+1);
+        ed.SetDomainOut(edge->domout+1);
+        ed.SetIndex(fdi);
+        auto edsi = mesh.AddEdgeDescriptor(ed);
 
         for(auto i : Range(pnums.Size()-1))
         {
