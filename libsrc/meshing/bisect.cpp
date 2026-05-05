@@ -3648,7 +3648,7 @@ namespace netgen
                                          mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0),
                                          mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1),
                                          seg.EPGeomInfo(0), seg.EPGeomInfo(1),
-                                         mesh.Point (newpi), newepgi);
+                                         mesh.Point (newpi), newepgi, seg.GetIndex());
 		    nseg1.EPGeomInfo(1) = newepgi;
 		    nseg2.EPGeomInfo(0) = newepgi;
 		  
