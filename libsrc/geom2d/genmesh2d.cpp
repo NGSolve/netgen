@@ -522,19 +522,12 @@ namespace netgen
 
     mesh->SetNBCNames(maxsegmentindex);
 
-    for ( int sindex = 0; sindex < maxsegmentindex; sindex++ )
-      mesh->SetBCName ( sindex, geometry.GetBCName( sindex+1 ) );
-
-    // Fix EdgeDescriptor names: Partition() uses spline.GetBCName() which returns
-    // "default" because SplineSeg::bcname is never set from geometry.bcnames.
-    // Match EDs to splines by edgenr (1-based spline index) since placeholder EDs
-    // from SetCD2Name may occupy the first indices.
     for (int edi = 1; edi <= mesh->GetNED(); edi++)
       {
         auto & ed = mesh->GetEdgeDescriptor(edi);
         int enr = ed.EdgeNr();  // 1-based spline index set by Partition()
-        if (enr >= 1 && enr <= (int)geometry.GetNSplines())
-          ed.SetName(geometry.GetBCName(geometry.GetSpline(enr-1).bc));
+        ed.SetName(geometry.GetBCName(geometry.GetSpline(enr-1).bc));
+        mesh->SetBCName(edi-1, ed.GetName());
       }
 
     mesh->CalcLocalH(mp.grading);
@@ -751,6 +744,12 @@ namespace netgen
 	geometry.GetMaterial (domnr, material);
 	if (material)
           mesh->SetMaterial (domnr, material);
+      }
+    // SetBCName overwrites the facedescriptor names, so correct it here again:
+    for (int i = 1; i <= maxdomnr; i++)
+      {
+        auto & fd = mesh->GetFaceDescriptor(i);
+        fd.SetBCName(mesh->GetMaterial(i));
       }
 
     mesh->Compress();
