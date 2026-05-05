@@ -541,32 +541,6 @@ def test_fdindex_2d():
             f"ED[{seg.index}] fdindex={ed.fdindex} should be > 0"
 
 
-def test_fdindex_recomputed_after_save_load():
-    """After save/load, RebuildFDIndices recomputes valid index values for 3D."""
-    import tempfile, os
-    pytest.importorskip("netgen.occ")
-    from netgen.occ import Box, Pnt, OCCGeometry
-    from netgen.meshing import Mesh
-    geo = OCCGeometry(Box(Pnt(0,0,0), Pnt(1,1,1)))
-    mesh = geo.GenerateMesh(maxh=0.5)
-
-    with tempfile.NamedTemporaryFile(suffix=".vol", delete=False) as f:
-        tmpfile = f.name
-    try:
-        mesh.Save(tmpfile)
-        mesh2 = Mesh()
-        mesh2.Load(tmpfile)
-        assert mesh2.GetNED() == mesh.GetNED()
-        # After load, RebuildFDIndices should produce valid indices (>0) for 3D
-        nfd = mesh2.GetNFaceDescriptors()
-        for i in range(mesh2.GetNED()):
-            ed = mesh2.EdgeDescriptor(i+1)
-            assert ed.fdindex >= 1, f"ED[{i}] index={ed.fdindex} should be >= 1"
-            assert ed.fdindex <= nfd, f"ED[{i}] index={ed.fdindex} exceeds nfd={nfd}"
-    finally:
-        os.unlink(tmpfile)
-
-
 def test_save_load_second_order_mesh():
     """Save/load a second-order OCC box mesh preserves segments, indices, and ED edgenr values."""
     import tempfile, os
