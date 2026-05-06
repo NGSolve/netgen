@@ -41,6 +41,7 @@ push_github:
             }
           }
 
+        $env:CCACHE_DIR       = "C:\tools\cache"
         $env:CI_DIR           = "C:\ci\$env:CI_PIPELINE_ID"
         $env:CCACHE_BASEDIR   = $env:CI_DIR
         $env:NETGEN_BUILD_DIR = Join-Path $env:CI_DIR "build"

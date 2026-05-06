@@ -32,43 +32,24 @@ namespace ngcore
   TaskManager * task_manager = nullptr;
   bool TaskManager :: use_paje_trace = false;
   int TaskManager :: max_threads = getenv("NGS_NUM_THREADS") ? atoi(getenv("NGS_NUM_THREADS")) : std::thread::hardware_concurrency();
-  int TaskManager :: num_threads = 1;
-
   
   thread_local int TaskManager :: thread_id = 0;
   
-  const function<void(TaskInfo&)> * TaskManager::func;
-  const function<void()> * TaskManager::startup_function = nullptr;
-  const function<void()> * TaskManager::cleanup_function = nullptr;
+  #ifdef WIN32
+      TaskManager * GetTaskManager() { return task_manager; }
+  #endif
 
-  atomic<int> TaskManager::ntasks;
-  Exception * TaskManager::ex;
-  
-  atomic<int> TaskManager::jobnr;
-  
-  atomic<int> TaskManager::complete[8];   // max nodes
-  atomic<int> TaskManager::done;
-  atomic<int> TaskManager::active_workers;
-  atomic<int> TaskManager::workers_on_node[8];   // max nodes
-
-  
-  int TaskManager::sleep_usecs = 1000;
-  bool TaskManager::sleep = false;
-
-  TaskManager::NodeData *TaskManager::nodedata[8];
-  int TaskManager::num_nodes;
-  
-  static mutex copyex_mutex;
-
-  int EnterTaskManager ()
+  int EnterTaskManager (int nthreads)
   {
+    if(nthreads == 0) return 0;
+    if(nthreads == -1) nthreads = TaskManager::GetMaxThreads();
     if (task_manager)
       {
         // no task manager started
         return 0;
       }
 
-    task_manager = new TaskManager();
+    task_manager = new TaskManager(nthreads);
 
     GetLogger("TaskManager")->info("task-based parallelization (C++11 threads) using {} threads", task_manager->GetNumThreads());
 
@@ -124,9 +105,9 @@ namespace ngcore
     }
 
 
-  TaskManager :: TaskManager()
+  TaskManager :: TaskManager(int anthreads)
     {
-      num_threads = GetMaxThreads();
+      num_threads = anthreads;
       // if (MyMPI_GetNTasks() > 1) num_threads = 1;
 
 #ifdef USE_NUMA
@@ -174,6 +155,7 @@ namespace ngcore
 #else
       delete nodedata[0];
 #endif
+    task_manager = nullptr;
   }
 
 #ifdef WIN32
@@ -308,9 +290,11 @@ namespace ngcore
   void TaskManager :: CreateJob (const function<void(TaskInfo&)> & afunc,
                                  int antasks)
   {
-    if (num_threads == 1 || !task_manager) //  || func)
+    auto *tm = GetTaskManager();
+    if (!tm || tm->num_threads == 1 ) //  || func)
       {
-        if (startup_function) (*startup_function)();
+        if (tm && tm->startup_function) (*tm->startup_function)();
+        if (antasks == -1) antasks = 1;
         
         TaskInfo ti;
         ti.ntasks = antasks;
@@ -319,15 +303,16 @@ namespace ngcore
         for (ti.task_nr = 0; ti.task_nr < antasks; ti.task_nr++)
           afunc(ti);
 
-        if (cleanup_function) (*cleanup_function)();        
+        if (tm && tm->cleanup_function) (*tm->cleanup_function)();
         return;
       }
 
 
-    if (func)
+    if (tm->func)
       { // we are already parallel, use nested tasks
         // startup for inner function not supported ...
         // if (startup_function) (*startup_function)();
+        if (antasks == -1) antasks = tm->GetNumThreads();
 
         if (antasks == 1)
           {
@@ -357,7 +342,7 @@ namespace ngcore
       StartStop(const function<void(TaskInfo&)> & afunc)
       {
         if (trace)
-          trace->StartJob(jobnr, afunc.target_type());
+          trace->StartJob(GetTaskManager()->jobnr, afunc.target_type());
       }
       ~StartStop()
       {
@@ -371,47 +356,49 @@ namespace ngcore
         StartStop startstop(afunc);
         //if (trace)
         // trace->StartJob(jobnr, afunc.target_type());
-        jobnr++;
-        if (startup_function) (*startup_function)();
+        tm->jobnr++;
+        if (tm->startup_function) (*tm->startup_function)();
         TaskInfo ti;
         ti.task_nr = 0;
         ti.ntasks = 1;
         ti.thread_nr = 0; ti.nthreads = 1;
         {
-          RegionTracer t(ti.thread_nr, jobnr, RegionTracer::ID_JOB, ti.task_nr);
+          RegionTracer t(ti.thread_nr, tm->jobnr, RegionTracer::ID_JOB, ti.task_nr);
           afunc(ti);
         }
-        if (cleanup_function) (*cleanup_function)();
+        if (tm->cleanup_function) (*tm->cleanup_function)();
         // if (trace)
         // trace->StopJob();
         return;
       }
 
+    if (antasks == -1) antasks = tm->GetNumThreads();
+
     StartStop startstop(afunc);    
     // if (trace)
     // trace->StartJob(jobnr, afunc.target_type());
 
-    func = &afunc;
+    tm->func = &afunc;
 
-    ntasks.store (antasks); // , memory_order_relaxed);
-    ex = nullptr;
+    tm->ntasks.store (antasks); // , memory_order_relaxed);
+    tm->ex = nullptr;
 
 
-    nodedata[0]->start_cnt.store (0, memory_order_relaxed);
+    tm->nodedata[0]->start_cnt.store (0, memory_order_relaxed);
 
-    jobnr++;
+    tm->jobnr++;
     
-    for (int j = 0; j < num_nodes; j++)
-      nodedata[j]->participate |= 1;
+    for (int j = 0; j < tm->num_nodes; j++)
+      tm->nodedata[j]->participate |= 1;
 
-    if (startup_function) (*startup_function)();
+    if (tm->startup_function) (*tm->startup_function)();
     
     int thd = 0;
-    int thds = GetNumThreads();
-    int mynode = num_nodes * thd/thds;
+    int thds = tm->GetNumThreads();
+    int mynode = tm->num_nodes * thd/thds;
 
-    IntRange mytasks = Range(int(ntasks)).Split (mynode, num_nodes);
-    NodeData & mynode_data = *(nodedata[mynode]);
+    IntRange mytasks = Range(int(tm->ntasks)).Split (mynode, tm->num_nodes);
+    NodeData & mynode_data = *((tm->nodedata)[mynode]);
 
     TaskInfo ti;
     ti.nthreads = thds;
@@ -427,11 +414,11 @@ namespace ngcore
             if (mytask >= mytasks.Size()) break;
             
             ti.task_nr = mytasks.First()+mytask;
-            ti.ntasks = ntasks;
+            ti.ntasks = tm->ntasks;
 
             {
-              RegionTracer t(ti.thread_nr, jobnr, RegionTracer::ID_JOB, ti.task_nr);
-              (*func)(ti); 
+              RegionTracer t(ti.thread_nr, tm->jobnr, RegionTracer::ID_JOB, ti.task_nr);
+              (*tm->func)(ti); 
             }
           }
 
@@ -439,19 +426,19 @@ namespace ngcore
     catch (Exception & e)
       {
         {
-          lock_guard<mutex> guard(copyex_mutex);
-          delete ex;
-          ex = new Exception (e);
+          lock_guard<mutex> guard(tm->copyex_mutex);
+          delete tm->ex;
+          tm->ex = new Exception (e);
           mynode_data.start_cnt = mytasks.Size();
         }
       }
 
-    if (cleanup_function) (*cleanup_function)();
+    if (tm->cleanup_function) (*tm->cleanup_function)();
     
-    for (int j = 0; j < num_nodes; j++)
-      if (workers_on_node[j])
+    for (int j = 0; j < tm->num_nodes; j++)
+      if (tm->workers_on_node[j])
         {
-          while (complete[j] != jobnr)
+          while (tm->complete[j] != tm->jobnr)
           {
 #ifdef NETGEN_ARCH_AMD64
             _mm_pause();
@@ -459,9 +446,9 @@ namespace ngcore
           }
         }
 
-    func = nullptr;
-    if (ex)
-      throw Exception (*ex);
+    tm->func = nullptr;
+    if (tm->ex)
+      throw Exception (*tm->ex);
 
     // if (trace)
     //    trace->StopJob();
@@ -480,7 +467,7 @@ namespace ngcore
     */
     thread_id = thd;
 
-    int thds = GetNumThreads();
+    int thds = num_threads;
 
     int mynode = num_nodes * thd/thds;
 
@@ -560,7 +547,6 @@ namespace ngcore
           
         try
           {
-            
             while (1)
               {
                 if (mynode_data.start_cnt >= mytasks.Size()) break;

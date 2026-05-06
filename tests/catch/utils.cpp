@@ -13,8 +13,7 @@ uint64_t shuffle(uint64_t N, uint64_t i) {
 
 void testThreading(int n_threads)
 {
-  TaskManager::SetNumThreads(n_threads);
-  n_threads = EnterTaskManager();
+  n_threads = EnterTaskManager(n_threads);
 
   constexpr uint64_t N = 100000;
 
