@@ -72,6 +72,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           return py::make_tuple(s.c_str(), percent);
         });
   m.def("_PushStatus", [](string s) { PushStatus(s); });
+  m.def("_PopStatus", []() { PopStatus(); });
   m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
 
   py::enum_<Identifications::ID_TYPE>(m,"IdentificationType")
