@@ -2418,7 +2418,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
 
   ParallelForRange( Range(ne), [&]( auto myrange )
       {
-        int tid = ngcore::TaskManager::GetThreadId();
+        int tid = std::max(ngcore::TaskManager::GetThreadId(), 0);
         auto & my_faces_with_improvement = faces_with_improvement_threadlocal[tid];
         for (ElementIndex eli1 : myrange)
           {

@@ -37,7 +37,7 @@ namespace ngcore
   LocalHeap LocalHeap :: Split() const
   {
     int pieces = TaskManager::GetNumThreads();
-    int i = TaskManager::GetThreadId();
+    int i = pieces > 1 ? TaskManager::GetThreadId() : 0;
     size_t freemem = totsize - (p - data);
     size_t size_of_piece = freemem / pieces;
     return LocalHeap (p + i * size_of_piece, size_of_piece, name);

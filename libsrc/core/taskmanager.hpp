@@ -42,11 +42,29 @@ namespace ngcore
     // int nnodes;
   };
 
+  struct WorkerData
+  {
+      static constexpr int MAX_TIMERS = 8*1024;
+      std::array<TTimePoint, MAX_TIMERS> times{};
+      std::array<TTimePoint, MAX_TIMERS> flops{};
+      std::thread thread;
+      Exception * ex = nullptr;
+      void *produce_token = nullptr;
+      void *consume_token = nullptr;
+
+      WorkerData() = default;
+      ~WorkerData();
+      WorkerData(const WorkerData &) = delete;
+      WorkerData(WorkerData &&) = default;
+      WorkerData& operator=(const WorkerData &) = delete;
+      WorkerData& operator=(WorkerData &&) = default;
+  };
+
   #ifdef WIN32
-      extern class TaskManager * task_manager;
+      extern thread_local class TaskManager * task_manager;
       NGCORE_API class TaskManager * GetTaskManager();
   #else
-      NGCORE_API extern class TaskManager * task_manager;
+      NGCORE_API thread_local extern class TaskManager * task_manager;
       inline class TaskManager * GetTaskManager() { return task_manager; }
   #endif
   
@@ -61,6 +79,8 @@ namespace ngcore
       atomic<int> participate{0};
     };
     
+    void * taskqueue_ptr;
+    void AddTask (const function<void(TaskInfo&)> & afunc, atomic<int> & endcnt);
     const function<void(TaskInfo&)> * func = nullptr;
     const function<void()> * startup_function = nullptr;
     const function<void()> * cleanup_function = nullptr;
@@ -77,6 +97,7 @@ namespace ngcore
     // Array<atomic<int>*> sync;
     int sleep_usecs = 100;
     bool sleep = false;
+    std::vector<WorkerData> workers;
 
     NodeData *nodedata[8];
 
@@ -88,8 +109,10 @@ namespace ngcore
 
 #ifdef WIN32 // no exported thread_local in dlls on Windows
     static thread_local int thread_id;
+    static thread_local WorkerData *worker_data;
 #else
     NGCORE_API static thread_local int thread_id;
+    NGCORE_API static thread_local WorkerData *worker_data;
 #endif
     NGCORE_API static bool use_paje_trace;
   public:
@@ -117,14 +140,16 @@ namespace ngcore
     static int GetNumThreads() { auto *tm = GetTaskManager(); return tm ? tm->num_threads : 1; }
 #ifdef WIN32
     NGCORE_API static int GetThreadId();
+    NGCORE_API static WorkerData* GetWorkerData();
 #else
     static int GetThreadId() { return thread_id; }
+    static WorkerData* GetWorkerData() { return worker_data; }
 #endif
     int GetNumNodes() const { return num_nodes; }
 
     static void SetPajeTrace (bool use)  { use_paje_trace = use; }
     
-    NGCORE_API static bool ProcessTask();
+    NGCORE_API bool ProcessTask();
 
     NGCORE_API static void CreateJob (const function<void(TaskInfo&)> & afunc, int antasks = -1);
 
@@ -667,15 +692,7 @@ public:
     
     SharedIterator begin()
     {
-      /*
-      int me = participants++;
-      if (me < ranges.Size())
-        return SharedIterator (ranges, processed, total, me, true);
-      else
-        // more participants than buckets. set processed to total, and the loop is terminated immediately
-        return SharedIterator (ranges, total, total, me, true);
-      */
-      return SharedIterator (ranges, processed, total, TaskManager::GetThreadId(), true);      
+      return SharedIterator (ranges, processed, total, std::max(TaskManager::GetThreadId(), 0), true);
     }
     
     SharedIterator end()   { return SharedIterator (ranges, processed, total, -1, false); }

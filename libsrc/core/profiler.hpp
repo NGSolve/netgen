@@ -17,8 +17,8 @@ namespace ngcore
   class NgProfiler
   {
   public:
+    static constexpr int SIZE = WorkerData::MAX_TIMERS;
     /// maximal number of timers
-    enum { SIZE = 8*1024 };
 
     struct TimerVal
     {
@@ -36,11 +36,7 @@ namespace ngcore
 
     NGCORE_API static std::vector<TimerVal> timers;
 
-    NGCORE_API static TTimePoint * thread_times;
-    NGCORE_API static TTimePoint * thread_flops;
     NGCORE_API static std::shared_ptr<Logger> logger;
-    NGCORE_API static std::array<size_t, NgProfiler::SIZE> dummy_thread_times;
-    NGCORE_API static std::array<size_t, NgProfiler::SIZE> dummy_thread_flops;
   private:
 
     NGCORE_API static std::string filename;
@@ -75,17 +71,32 @@ namespace ngcore
 
     static void StartThreadTimer (size_t nr, size_t tid)
     {
-      thread_times[tid*SIZE+nr] -= GetTimeCounter(); // NOLINT
+      if(tid == -1)
+          return;
+      else if(tid==-2)
+          StartTimer(nr);
+      else
+          TaskManager::GetWorkerData()->times[nr] -= GetTimeCounter();
     }
 
     static void StopThreadTimer (size_t nr, size_t tid)
     {
-      thread_times[tid*SIZE+nr] += GetTimeCounter(); // NOLINT
+      if(tid == -1)
+          return;
+      else if(tid==-2)
+          StopTimer(nr);
+      else
+          TaskManager::GetWorkerData()->times[nr] += GetTimeCounter();
     }
 
     static void AddThreadFlops (size_t nr, size_t tid, size_t flops)
     {
-      thread_flops[tid*SIZE+nr] += flops; // NOLINT
+      if(tid == -1)
+          return;
+      else if(tid==-2)
+          AddFlops(nr, flops);
+      else
+          TaskManager::GetWorkerData()->flops[nr] += flops;
     }
 
     /// if you know number of flops, provide them to obtain the MFlop - rate
@@ -175,8 +186,8 @@ namespace ngcore
       return NgProfiler::CreateTimer (name);
     }
   public:
-    static constexpr bool do_tracing = TTracing::do_tracing;
-    static constexpr bool do_timing = TTiming::do_timing;
+    static constexpr bool do_tracing = false; //TTracing::do_tracing;
+    static constexpr bool do_timing = false; //TTiming::do_timing;
 
     Timer (const std::string & name) : timernr(Init(name)) { }
 
@@ -204,37 +215,17 @@ namespace ngcore
     }
     void Start (int tid, int trace_value = -1) const
     {
-        if(tid==0)
-        {
-          if constexpr(do_timing)
-            NgProfiler::StartTimer (timernr);
-          if constexpr(do_tracing)
-            if(trace) trace->StartTimer(timernr, trace_value);
-        }
-        else
-        {
-          if constexpr(do_timing)
-            NgProfiler::StartThreadTimer(timernr, tid);
-          if constexpr(do_tracing)
-            if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER, trace_value);
-        }
+      if constexpr(do_timing)
+          NgProfiler::StartThreadTimer(timernr, tid);
+      if constexpr(do_tracing)
+          if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER, trace_value);
     }
     void Stop (int tid) const
     {
-        if(tid==0)
-        {
-            if constexpr(do_timing)
-                NgProfiler::StopTimer (timernr);
-            if constexpr(do_tracing)
-                if(trace) trace->StopTimer(timernr);
-        }
-        else
-        {
-          if constexpr(do_timing)
-            NgProfiler::StopThreadTimer(timernr, tid);
-          if constexpr(do_tracing)
-            if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
-        }
+      if constexpr(do_timing)
+        NgProfiler::StopThreadTimer(timernr, tid);
+      if constexpr(do_tracing)
+        if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
     }
     void AddFlops (double aflops)
     {
