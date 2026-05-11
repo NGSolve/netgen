@@ -8,11 +8,6 @@ namespace ngcore
 
   std::string NgProfiler::filename;
 
-  std::array<size_t,NgProfiler::SIZE> NgProfiler::dummy_thread_times;
-  size_t * NgProfiler::thread_times = NgProfiler::dummy_thread_times.data(); // NOLINT
-  std::array<size_t,NgProfiler::SIZE> NgProfiler::dummy_thread_flops;
-  size_t * NgProfiler::thread_flops = NgProfiler::dummy_thread_flops.data(); // NOLINT
-
   std::shared_ptr<Logger> NgProfiler::logger = GetLogger("Profiler"); // NOLINT
 
   NgProfiler :: NgProfiler()
