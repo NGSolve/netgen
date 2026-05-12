@@ -2018,11 +2018,6 @@ namespace netgen
         if (comm.Rank() == 0)
           {
             archive & facedecoding;
-            if(archive.GetVersion("netgen") >= "v6.2.2603-26")
-              {
-                archive.NeedsVersion("netgen", "v6.2.2603-26");
-                archive & edgedecoding;
-              }
             {
               Array<string*> cd2names_compat;
               if (archive.Output())
@@ -2056,6 +2051,12 @@ namespace netgen
             
             archive.Shallow(geometry);
             archive & *curvedelems;
+
+            if(archive.GetVersion("netgen") >= "v6.2.2603-26")
+              {
+                archive.NeedsVersion("netgen", "v6.2.2603-26");
+                archive & edgedecoding;
+              }
           }
         
         if (comm.Rank() == 0)

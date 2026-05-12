@@ -625,7 +625,26 @@ namespace netgen
       }
     for (int dest = 1; dest < ntasks; dest++)
       sendrequests += comm.ISend (fddata, dest, NG_MPI_TAG_MESH+3);
-    
+
+    PrintMessage ( 3, "Sending Edge Descriptors" );
+
+    int ned = GetNED();
+    Array<double> eddata (8 * ned);
+    for (int edi = 0; edi < ned; edi++)
+      {
+        auto & ed = edgedecoding[edi];
+        eddata[8*edi+0] = ed.EdgeNr();
+        eddata[8*edi+1] = ed.SurfNr(0);
+        eddata[8*edi+2] = ed.SurfNr(1);
+        eddata[8*edi+3] = ed.SingEdgeLeft();
+        eddata[8*edi+4] = ed.SingEdgeRight();
+        eddata[8*edi+5] = ed.TLOSurface();
+        eddata[8*edi+6] = ed.DomainIn();
+        eddata[8*edi+7] = ed.DomainOut();
+      }
+    for (int dest = 1; dest < ntasks; dest++)
+      sendrequests += comm.ISend (eddata, dest, NG_MPI_TAG_MESH+7);
+
     /** Surface Elements **/
 
     PrintMessage ( 3, "Sending Surface elements" );
@@ -1099,8 +1118,27 @@ namespace netgen
 	    (FaceDescriptor(int(fddata[i]), int(fddata[i+1]), int(fddata[i+2]), 0));
 	  GetFaceDescriptor(faceind).SetBCProperty (int(fddata[i+3]));
 	  GetFaceDescriptor(faceind).domin_singular = fddata[i+4];
-	  GetFaceDescriptor(faceind).domout_singular = fddata[i+5];
+	GetFaceDescriptor(faceind).domout_singular = fddata[i+5];
 	}
+    }
+
+    {
+      Array<double> eddata;
+      comm.Recv (eddata, 0, NG_MPI_TAG_MESH+7);
+      int ned = eddata.Size() / 8;
+      edgedecoding.SetSize(ned);
+      for (int edi = 0; edi < ned; edi++)
+        {
+          auto & ed = edgedecoding[edi];
+          ed.SetEdgeNr(int(eddata[8*edi+0]));
+          ed.SetSurfNr(0, int(eddata[8*edi+1]));
+          ed.SetSurfNr(1, int(eddata[8*edi+2]));
+          ed.SetSingEdgeLeft(eddata[8*edi+3]);
+          ed.SetSingEdgeRight(eddata[8*edi+4]);
+          ed.SetTLOSurface(int(eddata[8*edi+5]));
+          ed.SetDomainIn(int(eddata[8*edi+6]));
+          ed.SetDomainOut(int(eddata[8*edi+7]));
+        }
     }
 
     {
@@ -1202,7 +1240,7 @@ namespace netgen
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
     bcnames.SetSize(nnames[1]);
-    edgedecoding.SetSize(nnames[2]);
+    // edgedecoding already populated from ED data message
     cd3names.SetSize(nnames[3]);
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
@@ -1236,11 +1274,12 @@ namespace netgen
     write_names(materials);
     write_names(bcnames);
     {
-      // cd2 names are stored in edgedecoding
+      // cd2 names: for 3D stored on edgedecoding, for 2D may differ from ED count
       for (int k = 0; k < nnames[2]; k++) {
 	int s = name_sizes[tot_nn];
 	string nm = s ? string(&compiled_names[tot_size], s) : string("");
-	edgedecoding[k].SetName(nm);
+	if (k < edgedecoding.Size())
+	  edgedecoding[k].SetName(nm);
 	tot_nn++;
 	tot_size += s;
       }
