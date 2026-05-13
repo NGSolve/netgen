@@ -156,7 +156,7 @@ namespace ngcore
   class RegionTaskManager
   {
     int nthreads;
-    bool started_taskmanager;
+    // bool started_taskmanager;
 
   public:
     RegionTaskManager(int anthreads=-1)
