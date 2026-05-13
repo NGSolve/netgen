@@ -720,6 +720,100 @@ namespace netgen
                 old_ed.SetSurfNr(i, new_domain);
      }
 
+     // Fix junction points: where active boundary meets inactive boundary,
+     // the boundary of domain is not closed. We need to:
+     // 1) Assign BL-zone inactive segments a new edge descriptor with new_domain
+     // 2) Merge duplicate points at the BL endpoint with existing inactive boundary points
+     std::map<int, int> ed_to_bl_ed;
+     for(PointIndex pi = PointIndex::BASE; pi < np + PointIndex::BASE; pi++)
+     {
+        if(mapto[pi].Size() == 0) continue;
+
+        // Check if pi is on a non-active segment with domain (junction point)
+        bool is_junction = false;
+        for(SegmentIndex segi(0); segi < nseg; segi++)
+        {
+           if(active_segments.Test(segi)) continue;
+           auto & seg = line_segments[segi];
+           if(seg[0] != pi && seg[1] != pi) continue;
+           auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+           if(ed.SurfNr(0) == domain || ed.SurfNr(1) == domain)
+           { is_junction = true; break; }
+        }
+        if(!is_junction) continue;
+
+        auto target_pos = mesh[mapto[pi].Last()];
+        auto gv = growthvectors[pi];
+        double gv_len = gv.Length();
+        if(gv_len < 1e-10) continue;
+        auto gv_dir = (1.0/gv_len) * gv;
+        double bl_proj = Dot(target_pos - mesh[pi], gv_dir);
+
+        // Walk from pi along inactive boundary in growth direction
+        PointIndex current = pi;
+        for(int iter = 0; iter < 1000; iter++)
+        {
+           bool stepped = false;
+           for(SegmentIndex segi(0); segi < nseg; segi++)
+           {
+              if(active_segments.Test(segi)) continue;
+              auto & seg = line_segments[segi];
+              if(seg[0] != current && seg[1] != current) continue;
+              auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+              if(ed.SurfNr(0) != domain && ed.SurfNr(1) != domain) continue;
+
+              auto next = seg[0] == current ? seg[1] : seg[0];
+              double proj = Dot(mesh[next] - mesh[pi], gv_dir);
+              if(proj > 1e-10 && proj <= bl_proj + 1e-8)
+              {
+                 // segment inside BL zone: assign new edge descriptor with new_domain
+                 int old_ed_idx = seg.GetIndex();
+                 if(ed_to_bl_ed.find(old_ed_idx) == ed_to_bl_ed.end())
+                 {
+                    EdgeDescriptor new_ed;
+                    new_ed.SetEdgeNr(ed.EdgeNr());
+                    for(int k = 0; k < 2; k++)
+                    {
+                       if(ed.SurfNr(k) == domain)
+                          new_ed.SetSurfNr(k, new_domain);
+                       else
+                          new_ed.SetSurfNr(k, ed.SurfNr(k));
+                    }
+                    new_ed.SetName(ed.GetName());
+                    ed_to_bl_ed[old_ed_idx] = mesh.AddEdgeDescriptor(new_ed);
+                 }
+                 mesh[segi].SetIndex(ed_to_bl_ed[old_ed_idx]);
+
+                 // If this point matches the BL endpoint, merge
+                 if((mesh[next] - target_pos).Length() < 1e-8)
+                 {
+                    auto old_pi = mapto[pi].Last();
+                    if(old_pi != next)
+                    {
+                       // Replace old_pi with next in new segments and surface elements
+                       for(auto sk = first_new_seg; sk < mesh.LineSegments().Range().Next(); sk++)
+                       {
+                          if(mesh[sk][0] == old_pi) mesh[sk][0] = next;
+                          if(mesh[sk][1] == old_pi) mesh[sk][1] = next;
+                       }
+                       for(SurfaceElementIndex sei(0); sei < mesh.GetNSE(); sei++)
+                       {
+                          auto & el = mesh[sei];
+                          for(int k = 0; k < el.GetNP(); k++)
+                             if(el[k] == old_pi) el[k] = next;
+                       }
+                       mapto[pi].Last() = next;
+                    }
+                 }
+                 current = next;
+                 stepped = true;
+                 break;
+              }
+           }
+           if(!stepped) break;
+        }
+     }
+
      for(auto pi : Range(mapto))
      {
         if(mapto[pi].Size() == 0)
