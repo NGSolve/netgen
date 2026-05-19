@@ -855,6 +855,21 @@ namespace netgen
            mesh[segi][1].Invalidate();
         }
 
+        // revert segment indices changed during junction handling
+        for(auto & [old_idx, new_idx] : ed_to_bl_ed)
+           for(auto & seg : mesh.LineSegments())
+              if(seg.GetIndex() == new_idx)
+                 seg.SetIndex(old_idx);
+
+        // revert edge descriptor SurfNr changes on moved segments
+        for(auto si : moved_segs)
+        {
+           auto & ed = mesh.GetEdgeDescriptor(mesh.LineSegments()[si].GetIndex());
+           for(auto i : Range(2))
+              if(ed.SurfNr(i) == new_domain)
+                 ed.SetSurfNr(i, domain);
+        }
+
         mesh.Compress();
         mesh.EdgeDescriptors().SetSize(max_edge_nr);
         mesh.CalcSurfacesOfNode();
