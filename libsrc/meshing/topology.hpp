@@ -232,8 +232,9 @@ public:
   void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
   void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
 
-  // Call this before Update() to discard old edges
+  // Call this before Update() to discard old edges/faces (e.g. after Compress)
   void ClearEdges() { edge2vert.SetSize0(); }
+  void ClearFaces() { face2vert.SetSize0(); }
 
 private:
   Array<std::tuple<int, std::array<int,3>>> parent_edges;

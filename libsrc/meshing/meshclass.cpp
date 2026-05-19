@@ -4643,6 +4643,8 @@ namespace netgen
     RebuildSurfaceElementLists ();
     CalcSurfacesOfNode();
 
+    topology.ClearEdges();
+    topology.ClearFaces();
 
     //  FindOpenElements();
     timestamp = NextTimeStamp();
