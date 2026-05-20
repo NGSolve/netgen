@@ -75,8 +75,8 @@ namespace netgen
   CalcSpecialPoints (const CSGeometry & ageometry, 
 		     NgArray<MeshPoint> & apoints)
   {
-    // static int timer = NgProfiler::CreateTimer ("CSG: find special points");
-    // NgProfiler::RegionTimer reg (timer);
+    // static Timer timer("CSG: find special points");
+    // RegionTimer reg (timer);
 
 
     geometry = &ageometry;
@@ -1719,8 +1719,8 @@ namespace netgen
 			NgArray<MeshPoint> & apoints, 
 			NgArray<SpecialPoint> & specpoints)
   {
-    static int timer = NgProfiler::CreateTimer ("CSG: analyze special points");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("CSG: analyze special points");
+    RegionTimer reg (timer);
 
 
     NgArray<int> surfind, rep_surfind, surfind2, rep_surfind2, surfind3;

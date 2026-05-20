@@ -202,8 +202,8 @@ namespace netgen
     pused = 0;
 
 
-    static int timer1 = NgProfiler::CreateTimer ("meshing2::ApplyRules 1");
-    NgProfiler::RegionTimer reg1 (timer1);
+    static Timer timer1("meshing2::ApplyRules 1");
+    RegionTimer reg1 (timer1);
 
 
     for (int ri = 1; ri <= rules.Size(); ri++)

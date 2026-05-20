@@ -192,7 +192,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // static int meshing3_timer_b = NgProfiler::CreateTimer ("Meshing3::GenerateMesh b");
   // static int meshing3_timer_c = NgProfiler::CreateTimer ("Meshing3::GenerateMesh c");
   // static int meshing3_timer_d = NgProfiler::CreateTimer ("Meshing3::GenerateMesh d");
-  // NgProfiler::RegionTimer reg (meshing3_timer);
+  // RegionTimer reg (meshing3_timer);
 
 
   Array<Point3d, PointIndex> locpoints;      // local points
@@ -370,7 +370,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       if (stat.qualclass >= mp.starshapeclass &&
 	  mp.baseelnp != 4)   
 	{
-	  // NgProfiler::RegionTimer reg1 (meshing3_timer_b);
+	  // RegionTimer reg1 (meshing3_timer_b);
 	  // star-shaped domain removing
 
 	  grouppoints.SetSize (0);
@@ -509,7 +509,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
 	  if (!found) loktestmode = 0;
 
-	  // NgProfiler::RegionTimer reg2 (meshing3_timer_d);	  
+	  // RegionTimer reg2 (meshing3_timer_d);	  
 	  
 	  if (loktestmode)
 	    {

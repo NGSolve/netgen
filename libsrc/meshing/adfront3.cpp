@@ -292,13 +292,13 @@ void AdFront3 :: GetFaceBoundingBox (int i, Box3d & box) const
 
 void AdFront3 :: RebuildInternalTables ()
 {
-  static int timer_a = NgProfiler::CreateTimer ("Adfront3::RebuildInternal A");
-  static int timer_b = NgProfiler::CreateTimer ("Adfront3::RebuildInternal B");
-  static int timer_c = NgProfiler::CreateTimer ("Adfront3::RebuildInternal C");
-  static int timer_d = NgProfiler::CreateTimer ("Adfront3::RebuildInternal D");
+  static Timer timer_a("Adfront3::RebuildInternal A");
+  static Timer timer_b("Adfront3::RebuildInternal B");
+  static Timer timer_c("Adfront3::RebuildInternal C");
+  static Timer timer_d("Adfront3::RebuildInternal D");
 
 
-  NgProfiler::StartTimer (timer_a);	  
+  timer_a.Start();	  
   int hi = 0;
   for (int i = 1; i <= faces.Size(); i++)
     if (faces.Get(i).Valid())
@@ -316,8 +316,8 @@ void AdFront3 :: RebuildInternalTables ()
   for (PointIndex pi : points.Range())
     points[pi].cluster = pi;
   
-  NgProfiler::StopTimer (timer_a);	  
-  NgProfiler::StartTimer (timer_b);	  
+  timer_a.Stop();	  
+  timer_b.Start();
 
   int change;
   do
@@ -348,8 +348,8 @@ void AdFront3 :: RebuildInternalTables ()
   while (change);
 
 
-  NgProfiler::StopTimer (timer_b);	  
-  NgProfiler::StartTimer (timer_c);	  
+  timer_b.Stop();
+  timer_c.Start();
 
 
 
@@ -396,8 +396,8 @@ void AdFront3 :: RebuildInternalTables ()
       clvol[faces.Get(i).cluster] += vi;
     }
 
-  NgProfiler::StopTimer (timer_c);	  
-  NgProfiler::StartTimer (timer_d);	  
+  timer_c.Stop();	  
+  timer_d.Start();
 
 
 
@@ -418,7 +418,7 @@ void AdFront3 :: RebuildInternalTables ()
   if (hashon) 
     hashtable.Create();
 
-  NgProfiler::StopTimer (timer_d);	  
+  timer_d.Stop();
 }
 
 
@@ -503,8 +503,8 @@ int AdFront3 :: GetLocals (int fstind,
 			   float relh,
 			   INDEX& facesplit)
 {
-  // static int timer = NgProfiler::CreateTimer ("AdFront3::GetLocals");
-  // NgProfiler::RegionTimer reg (timer);
+  // static Timer timer("AdFront3::GetLocals");
+  // RegionTimer reg (timer);
 
 
   if (hashon && faces.Size() < 500) { hashon=0; }

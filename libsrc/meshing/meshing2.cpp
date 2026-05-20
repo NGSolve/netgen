@@ -250,14 +250,14 @@ namespace netgen
 
     static Timer timer1("surface meshing1");
     static Timer timer2("surface meshing2");
-    static int timer3 = NgProfiler::CreateTimer ("surface meshing3");
+    static Timer timer3("surface meshing3");
 
-    static int ts1 = NgProfiler::CreateTimer ("surface meshing start 1");
-    static int ts2 = NgProfiler::CreateTimer ("surface meshing start 2");
-    static int ts3 = NgProfiler::CreateTimer ("surface meshing start 3");
+    static Timer ts1("surface meshing start 1");
+    static Timer ts2("surface meshing start 2");
+    static Timer ts3("surface meshing start 3");
 
 
-    NgProfiler::StartTimer (ts1);
+    ts1.Start();
 
     NgArray<int> pindex, lindex;
     NgArray<int> delpoints, dellines;
@@ -363,8 +363,8 @@ namespace netgen
 	surfeltree.Insert (box, seia[i]);
       }
 
-    NgProfiler::StopTimer (ts1);
-    NgProfiler::StartTimer (ts2);
+    ts1.Stop();
+    ts2.Start();
 
     if (totalarea > 0 || maxarea > 0)
       meshedarea = mesh.SurfaceArea();
@@ -389,8 +389,8 @@ namespace netgen
       // cout << "meshedarea = " << meshedarea << " =?= " 
       // << mesh.SurfaceArea() << endl;
 
-    NgProfiler::StopTimer (ts2);
-    NgProfiler::StartTimer (ts3);
+    ts2.Stop();
+    ts3.Start();
 
     const char * savetask = multithread.task;
     multithread.task = "Surface meshing";
@@ -402,7 +402,7 @@ namespace netgen
 
     double meshedarea_before = meshedarea;
 
-    NgProfiler::StopTimer (ts3);
+    ts3.Stop();
 
     static Timer tloop("surfacemeshing mainloop");
     // static Timer tgetlocals("surfacemeshing getlocals");
@@ -851,7 +851,7 @@ namespace netgen
 	      }
 	  }
       
-	NgProfiler::RegionTimer reg3 (timer3);
+	RegionTimer reg3 (timer3);
 
 
 	for (int i = 1; i <= locelements.Size() && found; i++)

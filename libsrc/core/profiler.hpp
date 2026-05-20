@@ -143,22 +143,6 @@ namespace ngcore
     static std::string GetName (int nr) { return timers[nr].name; }
     /// print profile
     NGCORE_API static void Print (FILE * prof);
-
-    class RegionTimer
-    {
-      int nr;
-    public:
-      /// start timer
-      RegionTimer (int anr) : nr(anr) { NgProfiler::StartTimer(nr); }
-      /// stop timer
-      ~RegionTimer () { NgProfiler::StopTimer(nr); }
-
-      RegionTimer() = delete;
-      RegionTimer(const RegionTimer &) = delete;
-      RegionTimer(RegionTimer &&) = delete;
-      void operator=(const RegionTimer &) = delete;
-      void operator=(RegionTimer &&) = delete;
-    };
   };
 
   
