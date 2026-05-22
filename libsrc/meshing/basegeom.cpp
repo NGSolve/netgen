@@ -774,7 +774,7 @@ namespace netgen
             seg.EPGeomInfo(1).dist = params[i+1];
             mesh.AddSegment(seg);
         }
-        mesh.SetCD2Name(edgenr+1, edge->properties.GetName());
+        mesh.SetCD2Name(edsi, edge->properties.GetName());
     }
 
     for (auto & edge : edges)
