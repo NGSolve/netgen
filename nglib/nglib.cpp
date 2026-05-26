@@ -478,7 +478,7 @@ namespace nglib
       pi[1] = seg[1];
 
       if (matnum)
-         *matnum = seg.edgenr;
+         *matnum = ((Mesh*)mesh)->GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
    }
 
 

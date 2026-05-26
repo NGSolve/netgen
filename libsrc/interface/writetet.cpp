@@ -115,12 +115,13 @@ namespace netgen
 	edgenumbers.Set(i2,numedges);
 	edge2node.Append(i2);
 
-	edge_ids.Append(seg.edgenr);
+	int edgenr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
+	edge_ids.Append(edgenr);
 
 	if(point_ids[seg[0]] == -1)
-	  point_ids[seg[0]] = (version >= 2) ? seg.edgenr : 0;
+	  point_ids[seg[0]] = (version >= 2) ? edgenr : 0;
 	if(point_ids[seg[1]] == -1)
-	  point_ids[seg[1]] = (version >= 2) ? seg.edgenr : 0;
+	  point_ids[seg[1]] = (version >= 2) ? edgenr : 0;
       }
 
     for(SurfaceElementIndex si = 0; si < mesh.GetNSE(); si++)

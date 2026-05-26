@@ -123,7 +123,7 @@ else(BUILD_OCC)
     find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
     if(NOT OpenCascade_FOUND)
       message(FATAL_ERROR "Opencascade not found, either\n\
-      - install pip packages netgen-occt-devel netgen-occ\n\
+      - install pip packages netgen-occt-devel netgen-occt\n\
       - set OpenCascade_DIR to a directory containting opencascadeConfig.cmake\n\
       - build OpenCascade automatically by passing -DBUILD_OCC=ON\n\
       - disable OpenCascade by passing -DUSE_OCC=OFF\n\

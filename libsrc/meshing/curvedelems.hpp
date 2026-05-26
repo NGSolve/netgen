@@ -54,11 +54,7 @@ public:
 
   int GetOrder () { return order; }
 
-  void DoArchive(Archive& ar)
-  {
-    ar & edgeorder & faceorder & edgecoeffsindex & facecoeffsindex & edgecoeffs & facecoeffs
-      & edgeweight & order & rational & ishighorder;
-  }
+  void DoArchive(Archive& ar);
 
   DLL_HEADER bool IsSegmentCurved (SegmentIndex segnr) const;
   DLL_HEADER bool IsSurfaceElementCurved (SurfaceElementIndex sei) const;
@@ -159,7 +155,7 @@ public:
                                             T * dxdxi, size_t sdxdxi);
 
 
-
+  
 
 private:
 

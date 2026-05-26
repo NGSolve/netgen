@@ -13,7 +13,7 @@
 #include "ShapeBuild_ReShape.hxx"
 #include "ShapeFix.hxx"
 #include "ShapeFix_FixSmallFace.hxx"
-#include "Partition_Spliter.hxx"
+
 //#include "VrmlAPI.hxx"
 //#include "StlAPI.hxx"
 

@@ -81,18 +81,16 @@ namespace netgen
           ipmap[i] = state0;   // 0; // PointIndex::INVALID;
           m.SetDimension( mesh.GetDimension() );
           m.SetGeometry( mesh.GetGeometry() );
-
-          for(auto i : Range(1, num_facedescriptors+1))
-              m.AddFaceDescriptor( mesh.GetFaceDescriptor(i) );
       }
 
       // mark interior edge points
       for(const auto& seg : mesh.LineSegments())
         {
-          if(seg.domin > 0 && seg.domin == seg.domout)
+          const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+          if(ed.DomainIn() > 0 && ed.DomainIn() == ed.DomainOut())
             {
-              ipmap[seg.domin-1][seg[0]] = state1; // 1;
-              ipmap[seg.domin-1][seg[1]] = state1; // 1;
+              ipmap[ed.DomainIn()-1][seg[0]] = state1; // 1;
+              ipmap[ed.DomainIn()-1][seg[1]] = state1; // 1;
             }
         }
 
@@ -147,6 +145,14 @@ namespace netgen
               ipmap[i][pi] = pi_new;
               pmap.Append( pi );
             }
+      }
+
+      // copy edge descriptors to sub-meshes so ED lookups work there too
+      for(auto i : Range(ret))
+      {
+          auto & m = *ret[i].mesh;
+          for(auto j : Range(1, mesh.GetNED()+1))
+            m.AddEdgeDescriptor(mesh.GetEdgeDescriptor(j));
       }
 
       // add segments
@@ -648,18 +654,28 @@ namespace netgen
      ParallelFor( md.Range(), [&](int i)
        {
          try {
+             auto & mesh = *md[i].mesh;
+             if(&mesh != &mesh3d)
+             {
+                mesh.ClearFaceDescriptors();
+                for(auto face_descriptor : mesh3d.FaceDescriptors())
+                    mesh.AddFaceDescriptor(face_descriptor);
+             }
+
            if (mp.checkoverlappingboundary)
-             if (md[i].mesh->CheckOverlappingBoundary())
+             if (mesh.CheckOverlappingBoundary())
              {
                if(debugparam.write_mesh_on_error)
-                 md[i].mesh->Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
+                 mesh.Save("overlapping_mesh_domain_"+ToString(md[i].domain)+".vol.gz");
                throw NgException ("Stop meshing since boundary mesh is overlapping");
              }
 
-           if(md[i].mesh->GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
+           if(mesh.GetGeometry()->GetGeomType() == Mesh::GEOM_OCC)
               FillCloseSurface( md[i] );
            CloseOpenQuads( md[i] );
            MeshDomain(md[i]);
+           if(&mesh != &mesh3d)
+               mesh.FreeFaceDescriptors();
          }
          catch (const Exception & e) {
            if(debugparam.write_mesh_on_error)
@@ -788,8 +804,11 @@ namespace netgen
 
     Array<SegmentIndex> free_segs;
     for (auto segi : Range(mesh.LineSegments()))
-      if(mesh[segi].domin == domain && mesh[segi].domout == domain)
+    {
+      const auto & ed = mesh.GetEdgeDescriptor(mesh[segi].GetIndex());
+      if(ed.DomainIn() == domain && ed.DomainOut() == domain)
         free_segs.Append(segi);
+    }
 
     auto get_nonconforming = [&] (const auto & p2el) {
       Array<SegmentIndex> nonconforming;

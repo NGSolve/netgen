@@ -3277,12 +3277,13 @@ namespace netgen
 		for (int i = 1; i <= mesh.GetNSeg(); i++)
 		  {
 		    const Segment & seg = mesh.LineSegment(i);
+		    int ednr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
 		    for (int j = 0; j < 2; j++)
 		      {
 			PointIndex pi = (j == 0) ? seg[0] : seg[1];
 			if (bndind[pi] == 0)
-			  bndind[pi] = seg.edgenr;
-			else if (bndind[pi] != seg.edgenr)
+			  bndind[pi] = ednr;
+			else if (bndind[pi] != ednr)
 			  singv.SetBit (pi);
 		      }
 		  }
@@ -3643,11 +3644,13 @@ namespace netgen
 		    EdgePointGeomInfo newepgi;
 		  
 		    geo.PointBetweenEdge(mesh.Point (seg[0]), mesh.Point (seg[1]),
-                                         0.5, seg.surfnr1, seg.surfnr2,
-                                         seg.epgeominfo[0], seg.epgeominfo[1],
-                                         mesh.Point (newpi), newepgi);
-		    nseg1.epgeominfo[1] = newepgi;
-		    nseg2.epgeominfo[0] = newepgi;
+                                         0.5,
+                                         mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0),
+                                         mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1),
+                                         seg.EPGeomInfo(0), seg.EPGeomInfo(1),
+                                         mesh.Point (newpi), newepgi, seg.GetIndex());
+		    nseg1.EPGeomInfo(1) = newepgi;
+		    nseg2.EPGeomInfo(0) = newepgi;
 		  
 		    mesh.LineSegment (i) = nseg1;
 		    mesh.AddSegment (nseg2);

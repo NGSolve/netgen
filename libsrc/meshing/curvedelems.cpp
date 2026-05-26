@@ -1,6 +1,11 @@
 #include <mystdlib.h>
 
-#include "meshing.hpp"
+
+#include "curvedelems.hpp"
+#include "basegeom.hpp"
+#include "hprefinement.hpp"
+
+// #include "meshing.hpp"
 // #include "../general/autodiff.hpp"
 
 
@@ -46,6 +51,7 @@ namespace netgen
   
 
   // compute edge bubbles up to order n, x \in (-1, 1)
+  // integrated Legendre pols, starting with order 2
   template <typename T>
   static void CalcEdgeShape (int n, T x, T * shape)
   {
@@ -282,6 +288,34 @@ namespace netgen
 	}
     }
 
+    template <class S, class FUNC>
+    void EvaluateLambda (int n, S x, FUNC func)
+    {
+      S p1(1.0), p2(0.0), p3;
+      
+      if (n >= 0)
+        {
+          // p2 = values[0] = 1.0;
+          p2 = 1.0;
+          func(0,p2);
+        }
+      if (n >= 1)
+        {
+          // p1 = values[1] = a[0]+b[0]*x;
+          p1 = a[0]+b[0]*x;
+          func(1,p1);
+        }
+      
+      for (int i  = 1; i < n; i++)
+	{
+	  p3 = p2; p2=p1;
+	  p1 = (a[i]+b[i]*x)*p2-c[i]*p3;
+	  // values[i+1] = p1;
+          func(i+1, p1);
+	}
+    }
+
+    
     template <class S, class T>
     void EvaluateScaled (int n, S x, S y, T * values)
     {
@@ -342,9 +376,8 @@ namespace netgen
 	}
     }
   };
-
-
-
+  
+  /*
   template <class S, class T>
   inline void JacobiPolynomial (int n, S x, double alpha, double beta, T * values)
   {
@@ -369,18 +402,14 @@ namespace netgen
         values[i+1] = p1;
       }
   }
-
+  */
   
-  
-
+  /*
   template <class S, class St, class T>
   inline void ScaledJacobiPolynomial (int n, S x, St t, double alpha, double beta, T * values)
   {
-    /*
-      S p1 = 1.0, p2 = 0.0, p3;
-
-      if (n >= 0) values[0] = 1.0;
-    */
+  // S p1 = 1.0, p2 = 0.0, p3;
+  // if (n >= 0) values[0] = 1.0;
 
     S p1(1.0), p2(0.0), p3;
 
@@ -403,7 +432,9 @@ namespace netgen
         values[i+1] = p1;
       }
   }
-
+  */
+  
+  // Jacobi polynomials alpah, beta=2
   struct JacobiRecPols
   {
     static constexpr size_t N = 100;
@@ -422,6 +453,10 @@ namespace netgen
   };
 
   static JacobiRecPols jacpols2;
+  
+  static JacobiRecPol jacpol00(100,0,0);
+  static JacobiRecPol jacpol11(100,1,1);
+  static JacobiRecPol jacpol22(100,2,2);
 
   // compute face bubbles up to order n, 0 < y, y-x < 1, x+y < 1
   template <class Tx, class Ty, class Ts>
@@ -477,6 +512,7 @@ namespace netgen
   {
     if (n < 3) return;
 
+    /*
     Tx hx[50], hy[50];
     ScaledJacobiPolynomial (n-3, x, t-y, 2, 2, hx);
 
@@ -488,7 +524,22 @@ namespace netgen
         for (int iy = 0; iy <= n-3-ix; iy++)
           shape[ii++] = bub * hx[ix]*hy[iy];
       }
+    */
+
+    
+    int ii = 0;
+    Tx bub = (t+x-y)*y*(t-x-y);
+    jacpols2[2]->EvaluateScaledLambda
+      (n-3, x, t-y,
+       [&](int ix, Tx valx)
+       {
+         jacpols2[2*ix+5] -> EvaluateScaledLambda (n-3-ix, 2*y-1, t, [&](int iy, Ty valy)
+         {
+                                                     shape[ii++] = bub*valx*valy;
+                                                   });
+       });
   }
+
 
   template <class Tx, class Ty, class Tt, typename FUNC>
   static void CalcScaledTrigShapeLambda (int n, Tx x, Ty y, Tt t, FUNC func)
@@ -540,6 +591,38 @@ namespace netgen
                                });
   }
 
+
+  // tensor product of Jacobi(2,2)
+  // x,y in (-1,1)
+  template <class Tx, class Ty, typename FUNC>
+  static void CalcQuadShapeLambda (int n, Tx x, Ty y, FUNC func)
+  {
+    if (n < 2) return;
+    int ii = 0;
+    Tx bub = (1-x*x)*(1-y*y);
+    jacpol22.EvaluateLambda
+      (n-2, x, [&](int ix, Tx valx) {
+        jacpol22.EvaluateLambda (n-2, y, [&](int iy, Ty valy) {
+          func(ii++, bub*valx*valy);
+        });
+      });
+  }
+
+  
+  template <class Tx, class Ty, class Tsx, class Tsy, typename FUNC>
+  static void CalcScaledQuadShapeLambda (int n, Tx x, Ty y, Tsx sx, Tsy sy, FUNC func)
+  {
+    if (n < 2) return;
+    int ii = 0;
+    Tx bub = (1-x*x)*(1-y*y);
+    jacpol22.EvaluateScaledLambda
+      (n-2, x, sx, [&](int ix, Tx valx) {
+        jacpol22.EvaluateScaledLambda (n-2, y, sy, [&](int iy, Ty valy) {
+          func(ii++, bub*valx*valy);
+        });
+      });
+  }
+
       
 
   CurvedElements :: CurvedElements (const Mesh & amesh)
@@ -556,6 +639,13 @@ namespace netgen
   }
 
 
+  void CurvedElements :: DoArchive(Archive& ar)
+  {
+    ar & edgeorder & faceorder & edgecoeffsindex & facecoeffsindex & edgecoeffs & facecoeffs
+      & edgeweight & order & rational & ishighorder;
+  }
+
+  
   void CurvedElements :: BuildCurvedElements(const Refinement * ref, int aorder,
                                              bool arational)
   {
@@ -694,7 +784,7 @@ namespace netgen
     for (int i = 0; i < nfaces; i++)
       {
 	facecoeffsindex[i] = nd;
-	if (top.GetFaceType(i+1) == TRIG)
+	if (top.GetFaceType0(i) == TRIG)
 	  nd += max2 (0, (faceorder[i]-1)*(faceorder[i]-2)/2);
 	else
 	  nd += max2 (0, sqr(faceorder[i]-1));
@@ -935,7 +1025,9 @@ namespace netgen
     NgArray<int> swap_edge(nedges);
     NgArray<EdgePointGeomInfo> edge_gi0(nedges);
     NgArray<EdgePointGeomInfo> edge_gi1(nedges);
+    NgArray<int> edge_geoedgenr(nedges);
     use_edge = 0;
+    edge_geoedgenr = -1;
 
     if (working)
       for (SegmentIndex i = 0; i < mesh.GetNSeg(); i++)
@@ -943,10 +1035,11 @@ namespace netgen
 	  const Segment & seg = mesh[i];
 	  int edgenr = top.GetEdge (i);
 	  use_edge[edgenr] = 1;
-	  edge_surfnr1[edgenr] = seg.surfnr1;
-	  edge_surfnr2[edgenr] = seg.surfnr2;
-	  edge_gi0[edgenr] = seg.epgeominfo[0];
-	  edge_gi1[edgenr] = seg.epgeominfo[1];
+	  edge_surfnr1[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0);
+	  edge_surfnr2[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1);
+	  edge_gi0[edgenr] = seg.EPGeomInfo(0);
+	  edge_gi1[edgenr] = seg.EPGeomInfo(1);
+	  edge_geoedgenr[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
 	  swap_edge[edgenr] = int (seg[0] > seg[1]);
 	}
 
@@ -966,16 +1059,13 @@ namespace netgen
                   {
                     senddata.Add (proc, edge_surfnr1[e]);
                     senddata.Add (proc, edge_surfnr2[e]);
-                    senddata.Add (proc, edge_gi0[e].edgenr);
-                    senddata.Add (proc, edge_gi0[e].body);
+                    senddata.Add (proc, edge_geoedgenr[e]);
                     senddata.Add (proc, edge_gi0[e].dist);
-                    senddata.Add (proc, edge_gi0[e].u);
-                    senddata.Add (proc, edge_gi0[e].v);
-                    senddata.Add (proc, edge_gi1[e].edgenr);
-                    senddata.Add (proc, edge_gi1[e].body);
+                    senddata.Add (proc, edge_gi0[e].gi.u);
+                    senddata.Add (proc, edge_gi0[e].gi.v);
                     senddata.Add (proc, edge_gi1[e].dist);
-                    senddata.Add (proc, edge_gi1[e].u);
-                    senddata.Add (proc, edge_gi1[e].v);
+                    senddata.Add (proc, edge_gi1[e].gi.u);
+                    senddata.Add (proc, edge_gi1[e].gi.v);
                     senddata.Add (proc, swap_edge[e]);
                   }
               }
@@ -995,16 +1085,13 @@ namespace netgen
                     use_edge[e] = 1;
                     edge_surfnr1[e] = int (recvdata[proc][cnt[proc]++]);
                     edge_surfnr2[e] = int (recvdata[proc][cnt[proc]++]);
-                    edge_gi0[e].edgenr = int (recvdata[proc][cnt[proc]++]);
-                    edge_gi0[e].body = int (recvdata[proc][cnt[proc]++]);
+                    edge_geoedgenr[e] = int (recvdata[proc][cnt[proc]++]);
                     edge_gi0[e].dist = recvdata[proc][cnt[proc]++];
-                    edge_gi0[e].u = recvdata[proc][cnt[proc]++];
-                    edge_gi0[e].v = recvdata[proc][cnt[proc]++];
-                    edge_gi1[e].edgenr = int (recvdata[proc][cnt[proc]++]);
-                    edge_gi1[e].body = int (recvdata[proc][cnt[proc]++]);
+                    edge_gi0[e].gi.u = recvdata[proc][cnt[proc]++];
+                    edge_gi0[e].gi.v = recvdata[proc][cnt[proc]++];
                     edge_gi1[e].dist = recvdata[proc][cnt[proc]++];
-                    edge_gi1[e].u = recvdata[proc][cnt[proc]++];
-                    edge_gi1[e].v = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].gi.u = recvdata[proc][cnt[proc]++];
+                    edge_gi1[e].gi.v = recvdata[proc][cnt[proc]++];
                     swap_edge[e] = recvdata[proc][cnt[proc]++];
                   }
               }
@@ -1035,9 +1122,9 @@ namespace netgen
 	  if (rational)
 	    {
 	      Vec<3> tau1 = geo.GetTangent(p1, edge_surfnr2[edgenr], edge_surfnr1[edgenr],
-                                           edge_gi0[edgenr]);
+                                           edge_gi0[edgenr], edge_geoedgenr[edgenr]);
 	      Vec<3> tau2 = geo.GetTangent(p2, edge_surfnr2[edgenr], edge_surfnr1[edgenr],
-                                           edge_gi1[edgenr]);
+                                           edge_gi1[edgenr], edge_geoedgenr[edgenr]);
 	      // p1 + alpha1 tau1 = p2 + alpha2 tau2;
 
 	      Mat<3,2> mat;
@@ -1064,7 +1151,7 @@ namespace netgen
 		  v05 /= 1 + (w-1) * 0.5;
 		  Point<3> p05 (v05), pp05(v05);
 		  geo.ProjectPointEdge(edge_surfnr1[edgenr], edge_surfnr2[edgenr], pp05,
-                                       &edge_gi0[edgenr]);
+                                       &edge_gi0[edgenr], edge_geoedgenr[edgenr]);
 		  double d = Dist (pp05, p05);
 
 		  if (d < dold)
@@ -1111,7 +1198,7 @@ namespace netgen
 		      geo.PointBetweenEdge(p1, p2, xi[j],
                                            edge_surfnr2[edgenr], edge_surfnr1[edgenr],
                                            edge_gi0[edgenr], edge_gi1[edgenr],
-                                           pp, ppgi);
+                                           pp, ppgi, edge_geoedgenr[edgenr]);
 		    }
 		  else
 		    {
@@ -1119,7 +1206,7 @@ namespace netgen
 		      geo.PointBetweenEdge(p2, p1, xi[j],
 					   edge_surfnr2[edgenr], edge_surfnr1[edgenr],
 					   edge_gi1[edgenr], edge_gi0[edgenr],
-					   pp, ppgi);
+					   pp, ppgi, edge_geoedgenr[edgenr]);
 		    }
 	    
 		  Vec<3> dist = pp - p;
@@ -1134,7 +1221,6 @@ namespace netgen
 		    for (int l = 0; l < 3; l++)
 		      rhs(k,l) += weight[j] * shape(k) * dist(l);
 		}
-
 
 	      CalcInverse (mat, inv);
 	      Mult (inv, rhs, sol);
@@ -1190,55 +1276,91 @@ namespace netgen
 	  {
 	    int facenr = f;
 	    if (surfnr[f] == -1) continue;
-	    // if (el.GetType() == TRIG && order >= 3)
-	    if (top.GetFaceType(facenr+1) == TRIG && order >= 3)
+
+            auto face_type = top.GetFaceType0(facenr);
+            bool has_inner =
+              (face_type == TRIG && order >= 3) ||
+              (face_type == QUAD && order >= 2);
+              
+	    if (has_inner)
 	      {
-                // NgArrayMem<PointIndex, 3> verts(3);
-                // top.GetFaceVertices (facenr+1, verts);
                 auto verts = top.GetFaceVertices(facenr);
                                                  
-		int fnums[] = { 0, 1, 2 };
-		/*
-		if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
-		if (el[fnums[1]] > el[fnums[2]]) swap (fnums[1], fnums[2]);
-		if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
-		*/
-		if (verts[fnums[0]] > verts[fnums[1]]) swap (fnums[0], fnums[1]);
-		if (verts[fnums[1]] > verts[fnums[2]]) swap (fnums[1], fnums[2]);
-		if (verts[fnums[0]] > verts[fnums[1]]) swap (fnums[0], fnums[1]);
-
+		int fnums[] = { 0, 1, 2, 4 };
+                if (face_type == TRIG)
+                  {
+                    if (verts[fnums[0]] > verts[fnums[1]]) swap (fnums[0], fnums[1]);
+                    if (verts[fnums[1]] > verts[fnums[2]]) swap (fnums[1], fnums[2]);
+                    if (verts[fnums[0]] > verts[fnums[1]]) swap (fnums[0], fnums[1]);
+                  }
+                else
+                  {
+                    int fmin = 0;
+                    for (int j = 1; j < 4; j++)
+                      if (verts[j] < verts[fmin]) fmin = j;
+                    fnums[0] = fmin;
+                    fnums[1] = (fmin+1)%4;
+                    fnums[2] = (fmin+2)%4;
+                    fnums[3] = (fmin+3)%4;
+                    if (verts[fnums[3]] < verts[fnums[1]]) swap (fnums[1], fnums[3]);
+                  }
 		int order1 = faceorder[facenr];
-		int ndof = max (0, (order1-1)*(order1-2)/2);
+		int ndof = max (0, (face_type==TRIG) ? (order1-1)*(order1-2)/2 : sqr(order1-1));
 	    
 		Vector shape(ndof), dmat(ndof);
 		MatrixFixWidth<3> rhs(ndof), sol(ndof);
 	    
 		rhs = 0.0;
 		dmat = 0.0;
-
+                
 		int np = sqr(xi.Size());
 		NgArray<Point<2> > xia(np);
 		NgArray<Point<3> > xa(np);
 
-		for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
-		  for (int jy = 0; jy < xi.Size(); jy++, jj++)
-		    xia[jj] = Point<2> ((1-xi[jy])*xi[jx], xi[jy]);
-
+                if (face_type==TRIG)
+                  for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
+                    for (int jy = 0; jy < xi.Size(); jy++, jj++)
+                      xia[jj] = Point<2> ((1-xi[jy])*xi[jx], xi[jy]);
+                else
+                  for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
+                    for (int jy = 0; jy < xi.Size(); jy++, jj++)
+                      xia[jj] = Point<2> (xi[jx], xi[jy]);
+                  
 		// CalcMultiPointSurfaceTransformation (&xia, i, &xa, NULL);
+
 
 		NgArray<int> edgenrs;
 		top.GetFaceEdges (facenr+1, edgenrs);
 		for (int k = 0; k < edgenrs.Size(); k++) edgenrs[k]--;
-
+                
 		for (int jj = 0; jj < np; jj++)
 		  {
 		    Point<3> pp(0,0,0);
-		    double lami[] = { xia[jj](0), xia[jj](1), 1-xia[jj](0)-xia[jj](1)};
+		    double lami[4], mui[4];
+                    if (face_type==TRIG)
+                      {
+                        lami[0] = xia[jj](0);
+                        lami[1] = xia[jj](1);
+                        lami[2] = 1-xia[jj](0)-xia[jj](1);
+                        lami[3] = 0.0;
+                      }
+                    else
+                      {
+                        lami[0] = (1-xia[jj](0))*(1-xia[jj](1));
+                        lami[1] = (  xia[jj](0))*(1-xia[jj](1));                        
+                        lami[2] = (  xia[jj](0))*(  xia[jj](1));
+                        lami[3] = (1-xia[jj](0))*(  xia[jj](1));                        
 
+                        mui[0] = (1-xia[jj](0))+(1-xia[jj](1));
+                        mui[1] = (  xia[jj](0))+(1-xia[jj](1));                        
+                        mui[2] = (  xia[jj](0))+(  xia[jj](1));
+                        mui[3] = (1-xia[jj](0))+(  xia[jj](1));                        
+
+                      }
+                    
 		    for (int k = 0; k < verts.Size(); k++)
 		      pp += lami[k] * Vec<3> (mesh.Point(verts[k]));
 
-		    // const ELEMENT_EDGE * edges = MeshTopology::GetEdges0 (TRIG);
 		    for (int k = 0; k < edgenrs.Size(); k++)
 		      {
 			int eorder = edgeorder[edgenrs[k]];
@@ -1246,67 +1368,133 @@ namespace netgen
 
 			int first = edgecoeffsindex[edgenrs[k]];
 			Vector eshape(eorder-1);
-			// int vi1, vi2;
-			// top.GetEdgeVertices (edgenrs[k]+1, vi1, vi2);
+
                         auto [vi1,vi2] = top.GetEdgeVertices(edgenrs[k]);
 			if (vi1 > vi2) swap (vi1, vi2);
 			int v1 = -1, v2 = -1;
-			for (int j = 0; j < 3; j++)
+			for (int j = 0; j < verts.Size(); j++)
 			  {
 			    if (verts[j] == vi1) v1 = j;
 			    if (verts[j] == vi2) v2 = j;
 			  }
 
-			CalcScaledEdgeShape (eorder, lami[v1]-lami[v2], lami[v1]+lami[v2], &eshape(0));
+                        if (face_type==TRIG)
+                          CalcScaledEdgeShape (eorder, lami[v1]-lami[v2], lami[v1]+lami[v2], &eshape(0));
+                        else
+                          {
+                            CalcEdgeShape (eorder, mui[v1]-mui[v2], &eshape(0));
+                            eshape *= lami[v1]+lami[v2];
+                          }
+                        
 			for (int n = 0; n < eshape.Size(); n++)
 			  pp += eshape(n) * edgecoeffs[first+n];
 		      }
 		    xa[jj] = pp;
 		  }
+                
+                // check JOACHIM
 
-		for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
-		  for (int jy = 0; jy < xi.Size(); jy++, jj++)
-		    {
-		      double y = xi[jy];
-		      double x = (1-y) * xi[jx];
-		      double lami[] = { x, y, 1-x-y };
-		      double wi = weight[jx]*weight[jy]*(1-y);
- 
-		      Point<3> pp = xa[jj];
-		      // ref -> ProjectToSurface (pp, mesh.GetFaceDescriptor(el.GetIndex()).SurfNr());
-		      /**
-			 with MPI and an interior surface element between volume elements assigned to different
-			 procs, only one of them has the surf-el
-		      **/
-                      SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
-		      if (sei != SurfaceElementIndex(-1)) {
-			PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
-                        // use improved initial guess
-                        gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
-                        gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
+                if (face_type == TRIG)
+                  for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
+                    for (int jy = 0; jy < xi.Size(); jy++, jj++)
+                      {
+                        double y = xi[jy];
+                        double x = (1-y) * xi[jx];
+                        double lami[] = { x, y, 1-x-y };
+                        double wi = weight[jx]*weight[jy]*(1-y);
+                        
+                        Point<3> pp = xa[jj];
+                        // ref -> ProjectToSurface (pp, mesh.GetFaceDescriptor(el.GetIndex()).SurfNr());
+                        /**
+                           with MPI and an interior surface element between volume elements assigned to different
+                           procs, only one of them has the surf-el
+                        **/
+                        SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
+                        if (sei != SurfaceElementIndex(-1)) {
+                          PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+                          // use improved initial guess
+                          gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
+                          gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
+                          
+                          geo.ProjectPointGI(surfnr[facenr], pp, gi);
+                        }
+                        else
+                          { geo.ProjectPoint(surfnr[facenr], pp); }
+                        Vec<3> dist = pp-xa[jj];
+                        
+                        CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],
+                                       1-lami[fnums[1]]-lami[fnums[0]], &shape(0));
+                        
+                        for (int k = 0; k < ndof; k++)
+                          dmat(k) += wi * shape(k) * shape(k);
 
-			geo.ProjectPointGI(surfnr[facenr], pp, gi);
-		      }
-		      else
-			{ geo.ProjectPoint(surfnr[facenr], pp); }
-		      Vec<3> dist = pp-xa[jj];
-		
-		      CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],
-				     1-lami[fnums[1]]-lami[fnums[0]], &shape(0));
+                        dist *= wi;
+                        for (int k = 0; k < ndof; k++)
+                          for (int l = 0; l < 3; l++)
+                            rhs(k,l) += shape(k) * dist(l);
+                      }
+                else
+                  for (int jx = 0, jj = 0; jx < xi.Size(); jx++)
+                    for (int jy = 0; jy < xi.Size(); jy++, jj++)
+                      {
+                        double wi = weight[jx]*weight[jy];
 
-		      for (int k = 0; k < ndof; k++)
-			dmat(k) += wi * shape(k) * shape(k);
+                        double lami[4];
+                        lami[0] = (1-xia[jj](0))*(1-xia[jj](1));
+                        lami[1] = (  xia[jj](0))*(1-xia[jj](1));                        
+                        lami[2] = (  xia[jj](0))*(  xia[jj](1));
+                        lami[3] = (1-xia[jj](0))*(  xia[jj](1));                        
+                        double mui[4];
+                        mui[0] = (1-xia[jj](0))+(1-xia[jj](1));
+                        mui[1] = (  xia[jj](0))+(1-xia[jj](1));                        
+                        mui[2] = (  xia[jj](0))+(  xia[jj](1));
+                        mui[3] = (1-xia[jj](0))+(  xia[jj](1));                        
 
-		      dist *= wi;
-		      for (int k = 0; k < ndof; k++)
-			for (int l = 0; l < 3; l++)
-			  rhs(k,l) += shape(k) * dist(l);
-		    }
+                        
+                        Point<3> pp = xa[jj];
+                        // ref -> ProjectToSurface (pp, mesh.GetFaceDescriptor(el.GetIndex()).SurfNr());
+                        /**
+                           with MPI and an interior surface element between volume elements assigned to different
+                           procs, only one of them has the surf-el
+                        **/
+                        SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
 
-		for (int i = 0; i < ndof; i++)
-		  for (int j = 0; j < 3; j++)
-		    sol(i,j) = rhs(i,j) / dmat(i);   // Orthogonal basis !
+                        if (sei != SurfaceElementIndex(-1)) {
+                          PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+                          // use improved initial guess TODO JOACHIM
+                          gi.u = 0;
+                          gi.v = 0;
+                          for (int k = 0; k < 4; k++)
+                            {
+                              gi.u += lami[k] * mesh[sei].GeomInfoPi(k+1).u;
+                              gi.v += lami[k] * mesh[sei].GeomInfoPi(k+1).v;
+                            }
+                          geo.ProjectPointGI(surfnr[facenr], pp, gi);
+                        }
+                        else
+                          geo.ProjectPoint(surfnr[facenr], pp);
+                        
+                        Vec<3> dist = pp-xa[jj];
 
+                        /*
+                        CalcTrigShape (order1, lami[fnums[1]]-lami[fnums[0]],
+                                       1-lami[fnums[1]]-lami[fnums[0]], &shape(0));
+                        */
+                        // CalcQuadShapeLambda (order1, 2*x-1, 2*y-1, [&](int i, double val) { shape(i) = val; });
+                        CalcQuadShapeLambda (order1, mui[fnums[1]]-mui[fnums[0]], mui[fnums[3]]-mui[fnums[0]], [&](int i, double val) { shape(i) = val; });                        
+                        for (int k = 0; k < ndof; k++)
+                          dmat(k) += wi * shape(k) * shape(k);
+
+                        dist *= wi;
+                        for (int k = 0; k < ndof; k++)
+                          for (int l = 0; l < 3; l++)
+                            rhs(k,l) += shape(k) * dist(l);
+                      }
+                
+                for (int i = 0; i < ndof; i++)
+                  for (int j = 0; j < 3; j++)
+                    sol(i,j) = rhs(i,j) / dmat(i);   // Orthogonal basis !
+                
 		int first = facecoeffsindex[facenr];
 		for (int j = 0; j < ndof; j++)
 		  for (int k = 0; k < 3; k++)
@@ -1389,8 +1577,8 @@ namespace netgen
     if (mesh.coarsemesh)
       {
 	const HPRefElement & hpref_el =
-	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
-	
+	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+        
 	return mesh.coarsemesh->GetCurvedElements().IsSegmentCurved (hpref_el.coarse_elnr);
       }
 
@@ -1419,7 +1607,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
 	const HPRefElement & hpref_el =
-	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
+	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
 	// xi umrechnen
 	T lami[2] = { xi, 1-xi };
@@ -2208,7 +2396,6 @@ namespace netgen
 
 	  int ii = 4;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (QUAD);
-	  
 	  for (int i = 0; i < 4; i++)
 	    {
 	      int eorder = edgeorder[info.edgenrs[i]];
@@ -2232,6 +2419,18 @@ namespace netgen
 
 		  ii += eorder-1;
 		}
+              
+              // TODO (if still needed???)
+              /*
+              int forder = faceorder[info.facenr];
+              if (forder >= 2)
+                {
+                  
+                }
+              */
+              for (int i = ii; i < info.ndof; i++)
+                for (int k = 0; k < 2; k++)                
+                  dshapes(i,k) = 0;
 	    }
 
 	  /*	  
@@ -2343,14 +2542,72 @@ namespace netgen
         }
       case QUAD: 
         {
-          if (info.order >= 2) return false; // not yet supported
           AutoDiff<2,T> lami[4] = { (1-x)*(1-y), x*(1-y), x*y, (1-x)*y };
+          AutoDiff<2,T> mui[4] = { (1-x)+(1-y), x+(1-y), x+y, (1-x)+y };
           for (int j = 0; j < 4; j++)
             {
               Point<3> p = mesh[el[j]];
               for (int k = 0; k < DIM_SPACE; k++)
                 mapped_x[k] += p(k) * lami[j];
             }
+          if (info.order == 1) break;
+
+	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (QUAD);
+	  for (int i = 0; i < 4; i++)
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];
+                  
+		  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+
+                  auto lame = lami[vi1]+lami[vi2];
+                  CalcEdgeShapeLambda(eorder, mui[vi1]-mui[vi2],
+                                      [&](int i, AutoDiff<2,T> shape)
+                                      {
+                                        for (int k = 0; k < DIM_SPACE; k++)
+                                          mapped_x[k] += edgecoeffs[first+i](k) * (lame*shape);
+                                      });
+
+		}              
+	    }
+          
+          int forder = faceorder[info.facenr];
+          if (forder >= 2)
+            {
+              int first = facecoeffsindex[info.facenr];
+
+              int fnums[4];
+              int fmin = 0;
+              for (int j = 1; j < 4; j++)
+                if (el[j] < el[fmin]) fmin = j;
+              fnums[0] = fmin;
+              fnums[1] = (fmin+1)%4;
+              fnums[2] = (fmin+2)%4;
+              fnums[3] = (fmin+3)%4;
+              if (el[fnums[3]] < el[fnums[1]]) swap (fnums[1], fnums[3]);
+              
+              AutoDiff<2,T>  mui[4];
+              mui[0] = (1-x)+(1-y);
+              mui[1] = (  x)+(1-y);
+              mui[2] = (  x)+(  y);
+              mui[3] = (1-x)+(  y);
+              
+              CalcQuadShapeLambda (forder,
+                                   // 1-2*x, 1-2*y,
+                                   mui[fnums[1]]-mui[fnums[0]],
+                                   mui[fnums[3]]-mui[fnums[0]], 
+                                   [&](int i, AutoDiff<2,T> shape)
+                                   {
+                                     for (int k = 0; k < DIM_SPACE; k++)
+                                       mapped_x[k] += facecoeffs[first+i](k) * shape;
+                                   });
+            }
+
+          
+          
           break;
         }
       case QUAD8:
@@ -3882,7 +4139,7 @@ namespace netgen
         }
       case HEX:
         {
-          if (info.order >= 2) return false; // not yet supported          
+          // if (info.order >= 2) return false; // not yet supported          
           AutoDiff<3,T> lami[8] =
             { (1-x)*(1-y)*(1-z),
               (  x)*(1-y)*(1-z),
@@ -3914,7 +4171,8 @@ namespace netgen
           };
 	  // int ii = 8;
 	  const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
-	  
+	  const ELEMENT_FACE * faces = MeshTopology::GetFaces0 (HEX);
+          
 	  for (int i = 0; i < 12; i++)
 	    {
 	      int eorder = edgeorder[info.edgenrs[i]];
@@ -3935,9 +4193,225 @@ namespace netgen
                   
 		}
 	    }
+
+
+	  for (int i = 0; i < 6; i++)
+	    {
+	      int forder = faceorder[info.facenrs[i]];
+	      if (forder >= 2)
+		{
+                  int first = facecoeffsindex[info.facenrs[i]];
+                  
+                  int fmin = 0;
+                  for (int j = 1; j < 4; j++)
+                    if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+
+                  int fx = (fmin+1)%4;
+                  int fy = (fmin+3)%4;
+                  if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+
+                  auto lamf = lami[faces[i][0]] + lami[faces[i][1]] + lami[faces[i][2]] + lami[faces[i][3]];
+                  CalcQuadShapeLambda (forder,
+                                       mu[faces[i][fx]]-mu[faces[i][fmin]],
+                                       mu[faces[i][fy]]-mu[faces[i][fmin]],
+                                       [&](int i, AutoDiff<3,T> shape)
+                                       {
+                                         for (int k = 0; k < 3; k++)
+                                           mapped_x[k] += facecoeffs[first+i](k) * lamf * shape;
+                                       });
+                }
+            }
           
           break;
         }
+      case PRISM:
+	{
+	  AutoDiff<3,T> lami[6] = { x, y,1-x-y, x, y, 1-x-y };
+	  AutoDiff<3,T> lamiz[6] = { 1-z, 1-z, 1-z, z, z, z };
+          AutoDiff<3,T> sigma[6];
+          for (int i = 0; i < 6; i++) sigma[i] = lami[i] + lamiz[i];
+
+	  for (int j = 0; j < 6; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < 3; k++)
+                mapped_x[k] += p(k) * (lami[j]*lamiz[j]);
+            }
+
+	  if (info.order == 1) break;
+
+	  auto edges = MeshTopology::GetEdges (PRISM);
+	  for (int i = 0; i < 6; i++)    // horizontal edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+
+		  CalcScaledEdgeShapeLambda (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2],
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = edgecoeffs[first+j];
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * (lamiz[vi1]*shape);
+                                             });
+		}
+	    }
+
+	  for (int i = 6; i < 9; i++)    // vertical edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+		  auto bubxy = lami[vi1];
+                  
+		  CalcEdgeShapeLambda (eorder, lamiz[vi1]-lamiz[vi2],
+                                       [&](int j, AutoDiff<3,T> shape)
+                                       {
+                                         Vec<3> coef = edgecoeffs[first+j];
+                                         for (int k = 0; k < 3; k++)
+                                           mapped_x[k] += coef(k) * (bubxy*shape);
+                                       });
+		}
+	    }
+
+	  // FACE SHAPES
+	  auto faces = MeshTopology::GetFaces0 (PRISM);
+	  for (int i = 0; i < 2; i++)   // triangular faces
+	    {
+	      int forder = faceorder[info.facenrs[i]];
+	      if ( forder < 3 ) continue;
+              
+              int first = facecoeffsindex[info.facenrs[i]];              
+	      int fav[3] = { faces[i][0], faces[i][1], faces[i][2] };
+	      if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 
+	      if(el[fav[1]] > el[fav[2]]) swap(fav[1],fav[2]);
+	      if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 	
+
+              auto lamf = lamiz[fav[0]];
+	      CalcScaledTrigShapeLambda (forder, 
+                                         lami[fav[2]]-lami[fav[1]], lami[fav[0]], AutoDiff<3,T>(1.0),
+                                         [&](int j, AutoDiff<3,T> shape)
+                                         {
+                                           Vec<3> coef = facecoeffs[first+j];            
+                                           for (int k = 0; k < 3; k++)
+                                             mapped_x[k] += coef(k) * lamf * shape;
+                                         });
+	    }
+
+	  for (int i = 2; i < 5; i++)  // quad faces
+	    {
+	      int forder = faceorder[info.facenrs[i]];
+	      if (forder >= 2)
+		{
+                  int first = facecoeffsindex[info.facenrs[i]];
+                  
+                  int fmin = 0;
+                  for (int j = 1; j < 4; j++)
+                    if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+
+                  int fx = (fmin+1)%4;
+                  int fy = (fmin+3)%4;
+                  if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+                  
+                  auto xi = sigma[faces[i][fx]]-sigma[faces[i][fmin]];
+                  auto eta = sigma[faces[i][fy]]-sigma[faces[i][fmin]];
+                    
+                  AutoDiff<3,T> scalexi(1.0), scaleeta(1.0);
+                  if (faces[i][fmin] / 3 == faces[i][fx] / 3)  
+                    scalexi = lami[faces[i][fmin]]+lami[faces[i][fx]];  // xi is horizontal
+                  else
+                    scaleeta = lami[faces[i][fmin]]+lami[faces[i][fy]];
+                  
+                  CalcScaledQuadShapeLambda (forder, 
+                                             xi, eta, scalexi, scaleeta, 
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = facecoeffs[first+j];            
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * shape;
+                                             });
+                }
+            }
+
+          
+	  break;
+        }
+          
+      case PYRAMID:
+	{
+          z *= (1-1e-10);
+          
+          auto xt = x / (1-z);
+          auto yt = y / (1-z);
+          
+          AutoDiff<3,T> sigma[4]  = { (1-xt)+(1-yt), xt+(1-yt), xt+yt, (1-xt)+yt };
+          AutoDiff<3,T> lambda[4] = { (1-xt)*(1-yt), xt*(1-yt), xt*yt, (1-xt)*yt };
+          AutoDiff<3,T> lambda3d[5];
+          
+          for (int i = 0; i < 4; i++)  
+            lambda3d[i] = lambda[i] * (1-z);
+          lambda3d[4] = z;
+          
+	  for (int j = 0; j < 5; j++)
+            {
+              Point<3> p = mesh[el[j]];
+              for (int k = 0; k < 3; k++)
+                mapped_x[k] += p(k) * lambda3d[j];
+            }
+
+	  if (info.order == 1) break;
+
+	  auto edges = MeshTopology::GetEdges (PYRAMID);
+	  for (int i = 0; i < 4; i++)    // horizontal edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+                  
+		  CalcScaledEdgeShapeLambda (eorder, (sigma[vi1]-sigma[vi2])*(1-z),
+                                             1-z,
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = edgecoeffs[first+j];
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * shape;
+                                             });
+		}
+	    }
+
+	  for (int i = 4; i < 8; i++)    // vertical edges
+	    {
+	      int eorder = edgeorder[info.edgenrs[i]];
+	      if (eorder >= 2)
+		{
+                  int first = edgecoeffsindex[info.edgenrs[i]];                  
+		  int vi1 = edges[i][0], vi2 = edges[i][1];
+		  if (el[vi1] > el[vi2]) swap (vi1, vi2);
+                  
+		  CalcScaledEdgeShapeLambda (eorder, lambda3d[vi1]-lambda3d[vi2],
+                                             lambda3d[vi1]+lambda3d[vi2],
+                                             [&](int j, AutoDiff<3,T> shape)
+                                             {
+                                               Vec<3> coef = edgecoeffs[first+j];
+                                               for (int k = 0; k < 3; k++)
+                                                 mapped_x[k] += coef(k) * shape;
+                                             });
+		}
+	    }
+          
+          // TODO: face dofs
+          break;
+        }
+        
       default:
         return false;
       }
@@ -4110,7 +4584,7 @@ namespace netgen
 	T lami[4];
 	TFlatVector<T> vlami(4, lami);
 
-	NgArrayMem<Point<2,T>, 50> coarse_xi (npts);
+	ArrayMem<Point<2,T>, 50> coarse_xi (npts);
 	
 	for (int pi = 0; pi < npts; pi++)
 	  {
@@ -4128,7 +4602,7 @@ namespace netgen
 
 	mesh.coarsemesh->GetCurvedElements().
 	  CalcMultiPointSurfaceTransformation<DIM_SPACE,T> (hpref_el.coarse_elnr, npts,
-                                                            &coarse_xi[0](0), &coarse_xi[1](0)-&coarse_xi[0](0), 
+                                                            &coarse_xi[0](0), sizeof(Point<2,T>)/sizeof(T),
                                                             x, sx, dxdxi, sdxdxi);
 
 	// Mat<3,2> dxdxic;
@@ -4412,7 +4886,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
 	const HPRefElement & hpref_el =
-	  (*mesh.hpelements) [mesh[elnr].hp_elnr];
+	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
 	// xi umrechnen
 	double lami[8];

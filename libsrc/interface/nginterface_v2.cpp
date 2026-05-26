@@ -322,7 +322,10 @@ namespace netgen
   template <>
   DLL_HEADER int Ng_GetElementIndex<1> (int nr)
   {
-    return (*mesh)[SegmentIndex(nr)].si;
+    const auto& seg = (*mesh)[SegmentIndex(nr)];
+    if (seg.GetIndex() >= 1 && seg.GetIndex() <= mesh->GetNED())
+      { int fdi = mesh->GetEdgeDescriptor(seg.GetIndex()).GetIndex(); if (fdi > 0) return fdi; }
+    return seg.GetIndex();
   }
   
   template <>
@@ -1155,7 +1158,7 @@ namespace netgen
     if (mesh->GetDimension() == 3)
       return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).SurfNr();
     else
-      return mesh->LineSegment(ei).si;
+      return mesh->LineSegment(ei).GetIndex();
   }
   int Ngx_Mesh::GetSurfaceElementFDNumber (size_t ei) const
   {

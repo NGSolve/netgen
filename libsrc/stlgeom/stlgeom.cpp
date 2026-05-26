@@ -194,7 +194,7 @@ PointBetweenEdge (const Point<3> & p1, const Point<3> & p2, double secpoint,
 	      int surfi1, int surfi2,
 	      const EdgePointGeomInfo & gi1,
 	      const EdgePointGeomInfo & gi2,
-	      Point<3> & newp, EdgePointGeomInfo & newgi) const
+	      Point<3> & newp, EdgePointGeomInfo & newgi, int edgenr) const
 {
   /*
   (*testout) << "edge-between: p1 = " << p1 << ", p2 = " << p2
@@ -207,14 +207,13 @@ PointBetweenEdge (const Point<3> & p1, const Point<3> & p2, double secpoint,
   */
   int hi;
   newgi.dist = (1.0-secpoint) * gi1.dist + secpoint*gi2.dist;
-  newgi.edgenr = gi1.edgenr;
 
   /*
   (*testout) << "p1 = " << p1 << ", p2 = " << p2 << endl;
-  (*testout) << "refedge: " << gi1.edgenr
+  (*testout) << "refedge: " << edgenr
 	     << " d1 = " << gi1.dist << ", d2 = " << gi2.dist << endl;
   */
-  newp = GetLine (gi1.edgenr)->GetPointInDist (GetPoints(), newgi.dist, hi);
+  newp = GetLine (edgenr)->GetPointInDist (GetPoints(), newgi.dist, hi);
 
   //  (*testout) << "newp = " << newp << endl;
 }

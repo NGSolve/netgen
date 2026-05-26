@@ -373,6 +373,10 @@ public:
       unit = soldata[i]->unit;
   }
 
+  SolData* GetScalFunction() const { return scalfunction == -1 ? nullptr : soldata[scalfunction]; }
+  SolData* GetVecFunction() const { return vecfunction == -1 ? nullptr : soldata[vecfunction]; }
+  SolData* GetScalOrVecFunction() const { auto sol = GetScalFunction(); return sol ? sol : GetVecFunction(); }
+
 #ifdef PARALLELGL
   void Broadcast ();
 #endif

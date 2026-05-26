@@ -78,11 +78,11 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
 
   int new_max_edge_nr = max_edge_nr;
   for (const auto& seg : segments)
-    if (seg.edgenr > new_max_edge_nr)
-      new_max_edge_nr = seg.edgenr;
+    if (seg.GetIndex() > new_max_edge_nr)
+      new_max_edge_nr = seg.GetIndex();
   for (const auto& seg : new_segments)
-    if (seg.edgenr > new_max_edge_nr)
-      new_max_edge_nr = seg.edgenr;
+    if (seg.GetIndex() > new_max_edge_nr)
+      new_max_edge_nr = seg.GetIndex();
 
   auto getGW = [&] (PointIndex pi) -> Vec<3> {
     if (growth_vector_map.count(pi) == 0)
@@ -107,7 +107,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
       auto& seg = segi < segments.Size()
                     ? segments[segi]
                     : new_segments[segi - segments.Size()];
-      table.Add(seg.edgenr, &seg);
+      table.Add(seg.GetIndex(), &seg);
     },
     new_max_edge_nr + 1);
   auto point2seg = ngcore::CreateSortedTable<Segment*, PointIndex>(
@@ -194,9 +194,9 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
         auto segs = point2seg[pi];
         if (segs.Size() == 1)
           return true;
-        auto first_edgenr = (*segs[0]).edgenr;
+        auto first_edgenr = (*segs[0]).GetIndex();
         for (auto* p_seg : segs)
-          if (p_seg->edgenr != first_edgenr)
+          if (p_seg->GetIndex() != first_edgenr)
             return true;
         return false;
       };
@@ -246,7 +246,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
           for (auto* p_seg : point2seg[points.Last()])
             {
               const auto& seg = *p_seg;
-              if (seg.edgenr != edgenr)
+              if (seg.GetIndex() != edgenr)
                 continue;
               auto plast = points.Last();
               if (plast != seg[0] && plast != seg[1])

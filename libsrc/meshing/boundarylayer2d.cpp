@@ -26,7 +26,7 @@ namespace netgen
       bndnodes.Clear();
       for (i = 1; i <= mesh.GetNSeg(); i++)
       {
-         int snr = mesh.LineSegment(i).edgenr;
+         int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          cout << "snr = " << snr << endl;
          if (snr == surfid)
          {
@@ -36,7 +36,7 @@ namespace netgen
       }
       for (i = 1; i <= mesh.GetNSeg(); i++)
       {
-         int snr = mesh.LineSegment(i).edgenr;
+         int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          if (snr != surfid)
          {
             bndnodes.Clear (mesh.LineSegment(i)[0]);
@@ -64,7 +64,7 @@ namespace netgen
       int nq = 0;
       for (i = 1; i <= mesh.GetNSeg(); i++)
       {
-         int snr = mesh.LineSegment(i).edgenr;
+         int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          if (snr == surfid)
          {
             int p1 = mesh.LineSegment(i)[0];
@@ -132,9 +132,12 @@ namespace netgen
   {
      Box<3> box{Box<3>::EMPTY_BOX};
      for(const auto & seg : mesh.LineSegments())
-        if (seg.domin == domain || seg.domout == domain)
+     {
+        const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+        if (ed.SurfNr(0) == domain || ed.SurfNr(1) == domain)
            for (auto pi : {seg[0], seg[1]})
               box.Add(mesh[pi]);
+     }
 
      MeshingParameters mp;
      Meshing2 meshing (*mesh.GetGeometry(), mp, box);
@@ -151,16 +154,17 @@ namespace netgen
      gi.trignum = domain;
      for(auto seg : mesh.LineSegments())
      {
-         if(seg.domin == domain || seg.domout == domain)
+         const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+         if(ed.SurfNr(0) == domain || ed.SurfNr(1) == domain)
          for (auto pi : {seg[0], seg[1]})
             if (compress[pi]==PointIndex{PointIndex::INVALID})
             {
                meshing.AddPoint(mesh[pi], pi);
                compress[pi] = cnt++;
             }
-         if(seg.domin == domain)
+         if(ed.SurfNr(0) == domain)
              meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], gi, gi);
-         if(seg.domout == domain)
+         if(ed.SurfNr(1) == domain)
              meshing.AddBoundaryElement (compress[seg[1]], compress[seg[0]], gi, gi);
      }
 
@@ -235,6 +239,7 @@ namespace netgen
 
      // moved segments
      Array<SegmentIndex> moved_segs;
+     std::map<int, int> edge_to_new_edge;
 
      Array<Vec<3>, PointIndex> growthvectors(np);
      growthvectors = 0.;
@@ -250,16 +255,17 @@ namespace netgen
 
     for(const auto& seg : line_segments)
     {
-      if(seg.edgenr > max_edge_nr)
-        max_edge_nr = seg.edgenr;
-      if(seg.domin > max_domain)
-         max_domain = seg.domin;
-      if(seg.domout > max_domain)
-         max_domain = seg.domout;
+      if(mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() > max_edge_nr)
+        max_edge_nr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
+      const auto & ed2 = mesh.GetEdgeDescriptor(seg.GetIndex());
+      if(ed2.SurfNr(0) > max_domain)
+         max_domain = ed2.SurfNr(0);
+      if(ed2.SurfNr(1) > max_domain)
+         max_domain = ed2.SurfNr(1);
     }
 
     int new_domain = max_domain+1;
-    int new_edge_nr = max_edge_nr+1;
+    int next_edge_nr = max_edge_nr+1;
 
     BitArray active_boundaries(max_edge_nr+1);
     BitArray active_segments(nseg);
@@ -275,7 +281,8 @@ namespace netgen
     for(auto segi : Range(line_segments))
     {
        const auto seg = line_segments[segi];
-       if(active_boundaries.Test(seg.epgeominfo[0].edgenr) && (seg.domin==domain || seg.domout==domain))
+       const auto & ed3 = mesh.GetEdgeDescriptor(seg.GetIndex());
+       if(active_boundaries.Test(mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr()) && (ed3.SurfNr(0)==domain || ed3.SurfNr(1)==domain))
           active_segments.SetBit(segi);
     }
 
@@ -285,10 +292,7 @@ namespace netgen
         // int new_fd_index =
         mesh.AddFaceDescriptor(new_fd);
         if(should_make_new_domain)
-          {
            mesh.SetMaterial(new_domain, "layer_" + mesh.GetMaterial(domain));
-           mesh.SetBCName(new_edge_nr - 1, "moved");
-          }
     }
 
     for(auto segi : Range(line_segments))
@@ -296,8 +300,9 @@ namespace netgen
         if(segs_done[segi]) continue;
         segs_done.SetBit(segi);
         const auto& seg = line_segments[segi];
-        if(seg.domin != domain && seg.domout != domain) continue;
-        if(!active_boundaries.Test(seg.epgeominfo[0].edgenr))
+        const auto & ed4 = mesh.GetEdgeDescriptor(seg.GetIndex());
+        if(ed4.SurfNr(0) != domain && ed4.SurfNr(1) != domain) continue;
+        if(!active_boundaries.Test(mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr()))
            continue;
         moved_segs.Append(segi);
       }
@@ -311,7 +316,7 @@ namespace netgen
        n = {-n[1], n[0], 0};
        n.Normalize();
 
-       if(seg.domout == domain)
+       if(mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1) == domain)
            n = -n;
 
        AddDirection(growthvectors[seg[0]], n);
@@ -463,8 +468,10 @@ namespace netgen
         const auto & seg0 = mesh[segi0];
         const auto & seg1 = mesh[segi1];
 
-        if( (seg0.domin != domain && seg0.domout != domain) ||
-            (seg1.domin != domain && seg1.domout != domain) )
+        const auto & ed0 = mesh.GetEdgeDescriptor(seg0.GetIndex());
+        const auto & ed1 = mesh.GetEdgeDescriptor(seg1.GetIndex());
+        if( (ed0.SurfNr(0) != domain && ed0.SurfNr(1) != domain) ||
+            (ed1.SurfNr(0) != domain && ed1.SurfNr(1) != domain) )
             return;
 
         if(segi0 == segi1)
@@ -628,16 +635,28 @@ namespace netgen
         auto & pm1 = mapto[seg[1]];
 
         Segment s = seg;
-        s.geominfo[0] = {};
-        s.geominfo[1] = {};
+        s.GeomInfo(0) = {};
+        s.GeomInfo(1) = {};
         s[0] = pm0.Last();
         s[1] = pm1.Last();
         s[2] = PointIndex::INVALID;
+
+
+        if(edge_to_new_edge.find(seg.GetIndex()) == edge_to_new_edge.end())
+        {
+          EdgeDescriptor ed;
+          ed.SetEdgeNr(next_edge_nr);
+          auto & orig_ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+          ed.SetSurfNr(0, orig_ed.SurfNr(0));
+          ed.SetSurfNr(1, orig_ed.SurfNr(1));
+          ed.SetName("moved_" + orig_ed.GetName());
+          mesh.AddEdgeDescriptor(ed);
+          mesh.GetEdgeDescriptor(s.GetIndex()).SetIndex(next_edge_nr);
+          edge_to_new_edge[seg.GetIndex()] = next_edge_nr++;
+        }
+
+        s.SetIndex(edge_to_new_edge[seg.GetIndex()]);
         // auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
-        s.edgenr = new_edge_nr;
-        s.epgeominfo[0].edgenr = -1;
-        s.epgeominfo[1].edgenr = -1;
-        s.si = s.edgenr;
         mesh.AddSegment(s);
 
         for ( auto i : Range(thicknesses))
@@ -695,10 +714,104 @@ namespace netgen
 
         }
         // segment now adjacent to new 2d-domain!
-        if(line_segments[si].domin == domain)
-            line_segments[si].domin = new_domain;
-        if(line_segments[si].domout == domain)
-            line_segments[si].domout = new_domain;
+        auto & old_ed = mesh.GetEdgeDescriptor(line_segments[si].GetIndex());
+        for (auto i : Range(2))
+            if(old_ed.SurfNr(i) == domain)
+                old_ed.SetSurfNr(i, new_domain);
+     }
+
+     // Fix junction points: where active boundary meets inactive boundary,
+     // the boundary of domain is not closed. We need to:
+     // 1) Assign BL-zone inactive segments a new edge descriptor with new_domain
+     // 2) Merge duplicate points at the BL endpoint with existing inactive boundary points
+     std::map<int, int> ed_to_bl_ed;
+     for(PointIndex pi = PointIndex::BASE; pi < np + PointIndex::BASE; pi++)
+     {
+        if(mapto[pi].Size() == 0) continue;
+
+        // Check if pi is on a non-active segment with domain (junction point)
+        bool is_junction = false;
+        for(SegmentIndex segi(0); segi < nseg; segi++)
+        {
+           if(active_segments.Test(segi)) continue;
+           auto & seg = line_segments[segi];
+           if(seg[0] != pi && seg[1] != pi) continue;
+           auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+           if(ed.SurfNr(0) == domain || ed.SurfNr(1) == domain)
+           { is_junction = true; break; }
+        }
+        if(!is_junction) continue;
+
+        auto target_pos = mesh[mapto[pi].Last()];
+        auto gv = growthvectors[pi];
+        double gv_len = gv.Length();
+        if(gv_len < 1e-10) continue;
+        auto gv_dir = (1.0/gv_len) * gv;
+        double bl_proj = Dot(target_pos - mesh[pi], gv_dir);
+
+        // Walk from pi along inactive boundary in growth direction
+        PointIndex current = pi;
+        for(int iter = 0; iter < 1000; iter++)
+        {
+           bool stepped = false;
+           for(SegmentIndex segi(0); segi < nseg; segi++)
+           {
+              if(active_segments.Test(segi)) continue;
+              auto & seg = line_segments[segi];
+              if(seg[0] != current && seg[1] != current) continue;
+              auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+              if(ed.SurfNr(0) != domain && ed.SurfNr(1) != domain) continue;
+
+              auto next = seg[0] == current ? seg[1] : seg[0];
+              double proj = Dot(mesh[next] - mesh[pi], gv_dir);
+              if(proj > 1e-10 && proj <= bl_proj + 1e-8)
+              {
+                 // segment inside BL zone: assign new edge descriptor with new_domain
+                 int old_ed_idx = seg.GetIndex();
+                 if(ed_to_bl_ed.find(old_ed_idx) == ed_to_bl_ed.end())
+                 {
+                    EdgeDescriptor new_ed;
+                    new_ed.SetEdgeNr(ed.EdgeNr());
+                    for(int k = 0; k < 2; k++)
+                    {
+                       if(ed.SurfNr(k) == domain)
+                          new_ed.SetSurfNr(k, new_domain);
+                       else
+                          new_ed.SetSurfNr(k, ed.SurfNr(k));
+                    }
+                    new_ed.SetName(ed.GetName());
+                    ed_to_bl_ed[old_ed_idx] = mesh.AddEdgeDescriptor(new_ed);
+                 }
+                 mesh[segi].SetIndex(ed_to_bl_ed[old_ed_idx]);
+
+                 // If this point matches the BL endpoint, merge
+                 if((mesh[next] - target_pos).Length() < 1e-8)
+                 {
+                    auto old_pi = mapto[pi].Last();
+                    if(old_pi != next)
+                    {
+                       // Replace old_pi with next in new segments and surface elements
+                       for(auto sk = first_new_seg; sk < mesh.LineSegments().Range().Next(); sk++)
+                       {
+                          if(mesh[sk][0] == old_pi) mesh[sk][0] = next;
+                          if(mesh[sk][1] == old_pi) mesh[sk][1] = next;
+                       }
+                       for(SurfaceElementIndex sei(0); sei < mesh.GetNSE(); sei++)
+                       {
+                          auto & el = mesh[sei];
+                          for(int k = 0; k < el.GetNP(); k++)
+                             if(el[k] == old_pi) el[k] = next;
+                       }
+                       mapto[pi].Last() = next;
+                    }
+                 }
+                 current = next;
+                 stepped = true;
+                 break;
+              }
+           }
+           if(!stepped) break;
+        }
      }
 
      for(auto pi : Range(mapto))
@@ -742,15 +855,23 @@ namespace netgen
            mesh[segi][1].Invalidate();
         }
 
-        for(auto segi : moved_segs)
+        // revert segment indices changed during junction handling
+        for(auto & [old_idx, new_idx] : ed_to_bl_ed)
+           for(auto & seg : mesh.LineSegments())
+              if(seg.GetIndex() == new_idx)
+                 seg.SetIndex(old_idx);
+
+        // revert edge descriptor SurfNr changes on moved segments
+        for(auto si : moved_segs)
         {
-            if(mesh[segi].domin == new_domain)
-                mesh[segi].domin = domain;
-            if(mesh[segi].domout == new_domain)
-                mesh[segi].domout = domain;
+           auto & ed = mesh.GetEdgeDescriptor(mesh.LineSegments()[si].GetIndex());
+           for(auto i : Range(2))
+              if(ed.SurfNr(i) == new_domain)
+                 ed.SetSurfNr(i, domain);
         }
 
         mesh.Compress();
+        mesh.EdgeDescriptors().SetSize(max_edge_nr);
         mesh.CalcSurfacesOfNode();
      }
 

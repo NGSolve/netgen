@@ -80,10 +80,8 @@ namespace netgen
     glGetDoublev (GL_PROJECTION_MATRIX, projmat);
 
 
-#ifdef PARALLEL
     glEnable (GL_BLEND);
     glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#endif
 
 
     glInitNames ();
@@ -199,6 +197,8 @@ namespace netgen
     glLineWidth (1.0f);
     glColor3f (0.0f, 0.0f, 0.0f);
     glDisable (GL_LINE_SMOOTH);
+
+    glDisable(GL_BLEND);
 
 
     if (vispar.drawoutline)
@@ -1707,19 +1707,20 @@ namespace netgen
 	const Point3d & p1 = (*mesh)[seg[0]];
 	const Point3d & p2 = (*mesh)[seg[1]];
 
-	if (seg.singedge_left || seg.singedge_right)
+	auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
+	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
 			matcolsingedge);
 	else
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
 			matcoledge);
 
-	if (seg.singedge_left || seg.singedge_right)
+	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
 	  glColor3fv (matcolsingedge);
 	else
 	  glColor3fv (matcoledge);
 
-	if (seg.edgenr == seledge)
+	if (mesh->GetEdgeDescriptor(seg).EdgeNr() == seledge)
 	  glLineWidth(5);
 	else
 	  glLineWidth(2);

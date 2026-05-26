@@ -163,6 +163,9 @@ namespace netgen
       return true;
     }
 
+    void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr, int edgenr = -1) const override;
+
+
     void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
                       int surfi,
                       const PointGeomInfo & gi1,
@@ -177,11 +180,13 @@ namespace netgen
                           int surfi1, int surfi2,
                           const EdgePointGeomInfo & ap1,
                           const EdgePointGeomInfo & ap2,
-                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+                          Point<3> & newp, EdgePointGeomInfo & newgi,
+                          int edgenr = -1) const override;
 
 
     Vec<3> GetTangent (const Point<3> & p, int surfi1, int surfi2,
-                       const EdgePointGeomInfo & ap1) const override;
+                       const EdgePointGeomInfo & ap1,
+                       int edgenr = -1) const override;
     Vec<3> GetNormal(int surfi1, const Point<3> & p,
                      const PointGeomInfo* gi) const override;
 

@@ -88,7 +88,7 @@ namespace netgen
   }
 
   void CSGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
-                                      Point<3> & p, EdgePointGeomInfo* /*unused*/) const
+                                      Point<3> & p, EdgePointGeomInfo* /*unused*/, int /*edgenr*/) const
   {
     Point<3> hp = p;
     ProjectToEdge (GetSurface(surfind),
@@ -128,7 +128,8 @@ namespace netgen
                int surfi1, int surfi2,
                const EdgePointGeomInfo & ap1,
                const EdgePointGeomInfo & ap2,
-               Point<3> & newp, EdgePointGeomInfo & newgi) const
+               Point<3> & newp, EdgePointGeomInfo & newgi,
+               int /*edgenr*/) const
   {
     Point<3> hnewp = p1+secpoint*(p2-p1);
 
@@ -140,7 +141,7 @@ namespace netgen
                                hnewp);
         // (*testout) << "Pointbetween, newp = " << hnewp << endl
         // << ", err = " << sqrt (sqr (hnewp(0))+ sqr(hnewp(1)) + sqr (hnewp(2))) - 1 << endl;
-        newgi.edgenr = 1;
+
         //(*testout) << "hnewp (a1) " << hnewp << endl;
       }
     else if (surfi1 != -1)
@@ -153,7 +154,8 @@ namespace netgen
   };
 
   Vec<3> CSGeometry :: GetTangent(const Point<3> & p, int surfi1, int surfi2,
-                                  const EdgePointGeomInfo & ap1) const
+                                  const EdgePointGeomInfo & ap1,
+                                  int /*edgenr*/) const
   {
     Vec<3> n1 = GetSurface (surfi1)->GetNormalVector (p);
     Vec<3> n2 = GetSurface (surfi2)->GetNormalVector (p);

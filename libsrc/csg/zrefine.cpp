@@ -29,7 +29,8 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNSeg(); i++)
       {
 	const Segment & seg = mesh.LineSegment(i);
-	if (seg.singedge_left || seg.singedge_right)
+	auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
 	  {
 	    INDEX_2 i2(seg[0], seg[1]);
 	    i2.Sort();
@@ -577,9 +578,9 @@ namespace netgen
 	    Segment ns1 = el;
 	    Segment ns2 = el;
 	    ns1[1] = pnew;
-	    ns1.epgeominfo[1] = ngi;
+	    ns1.EPGeomInfo(1) = ngi;
 	    ns2[0] = pnew;
-	    ns2.epgeominfo[0] = ngi;
+	    ns2.EPGeomInfo(0) = ngi;
 
 	    mesh.LineSegment(i) = ns1;
 	    mesh.AddSegment (ns2);

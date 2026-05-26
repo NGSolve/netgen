@@ -12,10 +12,11 @@
 #include "occ_face.hpp"
 #include "occ_solid.hpp"
 #include "occgeom.hpp"
-#include "Partition_Spliter.hxx"
+#include <BRepAlgoAPI_Splitter.hxx>
 
 #include <BinTools.hxx>
 #include <BOPAlgo_Builder.hxx>
+#include <BRep_Builder.hxx>
 #include <BRepBndLib.hxx>
 #include <BRepBuilderAPI_Copy.hxx>
 #include <BRepBuilderAPI_MakeSolid.hxx>
@@ -45,6 +46,9 @@
 #include <StepBasic_ProductDefinitionRelationship.hxx>
 #include <StepRepr_RepresentationItem.hxx>
 #include <StlAPI_Writer.hxx>
+#include <TDF_LabelSequence.hxx>
+#include <TopTools_DataMapOfShapeListOfShape.hxx>
+#include <TopTools_ListOfShape.hxx>
 #include <TopoDS_Shape.hxx>
 #include <TransferBRep.hxx>
 #include <Transfer_FinderProcess.hxx>
@@ -54,18 +58,12 @@
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
 #include <XCAFPrs.hxx>
+#include <XCAFPrs_IndexedDataMapOfShapeStyle.hxx>
 #include <XCAFPrs_Style.hxx>
 #include <XSControl_TransferReader.hxx>
 #include <XSControl_WorkSession.hxx>
 
-#if OCC_VERSION_HEX < 0x070000
-// pass
-#elif OCC_VERSION_HEX < 0x070200
-   #include <StlTransfer.hxx>
-   #include <TopoDS_Iterator.hxx>
-#else
-   #include <TopoDS_Iterator.hxx>
-#endif
+#include <TopoDS_Iterator.hxx>
 
 namespace netgen
 {
@@ -825,21 +823,24 @@ namespace netgen
 
       if (splitpartitions)
       {
-         cout << "- running SALOME partition splitter" << endl;
+         cout << "- running partition splitter" << endl;
 
          TopExp_Explorer e2;
-         Partition_Spliter ps;
          int count = 0;
 
+         TopTools_ListOfShape args;
          for (e2.Init (shape, TopAbs_SOLID);
             e2.More(); e2.Next())
          {
             count++;
-            ps.AddShape (e2.Current());
+            args.Append (e2.Current());
          }
 
-         ps.Compute();
-         shape = ps.Shape();
+         BRepAlgoAPI_Splitter splitter;
+         splitter.SetArguments(args);
+         splitter.Build();
+         if (splitter.IsDone())
+           shape = splitter.Shape();
 
          cout << " before: " << count << " solids" << endl;
 

@@ -8,6 +8,7 @@
 #include <meshing.hpp>
 
 #include <occgeom.hpp>
+#include "occ_utils.hpp"
 
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepBndLib.hxx>
@@ -52,6 +53,7 @@ namespace netgen
          BuildScene();
          occgeometry -> changed = 0;
       }
+      glDisable(GL_TEXTURE_2D);
 
       glClearColor(backcolor, backcolor, backcolor, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -363,6 +365,7 @@ namespace netgen
    {
      if (occgeometry -> changed == OCCGEOMETRYVISUALIZATIONFULLCHANGE)
        {
+         zoomall = 1;
          occgeometry -> BuildVisualizationMesh (vispar.occdeflection);
 
          center = occgeometry -> Center();
@@ -411,7 +414,6 @@ namespace netgen
             }
          }
 
-         CalcTransformationMatrices();
       }
 
       // Clear lists
@@ -598,7 +600,7 @@ namespace netgen
 
             for (int k = 1; k <= 3; k++)
             {
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5              
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 5)
               uv = triangulation -> UVNode(triangle(k));
 #else              
               uv = triangulation -> UVNodes()(triangle(k));
@@ -629,6 +631,8 @@ namespace netgen
       }
       glEndList ();
 
+      if(zoomall)
+         CalcTransformationMatrices();
    }
 
    void SelectFaceInOCCDialogTree (int facenr);

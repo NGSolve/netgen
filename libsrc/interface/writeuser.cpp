@@ -16,19 +16,38 @@
 
 namespace netgen
 {
-  extern MeshingParameters mparam;
+  std::map<std::string, UserFormatRegister::UserFormatEntry>& UserFormatRegister::getFormats()
+  {
+      static std::map<std::string, UserFormatRegister::UserFormatEntry> formats = {};
+      return formats;
+  }
 
-  Array<UserFormatRegister::UserFormatEntry> UserFormatRegister::entries;
-  std::map<string, int> UserFormatRegister::format_to_entry_index;
+  void UserFormatRegister::Register(UserFormatRegister::UserFormatEntry && entry)
+  {
+      getFormats()[entry.format] = std::move(entry);
+  }
+
+  const bool UserFormatRegister::HaveFormat(string format)
+  {
+      const auto formats = getFormats();
+      return formats.find(format) != formats.end();
+  }
+
+  const UserFormatRegister::UserFormatEntry & UserFormatRegister::Get(string format)
+  {
+      return getFormats()[format];
+  }
+
+  extern MeshingParameters mparam;
 
   void RegisterUserFormats (NgArray<const char*> & names,
 			    NgArray<const char*> & extensions)
 			    
 {
-  for (const auto & entry : UserFormatRegister::entries)
+  for (const auto & entry : UserFormatRegister::getFormats())
     {
-      names.Append (entry.format.c_str());
-      extensions.Append (entry.extensions[0].c_str());
+      names.Append (entry.second.format.c_str());
+      extensions.Append (entry.second.extensions[0].c_str());
     }
 }
   
@@ -144,7 +163,7 @@ void WriteNeutralFormat (const Mesh & mesh,
 	{
 	  const Segment & seg = mesh.LineSegment(i);
 	  outfile.width(4);
-	  outfile << seg.si << "    ";
+	outfile << seg.GetIndex() << "    ";
 
           for (int j = 0; j < seg.GetNP(); j++)
             {
@@ -226,12 +245,12 @@ void WriteSTLFormat (const Mesh & mesh,
   cout << "\nWrite STL Surface Mesh" << endl;
 
   auto ext = filename.extension();
-  ostream *outfile;
+  unique_ptr<ostream> outfile;
 
   if(ext == ".gz")
-	  outfile = new ogzstream(filename);
+	  outfile = make_unique<ogzstream>(filename);
   else
-	  outfile = new ofstream(filename);
+	  outfile = make_unique<ofstream>(filename);
 
   int i;
 
@@ -284,12 +303,12 @@ void WriteSTLExtFormat (const Mesh & mesh,
   cout << "\nWrite STL Surface Mesh (with separated boundary faces)" << endl;
 
   auto ext = filename.extension();
-  ostream *outfile;
+  unique_ptr<ostream> outfile;
 
   if(ext == ".gz")
-	  outfile = new ogzstream(filename);
+	  outfile = make_unique<ogzstream>(filename);
   else
-	  outfile = new ofstream(filename);
+	  outfile = make_unique<ofstream>(filename);
 
   outfile->precision(10);
 

@@ -5,6 +5,7 @@ add_library(ngcore ${NGCORE_LIBRARY_TYPE}
   exception.cpp
   localheap.cpp
   logging.cpp
+  memtracer.cpp
   flags.cpp
   paje_trace.cpp
   profiler.cpp

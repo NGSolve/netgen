@@ -10,6 +10,31 @@
 namespace netgen
 {
 
+  /// Lightweight struct for CSG refedges (replaces Segment as refedge type)
+  struct RefEdge
+  {
+    int si = 0;           // surface index (class representant)
+    int surfnr1 = -1;    // original surface 1
+    int surfnr2 = -1;    // original surface 2
+    int domin = -1;       // domain in (TLO index, or -1)
+    int domout = -1;      // domain out (TLO index, or -1)
+    int tlosurf = -1;     // TLO surface index, or -1
+    int edgenr = 0;       // edge number (1-based)
+    int index_ = 0;      // edge descriptor index (1-based, 0 = invalid)
+
+    int GetIndex() const { return index_; }
+    void SetIndex(int i) { index_ = i; }
+
+    friend ostream & operator<< (ostream & s, const RefEdge & re)
+    {
+      s << "GitRefEdge(si=" << re.si
+        << ", surfnr=" << re.surfnr1 << "/" << re.surfnr2
+        << ", domin=" << re.domin << ", domout=" << re.domout
+        << ", tlosurf=" << re.tlosurf << ", edgenr=" << re.edgenr
+        << ", index=" << re.index_ << ")";
+      return s;
+    }
+  };
 
 
   /*
@@ -41,6 +66,10 @@ namespace netgen
     Point3dTree * meshpoint_tree;
     int cntedge;
 
+  public:
+    Array<char> seg_seginfo;
+
+  private:
     double ideps;
     MeshingParameters & mparam;
 
@@ -70,24 +99,24 @@ namespace netgen
 
     void AnalyzeEdge (int s1, int s2, int s1_rep, int s2_rep, int pos, int layer,
 		      const NgArray<Point<3> > & edgepoints,
-		      NgArray<Segment> & refedges,
+		      NgArray<RefEdge> & refedges,
 		      NgArray<bool> & refedgesinv);
 
-    void StoreEdge (const NgArray<Segment> & refedges,
+    void StoreEdge (const NgArray<RefEdge> & refedges,
 		    const NgArray<bool> & refedgesinv,
 		    const NgArray<Point<3> > & edgepoints,
 		    const NgArray<double> & curvelength,
 		    int layer,
 		    Mesh & mesh);
 
-    void StoreShortEdge (const NgArray<Segment> & refedges,
+    void StoreShortEdge (const NgArray<RefEdge> & refedges,
 			 const NgArray<bool> & refedgesinv,
 			 const NgArray<Point<3> > & edgepoints,
 			 const NgArray<double> & curvelength,
 			 int layer,
 			 Mesh & mesh);
 
-    void CopyEdge (const NgArray<Segment> & refedges,
+    void CopyEdge (const NgArray<RefEdge> & refedges,
 		   const NgArray<bool> & refedgesinv,
 		   int copyfromedge, 
 		   const Point<3> & fromstart, const Point<3> & fromend,

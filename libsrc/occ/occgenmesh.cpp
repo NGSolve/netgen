@@ -72,7 +72,7 @@ namespace netgen
     return hret;
     */
     // return min(mparam.maxh, 1/kappa);
-    return (mparam.maxh*kappa < 1) ? mparam.maxh : 1/kappa;
+    return max2(mparam.minh, (mparam.maxh*kappa < 1) ? mparam.maxh : 1/kappa);
   }
 
 
@@ -324,10 +324,10 @@ namespace netgen
             {
               PointGeomInfo gi0, gi1;
               gi0.trignum = gi1.trignum = k;
-              gi0.u = seg.epgeominfo[0].u;
-              gi0.v = seg.epgeominfo[0].v;
-              gi1.u = seg.epgeominfo[1].u;
-              gi1.v = seg.epgeominfo[1].v;
+              gi0.u = seg.GeomInfo(0).u;
+              gi0.v = seg.GeomInfo(0).v;
+              gi1.u = seg.GeomInfo(1).u;
+              gi1.v = seg.GeomInfo(1).v;
               
               //if(orientation & 1)
               meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
@@ -346,14 +346,14 @@ namespace netgen
         Box<2> uv_box(Box<2>::EMPTY_BOX);
         for(auto & seg : segments)
             for(auto i : Range(2))
-                uv_box.Add( {seg.epgeominfo[i].u, seg.epgeominfo[i].v } );
+                uv_box.Add( {seg.GeomInfo(i).u, seg.GeomInfo(i).v } );
 
         BoxTree<2> uv_tree(uv_box);
         double tol = 1e99;
         for(auto& seg : segments)
           {
-            Point<2> p1 = { seg.epgeominfo[0].u, seg.epgeominfo[0].v };
-            Point<2> p2 = { seg.epgeominfo[1].u, seg.epgeominfo[1].v };
+            Point<2> p1 = { seg.GeomInfo(0).u, seg.GeomInfo(0).v };
+            Point<2> p2 = { seg.GeomInfo(1).u, seg.GeomInfo(1).v };
             tol = min2(tol, Dist(p1, p2));
           }
         uv_tree.SetTolerance(0.9 * tol);
@@ -363,10 +363,10 @@ namespace netgen
         {
             PointGeomInfo gi[2];
             gi[0].trignum = gi[1].trignum = k;
-            gi[0].u = seg.epgeominfo[0].u;
-            gi[0].v = seg.epgeominfo[0].v;
-            gi[1].u = seg.epgeominfo[1].u;
-            gi[1].v = seg.epgeominfo[1].v;
+            gi[0].u = seg.GeomInfo(0).u;
+            gi[0].v = seg.GeomInfo(0).v;
+            gi[1].u = seg.GeomInfo(1).u;
+            gi[1].v = seg.GeomInfo(1).v;
 
             int locpnum[2] = {0, 0};
 
@@ -571,6 +571,7 @@ namespace netgen
 
             const auto & props = gedge.properties;
             localh = min2(localh, props.maxh);
+            localh = max2(localh, mparam.minh);
             maxedgelen = max (maxedgelen, len);
             minedgelen = min (minedgelen, len);
             int maxj = max((int) ceil(len/localh)*2, 2);
@@ -638,7 +639,7 @@ namespace netgen
                 if (geom.shape.Infinite())
                   throw Exception("Cannot generate mesh for an infinite geometry");
                 else
-                  throw Exception("OCC-Triangulation could not be built");
+                  throw Exception("OCC-Triangulation could not be built for face " + to_string(i));
               }
             
             BRepAdaptor_Surface sf(face, Standard_True);
@@ -705,14 +706,18 @@ namespace netgen
                 BRepLProp_CLProps prop(brepc, 1, 1e-5);
                 prop.SetParameter (s0);
 
-                gp_Vec d0 = prop.D1().Normalized();
+                gp_Vec d0 = prop.D1();
+                if(d0.Magnitude() > gp::Resolution())
+                    d0 = d0.Normalized();
                 double s_start = s0;
                 // int count = 0;
                 for (int j = 1; j <= sections; j++)
                   {
                     double s = s0 + (s1-s0)*(double)j/(double)sections;
                     prop.SetParameter (s);
-                    gp_Vec d1 = prop.D1().Normalized();
+                    gp_Vec d1 = prop.D1();
+                    if(d1.Magnitude() > gp::Resolution())
+                        d1 = d1.Normalized();
                     double cosalpha = fabs(d0*d1);
                     if ((j == sections) || (cosalpha < cos(10.0/180.0*M_PI)))
                       {

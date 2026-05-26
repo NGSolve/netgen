@@ -98,7 +98,7 @@ namespace netgen
         Array<Segment> boundary;
         for (auto seg : mesh.LineSegments())
         {
-            auto edgenr = seg.epgeominfo[0].edgenr;
+            auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() - 1;
             auto orientation = edge_orientation[edgenr];
 
             if(orientation == UNUSED)
@@ -114,7 +114,7 @@ namespace netgen
                 double s0, s1;
                 auto cof = BRep_Tool::CurveOnSurface (edge, face, s0, s1);
 
-                double s[2] = { seg.epgeominfo[0].dist, seg.epgeominfo[1].dist };
+                double s[2] = { seg.EPGeomInfo(0).dist, seg.EPGeomInfo(1).dist };
 
                 // dist is in [0,1], map parametrization to [s0, s1]
                 s[0] = s0 + s[0]*(s1-s0);
@@ -135,20 +135,20 @@ namespace netgen
                     gi.v = uv.Y();
                     Point<3> pproject = mesh[seg[i]];
                     ProjectPointGI(pproject, gi);
-                    seg.epgeominfo[i].u = gi.u;
-                    seg.epgeominfo[i].v = gi.v;
+                    seg.GeomInfo(i).u = gi.u;
+                    seg.GeomInfo(i).v = gi.v;
                 }
 
                 bool do_swap = ORIENTATION == REVERSED;
-                if(seg.epgeominfo[1].dist < seg.epgeominfo[0].dist)
+                if(seg.EPGeomInfo(1).dist < seg.EPGeomInfo(0).dist)
                   do_swap = !do_swap;
 
                 if(do_swap)
                 {
                     swap(seg[0], seg[1]);
-                    swap(seg.epgeominfo[0].dist, seg.epgeominfo[1].dist);
-                    swap(seg.epgeominfo[0].u, seg.epgeominfo[1].u);
-                    swap(seg.epgeominfo[0].v, seg.epgeominfo[1].v);
+                    swap(seg.EPGeomInfo(0).dist, seg.EPGeomInfo(1).dist);
+                    swap(seg.GeomInfo(0).u, seg.GeomInfo(1).u);
+                    swap(seg.GeomInfo(0).v, seg.GeomInfo(1).v);
                 }
 
                 boundary.Append(seg);

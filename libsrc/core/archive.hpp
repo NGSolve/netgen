@@ -776,8 +776,8 @@ namespace ngcore
     friend class RegisterClassForArchive;
 
 #ifdef NETGEN_PYTHON
-    friend pybind11::object CastAnyToPy(const std::any&);
-    friend std::any CastPyToAny(pybind11::object&);
+    friend NGCORE_API pybind11::object CastAnyToPy(const std::any&);
+    friend NGCORE_API std::any CastPyToAny(pybind11::object&);
 #endif // NETGEN_PYTHON
 
     // Returns ClassArchiveInfo of Demangled typeid

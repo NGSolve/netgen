@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <mystdlib.h>
 #include <atomic>
+#include <map>
 #include <regex>
 #include <set>
 #include "core/array.hpp"
@@ -252,7 +253,6 @@ namespace netgen
     geomtype = NO_GEOM;
 
     bcnames.SetSize(0);
-    cd2names.SetSize(0);
 
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
@@ -271,9 +271,6 @@ namespace netgen
 
     for (int i = 0; i < bcnames.Size(); i++ )
       delete bcnames[i];
-
-    for (int i = 0; i < cd2names.Size(); i++)
-      delete cd2names[i];
 
     for (int i = 0; i < cd3names.Size(); i++)
       delete cd3names[i];
@@ -304,6 +301,7 @@ namespace netgen
     volelements = mesh2.volelements;
     lockedpoints = mesh2.lockedpoints;
     facedecoding = mesh2.facedecoding;
+    edgedecoding = mesh2.edgedecoding;
     dimension = mesh2.dimension;
     hglob = mesh2.hglob;
     hmin = mesh2.hmin;
@@ -337,6 +335,7 @@ namespace netgen
       else bcnames[i] = 0;
     }
 
+    // In 2D, cd2 names live in cd2names; in 3D, they live in edgedecoding (already copied above)
     cd2names.SetSize(mesh2.cd2names.Size());
     for (int i=0; i < mesh2.cd2names.Size(); i++)
       if (mesh2.cd2names[i]) cd2names[i] = new string(*mesh2.cd2names[i]);
@@ -371,6 +370,7 @@ namespace netgen
 
     openelements.SetSize(0);
     facedecoding.SetSize(0);
+    edgedecoding = Array<EdgeDescriptor>();
 
     ident = make_unique<Identifications> (*this);
     topology = MeshTopology (*this);
@@ -379,8 +379,7 @@ namespace netgen
 
     for ( int i = 0; i < bcnames.Size(); i++ )
       if ( bcnames[i] ) delete bcnames[i];
-    for (int i= 0; i< cd2names.Size(); i++)
-      if (cd2names[i]) delete cd2names[i];
+    edgedecoding.SetSize(0);
 
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
@@ -671,6 +670,11 @@ namespace netgen
   void Mesh :: Save (ostream & outfile) const
   {
     static Timer timer("Mesh::Save"); RegionTimer rt(timer);
+    auto seg_fdi = [this](const Segment& s) -> int {
+      if (s.GetIndex() >= 1 && s.GetIndex() <= edgedecoding.Size())
+        { int fdi = edgedecoding[s.GetIndex()-1].GetIndex(); if (fdi > 0) return fdi; }
+      return -1;
+    };
     int i, j;
 
     double scale = 1;  // globflags.GetNumFlag ("scale", 1);
@@ -773,62 +777,33 @@ namespace netgen
 
     outfile << "\n" << "\n";
     //     outfile << "   surf1   surf2      p1      p2" << "\n";
-    outfile << "# surfid  0   p1   p2   trignum1    trignum2   domin/surfnr1    domout/surfnr2   ednr1   dist1   ednr2   dist2 \n";
-    outfile << "edgesegmentsgi2" << "\n";
+    outfile << "# p1   p2   trignum1   trignum2   dist1   dist2   edsi \n";
+    outfile << "edgesegmentsgi3" << "\n";
     outfile << GetNSeg() << "\n";
 
     for (i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment (i);
         outfile.width(8);
-        outfile << seg.si; // 2D: bc number, 3D: wievielte Kante
-        outfile.width(8);
-        outfile << 0;
-        outfile.width(8);
         outfile << seg[0];
         outfile.width(8);
         outfile << seg[1];
         outfile << " ";
         outfile.width(8);
-        outfile << seg.geominfo[0].trignum;  // stl dreiecke
+        outfile << seg.GeomInfo(0).trignum;
         outfile << " ";
         outfile.width(8);
-        outfile << seg.geominfo[1].trignum; // << endl;  // stl dreieck
-
-        if (dimension == 3)
-          {
-            outfile << " ";
-            outfile.width(8);
-            outfile << seg.surfnr1+1;
-            outfile << " ";
-            outfile.width(8);
-            outfile << seg.surfnr2+1;
-          }
-        else
-          {
-            outfile << " ";
-            outfile.width(8);
-            outfile << seg.domin;
-            outfile << " ";
-            outfile.width(8);
-            outfile << seg.domout;
-          }
-
-        outfile << " ";
-        outfile.width(8);
-        outfile << seg.edgenr;
+        outfile << seg.GeomInfo(1).trignum;
         outfile << " ";
         outfile.width(12);
         outfile.precision(16);
-        outfile << seg.epgeominfo[0].dist;  // splineparameter (2D)
-        outfile << " ";
-        outfile.width(8);
-        outfile.precision(16);
-        outfile << seg.epgeominfo[1].edgenr;  // geometry dependent
+        outfile << seg.EPGeomInfo(0).dist;
         outfile << " ";
         outfile.width(12);
-        outfile << seg.epgeominfo[1].dist;
-
+        outfile << seg.EPGeomInfo(1).dist;
+        outfile << " ";
+        outfile.width(8);
+        outfile << seg.GetIndex() - 1;
         outfile << "\n";
       }
 
@@ -939,16 +914,36 @@ namespace netgen
           outfile << i+1 << "\t" << GetBCName(i) << endl;
         outfile << endl << endl;
       }
+    int ncd2 = GetNCD2Names();
     int cntcd2names = 0;
-    for (int ii = 0; ii<cd2names.Size(); ii++)
-      if(cd2names[ii]) cntcd2names++;
+    for (int ii = 0; ii < ncd2; ii++)
+      {
+        const auto & n = GetCD2Name(ii);
+        if (n != "default" && !n.empty()) cntcd2names++;
+      }
 
     if(cntcd2names)
       {
-	outfile << "\n\ncd2names" << endl << cd2names.Size() << endl;
-	for (i=0; i<cd2names.Size(); i++)
+	outfile << "\n\ncd2names" << endl << ncd2 << endl;
+	for (i=0; i<ncd2; i++)
 	  outfile << i+1 << "\t" << GetCD2Name(i) << endl;
 	outfile << endl << endl;
+      }
+
+    if (edgedecoding.Size())
+      {
+        outfile << "\n\nedgedescriptors" << endl << edgedecoding.Size() << endl;
+        for (int ii = 0; ii < edgedecoding.Size(); ii++)
+          {
+            const EdgeDescriptor & ed = edgedecoding[ii];
+            outfile << ed.EdgeNr() << " "
+                    << ed.SurfNr(0) << " " << ed.SurfNr(1) << " "
+                    << ed.SingEdgeLeft() << " " << ed.SingEdgeRight() << " "
+                    << ed.TLOSurface() << " "
+                    << ed.DomainIn() << " " << ed.DomainOut() << " "
+                    << ed.GetName() << endl;
+          }
+        outfile << endl << endl;
       }
 
     int cntcd3names = 0;
@@ -1048,24 +1043,24 @@ namespace netgen
 
     cnt_sing = 0;
     for (SegmentIndex si = 0; si < GetNSeg(); si++)
-      if ( segments[si].singedge_left ) cnt_sing++;
+      if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() ) cnt_sing++;
     if (cnt_sing)
       {
         outfile << "singular_edge_left" << endl << cnt_sing << endl;
         for (SegmentIndex si = 0; si < GetNSeg(); si++)
-          if ( segments[si].singedge_left )
-            outfile << int(si) << "\t" << segments[si].singedge_left << endl;
+          if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() )
+            outfile << int(si) << "\t" << GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() << endl;
       }
 
     cnt_sing = 0;
     for (SegmentIndex si = 0; si < GetNSeg(); si++)
-      if ( segments[si].singedge_right ) cnt_sing++;
+      if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight() ) cnt_sing++;
     if (cnt_sing)
       {
         outfile << "singular_edge_right" << endl << cnt_sing << endl;
         for (SegmentIndex si = 0; si < GetNSeg(); si++)
-          if ( segments[si].singedge_right  )
-            outfile << int(si) << "\t" << segments[si].singedge_right << endl;
+          if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight()  )
+            outfile << int(si) << "\t" << GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight() << endl;
       }
 
 
@@ -1132,6 +1127,21 @@ namespace netgen
          }
     }
 
+
+    if (curvedelems && curvedelems->IsHighOrder())
+      {
+        if (level_nv.Size() > 1 && (MeshTopology().HasParentEdges() || MeshTopology().HasParentFaces()))
+          cerr << "Waring: cannot store curvedelements on refined meshes with full hierarchy" << endl;
+        else
+          {
+            outfile << "curvedelements" << endl;
+            shared_ptr<std::ostream> spoutfile(&outfile,  [](void*) noexcept {});
+            TextOutArchive out(std::move(spoutfile));
+            out & (*curvedelems);
+          }
+      }
+
+    
     outfile << endl << endl << "endmesh" << endl << endl;
     if (geometry)
       geometry -> SaveToMeshFile (outfile);
@@ -1182,12 +1192,14 @@ namespace netgen
       {
         std::getline(infile, line);
         iline = std::istringstream{line};
-        iline >> i;
-
-        if(iline)
+        if(iline >> i)
+          {
             empty_line = false;
-
-        iline >> s;
+            // skip a single whitespace character after the number, then read the rest
+            if(iline.peek() == ' ' || iline.peek() == '\t')
+              iline.get();
+            std::getline(iline, s);
+          }
       }
 
     if(!infile)
@@ -1219,11 +1231,15 @@ namespace netgen
     bool endmesh = false;
 
     bool has_facedescriptors = false;
+    Array<std::pair<int,int>> seg_surfnrs;
+    Array<int> seg_edgenrs;
+    Array<int> seg_sis;
     
 
     while (infile.good() && !endmesh)
       {
         infile >> str;
+
         if (strcmp (str, "dimension") == 0)
           {
             infile >> dimension;
@@ -1350,7 +1366,9 @@ namespace netgen
               {
                 Segment seg;
                 int hi;
-                infile >> seg.si >> hi >> seg[0] >> seg[1];
+                int si_tmp;
+                infile >> si_tmp >> hi >> seg[0] >> seg[1];
+                seg.SetIndex(si_tmp);
                 AddSegment (seg);
               }
           }
@@ -1365,9 +1383,11 @@ namespace netgen
               {
                 Segment seg;
                 int hi;
-                infile >> seg.si >> hi >> seg[0] >> seg[1]
-                       >> seg.geominfo[0].trignum
-                       >> seg.geominfo[1].trignum;
+                int si_tmp;
+                infile >> si_tmp >> hi >> seg[0] >> seg[1]
+                       >> seg.GeomInfo(0).trignum
+                       >> seg.GeomInfo(1).trignum;
+                seg.SetIndex(si_tmp);
                 AddSegment (seg);
               }
           }
@@ -1385,23 +1405,53 @@ namespace netgen
               {
                 Segment seg;
                 int hi;
-                infile >> seg.si >> hi >> seg[0] >> seg[1]
-                       >> seg.geominfo[0].trignum
-                       >> seg.geominfo[1].trignum
-                       >> seg.surfnr1 >> seg.surfnr2
-                       >> seg.edgenr
-                       >> seg.epgeominfo[0].dist
-                       >> seg.epgeominfo[1].edgenr
-                       >> seg.epgeominfo[1].dist;
+                int surfnr1_tmp, surfnr2_tmp;
+                int edgenr_tmp;
+                int si_tmp;
+                int epgi_edgenr_tmp;
+                infile >> si_tmp >> hi >> seg[0] >> seg[1]
+                       >> seg.GeomInfo(0).trignum
+                       >> seg.GeomInfo(1).trignum
+                       >> surfnr1_tmp >> surfnr2_tmp
+                       >> edgenr_tmp
+                       >> seg.EPGeomInfo(0).dist
+                       >> epgi_edgenr_tmp
+                       >> seg.EPGeomInfo(1).dist;
 
-                seg.epgeominfo[0].edgenr = seg.epgeominfo[1].edgenr;
+                if (geomtype == GEOM_OCC)
+                  seg.SetIndex(edgenr_tmp);
+                else if (geomtype == GEOM_CSG)
+                  seg.SetIndex(edgenr_tmp);
+                else
+                  seg.SetIndex(si_tmp);
 
-                seg.domin = seg.surfnr1;
-                seg.domout = seg.surfnr2;
+                surfnr1_tmp--;
+                surfnr2_tmp--;
 
-                seg.surfnr1--;
-                seg.surfnr2--;
+                seg_edgenrs.Append(edgenr_tmp);
+                seg_surfnrs.Append({surfnr1_tmp, surfnr2_tmp});
+                seg_sis.Append(si_tmp);
+                AddSegment (seg);
+              }
+          }
 
+        if (strcmp (str, "edgesegmentsgi3") == 0)
+          {
+            static Timer t1("read edge segmentsgi3"); RegionTimer rt1(t1);
+            infile >> n;
+            PrintMessage (3, n, " curve elements (gi3)");
+
+            for (i = 1; i <= n; i++)
+              {
+                Segment seg;
+                int edsi;
+                infile >> seg[0] >> seg[1]
+                       >> seg.GeomInfo(0).trignum
+                       >> seg.GeomInfo(1).trignum
+                       >> seg.EPGeomInfo(0).dist
+                       >> seg.EPGeomInfo(1).dist
+                       >> edsi;
+                seg.SetIndex(edsi + 1);
                 AddSegment (seg);
               }
           }
@@ -1519,16 +1569,56 @@ namespace netgen
 	  {
 	    infile >> n;
 	    Array<int> cd2nrs(n);
-	    SetNCD2Names(n);
             for ( auto i : Range(n) )
               {
                 string nextcd2name;
                 ReadNumberAndName( infile, cd2nrs[i], nextcd2name );
-                cd2names[cd2nrs[i]-1] = new string(nextcd2name);
+                SetCD2Name(cd2nrs[i], nextcd2name);  // dispatches on dimension
               }
 	    if (GetDimension() < 2)
 	      {
 		throw NgException("co dim 2 elements not implemented for dimension < 2");
+	      }
+	  }
+
+	if ( strcmp (str, "edgedescriptors" ) == 0)
+	  {
+	    infile >> n;
+	    edgedecoding.SetSize(n);
+	    for (int ii = 0; ii < n; ii++)
+	      {
+	        EdgeDescriptor & ed = edgedecoding[ii];
+	        int ednr, s0, s1, tlo;
+	        double sl, sr;
+	        infile >> ednr >> s0 >> s1 >> sl >> sr >> tlo;
+	        ed.SetEdgeNr(ednr);
+	        ed.SetSurfNr(0, s0);
+	        ed.SetSurfNr(1, s1);
+	        ed.SetSingEdgeLeft(sl);
+	        ed.SetSingEdgeRight(sr);
+	        ed.SetTLOSurface(tlo);
+	        // try to read domin/domout (new format) or name (old format)
+	        int di;
+	        if (infile >> di)
+	          {
+	            ed.SetDomainIn(di);
+	            int dout;
+	            infile >> dout;
+	            ed.SetDomainOut(dout);
+	            string nm;
+	            infile >> nm;
+	            ed.SetName(nm);
+	            // consume rest of line (may contain legacy fdindex - discard)
+	            { string rest; getline(infile, rest); }
+	          }
+	        else
+	          {
+	            // old format: next token is the name (not an int)
+	            infile.clear();
+	            string nm;
+	            infile >> nm;
+	            ed.SetName(nm);
+	          }
 	      }
 	  }
 
@@ -1571,7 +1661,9 @@ namespace netgen
                 double s; 
                 infile >> si;
                 infile >> s; 
-                (*this)[si].singedge_left = s;
+                auto & seg = (*this)[si];
+                if (seg.GetIndex() >= 1)
+                  GetEdgeDescriptor(seg.GetIndex()).SetSingEdgeLeft(s);
               }
           }
         if (strcmp (str, "singular_edge_right") == 0)
@@ -1583,7 +1675,9 @@ namespace netgen
                 double s; 
                 infile >> si;
                 infile >> s; 
-                (*this)[si].singedge_right = s;
+                auto & seg = (*this)[si];
+                if (seg.GetIndex() >= 1)
+                  GetEdgeDescriptor(seg.GetIndex()).SetSingEdgeRight(s);
               }
           }
 
@@ -1688,7 +1782,22 @@ namespace netgen
                   }
               }
           }
+        
+        if (strcmp (str, "curvedelements") == 0)	      
+          {
+            topology.Update();
+            shared_ptr<std::istream> spinfile(&infile,  [](void*) noexcept {});
+            TextInArchive in(std::move(spinfile));
+            in & (*curvedelems);
 
+
+            for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+              (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
+            for (ElementIndex ei = 0; ei < GetNE(); ei++)
+              (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
+          }
+
+        
         if (strcmp (str, "endmesh") == 0)
           endmesh = true;
 
@@ -1707,6 +1816,55 @@ namespace netgen
 	topology.Update();
 	clusters -> Update();
       }
+
+    // reconstruct edge descriptors from segment data if not loaded from file
+    if (edgedecoding.Size() == 0)
+      ReconstructEdgeDescriptors(&seg_surfnrs, &seg_edgenrs);
+    else if (seg_edgenrs.Size() > 0)
+      {
+        // edgesegmentsgi2 (legacy): match each segment to its ED using
+        // the redundant per-segment data that was saved alongside.
+        // With per-refedge EDs, multiple EDs can share the same edgenr,
+        // so we match by (edgenr, surfnr1, surfnr2) using the temp surfnr data.
+        for (int si = 0; si < segments.Size(); si++)
+          {
+            auto & seg = segments[si];
+            int seg_edgenr = (si < seg_edgenrs.Size()) ? seg_edgenrs[si] : -1;
+            int snr1 = -1, snr2 = -1;
+            if (si < seg_surfnrs.Size())
+              {
+                snr1 = seg_surfnrs[si].first;
+                snr2 = seg_surfnrs[si].second;
+              }
+            // Find matching ED: prefer exact (edgenr, surfnr1, surfnr2, fdindex) match
+            int best = -1;
+            int best_no_fdi = -1;
+            for (int j = 0; j < edgedecoding.Size(); j++)
+              {
+                const auto & ed = edgedecoding[j];
+                if (ed.EdgeNr() == seg_edgenr)
+                  {
+                    if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
+                      {
+                        int seg_si_val = (si < seg_sis.Size()) ? seg_sis[si] : -1;
+                        if (ed.GetIndex() > 0 && ed.GetIndex() == seg_si_val)
+                          { best = j; break; }  // exact match including index
+                        if (best_no_fdi < 0)
+                          best_no_fdi = j;  // surfnr match without fdindex
+                      }
+                    if (best < 0 && best_no_fdi < 0)
+                      best_no_fdi = j;  // first edgenr match as fallback
+                  }
+              }
+            if (best < 0) best = best_no_fdi;
+            if (best >= 0)
+              seg.SetIndex(best + 1);
+          }
+      }
+    // else: edgesegmentsgi3 - segments already have correct indices
+
+    RebuildFDIndices();
+    SyncCD2Names();
 
     SetNextMajorTimeStamp();
     //  PrintMemInfo (cout);
@@ -1813,7 +1971,7 @@ namespace netgen
         // sending 1D elements
         auto copy_el1d  (segments);
         for (auto & el : copy_el1d)
-          for (auto & pi : el.pnums)
+          for (auto & pi : el.PNums())
             if (pi != PointIndex(PointIndex::INVALID))
               pi = globnum[pi];
 
@@ -1861,7 +2019,27 @@ namespace netgen
         if (comm.Rank() == 0)
           {
             archive & facedecoding;
-            archive & materials & bcnames & cd2names & cd3names;
+            {
+              Array<string*> cd2names_compat;
+              if (archive.Output())
+                {
+                  int ncd2 = GetNCD2Names();
+                  cd2names_compat.SetSize(ncd2);
+                  for (int i = 0; i < ncd2; i++)
+                    {
+                      const auto & n = GetCD2Name(i);
+                      cd2names_compat[i] = (n != "default" && !n.empty()) ? new string(n) : nullptr;
+                    }
+                }
+              archive & materials & bcnames & cd2names_compat & cd3names;
+              if (archive.Input())
+                {
+                  for (int i = 0; i < cd2names_compat.Size(); i++)
+                    if (cd2names_compat[i])
+                      SetCD2Name(i+1, *cd2names_compat[i]);  // 1-based, dispatches on dimension
+                }
+              for (auto p : cd2names_compat) delete p;
+            }
             auto mynv = numglob;
             archive & mynv;   // numvertices;
             archive & *ident;
@@ -1874,6 +2052,12 @@ namespace netgen
             
             archive.Shallow(geometry);
             archive & *curvedelems;
+
+            if(archive.GetVersion("netgen") >= "v6.2.2603-26")
+              {
+                archive.NeedsVersion("netgen", "v6.2.2603-26");
+                archive & edgedecoding;
+              }
           }
         
         if (comm.Rank() == 0)
@@ -1889,7 +2073,27 @@ namespace netgen
     archive & segments;
     archive & pointelements;
     archive & facedecoding;
-    archive & materials & bcnames & cd2names & cd3names;
+    {
+      Array<string*> cd2names_compat;
+      if (archive.Output())
+        {
+          int ncd2 = GetNCD2Names();
+          cd2names_compat.SetSize(ncd2);
+          for (int i = 0; i < ncd2; i++)
+            {
+              const auto & n = GetCD2Name(i);
+              cd2names_compat[i] = (n != "default" && !n.empty()) ? new string(n) : nullptr;
+            }
+        }
+      archive & materials & bcnames & cd2names_compat & cd3names;
+      if (archive.Input())
+        {
+          for (int i = 0; i < cd2names_compat.Size(); i++)
+            if (cd2names_compat[i])
+              SetCD2Name(i+1, *cd2names_compat[i]);  // 1-based, dispatches on dimension
+        }
+      for (auto p : cd2names_compat) delete p;
+    }
     archive & numvertices;
 
     archive & *ident;
@@ -1906,13 +2110,23 @@ namespace netgen
     
     archive.Shallow(geometry);
     archive & *curvedelems;
-    
+
+    if(archive.GetVersion("netgen") >= "v6.2.2603-26")
+      {
+        archive.NeedsVersion("netgen", "v6.2.2603-26");
+        archive & edgedecoding;
+      }
+
     if (archive.Input())
       {
 	// int rank = GetCommunicator().Rank();
 	int ntasks = GetCommunicator().Size();
 	
         RebuildSurfaceElementLists();
+        if (edgedecoding.Size() == 0)
+          ReconstructEdgeDescriptors(nullptr, nullptr);
+        RebuildFDIndices();
+        SyncCD2Names();
         
         CalcSurfacesOfNode ();
         if (ntasks == 1) // sequential run only
@@ -1942,6 +2156,9 @@ namespace netgen
     char str[100];
     int i, n;
 
+    Array<std::pair<int,int>> merge_seg_surfnrs;
+    Array<int> merge_seg_edgenrs;
+    Array<int> merge_seg_sis;
 
     int inverttets = 0;  // globflags.GetDefineFlag ("inverttets");
 
@@ -2029,7 +2246,9 @@ namespace netgen
               {
                 Segment seg;
                 int hi;
-                infile >> seg.si >> hi >> seg[0] >> seg[1];
+                int si_tmp;
+                infile >> si_tmp >> hi >> seg[0] >> seg[1];
+                seg.SetIndex(si_tmp);
                 seg[0] = seg[0] + oldnp;
                 seg[1] = seg[1] + oldnp;
                 AddSegment (seg);
@@ -2045,9 +2264,11 @@ namespace netgen
               {
                 Segment seg;
                 int hi;
-                infile >> seg.si >> hi >> seg[0] >> seg[1]
-                       >> seg.geominfo[0].trignum
-                       >> seg.geominfo[1].trignum;
+                int si_tmp;
+                infile >> si_tmp >> hi >> seg[0] >> seg[1]
+                       >> seg.GeomInfo(0).trignum
+                       >> seg.GeomInfo(1).trignum;
+                seg.SetIndex(si_tmp);
                 seg[0] = seg[0] + oldnp;
                 seg[1] = seg[1] + oldnp;
                 AddSegment (seg);
@@ -2062,28 +2283,34 @@ namespace netgen
               {
                 Segment seg;
                 int hi;
-                infile >> seg.si >> hi >> seg[0] >> seg[1]
-                       >> seg.geominfo[0].trignum
-                       >> seg.geominfo[1].trignum
-                       >> seg.surfnr1 >> seg.surfnr2
-                       >> seg.edgenr
-                       >> seg.epgeominfo[0].dist
-                       >> seg.epgeominfo[1].edgenr
-                       >> seg.epgeominfo[1].dist;
-                seg.epgeominfo[0].edgenr = seg.epgeominfo[1].edgenr;
+                int surfnr1_tmp, surfnr2_tmp;
+                int edgenr_tmp;
+                int si_tmp;
+                int epgi_edgenr_tmp;
+                infile >> si_tmp >> hi >> seg[0] >> seg[1]
+                       >> seg.GeomInfo(0).trignum
+                       >> seg.GeomInfo(1).trignum
+                       >> surfnr1_tmp >> surfnr2_tmp
+                       >> edgenr_tmp
+                       >> seg.EPGeomInfo(0).dist
+                       >> epgi_edgenr_tmp
+                       >> seg.EPGeomInfo(1).dist;
+                seg.SetIndex(si_tmp);
 
-                seg.surfnr1--;
-                seg.surfnr2--;
+                surfnr1_tmp--;
+                surfnr2_tmp--;
 
-                if(seg.surfnr1 >= 0)  seg.surfnr1 = seg.surfnr1 + max_surfnr;
-                if(seg.surfnr2 >= 0)  seg.surfnr2 = seg.surfnr2 + max_surfnr;
+                if(surfnr1_tmp >= 0)  surfnr1_tmp = surfnr1_tmp + max_surfnr;
+                if(surfnr2_tmp >= 0)  surfnr2_tmp = surfnr2_tmp + max_surfnr;
                 seg[0] = seg[0] +oldnp;
                 seg[1] = seg[1] +oldnp;
-		*testout << "old edgenr: " << seg.edgenr << endl;
-                seg.edgenr = seg.edgenr + oldne;
-		*testout << "new edgenr: " << seg.edgenr << endl;
-                seg.epgeominfo[1].edgenr = seg.epgeominfo[1].edgenr + oldne;
+		*testout << "old edgenr: " << edgenr_tmp << endl;
+                edgenr_tmp = edgenr_tmp + oldne;
+		*testout << "new edgenr: " << edgenr_tmp << endl;
 
+                merge_seg_edgenrs.Append(edgenr_tmp);
+                merge_seg_surfnrs.Append({surfnr1_tmp, surfnr2_tmp});
+                merge_seg_sis.Append(si_tmp);
                 AddSegment (seg);
               }
           }
@@ -2155,6 +2382,51 @@ namespace netgen
 
     topology.Update();
     clusters -> Update();
+
+    if (edgedecoding.Size() == 0)
+      ReconstructEdgeDescriptors(&merge_seg_surfnrs, &merge_seg_edgenrs);
+    else
+      {
+        // edgedescriptors were loaded from file; match each segment to its ED
+        // With per-refedge EDs, multiple EDs can share the same edgenr,
+        // so we match by (edgenr, surfnr1, surfnr2) using the temp surfnr data.
+        for (int si = 0; si < segments.Size(); si++)
+          {
+            auto & seg = segments[si];
+            int seg_edgenr = (si < merge_seg_edgenrs.Size()) ? merge_seg_edgenrs[si] : -1;
+            int snr1 = -1, snr2 = -1;
+            if (si < merge_seg_surfnrs.Size())
+              {
+                snr1 = merge_seg_surfnrs[si].first;
+                snr2 = merge_seg_surfnrs[si].second;
+              }
+            int best = -1;
+            int best_no_fdi = -1;
+            for (int j = 0; j < edgedecoding.Size(); j++)
+              {
+                const auto & ed = edgedecoding[j];
+                if (ed.EdgeNr() == seg_edgenr)
+                  {
+                    if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
+                      {
+                        int seg_si_val = (si < merge_seg_sis.Size()) ? merge_seg_sis[si] : -1;
+                        if (ed.GetIndex() > 0 && ed.GetIndex() == seg_si_val)
+                          { best = j; break; }
+                        if (best_no_fdi < 0)
+                          best_no_fdi = j;
+                      }
+                    if (best < 0 && best_no_fdi < 0)
+                      best_no_fdi = j;
+                  }
+              }
+            if (best < 0) best = best_no_fdi;
+            if (best >= 0)
+              seg.SetIndex(best + 1);
+          }
+      }
+
+    RebuildFDIndices();
+    SyncCD2Names();
 
     SetNextMajorTimeStamp();
   }
@@ -2281,6 +2553,115 @@ namespace netgen
         //segmentht -> Set (i2, i);
       }
 
+  }
+
+  void Mesh :: ReconstructEdgeDescriptors (const Array<std::pair<int,int>> * seg_surfnrs, const Array<int> * seg_edgenrs)
+  {
+    edgedecoding.SetSize(0);
+
+    // find the max index value across all segments
+    int maxindex = 0;
+    for (auto & seg : segments)
+      if (seg.GetIndex() > maxindex)
+        maxindex = seg.GetIndex();
+
+    if (maxindex < 1) return;
+
+    // create edge descriptors indexed by seg.GetIndex() (1-based)
+    edgedecoding.SetSize(maxindex);
+
+    // mark which indices are used
+    Array<bool> used(maxindex);
+    used = false;
+
+    for (int si = 0; si < segments.Size(); si++)
+    {
+      auto & seg = segments[si];
+      int idx = seg.GetIndex();
+      if (idx < 1 || idx > maxindex) continue;
+
+      seg.SetIndex(idx);
+
+      if (!used[idx-1])
+      {
+        used[idx-1] = true;
+        int snr1 = -1, snr2 = -1;
+        if (seg_surfnrs && si < seg_surfnrs->Size())
+          {
+            snr1 = (*seg_surfnrs)[si].first;
+            snr2 = (*seg_surfnrs)[si].second;
+          }
+        auto & ed = edgedecoding[idx-1];
+        int ednr = -1;
+        if (seg_edgenrs && si < seg_edgenrs->Size())
+          ednr = (*seg_edgenrs)[si];
+        ed.SetEdgeNr(ednr);
+        ed.SetSurfNr(0, snr1);
+        ed.SetSurfNr(1, snr2);
+        ed.SetSingEdgeLeft(0);
+        ed.SetSingEdgeRight(0);
+        ed.SetTLOSurface(-1);
+        ed.SetDomainIn(snr1);
+        ed.SetDomainOut(snr2);
+      }
+    }
+
+    // cd2names removed - names already stored in edgedecoding
+
+    RebuildFDIndices();
+  }
+
+  void Mesh :: RebuildFDIndices ()
+  {
+    // Recompute EdgeDescriptor::index_ from surfnr + domin/domout vs face descriptors.
+    for (int edi = 0; edi < edgedecoding.Size(); edi++)
+      {
+        auto & ed = edgedecoding[edi];
+        ed.SetIndex(-1);
+        for (int k = 1; k <= GetNFD(); k++)
+          {
+            const auto & fd = GetFaceDescriptor(k);
+            if ((fd.SurfNr() == ed.SurfNr(0) || fd.SurfNr() == ed.SurfNr(1)) &&
+                fd.DomainIn() == ed.DomainIn()+1 &&
+                fd.DomainOut() == ed.DomainOut()+1)
+              {
+                ed.SetIndex(k);
+                break;
+              }
+          }
+        // fallback: match surfnr only (OCC, STL - domin/domout may be unset)
+        if (ed.GetIndex() < 0)
+          {
+            for (int k = 1; k <= GetNFD(); k++)
+              {
+                const auto & fd = GetFaceDescriptor(k);
+                if (fd.SurfNr() == ed.SurfNr(0) || fd.SurfNr() == ed.SurfNr(1))
+                  {
+                    ed.SetIndex(k);
+                    break;
+                  }
+              }
+          }
+      }
+  }
+
+  void Mesh :: SyncCD2Names ()
+  {
+    if (dimension == 2)
+      return;  // In 2D, cd2names is the primary store - nothing to sync
+
+    // In 3D, cd2 names live in edgedecoding. Populate cd2names so that
+    // GetRegionNamesCD(2) returns correct data for callers (e.g. writeelmer, python).
+    for (auto p : cd2names) delete p;
+    cd2names.SetSize(edgedecoding.Size());
+    for (int i = 0; i < edgedecoding.Size(); i++)
+      {
+        const auto & n = edgedecoding[i].GetName();
+        if (!n.empty() && n != "default")
+          cd2names[i] = new string(n);
+        else
+          cd2names[i] = nullptr;
+      }
   }
 
   void Mesh :: CalcSurfacesOfNode ()
@@ -2992,6 +3373,11 @@ namespace netgen
 
   void Mesh :: FindOpenSegments (int surfnr)
   {
+    auto seg_fdi = [this](const Segment& s) -> int {
+      if (s.GetIndex() >= 1 && s.GetIndex() <= edgedecoding.Size())
+        { int fdi = edgedecoding[s.GetIndex()-1].GetIndex(); if (fdi > 0) return fdi; }
+      return -1;
+    };
     // int i, j, k;
 
     // new version, general elements
@@ -3004,9 +3390,9 @@ namespace netgen
       {
         const Segment & seg = LineSegment (i);
 
-        if (surfnr == 0 || seg.si == surfnr)
+        if (surfnr == 0 || seg_fdi(seg) == surfnr)
           {
-            INDEX_3 key(seg[0], seg[1], seg.si);
+            INDEX_3 key(seg[0], seg[1], seg_fdi(seg));
             int data = -i;
 
             if (faceht.Used (key))
@@ -3116,6 +3502,7 @@ namespace netgen
 
     (*testout) << "open segments: " << endl;
     opensegments.SetSize(0);
+    opensegment_faces.SetSize(0);
     for (int i = 1; i <= faceht.GetNBags(); i++)
       for (int j = 1; j <= faceht.GetBagSize(i); j++)
         {
@@ -3127,7 +3514,7 @@ namespace netgen
               Segment seg;
               seg[0] = i2.I1();
               seg[1] = i2.I2();
-              seg.si = i2.I3();
+              int face = i2.I3();
 
               // find geomdata:
               if (data > 0)
@@ -3137,9 +3524,9 @@ namespace netgen
                   for (int k = 1; k <= el.GetNP(); k++)
                     {
                       if (seg[0] == el.PNum(k))
-                        seg.geominfo[0] = el.GeomInfoPi(k);
+                        seg.GeomInfo(0) = el.GeomInfoPi(k);
                       if (seg[1] == el.PNum(k))
-                        seg.geominfo[1] = el.GeomInfoPi(k);
+                        seg.GeomInfo(1) = el.GeomInfoPi(k);
                     }
 
                   (*testout) << "trig seg: ";
@@ -3148,8 +3535,8 @@ namespace netgen
                 {
                   // segment due to line
                   const Segment & lseg = LineSegment (-data);
-                  seg.geominfo[0] = lseg.geominfo[0];
-                  seg.geominfo[1] = lseg.geominfo[1];
+                  seg.GeomInfo(0) = lseg.GeomInfo(0);
+                  seg.GeomInfo(1) = lseg.GeomInfo(1);
 
                   (*testout) << "line seg: ";
                 }
@@ -3159,7 +3546,8 @@ namespace netgen
                          << endl;
 
               opensegments.Append (seg);
-              if (seg.geominfo[0].trignum <= 0 || seg.geominfo[1].trignum <= 0)
+              opensegment_faces.Append (face);
+              if (seg.GeomInfo(0).trignum <= 0 || seg.GeomInfo(1).trignum <= 0)
                 {
                   (*testout) << "Problem with open segment: " << seg << endl;
                 }
@@ -3843,7 +4231,7 @@ namespace netgen
           for (i = 1; i <= GetNSeg(); i++)
             {
               const Segment & seg = LineSegment(i);
-              if (seg.edgenr == nr)
+              if (GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == nr)
                 RestrictLocalH (RESTRICTH_SEGMENT, i, loch);
             }
           break;
@@ -4090,7 +4478,7 @@ namespace netgen
         }
 
     for(int i=0; i < segments.Size(); i++)
-      if(segments[i].edgenr < 0)
+      if(segments[i].GetIndex() < 1)
           segments.DeleteElement(i--);
 
     pused = false;
@@ -4256,6 +4644,8 @@ namespace netgen
     RebuildSurfaceElementLists ();
     CalcSurfacesOfNode();
 
+    topology.ClearEdges();
+    topology.ClearFaces();
 
     //  FindOpenElements();
     timestamp = NextTimeStamp();
@@ -4812,33 +5202,39 @@ namespace netgen
     if (dimension == 3 && dim == 2)
       {
         // change mesh-dim from 3 to 2 (currently needed for OCC)
+        // materials ← bcnames
         for (auto str : materials)
           delete str;
         materials.SetSize(0);
         for (auto str : bcnames)
           materials.Append(str);
         bcnames.SetSize(0);
-        for (auto str : cd2names)
-          bcnames.Append(str);
-        cd2names.SetSize(0);
-        for (auto str : cd3names)
-          cd2names.Append(str);
-        cd3names.SetSize(0);
 
-        for (auto & seg : LineSegments())
-          seg.si = seg.edgenr;
+        // bcnames ← edgedecoding names
+        for (int i = 0; i < edgedecoding.Size(); i++)
+          {
+            const auto & n = edgedecoding[i].GetName();
+            bcnames.Append((n != "default" && !n.empty()) ? new string(n) : nullptr);
+          }
       }
     if (dimension == 3 && dim == 1)
       {
+        // materials ← edgedecoding names (old codim 2)
         for(auto str : materials)
           delete str;
         materials.SetSize(0);
+        for (int i = 0; i < edgedecoding.Size(); i++)
+          {
+            const auto & n = edgedecoding[i].GetName();
+            materials.Append((n != "default" && !n.empty()) ? new string(n) : nullptr);
+          }
+        for (auto & ed : edgedecoding)
+          ed.SetName("default");
+
+        // bcnames ← cd3names
         for(auto str : bcnames)
           delete str;
         bcnames.SetSize(0);
-        for(auto str: cd2names)
-          materials.Append(str);
-        cd2names.SetSize(0);
         for(auto str : cd3names)
           bcnames.Append(str);
         cd3names.SetSize(0);
@@ -6222,6 +6618,11 @@ namespace netgen
 
   void Mesh :: SplitSeparatedFaces ()
   {
+    auto seg_fdi = [this](const Segment& s) -> int {
+      if (s.GetIndex() >= 1 && s.GetIndex() <= edgedecoding.Size())
+        { int fdi = edgedecoding[s.GetIndex()-1].GetIndex(); if (fdi > 0) return fdi; }
+      return -1;
+    };
     PrintMessage (3, "SplitSeparateFaces");
     int fdi;
     int np = GetNP();
@@ -6310,11 +6711,32 @@ namespace netgen
                 facedecoding[ind-1].firstelement = els_of_face[i];
               }
 
-            // map the segments
+            // map the segments - also create per-face EDs so edsi stays in sync
+            map<pair<int,int>, int> split_ed_cache;
             for(auto& seg : segments)
               if(!usedp.Test(seg[0]) || !usedp.Test(seg[1]))
-                if(seg.si == fdi)
-                  seg.si = nface;
+                {
+                  if(seg_fdi(seg) == fdi)
+                    {
+                      if (seg.GetIndex() >= 1 && seg.GetIndex() <= edgedecoding.Size())
+                        {
+                          auto key = make_pair((int)seg.GetIndex(), nface);
+                          auto it = split_ed_cache.find(key);
+                          if (it != split_ed_cache.end())
+                            {
+                              seg.SetIndex(it->second);
+                            }
+                          else
+                            {
+                              EdgeDescriptor new_ed = edgedecoding[seg.GetIndex()-1];
+                              new_ed.SetIndex(nface);
+                              int new_edsi = AddEdgeDescriptor(new_ed);
+                              split_ed_cache[key] = new_edsi;
+                              seg.SetIndex(new_edsi);
+                            }
+                        }
+                    }
+                }
           }
 
         fdi++;
@@ -6857,7 +7279,12 @@ namespace netgen
     for(auto sei : Range(nse))
       {
         auto name = GetDimension() == 3 ? GetBCName(surfelements[sei].index-1) :
-          GetBCName(segments[sei].edgenr-1);
+          [&]() -> string_view {
+            int ednr = -1;
+            if (segments[sei].GetIndex() >= 1 && segments[sei].GetIndex() <= edgedecoding.Size())
+              ednr = edgedecoding[segments[sei].GetIndex()-1].EdgeNr();
+            return GetBCName(ednr-1);
+          }();
         if(name != s1)
           continue;
 
@@ -7244,8 +7671,7 @@ namespace netgen
   {
     GetCurvedElements().BuildCurvedElements (ref, aorder, arational);
 
-    for (SegmentIndex seg = 0; seg < GetNSeg(); seg++)
-      (*this)[seg].SetCurved (GetCurvedElements().IsSegmentCurved (seg));
+
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
@@ -7261,8 +7687,7 @@ namespace netgen
     
     GetCurvedElements().BuildCurvedElements (&GetGeometry()->GetRefinement(), aorder, false);
 
-    for (SegmentIndex seg = 0; seg < GetNSeg(); seg++)
-      (*this)[seg].SetCurved (GetCurvedElements().IsSegmentCurved (seg));
+
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
@@ -7485,29 +7910,63 @@ namespace netgen
 
   void Mesh :: SetNCD2Names( int ncd2n )
   {
-    if (cd2names.Size())
-      for(int i=0; i<cd2names.Size(); i++)
-	if(cd2names[i]) delete cd2names[i];
-    cd2names.SetSize(ncd2n);
-    cd2names = 0;
+    if (dimension == 2)
+      {
+        if (cd2names.Size())
+          for (int i = 0; i < cd2names.Size(); i++)
+            if (cd2names[i]) delete cd2names[i];
+        cd2names.SetSize(ncd2n);
+        cd2names = 0;
+      }
+    else
+      {
+        // 3D: ensure edgedecoding is at least ncd2n entries, reset names
+        int oldsize = edgedecoding.Size();
+        if (ncd2n > oldsize)
+          {
+            edgedecoding.SetSize(ncd2n);
+            for (int i = oldsize; i < ncd2n; i++)
+              edgedecoding[i] = EdgeDescriptor();
+          }
+        for (int i = 0; i < edgedecoding.Size(); i++)
+          edgedecoding[i].SetName("default");
+      }
   }
 
   void Mesh :: SetCD2Name ( int cd2nr, const string & abcname )
   {
     cd2nr--;
-    (*testout) << "setCD2Name on edge " << cd2nr << " to " << abcname << endl;
-    if (cd2nr >= cd2names.Size())
+    if (dimension == 2)
       {
-	int oldsize = cd2names.Size();
-	cd2names.SetSize(cd2nr+1);
-	for(int i= oldsize; i<= cd2nr; i++)
-	  cd2names[i] = nullptr;
+        // In 2D, CD2 entities are points - store in cd2names, not edgedecoding
+        if (cd2nr >= cd2names.Size())
+          {
+            int oldsize = cd2names.Size();
+            cd2names.SetSize(cd2nr+1);
+            for (int i = oldsize; i <= cd2nr; i++)
+              cd2names[i] = new string("default");
+          }
+        if (cd2names[cd2nr]) delete cd2names[cd2nr];
+        if (abcname != "default" && abcname != "")
+          cd2names[cd2nr] = new string(abcname);
+        else
+          cd2names[cd2nr] = new string("default");
       }
-    //if (cd2names[cd2nr]) delete cd2names[cd2nr];
-    if (abcname != "default" && abcname != "")
-      cd2names[cd2nr] = new string(abcname);
     else
-      cd2names[cd2nr] = nullptr;
+      {
+        (*testout) << "setCD2Name on edge " << cd2nr << " to " << abcname << endl;
+        if (cd2nr >= edgedecoding.Size())
+          {
+            int oldsize = edgedecoding.Size();
+            edgedecoding.SetSize(cd2nr+1);
+            for(int i = oldsize; i <= cd2nr; i++)
+              edgedecoding[i] = EdgeDescriptor();
+          }
+        if (abcname != "default" && abcname != "")
+          edgedecoding[cd2nr].SetName(abcname);
+        else
+          edgedecoding[cd2nr].SetName("default");
+      }
   }
 
   string Mesh :: cd2_default_name = "default";
@@ -7515,16 +7974,18 @@ namespace netgen
   const string & Mesh :: GetCD2Name (int cd2nr) const
   {
     static string defaultstring  = "default";
-    if (!cd2names.Size())
-      return defaultstring;
 
-    if (cd2nr < 0 || cd2nr >= cd2names.Size())
-      return defaultstring;
+    if (dimension == 2)
+      {
+        if (cd2nr >= 0 && cd2nr < cd2names.Size() && cd2names[cd2nr])
+          return *cd2names[cd2nr];
+        return defaultstring;
+      }
 
-    if (cd2names[cd2nr])
-      return *cd2names[cd2nr];
-    else
-      return defaultstring;
+    if (cd2nr >= 0 && cd2nr < edgedecoding.Size())
+      return edgedecoding[cd2nr].GetName();
+
+    return defaultstring;
   }
 
   void Mesh :: SetNCD3Names( int ncd3n )
@@ -7585,7 +8046,7 @@ namespace netgen
       {
       case 0: return materials;
       case 1: return bcnames;
-      case 2: return cd2names;
+      case 2: return region_name_cd[2]; // 2D: populated directly; 3D: synced from edgedecoding via SyncCD2Names()
       case 3: return cd3names;
       default: throw Exception("don't have regions of co-dimension "+ToString(codim));
       }
@@ -7597,7 +8058,7 @@ namespace netgen
       {
       case 0: return materials;
       case 1: return bcnames;
-      case 2: return cd2names;
+      case 2: return region_name_cd[2]; // cd2names removed; array kept empty for ABI compat
       case 3: return cd3names;
       default: throw Exception("don't have regions of co-dimension "+ToString(codim));
       }
@@ -7605,7 +8066,22 @@ namespace netgen
 
   std::string_view Mesh :: GetRegionName (const Segment & el) const
   {
-    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-1)[el.edgenr-1];
+    if (GetDimension() == 3)
+      {
+        // codim 2 names are in edgedecoding
+        if (el.GetIndex() >= 1 && el.GetIndex() <= edgedecoding.Size())
+          return edgedecoding[el.GetIndex()-1].GetName();
+        return defaultmat_sv;
+      }
+    // for 2D/1D, use the standard codim lookup
+    int codim = GetDimension()-1;
+    int ednr = -1;
+    if (el.GetIndex() >= 1 && el.GetIndex() <= edgedecoding.Size())
+      ednr = edgedecoding[el.GetIndex()-1].EdgeNr();
+    auto & names = const_cast<Mesh&>(*this).GetRegionNamesCD(codim);
+    if (ednr-1 >= 0 && ednr-1 < names.Size() && names[ednr-1])
+      return *names[ednr-1];
+    return defaultmat_sv;
   }
 
   std::string_view Mesh :: GetRegionName (const Element2d & el) const

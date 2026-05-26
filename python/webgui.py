@@ -41,6 +41,24 @@ _registered_draw_types = {}
 
 
 def register_draw_type(*types):
+    """Decorator to register a drawing handler for one or more types.
+
+    The decorated function is called as ``func(obj, args, kwargs)`` where
+    *obj* is the object passed to :func:`Draw`, *args* are its positional
+    arguments, and *kwargs* is a dict of keyword arguments merged with the
+    default Draw options.  It must return a dict of render data.
+
+    Parameters
+    ----------
+    *types
+        One or more types for which the handler should be invoked.
+
+    Example
+    -------
+    >>> @register_draw_type(MyMesh)
+    ... def draw_my_mesh(obj, args, kwargs):
+    ...     return {"mesh_dim": 3, ...}
+    """
     def inner(func):
         for typ in types:
             _registered_draw_types[typ] = func
@@ -431,6 +449,112 @@ def _get_draw_default_args():
 
 
 def Draw(obj, *args, show=True, **kwargs):
+    """Visualise a mesh or field in the webgui (Jupyter or standalone).
+
+    The object type determines how it is rendered.  Netgen meshes
+    (``netgen.meshing.Mesh``) are supported out of the box.  When
+    *ngsolve* is imported, ``ngsolve.Mesh``, ``CoefficientFunction``
+    and ``GridFunction`` are registered as well via
+    :func:`register_draw_type`.
+
+    Parameters
+    ----------
+    obj : mesh, function, or any registered draw type
+        The object to visualise.  For an ``ngsolve.CoefficientFunction``
+        pass the mesh or region as the first positional argument.
+    show : bool
+        Display the widget immediately in Jupyter (default ``True``).
+    order : int
+        Polynomial order used for visualisation (default 2).
+    draw_vol : bool
+        Draw volume elements (default ``True``).
+    draw_surf : bool
+        Draw surface elements (default ``True``).
+    deformation : bool or GridFunction
+        Apply deformation to the mesh (default ``False``).
+    scale : float
+        Scaling factor for the deformation (default 1.0).
+    autoscale : bool
+        Automatically determine color range (default ``True``).
+    min, max : float
+        Explicit color-range bounds (override *autoscale*).
+    clipping : dict
+        Clipping-plane specification, e.g.
+        ``{"x": 1, "y": 0, "z": 0, "dist": 0}`` or with
+        ``"vec"``/``"pnt"`` keys.
+    vectors : bool or dict
+        Show vector arrows.  Pass a dict with ``"grid_size"`` and/or
+        ``"offset"`` for fine control.
+    eval_function : str
+        Custom JavaScript evaluation expression for the color map.
+    objects : list
+        Additional overlay objects to render.
+    settings : dict
+        GUI settings forwarded to the viewer.  Supported keys:
+
+        - **Colormap** (*dict*) — ``autoscale`` (bool), ``ncolors`` (int),
+          ``min`` / ``max`` (float).
+        - **Clipping** (*dict*) — ``enable`` (bool), ``function`` (bool),
+          ``x``, ``y``, ``z``, ``dist`` (float).
+        - **Light** (*dict*) — ``ambient``, ``diffuse`` (float, 0–1),
+          ``shininess`` (float, 0–100), ``specularity`` (float, 0–1).
+        - **Vectors** (*dict*) — ``show`` (bool), ``grid_size`` (int),
+          ``offset`` (float).
+        - **Misc** (*dict*) — ``subdivision`` (int, 1–20),
+          ``line_thickness`` (int, 1–20), ``fast_draw`` (bool).
+        - **Complex** (*dict*) — ``phase`` (float), ``speed`` (float),
+          ``animate`` (bool).
+        - **Multidim** (*dict*) — ``t`` (float), ``speed`` (float),
+          ``animate`` (bool).
+        - **Objects** (*dict*) — visibility toggles by name, e.g.
+          ``{"Edges": True, "Wireframe": False, "Surface": True}``.
+        - **camera** (*dict*) — ``euler_angles`` ([x, y, z] in degrees),
+          ``transformations`` (list of rotation/move dicts).
+        - **axes_labels** (*list*) — axis labels, default
+          ``["X", "Y", "Z"]``.
+
+        Flat shortcuts are also accepted: ``autoscale``,
+        ``colormap_min``, ``colormap_max``, ``colormap_ncolors``,
+        ``subdivision``, ``line_thickness``, ``edges``, ``mesh``,
+        ``elements``.
+    euler_angles : tuple
+        Initial camera orientation as ``[x, y, z]`` in degrees.
+    center : list
+        Override the centre of the scene.
+    radius : float
+        Override the bounding-sphere radius.
+    interpolate_multidim : bool
+        Interpolate between multi-dim components (default ``False``).
+    animate : bool
+        Animate multi-dim data (default ``False``).
+    animate_complex : bool
+        Animate the complex phase (default ``False``).
+    colors : list
+        Custom color table.
+    fullscreen : bool
+        Open in fullscreen mode (default ``False``).
+    width, height : str
+        Widget size, e.g. ``"100%"`` / ``"50vh"``.
+    filename : str
+        If given, export the scene to an HTML file.
+    nodal_p1 : bool
+        Use nodal P1 interpolation (default ``False``).
+    js_code : str
+        JavaScript snippet executed after scene initialisation.
+    id : str
+        Register the scene under this name in
+        ``window._webgui_scenes`` for JS access.
+
+    Returns
+    -------
+    WebGLScene
+        The scene object.  Call ``scene.Redraw()`` to update after
+        changes.
+
+    See Also
+    --------
+    register_draw_type : Register a handler for additional types.
+    """
     kwargs_with_defaults = _get_draw_default_args()
     kwargs_with_defaults.update(kwargs)
 

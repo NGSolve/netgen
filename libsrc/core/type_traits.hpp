@@ -49,7 +49,7 @@ namespace ngcore
       template<typename T2>
       static constexpr auto check(T2*) ->
         std::enable_if_t<!std::is_same_v<decltype(std::declval<T2>().Range()), void>, std::true_type>
-      { std::true_type(); }
+      { return std::true_type(); }
       template<typename>
       static constexpr std::false_type check(...);
       using type = decltype(check<T>(nullptr)); // NOLINT

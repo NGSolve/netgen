@@ -21,15 +21,51 @@ namespace netgen
       delete [] materials[i];
   }
 
+
+  void SplineGeometry2d :: ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi, int edgenr) const
+  {
+    if (!gi) return;
+    
+    // copied from PointBetween, but should work easier
+    auto spline = GetSplines().Get(edgenr);
+    const SplineSeg3<2> * ss3;
+    const LineSeg<2> * ls;
+    auto ext = dynamic_cast<const SplineSegExt *>(spline);
+    if(ext)
+      {
+        ss3 = dynamic_cast<const SplineSeg3<2> *>(ext->seg);
+        ls = dynamic_cast<const LineSeg<2> *>(ext->seg);
+      }
+    else
+      {
+        ss3 = dynamic_cast<const SplineSeg3<2> *>(spline);
+        ls = dynamic_cast<const LineSeg<2> *>(spline);
+      }
+    
+    Point<2> p2d(p(0),p(1));
+    Point<2> p_proj(0.0,0.0);
+    double t_proj = 0.0;
+
+    if(ss3)
+      ss3->Project(p2d,p_proj,t_proj);
+    else if(ls)
+      ls->Project(p2d,p_proj,t_proj);
+
+    p(0) = p_proj(0);
+    p(1) = p_proj(1);
+    gi->dist = t_proj;
+  }
+  
   void SplineGeometry2d :: PointBetweenEdge(const Point<3> & p1, const Point<3> & p2, double secpoint,
                                          int surfi1, int surfi2,
                                          const EdgePointGeomInfo & ap1,
                                          const EdgePointGeomInfo & ap2,
-                                         Point<3> & newp, EdgePointGeomInfo & newgi) const
+                                         Point<3> & newp, EdgePointGeomInfo & newgi,
+                                         int edgenr) const
   {
     Point<2> p2d;
     double newdist;
-    auto spline = GetSplines().Get(ap1.edgenr);
+    auto spline = GetSplines().Get(edgenr);
     if( (ap1.dist == 0.0) && (ap2.dist == 0.0) )
       {
         // used for manually generated meshes
@@ -73,16 +109,16 @@ namespace netgen
     //  (*testout) << "p1, p2 = " << p1 << p2 << ", newp = " << p2d << endl;
 
     newp = Point3d (p2d(0), p2d(1), 0);
-    newgi.edgenr = ap1.edgenr;
     newgi.dist = newdist;
   };
 
 
 
   Vec<3> SplineGeometry2d :: GetTangent(const Point<3> & p, int surfi1, int surfi2,
-                                     const EdgePointGeomInfo & ap1) const
+                                     const EdgePointGeomInfo & ap1,
+                                     int edgenr) const
   {
-    Vec<2> t2d = GetSplines().Get(ap1.edgenr) -> GetTangent(ap1.dist);
+    Vec<2> t2d = GetSplines().Get(edgenr) -> GetTangent(ap1.dist);
     return Vec<3> (t2d(0), t2d(1), 0);
   }
 

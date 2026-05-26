@@ -65,6 +65,34 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
     {
       STLLine* line = meshlines.Get(i);
       (*testout) << "store line " << i << endl;
+
+      // Create EdgeDescriptor for this edge
+      int edsi_left, edsi_right = -1;
+      {
+        int lt = line->GetLeftTrig(1);
+        int rt = line->GetRightTrig(1);
+        int left_face = geom.GetTriangle(lt).GetFaceNum();
+        int right_face = (rt != 0) ? geom.GetTriangle(rt).GetFaceNum() : -1;
+
+        EdgeDescriptor ed_left;
+        ed_left.SetEdgeNr(i);
+        ed_left.SetSurfNr(0, left_face);
+        if (rt != 0) ed_left.SetSurfNr(1, right_face);
+        edsi_left = mesh.AddEdgeDescriptor(ed_left);
+        mesh.GetEdgeDescriptor(edsi_left).SetIndex(left_face);
+
+        if (rt != 0) {
+          EdgeDescriptor ed_right;
+          ed_right.SetEdgeNr(i);
+          ed_right.SetSurfNr(0, right_face);
+          ed_right.SetSurfNr(1, left_face);
+          edsi_right = mesh.AddEdgeDescriptor(ed_right);
+          mesh.GetEdgeDescriptor(edsi_right).SetIndex(right_face);
+        } else {
+          edsi_right = edsi_left;
+        }
+      }
+
       for (int j = 1; j <= line->GetNS(); j++)
 	{
 	  int p1, p2;
@@ -124,23 +152,16 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	  Segment seg;
 	  seg[0] = p1 + PointIndex::BASE-1;
 	  seg[1] = p2 + PointIndex::BASE-1;
-	  seg.si = geom.GetTriangle(trig1).GetFaceNum();
-	  seg.edgenr = i;
-
-	  seg.epgeominfo[0].edgenr = i;
-	  seg.epgeominfo[0].dist = line->GetDist(j);
-	  seg.epgeominfo[1].edgenr = i;
-	  seg.epgeominfo[1].dist = line->GetDist(j+1);
+	  seg.EPGeomInfo(0).dist = line->GetDist(j);
+	  seg.EPGeomInfo(1).dist = line->GetDist(j+1);
 	  /*
 	  (*testout) << "seg = " 
-		     << "edgenr " << seg.epgeominfo[0].edgenr
 		     << " dist " << seg.epgeominfo[0].dist
-		     << " edgenr " << seg.epgeominfo[1].edgenr
 		     << " dist " << seg.epgeominfo[1].dist << endl;
 	  */
 	  
-	  seg.geominfo[0].trignum = trig1;
-	  seg.geominfo[1].trignum = trig1b;
+	  seg.GeomInfo(0).trignum = trig1;
+	  seg.GeomInfo(1).trignum = trig1b;
 
 	  /*
 	  geom.SelectChartOfTriangle (trig1);
@@ -174,6 +195,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	      throw NgException ("Line segment of length 0");
 	    }
 	  
+	  seg.SetIndex(edsi_left);
 	  mesh.AddSegment (seg);
 
 
@@ -182,24 +204,16 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	  Segment seg2;
 	  seg2[0] = p2 + PointIndex::BASE-1;;
 	  seg2[1] = p1 + PointIndex::BASE-1;;
-	  seg2.si = geom.GetTriangle(trig2).GetFaceNum();
-
-	  seg2.edgenr = i;
-
-	  seg2.epgeominfo[0].edgenr = i;
-	  seg2.epgeominfo[0].dist = line->GetDist(j+1);
-	  seg2.epgeominfo[1].edgenr = i;
-	  seg2.epgeominfo[1].dist = line->GetDist(j);
+	  seg2.EPGeomInfo(0).dist = line->GetDist(j+1);
+	  seg2.EPGeomInfo(1).dist = line->GetDist(j);
 	  /*
 	  (*testout) << "seg = " 
-		     << "edgenr " << seg2.epgeominfo[0].edgenr
 		     << " dist " << seg2.epgeominfo[0].dist
-		     << " edgenr " << seg2.epgeominfo[1].edgenr
 		     << " dist " << seg2.epgeominfo[1].dist << endl;
 	  */
 	  
-	  seg2.geominfo[0].trignum = trig2b;
-	  seg2.geominfo[1].trignum = trig2;
+	  seg2.GeomInfo(0).trignum = trig2b;
+	  seg2.GeomInfo(1).trignum = trig2;
 	  
 	  /*
 	  geom.SelectChartOfTriangle (trig2);
@@ -222,6 +236,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	      (*testout) << "Get GeomInfo PROBLEM" << endl;
 	    }
 	  */	  
+	  seg2.SetIndex(edsi_right);
 	  mesh.AddSegment (seg2);
             }
 	}
@@ -253,7 +268,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
   for (int i = 1; i <= mesh.GetNSeg(); i++)
     {
       const Segment & seg = mesh.LineSegment (i);
-      if (seg.geominfo[0].trignum <= 0 || seg.geominfo[1].trignum <= 0)
+      if (seg.GeomInfo(0).trignum <= 0 || seg.GeomInfo(1).trignum <= 0)
 	(*testout) << "Problem with segment " << i << ": " << seg << endl;
     }
 
@@ -298,8 +313,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		  for (int i = 1; i <= nopen; i++)
 		    {
 		      const Segment & seg = mesh.GetOpenSegment (i);
-		      geom.SetMarkedTrig(seg.geominfo[0].trignum,1);
-		      geom.SetMarkedTrig(seg.geominfo[1].trignum,1);
+		      geom.SetMarkedTrig(seg.GeomInfo(0).trignum,1);
+		      geom.SetMarkedTrig(seg.GeomInfo(1).trignum,1);
 		    }
 
 		  MeshOptimize2d optmesh(mesh);
@@ -381,20 +396,20 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      Segment nseg1, nseg2;
 		      EdgePointGeomInfo newgi;
 		      
-		      const EdgePointGeomInfo & gi1 = seg.epgeominfo[0];
-		      const EdgePointGeomInfo & gi2 = seg.epgeominfo[1];
+		      const EdgePointGeomInfo & gi1 = seg.EPGeomInfo(0);
+		      const EdgePointGeomInfo & gi2 = seg.EPGeomInfo(1);
 		      
 		      newgi.dist = 0.5 * (gi1.dist + gi2.dist);
-		      newgi.edgenr = gi1.edgenr;
 
 		      int hi;
 		      
 		      Point3d newp;
 		      int newpi;
 		      
+		      auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
 		      if (!newpht.Used (i2))
 			{
-			  newp = geom.GetLine (gi1.edgenr)->
+			  newp = geom.GetLine (edgenr)->
 			    GetPointInDist (geom.GetPoints(), newgi.dist, hi);
 			  newpi = mesh.AddPoint (newp);
 			  newpht.Set (i2, newpi);
@@ -408,10 +423,10 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      nseg1 = seg;
 		      nseg2 = seg;
 		      nseg1[1] = newpi;
-		      nseg1.epgeominfo[1] = newgi;
+		      nseg1.EPGeomInfo(1) = newgi;
 		      
 		      nseg2[0] = newpi;
-		      nseg2.epgeominfo[0] = newgi;
+		      nseg2.EPGeomInfo(0) = newgi;
 		      
 		      mesh.LineSegment(i) = nseg1;
 		      mesh.AddSegment (nseg2);
@@ -527,20 +542,20 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                   Segment nseg1, nseg2;
                   EdgePointGeomInfo newgi;
 		      
-                  const EdgePointGeomInfo & gi1 = seg.epgeominfo[0];
-                  const EdgePointGeomInfo & gi2 = seg.epgeominfo[1];
+                  const EdgePointGeomInfo & gi1 = seg.EPGeomInfo(0);
+                  const EdgePointGeomInfo & gi2 = seg.EPGeomInfo(1);
 		      
                   newgi.dist = 0.5 * (gi1.dist + gi2.dist);
-                  newgi.edgenr = gi1.edgenr;
 
                   int hi;
 		      
                   Point3d newp;
                   int newpi;
 		      
+                  auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
                   if (!newpht.Used (i2))
                     {
-                      newp = geom.GetLine (gi1.edgenr)->
+                      newp = geom.GetLine (edgenr)->
                         GetPointInDist (geom.GetPoints(), newgi.dist, hi);
                       newpi = mesh.AddPoint (newp);
                       newpht.Set (i2, newpi);
@@ -554,10 +569,10 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                   nseg1 = seg;
                   nseg2 = seg;
                   nseg1[1] = newpi;
-                  nseg1.epgeominfo[1] = newgi;
+                  nseg1.EPGeomInfo(1) = newgi;
 		      
                   nseg2[0] = newpi;
-                  nseg2.epgeominfo[0] = newgi;
+                  nseg2.EPGeomInfo(0) = newgi;
 		      
                   mesh.LineSegment(i) = nseg1;
                   mesh.AddSegment (nseg2);
@@ -668,15 +683,15 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   NgArray<int, 1> opensegsperface(mesh.GetNFD());
   opensegsperface = 0;
   for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
-    opensegsperface[mesh.GetOpenSegment(i).si]++;
+    opensegsperface[mesh.GetOpenSegmentFace(i)]++;
   
   TABLE<int, 1> opensegments(mesh.GetNFD());
   for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
     {
-      const Segment & seg = mesh.GetOpenSegment (i);
-      if (seg.si < 1 || seg.si > mesh.GetNFD())
-	cerr << "segment index " << seg.si << " out of range [1, " << mesh.GetNFD() << "]" << endl;
-      opensegments.Add (seg.si, i);
+      int fdi = mesh.GetOpenSegmentFace(i);
+      if (fdi < 1 || fdi > mesh.GetNFD())
+	cerr << "segment index " << fdi << " out of range [1, " << mesh.GetNFD() << "]" << endl;
+      opensegments.Add (fdi, i);
     }
   
 
@@ -712,7 +727,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
 	{
 	  const Segment & seg = mesh.GetOpenSegment (i);
-	  if (seg.si == fnr)
+	  if (seg_fdi(seg) == fnr)
 	    for (int j = 0; j < 2; j++)
 	      if (compress[seg[j]] == 0)
 		{
@@ -783,7 +798,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
         for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
 	  {
 	    const Segment & seg = mesh.GetOpenSegment (i);
-	    if (seg.si == fnr)
+	    if (seg_fdi(seg) == fnr)
 	      meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], 
 					  seg.geominfo[0], seg.geominfo[1]);
 	  }
@@ -796,7 +811,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 	  int i = segs[hi];
 	  const Segment & seg = mesh.GetOpenSegment (i);
 	  meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], 
-				      seg.geominfo[0], seg.geominfo[1]);
+				      seg.GeomInfo(0), seg.GeomInfo(1));
 	}
 
 

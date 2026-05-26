@@ -44,7 +44,7 @@ namespace netgen
     virtual PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
     
     virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p,
-                           EdgePointGeomInfo* gi = nullptr) const override;
+                           EdgePointGeomInfo* gi = nullptr, int edgenr = -1) const override;
     
     virtual bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
 
@@ -54,7 +54,8 @@ namespace netgen
                           int surfi1, int surfi2, 
                           const EdgePointGeomInfo & ap1, 
                           const EdgePointGeomInfo & ap2,
-                          Point<3> & newp, EdgePointGeomInfo & newgi) const override;
+                          Point<3> & newp, EdgePointGeomInfo & newgi,
+                          int edgenr = -1) const override;
     
     virtual void PointBetween(const Point<3> & p1, const Point<3> & p2, double secpoint,
                       int surfi, 

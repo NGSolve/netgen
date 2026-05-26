@@ -363,6 +363,24 @@ threads : int
     ;
 
     m.def("GetTotalMemory", MemoryTracer::GetTotalMemory);
+    m.def("GetTotalMemory", MemoryTracer::GetTotalMemory);
+    m.def("GetRSSMemory", MemoryTracer::GetRSSMemory);
+    m.def("PrintMemoryUsage", [](std::filesystem::path log_file = "", std::string msg = "", int n_frames=0) {
+        auto inspect = py::module::import("inspect");
+        auto frame = inspect.attr("currentframe")();
+        while(n_frames-- > 0 && !frame.attr("f_back").is_none())
+            frame = frame.attr("f_back");
+        string filename = py::cast<string>(frame.attr("f_code").attr("co_filename"));
+        auto line = py::cast<int>(frame.attr("f_lineno"));
+        if(log_file != "")
+        {
+            ofstream out(log_file, std::ios::app);
+            MemoryTracer::PrintMemoryUsage(filename.c_str(), line, msg, out);
+        }
+        else
+            MemoryTracer::PrintMemoryUsage(filename.c_str(), line, msg);
+    }, py::arg("log_file") = "", py::arg("msg") = "", py::arg("n_frames") = 0,
+        "Parameters:\n\nlog_file : str\n    If given, memory usage information is appended to this file, otherwise printed to stdout\nmsg : str\n    Additional message to be printed together with memory usage information\nn_frames : int\n    Number of stack frames to go back to get the filename and line number for the log message, set it to 1 if you have a wrapper function that calls this function");
 
     py::class_<Timer<>> (m, "Timer")
     .def(py::init<const string&>())

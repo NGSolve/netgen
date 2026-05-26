@@ -99,6 +99,8 @@ namespace netgen
     NgArray<Element2d> openelements;
     /// open segments for surface meshing
     NgArray<Segment> opensegments;
+    /// face descriptor index for each open segment (parallel to opensegments)
+    Array<int> opensegment_faces;
 
     Array<int> tets_in_qualclass;
 
@@ -126,7 +128,7 @@ namespace netgen
        the edge-index of the line element maps into
        this table.
     */
-    NgArray<EdgeDescriptor> edgedecoding;
+    Array<EdgeDescriptor> edgedecoding;
 
     Array<string*> region_name_cd[4];
     Array<string*> & materials = region_name_cd[0];
@@ -461,6 +463,8 @@ namespace netgen
 
     int GetNOpenSegments () { return opensegments.Size(); }
     const Segment & GetOpenSegment (int nr) { return opensegments.Get(nr); }
+    /// face descriptor index for open segment nr (1-based)
+    int GetOpenSegmentFace (int nr) { return opensegment_faces[nr-1]; }
   
     /**
        Checks overlap of boundary
@@ -724,7 +728,7 @@ namespace netgen
     { facedecoding.Append(fd); return facedecoding.Size(); }
 
     int AddEdgeDescriptor(const EdgeDescriptor & fd)
-    { edgedecoding.Append(fd); return edgedecoding.Size() - 1; }
+    { edgedecoding.Append(fd); return edgedecoding.Size(); }
 
     auto & GetCommunicator() const { return this->comm; }
     void SetCommunicator(NgMPI_Comm acomm);
@@ -755,10 +759,28 @@ namespace netgen
     DLL_HEADER static string cd2_default_name;
     string * GetCD2NamePtr (int cd2nr ) const
     {
-      if (cd2nr < cd2names.Size() && cd2names[cd2nr]) return cd2names[cd2nr];
+      if (dimension == 2)
+        {
+          if (cd2nr >= 0 && cd2nr < cd2names.Size() && cd2names[cd2nr])
+            return cd2names[cd2nr];
+        }
+      else
+        {
+          if (cd2nr >= 0 && cd2nr < edgedecoding.Size())
+            {
+              const auto & n = edgedecoding[cd2nr].GetName();
+              if (n != "default" && !n.empty())
+                return const_cast<string*>(&edgedecoding[cd2nr].GetName());
+            }
+        }
       return &cd2_default_name;
     }
-    size_t GetNCD2Names() const { return cd2names.Size(); }
+    size_t GetNCD2Names() const
+    {
+      if (dimension == 2)
+        return cd2names.Size();
+      return edgedecoding.Size();
+    }
 
     DLL_HEADER void SetNCD3Names (int ncd3n);
     DLL_HEADER void SetCD3Name (int cd3nr, const string & abcname);
@@ -793,7 +815,10 @@ namespace netgen
     std::string_view GetRegionName (int dim, int domnr) // 1-based domnr
     {
       domnr--;
-      auto & names = region_name_cd[dimension-dim];
+      int codim = dimension-dim;
+      if (codim == 2)
+        return GetCD2Name(domnr);
+      auto & names = region_name_cd[codim];
       if (domnr < names.Size() && names[domnr]) return *names[domnr];
       return defaultmat_sv;
     }
@@ -801,6 +826,9 @@ namespace netgen
     ///
     void ClearFaceDescriptors()
     { facedecoding.SetSize(0); }
+
+    void FreeFaceDescriptors()
+    { facedecoding = Array<FaceDescriptor>(); }
 
     ///
     int GetNFD () const
@@ -816,7 +844,30 @@ namespace netgen
     auto & FaceDescriptors () const { return facedecoding; }
 
     const EdgeDescriptor & GetEdgeDescriptor (int i) const
-    { return edgedecoding[i]; }
+    { return edgedecoding[i-1]; }
+
+    EdgeDescriptor & GetEdgeDescriptor (int i)
+    { return edgedecoding[i-1]; }
+
+    const EdgeDescriptor & GetEdgeDescriptor (const Segment & seg) const
+    { return edgedecoding[seg.GetIndex()-1]; }
+
+    int GetNED () const
+    { return edgedecoding.Size(); }
+
+    auto & EdgeDescriptors () const { return edgedecoding; }
+    auto & EdgeDescriptors () { return edgedecoding; }
+
+    void ClearEdgeDescriptors()
+    { edgedecoding.SetSize(0); }
+
+    void ReconstructEdgeDescriptors(const Array<std::pair<int,int>> * seg_surfnrs = nullptr, const Array<int> * seg_edgenrs = nullptr);
+
+    /// Recompute EdgeDescriptor::fdindex from segment si values or FD lookup
+    void RebuildFDIndices();
+
+    /// Sync cd2names array from edgedecoding (for 3D) so GetRegionNamesCD(2) works
+    void SyncCD2Names();
 
 
     ///

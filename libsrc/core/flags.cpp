@@ -475,7 +475,11 @@ namespace ngcore
 
   void Flags :: DoArchive(Archive & archive)
   {
-    archive & strflags & numflags & defflags & numlistflags & strlistflags & flaglistflags & anyflags;
+    archive & strflags & numflags & defflags & numlistflags & strlistflags & flaglistflags;
+    // any flags can currently only be archived with python registry
+#ifdef NETGEN_PYTHON
+    archive & anyflags;
+#endif // NETGEN_PYTHON
   }
 
   void Flags :: Update(const Flags& other)

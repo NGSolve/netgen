@@ -4,6 +4,7 @@
 #include <array>
 #include <chrono>
 #include <string>
+#include <mutex>
 
 #include "array.hpp"
 #include "logging.hpp"
@@ -38,6 +39,7 @@ namespace ngcore
 #if defined(NETGEN_TRACE_MEMORY) && !defined(__CUDA_ARCH__)
     NGCORE_API static std::vector<std::string> names;
     NGCORE_API static std::vector<int> parents;
+    NGCORE_API static std::mutex create_id_mutex;
 
     #if defined(NETGEN_CHECK_RANGE)
     NGCORE_API static std::atomic<size_t> total_memory;
@@ -46,6 +48,7 @@ namespace ngcore
 
     static int CreateId(const std::string& name = "")
     {
+      std::lock_guard<std::mutex> lock(create_id_mutex);
       int id = names.size();
       names.push_back(name);
       parents.push_back(0);
@@ -215,6 +218,9 @@ namespace ngcore
     void SetName(std::string /* name */) const {}
     static size_t GetTotalMemory() { return 0; }
 #endif // NETGEN_TRACE_MEMORY
+    NGCORE_API static void PrintMemoryUsage(const char * file = nullptr, int line = 0, std::string msg = "", std::ostream & out = std::cout);
+    NGCORE_API static size_t GetRSSMemory();
+    NGCORE_API static size_t GetPageSize();
   };
 } // namespace ngcore
 

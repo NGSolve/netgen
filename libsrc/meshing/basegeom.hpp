@@ -266,10 +266,10 @@ namespace netgen
       return PointGeomInfo();
     }
 
-  virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr) const
+  virtual void ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi = nullptr, int edgenr = -1) const
   {
-    if(gi && gi->edgenr < edges.Size() && gi->edgenr >= 0)
-      edges[gi->edgenr]->ProjectPoint(p, gi);
+    if(edgenr > 0 && edgenr-1 < edges.Size())
+      edges[edgenr-1]->ProjectPoint(p, gi);
   }
 
     virtual bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const
@@ -313,20 +313,23 @@ namespace netgen
                                   const EdgePointGeomInfo & ap1,
                                   const EdgePointGeomInfo & ap2,
                                   Point<3> & newp,
-                                  EdgePointGeomInfo & newgi) const
+                                  EdgePointGeomInfo & newgi,
+                                  int edgenr = -1) const
     {
-      if(ap1.edgenr < edges.Size() && ap1.edgenr >= 0)
+      if(edgenr > 0 && edgenr-1 < edges.Size())
         {
-          edges[ap1.edgenr]->PointBetween(p1, p2, secpoint,
+          edges[edgenr-1]->PointBetween(p1, p2, secpoint,
                                           ap1, ap2, newp, newgi);
           return;
         }
       newp = p1+secpoint*(p2-p1);
+      newgi.dist = ap1.dist + secpoint*(ap2.dist-ap1.dist);
     }
 
     virtual Vec<3> GetTangent(const Point<3> & p, int surfi1,
                               int surfi2,
-                              const EdgePointGeomInfo & egi) const
+                              const EdgePointGeomInfo & egi,
+                              int edgenr = -1) const
     {
       throw Exception("Base geometry get tangent called");
     }

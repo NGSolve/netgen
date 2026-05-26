@@ -625,7 +625,26 @@ namespace netgen
       }
     for (int dest = 1; dest < ntasks; dest++)
       sendrequests += comm.ISend (fddata, dest, NG_MPI_TAG_MESH+3);
-    
+
+    PrintMessage ( 3, "Sending Edge Descriptors" );
+
+    int ned = GetNED();
+    Array<double> eddata (8 * ned);
+    for (int edi = 0; edi < ned; edi++)
+      {
+        auto & ed = edgedecoding[edi];
+        eddata[8*edi+0] = ed.EdgeNr();
+        eddata[8*edi+1] = ed.SurfNr(0);
+        eddata[8*edi+2] = ed.SurfNr(1);
+        eddata[8*edi+3] = ed.SingEdgeLeft();
+        eddata[8*edi+4] = ed.SingEdgeRight();
+        eddata[8*edi+5] = ed.TLOSurface();
+        eddata[8*edi+6] = ed.DomainIn();
+        eddata[8*edi+7] = ed.DomainOut();
+      }
+    for (int dest = 1; dest < ntasks; dest++)
+      sendrequests += comm.ISend (eddata, dest, NG_MPI_TAG_MESH+7);
+
     /** Surface Elements **/
 
     PrintMessage ( 3, "Sending Surface elements" );
@@ -830,25 +849,28 @@ namespace netgen
     iterate_segs2([&](auto segi, const auto & seg, int dest)
 		  {
 		    nloc_seg[dest]++;
-		    bufsize[dest] += 14;
+		    bufsize[dest] += 15;
 		  });
     DynamicTable<double> segm_buf(bufsize);
     iterate_segs2([&](auto segi, const auto & seg, int dest)
 		  {
 		    segm_buf.Add (dest, segi);
-		    segm_buf.Add (dest, seg.si);
-		    segm_buf.Add (dest, seg.pnums[0]);
-		    segm_buf.Add (dest, seg.pnums[1]);
-		    segm_buf.Add (dest, seg.geominfo[0].trignum);
-		    segm_buf.Add (dest, seg.geominfo[1].trignum);
-		    segm_buf.Add (dest, seg.surfnr1);
-		    segm_buf.Add (dest, seg.surfnr2);
-		    segm_buf.Add (dest, seg.edgenr);
-		    segm_buf.Add (dest, seg.epgeominfo[0].dist);
-		    segm_buf.Add (dest, seg.epgeominfo[1].edgenr);
-		    segm_buf.Add (dest, seg.epgeominfo[1].dist);
-		    segm_buf.Add (dest, seg.singedge_right);
-		    segm_buf.Add (dest, seg.singedge_left);
+		    bool has_ed = seg.GetIndex() >= 1 && seg.GetIndex() <= GetNED();
+		    int fdi = has_ed ? GetEdgeDescriptor(seg.GetIndex()).GetIndex() : -1;
+		    segm_buf.Add (dest, fdi);
+		    segm_buf.Add (dest, seg[0]);
+		    segm_buf.Add (dest, seg[1]);
+		    segm_buf.Add (dest, seg.GeomInfo(0).trignum);
+		    segm_buf.Add (dest, seg.GeomInfo(1).trignum);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(0) : -1);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(1) : -1);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
+		    segm_buf.Add (dest, seg.GetIndex());
+		    segm_buf.Add (dest, seg.EPGeomInfo(0).dist);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
+		    segm_buf.Add (dest, seg.EPGeomInfo(1).dist);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SingEdgeRight() : 0.0);
+		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SingEdgeLeft() : 0.0);
 		  });
     // distribute segment data
     for (int dest = 1; dest < ntasks; dest++)
@@ -903,7 +925,7 @@ namespace netgen
     auto iterate_names = [&](auto func) {
       for (int k = 0; k < nnames[0]; k++) func(materials[k]);
       for (int k = 0; k < nnames[1]; k++) func(bcnames[k]);
-      for (int k = 0; k < nnames[2]; k++) func(cd2names[k]);
+      for (int k = 0; k < nnames[2]; k++) func(GetCD2NamePtr(k));
       for (int k = 0; k < nnames[3]; k++) func(cd3names[k]);
     };
     // sizes of names
@@ -1096,8 +1118,27 @@ namespace netgen
 	    (FaceDescriptor(int(fddata[i]), int(fddata[i+1]), int(fddata[i+2]), 0));
 	  GetFaceDescriptor(faceind).SetBCProperty (int(fddata[i+3]));
 	  GetFaceDescriptor(faceind).domin_singular = fddata[i+4];
-	  GetFaceDescriptor(faceind).domout_singular = fddata[i+5];
+	GetFaceDescriptor(faceind).domout_singular = fddata[i+5];
 	}
+    }
+
+    {
+      Array<double> eddata;
+      comm.Recv (eddata, 0, NG_MPI_TAG_MESH+7);
+      int ned = eddata.Size() / 8;
+      edgedecoding.SetSize(ned);
+      for (int edi = 0; edi < ned; edi++)
+        {
+          auto & ed = edgedecoding[edi];
+          ed.SetEdgeNr(int(eddata[8*edi+0]));
+          ed.SetSurfNr(0, int(eddata[8*edi+1]));
+          ed.SetSurfNr(1, int(eddata[8*edi+2]));
+          ed.SetSingEdgeLeft(eddata[8*edi+3]);
+          ed.SetSingEdgeRight(eddata[8*edi+4]);
+          ed.SetTLOSurface(int(eddata[8*edi+5]));
+          ed.SetDomainIn(int(eddata[8*edi+6]));
+          ed.SetDomainOut(int(eddata[8*edi+7]));
+        }
     }
 
     {
@@ -1135,33 +1176,30 @@ namespace netgen
       int globsegi;
       int ii = 0;
       int segi = 1;
-      int nsegloc = int ( segmbuf.Size() / 14 ) ;
+      int nsegloc = int ( segmbuf.Size() / 15 ) ;
       paralleltop -> SetNSegm ( nsegloc );
 
       while ( ii < segmbuf.Size() )
 	{
 	  globsegi = int (segmbuf[ii++]);
-	  seg.si = int (segmbuf[ii++]);
+	  ii++; // fdi (now on EdgeDescriptor)
 	  
-	  seg.pnums[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-	  seg.pnums[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-	  seg.geominfo[0].trignum = int( segmbuf[ii++] );
-	  seg.geominfo[1].trignum = int ( segmbuf[ii++]);
-	  seg.surfnr1 = int ( segmbuf[ii++]);
-	  seg.surfnr2 = int ( segmbuf[ii++]);
-	  seg.edgenr = int ( segmbuf[ii++]);
-	  seg.epgeominfo[0].dist = segmbuf[ii++];
-	  seg.epgeominfo[1].edgenr = int (segmbuf[ii++]);
-	  seg.epgeominfo[1].dist = segmbuf[ii++];
+	  seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
+	  seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
+	  seg.GeomInfo(0).trignum = int( segmbuf[ii++] );
+	  seg.GeomInfo(1).trignum = int ( segmbuf[ii++]);
+	  ii++; // surfnr1 (on EdgeDescriptor)
+	  ii++; // surfnr2 (on EdgeDescriptor)
+	  ii++; // edgenr (on EdgeDescriptor)
+	  seg.SetIndex(int ( segmbuf[ii++]));
+	  seg.EPGeomInfo(0).dist = segmbuf[ii++];
+	  ii++; // edgenr (now on EdgeDescriptor)
+	  seg.EPGeomInfo(1).dist = segmbuf[ii++];
 	  
-	  seg.singedge_left = segmbuf[ii++];
-	  seg.singedge_right = segmbuf[ii++];
+	  ii++; // singedge_right (on EdgeDescriptor)
+	  ii++; // singedge_left (on EdgeDescriptor)
 	  
-	  seg.epgeominfo[0].edgenr = seg.epgeominfo[1].edgenr;
-	  
-	  seg.domin = seg.surfnr1;
-	  seg.domout = seg.surfnr2;
-	  if ( seg.pnums[0].IsValid() && seg.pnums[1].IsValid() )
+	  if ( seg[0].IsValid() && seg[1].IsValid() )
 	    {
 	      paralleltop-> SetLoc2Glob_Segm ( segi,  globsegi );
 	      
@@ -1202,7 +1240,7 @@ namespace netgen
     // cout << "nnames = " << FlatArray(nnames) << endl;
     materials.SetSize(nnames[0]);
     bcnames.SetSize(nnames[1]);
-    cd2names.SetSize(nnames[2]);
+    // edgedecoding already populated from ED data message
     cd3names.SetSize(nnames[3]);
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
@@ -1235,7 +1273,17 @@ namespace netgen
     };
     write_names(materials);
     write_names(bcnames);
-    write_names(cd2names);
+    {
+      // cd2 names: for 3D stored on edgedecoding, for 2D may differ from ED count
+      for (int k = 0; k < nnames[2]; k++) {
+	int s = name_sizes[tot_nn];
+	string nm = s ? string(&compiled_names[tot_size], s) : string("");
+	if (k < edgedecoding.Size())
+	  edgedecoding[k].SetName(nm);
+	tot_nn++;
+	tot_size += s;
+      }
+    }
     write_names(cd3names);
     
     comm.Barrier();
@@ -1648,7 +1696,7 @@ namespace netgen
 	
 	const Segment & el = LineSegment(i+1);	
 	
-	int ind = el.si;
+	int ind = el.GetIndex();
 	if (segment_weights.Size()<ind)
 	    nwgt.Append(0);
 	else

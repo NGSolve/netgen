@@ -1007,6 +1007,19 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   }
 
   template <int D, typename SCAL>
+  auto asinh (AutoDiffRec<D,SCAL> x)
+  {
+    return AutoDiffRec<D,SCAL> (asinh(x.Rec()), 1/sqrt(sqr(x.Value()+1))*x.Last());
+  }
+
+  template <int D, typename SCAL>
+  auto acosh (AutoDiffRec<D,SCAL> x)
+  {
+    return AutoDiffRec<D,SCAL> (acosh(x.Rec()), 1/sqrt(sqr(x.Value()-1))*x.Last());
+  }
+
+
+  template <int D, typename SCAL>
   auto erf (AutoDiffRec<D,SCAL> x)
   {
     return AutoDiffRec<D,SCAL> (erf(x.Rec()), 2. / sqrt(M_PI) * exp(- x.Value() * x.Value())*x.Last());

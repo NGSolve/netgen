@@ -146,14 +146,14 @@ SpecialBoundaryPoint ::SpecialBoundaryPoint (
   growth_groups.Append(GrowthGroup(g2_faces, normals2));
 }
 
-Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int edgenr, FlatArray<Segment*> segs)
+Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int index, FlatArray<Segment*> segs)
 {
   Vec<3> tangent = 0.0;
   ArrayMem<PointIndex, 2> pts;
   for (auto* p_seg : segs)
     {
       auto& seg = *p_seg;
-      if (seg.edgenr != edgenr)
+      if (seg.GetIndex() != index)
         continue;
       PointIndex other = seg[0] - pi + seg[1];
       if (!pts.Contains(other))
@@ -161,7 +161,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int edgenr, FlatArray<
     }
   if (pts.Size() != 2)
     {
-      cout << "getEdgeTangent pi = " << pi << ", edgenr = " << edgenr << endl;
+      cout << "getEdgeTangent pi = " << pi << ", index = " << index << endl;
       cout << pts << endl;
       for (auto* p_seg : segs)
         cout << *p_seg << endl;
@@ -218,9 +218,9 @@ bool HaveSingleSegments (const Mesh& mesh)
   return true;
 }
 
-// duplicates segments (and sets seg.si accordingly) to have a unified data
-// structure for all geometry types
-void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segments, Array<Segment>& free_segments)
+// duplicates segments to have a unified data structure
+// for all geometry types
+void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segments, Array<Segment>& free_segments, Array<int>& seg_face)
 {
   // auto& topo = mesh.GetTopology();
 
@@ -229,22 +229,26 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segme
   for (auto segi : Range(mesh.LineSegments()))
     {
       auto seg = mesh[segi];
-      if (seg.domin == seg.domout && seg.domin > 0)
+      if (seg.GetIndex() >= 1 && seg.GetIndex() <= mesh.GetNED())
         {
-          free_segments.Append(seg);
-          continue;
+          const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+          if (ed.DomainIn() == ed.DomainOut() && ed.DomainIn() > 0)
+            {
+              free_segments.Append(seg);
+              continue;
+            }
         }
       if (!have_single_segments)
         {
           segments.Append(seg);
+          int face = (seg.GetIndex() >= 1 && seg.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg.GetIndex()).GetIndex() : seg.GetIndex();
+          seg_face.Append(face);
           continue;
         }
       mesh.GetTopology().GetSegmentSurfaceElements(segi + 1, surf_els);
       for (auto seli : surf_els)
         {
           const auto& sel = mesh[seli];
-          seg.si = sel.GetIndex();
-
           auto np = sel.GetNP();
           for (auto i : Range(np))
             {
@@ -257,6 +261,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segme
             }
 
           segments.Append(seg);
+          seg_face.Append(sel.GetIndex());
         }
     }
 }
@@ -271,7 +276,6 @@ void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Seg
     SortedPointIndices<2> i2(seg[0], seg[1]);
     if (!already_added.Used(i2))
       {
-        seg.si = seg.edgenr + 1;
         mesh.AddSegment(seg);
         already_added.Set(i2, true);
       }
@@ -300,7 +304,7 @@ BoundaryLayerTool::BoundaryLayerTool (Mesh& mesh_,
   old_segments = mesh.LineSegments();
   have_single_segments = HaveSingleSegments(mesh);
 
-  BuildSegments(mesh, have_single_segments, segments, free_segments);
+  BuildSegments(mesh, have_single_segments, segments, free_segments, seg_face);
 
   np = mesh.GetNP();
   first_new_pi = IndexBASE<PointIndex>() + np;
@@ -488,12 +492,12 @@ BoundaryLayerTool ::BuildSegMap ()
       if (segs_done[si])
         continue;
       const auto& segi = segments[si];
-      if (!moved_surfaces.Test(segi.si))
+      if (!moved_surfaces.Test(seg_face[si]))
         continue;
       segs_done.SetBit(si);
       segmap[si].Append(make_pair(si, 0));
       moved_segs.Append(si);
-      is_edge_moved.SetBit(segi.edgenr);
+      is_edge_moved.SetBit(segi.GetIndex());
       for (auto sj : Range(segments))
         {
           if (segs_done.Test(sj))
@@ -503,30 +507,30 @@ BoundaryLayerTool ::BuildSegMap ()
             {
               segs_done.SetBit(sj);
               int type;
-              if (moved_surfaces.Test(segj.si))
+              if (moved_surfaces.Test(seg_face[sj]))
                 {
                   type = 0;
                   moved_segs.Append(sj);
                 }
-              else if (const auto& fd = mesh.GetFaceDescriptor(segj.si);
+              else if (const auto& fd = mesh.GetFaceDescriptor(seg_face[sj]);
                        domains.Test(fd.DomainIn()) && domains.Test(fd.DomainOut()))
                 {
                   type = 2;
                   if (fd.DomainIn() == 0 || fd.DomainOut() == 0)
-                    is_boundary_projected.SetBit(segj.si);
+                    is_boundary_projected.SetBit(seg_face[sj]);
                 }
-              else if (const auto& fd = mesh.GetFaceDescriptor(segj.si);
+              else if (const auto& fd = mesh.GetFaceDescriptor(seg_face[sj]);
                        !domains.Test(fd.DomainIn()) && !domains.Test(fd.DomainOut()))
                 {
                   type = 3;
-                  // cout << "set is_moved boundary to type 3 for " << segj.si << endl;
-                  is_boundary_moved.SetBit(segj.si);
+                  // cout << "set is_moved boundary to type 3 for " << seg_fdi(segj) << endl;
+                  is_boundary_moved.SetBit(seg_face[sj]);
                 }
               else
                 {
                   type = 1;
                   // in case 1 we project the growthvector onto the surface
-                  is_boundary_projected.SetBit(segj.si);
+                  is_boundary_projected.SetBit(seg_face[sj]);
                 }
               segmap[si].Append(make_pair(sj, type));
             }
@@ -544,7 +548,7 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
   if (params.grow_edges)
     {
       for (const auto& sel : mesh.SurfaceElements())
-        if (is_boundary_projected.Test(sel.GetIndex()))
+	if (is_boundary_projected.Test(sel.GetIndex()))
           {
             auto n = getNormal(sel);
             for (auto i : Range(sel.PNums()))
@@ -582,9 +586,10 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
       for (const auto& seg : segments)
         {
           int count = 0;
-          for (const auto& seg2 : segments)
-            if (((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && par_surfid.Contains(seg2.si))
-              count++;
+          for (auto si2 : Range(segments))
+            { const auto& seg2 = segments[si2];
+            if (((seg[0] == seg2[0] && seg[1] == seg2[1]) || (seg[0] == seg2[1] && seg[1] == seg2[0])) && par_surfid.Contains(seg_face[si2]))
+              count++; }
           if (count == 1)
             {
               growthvectors[seg[0]] = {0., 0., 0.};
@@ -691,10 +696,19 @@ void BoundaryLayerTool ::InsertNewElements (
   // add 2d quads on required surfaces
   map<pair<PointIndex, PointIndex>, int> seg2edge;
   map<int, int> edge_map;
-  int edge_nr = max_edge_nr;
-  auto getEdgeNr = [&] (int ei) {
+  auto getIndex = [&] (int ei) {
     if (edge_map.count(ei) == 0)
-      edge_map[ei] = ++edge_nr;
+      {
+        EdgeDescriptor new_ed;
+        if (ei >= 1 && ei <= mesh.GetNED())
+          {
+            new_ed = mesh.GetEdgeDescriptor(ei);
+            int old_fdi = new_ed.GetIndex();
+            if (old_fdi >= 0 && old_fdi < si_map.Size())
+              new_ed.SetIndex(si_map[old_fdi]);
+          }
+        edge_map[ei] = mesh.AddEdgeDescriptor(new_ed);
+      }
     return edge_map[ei];
   };
   if (params.grow_edges)
@@ -709,26 +723,21 @@ void BoundaryLayerTool ::InsertNewElements (
               auto segj = segments[sej];
               if (type == 0)
                 {
-                  auto addSegment = [&] (PointIndex p0, PointIndex p1, bool extra_edge_nr = false) {
+                  auto addSegment = [&] (PointIndex p0, PointIndex p1) {
                     Segment s;
                     s[0] = p0;
                     s[1] = p1;
                     s[2] = PointIndex::INVALID;
                     [[maybe_unused]] auto pair =
                       s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
-                    if (extra_edge_nr)
-                      s.edgenr = ++edge_nr;
-                    else
-                      s.edgenr = getEdgeNr(segj.edgenr);
-                    s.si = si_map[segj.si];
+                    s.SetIndex(getIndex(segj.GetIndex()));
                     new_segments.Append(s);
-                    // cout << __LINE__ <<"\t" << s << endl;
                     return s;
                   };
 
                   auto p0 = segj[0], p1 = segj[1];
-                  auto g0 = getGroups(p0, segj.si);
-                  auto g1 = getGroups(p1, segj.si);
+                  auto g0 = getGroups(p0, seg_face[sej]);
+                  auto g1 = getGroups(p1, seg_face[sej]);
 
                   if (g0.Size() == 1 && g1.Size() == 1)
                     {
@@ -749,10 +758,10 @@ void BoundaryLayerTool ::InsertNewElements (
                 {
                   PointIndex pp1 = segj[1];
                   PointIndex pp2 = segj[0];
-                  if (in_surface_direction.Test(segj.si))
+                  if (in_surface_direction.Test(seg_face[sej]))
                     {
                       Swap(pp1, pp2);
-                      is_boundary_moved.SetBit(segj.si);
+                      is_boundary_moved.SetBit(seg_face[sej]);
                     }
                   PointIndex p1 = pp1;
                   PointIndex p2 = pp2;
@@ -761,8 +770,7 @@ void BoundaryLayerTool ::InsertNewElements (
                   s0[0] = p1;
                   s0[1] = p2;
                   s0[2] = PointIndex::INVALID;
-                  s0.edgenr = segj.edgenr;
-                  s0.si = segj.si;
+                  s0.SetIndex(segj.GetIndex());
                   new_segments.Append(s0);
                   if (type == 3)
                     new_segments_on_moved_bnd.Append(s0);
@@ -783,7 +791,7 @@ void BoundaryLayerTool ::InsertNewElements (
                         }
                       identifications.Add(p1, p4, identnr);
                       identifications.Add(p2, p3, identnr);
-                      sel.SetIndex(si_map[segj.si]);
+                      sel.SetIndex(si_map[seg_face[sej]]);
                       new_sels.Append(sel);
                       new_sels_on_moved_bnd.Append(sel);
 
@@ -793,16 +801,14 @@ void BoundaryLayerTool ::InsertNewElements (
                       s1[1] = p3;
                       s1[2] = PointIndex::INVALID;
                       auto pair = make_pair(p2, p3);
-                      s1.edgenr = getEdgeNr(segj.edgenr);
-                      s1.si = segj.si;
+                      s1.SetIndex(getIndex(segj.GetIndex()));
                       // new_segments.Append(s1);
                       Segment s2;
                       s2[0] = p4;
                       s2[1] = p1;
                       s2[2] = PointIndex::INVALID;
                       pair = make_pair(p1, p4);
-                      s2.edgenr = getEdgeNr(segj.edgenr);
-                      s2.si = segj.si;
+                      s2.SetIndex(getIndex(segj.GetIndex()));
                       // new_segments.Append(s2);
                       p1 = p4;
                       p2 = p3;
@@ -812,8 +818,7 @@ void BoundaryLayerTool ::InsertNewElements (
                   s3[1] = p4;
                   s3[2] = PointIndex::INVALID;
                   // auto pair = p3 < p4 ? make_pair(p3, p4) : make_pair(p4, p3);
-                  s3.edgenr = getEdgeNr(segj.edgenr);
-                  s3.si = segj.si;
+                  s3.SetIndex(getIndex(segj.GetIndex()));
                   new_segments.Append(s3);
                   if (type == 3)
                     new_segments_on_moved_bnd.Append(s0);
@@ -822,7 +827,7 @@ void BoundaryLayerTool ::InsertNewElements (
                 {
                   PointIndex pp1 = segj[1];
                   PointIndex pp2 = segj[0];
-                  if (!in_surface_direction.Test(segj.si))
+                  if (!in_surface_direction.Test(seg_face[sej]))
                     {
                       Swap(pp1, pp2);
                     }
@@ -846,7 +851,7 @@ void BoundaryLayerTool ::InsertNewElements (
                         }
                       identifications.Add(p1, p4, identnr);
                       identifications.Add(p2, p3, identnr);
-                      sel.SetIndex(si_map[segj.si]);
+                      sel.SetIndex(si_map[seg_face[sej]]);
                       new_sels.Append(sel);
                       new_sels_on_moved_bnd.Append(sel);
                       p1 = p4;
@@ -945,7 +950,7 @@ void BoundaryLayerTool ::InsertNewElements (
   for (SegmentIndex sei = 0; sei < nseg; sei++)
     {
       auto& seg = segments[sei];
-      if (is_boundary_moved.Test(seg.si))
+      if (is_boundary_moved.Test(seg_face[sei]))
         {
           // cout << "moved setg " << seg << endl;
           for (auto& p : seg.PNums())
@@ -954,8 +959,9 @@ void BoundaryLayerTool ::InsertNewElements (
                 p = newPoint(p);
                 if (params.disable_curving)
                   {
-                    seg.epgeominfo[0].edgenr = -1;
-                    seg.epgeominfo[1].edgenr = -1;
+                    int edsi = seg.GetIndex();
+                    if (edsi >= 1 && edsi <= mesh.GetNED())
+                      mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
                   }
               }
         }
@@ -1037,7 +1043,7 @@ void BoundaryLayerTool ::InsertNewElements (
           for (auto face : faces)
             for (auto seg : new_segments)
               {
-                if ( // seg.si == face
+                if (
                   (seg[0] == pi_new || seg[1] == pi_new) && (seg[0] != pi_new_other && seg[1] != pi_new_other))
                   {
                     bool is_correct_face = false;
@@ -1167,8 +1173,9 @@ void BoundaryLayerTool ::AddSegments ()
           for (auto& seg : old_segments)
             if (is_mapped(seg[0]) || is_mapped(seg[1]))
               {
-                seg.epgeominfo[0].edgenr = -1;
-                seg.epgeominfo[1].edgenr = -1;
+                int edsi = seg.GetIndex();
+                if (edsi >= 1 && edsi <= mesh.GetNED())
+                  mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
               }
         }
     }
@@ -1184,21 +1191,24 @@ void BoundaryLayerTool ::AddSegments ()
       for (auto& seg : segments)
         if (is_mapped(seg[0]) || is_mapped(seg[1]))
           {
-            seg.epgeominfo[0].edgenr = -1;
-            seg.epgeominfo[1].edgenr = -1;
+            int edsi = seg.GetIndex();
+            if (edsi >= 1 && edsi <= mesh.GetNED())
+              mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
           }
 
       for (auto& seg : segments)
-        if (is_edge_moved[seg.edgenr])
+        if (seg.GetIndex() < is_edge_moved.Size() && is_edge_moved[seg.GetIndex()])
           {
-            seg.epgeominfo[0].edgenr = -1;
-            seg.epgeominfo[1].edgenr = -1;
+            int edsi = seg.GetIndex();
+            if (edsi >= 1 && edsi <= mesh.GetNED())
+              mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
           }
 
       for (auto& seg : new_segs)
         {
-          seg.epgeominfo[0].edgenr = -1;
-          seg.epgeominfo[1].edgenr = -1;
+          int edsi = seg.GetIndex();
+          if (edsi >= 1 && edsi <= mesh.GetNED())
+            mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
         }
     }
 
@@ -1342,8 +1352,8 @@ void BoundaryLayerTool ::ProcessParameters ()
 
   max_edge_nr = -1;
   for (const auto& seg : mesh.LineSegments())
-    if (seg.edgenr > max_edge_nr)
-      max_edge_nr = seg.edgenr;
+    if (seg.GetIndex() > max_edge_nr)
+      max_edge_nr = seg.GetIndex();
 
   int ndom = mesh.GetNDomains();
   ndom_old = ndom;

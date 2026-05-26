@@ -105,7 +105,7 @@ namespace ngcore
     if ( msgstatus_stack.Size() )
       s = msgstatus_stack.Last();
     else
-      s = "idle";     
+      s = (multithread.task && multithread.task[0]) ? multithread.task : "idle";
   }
 }
 

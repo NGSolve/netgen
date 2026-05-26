@@ -137,7 +137,8 @@ namespace netgen
     center = Point3d (0,0,0);
     rad = 1;
 
-    CalcTransformationMatrices();
+    if(zoomall)
+        CalcTransformationMatrices();
 
     glEnable(GL_DEPTH_TEST);
     glDisable (GL_DITHER);

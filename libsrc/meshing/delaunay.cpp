@@ -626,11 +626,14 @@ namespace netgen
     
     // mark points of free edge segments (no adjacent face)
     for (auto & seg : mesh.LineSegments())
-      if(seg.domin == domainnr && seg.domout == domainnr)
+    {
+      const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+      if(ed.DomainIn() == domainnr && ed.DomainOut() == domainnr)
       {
         usep[seg[0]] = true;
         usep[seg[1]] = true;
       }
+    }
 
     NgArray<int> freelist;
 

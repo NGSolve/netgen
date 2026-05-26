@@ -89,7 +89,7 @@ static void WriteElements ( ostream & out, const Mesh & mesh, int dim, const Ele
       const auto & el = mesh[ei];
       int index = 0;
       if constexpr(std::is_same_v<ElIndex,SegmentIndex>)
-        index = el.edgenr;
+        index = (el.GetIndex() >= 1 && el.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(el.GetIndex()).EdgeNr() : -1;
       else
         index = el.GetIndex();
       elset_map[{index, el.GetNP()}].Append(ei);
