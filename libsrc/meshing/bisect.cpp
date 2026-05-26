@@ -1681,8 +1681,8 @@ namespace netgen
 		       const HASHTABLE_CUTEDGES & cutedges,
                        NgTaskManager tm)                       
   {
-    static int timer = NgProfiler::CreateTimer ("MarkHangingTets");    
-    NgProfiler::RegionTimer reg (timer);    
+    static Timer timer("MarkHangingTets");    
+    RegionTimer reg (timer);    
     
     int hanging = 0;
     // for (int i = 1; i <= mtets.Size(); i++)
@@ -2750,32 +2750,33 @@ namespace netgen
     auto& mtris = *mesh.bisectioninfo.mtris;
     auto& mquads = *mesh.bisectioninfo.mquads;
 
-    static int timer = NgProfiler::CreateTimer ("Bisect");
-    static int timer1 = NgProfiler::CreateTimer ("Bisect 1");
-    static int timer1a = NgProfiler::CreateTimer ("Bisect 1a");
-    static int timer1b = NgProfiler::CreateTimer ("Bisect 1b");
-    static int timer2 = NgProfiler::CreateTimer ("Bisect 2");
-    static int timer2a = NgProfiler::CreateTimer ("Bisect 2a");
-    static int timer2b = NgProfiler::CreateTimer ("Bisect 2b");
-    // static int timer2c = NgProfiler::CreateTimer ("Bisect 2c");
-    static int timer3 = NgProfiler::CreateTimer ("Bisect 3");
-    static int timer3a = NgProfiler::CreateTimer ("Bisect 3a");
-    static int timer3b = NgProfiler::CreateTimer ("Bisect 3b");
-    static int timer_bisecttet = NgProfiler::CreateTimer ("Bisect tets");
-    static int timer_bisecttrig = NgProfiler::CreateTimer ("Bisect trigs");
-    static int timer_bisectsegms = NgProfiler::CreateTimer ("Bisect segms");
+    static Timer timer("Bisect");
+    static Timer timer1("Bisect 1");
+    static Timer timer1a("Bisect 1a");
+    static Timer timer1b("Bisect 1b");
+    static Timer timer2("Bisect 2");
+    static Timer timer2a("Bisect 2a");
+    static Timer timer2b("Bisect 2b");
+    // static Timer timer2c("Bisect 2c");
+    static Timer timer3("Bisect 3");
+    static Timer timer3a("Bisect 3a");
+    static Timer timer3b("Bisect 3b");
+    static Timer timer_bisecttet("Bisect tets");
+    static Timer timer_bisecttrig("Bisect trigs");
+    static Timer timer_bisectsegms("Bisect segms");
 
     
-    NgProfiler::RegionTimer reg1 (timer);
+    RegionTimer reg1 (timer);
 
     (*opt.tracer)("Bisect", false);
     
-    NgProfiler::StartTimer (timer1);
-    NgProfiler::StartTimer (timer1a);
-    static int localizetimer = NgProfiler::CreateTimer("localize edgepoints");
-    NgProfiler::RegionTimer * loct = new NgProfiler::RegionTimer(localizetimer);   
+    timer1.Start();
+    timer1a.Start();
+    Timer localizetimer("localize edgepoints");
+    localizetimer.Start();
     LocalizeEdgePoints(mesh);
-    delete loct;
+    localizetimer.Stop();
+
 
     NgArray< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
@@ -2921,7 +2922,7 @@ namespace netgen
     ClosedHashTable<SortedPointIndices<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
 
     bool noprojection = false;
-    NgProfiler::StopTimer (timer1a);
+    timer1a.Stop();
     
     for (int l = 1; l <= 1; l++)
       {
@@ -3354,7 +3355,7 @@ namespace netgen
 	do
 	  {
 	    // refine volume elements
-            NgProfiler::StartTimer (timer_bisecttet);
+            timer_bisecttet.Start();
             (*opt.tracer)("bisecttet", false);
 	    size_t nel = mtets.Size();
 	    // for (size_t i = 0; i < nel; i++)
@@ -3385,7 +3386,7 @@ namespace netgen
 		  mtets.Append (newtet2);
 		  mesh.mlparentelement.Append (ei);
 		}
-            NgProfiler::StopTimer (timer_bisecttet);
+            timer_bisecttet.Stop();
             (*opt.tracer)("bisecttet", true);            
 	    int npr = mprisms.Size();
 	    for (int i = 1; i <= npr; i++)
@@ -3490,7 +3491,7 @@ namespace netgen
             (*opt.tracer)("mark elements", true);
 
 	    size_t nsel = mtris.Size();
-            NgProfiler::StartTimer (timer_bisecttrig);
+            timer_bisecttrig.Start();
             (*opt.tracer)("Bisect trigs", false);            
 	    for (size_t i = 0; i < nsel; i++)
 	      if (mtris[i].marked)
@@ -3533,7 +3534,7 @@ namespace netgen
 		  mesh.mlparentsurfaceelement.Append (i);
 		}
 
-            NgProfiler::StopTimer (timer_bisecttrig);
+            timer_bisecttrig.Stop();
             (*opt.tracer)("Bisect trigs", true);                        
             
 	    int nquad = mquads.Size();
@@ -3616,14 +3617,14 @@ namespace netgen
 		  mquads.Append (newquad2);
 		}
 
-            NgProfiler::StartTimer (timer1b);            
+            timer1b.Start();
 	    hangingsurf = 
 	      MarkHangingTris (mtris, cutedges, opt.task_manager) +
 	      MarkHangingQuads (mquads, cutedges);
 
 	    hangingedge = mesh.GetDimension() == 3 ? 0 : MarkHangingIdentifications(mids, cutedges);
-            NgProfiler::StopTimer (timer1b);                        
-            NgProfiler::StartTimer (timer_bisectsegms);            	  
+            timer1b.Stop();
+            timer_bisectsegms.Start();
 	    int nseg = mesh.GetNSeg ();
 	    for (int i = 1; i <= nseg; i++)
 	      {
@@ -3657,7 +3658,7 @@ namespace netgen
 		  }
 	      }
 
-            NgProfiler::StopTimer (timer_bisectsegms);            	              
+            timer_bisectsegms.Stop();
 	  }
 	while (hangingvol || hangingsurf || hangingedge);
         
@@ -3686,7 +3687,7 @@ namespace netgen
 	PrintMessage (4, mesh.GetNP(), " points");
       }
 
-    NgProfiler::StopTimer (timer1);
+    timer1.Stop();
 
 
     // (*testout) << "mtets = " << mtets << endl;
@@ -3735,9 +3736,9 @@ namespace netgen
 	  }
       }
 
-    NgProfiler::StartTimer (timer2);
+    timer2.Stop();
 
-    NgProfiler::StartTimer (timer2a);    
+    timer2a.Start();
     
     mtets.SetAllocSize (mtets.Size());
     mprisms.SetAllocSize (mprisms.Size());
@@ -3835,8 +3836,8 @@ namespace netgen
   
     mesh.ClearSurfaceElements();
     mesh.SurfaceElements().SetAllocSize (mtris.Size()+mquads.Size());    
-    NgProfiler::StopTimer (timer2a);        
-    NgProfiler::StartTimer (timer2b);
+    timer2a.Stop();
+    timer2b.Start();
     /*
     for (auto & trig : mtris)
       {
@@ -3883,7 +3884,7 @@ namespace netgen
 	Swap (el.PNum(3), el.PNum(4));
 	mesh.AddSurfaceElement (el);
       }
-    NgProfiler::StopTimer (timer2b);        
+    timer2b.Stop();
 
       
     // write multilevel hierarchy to mesh:
@@ -4111,9 +4112,8 @@ namespace netgen
 
     //mesh.Save("before.vol");
 
-    static int reptimer = NgProfiler::CreateTimer("check/repair");
-	NgProfiler::RegionTimer * regt(NULL);
-    regt = new NgProfiler::RegionTimer(reptimer); 
+    static Timer reptimer("check/repair");
+    reptimer.Start();
 
     NgArray<ElementIndex> bad_elts;
     NgArray<double> pure_badness;
@@ -4200,7 +4200,7 @@ namespace netgen
 	    
 	  }
       }
-    delete regt;
+    reptimer.Stop();
 
 
     
@@ -4208,14 +4208,14 @@ namespace netgen
       delete idmaps[i];
     idmaps.DeleteAll();
 
-    NgProfiler::StopTimer (timer2);
-    NgProfiler::StartTimer (timer3);
+    timer2.Stop();
+    timer3.Start();
 
-    NgProfiler::StartTimer (timer3a);
+    timer3a.Start();
     (*opt.tracer)("topology from bisect", false);
     mesh.UpdateTopology(opt.task_manager, opt.tracer);
     (*opt.tracer)("topology from bisect", true);
-    NgProfiler::StopTimer (timer3a);    
+    timer3a.Stop();
 
 
 
@@ -4229,14 +4229,14 @@ namespace netgen
 	ofst.close();
       }
 
-    NgProfiler::StartTimer (timer3b);    
+    timer3b.Start();
     mesh.CalcSurfacesOfNode();
-    NgProfiler::StopTimer (timer3b);        
+    timer3b.Stop();
 
     PrintMessage (1, "Bisection done");
 
     PopStatus();
-    NgProfiler::StopTimer (timer3);    
+    timer3.Stop();
   }
 
   

@@ -628,11 +628,11 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 			 int retrynr,
                          const STLParameters& stlparam)
 {
-  static int timer1 = NgProfiler::CreateTimer ("STL surface meshing1");
-  static int timer1a = NgProfiler::CreateTimer ("STL surface meshing1a");
-  static int timer1b = NgProfiler::CreateTimer ("STL surface meshing1b");
-  static int timer1c = NgProfiler::CreateTimer ("STL surface meshing1c");
-  static int timer1d = NgProfiler::CreateTimer ("STL surface meshing1d");
+  static Timer timer1("STL surface meshing1");
+  static Timer timer1a("STL surface meshing1a");
+  static Timer timer1b("STL surface meshing1b");
+  static Timer timer1c("STL surface meshing1c");
+  static Timer timer1d("STL surface meshing1d");
 
   double h = mparam.maxh;
 
@@ -700,8 +700,8 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       if (!opensegsperface[fnr]) continue;
       if (multithread.terminate) return;
 
-      NgProfiler::StartTimer (timer1);
-      NgProfiler::StartTimer (timer1a);
+      timer1.Start();
+      timer1a.Start();
 
 
       PrintMessage(5,"Meshing surface ", fnr, "/", mesh.GetNFD());
@@ -718,8 +718,8 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 	  icompress.Append(imeshsp[i]);
 	}
 
-      NgProfiler::StopTimer (timer1a);
-      NgProfiler::StartTimer (timer1b);
+      timer1a.Stop();
+      timer1b.Start();
 
 
 
@@ -749,8 +749,8 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 	      }
 	}
 
-      NgProfiler::StopTimer (timer1b);
-      NgProfiler::StartTimer (timer1c);
+      timer1b.Stop();
+      timer1c.Start();
 
 
       for (int hi = 0; hi < icompress.Size(); hi++)
@@ -791,8 +791,8 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 	    meshing.AddPoint (mesh[pi], pi);
 	}
 
-      NgProfiler::StopTimer (timer1c);
-      NgProfiler::StartTimer (timer1d);
+      timer1c.Stop();
+      timer1d.Start();
 
       /*
         for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
@@ -816,9 +816,9 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
 
 
-      NgProfiler::StopTimer (timer1d);
+      timer1d.Stop();
 
-      NgProfiler::StopTimer (timer1);
+      timer1.Stop();
       
       PrintMessage(3,"start meshing, trialcnt = ", retrynr);
       

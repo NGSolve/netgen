@@ -34,8 +34,8 @@ namespace netgen
 
   void EdgeCalculation :: Calc(double h, Mesh & mesh)
   {
-    static int timer = NgProfiler::CreateTimer ("CSG: mesh edges");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("CSG: mesh edges");
+    RegionTimer reg (timer);
 
 
     PrintMessage (1, "Find edges");

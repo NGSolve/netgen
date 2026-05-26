@@ -76,8 +76,8 @@ inline int FindInnerPoint (POINTArray & points,
 			   FACEArray & faces,
 			   Point3d & p)
 {
-  static int timer = NgProfiler::CreateTimer ("FindInnerPoint");
-  NgProfiler::RegionTimer reg (timer);
+  static Timer timer("FindInnerPoint");
+  RegionTimer reg (timer);
 
   NgArray<Vec3d> a;
   NgArray<double> c;

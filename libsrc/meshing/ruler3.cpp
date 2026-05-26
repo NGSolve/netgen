@@ -129,9 +129,9 @@ int Meshing3 :: ApplyRules
   for (PointIndex pi : lfaces[0].PNums())
     pnearness[pi] = 0;
   
-  NgProfiler::RegionTimer reg2(98);
+  // NgProfiler::RegionTimer reg2(98);
   
-  NgProfiler::StartTimer (90);
+  // NgProfiler::StartTimer (90);
 
   for (int loop = 0; loop < 2; loop++)
     {
@@ -176,8 +176,8 @@ int Meshing3 :: ApplyRules
     }
 
   
-  NgProfiler::StopTimer (90);
-  NgProfiler::StartTimer (91);
+  // NgProfiler::StopTimer (90);
+  // NgProfiler::StartTimer (91);
 
   // find bounding boxes of faces
 
@@ -191,8 +191,8 @@ int Meshing3 :: ApplyRules
 	triboxes[i].AddPoint (lpoints[face[j]]);
     }
 
-  NgProfiler::StopTimer (91);
-  NgProfiler::StartTimer (92);
+  // NgProfiler::StopTimer (91);
+  // NgProfiler::StartTimer (92);
 
   
   bool useedges = false;
@@ -219,9 +219,9 @@ int Meshing3 :: ApplyRules
 	  }
     }
 
-  NgProfiler::StopTimer (92);
+  // NgProfiler::StopTimer (92);
 
-  NgProfiler::RegionTimer reg3(99);
+  // NgProfiler::RegionTimer reg3(99);
 
   pused.SetSize (lpoints.Size());
   fused.SetSize (lfaces.Size());
@@ -244,9 +244,9 @@ int Meshing3 :: ApplyRules
   // tloop.Start();
   for (int rim = 0; rim < rules.Size(); rim++)
     {
-      int base = (lfaces[0].GetNP() == 3) ? 100 : 200;
-      NgProfiler::RegionTimer regx1(base);
-      NgProfiler::RegionTimer regx(base+rim+1);
+      // int base = (lfaces[0].GetNP() == 3) ? 100 : 200;
+      // NgProfiler::RegionTimer regx1(base);
+      // NgProfiler::RegionTimer regx(base+rim+1);
 
       // sprintf (problems.Elem(ri), "");
       // *problems.Elem(ri) = '\0';
@@ -303,8 +303,8 @@ int Meshing3 :: ApplyRules
 	*/
 
       int nfok = 2;
-      NgProfiler::RegionTimer regfa(300);
-      NgProfiler::RegionTimer regx2(base+50+rim+1);
+      // NgProfiler::RegionTimer regfa(300);
+      // NgProfiler::RegionTimer regx2(base+50+rim+1);
       while (nfok >= 2)
 	{
 	  
@@ -428,7 +428,7 @@ int Meshing3 :: ApplyRules
 	  else
 	    
 	    { 
-	      NgProfiler::RegionTimer regfb(301);
+	      // NgProfiler::RegionTimer regfb(301);
 
 	      // all faces are mapped
 	      // now map all isolated points:
@@ -534,7 +534,7 @@ int Meshing3 :: ApplyRules
 		  else
 		    
 		    {
-		      NgProfiler::RegionTimer regfa2(302);		      
+		      // NgProfiler::RegionTimer regfa2(302);		      
 
 		      // all points are mapped
 		      

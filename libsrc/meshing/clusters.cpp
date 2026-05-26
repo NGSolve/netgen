@@ -19,9 +19,9 @@ namespace netgen
   void AnisotropicClusters ::  Update()
   {
     static Timer timer("clusters");
-    // static int timer1 = NgProfiler::CreateTimer ("clusters1");
-    // static int timer2 = NgProfiler::CreateTimer ("clusters2");
-    // static int timer3 = NgProfiler::CreateTimer ("clusters3");
+    // static Timer timer1("clusters1");
+    // static Timer timer2("clusters2");
+    // static Timer timer3("clusters3");
     RegionTimer reg (timer);
     constexpr auto PI0 = IndexBASE<PointIndex>();
 
