@@ -1124,13 +1124,13 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 					       class Mesh & mesh, double gh, double fact, double minh,
                                                const STLParameters& stlparam)
 {
-  static int timer1 = NgProfiler::CreateTimer ("restrictH OneChart 1");
-  static int timer2 = NgProfiler::CreateTimer ("restrictH OneChart 2");
-  static int timer3 = NgProfiler::CreateTimer ("restrictH OneChart 3");
-  static int timer3a = NgProfiler::CreateTimer ("restrictH OneChart 3a");
-  static int timer3b = NgProfiler::CreateTimer ("restrictH OneChart 3b");
+  static Timer timer1("restrictH OneChart 1");
+  static Timer timer2("restrictH OneChart 2");
+  static Timer timer3("restrictH OneChart 3");
+  static Timer timer3a("restrictH OneChart 3a");
+  static Timer timer3b("restrictH OneChart 3b");
 
-  NgProfiler::StartTimer (timer1);
+  timer1.Start();
   double limessafety = stlparam.resthchartdistfac*fact;  // original: 2
   double localh;
 
@@ -1213,9 +1213,9 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 	}
     }
 	  
-  NgProfiler::StopTimer (timer1);	 
+  timer1.Stop();
 
-  NgProfiler::StartTimer (timer2);	 
+  timer2.Start();
   for (int j = 1; j <= chart.GetNT(); j++)
     acttrigs.Elem(chart.GetTrig1(j)) = chartnum;
 
@@ -1266,14 +1266,14 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 	}
     }
 	  
-  NgProfiler::StopTimer (timer2);	 
-  NgProfiler::StartTimer (timer3);	 	  
+  timer2.Stop();;	 
+  timer3.Start();
 
   double chartmindist = 1E50;
 
   if (plimes2.Size())
     {
-      NgProfiler::StartTimer (timer3a);
+      timer3a.Start();
       Box3d bbox;
       bbox.SetPoint (plimes2.Get(1));
       for (int j = 2; j <= plimes2.Size(); j++)
@@ -1283,8 +1283,8 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 	stree.Insert (plimes2.Get(j), j);
       NgArray<int> foundpts;
 	  
-      NgProfiler::StopTimer (timer3a);
-      NgProfiler::StartTimer (timer3b);
+      timer3a.Stop();
+      timer3b.Start();
 
       for (int j = 1; j <= plimes1.Size(); j++) 
 	{
@@ -1344,9 +1344,9 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 	      if (mindist < chartmindist) {chartmindist = mindist;}
 	    }
 	}
-      NgProfiler::StopTimer (timer3b);
+      timer3b.Stop();
     }
-  NgProfiler::StopTimer (timer3);	 
+  timer3.Stop();	 
 }
 
 

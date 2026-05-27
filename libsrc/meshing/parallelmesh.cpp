@@ -1288,10 +1288,10 @@ namespace netgen
     
     comm.Barrier();
 
-    int timerloc = NgProfiler::CreateTimer ("Update local mesh");
-    int timerloc2 = NgProfiler::CreateTimer ("CalcSurfacesOfNode");
+    static Timer timerloc("Update local mesh");
+    static Timer timerloc2("CalcSurfacesOfNode");
 
-    NgProfiler::RegionTimer regloc(timerloc);
+    RegionTimer regloc(timerloc);
     stringstream str;
     str << "p" << id << ": got " << GetNE() << " elements and " 
 	 << GetNSE() << " surface elements";
@@ -1300,11 +1300,11 @@ namespace netgen
     // PrintMessage (2, "Got ", GetNE(), " elements and ", GetNSE(), " surface elements");
     // PrintMessage (2, "Got ", GetNSE(), " surface elements");
 
-    NgProfiler::StartTimer (timerloc2);
+    timerloc2.Start();
 
     CalcSurfacesOfNode ();
 
-    NgProfiler::StopTimer (timerloc2);
+    timerloc2.Stop();
 
     topology.Update();
     clusters -> Update();
@@ -1354,8 +1354,8 @@ namespace netgen
   {
     PrintMessage (3, "call metis 5 ...");
 
-    int timer = NgProfiler::CreateTimer ("Mesh::Partition");
-    NgProfiler::RegionTimer reg(timer);
+    static Timer timer("Mesh::Partition");
+    RegionTimer reg(timer);
 
     idx_t ne = GetNE() + GetNSE() + GetNSeg();
     idx_t nn = GetNP();
@@ -1651,8 +1651,8 @@ namespace netgen
     // cout << "surface_weights " << surface_weights << endl;
     // cout << "volume_weights " << volume_weights << endl;
 
-    int timer = NgProfiler::CreateTimer ("Mesh::Partition");
-    NgProfiler::RegionTimer reg(timer);
+    Timer timer("Mesh::Partition");
+    RegionTimer reg(timer);
 
     idx_t ne = GetNE() + GetNSE() + GetNSeg();
     idx_t nn = GetNP();
@@ -1771,8 +1771,8 @@ namespace netgen
 #ifdef METIS4
   void Mesh :: ParallelMetis ( )  
   {
-    int timer = NgProfiler::CreateTimer ("Mesh::Partition");
-    NgProfiler::RegionTimer reg(timer);
+    static Timer timer("Mesh::Partition");
+    RegionTimer reg(timer);
 
     PrintMessage (3, "Metis called");
       
@@ -1858,8 +1858,8 @@ namespace netgen
 	//       }
 	
 	
-	int timermetis = NgProfiler::CreateTimer ("Metis itself");
-	NgProfiler::StartTimer (timermetis);
+	static Timer timermetis("Metis itself");
+	timermetis.Start();
 	
 #ifdef METIS4
 	cout << "call metis(4)_PartMeshDual ... " << flush;
@@ -1878,7 +1878,7 @@ namespace netgen
 			    &edgecut, &epart[0], &npart[0]);
 #endif
 	
-	NgProfiler::StopTimer (timermetis);
+	timermetis.Stop();
 	
 	cout << "complete" << endl;
 #ifdef METIS4
@@ -2091,8 +2091,8 @@ namespace netgen
 	BubbleSort(array);
       }
 
-    int timermetis = NgProfiler::CreateTimer ("Metis itself");
-    NgProfiler::StartTimer (timermetis);
+    Timer timermetis("Metis itself");
+    timermetis.Start();
 
 #ifdef METIS4
     METIS_PartGraphKway ( &ne, xadj, adjacency, v_weights, e_weights, &weightflag, 
@@ -2102,7 +2102,7 @@ namespace netgen
 #endif
 
 
-    NgProfiler::StopTimer (timermetis);
+    timermetis.Stop();
 
     NgArray<int> nodesinpart(ntasks);
 

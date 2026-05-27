@@ -1200,7 +1200,7 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    static int timer = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements");
+    static Timer timer("Solution::DrawSurfaceElements");
     /*
     static int timerstart = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements start");
     static int timerloops = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements loops");
@@ -1214,7 +1214,7 @@ namespace netgen
     static int timer2a = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2a");
     static int timer2b = NgProfiler::CreateTimer ("Solution::DrawSurfaceElements 2b");
     */
-    NgProfiler::RegionTimer reg (timer);
+    RegionTimer reg (timer);
   
     
 #ifdef PARALLELGL
@@ -3946,7 +3946,7 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
 
     // static int timer_vals = NgProfiler::CreateTimer ("ClipPlaneTrigs - vertex values");
-    static int timer1 = NgProfiler::CreateTimer ("ClipPlaneTrigs1");
+    static Timer timer1("ClipPlaneTrigs1");
     // static int timer1a = NgProfiler::CreateTimer ("ClipPlaneTrigs1a");
     // static int timer2 = NgProfiler::CreateTimer ("ClipPlaneTrigs2");
     // static int timer3 = NgProfiler::CreateTimer ("ClipPlaneTrigs3");
@@ -3954,7 +3954,7 @@ namespace netgen
     // static int timer4b = NgProfiler::CreateTimer ("ClipPlaneTrigs4b");
 
 
-    NgProfiler::RegionTimer reg1 (timer1);
+    RegionTimer reg1 (timer1);
 
     
     int ne = mesh->GetNE();

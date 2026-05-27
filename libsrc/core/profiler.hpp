@@ -17,8 +17,8 @@ namespace ngcore
   class NgProfiler
   {
   public:
+    static constexpr int SIZE = WorkerData::MAX_TIMERS;
     /// maximal number of timers
-    enum { SIZE = 8*1024 };
 
     struct TimerVal
     {
@@ -36,11 +36,7 @@ namespace ngcore
 
     NGCORE_API static std::vector<TimerVal> timers;
 
-    NGCORE_API static TTimePoint * thread_times;
-    NGCORE_API static TTimePoint * thread_flops;
     NGCORE_API static std::shared_ptr<Logger> logger;
-    NGCORE_API static std::array<size_t, NgProfiler::SIZE> dummy_thread_times;
-    NGCORE_API static std::array<size_t, NgProfiler::SIZE> dummy_thread_flops;
   private:
 
     NGCORE_API static std::string filename;
@@ -64,28 +60,46 @@ namespace ngcore
     /// start timer of index nr
     static void StartTimer (int nr)
     {
-      timers[nr].starttime = GetTimeCounter(); timers[nr].count++;
+      StartTimer(nr, TaskManager::GetTimerThreadId());
     }
 
     /// stop timer of index nr
     static void StopTimer (int nr)
     {
-      timers[nr].tottime += (GetTimeCounter()-timers[nr].starttime)*seconds_per_tick;
+      StopTimer(nr, TaskManager::GetTimerThreadId());
     }
 
-    static void StartThreadTimer (size_t nr, size_t tid)
+    static void StartTimer (size_t nr, size_t tid)
     {
-      thread_times[tid*SIZE+nr] -= GetTimeCounter(); // NOLINT
+      if(tid == -1)
+          return;
+      else if(tid==-2)
+      {
+          timers[nr].starttime = GetTimeCounter();
+          timers[nr].count++;
+      }
+      else
+          TaskManager::GetWorkerData()->times[nr] -= GetTimeCounter();
     }
 
-    static void StopThreadTimer (size_t nr, size_t tid)
+    static void StopTimer (size_t nr, size_t tid)
     {
-      thread_times[tid*SIZE+nr] += GetTimeCounter(); // NOLINT
+      if(tid == -1)
+          return;
+      else if(tid==-2)
+          timers[nr].tottime += (GetTimeCounter()-timers[nr].starttime)*seconds_per_tick;
+      else
+          TaskManager::GetWorkerData()->times[nr] += GetTimeCounter();
     }
 
     static void AddThreadFlops (size_t nr, size_t tid, size_t flops)
     {
-      thread_flops[tid*SIZE+nr] += flops; // NOLINT
+      if(tid == -1)
+          return;
+      else if(tid==-2)
+          AddFlops(nr, flops);
+      else
+          TaskManager::GetWorkerData()->flops[nr] += flops;
     }
 
     /// if you know number of flops, provide them to obtain the MFlop - rate
@@ -129,22 +143,6 @@ namespace ngcore
     static std::string GetName (int nr) { return timers[nr].name; }
     /// print profile
     NGCORE_API static void Print (FILE * prof);
-
-    class RegionTimer
-    {
-      int nr;
-    public:
-      /// start timer
-      RegionTimer (int anr) : nr(anr) { NgProfiler::StartTimer(nr); }
-      /// stop timer
-      ~RegionTimer () { NgProfiler::StopTimer(nr); }
-
-      RegionTimer() = delete;
-      RegionTimer(const RegionTimer &) = delete;
-      RegionTimer(RegionTimer &&) = delete;
-      void operator=(const RegionTimer &) = delete;
-      void operator=(RegionTimer &&) = delete;
-    };
   };
 
   
@@ -188,55 +186,33 @@ namespace ngcore
 
     Timer( const std::string & name, TTracing, TTiming ) : timernr(Init(name)) { }
 
-    [[deprecated ("Use Timer(name, NoTracing/NoTiming) instead")]] Timer( const std::string & name, int ) : timernr(Init(name)) {}
-
     void SetName (const std::string & name)
     {
       NgProfiler::SetName (timernr, name);
     }
     void Start () const
     {
-      Start(TaskManager::GetThreadId());
+      Start(TaskManager::GetTimerThreadId());
     }
     void Stop () const
     {
-      Stop(TaskManager::GetThreadId());
+      Stop(TaskManager::GetTimerThreadId());
     }
     void Start (int tid, int trace_value = -1) const
     {
-        if(tid==0)
-        {
-          if constexpr(do_timing)
-            NgProfiler::StartTimer (timernr);
-          if constexpr(do_tracing)
-            if(trace) trace->StartTimer(timernr, trace_value);
-        }
-        else
-        {
-          if constexpr(do_timing)
-            NgProfiler::StartThreadTimer(timernr, tid);
-          if constexpr(do_tracing)
-            if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER, trace_value);
-        }
+      if constexpr(do_timing)
+          NgProfiler::StartTimer(timernr, tid);
+      if constexpr(do_tracing)
+          if(trace) trace->StartTask (tid, timernr, PajeTrace::Task::ID_TIMER, trace_value);
     }
     void Stop (int tid) const
     {
-        if(tid==0)
-        {
-            if constexpr(do_timing)
-                NgProfiler::StopTimer (timernr);
-            if constexpr(do_tracing)
-                if(trace) trace->StopTimer(timernr);
-        }
-        else
-        {
-          if constexpr(do_timing)
-            NgProfiler::StopThreadTimer(timernr, tid);
-          if constexpr(do_tracing)
-            if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
-        }
+      if constexpr(do_timing)
+        NgProfiler::StopTimer(timernr, tid);
+      if constexpr(do_tracing)
+        if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
     }
-    void AddFlops (double aflops)
+    void AddFlops (double aflops) const
     {
       if constexpr(do_timing)
 	NgProfiler::AddFlops (timernr, aflops);
@@ -256,15 +232,15 @@ namespace ngcore
        Start / stop timer at constructor / destructor.
   */
   template<typename TTimer>
-  class RegionTimer
+  struct RegionTimer
   {
+    static_assert(!std::is_same_v<TTimer, int>, "RegionTimer should be used with Timer objects, not with timer indices");
     const TTimer & timer;
-    int tid;
-  public:
+    const int tid;
     /// start timer
-    RegionTimer (const TTimer & atimer, int trace_value = -1) : timer(atimer)
+    RegionTimer (const TTimer & atimer, int trace_value = -1) 
+        : timer(atimer), tid(TaskManager::GetTimerThreadId())
     {
-      tid = TaskManager::GetThreadId();
       timer.Start(tid, trace_value);
     }
 
@@ -276,25 +252,7 @@ namespace ngcore
     RegionTimer(RegionTimer &&) = delete;
     void operator=(const RegionTimer &) = delete;
     void operator=(RegionTimer &&) = delete;
-  };
-
-  class [[deprecated("Use RegionTimer instead (now thread safe)")]] ThreadRegionTimer
-  {
-    size_t nr;
-    size_t tid;
-  public:
-    /// start timer
-    ThreadRegionTimer (size_t _nr, size_t _tid) : nr(_nr), tid(_tid)
-    { NgProfiler::StartThreadTimer(nr, tid); }
-    /// stop timer
-    ~ThreadRegionTimer ()
-    { NgProfiler::StopThreadTimer(nr, tid); }
-
-    ThreadRegionTimer() = delete;
-    ThreadRegionTimer(ThreadRegionTimer &&) = delete;
-    ThreadRegionTimer(const ThreadRegionTimer &) = delete;
-    void operator=(const ThreadRegionTimer &) = delete;
-    void operator=(ThreadRegionTimer &&) = delete;
+    void AddFlops (double aflops) { timer.AddFlops(aflops); }
   };
 
   class RegionTracer
