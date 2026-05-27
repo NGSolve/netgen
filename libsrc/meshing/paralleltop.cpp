@@ -399,8 +399,8 @@ namespace netgen
     if (ntasks == 1) return;
     
     Reset();
-    static int timer = NgProfiler::CreateTimer ("UpdateCoarseGrid");
-    NgProfiler::RegionTimer reg(timer);
+    static Timer timer("UpdateCoarseGrid");
+    RegionTimer reg(timer);
 
 
     (*testout) << "UPDATE COARSE GRID PARALLEL TOPOLOGY " << endl;
@@ -538,12 +538,12 @@ namespace netgen
     NgArray<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 
-    // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
-    static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
-    // static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
+    // static Timer timerv("UpdateCoarseGrid - ex vertices");
+    static Timer timere("UpdateCoarseGrid - ex edges");
+    // static Timer timerf("UpdateCoarseGrid - ex faces");
 
     
-    NgProfiler::StartTimer (timere);
+    timere.Start();
 
     // build exchange vertices
     cnt_send = 0;
@@ -574,8 +574,8 @@ namespace netgen
     if (ntasks == 1) return;
     
     Reset();
-    static int timer = NgProfiler::CreateTimer ("UpdateCoarseGrid");
-    NgProfiler::RegionTimer reg(timer);
+    static Timer timer("UpdateCoarseGrid");
+    RegionTimer reg(timer);
 
 
     (*testout) << "UPDATE COARSE GRID PARALLEL TOPOLOGY " << endl;
@@ -614,11 +614,11 @@ namespace netgen
     // cout << "UpdateCoarseGrid - edges" << endl;
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");
-    static int timere = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex edges");
-    static int timerf = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex faces");
+    static Timer timere("UpdateCoarseGrid - ex edges");
+    static Timer timerf("UpdateCoarseGrid - ex faces");
 
 
-    NgProfiler::StartTimer (timere);
+    timere.Start();
 
 
     int nfa = topology . GetNFaces();
@@ -720,12 +720,12 @@ namespace netgen
 
 
 
-    NgProfiler::StopTimer (timere);
+    timere.Stop();
 
     // cout << "UpdateCoarseGrid - faces" << endl;
     if (mesh.GetDimension() == 3)
       {
-	NgProfiler::StartTimer (timerf);
+	timerf.Start();
 	NgArray<int> verts;
 
 	// exchange faces
@@ -823,7 +823,7 @@ namespace netgen
 	      }
 	  }
 	
-	NgProfiler::StopTimer (timerf);
+	timerf.Stop();
       }
     // cout << "UpdateCoarseGrid - done" << endl;
     // EnumeratePointsGlobally();

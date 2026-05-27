@@ -57,9 +57,9 @@ namespace netgen
 
     lock = NULL;
 
-    static int timer = NgProfiler::CreateTimer ("VSMesh::DrawScene");
+    static Timer timer("VSMesh::DrawScene");
 
-    NgProfiler::RegionTimer reg (timer);
+    RegionTimer reg (timer);
 
     BuildScene();
 
@@ -335,8 +335,8 @@ namespace netgen
 	lock -> Lock();
       }
 
-    static int timer = NgProfiler::CreateTimer ("VSMesh::BuildScene");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("VSMesh::BuildScene");
+    RegionTimer reg (timer);
 
 
 
@@ -1210,8 +1210,8 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
-    static int timer = NgProfiler::CreateTimer ("Mesh::BuildFilledList");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("Mesh::BuildFilledList");
+    RegionTimer reg (timer);
     auto & list = build_select ? select.list : filledlist;
     auto & timestamp = build_select ? select.list_timestamp : filledtimestamp;
     if (list && timestamp > max(mesh->GetTimeStamp(), subdivision_timestamp))
@@ -1381,8 +1381,8 @@ namespace netgen
     if (linetimestamp > max(mesh->GetTimeStamp (), subdivision_timestamp))
       return;
 
-    static int timer = NgProfiler::CreateTimer ("Mesh::BuildLineList");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("Mesh::BuildLineList");
+    RegionTimer reg (timer);
 
 #ifdef PARALLELGL
 

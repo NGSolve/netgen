@@ -41,8 +41,8 @@ namespace netgen
       
 
 
-    static int timer = NgProfiler::CreateTimer ("MeshSmoothing 2D");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("MeshSmoothing 2D");
+    RegionTimer reg (timer);
 
 
 

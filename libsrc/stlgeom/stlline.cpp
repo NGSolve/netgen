@@ -647,12 +647,12 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
 			 NgArray<Point3d>& mp, double ghi,
 			 class Mesh& mesh) const
 {
-  static int timer1a = NgProfiler::CreateTimer ("mesh stl-line 1a");
-  static int timer1b = NgProfiler::CreateTimer ("mesh stl-line 1b");
-  static int timer2 = NgProfiler::CreateTimer ("mesh stl-line 2");
-  static int timer3 = NgProfiler::CreateTimer ("mesh stl-line 3");
+  static Timer timer1a("mesh stl-line 1a");
+  static Timer timer1b("mesh stl-line 1b");
+  static Timer timer2("mesh stl-line 2");
+  static Timer timer3("mesh stl-line 3");
 
-  NgProfiler::StartTimer (timer1a);
+  timer1a.Start();
 
   STLLine* line = new STLLine(geometry);
 
@@ -680,8 +680,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
   NgArray<double> inthi(GetNS()*nph);
   NgArray<double> curvelen(GetNS()*nph);
 
-  NgProfiler::StopTimer (timer1a);
-  NgProfiler::StartTimer (timer1b);
+  timer1a.Stop();
+  timer1b.Start();
 
 
   for (int i = 1; i <= GetNS(); i++)
@@ -728,8 +728,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
   line->AddRightTrig(GetRightTrig(segn));
   line->AddDist(dist);
 
-  NgProfiler::StopTimer (timer1b);
-  NgProfiler::StartTimer (timer2);
+  timer1b.Stop();
+  timer2.Start();
 
   inthl = 0; //restart each meshseg
   for (int i = 1; i <= inthlint; i++)
@@ -768,8 +768,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
       j++;
     }
 
-  NgProfiler::StopTimer (timer2);
-  NgProfiler::StartTimer (timer3);
+  timer2.Stop();
+  timer3.Start();
 
 
   p = ap[EndP()];
@@ -790,7 +790,7 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
 	     << " len = " << Dist (ap.Get(StartP()), ap.Get(EndP())) << endl;
   */
 
-  NgProfiler::StopTimer (timer3);
+  timer3.Stop();
 
   return line;
 }

@@ -538,8 +538,8 @@ namespace netgen
 	  { 
 	    // surface was meshed, not copied
 
-	    static int timer = NgProfiler::CreateTimer ("total surface mesh optimization");
-	    NgProfiler::RegionTimer reg (timer);
+	    static Timer timer("total surface mesh optimization");
+	    RegionTimer reg (timer);
 
 
 	    PrintMessage (2, "Optimize Surface");

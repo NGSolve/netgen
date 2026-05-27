@@ -6998,8 +6998,8 @@ namespace netgen
 
   void Mesh :: GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const
   {
-    static int timer = NgProfiler::CreateTimer ("GetSurfaceElementsOfFace");
-    NgProfiler::RegionTimer reg (timer);
+    static Timer timer("GetSurfaceElementsOfFace");
+    RegionTimer reg (timer);
 
     if(facenr==0)
     {
