@@ -314,7 +314,7 @@ namespace netgen
                                   const EdgePointGeomInfo & ap2,
                                   Point<3> & newp,
                                   EdgePointGeomInfo & newgi,
-                                  int edgenr = -1) const
+                                  int edgenr) const
     {
       if(edgenr > 0 && edgenr-1 < edges.Size())
         {

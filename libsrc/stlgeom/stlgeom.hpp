@@ -207,7 +207,7 @@ namespace netgen
                           const EdgePointGeomInfo & ap1,
                           const EdgePointGeomInfo & ap2,
                           Point<3> & newp, EdgePointGeomInfo & newgi,
-                          int edgenr = -1) const override;
+                          int edgenr) const override;
 
 
 
