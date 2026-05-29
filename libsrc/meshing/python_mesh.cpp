@@ -868,7 +868,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                     const EdgePointGeomInfo & ap2,
                                     Point<3> & newp,
                                     EdgePointGeomInfo & newgi,
-                                    int edgenr = -1) const override {
+                                    int edgenr) const override {
         py::gil_scoped_acquire gil;
         if (auto overload = pybind11::get_overload(this, "PointBetweenEdge"))
           overload(p1, p2, secpoint, surfi1, surfi2, ap1, ap2,
