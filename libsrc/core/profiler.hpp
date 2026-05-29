@@ -92,20 +92,18 @@ namespace ngcore
           TaskManager::GetWorkerData()->times[nr] += GetTimeCounter();
     }
 
-    static void AddThreadFlops (size_t nr, size_t tid, size_t flops)
+    static void AddFlops (size_t nr, size_t flops, int tid)
     {
       if(tid == -1)
           return;
       else if(tid==-2)
-          AddFlops(nr, flops);
+          timers[nr].flops += flops;
       else
           TaskManager::GetWorkerData()->flops[nr] += flops;
     }
 
     /// if you know number of flops, provide them to obtain the MFlop - rate
-    static void AddFlops (int nr, double aflops) { timers[nr].flops += aflops; }
-    static void AddLoads (int nr, double aloads) { timers[nr].loads += aloads; }
-    static void AddStores (int nr, double astores) { timers[nr].stores += astores; }
+    static void AddFlops (int nr, double aflops) { AddFlops(nr, aflops, TaskManager::GetTimerThreadId()); }
 
     static int GetNr (const std::string & name)
     {
@@ -212,10 +210,17 @@ namespace ngcore
       if constexpr(do_tracing)
         if(trace) trace->StopTask (tid, timernr, PajeTrace::Task::ID_TIMER);
     }
+    
     void AddFlops (double aflops) const
     {
       if constexpr(do_timing)
 	NgProfiler::AddFlops (timernr, aflops);
+    }
+    
+    void AddFlops (double aflops, int tid) const
+    {
+      if constexpr(do_timing)
+	NgProfiler::AddFlops (timernr, aflops, tid);
     }
 
     double GetTime () { return NgProfiler::GetTime(timernr); }
@@ -239,7 +244,7 @@ namespace ngcore
     const int tid;
     /// start timer
     RegionTimer (const TTimer & atimer, int trace_value = -1) 
-        : timer(atimer), tid(TaskManager::GetTimerThreadId())
+        : timer(atimer), tid(atimer.do_timing ? TaskManager::GetTimerThreadId() : -1)
     {
       timer.Start(tid, trace_value);
     }
@@ -252,7 +257,7 @@ namespace ngcore
     RegionTimer(RegionTimer &&) = delete;
     void operator=(const RegionTimer &) = delete;
     void operator=(RegionTimer &&) = delete;
-    void AddFlops (double aflops) { timer.AddFlops(aflops); }
+    void AddFlops (double aflops) { timer.AddFlops(aflops, tid); }
   };
 
   class RegionTracer

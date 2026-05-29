@@ -63,6 +63,8 @@ namespace netgen
                                          Point<3> & newp, EdgePointGeomInfo & newgi,
                                          int edgenr) const
   {
+    if(edgenr==-1)  return NetgenGeometry::PointBetweenEdge(p1, p2, secpoint, surfi1, surfi2, ap1, ap2, newp, newgi, edgenr);
+
     Point<2> p2d;
     double newdist;
     auto spline = GetSplines().Get(edgenr);
