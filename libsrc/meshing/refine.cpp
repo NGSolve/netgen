@@ -186,7 +186,7 @@ namespace netgen
                                  mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(0),
                                  mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(1),
                                  el.EPGeomInfo(0), el.EPGeomInfo(1),
-                                 pnew, ngi, el.GetIndex());
+                                 pnew, ngi, mesh.GetEdgeDescriptor(el.GetIndex()).EdgeNr());
 
 	    // pinew = mesh.AddPoint (pnew);
             mesh.Point(pinew) = pnew;

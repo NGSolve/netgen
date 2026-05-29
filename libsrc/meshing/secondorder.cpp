@@ -104,7 +104,7 @@ namespace netgen
                                  mesh.Point (el[1]), 0.5,
                                  mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(0), mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(1),
                                  el.EPGeomInfo(0), el.EPGeomInfo(1),
-                                 pb, ngi, el.GetIndex());
+                                 pb, ngi, mesh.GetEdgeDescriptor(el.GetIndex()).EdgeNr());
 	  
 	    el[2] = mesh.AddPoint (pb, mesh.Point(el[0]).GetLayer(), 
 				   EDGEPOINT);
