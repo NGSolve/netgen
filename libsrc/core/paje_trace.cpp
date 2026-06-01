@@ -89,6 +89,17 @@ namespace ngcore
 
   PajeTrace :: ~PajeTrace()
   {
+    // timer events on thread 0 are moved to the timer_events array for a tree-like view of hierachical timers at the bottom
+    std::vector<Task> new_tasks0;
+    for(const auto & task : tasks[0])
+    {
+      if(task.id_type == Task::ID_TIMER)
+          timer_events.push_back( TimerEvent{task.time, task.id, task.thread_id, task.additional_value, task.is_start} );
+      else
+          new_tasks0.push_back(task);
+    }
+    tasks[0] = std::move(new_tasks0);
+
     for(auto & ltask : tasks)
         for(auto & task : ltask)
           {
