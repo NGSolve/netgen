@@ -9,6 +9,8 @@
 #pragma clang diagnostic ignored "-Wdeprecated-declarations"
 
 #include <GeomLProp_SLProps.hxx>
+#include <GeomLib.hxx>
+#include <GeomAPI_ProjectPointOnSurf.hxx>
 #include <ShapeAnalysis_Surface.hxx>
 
 #pragma clang diagnostic pop
@@ -26,9 +28,25 @@ namespace netgen
   {
     GeomLProp_SLProps lprop(occface,geominfo.u,geominfo.v,1,1e-8);
 
+    gp_Dir normestim;
+    int normstatus = 2;
+    if (!lprop.IsNormalDefined())
+      {
+        double uc = 0.5*(umin+umax), vc = 0.5*(vmin+vmax);
+        normstatus = GeomLib::NormEstim(occface, gp_Pnt2d(geominfo.u, geominfo.v), 1e-9, normestim);
+        for (double f = 1e-3; f <= 0.1 && normstatus >= 2; f *= 4)
+          normstatus = GeomLib::NormEstim(occface,
+              gp_Pnt2d(geominfo.u + f*(uc-geominfo.u), geominfo.v + f*(vc-geominfo.v)),
+              1e-9, normestim);
+      }
+
     if (lprop.IsNormalDefined())
       {
         n = occ2ng(lprop.Normal());
+      }
+    else if (normstatus <= 1)
+      {
+        n = occ2ng(normestim);
       }
     else
       {
@@ -167,6 +185,19 @@ namespace netgen
 	gp_Pnt pnt;
 	gp_Vec du, dv;
 	occface->D1 (geominfo1.u, geominfo1.v, pnt, du, dv);
+
+        {
+          auto degenerate = [] (const gp_Vec & a, const gp_Vec & b)
+            {
+              double am = a.Magnitude(), bm = b.Magnitude();
+              return min(am, bm) < 1e-6 * max(am, bm);
+            };
+          gp_Pnt pnt2;
+          gp_Vec du2, dv2;
+          occface->D1 (geominfo2.u, geominfo2.v, pnt2, du2, dv2);
+          if (degenerate(du, dv) && degenerate(du2, dv2))
+            throw SingularMatrixException();
+        }
 
         // static Timer t("occ-defintangplane calculations");
         // RegionTimer reg(t);
@@ -488,6 +519,22 @@ namespace netgen
     gp_Pnt2d suval = su->NextValueOfUV (gp_Pnt2d(u,v), pnt, toltool);
     t2.Stop();
     suval.Coord( u, v);
+
+    {
+      gp_Pnt sp; gp_Vec d1u, d1v;
+      occface->D1(u, v, sp, d1u, d1v);
+      double a = d1u.Magnitude(), b = d1v.Magnitude();
+      if (min(a, b) < 1e-5 * max(a, b))
+        {
+          double uc = u, vc = v;
+          double dwu = 0.05*(umax-umin), dwv = 0.05*(vmax-vmin);
+          GeomAPI_ProjectPointOnSurf gproj(p, occface,
+              max(umin, uc-dwu), min(umax, uc+dwu),
+              max(vmin, vc-dwv), min(vmax, vc+dwv));
+          if (gproj.NbPoints() > 0)
+            gproj.LowerDistanceParameters(u, v);
+        }
+    }
     pnt = occface->Value( u, v );
     
     //(*testout) << "pnt(proj) = " << pnt.X() << ", " << pnt.Y() << ", " << pnt.Z() << endl;
