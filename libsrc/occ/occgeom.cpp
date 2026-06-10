@@ -2177,7 +2177,7 @@ namespace netgen
       return true;
   }
 
-  void Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<std::variant<gp_Trsf, gp_GTrsf>> opt_trafo) 
+  size_t Identify(const TopoDS_Shape & me, const TopoDS_Shape & you, string name, Identifications::ID_TYPE type, std::optional<std::variant<gp_Trsf, gp_GTrsf>> opt_trafo) 
   {
     Transformation<3> trafo;
     if(opt_trafo)
@@ -2193,10 +2193,10 @@ namespace netgen
     ListOfShapes list_me, list_you;
     list_me.push_back(me);
     list_you.push_back(you);
-    Identify(list_me, list_you, name, type, trafo);
+    return Identify(list_me, list_you, name, type, trafo);
   }
 
-  void Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, Transformation<3> trafo) 
+  size_t Identify(const ListOfShapes & me, const ListOfShapes & you, string name, Identifications::ID_TYPE type, Transformation<3> trafo) 
   {
     ListOfShapes id_me;
     ListOfShapes id_you;
@@ -2217,15 +2217,19 @@ namespace netgen
         id_you = you.Vertices();
     }
 
+    size_t n_idents = 0;
+    
     for(auto shape_me : id_me)
         for(auto shape_you : id_you)
         {
             if(!IsMappedShape(trafo, shape_me, shape_you))
                 continue;
 
+            n_idents++;
             OCCGeometry::GetIdentifications(shape_me).push_back
                 (OCCIdentification { shape_me, shape_you, trafo, name, type });
         }
+    return n_idents;
   }
 
   void OCCParameters :: Print(ostream & ost) const

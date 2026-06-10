@@ -2065,7 +2065,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                         Identifications::ID_TYPE type,
                         std::variant<gp_Trsf, gp_GTrsf> trafo)
     {
-      Identify(me, other, name, type, occ2ng(trafo));
+      return Identify(me, other, name, type, occ2ng(trafo));
     }, py::arg("other"), py::arg("name"),
          py::arg("type")=Identifications::PERIODIC, py::arg("trafo"),
          "Identify shapes for periodic meshing")
