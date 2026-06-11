@@ -1641,12 +1641,18 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            return OCCGeometry::GetProperties(self).partition;
          return nullopt;
        },
-       [](TopoDS_Shape &self, py::array_t<double> val)
+       [](TopoDS_Shape &self, optional<py::array_t<double>> opt_val)
        {
-         Array<double> partition(val.size());
-         for(auto i : Range(partition))
-           partition[i] = val.at(i);
-         OCCGeometry::GetProperties(self).partition = std::move(partition);
+         optional<Array<double>> opt_partition = nullopt;
+         if(opt_val)
+         {
+            auto & val = opt_val.value();
+            Array<double> partition(val.size());
+            for(auto i : Range(partition))
+                partition[i] = val.at(i);
+            opt_partition = std::move(partition);
+         }
+         OCCGeometry::GetProperties(self).partition = std::move(opt_partition);
        }, "Optional edge partition parameters for meshing (array of curve parameters).")
     
     .def("Split", [](const TopoDS_Edge& self, py::args args)
