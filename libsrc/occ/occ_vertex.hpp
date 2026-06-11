@@ -18,14 +18,12 @@ namespace netgen
     {
         TopoDS_Vertex vertex;
         Point<3> p;
-        bool initialized = false;
 
         public:
         OCCVertex( ) = default;
         OCCVertex( TopoDS_Shape s );
         ~OCCVertex() {}
         Point<3> GetPoint() const override;
-        void SetPoint(Point<3> newp);
     };
 }
 

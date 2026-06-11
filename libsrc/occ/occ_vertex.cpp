@@ -16,8 +16,4 @@ namespace netgen
     {
         return p;
     }
-
-    void OCCVertex::SetPoint(Point<3> newp) {
-      p = newp;
-    }
 }
