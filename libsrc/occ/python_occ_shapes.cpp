@@ -778,7 +778,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                             bool ngs_mesh, py::kwargs kwargs)
     {
       auto geo = py::cast(make_shared<OCCGeometry>(shape, dim));
-      auto mesh = geo.attr("GenerateMesh")(**kwargs);
+      auto mesh = geo.attr("GenerateMesh")(pars, **kwargs);
       if(!ngs_mesh)
         return mesh;
       try
