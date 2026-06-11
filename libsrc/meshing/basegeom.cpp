@@ -522,10 +522,16 @@ namespace netgen
     while (lam<1. && hvalue.Size() < 20000) {
       fine_params.Append(lam);
       auto h = mesh.GetH(old_p, layer);
-      auto step = safety * h/GetTangent(lam).Length();
-      lam += step;
-      lam = min2(lam, 1.0);
+      auto tanlen = GetTangent(lam).Length();
+      auto step = tanlen > 0 ? safety * h/tanlen : 1.0-lam;
+      lam = min2(lam+step, 1.0);
       p = GetPoint(lam);
+      for(int cnt = 0; (p-old_p).Length() > h && lam > fine_params.Last() && cnt < 30; cnt++)
+        {
+          step *= 0.5;
+          lam = min2(fine_params.Last()+step, 1.0);
+          p = GetPoint(lam);
+        }
       hvalue.Append((hvalue.Size()==0 ? 0.0 : hvalue.Last()) + 1./h * (p-old_p).Length());
       old_p = p;
     }

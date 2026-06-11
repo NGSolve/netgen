@@ -62,10 +62,38 @@ namespace netgen
         // I do not see a better way using occ tolerances?
         double eps = 1e-7 * (s1-s0);
         GeomAPI_ProjectPointOnCurve proj(pnt, curve, s0-eps, s1+eps);
-        pnt = proj.NearestPoint();
-        if(gi)
-            gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);
-        p = occ2ng(pnt);
+        if(proj.NbPoints() > 0)
+        {
+            if(gi)
+                gi->dist = (proj.LowerDistanceParameter() - s0)/(s1-s0);
+            p = occ2ng(proj.NearestPoint());
+        }
+        else
+        {
+            double bests = s0, bestd = 1e99;
+            const int N = 100;
+            for(int i = 0; i <= N; i++)
+            {
+                double s = s0 + (s1-s0)*double(i)/N;
+                double d = curve->Value(s).SquareDistance(pnt);
+                if(d < bestd) { bestd = d; bests = s; }
+            }
+            for(int it = 0; it < 20; it++)
+            {
+                gp_Pnt c; gp_Vec d1, d2;
+                curve->D2(bests, c, d1, d2);
+                gp_Vec r(pnt, c);
+                double f = r * d1;
+                double fp = d1 * d1 + r * d2;
+                if(fabs(fp) < 1e-30) break;
+                double snew = min(s1, max(s0, bests - f/fp));
+                if(fabs(snew-bests) < 1e-12*(s1-s0)) { bests = snew; break; }
+                bests = snew;
+            }
+            if(gi)
+                gi->dist = (bests - s0)/(s1-s0);
+            p = occ2ng(curve->Value(bests));
+        }
     }
 
     Vec<3> OCCEdge::GetTangent(double t) const
