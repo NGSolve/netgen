@@ -754,11 +754,64 @@ def Draw(obj, *args, show=True, **kwargs):
         scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
     return scene
 
+_html_template = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>NGSolve WebGUI</title>
+        <meta name='viewport' content='width=device-width, user-scalable=no'/>
+        <style>
+            body{
+                margin:0;
+                overflow:hidden;
+            }
+            canvas{
+                cursor:grab;
+                cursor:-webkit-grab;
+                cursor:-moz-grab;
+            }
+            canvas:active{
+                cursor:grabbing;
+                cursor:-webkit-grabbing;
+                cursor:-moz-grabbing;
+            }
+        </style>
+    </head>
+    <body>
+          <script src="https://cdn.jsdelivr.net/npm/webgui@0.2.39/dist/webgui.js"></script>
+          </script>
+          <script>
+            {render}
+            const scene = new webgui.Scene();
+            scene.init(document.body, render_data, {preserveDrawingBuffer: false});
+          </script>
+    </body>
+</html>
+"""
+
+def getScreenshotHTML():
+    return _html_template.replace("preserveDrawingBuffer: false", "preserveDrawingBuffer: true")
+
+def GenerateHTML(data, filename=None, template=None):
+    if template is None:
+        template = _html_template
+    import json
+    data = json.dumps(data)
+
+    jscode = "var render_data = {}\n".format(data)
+    html = _html_template.replace('{render}', jscode )
+
+    if filename is not None:
+        open(filename,'w').write( html )
+    return html
+
+
+
+
 async def _MakeScreenshot(data, png_file, width=1200, height=600):
     """Uses playwright to make a screenshot of the given html file."""
     # pylint: disable=import-outside-toplevel
     from playwright.async_api import async_playwright
-    from webgui_jupyter_widgets.html import GenerateHTML, getScreenshotHTML
 
     html_file = png_file + ".html"
     GenerateHTML(data, filename=html_file, template=getScreenshotHTML())
