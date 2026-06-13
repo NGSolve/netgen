@@ -434,6 +434,25 @@ class WebGLScene(BaseWebGuiScene):
         self.widget.height = str(height)
         self.widget.value = self.GetData()
 
+    def __repr__(self):
+        return "WebGLScene"
+
+    def GenerateHTML(self, filename=None, template=None):
+        self.encoding = 'b64'
+        return GenerateHTML(self.GetData(), filename, template)
+
+    def MakeScreenshot(self, filename, width=1200, height=600):
+        self.encoding = 'b64'
+        return _MakeScreenshot(self.GetData(), filename, width, height)
+
+    def Draw(self, width = None, height = None):
+        from IPython.display import display
+        if width is not None:
+            self.widget.width = str(width)
+        if height is not None:
+            self.widget.height = str(height)
+        display(self.widget)
+
     def Redraw(self, *args, **kwargs):
         if args or kwargs:
             if 'show' not in kwargs:
