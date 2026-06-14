@@ -31,7 +31,7 @@ def encodeData( data, dtype=None, encoding='b64' ):
 import netgen.meshing as ng
 
 _default_width = "100%"
-_default_height = "50vh"
+_default_height = "500px" if "VSCODE_PID" in os.environ else "50vh"
 
 
 _registered_draw_types = {}
