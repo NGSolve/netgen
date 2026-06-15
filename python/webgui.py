@@ -31,8 +31,7 @@ def encodeData( data, dtype=None, encoding='b64' ):
 import netgen.meshing as ng
 
 _default_width = "100%"
-_default_height = "500px" if "VSCODE_PID" in os.environ else "50vh"
-
+_default_height = "20rem"
 
 _registered_draw_types = {}
 
@@ -301,6 +300,10 @@ class WebGuiWidget(anywidget.AnyWidget):
         // measures it (otherwise offsetHeight is read as ~0 -> tiny canvas)
         setTimeout(() => {
             resolveRenderData(model.get("value")).then((render_data) => {
+                container.style.width = model.get("width");
+                container.style.height = model.get("height");
+                if(Object.keys(render_data).length === 0)
+                    return;
                 scene.init(container, render_data);
                 scene.render();
                 adoptDatGuiStyles(el);
@@ -413,8 +416,8 @@ class WebGuiWidget(anywidget.AnyWidget):
 
     """
     value = traitlets.Dict({}).tag(sync=True)
-    width = traitlets.Unicode("100%").tag(sync=True)
-    height = traitlets.Unicode("50vh").tag(sync=True)
+    width = traitlets.Unicode(_default_height).tag(sync=True)
+    height = traitlets.Unicode(_default_height).tag(sync=True)
 
 
 class WebGLScene(BaseWebGuiScene):
