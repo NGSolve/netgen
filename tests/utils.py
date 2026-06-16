@@ -1,17 +1,21 @@
 import argparse
 import os
-import requests
 import sys
 import time
 from subprocess import check_output
-from packaging import tags
-from packaging.utils import parse_wheel_filename
 
+# NOTE: ``requests`` and ``packaging`` are imported lazily inside the functions
+# that need them. This keeps ``get_version`` / ``get_git_version`` (used by the
+# scikit-build-core version provider during the build) dependent only on git and
+# the standard library, so they work in a bare build environment.
 
 _sys_tags = None
 
 
 def _is_wheel_compatible(wheel_filename: str):
+    from packaging import tags
+    from packaging.utils import parse_wheel_filename
+
     global _sys_tags
     try:
         if _sys_tags is None:
@@ -28,6 +32,8 @@ def _is_wheel_compatible(wheel_filename: str):
 
 
 def is_package_available(package_name, version):
+    import requests
+
     url = f"https://pypi.org/pypi/{package_name}/{version}/json"
 
     try:

@@ -120,6 +120,26 @@ if(BUILD_OCC)
   list(APPEND NETGEN_DEPENDENCIES project_occ)
   set(OpenCascade_ROOT ${OCC_DIR})
 else(BUILD_OCC)
+    # When building pip wheels, OpenCASCADE is provided by the netgen-occt-devel
+    # package. Locate its CMake config automatically unless OpenCascade_DIR /
+    # OpenCascade_ROOT was given explicitly. For normal (non-pip) builds the
+    # package is usually not installed and we silently fall back to find_package.
+    if(NOT OpenCascade_DIR AND NOT OpenCascade_ROOT AND NOT DEFINED ENV{OpenCascade_ROOT})
+      find_package(Python3 COMPONENTS Interpreter QUIET)
+      if(Python3_Interpreter_FOUND)
+        execute_process(
+          COMMAND ${Python3_EXECUTABLE} -c "import importlib.metadata as m; print(next((str(f.locate().resolve().parent) for f in m.files('netgen-occt-devel') if f.name=='OpenCASCADEConfig.cmake'),''))"
+          OUTPUT_VARIABLE _occ_config_dir
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+          RESULT_VARIABLE _occ_query_result
+          ERROR_QUIET
+        )
+        if(_occ_query_result EQUAL 0 AND _occ_config_dir AND EXISTS "${_occ_config_dir}")
+          set(OpenCascade_DIR "${_occ_config_dir}")
+          message(STATUS "Using OpenCASCADE from netgen-occt-devel: ${OpenCascade_DIR}")
+        endif()
+      endif()
+    endif()
     find_package(OpenCascade NAMES OpenCasCade OpenCASCADE opencascade)
     if(NOT OpenCascade_FOUND)
       message(FATAL_ERROR "Opencascade not found, either\n\

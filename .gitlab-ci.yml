@@ -313,7 +313,7 @@ cleanup_mac:
   needs: ["test_mac"]
 
 pip_linux:
-  image: quay.io/pypa/manylinux_2_28_x86_64
+  image: cerbsim/manylinux_2_28_x86_64_cuda_12.9
   stage: build
   tags:
     - pip
@@ -321,7 +321,6 @@ pip_linux:
     - docker
   script:
     - ./tests/build_pip.sh
-  when: manual
 
 pip_windows:
   stage: build
@@ -329,12 +328,8 @@ pip_windows:
     - pip
     - windows
   script:
-    - .\tests\build_pip.ps1 C:\Python314
-    - .\tests\build_pip.ps1 C:\Python313
-    - .\tests\build_pip.ps1 C:\Python312
-    - .\tests\build_pip.ps1 C:\Python311
-    - .\tests\build_pip.ps1 C:\Python310
-  when: manual
+    # cibuildwheel builds all supported CPython versions (see pyproject.toml)
+    - .\tests\build_pip.ps1
 
 pip_macos:
   stage: build
@@ -343,9 +338,5 @@ pip_macos:
     - macosx
     - m1
   script:
-    - ./tests/build_pip_mac.sh 3.14
-    - ./tests/build_pip_mac.sh 3.13
-    - ./tests/build_pip_mac.sh 3.12
-    - ./tests/build_pip_mac.sh 3.11
-    - ./tests/build_pip_mac.sh 3.10
-  when: manual
+    # cibuildwheel builds all supported CPython versions (see pyproject.toml)
+    - ./tests/build_pip_mac.sh

@@ -1,0 +1,142 @@
+[build-system]
+requires = [
+    "scikit-build-core>=0.10",
+    "pybind11-stubgen>=2.5",
+    "netgen-occt-devel==7.8.1",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "netgen-mesher"
+dynamic = ["version"]
+description = "Netgen mesh generator"
+authors = [{ name = "The Netgen team" }]
+license = "LGPL-2.1-only"
+requires-python = ">=3.10"
+dependencies = [
+    "netgen-occt==7.8.1",
+    "numpy",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[project.scripts]
+netgen = "netgen.__main__:main"
+
+[tool.scikit-build]
+cmake.version = ">=3.16"
+build-dir = "build/{wheel_tag}"
+experimental = true # required to use the local version-metadata provider (tests/netgen_metadata.py)
+
+[tool.scikit-build.metadata.version]
+provider = "netgen_metadata"
+provider-path = "tests"
+
+[tool.scikit-build.cmake.define]
+USE_SUPERBUILD = "ON"
+USE_CCACHE = "ON"
+USE_GUI = "ON"
+USE_NATIVE_ARCH = "OFF"
+BUILD_ZLIB = "ON"
+ZLIB_USE_STATIC_LIBS = "ON"
+BUILD_OCC = "OFF"
+USE_OCC = "ON"
+BUILD_FOR_CONDA = "ON"
+BUILD_STUB_FILES = "ON"
+NETGEN_PYTHON_PACKAGE_NAME = "netgen-mesher"
+
+# ---- Linux
+[[tool.scikit-build.overrides]]
+if.platform-system = "linux"
+inherit.cmake.define = "append"
+cmake.define.NG_INSTALL_DIR_PYTHON = "."
+cmake.define.NG_INSTALL_DIR_LIB = "netgen_mesher.libs"
+cmake.define.NG_INSTALL_DIR_BIN = "bin"
+cmake.define.NG_INSTALL_DIR_INCLUDE = "include/netgen"
+cmake.define.TCL_INCLUDE_PATH = "/usr/include"
+cmake.define.TK_INCLUDE_PATH = "/usr/include"
+
+# ---- macOS
+[[tool.scikit-build.overrides]]
+if.platform-system = "darwin"
+inherit.cmake.define = "append"
+cmake.define.NG_INSTALL_DIR_PYTHON = "."
+cmake.define.NG_INSTALL_DIR_LIB = "netgen"
+cmake.define.NG_INSTALL_DIR_BIN = "bin"
+cmake.define.NG_INSTALL_DIR_CMAKE = "netgen/cmake"
+cmake.define.NG_INSTALL_DIR_INCLUDE = "netgen/include"
+cmake.define.NG_INSTALL_DIR_RES = "share"
+
+# ---- Windows
+[[tool.scikit-build.overrides]]
+if.platform-system = "win32"
+inherit.cmake.define = "append"
+cmake.define.NG_INSTALL_DIR_PYTHON = "."
+cmake.define.NG_INSTALL_DIR_BIN = "netgen"
+cmake.define.NG_INSTALL_DIR_LIB = "netgen/lib"
+cmake.define.NG_INSTALL_DIR_CMAKE = "netgen/cmake"
+cmake.define.NG_INSTALL_DIR_INCLUDE = "netgen/include"
+
+# ---- AVX2 build (NETGEN_ARCH=avx2), per platform compiler flag
+[[tool.scikit-build.overrides]]
+if.platform-system = "linux"
+if.env.NETGEN_ARCH = "avx2"
+inherit.cmake.define = "append"
+cmake.define.NG_COMPILE_FLAGS = "-march=core-avx2"
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "darwin"
+if.env.NETGEN_ARCH = "avx2"
+inherit.cmake.define = "append"
+cmake.define.NG_COMPILE_FLAGS = "-Xarch_x86_64;-march=core-avx2"
+
+[[tool.scikit-build.overrides]]
+if.platform-system = "win32"
+if.env.NETGEN_ARCH = "avx2"
+inherit.cmake.define = "append"
+cmake.define.NG_COMPILE_FLAGS = "/arch:AVX2"
+
+# ---- MPI (run-time dispatch via the MPI wrapper). Enabled when NETGEN_MPI is set;
+#      the MPI headers are staged into /opt by tests/cibw_before_all_linux.sh.
+[[tool.scikit-build.overrides]]
+if.platform-system = "linux"
+if.env.NETGEN_MPI = "(ON|1|true|TRUE)"
+inherit.cmake.define = "append"
+cmake.define.USE_MPI = "ON"
+cmake.define.USE_MPI_WRAPPER = "ON"
+cmake.define.MPICH_INCLUDE_DIR = "/opt/mpich/include"
+cmake.define.OPENMPI_INCLUDE_DIR = "/opt/openmpi/include"
+
+[tool.cibuildwheel]
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
+skip = "*-musllinux_* *_i686 *-win32"
+# Build without isolation to have tcl/tk headers available in sys.prefix
+build-frontend = { name = "pip", args = ["--no-build-isolation"] }
+before-build = "pip install -U \"scikit-build-core>=0.10\" \"pybind11-stubgen>=2.5\" netgen-occt==7.8.1 netgen-occt-devel==7.8.1 ninja cmake"
+build-verbosity = 1
+test-command = "python -c \"import netgen; import netgen.occ; print(netgen.__version__)\""
+
+[tool.cibuildwheel.environment]
+NETGEN_ARCH = "avx2"
+NETGEN_CCACHE = "1"
+
+[tool.cibuildwheel.linux]
+manylinux-x86_64-image = "cerbsim/manylinux_2_28_x86_64_cuda_12.9"
+before-all = "bash {project}/tests/cibw_before_all_linux.sh"
+environment = { NETGEN_ARCH = "avx2", NETGEN_CCACHE = "1", NETGEN_MPI = "ON" }
+repair-wheel-command = "auditwheel repair --exclude 'libTK*' -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+archs = ["universal2"]
+# avx2 is not running on rosetta, so skip x86_64 tests on m1 build machine
+test-skip = "*_universal2:x86_64"
+environment = { NETGEN_ARCH = "avx2", NETGEN_CCACHE = "1", MACOSX_DEPLOYMENT_TARGET = "10.15", CMAKE_OSX_ARCHITECTURES = "arm64;x86_64" }
+# set DYLD_LIBRARY_PATH to find OCC libraries
+repair-wheel-command = "LIBDIR=\"$(python3 -c 'import sys, os; print(os.path.join(sys.prefix, \"lib\"))')\"; DYLD_LIBRARY_PATH=\"$LIBDIR\" delocate-wheel --require-archs {delocate_archs} --exclude libTK -w {dest_dir} {wheel}"
+
+# Windows uses the global before-build (the build deps); cibuildwheel installs
+# delvewheel itself for the repair step below.
+[tool.cibuildwheel.windows]
+# OCC DLLs are provided by the netgen-occt package at runtime; do not vendor them.
+repair-wheel-command = "delvewheel repair --exclude \"TKernel.dll\" --no-dll \"TKernel.dll\" -w {dest_dir} {wheel}"

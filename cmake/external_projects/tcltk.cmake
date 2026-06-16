@@ -39,8 +39,14 @@ set(TK_INCLUDE_PATH ${TK_DIR}/generic)
 list(APPEND NETGEN_DEPENDENCIES project_tcl project_tk)
 
 if(APPLE OR WIN32)
+    # sys.prefix is the active environment, sys.base_prefix the underlying Python
+    # installation. When building in a venv (e.g. cibuildwheel always does) the
+    # Tcl/Tk libraries ship with the base installation, not the venv, so hint at
+    # both. For a non-venv build the two are identical.
     execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sys; print(sys.prefix)" OUTPUT_VARIABLE PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
     file(TO_CMAKE_PATH ${PYTHON_PREFIX} PYTHON_PREFIX)
+    execute_process(COMMAND ${Python3_EXECUTABLE} -c "import sys; print(sys.base_prefix)" OUTPUT_VARIABLE PYTHON_BASE_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE)
+    file(TO_CMAKE_PATH ${PYTHON_BASE_PREFIX} PYTHON_BASE_PREFIX)
 
     set(tcl_find_args
         REQUIRED
@@ -57,6 +63,11 @@ if(APPLE OR WIN32)
         ${PYTHON_PREFIX}/Frameworks
         ${PYTHON_PREFIX}/Frameworks/Tcl.framework
         ${PYTHON_PREFIX}/Frameworks/Tk.framework
+        ${PYTHON_BASE_PREFIX}/lib
+        ${PYTHON_BASE_PREFIX}/tcl
+        ${PYTHON_BASE_PREFIX}/Frameworks
+        ${PYTHON_BASE_PREFIX}/Frameworks/Tcl.framework
+        ${PYTHON_BASE_PREFIX}/Frameworks/Tk.framework
         )
     find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 ${tcl_find_args})
     find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 ${tcl_find_args})
