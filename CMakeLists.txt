@@ -640,7 +640,7 @@ if(USE_PYTHON AND NOT SKBUILD)
   file( WRITE "netgen_mesher-py3.egg-info"
 "Metadata-Version: 2.1
 Name: netgen-mesher
-Version: ${NETGEN_VERSION_MAJOR}.${NETGEN_VERSION_MINOR}.${NETGEN_VERSION_PATCH}.post${NETGEN_VERSION_TWEAK}
+Version: ${NETGEN_VERSION_PYTHON}
 ")
   install(FILES netgen_mesher-py3.egg-info DESTINATION ${NG_INSTALL_DIR_PYTHON} COMPONENT netgen)
 endif()
