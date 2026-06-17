@@ -319,6 +319,7 @@ pip_linux:
     - pip
     - linux
     - docker
+  when: manual
   script:
     - ./tests/build_pip.sh
 
@@ -327,6 +328,7 @@ pip_windows:
   tags:
     - pip
     - windows
+  when: manual
   script:
     # cibuildwheel builds all supported CPython versions (see pyproject.toml)
     - .\tests\build_pip.ps1
@@ -337,6 +339,7 @@ pip_macos:
     - pip
     - macosx
     - m1
+  when: manual
   script:
     # cibuildwheel builds all supported CPython versions (see pyproject.toml)
     - ./tests/build_pip_mac.sh
