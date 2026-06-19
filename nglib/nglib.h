@@ -125,6 +125,28 @@ public:
    int check_overlap;                  //!< Check for overlapping surfaces during Surface meshing
    int check_overlapping_boundary;     //!< Check for overlapping surface elements before volume meshing
 
+   // Nikhil - 29/09/2020
+   // Added a couple more parameters into the meshing parameters list
+   // from Netgen into Nglib
+   int parallel_meshing;                //!< Enable / Disable parallel meshing
+   int nthreads;                        //!< Set number of threads to use
+   
+   double opterrpow;                    //!< Set power of error (to approximate max err optimization)
+   int delaunayenable;                  //!< Enable / Disable delaunay
+   int blockfillenable;                 //!< Enable / Disable block fill
+   double blockfilldist;                //!< Enable / Disable block fill distance
+   int maxoutersteps;                   //!< Set max number of outer steps
+   int only3D_domain_nr;                //!< Select domain to perform volume meshing ignoring others. (0 => ignore none)
+   int try_hexes;                       //!< Enable / Disable hex-meshing
+
+   double surfcurvfact;                 //!< Set STL - surface curvature
+   double chartdistfact;                //!< Set STL - chart distance
+   double edgeanglefact;                //!< Set STL - edge angle
+   double surfmeshcurvfact;             //!< Set STL - surface mesh curv
+   double linelengthfact;               //!< Set STL - line length
+
+   double stlgeom_tol_fact;             //!< Set the point tolerance in STL files
+
 
    /*!
       Default constructor for the Mesh Parameters class
@@ -150,6 +172,21 @@ public:
       - #invert_trigs:0 
       - #check_overlap: 1
       - #check_overlapping_boundary: 1
+      - #parallel_meshing: 1
+      - #nthreads: 4
+      - #opterrpow: 2
+      - #delaunayenable: 1
+      - #blockfillenable = 1
+      - #blockfilldist = 0.1
+      - maxoutersteps = 10
+      - only3D_domain_nr = 0
+      - try_hexes = 0
+      - #surfcurvfact: 2
+      - #chartdistfact: 1.2
+      - #edgeanglefact: 1
+      - #surfmeshcurvfact: 1
+      - #linelengthfact: 0.5
+      - #stlgeom_tol_fact: 1E-6
    */
    NGLIB_API Ng_Meshing_Parameters();
 
