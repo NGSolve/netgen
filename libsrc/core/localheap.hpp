@@ -42,7 +42,7 @@ static Allocator global_alloc;
 class NGCORE_API LocalHeapOverflow : public Exception
 {
 public:
-  LocalHeapOverflow (size_t size);
+  LocalHeapOverflow (size_t size, const char * name);
   virtual ~LocalHeapOverflow ();
 };
 
