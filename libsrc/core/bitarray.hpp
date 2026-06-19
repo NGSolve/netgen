@@ -226,7 +226,7 @@ private:
     
     bool operator[] (IndexType i) const { return Test(i); } 
     T_Range<IndexType> Range() const { return { IndexBASE<IndexType>(), IndexBASE<IndexType>()+Size() }; }
-    NGCORE_API TBitArray & Or (const TBitArray & ba2)
+    inline TBitArray & Or (const TBitArray & ba2)
     {
       BitArray::Or(ba2);
       return *this;
