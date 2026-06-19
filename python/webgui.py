@@ -3,15 +3,18 @@ import numpy as np
 from time import time
 import os
 
-try:
-    import webgui_jupyter_widgets
-    from webgui_jupyter_widgets import BaseWebGuiScene, WebGuiDocuWidget
-    import webgui_jupyter_widgets.widget as wg
-except ImportError:
-    class BaseWebGuiScene:
-        pass
+import anywidget
+import traitlets
 
-    wg = None
+try:
+    from IPython import get_ipython
+    _IN_IPYTHON = get_ipython() is not None
+except ImportError:
+    _IN_IPYTHON = False
+
+
+class BaseWebGuiScene:
+    pass
 
 def encodeData( data, dtype=None, encoding='b64' ):
     import numpy as np
@@ -25,17 +28,10 @@ def encodeData( data, dtype=None, encoding='b64' ):
     else:
         raise RuntimeError("unknown encoding" + str(encoding))
 
-from packaging.version import parse
-
 import netgen.meshing as ng
 
-if wg is not None and parse(webgui_jupyter_widgets.__version__) >= parse("0.2.18"):
-    _default_width = None
-    _default_height = None
-else:
-    _default_width = "100%"
-    _default_height = "50vh"
-
+_default_width = "100%"
+_default_height = "20rem"
 
 _registered_draw_types = {}
 
@@ -235,17 +231,230 @@ def GetData(mesh, args, kwargs):
         d[name] = pnew
     return d
 
-class WebGLScene(BaseWebGuiScene):
-    class Widget:
-        def __init__(self):
-            self.value = {}
+class WebGuiWidget(anywidget.AnyWidget):
+    _esm = """
+    function loadWebgui() {
+        // webgui's dist is a Vite IIFE build that assigns a global `webgui`
+        // var; it has no module exports, so it must be loaded as a classic
+        // <script> and read off of window rather than import()-ed.
+        if (window.webgui) return Promise.resolve(window.webgui);
+        if (!window._webgui_loading) {
+            window._webgui_loading = new Promise((resolve, reject) => {
+                const s = document.createElement("script");
+                s.src = "https://cdn.jsdelivr.net/npm/webgui@0.2.39/dist/webgui.js";
+                s.onload = () => resolve(window.webgui);
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+        return window._webgui_loading;
+    }
 
+    // dat.gui (the control panel webgui adds, top-right) injects its stylesheet
+    // into the main document <head>. When this widget is hosted by MyST it lives
+    // inside a shadow root, and head styles do not cross the shadow boundary, so
+    // the panel renders unstyled. Copy the dat.gui stylesheet into our shadow
+    // root so it applies. No-op in a normal Jupyter page (no shadow root).
+    function adoptDatGuiStyles(el) {
+        const root = el.getRootNode();
+        if (typeof ShadowRoot === 'undefined' || !(root instanceof ShadowRoot)) return;
+        if (root.querySelector('style[data-webgui-datgui]')) return;
+        let copied = false;
+        for (const style of document.querySelectorAll('head style')) {
+            const css = style.textContent || '';
+            if (/\\.dg[\\s.,{>:]/.test(css)) {
+                const clone = document.createElement('style');
+                clone.setAttribute('data-webgui-datgui', '');
+                clone.textContent = css;
+                root.appendChild(clone);
+                copied = true;
+            }
+        }
+        return copied;
+    }
+
+    // The render data is normally the `value` trait itself. When `value` is a
+    // string it is instead a URL to a JSON file holding the data: the static
+    // MyST build offloads the (large) render data to a sidecar file next to the
+    // notebook to keep pages small (see scripts/widgets_to_directives.py). Fetch
+    // it in that case; otherwise use the value as-is.
+    function resolveRenderData(value) {
+        if (typeof value === 'string') {
+            return fetch(value).then((resp) => resp.json());
+        }
+        return Promise.resolve(value);
+    }
+
+    // Interactive scene view (port of WebguiView in the legacy widget.ts).
+    function renderScene(webgui, model, el) {
+        el.classList.add('webgui-widget');
+        // size the widget as requested from Python; the canvas container fills it
+
+        const scene = new webgui.Scene();
+        const container = document.createElement('div');
+        container.style.width = model.get("width");
+        container.style.height = model.get("height");
+        el.appendChild(container);
+
+        // defer to the next tick so the container is laid out before webgui
+        // measures it (otherwise offsetHeight is read as ~0 -> tiny canvas)
+        setTimeout(() => {
+            resolveRenderData(model.get("value")).then((render_data) => {
+                container.style.width = model.get("width");
+                container.style.height = model.get("height");
+                if(Object.keys(render_data).length === 0)
+                    return;
+                scene.init(container, render_data);
+                scene.render();
+                adoptDatGuiStyles(el);
+                // dat.gui may inject its <style> a tick after construction; retry once.
+                setTimeout(() => adoptDatGuiStyles(el), 100);
+            });
+        }, 0);
+
+        // redraw: Python sets widget.value -> push new data into the scene
+        model.on('change:value', () => {
+            resolveRenderData(model.get("value")).then((render_data) => {
+                scene.updateRenderData(render_data);
+            });
+        });
+    }
+
+    // Documentation view (port of WebguiDocuView): show a preview image and
+    // only load the interactive scene + render data on click.
+    function renderDocu(webgui, model, el) {
+        const files = model.get("value");
+        const container = document.createElement('div');
+        container.className = 'webgui_container';
+        container.style.width = '100%';
+        container.innerHTML = `
+            <img src="${files['preview']}" class="image">
+            <div class="webgui_overlay webgui_tooltip">
+                <span class="webgui_tooltiptext"> Click to load interactive WebGUI </span>
+            </div>`;
+        const div = document.createElement('div');
+        div.appendChild(container);
+        el.appendChild(div);
+
+        container.addEventListener('click', () => {
+            document.body.style.cursor = 'wait';
+            fetch(files['render_data'])
+                .then((resp) => resp.json())
+                .then((render_data) => {
+                    document.body.style.cursor = '';
+                    const style = `width: ${el.clientWidth}px; height: ${el.clientHeight}px;`;
+                    container.remove();
+                    const pel = el.children[0];
+                    pel.innerHTML = '';
+                    pel.setAttribute('style', style);
+                    const scene = new webgui.Scene();
+                    scene.init(pel, render_data);
+                    scene.render();
+                    adoptDatGuiStyles(el);
+                    setTimeout(() => adoptDatGuiStyles(el), 100);
+                });
+        });
+    }
+
+    async function render({ model, el }) {
+        const webgui = await loadWebgui();
+        const value = model.get("value");
+        if (value && value.render_data !== undefined && value.preview !== undefined) {
+            renderDocu(webgui, model, el);
+        } else {
+            renderScene(webgui, model, el);
+        }
+    }
+    export default { render };
+    """
+    _css = """
+    .webgui-widget {
+        padding: 0px 2px;
+    }
+    .webgui_container { position: relative; }
+    .webgui_container .image { width: 100%; display: block; }
+    .webgui_overlay {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        cursor: pointer;
+    }
+    .webgui_tooltip .webgui_tooltiptext {
+        visibility: hidden;
+        background-color: rgba(85, 85, 85, 0.9); color: #fff;
+        text-align: center; border-radius: 6px; padding: 5px 10px;
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%); white-space: nowrap;
+    }
+    .webgui_tooltip:hover .webgui_tooltiptext { visibility: visible; }
+
+    .label3d {
+      -moz-user-select: none;
+      -ms-user-select:none;
+      -o-user-select:none;
+      -webkit-user-select: none;
+      display:block;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      user-select:none;
+      z-index: 1;
+    }
+
+    .tooltiptext {
+      width: 120px;
+      background-color: #555;
+      color: #fff;
+      text-align: center;
+      border-radius: 6px;
+      padding: 5px 0;
+      position: absolute;
+      z-index: 1;
+      left: 50%;
+      margin-left: -60px;
+      opacity: 1;
+      transition: opacity 0.3s;
+    }
+
+
+    """
+    value = traitlets.Dict({}).tag(sync=True)
+    width = traitlets.Unicode(_default_height).tag(sync=True)
+    height = traitlets.Unicode(_default_height).tag(sync=True)
+
+
+class WebGLScene(BaseWebGuiScene):
     def __init__(self, obj, args=[], kwargs={}):
-        self.widget = self.Widget()
+        self.widget = WebGuiWidget()
         self.obj = obj
         self.args = args
         self.kwargs = kwargs
         self.encoding = "b64"
+        width = kwargs.get("width", _default_width)
+        height = kwargs.get("height", _default_height)
+        if isinstance(width, (int,float)):
+            width = str(width) + "px"
+        if isinstance(height, (int,float)):
+            height = str(height) + "px"
+        self.widget.width = str(width)
+        self.widget.height = str(height)
+        self.widget.value = self.GetData()
+
+    def __repr__(self):
+        return "WebGLScene"
+
+    def GenerateHTML(self, filename=None, template=None):
+        self.encoding = 'b64'
+        return GenerateHTML(self.GetData(), filename, template)
+
+    def MakeScreenshot(self, filename, width=1200, height=600):
+        self.encoding = 'b64'
+        return _MakeScreenshot(self.GetData(), filename, width, height)
+
+    def Draw(self, width = None, height = None):
+        from IPython.display import display
+        if width is not None:
+            self.widget.width = str(width)
+        if height is not None:
+            self.widget.height = str(height)
+        display(self.widget)
 
     def Redraw(self, *args, **kwargs):
         if args or kwargs:
@@ -256,7 +465,8 @@ class WebGLScene(BaseWebGuiScene):
             self.obj = new_scene.obj
             self.args = new_scene.args
             self.kwargs = new_scene.kwargs
-        super().Redraw()
+        if self.widget is not None:
+            self.widget.value = self.GetData()
 
     def GetData(self, set_minmax=True):
         self.kwargs["encoding"] = self.encoding
@@ -559,33 +769,71 @@ def Draw(obj, *args, show=True, **kwargs):
     kwargs_with_defaults.update(kwargs)
 
     scene = WebGLScene(obj, args, kwargs_with_defaults)
-    if show and wg is not None and wg._IN_IPYTHON:
-        if wg._IN_GOOGLE_COLAB:
-            from IPython.display import display, HTML
-
-            html = scene.GenerateHTML()
-            display(HTML(html))
-            return
-        else:
-            import webgui_jupyter_widgets as wjw
-            from packaging.version import parse
-
-            # render scene using widgets.DOMWidget
-            if parse(wjw.__version__) < parse("0.2.15"):
-                scene.Draw()
-            else:
-                scene.Draw(
-                    kwargs_with_defaults["width"], kwargs_with_defaults["height"]
-                )
+    if show and _IN_IPYTHON:
+        from IPython.display import display
+        display(scene.widget)
     if "filename" in kwargs_with_defaults:
         scene.GenerateHTML(filename=kwargs_with_defaults["filename"])
     return scene
+
+_html_template = """
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>NGSolve WebGUI</title>
+        <meta name='viewport' content='width=device-width, user-scalable=no'/>
+        <style>
+            body{
+                margin:0;
+                overflow:hidden;
+            }
+            canvas{
+                cursor:grab;
+                cursor:-webkit-grab;
+                cursor:-moz-grab;
+            }
+            canvas:active{
+                cursor:grabbing;
+                cursor:-webkit-grabbing;
+                cursor:-moz-grabbing;
+            }
+        </style>
+    </head>
+    <body>
+          <script src="https://cdn.jsdelivr.net/npm/webgui@0.2.39/dist/webgui.js"></script>
+          </script>
+          <script>
+            {render}
+            const scene = new webgui.Scene();
+            scene.init(document.body, render_data, {preserveDrawingBuffer: false});
+          </script>
+    </body>
+</html>
+"""
+
+def getScreenshotHTML():
+    return _html_template.replace("preserveDrawingBuffer: false", "preserveDrawingBuffer: true")
+
+def GenerateHTML(data, filename=None, template=None):
+    if template is None:
+        template = _html_template
+    import json
+    data = json.dumps(data)
+
+    jscode = "var render_data = {}\n".format(data)
+    html = _html_template.replace('{render}', jscode )
+
+    if filename is not None:
+        open(filename,'w').write( html )
+    return html
+
+
+
 
 async def _MakeScreenshot(data, png_file, width=1200, height=600):
     """Uses playwright to make a screenshot of the given html file."""
     # pylint: disable=import-outside-toplevel
     from playwright.async_api import async_playwright
-    from webgui_jupyter_widgets.html import GenerateHTML, getScreenshotHTML
 
     html_file = png_file + ".html"
     GenerateHTML(data, filename=html_file, template=getScreenshotHTML())
@@ -626,16 +874,17 @@ def _DrawDocu(obj, *args, **kwargs):
     preview_file = "preview_{}.png".format(file_counter)
     preview_file_abs = os.path.join(path, preview_file)
 
-    widget = WebGuiDocuWidget()
+    widget = WebGuiWidget()
     widget.value = {"render_data": data_file, "preview": preview_file}
     scene.widget = widget
     data = scene.GetData()
     json.dump(data, open(data_file_abs, "w"))
     asyncio.run(_MakeScreenshot(data, preview_file_abs, 1200, 600))
     scene.Redraw = lambda: None
-    from IPython.display import display, HTML
+    from IPython.display import display
 
-    display(widget)
+    if scene.widget is not None:
+        display(scene.widget)
     return scene
 
 

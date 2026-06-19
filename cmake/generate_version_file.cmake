@@ -54,7 +54,25 @@ if(NOT NETGEN_VERSION_GIT)
 endif()
 
 if(NOT NETGEN_VERSION_PYTHON)
-    set(NETGEN_VERSION_PYTHON ${NETGEN_VERSION_TWEAK})
+    # Derive a PEP 440 compliant python package version from git, matching
+    # tests/utils.py:get_version() (used for the wheel metadata version).
+    if(NETGEN_VERSION_TWEAK)
+        # commits after the last tag -> post release
+        set(NETGEN_VERSION_PYTHON "${NETGEN_VERSION_SHORT}.post${NETGEN_VERSION_TWEAK}")
+        set(_ng_dev_build TRUE)
+        if(DEFINED ENV{NG_NO_DEV_PIP_VERSION})
+            set(_ng_dev_build FALSE)
+        endif()
+        if("$ENV{CI_COMMIT_REF_NAME}" STREQUAL "release")
+            set(_ng_dev_build FALSE)
+        endif()
+        if(_ng_dev_build)
+            set(NETGEN_VERSION_PYTHON "${NETGEN_VERSION_PYTHON}.dev0")
+        endif()
+    else()
+        # current commit is tagged -> clean release version
+        set(NETGEN_VERSION_PYTHON "${NETGEN_VERSION_SHORT}")
+    endif()
 endif()
 
 

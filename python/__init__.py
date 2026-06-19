@@ -3,6 +3,11 @@ import sys
 from pathlib import Path
 
 from . import config
+try:
+    from .version import __version__, __package_name__
+except ImportError:
+    __version__ = config.NETGEN_VERSION_PYTHON
+    __package_name__ = config.NETGEN_PYTHON_PACKAGE_NAME
 _netgen_bin_dir=os.path.realpath(os.path.join(os.path.dirname(__file__),'..',config.NETGEN_PYTHON_RPATH_BIN))
 _netgen_lib_dir=os.path.realpath(os.path.join(os.path.dirname(__file__),'..',config.NETGEN_PYTHON_RPATH))
 
