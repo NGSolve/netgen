@@ -305,6 +305,7 @@ class WebGuiWidget(anywidget.AnyWidget):
                 if(Object.keys(render_data).length === 0)
                     return;
                 scene.init(container, render_data);
+                scene.container.style.position = 'relative';
                 scene.render();
                 adoptDatGuiStyles(el);
                 // dat.gui may inject its <style> a tick after construction; retry once.
