@@ -74,6 +74,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def("_PushStatus", [](string s) { PushStatus(s); });
   m.def("_PopStatus", []() { PopStatus(); });
   m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
+  m.def("_SetTerminate", [](bool t) { multithread.terminate = t; });
+  m.def("_GetTerminate", []() { return bool(multithread.terminate); });
 
   py::enum_<Identifications::ID_TYPE>(m,"IdentificationType")
     .value("UNDEFINED", Identifications::UNDEFINED)
