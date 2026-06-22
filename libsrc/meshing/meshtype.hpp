@@ -1467,6 +1467,10 @@ namespace netgen
 
   public:
     EdgeDescriptor () = default;
+    EdgeDescriptor (int edgenri, int surfnr1 = -1, int surfnr2 = -1,
+                    int domini = -1, int domouti = -1, int tlosurfi = -1)
+      : edgenr(edgenri), surfnr{surfnr1, surfnr2}, tlosurf(tlosurfi), domin(domini), domout(domouti)
+    { ; }
 
     int EdgeNr () const { return edgenr; }
     void SetEdgeNr (int nr) { edgenr = nr; }
