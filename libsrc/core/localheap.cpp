@@ -55,6 +55,13 @@ namespace ngcore
 
   size_t tl_heap_size = 50*1000*1000;
   thread_local LocalHeap tl_heap(tl_heap_size, "tlheap");
+
+  LocalHeap& TLHeap()
+  {
+    return tl_heap;
+  }
+
+  
   void SetTLHeapSize(size_t s)
   {
     tl_heap_size = s;
