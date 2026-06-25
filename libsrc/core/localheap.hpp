@@ -289,7 +289,7 @@ public:
   };
 
   extern size_t tl_heap_size;
-  NGCORE_API extern thread_local LocalHeap tl_heap;
+  extern thread_local LocalHeap tl_heap;
   extern void SetTLHeapSize(size_t s);
 }
 
