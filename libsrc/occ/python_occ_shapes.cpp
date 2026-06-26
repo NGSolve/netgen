@@ -2581,9 +2581,9 @@ TopoDS_Shape
 
   m.def("BSplineCurve", [](std::vector<gp_Pnt> vpoles, int degree) {
       // not yet working ????
-      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
-      TColStd_Array1OfReal knots(0, vpoles.size()+degree);
-      TColStd_Array1OfInteger mult(0, vpoles.size()+degree);
+      TColgp_Array1OfPnt poles(0, int(vpoles.size())-1);
+      TColStd_Array1OfReal knots(0, int(vpoles.size())+degree);
+      TColStd_Array1OfInteger mult(0, int(vpoles.size())+degree);
       // int cnt = 0;
 
       for (int i = 0; i < vpoles.size(); i++)
@@ -2604,7 +2604,7 @@ TopoDS_Shape
     "Create a B-spline edge from control points and degree (experimental).");
   
   m.def("BezierCurve", [](std::vector<gp_Pnt> vpoles) {
-      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
+      TColgp_Array1OfPnt poles(0, int(vpoles.size())-1);
 
       for (int i = 0; i < vpoles.size(); i++)
         poles.SetValue(i, vpoles[i]);
