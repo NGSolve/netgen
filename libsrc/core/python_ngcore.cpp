@@ -56,6 +56,7 @@ namespace ngcore
               flags.SetFlag(s, makeCArray<string>(vdl));
             else
               {
+                /*
                 Array<std::any> sta;
                 for (auto el : vdl)
                   // sta.Append(CastPyToAny(dynamic_cast<py::object&>(el)));
@@ -63,6 +64,15 @@ namespace ngcore
                     auto obj = py::reinterpret_borrow<py::object>(el);
                     sta.Append(CastPyToAny(obj));
                   }
+                */
+                std::vector<std::any> sta;
+                for (auto el : vdl)
+                  // sta.Append(CastPyToAny(dynamic_cast<py::object&>(el)));
+                  {
+                    auto obj = py::reinterpret_borrow<py::object>(el);
+                    sta.push_back(CastPyToAny(obj));
+                  }
+                
                 flags.SetFlag(s, sta);
               }
           }
