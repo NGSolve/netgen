@@ -294,7 +294,6 @@ namespace netgen
 	      onp = 4;
 	      break;
 	    }
-	  case PRISM:
 	  case PRISM12:
 	    {
 	      betw = betw_prism;
@@ -302,6 +301,7 @@ namespace netgen
 	      onp = 6;
 	      break;
 	    }
+          case PRISM:
           case PRISM15:
             {
               betw = betw_prism15;
