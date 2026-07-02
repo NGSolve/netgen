@@ -653,7 +653,15 @@ namespace netgen
 
           // build edge hierarchy:
           parent_edges.SetSize (ned);
-          parent_edges = { -1, { -1, -1, -1 } };
+          // Same Array::operator=(std::initializer_list<T>) pitfall as
+          // parent_faces below (see the comment there): a braced literal
+          // here is parsed as a single-element initializer_list<T>, which
+          // silently replaces the just-SetSize'd array with a size-1 array.
+          // Assigning a named, typed T value instead binds to
+          // Array::operator=(const T&), which fills every existing entry
+          // without resizing.
+          const std::tuple<int, std::array<int,3>> no_parent_edge{ -1, { -1, -1, -1 } };
+          parent_edges = no_parent_edge;
 
           for (size_t i = 0; i < ned; i++)
           {
@@ -1389,7 +1397,20 @@ namespace netgen
             // cout << "v2f:" << endl << v2f << endl;
             
             parent_faces.SetSize (nfa);
-            parent_faces = { -1, { -1, -1, -1, -1 } };
+            // NOTE: `parent_faces = { -1, { -1, -1, -1, -1 } };` looks like a
+            // broadcast-initialize of every entry to a "no parent" sentinel,
+            // but Array::operator=(std::initializer_list<T>) does
+            // `*this = Array<T>(list)` (see core/array.hpp) -- with a single
+            // T{-1,{-1,-1,-1,-1}} element, that silently REPLACES the
+            // just-`SetSize`d array with a size-1 array, discarding `nfa`.
+            // Every entry not explicitly written by one of the branches below
+            // is then read (via GetParentFaces) out of bounds of that
+            // size-1 array -- uninitialized/adjacent memory, not a defined
+            // "no parent" value. Assigning a named, typed T value instead
+            // binds to Array::operator=(const T&), which fills every
+            // existing entry in place without resizing.
+            const std::tuple<int, std::array<int,4>> no_parent_face{ -1, { -1, -1, -1, -1 } };
+            parent_faces = no_parent_face;
 
             for (auto i : Range(nfa))
               {
