@@ -1389,7 +1389,18 @@ namespace netgen
             // cout << "v2f:" << endl << v2f << endl;
             
             parent_faces.SetSize (nfa);
-            parent_faces = { -1, { -1, -1, -1, -1 } };
+            // NOTE: `parent_faces = { -1, { -1, -1, -1, -1 } };` looks like a
+            // broadcast-initialize of every entry to a "no parent" sentinel,
+            // but Array::operator=(std::initializer_list<T>) does
+            // `*this = Array<T>(list)` (see core/array.hpp) -- with a single
+            // T{-1,{-1,-1,-1,-1}} element, that silently REPLACES the
+            // just-`SetSize`d array with a size-1 array, discarding `nfa`.
+            // Every entry not explicitly written by one of the branches below
+            // is then read (via GetParentFaces) out of bounds of that
+            // size-1 array -- uninitialized/adjacent memory, not a defined
+            // "no parent" value. Initialize every entry explicitly instead.
+            for (auto i : Range(nfa))
+              parent_faces[i] = { -1, { -1, -1, -1, -1 } };
 
             for (auto i : Range(nfa))
               {
