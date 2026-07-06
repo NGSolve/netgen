@@ -1039,7 +1039,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     }, py::arg("unifyEdges")=true, py::arg("unifyFaces")=true,
          py::arg("concatBSplines")=true,
          "Unify edges and/or faces that lie on the same geometric domain "
-         "(ShapeUpgrade_UnifySameDomain) and propagate shape properties.")
+         "(ShapeUpgrade_UnifySameDomain) and propagate shape properties.",
+         py::call_guard<py::gil_scoped_release>())
     
     .def_property("location",
                   [](const TopoDS_Shape & shape) { return shape.Location(); },
@@ -1098,7 +1099,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         //   }
         // else
         //   return fused;
-      }, "fuses shapes")
+      }, "fuses shapes", py::call_guard<py::gil_scoped_release>())
     .def("__radd__", [] (const TopoDS_Shape & shape, int i) // for sum([shapes])
          { return shape; }, "needed for Sum([shapes])")
     .def("__mul__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
@@ -1123,7 +1124,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         PropagateProperties (builder, shape2);
         
         return builder.Shape();
-      }, "common of shapes")
+      }, "common of shapes", py::call_guard<py::gil_scoped_release>())
     
     .def("__sub__", [] (const TopoDS_Shape & shape1, const TopoDS_Shape & shape2) {
         
@@ -1146,7 +1147,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         PropagateProperties (builder, shape2);
         
         return builder.Shape();        
-      }, "cut of shapes")
+      }, "cut of shapes", py::call_guard<py::gil_scoped_release>())
     .def("__eq__", [] (const TopoDS_Shape& shape1, const TopoDS_Shape& shape2) {
       return shape1.IsSame(shape2);
     })
@@ -1209,7 +1210,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     }, py::arg("h"), py::arg("dir")=nullopt, py::arg("identify")=false,
          py::arg("idtype")=Identifications::CLOSESURFACES,
          py::arg("idname") = "extrusion",
-         "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction")
+         "extrude shape to thickness 'h', shape must contain a plane surface, optionally give an extrusion direction",
+         py::call_guard<py::gil_scoped_release>())
     
     .def("Extrude", [] (const TopoDS_Shape & face, gp_Vec vec) {
       BRepPrimAPI_MakePrism builder(face, vec);
@@ -1222,7 +1224,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
               OCCGeometry::GetProperties(mods).Merge(prop);
           }
       return builder.Shape();
-      }, py::arg("v"), "extrude shape by vector 'v'")
+      }, py::arg("v"), "extrude shape by vector 'v'", py::call_guard<py::gil_scoped_release>())
 
   .def("Revolve", [](const TopoDS_Shape & shape, const gp_Ax1 &A, const double D) {
       // for (TopExp_Explorer e(shape, TopAbs_FACE); e.More(); e.Next())
@@ -1241,7 +1243,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return builder.Shape();          
         }
         // throw Exception("no face found for revolve");
-    }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees")
+    }, py::arg("axis"), py::arg("ang"), "revolve shape around 'axis' by 'ang' degrees",
+       py::call_guard<py::gil_scoped_release>())
     .def("CrossSection", &CrossSection, py::arg("plane_axes"),
          "Create cross section of shape with plane defined by 'plane_axes' and transfer properties to dim-1 entities")
     .def("MakeFillet", [](const TopoDS_Shape& shape, const std::vector<std::pair<TopoDS_Shape, double>>& fillets) -> TopoDS_Shape
@@ -1264,7 +1267,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto gen : mkFillet.Generated(e))
             OCCGeometry::GetProperties(gen).name = "fillet";
         return mkFillet.Shape();
-      }, py::arg("fillets"), "make fillets for shapes of radius 'r'")
+      }, py::arg("fillets"), "make fillets for shapes of radius 'r'",
+         py::call_guard<py::gil_scoped_release>())
     .def("MakeFillet", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double r) -> TopoDS_Shape {
         if(shape.ShapeType() == TopAbs_FACE)
         {
@@ -1285,7 +1289,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           for (auto gen : mkFillet.Generated(e))
             OCCGeometry::GetProperties(gen).name = "fillet";
         return mkFillet.Shape();
-      }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'")
+      }, py::arg("edges"), py::arg("r"), "make fillets for edges 'edges' of radius 'r'",
+         py::call_guard<py::gil_scoped_release>())
   
     .def("MakeChamfer", [](const TopoDS_Shape & shape, std::vector<TopoDS_Shape> edges, double d) {
 #if NETGEN_OCC_VERSION_AT_LEAST(7, 4)
@@ -1301,7 +1306,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 #else
         throw Exception("MakeChamfer not available for occ-version < 7.4");
 #endif        
-      }, py::arg("edges"), py::arg("d"), "make symmetric chamfer for edges 'edges' of distrance 'd'")
+      }, py::arg("edges"), py::arg("d"), "make symmetric chamfer for edges 'edges' of distrance 'd'",
+         py::call_guard<py::gil_scoped_release>())
   
     .def("MakeThickSolid", [](const TopoDS_Shape & body, std::vector<TopoDS_Shape> facestoremove,
                               double offset, double tol, bool intersection,
@@ -1325,7 +1331,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
        }, py::arg("facestoremove"), py::arg("offset"), py::arg("tol"),
          py::arg("intersection") = false,py::arg("joinType")="arc",
          py::arg("removeIntersectingEdges") = false,
-         "makes shell-like solid from faces")
+         "makes shell-like solid from faces", py::call_guard<py::gil_scoped_release>())
 
     .def("Offset", [](const TopoDS_Shape & shape, 
                       double offset, double tol, bool intersection,
@@ -1376,7 +1382,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
          py::arg("intersection") = false,py::arg("joinType")="arc",
          py::arg("removeIntersectingEdges") = false,
          py::arg("identification_name") = nullopt,
-         "makes shell-like solid from faces")
+         "makes shell-like solid from faces", py::call_guard<py::gil_scoped_release>())
 
 
     
@@ -1385,7 +1391,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            BuildTriangulation(shape);
          }, "Ensure all faces of the shape have an OpenCascade triangulation "
             "(typically via BRepMesh). Useful before querying Poly_Triangulation "
-            "or exporting to viewers. See https://dev.opencascade.org/doc/refman/html/class_b_rep_mesh___incremental_mesh.html")
+            "or exporting to viewers. See https://dev.opencascade.org/doc/refman/html/class_b_rep_mesh___incremental_mesh.html",
+            py::call_guard<py::gil_scoped_release>())
 
 
     .def("Identify", py::overload_cast<const TopoDS_Shape &, const TopoDS_Shape &, string, Identifications::ID_TYPE, std::optional<std::variant<gp_Trsf, gp_GTrsf>>>(&Identify),
@@ -1398,7 +1405,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     {
       return BRepExtrema_DistShapeShape(self, other).Value();
     }, "Compute the minimum distance between two shapes using "
-       "BRepExtrema_DistShapeShape. See https://dev.opencascade.org/doc/refman/html/class_b_rep_extrema___dist_shape_shape.html")
+       "BRepExtrema_DistShapeShape. See https://dev.opencascade.org/doc/refman/html/class_b_rep_extrema___dist_shape_shape.html",
+       py::call_guard<py::gil_scoped_release>())
     
     .def("Triangulation", [](const TopoDS_Shape & shape)
          {
@@ -1439,11 +1447,13 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
            
            // return MoveToNumpyArray(triangles);
            return triangles;
-         }, "Extract the face triangulation (Poly_Triangulation) from OpenCascade. If missing, builds it first, then returns the triangle vertex coordinates.")
+         }, "Extract the face triangulation (Poly_Triangulation) from OpenCascade. If missing, builds it first, then returns the triangle vertex coordinates.",
+            py::call_guard<py::gil_scoped_release>())
     .def("_webgui_data", [](const TopoDS_Shape & shape)
          {
-           [[maybe_unused]] auto status = BuildTriangulation(shape);
-           // cout << "status = " << aStatus << endl;
+           // meshing (BuildTriangulation) can take seconds — release the GIL for it
+           // so the GUI stays responsive (the rest of this fn builds py objects).
+           { py::gil_scoped_release rel; BuildTriangulation(shape); }
            
            std::vector<double> p[3];
            std::vector<double> n[3];
@@ -1703,7 +1713,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return BRepBuilderAPI_MakeEdge(bounded_curve).Edge();
 
     }, py::arg("point"), py::arg("continuity") = 1, py::arg("after") = true,
-       "Extend the edge's underlying curve to a target point with G0/G1/G2 continuity.")
+       "Extend the edge's underlying curve to a target point with G0/G1/G2 continuity.",
+       py::call_guard<py::gil_scoped_release>())
     ;
   
   py::class_<TopoDS_Wire, TopoDS_Shape> (m, "Wire")
@@ -1754,7 +1765,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return shape;
     }, "Offset a wire on a supporting face by distance 'dist' with a chosen join type: "
        "'arc' rounds corners with circular arcs, 'tangent' blends with tangent continuity, "
-       "and 'intersection' keeps sharp corners by intersecting offset segments.")
+       "and 'intersection' keeps sharp corners by intersecting offset segments.",
+       py::call_guard<py::gil_scoped_release>())
     ;
 
   py::class_<TopoDS_Face, TopoDS_Shape> (m, "Face")
@@ -1803,7 +1815,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       builder.Build();
       return builder.Projection();
     }, "Project a wire onto a face along the local surface normals "
-       "using BRepAlgo_NormalProjection. See https://dev.opencascade.org/doc/refman/html/class_b_rep_algo___normal_projection.html")
+       "using BRepAlgo_NormalProjection. See https://dev.opencascade.org/doc/refman/html/class_b_rep_algo___normal_projection.html",
+       py::call_guard<py::gil_scoped_release>())
     .def("Extend", [](const TopoDS_Face & face, double length, int continuity, bool inU, bool after)
     {
       if (continuity < 0 || continuity > 2)
@@ -1816,7 +1829,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
 
     }, py::arg("length"), py::arg("continuity") = 1, py::arg("u_direction") = true, py::arg("after") = true,
     "Extend a bounded face in U or V by a given length with a requested continuity "
-    "using GeomLib::ExtendSurfByLength. See https://dev.opencascade.org/doc/refman/html/class_geom_lib.html")
+    "using GeomLib::ExtendSurfByLength. See https://dev.opencascade.org/doc/refman/html/class_geom_lib.html",
+    py::call_guard<py::gil_scoped_release>())
     ;
   py::class_<TopoDS_Solid, TopoDS_Shape> (m, "Solid")
     .def(py::init([](const TopoDS_Shape& faces)
@@ -2214,12 +2228,14 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
   m.def("Prism", [] (const TopoDS_Shape & face, gp_Vec vec) {
       return BRepPrimAPI_MakePrism (face, vec, true).Shape();
     }, py::arg("face"), py::arg("v"),
-    "Extrude a face (or shape) along the vector v to create a prism.");
+    "Extrude a face (or shape) along the vector v to create a prism.",
+    py::call_guard<py::gil_scoped_release>());
 
   m.def("Revolve", [] (const TopoDS_Shape & face,const gp_Ax1 &A, const double D) {
       //convert angle from deg to rad
       return BRepPrimAPI_MakeRevol (face, A, D*M_PI/180, true).Shape();
-    }, "Revolve a shape around an axis by an angle in degrees.");
+    }, "Revolve a shape around an axis by an angle in degrees.",
+    py::call_guard<py::gil_scoped_release>());
 
   m.def("Pipe", [] (const TopoDS_Wire & spine, const TopoDS_Shape & profile,
                     optional<tuple<gp_Pnt, double>> twist,
@@ -2253,7 +2269,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           return BRepOffsetAPI_MakePipe (spine, profile).Shape();
         }, py::arg("spine"), py::arg("profile"), py::arg("twist")=nullopt, py::arg("auxspine")=nullopt,
         "Create a pipe by sweeping a profile along a spine wire. "
-        "If auxspine is provided, uses a pipe shell with the auxiliary spine for orientation.");
+        "If auxspine is provided, uses a pipe shell with the auxiliary spine for orientation.",
+        py::call_guard<py::gil_scoped_release>());
   
   m.def("PipeShell", [] (const TopoDS_Wire & spine, variant<TopoDS_Shape, std::vector<TopoDS_Shape>> profile, std::optional<TopoDS_Wire> auxspine) {
       try
@@ -2278,7 +2295,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }
     }, py::arg("spine"), py::arg("profile"), py::arg("auxspine")=nullopt,
     "Create a pipe shell by sweeping one or more profiles along a spine wire. "
-    "Optionally uses an auxiliary spine to control orientation.");
+    "Optionally uses an auxiliary spine to control orientation.",
+    py::call_guard<py::gil_scoped_release>());
 
 
   // Handle(Geom2d_Ellipse) anEllipse1 = new Geom2d_Ellipse(anAx2d, aMajor, aMinor);
@@ -2432,7 +2450,7 @@ Returns
 -------
 TopoDS_Shape
     The sewed shape containing one or more shells.
-)doc");
+)doc", py::call_guard<py::gil_scoped_release>());
 
   
   m.def("Glue", [] (const std::vector<TopoDS_Shape> shapes) -> TopoDS_Shape
@@ -2492,7 +2510,8 @@ TopoDS_Shape
           for (auto & s : shapes)
             PropagateProperties (builder, s);          
           return builder.Shape();
-        }, py::arg("shapes"), "glue together shapes of list");
+        }, py::arg("shapes"), "glue together shapes of list",
+        py::call_guard<py::gil_scoped_release>());
 
   m.def("Glue", [] (TopoDS_Shape shape) -> TopoDS_Shape
         {
@@ -2523,7 +2542,8 @@ TopoDS_Shape
           PropagateProperties (builder, shape);
           
           return builder.Shape();
-        }, py::arg("shape"), "glue together shapes from shape, typically a compound");
+        }, py::arg("shape"), "glue together shapes from shape, typically a compound",
+        py::call_guard<py::gil_scoped_release>());
   m.def("Fuse", [](const vector<TopoDS_Shape>& shapes) -> TopoDS_Shape
   {
     auto s = shapes[0];
@@ -2535,7 +2555,8 @@ TopoDS_Shape
         s = builder.Shape();
       }
     return s;
-  }, "Fuse a list of shapes sequentially (pairwise) using BRepAlgoAPI_Fuse.");
+  }, "Fuse a list of shapes sequentially (pairwise) using BRepAlgoAPI_Fuse.",
+  py::call_guard<py::gil_scoped_release>());
 
 
   // py::class_<Handle(Geom_TrimmedCurve)> (m, "Geom_TrimmedCurve")
@@ -2566,9 +2587,9 @@ TopoDS_Shape
 
   m.def("BSplineCurve", [](std::vector<gp_Pnt> vpoles, int degree) {
       // not yet working ????
-      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
-      TColStd_Array1OfReal knots(0, vpoles.size()+degree);
-      TColStd_Array1OfInteger mult(0, vpoles.size()+degree);
+      TColgp_Array1OfPnt poles(0, int(vpoles.size())-1);
+      TColStd_Array1OfReal knots(0, int(vpoles.size())+degree);
+      TColStd_Array1OfInteger mult(0, int(vpoles.size())+degree);
       // int cnt = 0;
 
       for (int i = 0; i < vpoles.size(); i++)
@@ -2589,7 +2610,7 @@ TopoDS_Shape
     "Create a B-spline edge from control points and degree (experimental).");
   
   m.def("BezierCurve", [](std::vector<gp_Pnt> vpoles) {
-      TColgp_Array1OfPnt poles(0, vpoles.size()-1);
+      TColgp_Array1OfPnt poles(0, int(vpoles.size())-1);
 
       for (int i = 0; i < vpoles.size(); i++)
         poles.SetValue(i, vpoles[i]);
@@ -2879,7 +2900,8 @@ degen_tol : double
           return aTool.Shape();
         }, py::arg("wires"), py::arg("solid")=true,
         "Building a loft. This is a shell or solid passing through a set of sections (wires). "
-        "First and last sections may be vertices. See https://dev.opencascade.org/doc/refman/html/class_b_rep_offset_a_p_i___thru_sections.html#details");
+        "First and last sections may be vertices. See https://dev.opencascade.org/doc/refman/html/class_b_rep_offset_a_p_i___thru_sections.html#details",
+        py::call_guard<py::gil_scoped_release>());
 
   m.def("ConnectEdgesToWires", [](const vector<TopoDS_Shape>& edges,
                                   double tol, bool shared)
@@ -2894,7 +2916,8 @@ degen_tol : double
       wires.push_back(TopoDS::Wire(w));
     return wires;
   }, py::arg("edges"), py::arg("tol")=1e-8, py::arg("shared")=true,
-  "Connect edges into one or more wires using ShapeAnalysis_FreeBounds::ConnectEdgesToWires.");
+  "Connect edges into one or more wires using ShapeAnalysis_FreeBounds::ConnectEdgesToWires.",
+  py::call_guard<py::gil_scoped_release>());
 
   py::class_<WorkPlane, shared_ptr<WorkPlane>> (m, "WorkPlane")
     .def(py::init<gp_Ax3, gp_Ax2d>(), py::arg("axes")=gp_Ax3(), py::arg("pos")=gp_Ax2d())

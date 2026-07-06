@@ -52,15 +52,38 @@ namespace ngcore
           {
             if(py::isinstance<py::float_>(vdl[0]) || py::isinstance<py::int_>(vdl[0]))
               flags.SetFlag(s, makeCArray<double>(vdl));
-            if(py::isinstance<py::str>(vdl[0]))
+            else if(py::isinstance<py::str>(vdl[0]))
               flags.SetFlag(s, makeCArray<string>(vdl));
+            else
+              {
+                /*
+                Array<std::any> sta;
+                for (auto el : vdl)
+                  // sta.Append(CastPyToAny(dynamic_cast<py::object&>(el)));
+                  {
+                    auto obj = py::reinterpret_borrow<py::object>(el);
+                    sta.Append(CastPyToAny(obj));
+                  }
+                */
+                std::vector<std::any> sta;
+                for (auto el : vdl)
+                  // sta.Append(CastPyToAny(dynamic_cast<py::object&>(el)));
+                  {
+                    auto obj = py::reinterpret_borrow<py::object>(el);
+                    sta.push_back(CastPyToAny(obj));
+                  }
+                
+                flags.SetFlag(s, sta);
+              }
           }
         else
           {
             Array<string> dummystr;
             Array<double> dummydbl;
+            Array<std::any> dummyany;
             flags.SetFlag(s,dummystr);
             flags.SetFlag(s,dummydbl);
+            flags.SetFlag(s,dummyany);            
           }
       }
     else if (py::isinstance<py::tuple>(value))

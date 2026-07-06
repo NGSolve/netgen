@@ -74,6 +74,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   m.def("_PushStatus", [](string s) { PushStatus(s); });
   m.def("_PopStatus", []() { PopStatus(); });
   m.def("_SetThreadPercentage", [](double percent) { SetThreadPercent(percent); });
+  m.def("_SetTerminate", [](bool t) { multithread.terminate = t; });
+  m.def("_GetTerminate", []() { return bool(multithread.terminate); });
 
   py::enum_<Identifications::ID_TYPE>(m,"IdentificationType")
     .value("UNDEFINED", Identifications::UNDEFINED)
@@ -1332,6 +1334,18 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     for (int j = 0; j < np; j++)
                       el[j] = ptr[j]+PointIndex::BASE-base;
                     el.SetIndex(index);
+
+                    if(project_geometry)
+                      {
+                        // find some point in the mid of trig/quad for
+                        // quick + stable uv-projection of all points
+                        // auto startp = Center(self[el[0]], self[el[1]]);
+			int edgenr = self.GetEdgeDescriptor(index).EdgeNr();
+                        for(auto i : Range(np))
+                          self.GetGeometry()->ProjectPointEdge(0, 0, self[el[i]],
+                                                               (i<2)?&el.EPGeomInfo(i):nullptr, edgenr);
+                      }
+                    
                     self.AddSegment(el);
                     ptr += info.strides[0]/sizeof(int);
                   }

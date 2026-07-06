@@ -69,7 +69,7 @@ namespace ngcore
       StopTimer(nr, TaskManager::GetTimerThreadId());
     }
 
-    static void StartTimer (size_t nr, size_t tid)
+    static void StartTimer (size_t nr, int tid)
     {
       if(tid == -1)
           return;
@@ -82,7 +82,7 @@ namespace ngcore
           TaskManager::GetWorkerData()->times[nr] -= GetTimeCounter();
     }
 
-    static void StopTimer (size_t nr, size_t tid)
+    static void StopTimer (size_t nr, int tid)
     {
       if(tid == -1)
           return;

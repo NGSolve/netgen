@@ -288,6 +288,10 @@ public:
     }
   };
 
+  // extern size_t tl_heap_size;
+  // extern thread_local LocalHeap tl_heap;
+  NGCORE_API LocalHeap& TLHeap();
+  NGCORE_API void SetTLHeapSize(size_t s);
 }
 
 
@@ -312,7 +316,6 @@ NETGEN_INLINE void operator delete [] (void * p, ngcore::Allocator & lh)
 {
   lh.ArrayDelete(p);
 }
-
 
 
 #endif // NETGEN_CORE_LOCALHEAP_HPP

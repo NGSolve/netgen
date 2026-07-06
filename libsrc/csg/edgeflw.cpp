@@ -1668,11 +1668,13 @@ namespace netgen
     int k;
     // PointIndex pi;
 
+#ifdef DEVELOP    
     auto seg_fdi = [&mesh](const Segment& s) -> int {
       if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
         return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
       return -1;
     };
+#endif    
 
     double size = geometry.MaxSize();
     
