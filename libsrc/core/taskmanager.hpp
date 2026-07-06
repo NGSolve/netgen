@@ -823,7 +823,7 @@ public:
 
   // tasks must be a multiple of part.size
   template <typename TFUNC>
-  NETGEN_INLINE void ParallelFor (const Partitioning & part, TFUNC f, int tasks_per_thread = 1)
+  NETGEN_INLINE void ParallelFor (const Partitioning & part, TFUNC f, int tasks_per_thread = 2)
   {
     auto * task_manager = GetTaskManager();
     if (task_manager)
@@ -856,7 +856,7 @@ public:
 
   template <typename TFUNC>
   NETGEN_INLINE void ParallelForRange (const Partitioning & part, TFUNC f,
-                                int tasks_per_thread = 1, TotalCosts costs = 1000)
+                                int tasks_per_thread = 2, TotalCosts costs = 1000)
   {
     auto * task_manager = GetTaskManager();
     if (task_manager && costs() >= 1000)
