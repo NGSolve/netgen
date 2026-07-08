@@ -669,11 +669,13 @@ namespace netgen
   void Mesh :: Save (ostream & outfile) const
   {
     static Timer timer("Mesh::Save"); RegionTimer rt(timer);
+    /*
     auto seg_fdi = [this](const Segment& s) -> int {
       if (s.GetIndex() >= 1 && s.GetIndex() <= edgedecoding.Size())
         { int fdi = edgedecoding[s.GetIndex()-1].GetIndex(); if (fdi > 0) return fdi; }
       return -1;
     };
+    */
     int i, j;
 
     double scale = 1;  // globflags.GetNumFlag ("scale", 1);

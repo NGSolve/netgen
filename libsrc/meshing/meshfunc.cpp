@@ -57,7 +57,7 @@ namespace netgen
       ipmap.SetSize(num_domains);
       // auto dim = mesh.GetDimension();
       auto num_points = mesh.GetNP();
-      auto num_facedescriptors = mesh.GetNFD();
+      // auto num_facedescriptors = mesh.GetNFD();
 
 
       constexpr PointIndex state0 = IndexBASE<PointIndex>()-1; 
