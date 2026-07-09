@@ -301,7 +301,8 @@ namespace netgen
                     in >> name;
                     cout << IM(3)  << len << " element are in group " << name << endl;
                     int hi, index;
-                    int fdnr=-1, ednr=-1;
+                    int fdnr=-1;
+                    // int ednr = -1;
 
                     in >> hi >> index >> hi >> hi;
                     int codim = get<1>(element_map[index]);
@@ -344,9 +345,11 @@ namespace netgen
                             int bcpr = mesh.GetNCD2Names()+1;
                             auto ed = EdgeDescriptor();
                             ed.SetSurfNr(0,bcpr);//?
-                            ednr = mesh.AddEdgeDescriptor(ed);
+                            // ednr =
+                            mesh.AddEdgeDescriptor(ed);
                             mesh.SetCD2Name(bcpr, name);
-                            auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
+                            // auto nr = 
+                            mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
                           }
                           else if(dim == 2)
                           {
@@ -381,9 +384,10 @@ namespace netgen
                             break;
                           case 2:
 	   		    if(dim == 3)
-                            {
-                              auto nr = mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
-                            }
+                              {
+                                // auto nr =
+                                mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
+                              }
 			    else if(dim == 2)
 			    {
  				    Segment & seg = mesh.LineSegment(get<0>(element_map[index]));
