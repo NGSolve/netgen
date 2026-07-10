@@ -91,7 +91,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
     ;
 
-  py::class_<LocalH, shared_ptr<LocalH>>(m, "LocalH");
+  py::class_<LocalH, shared_ptr<LocalH>>(m, "LocalH")
+    .def("GetH", [](LocalH& self, const Point<3>& p) { return self.GetH(p); },
+         py::arg("p"), "evaluate the local mesh size field at a point")
+    ;
   
   py::class_<Point<2>> (m, "Point2d")
     .def(py::init<double,double>())
