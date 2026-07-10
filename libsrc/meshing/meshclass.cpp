@@ -5210,6 +5210,13 @@ namespace netgen
             const auto & n = edgedecoding[i].GetName();
             bcnames.Append((n != "default" && !n.empty()) ? new string(n) : nullptr);
           }
+
+        for (auto str : cd2names)
+          delete str;
+        cd2names.SetSize(0);
+        for (auto str : cd3names)
+          cd2names.Append(str);
+        cd3names.SetSize(0);
       }
     if (dimension == 3 && dim == 1)
       {
