@@ -1624,13 +1624,13 @@ namespace ngcore
     
     HTArray & operator= (const HTArray &) = default;
 
-    T * Ptr () { return tail.Ptr(); }
-    T & operator[] (size_t i) { return Ptr()[i]; }
+    NETGEN_INLINE T * Ptr () { return tail.Ptr(); }
+    NETGEN_INLINE T & operator[] (size_t i) { return Ptr()[i]; }
 
-    const T * Ptr () const { return tail.Ptr(); }
-    const T & operator[] (size_t i) const { return Ptr()[i]; }
+    NETGEN_INLINE const T * Ptr () const { return tail.Ptr(); }
+    NETGEN_INLINE const T & operator[] (size_t i) const { return Ptr()[i]; }
     template <int NR>
-    T & Elem() { return (NR==S-1) ? head : tail.template Elem<NR>(); }
+    NETGEN_INLINE T & Elem() { return (NR==S-1) ? head : tail.template Elem<NR>(); }
 
     auto Tail() const { return tail; }
     auto Head() const { return head; }
@@ -1653,13 +1653,13 @@ namespace ngcore
     
     HTArray & operator= (const HTArray &) = default;
 
-    T * Ptr () { return &head; }
-    T & operator[] (size_t i) { return Ptr()[i]; }
+    NETGEN_INLINE T * Ptr () { return &head; }
+    NETGEN_INLINE T & operator[] (size_t i) { return Ptr()[i]; }
 
-    const T * Ptr () const { return &head; }
-    const T & operator[] (size_t i) const { return Ptr()[i]; }
-    template <int NR>    
-    T & Elem()
+    NETGEN_INLINE const T * Ptr () const { return &head; }
+    NETGEN_INLINE const T & operator[] (size_t i) const { return Ptr()[i]; }
+    template <int NR>
+    NETGEN_INLINE T & Elem()
     {
       // assert(NR==0, "HTArray index error");
       return head;
@@ -1694,11 +1694,11 @@ namespace ngcore
     }
     */
     // T * Ptr () { return (T*)(void*)&head; }
-    T * Ptr () { return (T*)(void*)this; }
-    T & operator[] (size_t i) { return Ptr()[i]; }
+    NETGEN_INLINE T * Ptr () { return (T*)(void*)this; }
+    NETGEN_INLINE T & operator[] (size_t i) { return Ptr()[i]; }
     // const T * Ptr () const { return (const T*)(const void*)&head; }
-    const T * Ptr () const { return (const T*)(const void*)this; }
-    const T & operator[] (size_t i) const { return Ptr()[i]; }
+    NETGEN_INLINE const T * Ptr () const { return (const T*)(const void*)this; }
+    NETGEN_INLINE const T & operator[] (size_t i) const { return Ptr()[i]; }
     template <int NR>        
     T & Elem()
     {
