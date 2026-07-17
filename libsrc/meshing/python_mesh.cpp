@@ -955,6 +955,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("Partition", [](shared_ptr<Mesh> self, int numproc) {
         self->ParallelMetis(numproc);
       }, py::arg("numproc"))
+    .def("OrderElements", [](shared_ptr<Mesh> self) {
+        self->OrderElements();
+      })
     
     .def("Distribute", [](shared_ptr<Mesh> self, NgMPI_Comm comm) {
 	self->SetCommunicator(comm);
