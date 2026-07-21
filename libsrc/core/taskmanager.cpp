@@ -254,7 +254,7 @@ namespace ngcore
           NgProfiler::timers[j].flops += workers[i].flops[j];
         }
     workers.clear();
-    timer_thread_id = -1;
+    timer_thread_id = std::this_thread::get_id() == main_thread_id ? -2 : -1;
     thread_id = 0;
   }
 
