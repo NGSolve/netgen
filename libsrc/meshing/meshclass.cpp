@@ -1142,6 +1142,8 @@ namespace netgen
           }
       }
 
+
+
     
     outfile << endl << endl << "endmesh" << endl << endl;
     if (geometry)
@@ -1797,6 +1799,8 @@ namespace netgen
             for (ElementIndex ei = 0; ei < GetNE(); ei++)
               (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
           }
+
+
 
         
         if (strcmp (str, "endmesh") == 0)
@@ -6852,6 +6856,19 @@ namespace netgen
           }
         ipts.Append(hash_pts.I2());
       }
+
+    // Store offset-point identifications for curving
+    {
+      auto & ident = GetIdentifications();
+      int offset_nr = ident.GetNr("offset_points");
+      ident.SetType(offset_nr, Identifications::OFFSET_POINT);
+      for (const auto& [pair, chain] : inserted_points)
+        {
+          PointIndex base_pi = pair.first;
+          for (auto i : Range(size_t(1), chain.Size()-1))  // skip endpoints
+            ident.Add(chain[i], base_pi, offset_nr);  // inverse: offset -> base
+        }
+    }
 
     // Split segments
     for(auto si : Range(segments))
