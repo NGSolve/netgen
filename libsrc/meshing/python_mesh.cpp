@@ -82,6 +82,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .value("PERIODIC", Identifications::PERIODIC)
     .value("CLOSESURFACES", Identifications::CLOSESURFACES)
     .value("CLOSEEDGES", Identifications::CLOSEEDGES)
+    .value("OFFSET_POINT", Identifications::OFFSET_POINT)
     ;
 
   py::implicitly_convertible<int, Identifications::ID_TYPE>();
@@ -781,6 +782,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<FaceDescriptor>(m);
   ExportArray<EdgeDescriptor>(m);
 
+
+
   string export_docu = "Export mesh to other file format. Supported formats are:\n";
   Array<string> export_formats;
   for(auto & kv : UserFormatRegister::getFormats()) {
@@ -1187,6 +1190,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
+
     .def("RestrictLocalH", [](Mesh& self, const Point<3>& pnt, double maxh,
                               int layer)
     {
@@ -1508,10 +1512,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            py::list points;
            for(const auto& pair : self.GetIdentifications().GetIdentifiedPoints())
              {
-               // py::tuple pnts = py::make_tuple(pair.first.I1(), pair.first.I2());
-               
-               auto [pi1, pi2] = get<0> (pair.first);
-               py::tuple pnts = py::make_tuple(pi1, pi2);
+               auto [pts, nr] = pair.first;
+               py::tuple pnts = py::make_tuple(pts.I1(), pts.I2(), nr);
                points.append(pnts);
              }
            return points;
@@ -1540,6 +1542,10 @@ py::arg("point_tolerance") = -1.)
                                  {
                                    return self.GetIdentifications().GetMaxNr();
                                  })
+    .def("GetIdentificationType", [](Mesh& self, int identnr)
+                                 {
+                                   return self.GetIdentifications().GetType(identnr);
+                                 }, py::arg("identnr"))
     .def ("CalcLocalH", &Mesh::CalcLocalH)
     .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
           {

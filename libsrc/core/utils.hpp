@@ -218,15 +218,37 @@ namespace ngcore
     return reinterpret_cast<std::atomic<T>&> (d);
   }
 
+  
   NETGEN_INLINE double AtomicAdd( double & sum, double val )
   {
-      std::atomic<double> & asum = AsAtomic(sum);
-      double current = asum.load();
-      while (!asum.compare_exchange_weak(current, current + val))
-          ;
-      return current;
+#if defined(__cpp_lib_atomic_ref)
+    std::atomic_ref<double> asum(sum);
+    return asum.fetch_add(val); // Returns the old value of 'sum'
+#else
+    std::atomic<double> & asum = AsAtomic(sum);
+    double current = asum.load();
+    while (!asum.compare_exchange_weak(current, current + val))
+      ;
+    return current;
+#endif
   }
-
+  
+  NETGEN_INLINE float AtomicAdd( float & sum, float val )
+  {
+#if defined(__cpp_lib_atomic_ref)
+    std::atomic_ref<float> asum(sum);
+    return asum.fetch_add(val); // Returns the old value of 'sum'
+#else
+    std::atomic<float> & asum = AsAtomic(sum);
+    float current = asum.load();
+    while (!asum.compare_exchange_weak(current, current + val))
+      ;
+    return current;
+#endif
+  }
+  
+  
+  
   template<typename T>
   NETGEN_INLINE T AtomicMin( T & minval, T val )
   {

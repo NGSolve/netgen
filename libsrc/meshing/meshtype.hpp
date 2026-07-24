@@ -1814,7 +1814,7 @@ namespace netgen
   class Identifications
   {
   public:
-    enum ID_TYPE : unsigned char { UNDEFINED = 1, PERIODIC = 2, CLOSESURFACES = 3, CLOSEEDGES = 4};
+    enum ID_TYPE : unsigned char { UNDEFINED = 1, PERIODIC = 2, CLOSESURFACES = 3, CLOSEEDGES = 4, OFFSET_POINT = 5};
   
 
   private:
