@@ -274,7 +274,7 @@ namespace netgen
           }
       };
 
-      auto tol = 1e-8 * bounding_box.Diam();
+      auto tol = 1e-6 * bounding_box.Diam();
       for(auto & f : faces)
         for(auto & ident: f->identifications)
           for(auto e : static_cast<GeometryFace*>(ident.from)->edges)
