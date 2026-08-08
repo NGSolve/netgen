@@ -50,6 +50,12 @@ set(NGGUI_LIBRARY_TYPE SHARED CACHE STRING "nggui library type")
 
 set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cmake_modules")
 
+set (TCL_INCLUDE_PATH "/usr/include/tcl")
+
+include_directories(${TCL_INCLUDE_PATH})
+include_directories("${TCL_INCLUDE_PATH}/tk-private/generic")
+include_directories("${TCL_INCLUDE_PATH}/tk-private/unix")
+
 if(APPLE)
   set(INSTALL_DIR_DEFAULT /Applications/Netgen.app)
 else(APPLE)
