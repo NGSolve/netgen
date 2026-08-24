@@ -1725,7 +1725,11 @@ py::arg("point_tolerance") = -1.)
     .def ("BuildSearchTree", &Mesh::BuildElementSearchTree,py::call_guard<py::gil_scoped_release>(),
           py::arg("dim")=3)
 
-    .def ("BoundaryLayer2", GenerateBoundaryLayer2, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
+    .def ("BoundaryLayer2", [](Mesh & self, int domain, const Array<double> & thicknesses,
+                               bool make_new_domain, const Array<int> & boundaries)
+           {
+             throw Exception("Call syntax has changed! 2d boundary layers are now generated together with the mesh, pass a list of BoundaryLayerParameters to the GenerateMesh call instead: \ngeo.GenerateMesh(..., boundary_layers=[BoundaryLayerParameters(...), BoundaryLayerParameters(...), ...])");
+           }, py::arg("domain"), py::arg("thicknesses"), py::arg("make_new_domain")=true, py::arg("boundaries")=Array<int>{})
     .def ("BoundaryLayer", [](Mesh & self, variant<string, int, std::vector<int>> boundary,
                               variant<double, std::vector<double>> thickness,
                               optional<variant<string, map<string, string>>> material,

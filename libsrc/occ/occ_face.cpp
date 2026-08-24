@@ -95,10 +95,20 @@ namespace netgen
                 throw Exception("have edge more than twice in face " + ToString(nr) + " " + properties.GetName() + ", orientation: " + ToString(orientation));
         }
 
+        auto n_faces = static_cast<int>(geom.GetNFaces());
+
         Array<Segment> boundary;
         for (auto seg : mesh.LineSegments())
         {
-            auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() - 1;
+            const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+            auto edgenr = ed.EdgeNr() - 1;
+            if(edgenr < 0 || edgenr >= n_edges)
+                continue;  // not on an edge of the geometry, handled below
+
+            if((ed.SurfNr(0) > n_faces || ed.SurfNr(1) > n_faces) &&
+               ed.SurfNr(0) != nr+1 && ed.SurfNr(1) != nr+1)
+                continue;
+
             auto orientation = edge_orientation[edgenr];
 
             if(orientation == UNUSED)
@@ -153,6 +163,31 @@ namespace netgen
 
                 boundary.Append(seg);
             }
+        }
+
+        for (auto seg : mesh.LineSegments())
+        {
+            const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+            auto edgenr = ed.EdgeNr() - 1;
+            if(edgenr >= 0 && edgenr < n_edges)
+                continue;
+
+            bool forward = ed.SurfNr(0) == nr+1;
+            bool reversed = ed.SurfNr(1) == nr+1;
+            if(forward == reversed)
+                continue;  // not adjacent to this face, or interior to it
+
+            if(reversed)
+            {
+                swap(seg[0], seg[1]);
+                swap(seg.EPGeomInfo(0), seg.EPGeomInfo(1));
+            }
+            for(auto i : Range(2))
+            {
+                Point<3> p = mesh[seg[i]];
+                seg.GeomInfo(i) = Project(p);
+            }
+            boundary.Append(seg);
         }
         return boundary;
     }
