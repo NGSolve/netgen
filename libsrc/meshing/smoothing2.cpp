@@ -936,7 +936,7 @@ namespace netgen
 		if (ld.uselocalh)
 		  {
 		    Point3d pmid = Center (mesh[bel[0]], mesh[bel[1]], mesh[bel[2]]);
-		    ld.lochs.Append (mesh.GetH(pmid));
+		    ld.lochs.Append (mesh.GetH(pmid, mesh[pi].GetLayer()));
 		  }
 	      }
 

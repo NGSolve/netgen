@@ -478,7 +478,7 @@ namespace netgen
 	double hshould = CalcLocalH (pmid, mesh.GetH (pmid, layer));
 	if (gh < hshould) hshould = gh;
 
-	mesh.RestrictLocalH (pmid, hshould);
+	mesh.RestrictLocalH (pmid, hshould, layer);
 
 	double h = hshould;
 
@@ -1318,7 +1318,7 @@ namespace netgen
 	      
 	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
 	      {
-		PointIndex globind = mesh.AddPoint (locpoints.Get(i));
+		PointIndex globind = mesh.AddPoint (locpoints.Get(i), layer);
 		pindex.Elem(i) = adfront.AddPoint (locpoints.Get(i), globind);
 	      }
 	      
