@@ -567,21 +567,21 @@ NETGEN_INLINE AutoDiffDiff<D, SCAL> atan (AutoDiffDiff<D, SCAL> x)
 }
 
 template <int D, typename SCAL>
-NETGEN_INLINE AutoDiffDiff<D, SCAL> atan2 (AutoDiffDiff<D, SCAL> x,AutoDiffDiff<D, SCAL> y)
+NETGEN_INLINE AutoDiffDiff<D, SCAL> atan2 (AutoDiffDiff<D, SCAL> y,AutoDiffDiff<D, SCAL> x)
 {
   AutoDiffDiff<D, SCAL> res;
-  SCAL a = atan2(x.Value(), y.Value());
+  SCAL a = atan2(y.Value(), x.Value());
   res.Value() = a;
   SCAL denominator = x.Value()*x.Value()+y.Value()*y.Value();
   for (int k = 0; k < D; k++)
-    res.DValue(k) = (y.Value()*x.DValue(k)-x.Value()*y.DValue(k))/denominator;
+    res.DValue(k) = (x.Value()*y.DValue(k)-y.Value()*x.DValue(k))/denominator;
 
   for (int k = 0; k < D; k++)
     for (int l = 0; l < D; l++)
       {
-        SCAL numerator = y.Value()*x.DValue(k)-x.Value()*y.DValue(k);
-        SCAL dnumerator = y.DValue(l)*x.DValue(k)+y.Value()*x.DDValue(k,l)
-          - x.DValue(l)*y.DValue(k)-x.Value()*y.DDValue(k,l);
+        SCAL numerator = x.Value()*y.DValue(k)-y.Value()*x.DValue(k);
+        SCAL dnumerator = x.DValue(l)*y.DValue(k)+x.Value()*y.DDValue(k,l)
+          - y.DValue(l)*x.DValue(k)-y.Value()*x.DDValue(k,l);
         SCAL ddenominator = 2*(x.Value()*x.DValue(l)+y.Value()*y.DValue(l));
         res.DDValue(k,l) = dnumerator/denominator
           - numerator*ddenominator/(denominator*denominator);

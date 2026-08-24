@@ -569,13 +569,13 @@ AutoDiffVec<D,SCAL> atan (AutoDiffVec<D,SCAL> x)
 
 using std::atan2;
 template <int D, typename SCAL>
-NETGEN_INLINE AutoDiffVec<D,SCAL> atan2 (AutoDiffVec<D,SCAL> x, AutoDiffVec<D,SCAL> y)
+NETGEN_INLINE AutoDiffVec<D,SCAL> atan2 (AutoDiffVec<D,SCAL> y, AutoDiffVec<D,SCAL> x)
 {
   AutoDiffVec<D,SCAL> res;
-  SCAL a = atan2(x.Value(), y.Value());
+  SCAL a = atan2(y.Value(), x.Value());
   res.Value() = a;
   for (int k = 0; k < D; k++)
-    res.DValue(k) = (y.Value()*x.DValue(k)-x.Value()*y.DValue(k))/(y.Value()*y.Value()+x.Value()*x.Value());
+    res.DValue(k) = (x.Value()*y.DValue(k)-y.Value()*x.DValue(k))/(x.Value()*x.Value()+y.Value()*y.Value());
   return res;
 }
 
@@ -1046,10 +1046,10 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   }
 
   template <int D, typename SCAL>
-  auto atan2 (AutoDiffRec<D,SCAL> x, AutoDiffRec<D,SCAL> y)
+  auto atan2 (AutoDiffRec<D,SCAL> y, AutoDiffRec<D,SCAL> x)
   {
-    return AutoDiffRec<D,SCAL> (atan2(x.Rec(), y.Rec()),
-                                (1./(x.Value()*x.Value()+y.Value()*y.Value()))*(y.Value()*x.Last()-x.Value()*y.Last()));
+    return AutoDiffRec<D,SCAL> (atan2(y.Rec(), x.Rec()),
+                                (1./(x.Value()*x.Value()+y.Value()*y.Value()))*(x.Value()*y.Last()-y.Value()*x.Last()));
   }
 
   template <int D, typename SCAL>
@@ -1138,4 +1138,3 @@ namespace ngbla
 
 
 #endif
-
