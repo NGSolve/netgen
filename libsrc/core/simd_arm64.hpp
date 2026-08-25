@@ -172,6 +172,100 @@ namespace ngcore
   {
     return vshlq_n_s64(a.Data(), N);
   }
+
+
+  // *************************** float ***************************
+
+  template<>
+  class SIMD<float,4>
+  {
+    float32x4_t data;
+
+  public:
+    static constexpr int Size() { return 4; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD (float v0, float v1, float v2, float v3) : data{v0,v1,v2,v3} { }
+    SIMD (SIMD<float,2> v0, SIMD<float,2> v1) : data{v0[0],v0[1],v1[0],v1[1]} { }
+    SIMD (std::array<float, 4> arr) : data{arr[0],arr[1],arr[2],arr[3]} { }
+
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{val,val,val,val} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : data{float(val),float(val),float(val),float(val)} { }
+    SIMD (size_t val) : data{float(val),float(val),float(val),float(val)} { }
+
+    SIMD (float const * p)
+    {
+      data = vld1q_f32(p);
+    }
+
+    SIMD (float32x4_t _data) { data = _data; }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data[0] = func(0);
+      data[1] = func(1);
+      data[2] = func(2);
+      data[3] = func(3);
+    }
+
+    void Store (float * p)
+    {
+      vst1q_f32(p, data);
+    }
+
+    NETGEN_INLINE float operator[] (int i) const { return data[i]; }
+    NETGEN_INLINE float & operator[] (int i)  { return ((float*)&data)[i]; }
+
+    template <int I>
+    float Get() const { return data[I]; }
+
+    NETGEN_INLINE auto Data() const { return data; }
+    NETGEN_INLINE auto & Data() { return data; }
+
+    SIMD<float,2> Lo() const { return SIMD<float,2> (data[0],data[1]); }
+    SIMD<float,2> Hi() const { return SIMD<float,2> (data[2],data[3]); }
+  };
+
+
+  NETGEN_INLINE float HSum (SIMD<float,4> sd)
+  {
+    return vaddvq_f32(sd.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,4> FMA(SIMD<float,4> a, SIMD<float,4> b, SIMD<float,4> c)
+  {
+    return vmlaq_f32(c.Data(), a.Data(), b.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,4> FMA(const float & a, SIMD<float,4> b, SIMD<float,4> c)
+  {
+    return FMA(SIMD<float,4> (a), b, c);
+  }
+
+  // ARM complex mult:
+  // https://arxiv.org/pdf/1901.07294.pdf
+  // c += a*b    (a0re, a0im, a1re, a1im, ...),
+  NETGEN_INLINE void FMAComplex (SIMD<float,4> a, SIMD<float,4> b, SIMD<float,4> & c)
+  {
+    auto tmp = vcmlaq_f32(c.Data(), a.Data(), b.Data());   // are * b
+    c = vcmlaq_rot90_f32(tmp, a.Data(), b.Data());    // += i*aim * b
+  }
+
+
+  NETGEN_INLINE SIMD<float,4> operator+ (SIMD<float,4> a, SIMD<float,4> b)
+  { return a.Data()+b.Data(); }
+
+  NETGEN_INLINE SIMD<float,4> operator- (SIMD<float,4> a, SIMD<float,4> b)
+  { return a.Data()-b.Data(); }
+  NETGEN_INLINE SIMD<float,4> operator- (SIMD<float,4> a)
+  { return -a.Data(); }
+
+  NETGEN_INLINE SIMD<float,4> operator* (SIMD<float,4> a, SIMD<float,4> b)
+  { return a.Data()*b.Data(); }
   
   
   
@@ -404,4 +498,3 @@ namespace ngcore
   }
   
 }
-
