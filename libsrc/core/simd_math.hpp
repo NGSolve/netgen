@@ -71,6 +71,40 @@ namespace ngcore
     return std::tuple{ s, c };
   }
 
+  template <int N>
+  auto sincos_reduced (SIMD<float,N> x)
+  {
+    auto x2 = x*x;
+
+    auto s = ((((( float(sincof[0])*x2 + float(sincof[1])) * x2 + float(sincof[2])) * x2 + float(sincof[3])) * x2 + float(sincof[4])) * x2 + float(sincof[5]));
+    s = x + x*x*x * s;
+
+    auto c = ((((( float(coscof[0])*x2 + float(coscof[1])) * x2 + float(coscof[2])) * x2 + float(coscof[3])) * x2 + float(coscof[4])) * x2 + float(coscof[5]));
+    c = 1.0f - 0.5f*x2 + x2*x2*c;
+
+    return std::tuple{ s, c };
+  }
+
+  // TODO: use generic SIMD<float,N> rounding, integer conversion,
+  // masks and selection once these operations are available.
+  template <int N>
+  auto sincos (SIMD<float,N> x)
+  {
+    SIMD<float,N> y([&](int i) { return std::round(float(2/M_PI) * x[i]); });
+    std::array<int32_t,N> q;
+    for (int i = 0; i < N; i++) q[i] = int32_t(y[i]);
+
+    auto [s1,c1] = sincos_reduced(x - y * float(M_PI/2));
+
+    SIMD<float,N> s2([&](int i) { return (q[i] & 1) == 0 ? s1[i] :  c1[i]; });
+    SIMD<float,N> s ([&](int i) { return (q[i] & 2) == 0 ? s2[i] : -s2[i]; });
+
+    SIMD<float,N> c2([&](int i) { return (q[i] & 1) == 0 ? c1[i] : -s1[i]; });
+    SIMD<float,N> c ([&](int i) { return (q[i] & 2) == 0 ? c2[i] : -c2[i]; });
+
+    return std::tuple{ s, c };
+  }
+
 
 
 
