@@ -2,6 +2,7 @@
 
 #include <mystdlib.h>
 #include "meshing.hpp"
+#include "boundarylayer.hpp"
 #include <core/register_archive.hpp>
 
 namespace netgen
@@ -882,8 +883,6 @@ namespace netgen
     multithread.task = "Mesh Surface";
     mesh.ClearFaceDescriptors();
 
-    size_t n_failed_faces = 0;
-    Array<int, PointIndex> glob2loc(mesh.GetNP());
     for(auto k : Range(faces))
     {
         auto & face = *faces[k];
@@ -892,6 +891,22 @@ namespace netgen
           fd.SetSurfColour(*face.properties.col);
         mesh.AddFaceDescriptor(fd);
         mesh.SetBCName(k, face.properties.GetName());
+    }
+
+    int max_index = mesh.GetNFD();
+    for(const auto & sel : mesh.SurfaceElements())
+        max_index = max2(max_index, sel.GetIndex());
+    while(mesh.GetNFD() < max_index)
+    {
+        FaceDescriptor fd(mesh.GetNFD()+1, 0, 0, -1);
+        mesh.AddFaceDescriptor(fd);
+    }
+
+    size_t n_failed_faces = 0;
+    Array<int, PointIndex> glob2loc(mesh.GetNP());
+    for(auto k : Range(faces))
+    {
+        auto & face = *faces[k];
         if(face.primary == &face)
         {
             // check if this face connects two identified closesurfaces
@@ -1360,9 +1375,14 @@ namespace netgen
         return 0;
       }
 
+    Array<BoundaryLayer2dInfo> bl_infos;
     if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
+        if(dimension == 2)
+          bl_infos = InsertBoundaryLayers2d(*mesh, mparam);
         MeshSurface(*mesh, mparam);
+        if(dimension == 2)
+          FinalizeBoundaryLayers2d(*mesh, bl_infos);
       }
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)

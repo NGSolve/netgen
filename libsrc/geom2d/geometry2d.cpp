@@ -25,7 +25,9 @@ namespace netgen
   void SplineGeometry2d :: ProjectPointEdge (int surfind, int surfind2, Point<3> & p, EdgePointGeomInfo* gi, int edgenr) const
   {
     if (!gi) return;
-    
+    if(edgenr < 1 || edgenr > GetSplines().Size())
+      return;  // not from the geometry, e.g. in front of a boundary layer
+
     // copied from PointBetween, but should work easier
     auto spline = GetSplines().Get(edgenr);
     const SplineSeg3<2> * ss3;
@@ -63,7 +65,8 @@ namespace netgen
                                          Point<3> & newp, EdgePointGeomInfo & newgi,
                                          int edgenr) const
   {
-    if(edgenr==-1)  return NetgenGeometry::PointBetweenEdge(p1, p2, secpoint, surfi1, surfi2, ap1, ap2, newp, newgi, edgenr);
+    if(edgenr < 1 || edgenr > GetSplines().Size())
+      return NetgenGeometry::PointBetweenEdge(p1, p2, secpoint, surfi1, surfi2, ap1, ap2, newp, newgi, edgenr);
 
     Point<2> p2d;
     double newdist;
@@ -120,6 +123,8 @@ namespace netgen
                                      const EdgePointGeomInfo & ap1,
                                      int edgenr) const
   {
+    if(edgenr < 1 || edgenr > GetSplines().Size())
+      return NetgenGeometry::GetTangent(p, surfi1, surfi2, ap1, edgenr);
     Vec<2> t2d = GetSplines().Get(edgenr) -> GetTangent(ap1.dist);
     return Vec<3> (t2d(0), t2d(1), 0);
   }
