@@ -423,7 +423,7 @@ namespace ngcore
           high(detail::array_range<N2>(arr, N1))
       {}
 
-    template<typename ...T>
+    template<typename ...T, typename = std::enable_if_t<(std::is_convertible_v<T,float> && ...)>>
     explicit SIMD(const T... vals)
       : lo(detail::array_range<N1>(std::array<float, N>{vals...}, 0)),
       high(detail::array_range<N2>(std::array<float, N>{vals...}, N1))
