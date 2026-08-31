@@ -9,7 +9,6 @@ push_github:
   stage: build
   tags:
     - linux
-    - docker
     - bash
   script:
     - git remote add github git@github.com:NGSolve/netgen.git || true
@@ -318,7 +317,6 @@ pip_linux:
   tags:
     - pip
     - linux
-    - docker
   when: manual
   script:
     - ./tests/build_pip.sh
