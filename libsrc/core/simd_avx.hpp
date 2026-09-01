@@ -480,10 +480,8 @@ namespace ngcore
   {
     __m256i mask;
   public:
-    SIMD (int i)
-      : mask(_mm256_set_m128i(SIMD<mask32,4>(i-4).Data(),
-                              SIMD<mask32,4>(i).Data()))
-    { ; }
+    // delegate: _mm256_set_m128i is a macro on MSVC, template commas would split its args
+    SIMD (int i) : SIMD(SIMD<mask32,4>(i), SIMD<mask32,4>(i-4)) { ; }
     SIMD (SIMD<mask32,4> lo, SIMD<mask32,4> hi)
       : mask(_mm256_set_m128i(hi.Data(), lo.Data())) { ; }
     SIMD (__m256i _mask) : mask(_mask) { ; }
