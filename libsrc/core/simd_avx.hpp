@@ -466,6 +466,93 @@ namespace ngcore
     return FMA(SIMD<float,8> (a), b, c);
   }
 
+  NETGEN_INLINE SIMD<float,8> fabs (SIMD<float,8> a) { return _mm256_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,8> Min (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_min_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,8> Max (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_max_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,8> round (SIMD<float,8> a)
+  { return _mm256_round_ps(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
+
+
+  // *************************** mask32 ***************************
+
+  template <>
+  class SIMD<mask32,8>
+  {
+    __m256i mask;
+  public:
+    SIMD (int i)
+      : mask(_mm256_set_m128i(SIMD<mask32,4>(i-4).Data(),
+                              SIMD<mask32,4>(i).Data()))
+    { ; }
+    SIMD (SIMD<mask32,4> lo, SIMD<mask32,4> hi)
+      : mask(_mm256_set_m128i(hi.Data(), lo.Data())) { ; }
+    SIMD (__m256i _mask) : mask(_mask) { ; }
+    __m256i Data() const { return mask; }
+    static constexpr int Size() { return 8; }
+
+    SIMD<mask32,4> Lo() const { return _mm256_extractf128_si256(mask, 0); }
+    SIMD<mask32,4> Hi() const { return _mm256_extractf128_si256(mask, 1); }
+  };
+
+
+  // *************************** int32 ***************************
+
+  template<>
+  class alignas(32) SIMD<int32_t,8>
+  {
+    __m256i data;
+
+  public:
+    static constexpr int Size() { return 8; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (int32_t val) : data{_mm256_set1_epi32(val)} { }
+    SIMD (size_t val)  : SIMD(int32_t(val)) { }
+    SIMD (int32_t v0, int32_t v1, int32_t v2, int32_t v3, int32_t v4, int32_t v5, int32_t v6, int32_t v7)
+      : data{_mm256_setr_epi32(v0, v1, v2, v3, v4, v5, v6, v7)} { }
+    SIMD (SIMD<int32_t,4> lo, SIMD<int32_t,4> hi) : data{_mm256_set_m128i(hi.Data(), lo.Data())} { }
+    SIMD (std::array<int32_t,8> arr) : SIMD(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7]) { }
+    SIMD (int32_t const * p) : data{_mm256_loadu_si256((__m256i const*)p)} { }
+    SIMD (__m256i _data) : data{_data} { }
+
+    NETGEN_INLINE auto operator[] (int i) const { return ((int32_t*)(&data))[i]; }
+    NETGEN_INLINE int32_t & operator[] (int i) { return ((int32_t*)(&data))[i]; }
+    NETGEN_INLINE __m256i Data() const { return data; }
+    NETGEN_INLINE __m256i & Data() { return data; }
+
+    void Store (int32_t * p) { _mm256_storeu_si256((__m256i*)p, data); }
+
+    SIMD<int32_t,4> Lo() const { return _mm256_extractf128_si256(data, 0); }
+    SIMD<int32_t,4> Hi() const { return _mm256_extractf128_si256(data, 1); }
+    static SIMD FirstInt(int32_t n0=0) { return { n0, n0+1, n0+2, n0+3, n0+4, n0+5, n0+6, n0+7 }; }
+  };
+
+#ifdef __AVX2__
+  NETGEN_INLINE SIMD<int32_t,8> operator+ (SIMD<int32_t,8> a, SIMD<int32_t,8> b) { return _mm256_add_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,8> operator- (SIMD<int32_t,8> a, SIMD<int32_t,8> b) { return _mm256_sub_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,8> operator& (SIMD<int32_t,8> a, SIMD<int32_t,8> b) { return _mm256_and_si256(a.Data(), b.Data()); }
+
+  template <int N>
+  SIMD<int32_t,8> operator<< (SIMD<int32_t,8> a, IC<N> n) { return _mm256_slli_epi32(a.Data(), N); }
+
+  NETGEN_INLINE SIMD<mask32,8> operator== (SIMD<int32_t,8> a, SIMD<int32_t,8> b) { return _mm256_cmpeq_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<mask32,8> operator> (SIMD<int32_t,8> a, SIMD<int32_t,8> b) { return _mm256_cmpgt_epi32(a.Data(), b.Data()); }
+#endif // __AVX2__
+
+  NETGEN_INLINE SIMD<float,8> If (SIMD<mask32,8> a, SIMD<float,8> b, SIMD<float,8> c)
+  { return _mm256_blendv_ps(c.Data(), b.Data(), _mm256_castsi256_ps(a.Data())); }
+  NETGEN_INLINE SIMD<int32_t,8> If (SIMD<mask32,8> a, SIMD<int32_t,8> b, SIMD<int32_t,8> c)
+  { return _mm256_castps_si256(_mm256_blendv_ps(_mm256_castsi256_ps(c.Data()), _mm256_castsi256_ps(b.Data()),
+                                                _mm256_castsi256_ps(a.Data()))); }
+
+  NETGEN_INLINE SIMD<int32_t,8> lround (SIMD<float,8> a) { return _mm256_cvtps_epi32(a.Data()); }
+
+  template <>
+  NETGEN_INLINE SIMD<float,8> Reinterpret (SIMD<int32_t,8> a) { return _mm256_castsi256_ps(a.Data()); }
+
+
   // same semantics as the generic Unpack: interleave within each 128-bit half
   template<>
   NETGEN_INLINE auto Unpack (SIMD<float,8> a, SIMD<float,8> b)

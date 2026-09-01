@@ -443,6 +443,175 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
     return FMA(SIMD<float,4> (a), b, c);
   }
 
+  NETGEN_INLINE SIMD<float,2> fabs (SIMD<float,2> a) { return _mm_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,4> fabs (SIMD<float,4> a) { return _mm_max_ps(a.Data(), (-a).Data()); }
+
+  NETGEN_INLINE SIMD<float,2> Min (SIMD<float,2> a, SIMD<float,2> b) { return _mm_min_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,4> Min (SIMD<float,4> a, SIMD<float,4> b) { return _mm_min_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,2> Max (SIMD<float,2> a, SIMD<float,2> b) { return _mm_max_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,4> Max (SIMD<float,4> a, SIMD<float,4> b) { return _mm_max_ps(a.Data(), b.Data()); }
+
+#ifdef __SSE4_1__
+  NETGEN_INLINE SIMD<float,2> round (SIMD<float,2> a)
+  { return _mm_round_ps(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
+  NETGEN_INLINE SIMD<float,4> round (SIMD<float,4> a)
+  { return _mm_round_ps(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
+#endif
+
+
+  // *************************** mask32 ***************************
+
+  template <>
+  class SIMD<mask32,2>
+  {
+    __m128i mask;
+  public:
+    SIMD (int i)
+      : mask(_mm_cmpgt_epi32(_mm_set1_epi32(i),
+                             _mm_set_epi32(3, 2, 1, 0)))
+    { ; }
+    SIMD (bool i0, bool i1) { mask = _mm_set_epi32(0, 0, i1?-1:0, i0?-1:0); }
+    SIMD (SIMD<mask32,1> i0, SIMD<mask32,1> i1) : SIMD(bool(i0[0]), bool(i1[0])) { ; }
+    SIMD (__m128i _mask) : mask(_mask) { ; }
+    __m128i Data() const { return mask; }
+    static constexpr int Size() { return 2; }
+  };
+
+  template <>
+  class SIMD<mask32,4>
+  {
+    __m128i mask;
+  public:
+    SIMD (int i)
+      : mask(_mm_cmpgt_epi32(_mm_set1_epi32(i),
+                             _mm_set_epi32(3, 2, 1, 0)))
+    { ; }
+    SIMD (bool i0, bool i1, bool i2, bool i3)
+    { mask = _mm_set_epi32(i3?-1:0, i2?-1:0, i1?-1:0, i0?-1:0); }
+    SIMD (SIMD<mask32,2> lo, SIMD<mask32,2> hi)
+    { mask = _mm_unpacklo_epi64(lo.Data(), hi.Data()); }
+    SIMD (__m128i _mask) : mask(_mask) { ; }
+    __m128i Data() const { return mask; }
+    static constexpr int Size() { return 4; }
+
+    SIMD<mask32,2> Lo() const { return mask; }
+    SIMD<mask32,2> Hi() const { return _mm_unpackhi_epi64(mask, mask); }
+  };
+
+
+  // *************************** int32 ***************************
+
+  // stored in the lower half of an xmm register, upper lanes are undefined
+  template<>
+  class alignas(16) SIMD<int32_t,2>
+  {
+    __m128i data;
+
+  public:
+    static constexpr int Size() { return 2; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (int32_t val) : data{_mm_set1_epi32(val)} { }
+    SIMD (size_t val)  : SIMD(int32_t(val)) { }
+    SIMD (int32_t v0, int32_t v1) : data{_mm_set_epi32(0, 0, v1, v0)} { }
+    SIMD (SIMD<int32_t,1> v0, SIMD<int32_t,1> v1) : SIMD(v0.Data(), v1.Data()) { }
+    SIMD (std::array<int32_t,2> arr) : SIMD(arr[0], arr[1]) { }
+    SIMD (int32_t const * p) : data{_mm_loadl_epi64((__m128i const*)p)} { }
+    SIMD (__m128i _data) : data{_data} { }
+
+    NETGEN_INLINE auto operator[] (int i) const { return ((int32_t*)(&data))[i]; }
+    NETGEN_INLINE int32_t & operator[] (int i) { return ((int32_t*)(&data))[i]; }
+    NETGEN_INLINE __m128i Data() const { return data; }
+    NETGEN_INLINE __m128i & Data() { return data; }
+
+    void Store (int32_t * p) { _mm_storel_epi64((__m128i*)p, data); }
+
+    SIMD<int32_t,1> Lo() const { return (*this)[0]; }
+    SIMD<int32_t,1> Hi() const { return (*this)[1]; }
+    static SIMD FirstInt(int32_t n0=0) { return { n0, n0+1 }; }
+  };
+
+  template<>
+  class alignas(16) SIMD<int32_t,4>
+  {
+    __m128i data;
+
+  public:
+    static constexpr int Size() { return 4; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (int32_t val) : data{_mm_set1_epi32(val)} { }
+    SIMD (size_t val)  : SIMD(int32_t(val)) { }
+    SIMD (int32_t v0, int32_t v1, int32_t v2, int32_t v3) : data{_mm_set_epi32(v3, v2, v1, v0)} { }
+    SIMD (SIMD<int32_t,2> lo, SIMD<int32_t,2> hi) : data{_mm_unpacklo_epi64(lo.Data(), hi.Data())} { }
+    SIMD (std::array<int32_t,4> arr) : SIMD(arr[0], arr[1], arr[2], arr[3]) { }
+    SIMD (int32_t const * p) : data{_mm_loadu_si128((__m128i const*)p)} { }
+    SIMD (__m128i _data) : data{_data} { }
+
+    NETGEN_INLINE auto operator[] (int i) const { return ((int32_t*)(&data))[i]; }
+    NETGEN_INLINE int32_t & operator[] (int i) { return ((int32_t*)(&data))[i]; }
+    NETGEN_INLINE __m128i Data() const { return data; }
+    NETGEN_INLINE __m128i & Data() { return data; }
+
+    void Store (int32_t * p) { _mm_storeu_si128((__m128i*)p, data); }
+
+    SIMD<int32_t,2> Lo() const { return data; }
+    SIMD<int32_t,2> Hi() const { return _mm_unpackhi_epi64(data, data); }
+    static SIMD FirstInt(int32_t n0=0) { return { n0, n0+1, n0+2, n0+3 }; }
+  };
+
+  NETGEN_INLINE SIMD<int32_t,2> operator+ (SIMD<int32_t,2> a, SIMD<int32_t,2> b) { return _mm_add_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> operator+ (SIMD<int32_t,4> a, SIMD<int32_t,4> b) { return _mm_add_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,2> operator- (SIMD<int32_t,2> a, SIMD<int32_t,2> b) { return _mm_sub_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> operator- (SIMD<int32_t,4> a, SIMD<int32_t,4> b) { return _mm_sub_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,2> operator& (SIMD<int32_t,2> a, SIMD<int32_t,2> b) { return _mm_and_si128(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> operator& (SIMD<int32_t,4> a, SIMD<int32_t,4> b) { return _mm_and_si128(a.Data(), b.Data()); }
+
+  template <int N>
+  SIMD<int32_t,2> operator<< (SIMD<int32_t,2> a, IC<N> n) { return _mm_slli_epi32(a.Data(), N); }
+  template <int N>
+  SIMD<int32_t,4> operator<< (SIMD<int32_t,4> a, IC<N> n) { return _mm_slli_epi32(a.Data(), N); }
+
+  NETGEN_INLINE SIMD<mask32,2> operator== (SIMD<int32_t,2> a, SIMD<int32_t,2> b) { return _mm_cmpeq_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<mask32,4> operator== (SIMD<int32_t,4> a, SIMD<int32_t,4> b) { return _mm_cmpeq_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<mask32,2> operator> (SIMD<int32_t,2> a, SIMD<int32_t,2> b) { return _mm_cmpgt_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<mask32,4> operator> (SIMD<int32_t,4> a, SIMD<int32_t,4> b) { return _mm_cmpgt_epi32(a.Data(), b.Data()); }
+
+  NETGEN_INLINE __m128i my_mm_select_si128 (__m128i mask, __m128i b, __m128i c)
+  {
+    return _mm_or_si128(_mm_andnot_si128(mask, c), _mm_and_si128(mask, b));
+  }
+
+  NETGEN_INLINE SIMD<int32_t,2> If (SIMD<mask32,2> a, SIMD<int32_t,2> b, SIMD<int32_t,2> c)
+  { return my_mm_select_si128(a.Data(), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> If (SIMD<mask32,4> a, SIMD<int32_t,4> b, SIMD<int32_t,4> c)
+  { return my_mm_select_si128(a.Data(), b.Data(), c.Data()); }
+
+#ifdef __SSE4_1__
+  NETGEN_INLINE SIMD<float,2> If (SIMD<mask32,2> a, SIMD<float,2> b, SIMD<float,2> c)
+  { return _mm_blendv_ps(c.Data(), b.Data(), _mm_castsi128_ps(a.Data())); }
+  NETGEN_INLINE SIMD<float,4> If (SIMD<mask32,4> a, SIMD<float,4> b, SIMD<float,4> c)
+  { return _mm_blendv_ps(c.Data(), b.Data(), _mm_castsi128_ps(a.Data())); }
+#else
+  NETGEN_INLINE SIMD<float,2> If (SIMD<mask32,2> a, SIMD<float,2> b, SIMD<float,2> c)
+  { return _mm_castsi128_ps(my_mm_select_si128(a.Data(), _mm_castps_si128(b.Data()), _mm_castps_si128(c.Data()))); }
+  NETGEN_INLINE SIMD<float,4> If (SIMD<mask32,4> a, SIMD<float,4> b, SIMD<float,4> c)
+  { return _mm_castsi128_ps(my_mm_select_si128(a.Data(), _mm_castps_si128(b.Data()), _mm_castps_si128(c.Data()))); }
+#endif
+
+  NETGEN_INLINE SIMD<int32_t,2> lround (SIMD<float,2> a) { return _mm_cvtps_epi32(a.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> lround (SIMD<float,4> a) { return _mm_cvtps_epi32(a.Data()); }
+
+  template <>
+  NETGEN_INLINE SIMD<float,2> Reinterpret (SIMD<int32_t,2> a) { return _mm_castsi128_ps(a.Data()); }
+  template <>
+  NETGEN_INLINE SIMD<float,4> Reinterpret (SIMD<int32_t,4> a) { return _mm_castsi128_ps(a.Data()); }
+
+
   // same semantics as the generic Unpack: interleave within each Lo/Hi half
   // (a0,b0,a2,b2), (a1,b1,a3,b3)
   template<>

@@ -89,22 +89,24 @@ namespace ngcore
     return std::tuple{ s, c };
   }
 
-  // TODO: use generic SIMD<float,N> rounding, integer conversion,
-  // masks and selection once these operations are available.
   template <int N>
   auto sincos (SIMD<float,N> x)
   {
-    SIMD<float,N> y([&](int i) { return std::round(float(2/M_PI) * x[i]); });
-    std::array<int32_t,N> q;
-    for (int i = 0; i < N; i++) q[i] = int32_t(y[i]);
+    // Cody-Waite split of pi/2, from cephes sinf
+    static constexpr float DP1 = 2*0.78515625f;
+    static constexpr float DP2 = 2*2.4187564849853515625e-4f;
+    static constexpr float DP3 = 2*3.77489497744594108e-8f;
 
-    auto [s1,c1] = sincos_reduced(x - y * float(M_PI/2));
+    auto y = round(float(2/M_PI) * x);
+    auto q = lround(y);
 
-    SIMD<float,N> s2([&](int i) { return (q[i] & 1) == 0 ? s1[i] :  c1[i]; });
-    SIMD<float,N> s ([&](int i) { return (q[i] & 2) == 0 ? s2[i] : -s2[i]; });
+    auto [s1,c1] = sincos_reduced(((x - y*DP1) - y*DP2) - y*DP3);
 
-    SIMD<float,N> c2([&](int i) { return (q[i] & 1) == 0 ? c1[i] : -s1[i]; });
-    SIMD<float,N> c ([&](int i) { return (q[i] & 2) == 0 ? c2[i] : -c2[i]; });
+    auto s2 = If((q & SIMD<int32_t,N>(1)) == SIMD<int32_t,N>(0), s1,  c1);
+    auto s  = If((q & SIMD<int32_t,N>(2)) == SIMD<int32_t,N>(0), s2, -s2);
+
+    auto c2 = If((q & SIMD<int32_t,N>(1)) == SIMD<int32_t,N>(0), c1, -s1);
+    auto c  = If((q & SIMD<int32_t,N>(2)) == SIMD<int32_t,N>(0), c2, -c2);
 
     return std::tuple{ s, c };
   }
@@ -181,14 +183,76 @@ namespace ngcore
     constexpr double C1 = 6.93145751953125E-1;
     constexpr double C2 = 1.42860682030941723212E-6;
 
-    auto r = round(1/log2 * x);
-    auto rI = lround(r);
+    // keep the reduction arithmetic in range
+    x = If(x > SIMD<double,N>(1000.0), SIMD<double,N>(1000.0), x);
+    x = If(SIMD<double,N>(-1000.0) > x, SIMD<double,N>(-1000.0), x);
 
-    SIMD<double,N> pow2 = pow2_int64_to_float64 (rI);
-    return exp_reduced(x - r*C1 - r*C2) * pow2;
+    auto r = round(1/log2 * x);
+
+    // 2^r in two factors, to reach inf and denormals without clamping artifacts
+    auto r1 = round(0.5*r);
+    SIMD<double,N> pow2_1 = pow2_int64_to_float64 (lround(r1));
+    SIMD<double,N> pow2_2 = pow2_int64_to_float64 (lround(r-r1));
+
+    return exp_reduced(x - r*C1 - r*C2) * pow2_1 * pow2_2;
 
     // maybe better:
     // x = ldexp( x, n );
+  }
+
+
+  // *************************** float versions ***************************
+
+  template <int N>
+  SIMD<float,N> exp_reduced (SIMD<float,N> x)
+  {
+    // from cephes expf
+    static constexpr float P[] = {
+      1.9875691500E-4f,
+      1.3981999507E-3f,
+      8.3334519073E-3f,
+      4.1665795894E-2f,
+      1.6666665459E-1f,
+      5.0000001201E-1f,
+    };
+
+    auto z = ((((P[0]*x + P[1])*x + P[2])*x + P[3])*x + P[4])*x + P[5];
+    return 1.0f + x + x*x*z;
+  }
+
+  template <int N>
+  SIMD<float,N> pow2_int32_to_float32 (SIMD<int32_t,N> n)
+  {
+    // biased exponent 0 gives 0.0, 255 gives inf
+    SIMD<int32_t,N> max_exp(128);
+    SIMD<int32_t,N> min_exp(-127);
+    n = If(n > max_exp, max_exp, n);
+    n = If(min_exp > n, min_exp, n);
+
+    n = n + SIMD<int32_t,N>(127);
+    auto shifted_exp = (n << IC<23>());
+    return Reinterpret<float> (shifted_exp);
+  }
+
+  template <int N>
+  SIMD<float,N> myexp (SIMD<float,N> x)
+  {
+    constexpr float log2e = 1.44269504088896341f;
+    // Cody-Waite split of log(2), from cephes expf
+    constexpr float C1 = 0.693359375f;
+    constexpr float C2 = -2.12194440e-4f;
+
+    // keep the reduction arithmetic in range (inf above 88.73, 0 below -103.98)
+    x = Min(Max(x, SIMD<float,N>(-105.0f)), SIMD<float,N>(90.0f));
+
+    auto r = round(log2e * x);
+
+    // 2^r in two factors, to reach inf and denormals without clamping artifacts
+    auto r1 = round(0.5f*r);
+    SIMD<float,N> pow2_1 = pow2_int32_to_float32 (lround(r1));
+    SIMD<float,N> pow2_2 = pow2_int32_to_float32 (lround(r-r1));
+
+    return exp_reduced((x - r*C1) - r*C2) * pow2_1 * pow2_2;
   }
 
   /*
