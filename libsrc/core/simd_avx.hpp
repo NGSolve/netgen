@@ -387,6 +387,100 @@ namespace ngcore
                                                 _mm256_castsi256_pd(a.Data()))); }
 
 
+  // *************************** float ***************************
+
+  template<>
+  class alignas(32) SIMD<float,8>
+  {
+    __m256 data;
+
+  public:
+    static constexpr int Size() { return 8; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD (float v0, float v1, float v2, float v3, float v4, float v5, float v6, float v7)
+      : data{_mm256_setr_ps(v0,v1,v2,v3,v4,v5,v6,v7)} { }
+    SIMD (SIMD<float,4> v0, SIMD<float,4> v1)
+      : data{_mm256_insertf128_ps(_mm256_castps128_ps256(v0.Data()), v1.Data(), 1)} { }
+    SIMD (std::array<float, 8> arr)
+      : SIMD(arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7]) { }
+
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{_mm256_set1_ps(val)} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : SIMD(float(val)) { }
+    SIMD (size_t val) : SIMD(float(val)) { }
+
+    SIMD (float const * p) : data{_mm256_loadu_ps(p)} { }
+
+    SIMD (__m256 _data) : data{_data} { }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data = _mm256_setr_ps(func(0), func(1), func(2), func(3), func(4), func(5), func(6), func(7));
+    }
+
+    void Store (float * p) { _mm256_storeu_ps(p, data); }
+
+    NETGEN_INLINE float operator[] (int i) const { return ((float*)(&data))[i]; }
+    NETGEN_INLINE float & operator[] (int i) { return ((float*)(&data))[i]; }
+
+    template <int I>
+    float Get() const
+    {
+      static_assert(I>=0 && I<8, "Index out of range");
+      return (*this)[I];
+    }
+
+    NETGEN_INLINE __m256 Data() const { return data; }
+    NETGEN_INLINE __m256 & Data() { return data; }
+
+    SIMD<float,4> Lo() const { return _mm256_castps256_ps128(data); }
+    SIMD<float,4> Hi() const { return _mm256_extractf128_ps(data, 1); }
+  };
+
+  NETGEN_INLINE SIMD<float,8> operator- (SIMD<float,8> a) { return _mm256_xor_ps(a.Data(), _mm256_set1_ps(-0.0f)); }
+  NETGEN_INLINE SIMD<float,8> operator+ (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_add_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,8> operator- (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_sub_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,8> operator* (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_mul_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,8> operator/ (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_div_ps(a.Data(),b.Data()); }
+
+  NETGEN_INLINE float HSum (SIMD<float,8> a)
+  {
+    return HSum(a.Lo()+a.Hi());
+  }
+
+  NETGEN_INLINE SIMD<float,8> FMA (SIMD<float,8> a, SIMD<float,8> b, SIMD<float,8> c)
+  {
+#ifdef __FMA__
+    return _mm256_fmadd_ps(a.Data(), b.Data(), c.Data());
+#else
+    return a*b+c;
+#endif
+  }
+
+  NETGEN_INLINE SIMD<float,8> FMA (const float & a, SIMD<float,8> b, SIMD<float,8> c)
+  {
+    return FMA(SIMD<float,8> (a), b, c);
+  }
+
+  // same semantics as the generic Unpack: interleave within each 128-bit half
+  template<>
+  NETGEN_INLINE auto Unpack (SIMD<float,8> a, SIMD<float,8> b)
+  {
+    __m256 lo = _mm256_unpacklo_ps(a.Data(), b.Data());
+    __m256 hi = _mm256_unpackhi_ps(a.Data(), b.Data());
+    return std::make_tuple(SIMD<float,8>(_mm256_shuffle_ps(lo, hi, _MM_SHUFFLE(1,0,1,0))),
+                           SIMD<float,8>(_mm256_shuffle_ps(lo, hi, _MM_SHUFFLE(3,2,3,2))));
+  }
+
+  template<>
+  NETGEN_INLINE SIMD<float,8> SwapPairs (SIMD<float,8> a)
+  {
+    return _mm256_shuffle_ps(a.Data(), a.Data(), _MM_SHUFFLE(2,3,0,1));
+  }
 
 }
 

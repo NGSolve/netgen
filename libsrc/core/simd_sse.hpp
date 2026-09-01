@@ -284,6 +284,182 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
                         );
   }
 
+
+  // *************************** float ***************************
+
+  // stored in the lower half of an xmm register, upper lanes are undefined
+  template<>
+  class alignas(16) SIMD<float,2>
+  {
+    __m128 data;
+
+  public:
+    static constexpr int Size() { return 2; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD (float v0, float v1) : data{_mm_setr_ps(v0,v1,0,0)} { }
+    SIMD (SIMD<float,1> v0, SIMD<float,1> v1) : SIMD(v0.Data(), v1.Data()) { }
+    SIMD (std::array<float, 2> arr) : SIMD(arr[0], arr[1]) { }
+
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{_mm_set1_ps(val)} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : SIMD(float(val)) { }
+    SIMD (size_t val) : SIMD(float(val)) { }
+
+    SIMD (float const * p) : data{_mm_castpd_ps(_mm_load_sd((double const*)p))} { }
+
+    SIMD (__m128 _data) : data{_data} { }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data = _mm_setr_ps(func(0), func(1), 0, 0);
+    }
+
+    void Store (float * p)
+    {
+      _mm_store_sd((double*)p, _mm_castps_pd(data));
+    }
+
+    NETGEN_INLINE float operator[] (int i) const { return ((float*)(&data))[i]; }
+    NETGEN_INLINE float & operator[] (int i) { return ((float*)(&data))[i]; }
+
+    template <int I>
+    float Get() const
+    {
+      static_assert(I>=0 && I<2, "Index out of range");
+      return (*this)[I];
+    }
+
+    NETGEN_INLINE __m128 Data() const { return data; }
+    NETGEN_INLINE __m128 & Data() { return data; }
+
+    float Lo() const { return Get<0>(); }
+    float Hi() const { return Get<1>(); }
+  };
+
+  NETGEN_INLINE SIMD<float,2> operator- (SIMD<float,2> a) { return _mm_xor_ps(a.Data(), _mm_set1_ps(-0.0f)); }
+  NETGEN_INLINE SIMD<float,2> operator+ (SIMD<float,2> a, SIMD<float,2> b) { return _mm_add_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,2> operator- (SIMD<float,2> a, SIMD<float,2> b) { return _mm_sub_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,2> operator* (SIMD<float,2> a, SIMD<float,2> b) { return _mm_mul_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,2> operator/ (SIMD<float,2> a, SIMD<float,2> b) { return _mm_div_ps(a.Data(),b.Data()); }
+
+  NETGEN_INLINE float HSum (SIMD<float,2> a)
+  {
+    __m128 t = _mm_add_ss(a.Data(), _mm_shuffle_ps(a.Data(), a.Data(), 1));
+    return _mm_cvtss_f32(t);
+  }
+
+  NETGEN_INLINE SIMD<float,2> FMA (SIMD<float,2> a, SIMD<float,2> b, SIMD<float,2> c)
+  {
+#ifdef __FMA__
+    return _mm_fmadd_ps(a.Data(), b.Data(), c.Data());
+#else
+    return a*b+c;
+#endif
+  }
+
+  NETGEN_INLINE SIMD<float,2> FMA (const float & a, SIMD<float,2> b, SIMD<float,2> c)
+  {
+    return FMA(SIMD<float,2> (a), b, c);
+  }
+
+
+  template<>
+  class alignas(16) SIMD<float,4>
+  {
+    __m128 data;
+
+  public:
+    static constexpr int Size() { return 4; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD (float v0, float v1, float v2, float v3) : data{_mm_setr_ps(v0,v1,v2,v3)} { }
+    SIMD (SIMD<float,2> v0, SIMD<float,2> v1) : data{_mm_movelh_ps(v0.Data(), v1.Data())} { }
+    SIMD (std::array<float, 4> arr) : SIMD(arr[0], arr[1], arr[2], arr[3]) { }
+
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{_mm_set1_ps(val)} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : SIMD(float(val)) { }
+    SIMD (size_t val) : SIMD(float(val)) { }
+
+    SIMD (float const * p) : data{_mm_loadu_ps(p)} { }
+
+    SIMD (__m128 _data) : data{_data} { }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data = _mm_setr_ps(func(0), func(1), func(2), func(3));
+    }
+
+    void Store (float * p) { _mm_storeu_ps(p, data); }
+
+    NETGEN_INLINE float operator[] (int i) const { return ((float*)(&data))[i]; }
+    NETGEN_INLINE float & operator[] (int i) { return ((float*)(&data))[i]; }
+
+    template <int I>
+    float Get() const
+    {
+      static_assert(I>=0 && I<4, "Index out of range");
+      return (*this)[I];
+    }
+
+    NETGEN_INLINE __m128 Data() const { return data; }
+    NETGEN_INLINE __m128 & Data() { return data; }
+
+    SIMD<float,2> Lo() const { return data; }
+    SIMD<float,2> Hi() const { return _mm_movehl_ps(data, data); }
+  };
+
+  NETGEN_INLINE SIMD<float,4> operator- (SIMD<float,4> a) { return _mm_xor_ps(a.Data(), _mm_set1_ps(-0.0f)); }
+  NETGEN_INLINE SIMD<float,4> operator+ (SIMD<float,4> a, SIMD<float,4> b) { return _mm_add_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,4> operator- (SIMD<float,4> a, SIMD<float,4> b) { return _mm_sub_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,4> operator* (SIMD<float,4> a, SIMD<float,4> b) { return _mm_mul_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,4> operator/ (SIMD<float,4> a, SIMD<float,4> b) { return _mm_div_ps(a.Data(),b.Data()); }
+
+  NETGEN_INLINE float HSum (SIMD<float,4> a)
+  {
+    __m128 t = _mm_add_ps(a.Data(), _mm_movehl_ps(a.Data(), a.Data()));
+    t = _mm_add_ss(t, _mm_shuffle_ps(t, t, 1));
+    return _mm_cvtss_f32(t);
+  }
+
+  NETGEN_INLINE SIMD<float,4> FMA (SIMD<float,4> a, SIMD<float,4> b, SIMD<float,4> c)
+  {
+#ifdef __FMA__
+    return _mm_fmadd_ps(a.Data(), b.Data(), c.Data());
+#else
+    return a*b+c;
+#endif
+  }
+
+  NETGEN_INLINE SIMD<float,4> FMA (const float & a, SIMD<float,4> b, SIMD<float,4> c)
+  {
+    return FMA(SIMD<float,4> (a), b, c);
+  }
+
+  // same semantics as the generic Unpack: interleave within each Lo/Hi half
+  // (a0,b0,a2,b2), (a1,b1,a3,b3)
+  template<>
+  NETGEN_INLINE auto Unpack (SIMD<float,4> a, SIMD<float,4> b)
+  {
+    __m128 lo = _mm_unpacklo_ps(a.Data(), b.Data());
+    __m128 hi = _mm_unpackhi_ps(a.Data(), b.Data());
+    return std::make_tuple(SIMD<float,4>(_mm_shuffle_ps(lo, hi, _MM_SHUFFLE(1,0,1,0))),
+                           SIMD<float,4>(_mm_shuffle_ps(lo, hi, _MM_SHUFFLE(3,2,3,2))));
+  }
+
+  template<>
+  NETGEN_INLINE SIMD<float,4> SwapPairs (SIMD<float,4> a)
+  {
+    return _mm_shuffle_ps(a.Data(), a.Data(), _MM_SHUFFLE(2,3,0,1));
+  }
+
 }
 
 #endif // NETGEN_CORE_SIMD_SSE_HPP
