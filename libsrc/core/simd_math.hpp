@@ -57,10 +57,14 @@ namespace ngcore
   template <int N>
   auto sincos (SIMD<double,N> x)
   {
+    // Cody-Waite: pi/2 split into a 33-bit part and correction (fdlibm)
+    static constexpr double pio2_hi = 1.57079632673412561417E0;
+    static constexpr double pio2_lo = 6.07710050650619224932E-11;
+
     auto y = round((2/M_PI) * x);
     auto q = lround(y);
-  
-    auto [s1,c1] = sincos_reduced(x - y * (M_PI/2));
+
+    auto [s1,c1] = sincos_reduced(x - y * pio2_hi - y * pio2_lo);
 
     auto s2 = If((q & SIMD<int64_t,N>(1)) == SIMD<int64_t,N>(0), s1,  c1);
     auto s  = If((q & SIMD<int64_t,N>(2)) == SIMD<int64_t,N>(0), s2, -s2);
@@ -173,13 +177,15 @@ namespace ngcore
   SIMD<double,N> myexp (SIMD<double,N> x)
   {
     constexpr double log2 = 0.693147180559945286;  //  log(2.0);
-                     
+    // Cody-Waite split of log(2), from cephes exp.c
+    constexpr double C1 = 6.93145751953125E-1;
+    constexpr double C2 = 1.42860682030941723212E-6;
+
     auto r = round(1/log2 * x);
     auto rI = lround(r);
-    r *= log2;
-  
+
     SIMD<double,N> pow2 = pow2_int64_to_float64 (rI);
-    return exp_reduced(x-r) * pow2;
+    return exp_reduced(x - r*C1 - r*C2) * pow2;
 
     // maybe better:
     // x = ldexp( x, n );

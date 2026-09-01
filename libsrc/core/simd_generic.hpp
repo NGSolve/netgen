@@ -916,7 +916,7 @@ namespace ngcore
   SIMD<T, N> Reinterpret (SIMD<T1,N> a)
   {
     if constexpr (N == 1)
-      return SIMD<T,N> ( * (T*)(void*) & a.Data());
+      return SIMD<T,N> ( BitCast<T> (a.Data()) );
     else if constexpr (N == 2)
       return SIMD<T,N> { BitCast<T> (a.Lo()),
                          BitCast<T> (a.Hi()) };
@@ -929,7 +929,7 @@ namespace ngcore
   template <int N>
   SIMD<double,N> round (SIMD<double,N> x)
   {
-    if constexpr (N == 1) return round(x);
+    if constexpr (N == 1) return round(x.Data());
     else                  return { round(x.Lo()), round(x.Hi()) };
   }
 
@@ -938,7 +938,7 @@ namespace ngcore
   template <int N>  
   SIMD<int64_t,N> lround (SIMD<double,N> x)
   {
-    if constexpr (N == 1) return SIMD<int64_t,1> (lround(x));
+    if constexpr (N == 1) return SIMD<int64_t,1> (int64_t(lround(x.Data())));
     else                  return { lround(x.Lo()), lround(x.Hi()) };
   }
 
