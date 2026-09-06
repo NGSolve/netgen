@@ -187,6 +187,16 @@ namespace ngcore
           gpu_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
         }
 
+      // a finished gpu kernel, times measured by the device, converted to host ticks
+      void AddGPUEvent(int timer_id, TTimePoint t_start, TTimePoint t_stop)
+        {
+          if(!tracing_enabled) return;
+          if(unlikely(gpu_events.size()+2 >= max_num_events_per_thread))
+            StopTracing();
+          gpu_events.push_back(TimerEvent{t_start, timer_id, 0, -1, true});
+          gpu_events.push_back(TimerEvent{t_stop, timer_id, 0, -1, false});
+        }
+
       void StartTimer(int timer_id, int user_value = -1)
         {
           if(!tracing_enabled) return;
