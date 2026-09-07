@@ -640,8 +640,8 @@ namespace netgen
 
     timerstart.Stop();
 
-    // Find edges with improvement
-    Array<std::tuple<double, int>> candidate_edges(edges.Size());
+    // Find edges with improvement, each edge can yield a candidate per orientation
+    Array<std::tuple<double, int>> candidate_edges(2*edges.Size());
     std::atomic<int> improvement_counter(0);
 
     ParallelFor( Range(edges), [&] (auto i) NETGEN_LAMBDA_INLINE

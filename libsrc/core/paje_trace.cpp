@@ -472,7 +472,7 @@ namespace ngcore
 
   void PajeTrace::WritePajeFile( const std::string & filename )
     {
-      auto n_events = jobs.size() + timer_events.size();
+      auto n_events = jobs.size() + timer_events.size() + gpu_events.size() + user_events.size();
       for(auto & vtasks : tasks)
         n_events += vtasks.size();
 

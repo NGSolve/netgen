@@ -225,11 +225,20 @@ namespace netgen
     NgMPI_Requests sendrequests;  // (8*(ntasks-1));
     // sendrequests.SetSize0();
     
+    // periodic identifications need the vertex2element tables
+    bool has_periodic = false;
+    {
+      auto & idents = GetIdentifications();
+      for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
+        if (idents.GetType(idnr) == Identifications::PERIODIC)
+          { has_periodic = true; break; }
+    }
+
     // If the topology is not already updated, we do not need to
     // build edges/faces.
     auto & top = const_cast<MeshTopology&>(GetTopology());
     if(top.NeedsUpdate()) {
-      top.SetBuildVertex2Element(false);
+      top.SetBuildVertex2Element(has_periodic);
       top.SetBuildEdges(false);
       top.SetBuildFaces(false);
       top.Update();
@@ -301,11 +310,9 @@ namespace netgen
     NgArray<INDEX_2> per_pairs;
     NgArray<INDEX_2> pp2;
     auto & idents = GetIdentifications();
-    bool has_periodic = false; 
     for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
       {
 	if(idents.GetType(idnr)!=Identifications::PERIODIC) continue;
-	has_periodic = true;
 	idents.GetPairs(idnr, pp2);
 	per_pairs.Append(pp2);
       }

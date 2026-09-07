@@ -182,6 +182,12 @@ public:
   /// multiply with autodiffdiff object
   AutoDiffDiff<D, SCAL> & operator*= (const AutoDiffDiff<D, SCAL> & y) throw()
   {
+    if (this == &y)
+      {
+        AutoDiffDiff copy(y);
+        return *this *= copy;
+      }
+
     for (int i = 0; i < D*D; i++)
       ddval[i] = val * y.ddval[i] + y.val * ddval[i];
 
@@ -437,7 +443,7 @@ template<int D, typename SCAL, typename SCAL2,
            typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
 inline AutoDiffDiff<D, SCAL> operator/ (const AutoDiffDiff<D, SCAL> & x, SCAL2 y)
 {
-  return (1/y) * x;
+  return (1.0/y) * x;
 }
 
 template<int D, typename SCAL, typename SCAL2,
@@ -459,7 +465,13 @@ inline AutoDiffDiff<D, SCAL> sqrt (const AutoDiffDiff<D, SCAL> & x)
   
   for (int i = 0; i < D; i++)
     for (int j = 0; j < D; j++)
-      res.DDValue(i,j) = IfZero(x.DDValue(i,j)+x.DValue(i) * x.DValue(j),SCAL{0.},0.5/res.Value() * x.DDValue(i,j) - 0.25 / (x.Value()*res.Value()) * x.DValue(i) * x.DValue(j));
+      {
+        auto ddvalue = 0.5/res.Value() * x.DDValue(i,j)
+          - 0.25 / (x.Value()*res.Value()) * x.DValue(i) * x.DValue(j);
+        res.DDValue(i,j) = IfZero(x.DDValue(i,j),
+                                  IfZero(x.DValue(i)*x.DValue(j), SCAL{0.}, ddvalue),
+                                  ddvalue);
+      }
 
   return res;
 }
@@ -555,17 +567,25 @@ NETGEN_INLINE AutoDiffDiff<D, SCAL> atan (AutoDiffDiff<D, SCAL> x)
 }
 
 template <int D, typename SCAL>
-NETGEN_INLINE AutoDiffDiff<D, SCAL> atan2 (AutoDiffDiff<D, SCAL> x,AutoDiffDiff<D, SCAL> y)
+NETGEN_INLINE AutoDiffDiff<D, SCAL> atan2 (AutoDiffDiff<D, SCAL> y,AutoDiffDiff<D, SCAL> x)
 {
   AutoDiffDiff<D, SCAL> res;
-  SCAL a = atan2(x.Value(), y.Value());
+  SCAL a = atan2(y.Value(), x.Value());
   res.Value() = a;
+  SCAL denominator = x.Value()*x.Value()+y.Value()*y.Value();
   for (int k = 0; k < D; k++)
-    res.DValue(k) = (x.Value()*y.DValue(k)-y.Value()*x.DValue(k))/(y.Value()*y.Value()+x.Value()*x.Value());
+    res.DValue(k) = (x.Value()*y.DValue(k)-y.Value()*x.DValue(k))/denominator;
 
   for (int k = 0; k < D; k++)
     for (int l = 0; l < D; l++)
-      res.DDValue(k,l) = (x.DValue(k)*y.DValue(l)+x.Value()*y.DDValue(l,k) - y.DValue(k)*x.DValue(l) - y.Value()*x.DDValue(l,k))/(y.Value()*y.Value()+x.Value()*x.Value()) - 2 * (x.Value()*y.DValue(k)-y.Value()*x.DValue(k)) * (x.Value()*x.DValue(k) + y.Value()*y.DValue(k))/( (y.Value()*y.Value()+x.Value()*x.Value()) * (y.Value()*y.Value()+x.Value()*x.Value()) );
+      {
+        SCAL numerator = x.Value()*y.DValue(k)-y.Value()*x.DValue(k);
+        SCAL dnumerator = x.DValue(l)*y.DValue(k)+x.Value()*y.DDValue(k,l)
+          - y.DValue(l)*x.DValue(k)-y.Value()*x.DDValue(k,l);
+        SCAL ddenominator = 2*(x.Value()*x.DValue(l)+y.Value()*y.DValue(l));
+        res.DDValue(k,l) = dnumerator/denominator
+          - numerator*ddenominator/(denominator*denominator);
+      }
   return res;
 }
 
@@ -654,7 +674,7 @@ NETGEN_INLINE AutoDiffDiff<D, SCAL> erf (AutoDiffDiff<D, SCAL> x)
   
   res.Value() = erf(x.Value());
   for (int k = 0; k < D; k++)
-    res.DValue(k) = - derf * x.DValue(k);
+    res.DValue(k) = derf * x.DValue(k);
   for (int k = 0; k < D; k++)
     for (int l = 0; l < D; l++)
       res.DDValue(k,l) = derf * (x.DDValue(k, l) - 2 * x.Value() * x.DValue(k) * x.DValue(l));
@@ -688,10 +708,9 @@ NETGEN_INLINE AutoDiffDiff<D,SCAL> IfPos (SCAL /* SIMD<double> */ a, AutoDiffDif
   AutoDiffDiff<D,SCAL> res;
   res.Value() = IfPos (a, b.Value(), c.Value());
   for (int j = 0; j < D; j++)
-  {
     res.DValue(j) = IfPos (a, b.DValue(j), c.DValue(j));
+  for (int j = 0; j < D*D; j++)
     res.DDValue(j) = IfPos (a, b.DDValue(j), c.DDValue(j));
-  }
   return res;
 }
 

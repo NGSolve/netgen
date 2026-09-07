@@ -10,6 +10,7 @@ namespace netgen
 
     mesh.CalcSurfacesOfNode();
 
+    mesh.ComputeNVertices();
     bool secondorder = mesh.GetNP() > mesh.GetNV();
 
 

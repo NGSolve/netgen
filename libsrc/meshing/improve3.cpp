@@ -504,10 +504,15 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
       Element & el = mesh[ei];
 
       if(el.IsDeleted()) return 0.0;
-      if (mesh[ei].GetType() != TET) return 0.0;
 
       bool has1 = el.PNums().Contains(pi1);
       bool has2 = el.PNums().Contains(pi2);
+
+      if (mesh[ei].GetType() != TET)
+        {
+          if (has1 && has2) return 0.0;
+          continue;
+        }
 
       if (has1 && has2)
           if (!hasbothpoints.Contains (ei))

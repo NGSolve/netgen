@@ -172,6 +172,189 @@ namespace ngcore
   {
     return vshlq_n_s64(a.Data(), N);
   }
+
+
+  // *************************** float ***************************
+
+  template<>
+  class SIMD<float,2>
+  {
+    float32x2_t data;
+
+  public:
+    static constexpr int Size() { return 2; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD (float v0, float v1) : data{v0,v1} { }
+    SIMD (SIMD<float,1> v0, SIMD<float,1> v1) : data{v0.Data(),v1.Data()} { }
+    SIMD (std::array<float, 2> arr) : data{arr[0],arr[1]} { }
+
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{val,val} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : data{float(val),float(val)} { }
+    SIMD (size_t val) : data{float(val),float(val)} { }
+
+    SIMD (float const * p)
+    {
+      data = vld1_f32(p);
+    }
+
+    SIMD (float32x2_t _data) { data = _data; }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data[0] = func(0);
+      data[1] = func(1);
+    }
+
+    void Store (float * p)
+    {
+      vst1_f32(p, data);
+    }
+
+    NETGEN_INLINE float operator[] (int i) const { return data[i]; }
+    NETGEN_INLINE float & operator[] (int i) { return ((float*)&data)[i]; }
+
+    template <int I>
+    float Get() const { return data[I]; }
+
+    NETGEN_INLINE auto Data() const { return data; }
+    NETGEN_INLINE auto & Data() { return data; }
+
+    float Lo() const { return Get<0>(); }
+    float Hi() const { return Get<1>(); }
+  };
+
+
+  NETGEN_INLINE float HSum (SIMD<float,2> sd)
+  {
+    return vaddv_f32(sd.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,2> FMA (SIMD<float,2> a, SIMD<float,2> b, SIMD<float,2> c)
+  {
+    return vmla_f32(c.Data(), a.Data(), b.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,2> FMA (const float & a, SIMD<float,2> b, SIMD<float,2> c)
+  {
+    return FMA(SIMD<float,2> (a), b, c);
+  }
+
+  NETGEN_INLINE void FMAComplex (SIMD<float,2> a, SIMD<float,2> b, SIMD<float,2> & c)
+  {
+    auto tmp = vcmla_f32(c.Data(), a.Data(), b.Data());
+    c = vcmla_rot90_f32(tmp, a.Data(), b.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,2> operator+ (SIMD<float,2> a, SIMD<float,2> b)
+  { return a.Data()+b.Data(); }
+
+  NETGEN_INLINE SIMD<float,2> operator- (SIMD<float,2> a, SIMD<float,2> b)
+  { return a.Data()-b.Data(); }
+  NETGEN_INLINE SIMD<float,2> operator- (SIMD<float,2> a)
+  { return -a.Data(); }
+
+  NETGEN_INLINE SIMD<float,2> operator* (SIMD<float,2> a, SIMD<float,2> b)
+  { return a.Data()*b.Data(); }
+
+  NETGEN_INLINE SIMD<float,2> operator/ (SIMD<float,2> a, SIMD<float,2> b)
+  { return a.Data()/b.Data(); }
+
+
+  template<>
+  class SIMD<float,4>
+  {
+    float32x4_t data;
+
+  public:
+    static constexpr int Size() { return 4; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD (float v0, float v1, float v2, float v3) : data{v0,v1,v2,v3} { }
+    SIMD (SIMD<float,2> v0, SIMD<float,2> v1) : data{vcombine_f32(v0.Data(),v1.Data())} { }
+    SIMD (std::array<float, 4> arr) : data{arr[0],arr[1],arr[2],arr[3]} { }
+
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{val,val,val,val} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : data{float(val),float(val),float(val),float(val)} { }
+    SIMD (size_t val) : data{float(val),float(val),float(val),float(val)} { }
+
+    SIMD (float const * p)
+    {
+      data = vld1q_f32(p);
+    }
+
+    SIMD (float32x4_t _data) { data = _data; }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      data[0] = func(0);
+      data[1] = func(1);
+      data[2] = func(2);
+      data[3] = func(3);
+    }
+
+    void Store (float * p)
+    {
+      vst1q_f32(p, data);
+    }
+
+    NETGEN_INLINE float operator[] (int i) const { return data[i]; }
+    NETGEN_INLINE float & operator[] (int i)  { return ((float*)&data)[i]; }
+
+    template <int I>
+    float Get() const { return data[I]; }
+
+    NETGEN_INLINE auto Data() const { return data; }
+    NETGEN_INLINE auto & Data() { return data; }
+
+    SIMD<float,2> Lo() const { return vget_low_f32(data); }
+    SIMD<float,2> Hi() const { return vget_high_f32(data); }
+  };
+
+
+  NETGEN_INLINE float HSum (SIMD<float,4> sd)
+  {
+    return vaddvq_f32(sd.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,4> FMA(SIMD<float,4> a, SIMD<float,4> b, SIMD<float,4> c)
+  {
+    return vmlaq_f32(c.Data(), a.Data(), b.Data());
+  }
+
+  NETGEN_INLINE SIMD<float,4> FMA(const float & a, SIMD<float,4> b, SIMD<float,4> c)
+  {
+    return FMA(SIMD<float,4> (a), b, c);
+  }
+
+  // ARM complex mult:
+  // https://arxiv.org/pdf/1901.07294.pdf
+  // c += a*b    (a0re, a0im, a1re, a1im, ...),
+  NETGEN_INLINE void FMAComplex (SIMD<float,4> a, SIMD<float,4> b, SIMD<float,4> & c)
+  {
+    auto tmp = vcmlaq_f32(c.Data(), a.Data(), b.Data());   // are * b
+    c = vcmlaq_rot90_f32(tmp, a.Data(), b.Data());    // += i*aim * b
+  }
+
+
+  NETGEN_INLINE SIMD<float,4> operator+ (SIMD<float,4> a, SIMD<float,4> b)
+  { return a.Data()+b.Data(); }
+
+  NETGEN_INLINE SIMD<float,4> operator- (SIMD<float,4> a, SIMD<float,4> b)
+  { return a.Data()-b.Data(); }
+  NETGEN_INLINE SIMD<float,4> operator- (SIMD<float,4> a)
+  { return -a.Data(); }
+
+  NETGEN_INLINE SIMD<float,4> operator* (SIMD<float,4> a, SIMD<float,4> b)
+  { return a.Data()*b.Data(); }
   
   
   
@@ -402,6 +585,126 @@ namespace ngcore
     uint64x2_t res = vandq_u64 (m1, m2);
     return vreinterpretq_s64_u64(res);
   }
-  
-}
 
+
+  // *************************** mask32 ***************************
+
+  template <>
+  class SIMD<mask32,2>
+  {
+    int32x2_t mask;
+  public:
+    SIMD (int i)
+    {
+      mask[0] = i > 0 ? -1 : 0;
+      mask[1] = i > 1 ? -1 : 0;
+    }
+    SIMD (bool i0, bool i1) { mask[0] = i0 ? -1 : 0; mask[1] = i1 ? -1 : 0; }
+    SIMD (SIMD<mask32,1> i0, SIMD<mask32,1> i1) { mask[0] = i0[0]; mask[1] = i1[0]; }
+    SIMD (int32x2_t _mask) : mask{_mask} { }
+    auto Data() const { return mask; }
+    static constexpr int Size() { return 2; }
+    int32_t operator[] (int i) const { return mask[i]; }
+  };
+
+  template <>
+  class SIMD<mask32,4>
+  {
+    int32x4_t mask;
+  public:
+    SIMD (int i)
+    {
+      for (int j = 0; j < 4; j++)
+        mask[j] = i > j ? -1 : 0;
+    }
+    SIMD (SIMD<mask32,2> lo, SIMD<mask32,2> hi) : mask{vcombine_s32(lo.Data(), hi.Data())} { }
+    SIMD (int32x4_t _mask) : mask{_mask} { }
+    auto Data() const { return mask; }
+    static constexpr int Size() { return 4; }
+    int32_t operator[] (int i) const { return mask[i]; }
+
+    SIMD<mask32,2> Lo() const { return vget_low_s32(mask); }
+    SIMD<mask32,2> Hi() const { return vget_high_s32(mask); }
+  };
+
+
+  // *************************** int32 operators ***************************
+
+  NETGEN_INLINE SIMD<int32_t,2> operator+ (SIMD<int32_t,2> a, SIMD<int32_t,2> b)
+  { return vadd_s32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> operator+ (SIMD<int32_t,4> a, SIMD<int32_t,4> b)
+  { return vaddq_s32(a.Data(), b.Data()); }
+
+  NETGEN_INLINE SIMD<int32_t,2> operator- (SIMD<int32_t,2> a, SIMD<int32_t,2> b)
+  { return vsub_s32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> operator- (SIMD<int32_t,4> a, SIMD<int32_t,4> b)
+  { return vsubq_s32(a.Data(), b.Data()); }
+
+  NETGEN_INLINE SIMD<int32_t,2> operator& (SIMD<int32_t,2> a, SIMD<int32_t,2> b)
+  { return vand_s32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> operator& (SIMD<int32_t,4> a, SIMD<int32_t,4> b)
+  { return vandq_s32(a.Data(), b.Data()); }
+
+  template <int N>
+  SIMD<int32_t,2> operator<< (SIMD<int32_t,2> a, IC<N> n)
+  { return vshl_n_s32(a.Data(), N); }
+  template <int N>
+  SIMD<int32_t,4> operator<< (SIMD<int32_t,4> a, IC<N> n)
+  { return vshlq_n_s32(a.Data(), N); }
+
+  NETGEN_INLINE SIMD<mask32,2> operator== (SIMD<int32_t,2> a, SIMD<int32_t,2> b)
+  { return vreinterpret_s32_u32(vceq_s32(a.Data(), b.Data())); }
+  NETGEN_INLINE SIMD<mask32,4> operator== (SIMD<int32_t,4> a, SIMD<int32_t,4> b)
+  { return vreinterpretq_s32_u32(vceqq_s32(a.Data(), b.Data())); }
+
+  NETGEN_INLINE SIMD<mask32,2> operator> (SIMD<int32_t,2> a, SIMD<int32_t,2> b)
+  { return vreinterpret_s32_u32(vcgt_s32(a.Data(), b.Data())); }
+  NETGEN_INLINE SIMD<mask32,4> operator> (SIMD<int32_t,4> a, SIMD<int32_t,4> b)
+  { return vreinterpretq_s32_u32(vcgtq_s32(a.Data(), b.Data())); }
+
+  NETGEN_INLINE SIMD<int32_t,2> If (SIMD<mask32,2> a, SIMD<int32_t,2> b, SIMD<int32_t,2> c)
+  { return vbsl_s32(vreinterpret_u32_s32(a.Data()), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> If (SIMD<mask32,4> a, SIMD<int32_t,4> b, SIMD<int32_t,4> c)
+  { return vbslq_s32(vreinterpretq_u32_s32(a.Data()), b.Data(), c.Data()); }
+
+  NETGEN_INLINE SIMD<float,2> If (SIMD<mask32,2> a, SIMD<float,2> b, SIMD<float,2> c)
+  { return vbsl_f32(vreinterpret_u32_s32(a.Data()), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<float,4> If (SIMD<mask32,4> a, SIMD<float,4> b, SIMD<float,4> c)
+  { return vbslq_f32(vreinterpretq_u32_s32(a.Data()), b.Data(), c.Data()); }
+
+
+  // *************************** more float functions ***************************
+
+  NETGEN_INLINE SIMD<float,2> round (SIMD<float,2> x)
+  { return vrndn_f32(x.Data()); }
+  NETGEN_INLINE SIMD<float,4> round (SIMD<float,4> x)
+  { return vrndnq_f32(x.Data()); }
+
+  NETGEN_INLINE SIMD<int32_t,2> lround (SIMD<float,2> x)
+  { return vcvtn_s32_f32(x.Data()); }
+  NETGEN_INLINE SIMD<int32_t,4> lround (SIMD<float,4> x)
+  { return vcvtnq_s32_f32(x.Data()); }
+
+  NETGEN_INLINE SIMD<float,2> fabs (SIMD<float,2> x)
+  { return vabs_f32(x.Data()); }
+  NETGEN_INLINE SIMD<float,4> fabs (SIMD<float,4> x)
+  { return vabsq_f32(x.Data()); }
+
+  NETGEN_INLINE SIMD<float,2> Min (SIMD<float,2> a, SIMD<float,2> b)
+  { return vmin_f32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,4> Min (SIMD<float,4> a, SIMD<float,4> b)
+  { return vminq_f32(a.Data(), b.Data()); }
+
+  NETGEN_INLINE SIMD<float,2> Max (SIMD<float,2> a, SIMD<float,2> b)
+  { return vmax_f32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,4> Max (SIMD<float,4> a, SIMD<float,4> b)
+  { return vmaxq_f32(a.Data(), b.Data()); }
+
+  template <>
+  NETGEN_INLINE SIMD<float,2> Reinterpret (SIMD<int32_t,2> a)
+  { return vreinterpret_f32_s32(a.Data()); }
+  template <>
+  NETGEN_INLINE SIMD<float,4> Reinterpret (SIMD<int32_t,4> a)
+  { return vreinterpretq_f32_s32(a.Data()); }
+
+}

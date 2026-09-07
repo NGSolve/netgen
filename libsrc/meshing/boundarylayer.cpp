@@ -696,6 +696,9 @@ void BoundaryLayerTool ::InsertNewElements (
   // add 2d quads on required surfaces
   map<pair<PointIndex, PointIndex>, int> seg2edge;
   map<int, int> edge_map;
+  int new_edge_nr = 0;
+  for (int i = 1; i <= mesh.GetNED(); i++)
+    new_edge_nr = max(new_edge_nr, mesh.GetEdgeDescriptor(i).EdgeNr());
   auto getIndex = [&] (int ei) {
     if (edge_map.count(ei) == 0)
       {
@@ -707,6 +710,7 @@ void BoundaryLayerTool ::InsertNewElements (
             if (old_fdi >= 0 && old_fdi < si_map.Size())
               new_ed.SetIndex(si_map[old_fdi]);
           }
+        new_ed.SetEdgeNr(++new_edge_nr);
         edge_map[ei] = mesh.AddEdgeDescriptor(new_ed);
       }
     return edge_map[ei];

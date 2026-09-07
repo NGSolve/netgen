@@ -169,6 +169,8 @@ namespace ngcore
       void AddUserEvent(UserEvent ue)
       {
           if(!tracing_enabled) return;
+          if(unlikely(user_events.size() == max_num_events_per_thread))
+            StopTracing();
           user_events.push_back(ue);
       }
       void StartGPU(int timer_id = 0, int user_value = -1)
@@ -185,6 +187,16 @@ namespace ngcore
           if(unlikely(gpu_events.size() == max_num_events_per_thread))
             StopTracing();
           gpu_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
+        }
+
+      // a finished gpu kernel, times measured by the device, converted to host ticks
+      void AddGPUEvent(int timer_id, TTimePoint t_start, TTimePoint t_stop)
+        {
+          if(!tracing_enabled) return;
+          if(unlikely(gpu_events.size()+2 >= max_num_events_per_thread))
+            StopTracing();
+          gpu_events.push_back(TimerEvent{t_start, timer_id, 0, -1, true});
+          gpu_events.push_back(TimerEvent{t_stop, timer_id, 0, -1, false});
         }
 
       void StartTimer(int timer_id, int user_value = -1)
@@ -273,6 +285,50 @@ namespace ngcore
 
       void SendData(); // MPI parallel data reduction
 
+    };
+
+
+  /*
+    A named container for events an application produces itself, e.g. one
+    per gpu queue. Intervals are given in host ticks, or on another clock
+    (a device timer) mapped through the anchor taken after a sync.
+  */
+  class TraceContainer
+    {
+      std::string name;
+      int id = -1;
+      PajeTrace * id_trace = nullptr;   // container ids are per trace
+      TTimePoint anchor_tick = 0;
+      double anchor_time = 0;
+
+    public:
+      TraceContainer (std::string aname) : name(std::move(aname)) { }
+
+      bool Active() const { return trace != nullptr; }
+
+      void AddTicks (const std::string & label, TTimePoint t0, TTimePoint t1)
+        {
+          if(!trace) return;
+          if(id_trace != trace)
+            {
+              id = trace->AddUserContainer(name);
+              id_trace = trace;
+            }
+          trace->AddUserEvent({t0, t1, label, id, 0});
+        }
+
+      void Anchor (double clock_now)
+        {
+          anchor_tick = GetTimeCounter();
+          anchor_time = clock_now;
+        }
+
+      void AddInterval (const std::string & label, double t0, double t1)
+        { AddTicks(label, Tick(t0), Tick(t1)); }
+
+    private:
+      TTimePoint Tick (double t) const
+        { return anchor_tick + (long long) ((t-anchor_time) / seconds_per_tick); }
     };
 } // namespace ngcore
 

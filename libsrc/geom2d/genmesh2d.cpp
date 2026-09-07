@@ -1,5 +1,6 @@
 #include <meshing.hpp>
 #include <geometry2d.hpp>
+#include "../meshing/boundarylayer.hpp"
 
 namespace netgen
 {
@@ -469,6 +470,12 @@ namespace netgen
     
     PrintMessage (3, "Boundary mesh done, np = ", mesh->GetNP());
 
+    mesh->CalcLocalH(mp.grading);
+
+    auto bl_infos = InsertBoundaryLayers2d (*mesh, mp);
+
+    BitArray is_layer_domain;
+
 
     t_hpref.Start();
     // marks mesh points for hp-refinement
@@ -499,6 +506,12 @@ namespace netgen
 	if ( ed.DomainOut() > maxdomnr) maxdomnr = ed.DomainOut();
       }
 
+    is_layer_domain = BitArray(maxdomnr+1);
+    is_layer_domain.Clear();
+    for(const auto & info : bl_infos)
+      if(info.new_domain <= maxdomnr)
+        is_layer_domain.SetBit(info.new_domain);
+
     TableCreator<const Segment*> dom2seg_creator(maxdomnr+1);
     for ( ; !dom2seg_creator.Done(); dom2seg_creator++)
       for (const Segment & seg : mesh->LineSegments())
@@ -526,11 +539,12 @@ namespace netgen
       {
         auto & ed = mesh->GetEdgeDescriptor(edi);
         int enr = ed.EdgeNr();  // 1-based spline index set by Partition()
+        if (enr < 1 || enr > geometry.GetNSplines())
+          continue;  // not from the geometry, e.g. in front of a boundary layer
         ed.SetName(geometry.GetBCName(geometry.GetSpline(enr-1).bc));
         mesh->SetBCName(edi-1, ed.GetName());
       }
 
-    mesh->CalcLocalH(mp.grading);
     t_h.Stop();
 
     int bnp = mesh->GetNP(); // boundary points
@@ -641,6 +655,7 @@ namespace netgen
     for (int domnr = 1; domnr <= maxdomnr; domnr++)
       {
         RegionTimer rt(t_domain);
+        if (is_layer_domain.Test(domnr)) continue;  // already filled with layer elements
         if (geometry.GetDomainTensorMeshing (domnr)) continue;
         
         double h = mp.maxh;
@@ -769,6 +784,9 @@ namespace netgen
     Optimize2d (*mesh, mp);
 
     mp.optsteps2d = hsteps;
+
+    FinalizeBoundaryLayers2d (*mesh, bl_infos);
+
 
     mesh->Compress();
     mesh->OrderElements();

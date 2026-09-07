@@ -1,3 +1,13 @@
+# Access github.com via a personal access token to avoid rate limiting on unauthenticated clones.
+workflow:
+  rules:
+    - if: $GH_TOKEN
+      variables:
+        GIT_CONFIG_COUNT: "1"
+        GIT_CONFIG_KEY_0: "url.https://oauth2:${GH_TOKEN}@github.com/.insteadOf"
+        GIT_CONFIG_VALUE_0: "https://github.com/"
+    - when: always
+
 stages:
   - build
   - test
@@ -9,7 +19,6 @@ push_github:
   stage: build
   tags:
     - linux
-    - docker
     - bash
   script:
     - git remote add github git@github.com:NGSolve/netgen.git || true
@@ -318,7 +327,6 @@ pip_linux:
   tags:
     - pip
     - linux
-    - docker
   when: manual
   script:
     - ./tests/build_pip.sh
