@@ -306,7 +306,8 @@ namespace ngcore
 
       bool Active() const { return trace != nullptr; }
 
-      void AddTicks (const std::string & label, TTimePoint t0, TTimePoint t1)
+      // value: one integer stored with the event (e.g. bytes of a transfer)
+      void AddTicks (const std::string & label, TTimePoint t0, TTimePoint t1, int value = 0)
         {
           if(!trace) return;
           if(id_trace != trace)
@@ -314,7 +315,7 @@ namespace ngcore
               id = trace->AddUserContainer(name);
               id_trace = trace;
             }
-          trace->AddUserEvent({t0, t1, label, id, 0});
+          trace->AddUserEvent({t0, t1, label, id, value});
         }
 
       void Anchor (double clock_now)
@@ -323,8 +324,8 @@ namespace ngcore
           anchor_time = clock_now;
         }
 
-      void AddInterval (const std::string & label, double t0, double t1)
-        { AddTicks(label, Tick(t0), Tick(t1)); }
+      void AddInterval (const std::string & label, double t0, double t1, int value = 0)
+        { AddTicks(label, Tick(t0), Tick(t1), value); }
 
     private:
       TTimePoint Tick (double t) const
