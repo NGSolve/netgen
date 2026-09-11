@@ -54,10 +54,10 @@ namespace ngcore
   }
 
   size_t tl_heap_size = 50*1000*1000;
-  thread_local LocalHeap tl_heap(tl_heap_size, "tlheap");
 
   LocalHeap& TLHeap()
   {
+    static thread_local LocalHeap tl_heap(tl_heap_size, "tlheap");
     return tl_heap;
   }
 
@@ -66,7 +66,7 @@ namespace ngcore
   {
     tl_heap_size = s;
     // if (tl_heap.Available() == tl_heap.Size()) // check if not in used
-    tl_heap = LocalHeap(tl_heap_size, "tlheap");
+    TLHeap() = LocalHeap(tl_heap_size, "tlheap");
   }
 
   
