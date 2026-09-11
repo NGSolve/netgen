@@ -507,6 +507,22 @@ namespace ngcore
           variable_type_active_threads = paje.DefineVariableType( container_type_jobs, "Active threads" );
 
       const int container_task_manager = paje.CreateContainer( container_type_task_manager, 0, "The task manager" );
+
+      std::map<int, int> user_container_aliases;
+      if(user_events.size())
+        {
+          for(auto i : Range(user_containers.size()))
+            {
+              auto & [name, parent] = user_containers[i];
+              int a_parent = parent == -1 ? container_task_manager : user_container_aliases[parent];
+              user_container_aliases[i] = paje.CreateContainer( container_type_timer, a_parent, name );
+            }
+
+          for(auto ev : user_events)
+            if(user_container_aliases[ev.container]==0)
+              user_container_aliases[ev.container] = paje.CreateContainer( container_type_timer, container_task_manager, "User " + ToString(ev.container) );
+        }
+
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
 
       int variable_type_memory = 0;
@@ -701,23 +717,7 @@ namespace ngcore
         {
           // std::stable_sort (user_events.begin(), user_events.end());
 
-          std::map<int, int> containers;
-
-          for(auto i : Range(user_containers.size()))
-          {
-              auto & [name, parent] = user_containers[i];
-              int a_parent = parent == -1 ? container_task_manager : containers[parent];
-              containers[i] = paje.CreateContainer( container_type_timer, a_parent, name );
-          }
-
-          for(auto ev : user_events)
-          {
-            if(containers[ev.container]==0)
-            {
-              std::string name = "User " + ToString(ev.container);
-              containers[ev.container] = paje.CreateContainer( container_type_timer, container_task_manager, name );
-            }
-          }
+          auto & containers = user_container_aliases;
 
           int i_start = 0;
           for(auto i : Range(user_events.size()))
