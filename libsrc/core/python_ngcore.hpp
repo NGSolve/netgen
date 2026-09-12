@@ -38,6 +38,54 @@ namespace ngcore
     };
   } // namespace detail
 
+  // Conversions between C++ objects and python for pickling (PyArchive)
+  // and for std::any values in Flags. Registered per type by
+  // RegisterPyArchiveCaster<T>(), typically next to its py::class_.
+  namespace detail
+  {
+    struct PyArchiveCasters
+    {
+      py::object (*shared_to_py)(std::shared_ptr<void>) = nullptr;
+      std::shared_ptr<void> (*py_to_shared)(py::handle) = nullptr;
+      py::object (*any_to_py)(const std::any&) = nullptr;
+      std::any (*py_to_any)(py::handle) = nullptr;
+    };
+    NGCORE_API void SetPyArchiveCasters(const std::type_info& ti, const PyArchiveCasters& casters);
+    // throws if the type was not registered
+    NGCORE_API const PyArchiveCasters& GetPyArchiveCasters(const std::type_info& ti);
+    NGCORE_API const PyArchiveCasters* FindPyArchiveCasters(const std::type_info& ti);
+  } // namespace detail
+
+  NGCORE_API py::object CastAnyToPy(const std::any& a);
+  NGCORE_API std::any CastPyToAny(py::object& obj);
+
+  template<typename T>
+  void RegisterPyArchiveCaster()
+  {
+    detail::PyArchiveCasters c;
+    constexpr bool as_shared = has_shared_from_this2<T>::value || !std::is_copy_constructible_v<T>;
+    if constexpr (as_shared)
+      {
+        c.shared_to_py = [](std::shared_ptr<void> p) -> py::object
+        {
+          if (p.use_count() == 0)   // non-owning, from a raw pointer
+            return py::cast(static_cast<T*>(p.get()));
+          return py::cast(std::static_pointer_cast<T>(p));
+        };
+        c.py_to_shared = [](py::handle h) -> std::shared_ptr<void> { return h.cast<std::shared_ptr<T>>(); };
+        c.any_to_py = [](const std::any& a) { return py::cast(std::any_cast<std::shared_ptr<T>>(a)); };
+        c.py_to_any = [](py::handle h) { return std::any{ h.cast<std::shared_ptr<T>>() }; };
+        // a std::any holding a shared_ptr<T> reports that type
+        detail::SetPyArchiveCasters(typeid(std::shared_ptr<T>), c);
+      }
+    else
+      {
+        c.any_to_py = [](const std::any& a) { return py::cast(*std::any_cast<T>(&a)); };
+        c.py_to_any = [](py::handle h) { return std::any{ h.cast<T>() }; };
+      }
+    detail::SetPyArchiveCasters(typeid(T), c);
+  }
+
 #ifdef PARALLEL
   struct mpi4py_comm {
     mpi4py_comm() = default;
@@ -240,8 +288,16 @@ namespace ngcore
     using ARCHIVE::operator&;
     using ARCHIVE::operator<<;
     using ARCHIVE::GetVersion;
-    void ShallowOutPython(const pybind11::object& val) override { lst.append(val); }
-    void ShallowInPython(pybind11::object& val) override { val = lst[index++]; }
+    void ShallowOutPtr(std::shared_ptr<void> p, const std::type_info& ti) override
+    { lst.append(detail::GetPyArchiveCasters(ti).shared_to_py(std::move(p))); }
+    void ShallowInPtr(std::shared_ptr<void>& p, const std::type_info& ti) override
+    { p = detail::GetPyArchiveCasters(ti).py_to_shared(lst[index++]); }
+    void ShallowOutAny(const std::any& a) override { lst.append(CastAnyToPy(a)); }
+    void ShallowInAny(std::any& a) override
+    {
+      pybind11::object obj = lst[index++];
+      a = CastPyToAny(obj);
+    }
 
     pybind11::list WriteOut()
     {

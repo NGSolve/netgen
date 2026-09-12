@@ -36,6 +36,13 @@ namespace ngcore
 
     template<typename T>
     constexpr bool is_any_pointer = is_any_pointer_impl<T>::value;
+
+    template<typename T>
+    struct is_shared_ptr_impl : std::false_type {};
+    template<typename T>
+    struct is_shared_ptr_impl<std::shared_ptr<T>> : std::true_type {};
+    template<typename T>
+    constexpr bool is_shared_ptr = is_shared_ptr_impl<T>::value;
   } // namespace detail
 
   

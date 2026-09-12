@@ -451,9 +451,7 @@ threads : int
             (uintptr_t)info.creator,
             (uintptr_t)info.upcaster,
             (uintptr_t)info.downcaster,
-            (uintptr_t)info.cargs_archiver,
-            (uintptr_t)info.anyToPyCaster,
-            (uintptr_t)info.pyToAnyCaster
+            (uintptr_t)info.cargs_archiver
         );
       }
       return class_dict;

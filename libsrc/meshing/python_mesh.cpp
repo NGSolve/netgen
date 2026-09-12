@@ -914,11 +914,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     };
 
+  RegisterPyArchiveCaster<NetgenGeometry>();
   py::class_<NetgenGeometry, shared_ptr<NetgenGeometry>, NetgenGeometryTrampoline> (m, "NetgenGeometry", py::dynamic_attr())
     .def(py::init<> ())
     .def("RestrictH", &NetgenGeometry::RestrictH)
              ;
   
+  RegisterPyArchiveCaster<Mesh>();
   py::class_<Mesh,shared_ptr<Mesh>>(m, "Mesh")
     // .def(py::init<>("create empty mesh"))
 
