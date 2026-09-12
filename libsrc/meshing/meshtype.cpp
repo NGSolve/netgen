@@ -2764,7 +2764,18 @@ namespace netgen
     {
       ar & maxidentnr;
       ar & identifiedpoints & identifiedpoints_nr;
+      // idpoints_table is archived as raw bytes: store 1-based numbers, independent of BASE
+      auto shift = [&](int d)
+      {
+        for (int i = 0; i < idpoints_table.Size(); i++)
+          for (auto & p : idpoints_table[i])
+            for (int k = 0; k < 2; k++)
+              p[k] = PointIndex(int(p[k]) + d);
+      };
+      int d = 1 - int(IndexBASE<PointIndex>());
+      if (ar.Output()) shift(d);
       ar & idpoints_table;
+      shift(-d);
       
       if (ar.Output())
         {

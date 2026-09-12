@@ -16,6 +16,7 @@ def test_array_numpy():
 
 def test_mesh_elements_numpy_array_access():
     from netgen.csg import unit_cube
+    from netgen.meshing import PointId
     mesh = unit_cube.GenerateMesh()
     np_els = mesh.Elements3D().NumPy()
     vol_nodes = np_els["nodes"]
@@ -25,7 +26,7 @@ def test_mesh_elements_numpy_array_access():
         for n1, n2 in zip(nodes, el.vertices):
             assert n1 == n2
         for n in nodes[len(el.vertices):]:
-            assert n in (0, -1)  # unused slot is PointIndex::BASE-1
+            assert n == PointId.base - 1  # unused slot holds PointIndex::INVALID
         assert el.index == index
         assert len(el.vertices) == np
 

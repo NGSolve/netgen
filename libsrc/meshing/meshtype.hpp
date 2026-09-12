@@ -199,7 +199,13 @@ namespace netgen
     bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
 
-    void DoArchive (Archive & ar) { ar & i; }
+    // archives store 1-based numbers (the historic base-1 raw value), independent of BASE
+    void DoArchive (Archive & ar)
+    {
+      T nr1 = i - T(BASE) + 1;
+      ar & nr1;
+      if (ar.Input()) i = nr1 - 1 + T(BASE);
+    }
   };
 
 
@@ -296,7 +302,7 @@ namespace netgen
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
 
     template <typename ARCHIVE>
-    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 2); }
+    void DoArchive(ARCHIVE& ar) { for (int k = 0; k < 2; k++) (*this)[k].DoArchive(ar); }
     
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
@@ -323,7 +329,7 @@ namespace netgen
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
 
     template <typename ARCHIVE>
-    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 3); }
+    void DoArchive(ARCHIVE& ar) { for (int k = 0; k < 3; k++) (*this)[k].DoArchive(ar); }
     
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
@@ -348,7 +354,7 @@ namespace netgen
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
 
     template <typename ARCHIVE>
-    void DoArchive(ARCHIVE& ar) { ar.Do(&I1(), 4); }
+    void DoArchive(ARCHIVE& ar) { for (int k = 0; k < 4; k++) (*this)[k].DoArchive(ar); }
     
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
@@ -779,8 +785,13 @@ namespace netgen
       for (size_t i = 0; i < np; i++)
         ar & pnum[i];
       */
-      static_assert(sizeof(int) == sizeof (PointIndex));
-      ar.Do( (int*)&pnum[0], np);
+      // archive stores 1-based point numbers, independent of BASE
+      int nr1[ELEMENT2D_MAXPOINTS];
+      if (ar.Output())
+        for (int k = 0; k < np; k++) nr1[k] = pnum[k] - IndexBASE<PointIndex>() + 1;
+      ar.Do (nr1, np);
+      if (ar.Input())
+        for (int k = 0; k < np; k++) pnum[k] = IndexBASE<PointIndex>() + nr1[k] - 1;
     }
 
 #ifdef PARALLEL
@@ -1088,8 +1099,13 @@ namespace netgen
           flags.fixed = 0;
         }
 
-      static_assert(sizeof(int) == sizeof (PointIndex));
-      ar.Do( (int*)&pnum[0], np);
+      // archive stores 1-based point numbers, independent of BASE
+      int nr1[ELEMENT_MAXPOINTS];
+      if (ar.Output())
+        for (int k = 0; k < np; k++) nr1[k] = pnum[k] - IndexBASE<PointIndex>() + 1;
+      ar.Do (nr1, np);
+      if (ar.Input())
+        for (int k = 0; k < np; k++) pnum[k] = IndexBASE<PointIndex>() + nr1[k] - 1;
     }
     
 #ifdef PARALLEL
