@@ -345,9 +345,9 @@ namespace netgen
 	    else
 	      {
 		newel.PNum(onp+1+j) = mesh.AddPoint
-		  (Center (mesh.Point(i2.I1()),
-			   mesh.Point(i2.I2())),
-		   mesh.Point(i2.I1()).GetLayer(), 
+		  (Center (mesh[PointIndex(i2.I1())],
+			   mesh[PointIndex(i2.I2())]),
+		   mesh[PointIndex(i2.I1())].GetLayer(), 
 		   INNERPOINT);
 
 		between.Set (i2, newel.PNum(onp+1+j));
@@ -372,6 +372,7 @@ namespace netgen
               PointIndices<2> i2;
 	      PointIndex newpi;
 	      between.GetData (it, i2, newpi);
+	      if (!identmap[i2[0]].IsValid() || !identmap[i2[1]].IsValid()) continue;
 	      PointIndices<2> oi2(identmap[i2[0]], 
                                   identmap[i2[1]]);
 	      oi2.Sort();
@@ -436,10 +437,9 @@ namespace netgen
     PrintMessage (3, "Validate mesh");
     int np = mesh.GetNP();
     // int i, j;
-    NgArray<INDEX_2> parents(np);
-  
-    for (int i = 1; i <= np; i++)
-      parents.Elem(i) = INDEX_2(0,0);
+    Array<PointIndices<2>, PointIndex> parents(np);
+    for (auto & p : parents)
+      { p[0].Invalidate(); p[1].Invalidate(); }
 
     // for (int i = 1; i <= ne; i++)
     for (ElementIndex ei : mesh.VolumeElements().Range())
@@ -456,11 +456,10 @@ namespace netgen
 		{ 3, 4, 10 } };
 	    for (int j = 0; j < 6; j++)
 	      {
-		int f1 = el.PNum (betweentab[j][0]);
-		int f2 = el.PNum (betweentab[j][1]);
-		int son = el.PNum (betweentab[j][2]);
-		parents.Elem(son).I1() = f1;
-		parents.Elem(son).I2() = f2;
+		PointIndex f1 = el.PNum (betweentab[j][0]);
+		PointIndex f2 = el.PNum (betweentab[j][1]);
+		PointIndex son = el.PNum (betweentab[j][2]);
+		parents[son] = PointIndices<2>(f1, f2);
 	      }
 	  }
       }
@@ -471,7 +470,7 @@ namespace netgen
 
   void Refinement ::
   ValidateRefinedMesh (Mesh & mesh, 
-		       NgArray<INDEX_2> & parents)
+		       Array<PointIndices<2>, PointIndex> & parents)
   {
     // int i, j, k;
   
@@ -503,20 +502,15 @@ namespace netgen
 	cout << "WARNING: " << wrongels << " illegal element(s) found" << endl;
 
 	int np = mesh.GetNP();
-	NgArray<Point<3> > should(np);
-	NgArray<Point<3> > can(np);
+	Array<Point<3>, PointIndex> should(np);
+	Array<Point<3>, PointIndex> can(np);
 
-	for (int i = 1; i <= np; i++)
-	  {
-	    should.Elem(i) = can.Elem(i) = mesh.Point(i);
-	  }
+	for (PointIndex pi : mesh.Points().Range())
+	  should[pi] = can[pi] = mesh[pi];
 
-	for (int i = 1; i <= parents.Size(); i++)
-	  {
-	    if (parents.Get(i).I1())
-	      can.Elem(i) = Center (can.Elem(parents.Get(i).I1()),
-				    can.Elem(parents.Get(i).I2()));
-	  }
+	for (PointIndex pi : parents.Range())
+	  if (parents[pi][0].IsValid())
+	    can[pi] = Center (can[parents[pi][0]], can[parents[pi][1]]);
 
 	TBitArray<PointIndex> boundp(np);
 	boundp.Clear();
@@ -532,9 +526,9 @@ namespace netgen
 
 
 	(*testout) << "bpoints:" << endl;
-	for (int i = 1; i <= np; i++)
-	  if (boundp.Test(i))
-	    (*testout) << i << endl;
+	for (PointIndex pi : mesh.Points().Range())
+	  if (boundp.Test(pi))
+	    (*testout) << pi << endl;
 
 	double lam = 0.5;
 
@@ -554,16 +548,16 @@ namespace netgen
 		factry = lam + (1-lam) * facok;
 		cout << "trying: " << factry << endl;
 
-		for (int i = 1; i <= np; i++)
-		  if (boundp.Test(i))
+		for (PointIndex pi : mesh.Points().Range())
+		  if (boundp.Test(pi))
 		    {
 		      for (int j = 0; j < 3; j++)
-			mesh.Point(i)(j) = 
-			  lam * should.Get(i)(j) +
-			  (1-lam) * can.Get(i)(j);
+			mesh[pi](j) = 
+			  lam * should[pi](j) +
+			  (1-lam) * can[pi](j);
 		    }
 		  else
-		    mesh.Point(i) = Point<3> (can.Get(i));
+		    mesh[pi] = Point<3> (can[pi]);
 	      
 		//	      (*testout) << "bad els: " << endl;
 		wrongels = 0;
@@ -602,8 +596,8 @@ namespace netgen
 	    mesh.ImproveMeshJacobian (dummymp, OPT_WORSTCASE);	      
 	  
 	    facok = factry;
-	    for (int i = 1; i <= np; i++)
-	      can.Elem(i) = mesh.Point(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      can[pi] = mesh[pi];
 	  }
       }
 

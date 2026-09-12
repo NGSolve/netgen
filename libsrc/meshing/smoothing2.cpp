@@ -584,7 +584,7 @@ namespace netgen
     //  meshthis -> ProjectPoint (surfi, pp1);
     //  meshthis -> GetNormalVector (surfi, pp1, n);
 
-    static NgArray<Point<2>> pts2d;  // better: use hashtable
+    static Array<Point<2>, PointIndex> pts2d;  // better: use hashtable
     pts2d.SetSize(mesh.GetNP());
 
     grad = 0;
@@ -600,10 +600,10 @@ namespace netgen
 	for (int k = 1; k <= bel.GetNP(); k++)
 	  {
 	    PointIndex pi = bel.PNum(k);
-	    pts2d.Elem(pi) = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
+	    pts2d[pi] = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
 				      ld.t2 * (mesh.Point(pi) - ld.sp1)); 
 	  }				    
-	pts2d.Elem(gpi) = { x(0), x(1) };
+	pts2d[gpi] = { x(0), x(1) };
       
 
 	for (int k = 1; k <= 2; k++)
@@ -653,7 +653,7 @@ namespace netgen
     //    pp1.Add2 (x.Get(1), t1, x.Get(2), t2);
     pp1 = ld.sp1 + x(0) * ld.t1 + x(1) * ld.t2;
 
-    static NgArray<Point<2>> pts2d;
+    static Array<Point<2>, PointIndex> pts2d;
     pts2d.SetSize(mesh.GetNP());
 
     deriv = 0;
@@ -669,10 +669,10 @@ namespace netgen
 	for (k = 1; k <= bel.GetNP(); k++)
 	  {
 	    PointIndex pi = bel.PNum(k);
-	    pts2d.Elem(pi) = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
+	    pts2d[pi] = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
 				      ld.t2 * (mesh.Point(pi) - ld.sp1)); 
 	  }				    
-	pts2d.Elem(gpi) = Point2d (x(0), x(1));
+	pts2d[gpi] = Point2d (x(0), x(1));
       
 
 	vdir = { dir(0), dir(1) };

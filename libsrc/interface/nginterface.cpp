@@ -1823,8 +1823,8 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   for (int i = 0; i < apairs.Size(); i++)
     {
-      pairs[2*i] = apairs[i].I1();
-      pairs[2*i+1] = apairs[i].I2();
+      pairs[2*i] = apairs[i].I1() - IndexBASE<PointIndex>() + 1;
+      pairs[2*i+1] = apairs[i].I2() - IndexBASE<PointIndex>() + 1;
     }
       
 }
@@ -1849,7 +1849,7 @@ int Ng_GetNPeriodicEdges (int idnr)
 	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
 	//  (*testout) << "seg = " << (*mesh)[si] << "; other = " 
 	//     << other1 << "-" << other2 << endl;
-	if (other1 && other2 && mesh->IsSegment (other1, other2))
+	if (other1.IsValid() && other2.IsValid() && mesh->IsSegment (other1, other2))
 	  {
 	    cnt++;
 	  }
@@ -1875,7 +1875,7 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
       {
 	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
 	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
-	if (other1 && other2 && mesh->IsSegment (other1, other2))
+	if (other1.IsValid() && other2.IsValid() && mesh->IsSegment (other1, other2))
 	  {
 	    SegmentIndex otherseg = mesh->SegmentNr (other1, other2);
 	    // pairs[cnt++] = top.GetSegmentEdge (si+1);

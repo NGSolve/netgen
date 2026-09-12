@@ -30,7 +30,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
   INDEX ne = mesh.GetNE();
   INDEX nse = mesh.GetNSE();
   
-  NgArray<int> sn(np);
+  Array<int, PointIndex> sn(np);
   ofstream outfile(filename);
   
   outfile << "TITLE=\" " << filename.string() << "\"" << endl;
@@ -61,8 +61,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
       
   for (j = 1; j <= geom->GetNSurf(); j++)       /* Flaeche Nummer j */
     {
-      for (i = 1; i <= np; i++)
-	sn.Elem(i) = 0;
+      sn = 0;
 
       e = 0;
        
@@ -72,31 +71,31 @@ void WriteTecPlotFormat (const Mesh & mesh,
 	  if (j ==  mesh.GetFaceDescriptor (el.GetIndex ()).SurfNr())
 	    {
 	      for (k = 1; k <= 3; k++)
-		sn.Elem(el.PNum(k)) = 1;
+		sn[el.PNum(k)] = 1;
 	      e++;                     /* e= Anzahl der neuen Elemente */
 	    }
 	}
 
       z = 0;
-      for (i = 1; i <= np; i++)
-	if (sn.Elem(i) == 1)
-	  sn.Elem(i) = ++z;
+      for (PointIndex pi : sn.Range())
+	if (sn[pi] == 1)
+	  sn[pi] = ++z;
 
       outfile << "ZONE T=\" Surface " << j << " \", N=" << z
 	      << ", E=" << e << ", ET=TRIANGLE, F=FEPOINT" << endl;
 
-      for (i = 1; i <= np; i++)
-	if (sn.Elem(i) != 0)
+      for (PointIndex pi : mesh.Points().Range())
+	if (sn[pi] != 0)
 	  {
-	    n = geom->GetSurface(j) -> GetNormalVector ( mesh.Point(i) );
+	    n = geom->GetSurface(j) -> GetNormalVector ( mesh[pi] );
 		
-	    outfile << mesh.Point(i)(0) << " " /* Knoten Koordinaten */
-		    << mesh.Point(i)(1) << " "
-		    << mesh.Point(i)(2) << " "
+	    outfile << mesh[pi](0) << " " /* Knoten Koordinaten */
+		    << mesh[pi](1) << " "
+		    << mesh[pi](2) << " "
 		    << n(0) << " "
 		    << n(1) << " "
 		    << n(2) << " "
-		    << i     << endl;
+		    << pi    << endl;
 	  }
 	  
 
@@ -105,9 +104,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 	  const Element2d & el = mesh.SurfaceElement(i);
 	  if (j ==  mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr())
 	    /* FlaechenKnoten (3) */
-	    outfile << sn.Get(el.PNum(1)) << " " 
-		    << sn.Get(el.PNum(2)) << " "
-		    << sn.Get(el.PNum(3)) << endl;
+	    outfile << sn[el.PNum(1)] << " " 
+		    << sn[el.PNum(2)] << " "
+		    << sn[el.PNum(3)] << endl;
 	      
 	  /// Hier soll noch die Ausgabe der Nummer des angrenzenden
 	      /// Vol.elements erfolgen !

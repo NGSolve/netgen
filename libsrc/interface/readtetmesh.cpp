@@ -289,9 +289,9 @@ namespace netgen
                         segnum_ng[j] = -segnum-1;
 			
                       if(neg[j])
-                        tris.Last()->PNum(j+1) = (*segmentdata[segnum_ng[j]])[1];
+                        tris.Last()->PNum(j+1) = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[1]-1;
                       else
-                        tris.Last()->PNum(j+1) = (*segmentdata[segnum_ng[j]])[0];
+                        tris.Last()->PNum(j+1) = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[0]-1;
 
                       tris.Last()->GeomInfoPi(j+1).trignum = trinum;
                     }
@@ -756,8 +756,8 @@ namespace netgen
         if((atof(version.c_str()) <= 1.999999 && (*segmentdata[i])[2] > 0) ||
            (atof(version.c_str()) > 1.999999  && (*segmentdata[i])[2] > 0 && (*segmentdata[i])[2] < minId2D))
           {
-            seg[0] = (*segmentdata[i])[0];
-            seg[1] = (*segmentdata[i])[1];
+            seg[0] = IndexBASE<PointIndex>()+(*segmentdata[i])[0]-1;
+            seg[1] = IndexBASE<PointIndex>()+(*segmentdata[i])[1]-1;
             // (*segmentdata[i])[2] was edgenr, no longer stored in EPGeomInfo
             seg.SetIndex((*segmentdata[i])[3]-minId2D + 1);
 
@@ -765,8 +765,8 @@ namespace netgen
             seg.GeomInfo(1).trignum = (*segmentdata[i])[5];
             mesh.AddSegment(seg);
 
-            seg[0] = (*segmentdata[i])[1];
-            seg[1] = (*segmentdata[i])[0];
+            seg[0] = IndexBASE<PointIndex>()+(*segmentdata[i])[1]-1;
+            seg[1] = IndexBASE<PointIndex>()+(*segmentdata[i])[0]-1;
             seg.SetIndex((*segmentdata[i])[4]-minId2D + 1);
 
             seg.GeomInfo(0).trignum = (*segmentdata[i])[6];

@@ -862,9 +862,9 @@ namespace netgen
             for (j = 1; j <= identpairs.Size(); j++)
               {
                 outfile.width (8);
-                outfile << identpairs.Get(j).I1();
+                outfile << PointIndex(identpairs.Get(j).I1());
                 outfile.width (8);
-                outfile << identpairs.Get(j).I2();
+                outfile << PointIndex(identpairs.Get(j).I2());
                 outfile.width (8);
                 outfile << i << "\n";
               }
@@ -3127,7 +3127,7 @@ namespace netgen
                                       (*testout) << "face = " << i3 << endl;
                                       (*testout) << "points = " << endl;
                                       for (int jj = 1; jj <= 3; jj++)
-                                        (*testout) << "p = " << Point(i3.I(jj)) << endl;
+                                        (*testout) << "p = " << (*this)[PointIndex(i3.I(jj))] << endl;
                                     }
                                 }
                             }
@@ -3258,7 +3258,7 @@ namespace netgen
                                           (*testout) << "face = " << i3 << endl;
                                           (*testout) << "points = " << endl;
                                           for (int jj = 1; jj <= 3; jj++)
-                                            (*testout) << "p = " << Point(i3.I(jj)) << endl;
+                                            (*testout) << "p = " << (*this)[PointIndex(i3.I(jj))] << endl;
                                         }
                                     }
                                 }

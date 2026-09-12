@@ -97,8 +97,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int nbquad = 0;
   // array with 1 if point on any tetra, 0 else 
   // this is needed in order to arrange the prism points in the right order
-  NgArray<int,1> pointsOnTetras;
-  pointsOnTetras.SetSize (mesh.GetNP());
+  Array<int, PointIndex> pointsOnTetras(mesh.GetNP());
   pointsOnTetras = 0;
   for (i = 1; i <= ne; i++)
   {
@@ -106,7 +105,7 @@ void WriteJCMFormat (const Mesh & mesh,
     if (el.GetNP() == 4)
     {
       for (j = 1; j <= 4; j++)
-        pointsOnTetras.Set(int (el.PNum(j)),1);     
+        pointsOnTetras[el.PNum(j)] = 1;     
     }
   }
 
@@ -222,9 +221,9 @@ void WriteJCMFormat (const Mesh & mesh,
       dz3 = mesh.Point(el.PNum(4))(2) - mesh.Point(el.PNum(1))(2);
       vol = (dy1*dz2-dz1*dy2)*dx3 + (dz1*dx2-dx1*dz2)*dy3 + (dx1*dy2-dy1*dx2)*dz3;
 
-      if (pointsOnTetras.Get(el.PNum(1)) &&
-          pointsOnTetras.Get(el.PNum(2)) &&
-          pointsOnTetras.Get(el.PNum(3)))
+      if (pointsOnTetras[el.PNum(1)] &&
+          pointsOnTetras[el.PNum(2)] &&
+          pointsOnTetras[el.PNum(3)])
       {
         if (vol > 0)
           for (j = 1; j <= 6; j++)
@@ -237,9 +236,9 @@ void WriteJCMFormat (const Mesh & mesh,
             outfile << el.PNum(j)<<"\n";
         }
       }
-      else if ( pointsOnTetras.Get(el.PNum(4)) &&
-                pointsOnTetras.Get(el.PNum(5)) &&
-                pointsOnTetras.Get(el.PNum(6))    )
+      else if ( pointsOnTetras[el.PNum(4)] &&
+                pointsOnTetras[el.PNum(5)] &&
+                pointsOnTetras[el.PNum(6)]    )
       {
         if ( vol < 0 )
         {
@@ -352,17 +351,17 @@ void WriteJCMFormat (const Mesh & mesh,
         && (mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0
             || mesh.GetFaceDescriptor (el.GetIndex()).DomainOut()==0))
     {
-      if      (pointsOnTetras.Get(el.PNum(1)) &&
-               pointsOnTetras.Get(el.PNum(2)))
+      if      (pointsOnTetras[el.PNum(1)] &&
+               pointsOnTetras[el.PNum(2)])
         ct = 0;
-      else if (pointsOnTetras.Get(el.PNum(2)) &&
-               pointsOnTetras.Get(el.PNum(3)))
+      else if (pointsOnTetras[el.PNum(2)] &&
+               pointsOnTetras[el.PNum(3)])
         ct = 1;
-      else if (pointsOnTetras.Get(el.PNum(3)) &&
-               pointsOnTetras.Get(el.PNum(4)))
+      else if (pointsOnTetras[el.PNum(3)] &&
+               pointsOnTetras[el.PNum(4)])
         ct = 2;
-      else if (pointsOnTetras.Get(el.PNum(4)) &&
-               pointsOnTetras.Get(el.PNum(1)))
+      else if (pointsOnTetras[el.PNum(4)] &&
+               pointsOnTetras[el.PNum(1)])
         ct = 3;
       else
         cout << "\nWarning: Quadrilateral with inconsistent points found!"<<endl;

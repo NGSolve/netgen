@@ -842,6 +842,8 @@ namespace netgen
     /// matrix 2 * np
     void GetPointMatrix (const NgArray<Point<2>> & points,
 			 class DenseMatrix & pmat) const; 
+    void GetPointMatrix (const Array<Point<2>, PointIndex> & points,
+			 class DenseMatrix & pmat) const;
 
     void ComputeIntegrationPointData () const;
   
@@ -849,7 +851,7 @@ namespace netgen
     double CalcJacobianBadness (const NgArray<Point<2>> & points) const;
     double CalcJacobianBadness (const T_POINTS & points, 
 				const Vec<3> & n) const;
-    double CalcJacobianBadnessDirDeriv (const NgArray<Point<2>> & points,
+    double CalcJacobianBadnessDirDeriv (const Array<Point<2>, PointIndex> & points,
 					int pi, Vec<2> & dir, double & dd) const;
 
 

@@ -457,7 +457,7 @@ namespace netgen
 	    for(int k=0; k<startsize; k++)
 	      {
 		int id = (*idmaps[j])[group[k]];
-		if(id != 0 && !group.Contains(id) && nodenum[id] != -1)
+		if(PointIndex(id).IsValid() && !group.Contains(id) && nodenum[id] != -1)
 		  {
 		    group.Append(id);
 		    id_num[id] = j+1+id_num[group[k]];
@@ -609,7 +609,7 @@ namespace netgen
 	for(int j=0; j<idmaps.Size(); j++)
 	  {
 	    INDEX_2 vid((*idmaps[j])[v[0]], (*idmaps[j])[v[1]]);
-	    if(vid[0] != 0 && vid[0] != v[0] && vid[1] != 0 && vid[1] != v[1])
+	    if(PointIndex(vid[0]).IsValid() && vid[0] != v[0] && PointIndex(vid[1]).IsValid() && vid[1] != v[1])
 	      {
 		Intersection(*vertex_to_edge[vid[0]],*vertex_to_edge[vid[1]],possible);
 		if(possible.Size() == 1)

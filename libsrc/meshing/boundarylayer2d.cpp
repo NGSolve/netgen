@@ -23,7 +23,7 @@ namespace netgen
       cout << "Trigs: " << mesh.GetNSE() << endl;
 
       NgBitArray bndnodes(np);
-      NgArray<int> mapto(np);
+      Array<PointIndex, PointIndex> mapto(np);
 
       bndnodes.Clear();
       for (i = 1; i <= mesh.GetNSeg(); i++)
@@ -46,20 +46,15 @@ namespace netgen
          }
       }
 
-      for (i = 1; i <= np; i++)
-        {
-          if (bndnodes.Test(i))
-            mapto.Elem(i) = mesh.AddPoint (mesh.Point (i));
-          else
-            mapto.Elem(i) = 0;
-        }
+      for (PointIndex pi : mesh.Points().Range())
+        mapto[pi] = bndnodes.Test(pi) ? mesh.AddPoint (mesh[pi]) : PointIndex(PointIndex::INVALID);
 
       for (i = 1; i <= mesh.GetNSE(); i++)
       {
          Element2d & el = mesh.SurfaceElement(i);
          for (int j = 1; j <= el.GetNP(); j++)
-            if (mapto.Get(el.PNum(j)))
-               el.PNum(j) = mapto.Get(el.PNum(j));
+            if (mapto[el.PNum(j)].IsValid())
+               el.PNum(j) = mapto[el.PNum(j)];
       }
 
 
@@ -69,12 +64,12 @@ namespace netgen
          int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          if (snr == surfid)
          {
-            int p1 = mesh.LineSegment(i)[0];
-            int p2 = mesh.LineSegment(i)[1];
-            int p3 = mapto.Get (p1);
-            if (!p3) p3 = p1;
-            int p4 = mapto.Get (p2);
-            if (!p4) p4 = p2;
+            PointIndex p1 = mesh.LineSegment(i)[0];
+            PointIndex p2 = mesh.LineSegment(i)[1];
+            PointIndex p3 = mapto[p1];
+            if (!p3.IsValid()) p3 = p1;
+            PointIndex p4 = mapto[p2];
+            if (!p4.IsValid()) p4 = p2;
 
             Element2d el(QUAD);
             el.PNum(1) = p1;

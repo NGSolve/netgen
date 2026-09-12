@@ -175,15 +175,11 @@ namespace netgen
 
     PushStatus("Repair Bisection");
 
-    NgArray<Point<3>* > should(np);
-    NgArray<Point<3>* > can(np);
+    Array<Point<3>, PointIndex> should(np);
+    Array<Point<3>, PointIndex> can(np);
     NgArray<Vec<3>* > nv(np);
     for(int i=0; i<np; i++)
-      {
-	nv[i] = new Vec<3>;
-	should[i] = new Point<3>;
-	can[i] = new Point<3>;
-      }
+      nv[i] = new Vec<3>;
     
     TBitArray<PointIndex> isboundarypoint(np),isedgepoint(np);
     isboundarypoint.Clear();
@@ -196,7 +192,7 @@ namespace netgen
 	isedgepoint.SetBit(seg[1]);
       }
 
-    NgArray<int> surfaceindex(np);
+    Array<int, PointIndex> surfaceindex(np);
     surfaceindex = -1;
 
     /*
@@ -209,7 +205,7 @@ namespace netgen
         if(!isedgepoint.Test(sel.PNum(j)))
           {
             isboundarypoint.SetBit(sel.PNum(j));
-            surfaceindex[sel.PNum(j) - IndexBASE<PointIndex>()] = 
+            surfaceindex[sel.PNum(j)] = 
               mesh.GetFaceDescriptor(sel.GetIndex()).SurfNr();
           }
     
@@ -243,15 +239,15 @@ namespace netgen
     
 
     TBitArray<PointIndex> isworkingboundary(np);
-    for(int i=1; i<=np; i++)
-      if(working_points.Test(i) && isboundarypoint.Test(i))
-	isworkingboundary.SetBit(i);
+    for (PointIndex pi : mesh.Points().Range())
+      if(working_points.Test(pi) && isboundarypoint.Test(pi))
+	isworkingboundary.SetBit(pi);
       else
-	isworkingboundary.Clear(i);
+	isworkingboundary.Clear(pi);
 
 
-    for(int i=0; i<np; i++)
-      *should[i] = mesh.Point(i+1);
+    for (PointIndex pi : mesh.Points().Range())
+      should[pi] = mesh[pi];
 
     
     // for(int i=0; i<np; i++)
@@ -260,10 +256,10 @@ namespace netgen
 	if(isnewpoint.Test(i) && 
 	   //working_points.Test(i+PointIndex::BASE) && 
 	   mesh.mlbetweennodes[i][0].IsValid())
-	  *can[i-IndexBASE<PointIndex>()] = Center(*can[mesh.mlbetweennodes[i][0]-IndexBASE<PointIndex>()],
-                                                   *can[mesh.mlbetweennodes[i][1]-IndexBASE<PointIndex>()]);
+	  can[i] = Center(can[mesh.mlbetweennodes[i][0]],
+			  can[mesh.mlbetweennodes[i][1]]);
 	else
-	  *can[i-IndexBASE<PointIndex>()] = mesh[i];
+	  can[i] = mesh[i];
       }
 
 
@@ -342,17 +338,17 @@ namespace netgen
 		PrintMessage(5,ostrstr.str());
 		
 
-		for (int i = 1; i <= np; i++)
+		for (PointIndex pi : mesh.Points().Range())
 		  {
-		    if (isedgepoint.Test(i))
+		    if (isedgepoint.Test(pi))
 		      {
 			for (int j = 0; j < 3; j++)
-			  mesh.Point(i)(j) = 
-			    lamedge * (*should.Get(i))(j) +
-			    (1.-lamedge) * (*can.Get(i))(j);
+			  mesh[pi](j) = 
+			    lamedge * should[pi](j) +
+			    (1.-lamedge) * can[pi](j);
 		      }
 		    else
-		      mesh.Point(i) = *can.Get(i);
+		      mesh[pi] = can[pi];
 		  }
 		if(facokedge < 1.-1e-8)
 		  {
@@ -386,16 +382,16 @@ namespace netgen
 	    MeshingParameters dummymp;
 	    mesh.ImproveMeshJacobianOnSurface(dummymp,isworkingboundary,nv,OPT_QUALITY, &idmaps);
 	    
-	    for (int i = 1; i <= np; i++)
-	      *can.Elem(i) = mesh.Point(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      can[pi] = mesh[pi];
 	    
 	    if(geo)
-              for(int i=0; i<surfaceindex.Size(); i++)
+              for (PointIndex pi : surfaceindex.Range())
                 {
-                  if(surfaceindex[i] >= 0)
+                  if(surfaceindex[pi] >= 0)
                     {
-                      *should[i] = *can[i];
-                      geo->ProjectPoint(surfaceindex[i],*should[i]);
+                      should[pi] = can[pi];
+                      geo->ProjectPoint(surfaceindex[pi],should[pi]);
                     }
                 }
 	  }
@@ -424,17 +420,17 @@ namespace netgen
 		PrintMessage(5,ostrstr.str());
 		
 		
-		for (int i = 1; i <= np; i++)
+		for (PointIndex pi : mesh.Points().Range())
 		  {
-		    if (isboundarypoint.Test(i))
+		    if (isboundarypoint.Test(pi))
 		      {
 			for (int j = 0; j < 3; j++)
-			  mesh.Point(i)(j) = 
-			    lamface * (*should.Get(i))(j) +
-			    (1.-lamface) * (*can.Get(i))(j);
+			  mesh[pi](j) = 
+			    lamface * should[pi](j) +
+			    (1.-lamface) * can[pi](j);
 		      }
 		    else
-		      mesh.Point(i) = *can.Get(i);
+		      mesh[pi] = can[pi];
 		  }
 
 		ostrstr.str("");
@@ -467,8 +463,8 @@ namespace netgen
 	    //mesh.ImproveMeshJacobian (OPT_WORSTCASE,&working_points);
 	  
 
-	    for (int i = 1; i <= np; i++)
-	      *can.Elem(i) = mesh.Point(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      can[pi] = mesh[pi];
 	  }
 	  
 	//!
@@ -492,8 +488,8 @@ namespace netgen
 	    working_elements.SetSize(ne);
 	    
 	    
-	    for (int i = 1; i <= np; i++)
-	      mesh.Point(i) = *should.Elem(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      mesh[pi] = should[pi];
 	    
 	    Validate(mesh,bad_elements,pure_badness,
 		     ((uselocalworsening) ?  (0.8*(max_worsening-1.) + 1.) : (0.1*(max_worsening-1.) + 1.)),
@@ -502,11 +498,11 @@ namespace netgen
 	    if(lamedge < oldlamedge || lamface < oldlamface)
 	      numbadneighbours++;
 	    GetWorkingArea(working_elements,working_points,mesh,bad_elements,numbadneighbours);
-	    for(int i=1; i<=np; i++)
-	      if(working_points.Test(i) && isboundarypoint.Test(i))
-		isworkingboundary.SetBit(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      if(working_points.Test(pi) && isboundarypoint.Test(pi))
+		isworkingboundary.SetBit(pi);
 	      else
-		isworkingboundary.Clear(i);
+		isworkingboundary.Clear(pi);
 	    auxnum=0;
 	    for(int i=1; i<=np; i++)
 	      if(working_points.Test(i))
@@ -517,8 +513,8 @@ namespace netgen
 	    ostrstr << "Percentage working points: " << 100.*double(auxnum)/np;
 	    PrintMessage(5,ostrstr.str());
 	    
-	    for (int i = 1; i <= np; i++)
-	      mesh.Point(i) = *can.Elem(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      mesh[pi] = can[pi];
 	  }
 	//!
 
@@ -574,8 +570,8 @@ namespace netgen
 
     if(cnttrials == maxtrials)
       {
-	for (int i = 1; i <= np; i++)
-	  mesh.Point(i) = *should.Get(i);
+	for (PointIndex pi : mesh.Points().Range())
+	  mesh[pi] = should[pi];
 
 	Validate(mesh,bad_elements,pure_badness,max_worsening,uselocalworsening);
 	
@@ -589,16 +585,12 @@ namespace netgen
 		    << mesh[bad_elements[i]][3] << ": " << mesh.Point(mesh[bad_elements[i]][3]);
 	    PrintMessage(5,ostrstr.str());
 	  }
-	for (int i = 1; i <= np; i++)
-	  mesh.Point(i) = *can.Get(i);
+	for (PointIndex pi : mesh.Points().Range())
+	  mesh[pi] = can[pi];
       }
 
     for(int i=0; i<np; i++)
-      {
-	delete nv[i];
-	delete can[i];
-	delete should[i];
-      }
+      delete nv[i];
 
     PopStatus();
   }

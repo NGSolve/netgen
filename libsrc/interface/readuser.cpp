@@ -197,8 +197,8 @@ namespace netgen
                       case 11: // (Rod) SEGM
                         {
                           Segment el;
-                          el[0] = nodes[0];
-                          el[1] = nodes[1];
+                          el[0] = IndexBASE<PointIndex>()+nodes[0]-1;
+                          el[1] = IndexBASE<PointIndex>()+nodes[1]-1;
                           el[2] = -1;
 
                           if(dim == 3){
@@ -217,9 +217,9 @@ namespace netgen
                       case 22: // (Tapered beam) SEGM
                         {
                           Segment el;
-                          el[0] = nodes[0];
-                          el[1] = nodes[2];
-                          el[2] = nodes[1];
+                          el[0] = IndexBASE<PointIndex>()+nodes[0]-1;
+                          el[1] = IndexBASE<PointIndex>()+nodes[2]-1;
+                          el[2] = IndexBASE<PointIndex>()+nodes[1]-1;
                           
                           if(dim == 3){
                             auto nr = tmp_segments.Size();
@@ -239,7 +239,7 @@ namespace netgen
 			  Element2d el (TRIG);
 			  el.SetIndex (1);
 			  for (int j = 0; j < nnodes; j++)
-			    el[j] = nodes[j];
+			    el[j] = IndexBASE<PointIndex>()+nodes[j]-1;
 			  auto nr = mesh.AddSurfaceElement (el);
                           element_map[label] = std::make_tuple(nr+1, 1);
 			  break;
@@ -250,7 +250,7 @@ namespace netgen
                           el.SetIndex(1);
                           int jj = 0;
                           for(auto j : {0,2,4,3,5,1})
-                              el[jj++] = nodes[j];
+                              el[jj++] = IndexBASE<PointIndex>()+nodes[j]-1;
                           auto nr = mesh.AddSurfaceElement(el);
                           element_map[label] = std::make_tuple(nr+1, 1);
                           break;
@@ -260,7 +260,7 @@ namespace netgen
 			  Element el (TET);
 			  el.SetIndex (1);
 			  for (int j = 0; j < nnodes; j++)
-			    el[j] = nodes[j];
+			    el[j] = IndexBASE<PointIndex>()+nodes[j]-1;
 			  auto nr = mesh.AddVolumeElement (el);
 			  element_map[label] = std::make_tuple(nr+1, 0);
 			  break;
@@ -271,7 +271,7 @@ namespace netgen
                           el.SetIndex(1);
                           int jj = 0;
                           for(auto j : {0,2,4,9,1,5,6,3,7,8})
-                            el[jj++] = nodes[j];
+                            el[jj++] = IndexBASE<PointIndex>()+nodes[j]-1;
                           auto nr = mesh.AddVolumeElement(el);
                           element_map[label] = std::make_tuple(nr+1, 0);
                           break;
@@ -633,9 +633,9 @@ namespace netgen
               el.SetIndex(3);
 
 
-            el.PNum(1) = p1;
-            el.PNum(2) = p2;
-            el.PNum(3) = p3;
+            el.PNum(1) = IndexBASE<PointIndex>()+p1-1;
+            el.PNum(2) = IndexBASE<PointIndex>()+p2-1;
+            el.PNum(3) = IndexBASE<PointIndex>()+p3-1;
             mesh.AddSurfaceElement (el);
           }
 
@@ -660,9 +660,9 @@ namespace netgen
             p3 += np;
             Element2d el(TRIG);
             el.SetIndex(5);
-            el.PNum(1) = p1;
-            el.PNum(2) = p2;
-            el.PNum(3) = p3;
+            el.PNum(1) = IndexBASE<PointIndex>()+p1-1;
+            el.PNum(2) = IndexBASE<PointIndex>()+p2-1;
+            el.PNum(3) = IndexBASE<PointIndex>()+p3-1;
             mesh.AddSurfaceElement (el);
           }
       }

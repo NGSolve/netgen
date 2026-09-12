@@ -339,8 +339,8 @@ namespace netgen
 
 	    if (levels > 0)
 	      {
-		const Point3d & p1 = mesh.Point(pi1);
-		const Point3d & p2 = mesh.Point(pi2);
+		const Point3d & p1 = mesh[PointIndex(pi1)];
+		const Point3d & p2 = mesh[PointIndex(pi2)];
 		int npi(0);
 	      
 		INDEX_2 edge(pi1, pi2);
@@ -365,8 +365,8 @@ namespace netgen
 
 	    if (levels > 0)
 	      {
-		const Point3d & p1 = mesh.Point(pi1);
-		const Point3d & p2 = mesh.Point(pi2);
+		const Point3d & p1 = mesh[PointIndex(pi1)];
+		const Point3d & p2 = mesh[PointIndex(pi2)];
 		int npi;
 	      
 		INDEX_2 edge(pi1, pi2);
@@ -394,8 +394,8 @@ namespace netgen
 
 	    if (slicenr > 0)
 	      {
-		const Point3d & p1 = mesh.Point(pi1);
-		const Point3d & p2 = mesh.Point(pi2);
+		const Point3d & p1 = mesh[PointIndex(pi1)];
+		const Point3d & p2 = mesh[PointIndex(pi2)];
 		int npi;
 
 		const CloseSurfaceIdentification * csid = 
@@ -441,8 +441,8 @@ namespace netgen
 	      {
 		int pi1 = el.PNum(j);
 		int pi2 = el.PNum(j+3);
-		const Point3d & p1 = mesh.Point(pi1);
-		const Point3d & p2 = mesh.Point(pi2);
+		const Point3d & p1 = mesh[PointIndex(pi1)];
+		const Point3d & p2 = mesh[PointIndex(pi2)];
 
 		bool ref = 0;
 
@@ -513,8 +513,8 @@ namespace netgen
 		      {
 			int pi1 = el.PNum(j);
 			int pi2 = el.PNum(j+3);
-			const Point3d & p1 = mesh.Point(pi1);
-			const Point3d & p2 = mesh.Point(pi2);
+			const Point3d & p1 = mesh[PointIndex(pi1)];
+			const Point3d & p2 = mesh[PointIndex(pi2)];
 		      
 			INDEX_2 edge(pi1, pi2);
 			edge.Sort();
@@ -713,16 +713,16 @@ namespace netgen
 
 		int si = mesh.GetFaceDescriptor (index).SurfNr();
 
-		Point<3> hp = mesh.Point(npi[0]);
+		Point<3> hp = mesh[PointIndex(npi[0])];
 		geom->GetSurface(si)->Project (hp);
-		mesh.Point (npi[0]).SetPoint (hp);
+		mesh[PointIndex(npi[0])].SetPoint (hp);
 
-		hp = mesh.Point(npi[1]);
+		hp = mesh[PointIndex(npi[1])];
 		geom->GetSurface(si)->Project (hp);
-		mesh.Point (npi[1]).SetPoint (hp);
+		mesh[PointIndex(npi[1])].SetPoint (hp);
 
-		//	      geom->GetSurface(si)->Project (mesh.Point(npi[0]));
-		//	      geom->GetSurface(si)->Project (mesh.Point(npi[1]));
+		//	      geom->GetSurface(si)->Project (mesh[PointIndex(npi[0])]);
+		//	      geom->GetSurface(si)->Project (mesh[PointIndex(npi[1])]);
 	      }
 	  }
 

@@ -62,7 +62,7 @@ public:
 
   void ValidateSecondOrder (Mesh & mesh);
   void ValidateRefinedMesh (Mesh & mesh, 
-			    NgArray<INDEX_2> & parents);
+			    Array<PointIndices<2>, PointIndex> & parents);
   
   virtual void LocalizeEdgePoints(Mesh & /* mesh */) const {;}
 };

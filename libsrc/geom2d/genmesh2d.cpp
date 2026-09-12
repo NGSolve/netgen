@@ -483,7 +483,7 @@ namespace netgen
       if (geometry.GetPoint(i).hpref)
 	{
 	  double mindist = 1e99;
-	  PointIndex mpi(0);
+	  PointIndex mpi = PointIndex::INVALID;
 	  Point<2> gp = geometry.GetPoint(i);
 	  Point<3> gp3(gp(0), gp(1), 0);
 	  for (PointIndex pi = IndexBASE<PointIndex>(); 

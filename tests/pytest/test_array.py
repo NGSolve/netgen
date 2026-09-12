@@ -25,7 +25,7 @@ def test_mesh_elements_numpy_array_access():
         for n1, n2 in zip(nodes, el.vertices):
             assert n1 == n2
         for n in nodes[len(el.vertices):]:
-            assert n == 0
+            assert n in (0, -1)  # unused slot is PointIndex::BASE-1
         assert el.index == index
         assert len(el.vertices) == np
 

@@ -949,15 +949,15 @@ GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 
   //(*testout) << "projecting " << p << " to " << hp << endl;
 
-  int newpi = 0;
-  for (int i = 1; i <= mesh.GetNP(); i++)
-    if (Dist2 (mesh.Point(i), hp) < 1e-12)
+  PointIndex newpi = PointIndex::INVALID;
+  for (PointIndex i : mesh.Points().Range())
+    if (Dist2 (mesh[i], hp) < 1e-12)
       //    if (Dist2 (mesh.Point(i), hp) < 1 * Dist2 (hp, p))
       {
 	newpi = i;
 	break;
       }
-  if (!newpi)
+  if (!newpi.IsValid())
     newpi = mesh.AddPoint (hp);
 
   if (snew == s2)
@@ -988,19 +988,17 @@ GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 
 void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 {
-  int np = mesh.GetNP();
+  Array<PointIndex> points_on_surf2;
 
-  NgArray<int> points_on_surf2;
-
-  for (int i2 = 1; i2 <= np; i2++)
-    if (s2->PointOnSurface (mesh.Point(i2)))
-      points_on_surf2.Append (i2);
+  for (PointIndex pi : mesh.Points().Range())
+    if (s2->PointOnSurface (mesh[pi]))
+      points_on_surf2.Append (pi);
     
   NgArray<int> surfs_of_p1;
 
-  for (int i1 = 1; i1 <= np; i1++)
+  for (PointIndex i1 : mesh.Points().Range())
     {
-      Point<3> p1 = mesh.Point(i1);
+      Point<3> p1 = mesh[i1];
       //      (*testout) << "p1 = " << i1 << " = " << p1 << endl;
       if (domain && !domain->GetSolid()->IsIn (p1))
 	continue;
@@ -1009,7 +1007,7 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 
       if (s1->PointOnSurface (p1))
 	{
-	  int candi2 = 0;
+	  PointIndex candi2 = PointIndex::INVALID;
 	  double mindist = 1e10;
 
 	  Vec<3> n1;
@@ -1027,9 +1025,9 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 
 	  for (int ii2 = 0; ii2 < points_on_surf2.Size(); ii2++)
 	    {
-	      int i2 = points_on_surf2[ii2];
+	      PointIndex i2 = points_on_surf2[ii2];
 	      if (i2 == i1) continue;
-	      const Point<3> p2 = mesh.Point(i2);
+	      const Point<3> p2 = mesh[i2];
 	      
 	      Vec<3> n = p2 - p1;
 	      n.Normalize();
@@ -1079,7 +1077,7 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 	    
 	    }
 
-	  if (candi2)
+	  if (candi2.IsValid())
 	    {
 	      //(*testout) << "identify points " << p1 << " - " << mesh.Point(candi2) << endl;
 
@@ -1270,12 +1268,10 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   int cntquads = 0;
 
   idmap_type identmap;
-  identmap = 0;
-
   mesh.GetIdentifications().GetMap (nr, identmap);
-  
-  for (int i = PointIndex::BASE; i < identmap.Size()+PointIndex::BASE; i++)
-    if (identmap[i])  identmap[identmap[i]] = i;
+
+  for (PointIndex pi : identmap.Range())
+    if (identmap[pi].IsValid())  identmap[identmap[pi]] = pi;
 
     
   //(*testout) << "identification nr = " << nr << endl;
@@ -1291,7 +1287,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   for (int i1 = 0; i1 < segs.Size(); i1++)
     {
       const Segment & s1 = segs[i1];
-      if (identmap[s1[0]] && identmap[s1[1]])
+      if (identmap[s1[0]].IsValid() && identmap[s1[1]].IsValid())
 	for (int i2 = 0; i2 < i1; i2++)
 	  {
 	    const Segment & s2 = segs[i2];
@@ -1644,15 +1640,14 @@ Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
 
 void CloseEdgesIdentification :: IdentifyPoints (Mesh & mesh)
 {
-  int np = mesh.GetNP();
-  for (int i1 = 1; i1 <= np; i1++)
-    for (int i2 = 1; i2 <= np; i2++)
+  for (PointIndex i1 : mesh.Points().Range())
+    for (PointIndex i2 : mesh.Points().Range())
       {
 	if (i2 == i1)
 	  continue;
 	
-	const Point<3> p1 = mesh.Point(i1);
-	const Point<3> p2 = mesh.Point(i2);
+	const Point<3> p1 = mesh[i1];
+	const Point<3> p2 = mesh[i2];
 	Point<3> pp1 = p1;
 	Point<3> pp2 = p2;
 	

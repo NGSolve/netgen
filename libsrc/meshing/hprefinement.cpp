@@ -715,8 +715,8 @@ namespace netgen
 	      {
 		Point<3> np; 
 		for( int l=0;l<3;l++)
-		  np(l) = (1-fac1)*mesh.Point(i2.I1())(l) 
-		    + fac1 * mesh.Point(i2.I2())(l); 
+		  np(l) = (1-fac1)*mesh[PointIndex(i2.I1())](l) 
+		    + fac1 * mesh[PointIndex(i2.I2())](l); 
 	
 		int npi = mesh.AddPoint (np);
 		newpts.Set (i2, npi);
@@ -738,8 +738,8 @@ namespace netgen
 		{
 		  Point<3> np; 
 		  	for( int l=0;l<3;l++)
-			  np(l) = (1-2*fac2)*mesh.Point(i3.I1())(l) 
-			    + fac2*mesh.Point(i3.I2())(l)  + fac2*mesh.Point(i3.I3())(l);  
+			  np(l) = (1-2*fac2)*mesh[PointIndex(i3.I1())](l) 
+			    + fac2*mesh[PointIndex(i3.I2())](l)  + fac2*mesh[PointIndex(i3.I3())](l);  
 		  int npi = mesh.AddPoint (np);
 		  newfacepts.Set (i3, npi);
 		}
@@ -1313,10 +1313,9 @@ namespace netgen
 
   void ReorderPoints (Mesh & mesh, NgArray<HPRefElement> & hpelements)
   {
-    NgArray<int, 1> map (mesh.GetNP());
-    
-    for (int i = 1; i <= mesh.GetNP(); i++)
-      map[i] = i;
+    Array<PointIndex, PointIndex> map (mesh.GetNP());
+    for (PointIndex pi : map.Range())
+      map[pi] = pi;
 
     int nwrong(0), nright(0);
     for (int k = 0; k < 5; k++)
@@ -1354,13 +1353,11 @@ namespace netgen
     PrintMessage(3, nwrong, " wrong prisms, ",  nright, " right prisms");
 
 
-    NgArray<MeshPoint, 1> hpts(mesh.GetNP());
-
-    for (int i = 1; i <= mesh.GetNP(); i++)
-      hpts[map[i]] = mesh.Point(i);
-
-    for (int i = 1; i <= mesh.GetNP(); i++)
-      mesh.Point(i) = hpts[i];
+    Array<MeshPoint, PointIndex> hpts(mesh.GetNP());
+    for (PointIndex pi : map.Range())
+      hpts[map[pi]] = mesh[pi];
+    for (PointIndex pi : map.Range())
+      mesh[pi] = hpts[pi];
 
     for (int i = 0; i < hpelements.Size(); i++)
       {
@@ -1663,11 +1660,11 @@ namespace netgen
 	*/
 	cornerpoint.Clear();
 	
-	for (int i = 1; i <= mesh.GetNP(); i++)
+	for (PointIndex pi : mesh.Points().Range())
 	  {
-	    if (mesh.Point(i).Singularity() * levels >= act_ref)
+	    if (mesh[pi].Singularity() * levels >= act_ref)
 	      {
-		cornerpoint.SetBit(i);
+		cornerpoint.SetBit(pi);
 		sing = 1; 
 	      } 
 	  }
@@ -1787,8 +1784,7 @@ namespace netgen
 	// check, if point has as least 3 different surfs:
 	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
 
-	for (int i = 1; i <= mesh.GetNP(); i++)
-	  surfonpoint.Elem(i) = INDEX_3(0,0,0);
+	surfonpoint = INDEX_3(0,0,0);
 	
 	for (int i = 1; i <= mesh.GetNSeg(); i++)
 	  {
@@ -1838,7 +1834,7 @@ namespace netgen
 		for (int j = 0; j < 2; j++)
 		  {
 		    int pi = (j == 0) ? seg[0] : seg[1];
-		    INDEX_3 & i3 = surfonpoint.Elem(pi);
+		    INDEX_3 & i3 = surfonpoint[pi];
 		    if (ind != i3.I1() &&
 			ind != i3.I2())
 		      {
@@ -1850,20 +1846,20 @@ namespace netgen
 	  }
 
 
-	for (int i = 1; i <= mesh.GetNP(); i++)
+	for (PointIndex pi : mesh.Points().Range())
 	  {
 	    // mark points for refinement that are in corners between two anisotropic edges 
-	    if (surfonpoint.Get(i).I1())
+	    if (surfonpoint[pi].I1())
 	      {
 		// cornerpoint.Set(i);    // disabled by JS, Aug 2009
-		edgepoint.SetBit(i);
+		edgepoint.SetBit(pi);
 	      }
 	
 	    // mark points for refinement that are explicitly specified in input file
-	    if (mesh.Point(i).Singularity()*levels >= act_ref)
+	    if (mesh[pi].Singularity()*levels >= act_ref)
 	      {
-		cornerpoint.SetBit(i);
-		edgepoint.SetBit(i);
+		cornerpoint.SetBit(pi);
+		edgepoint.SetBit(pi);
 		sing =  1; 
 	      }
 	  }

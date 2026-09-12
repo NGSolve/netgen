@@ -774,6 +774,18 @@ namespace netgen
 
 
 
+  void Element2d ::
+  GetPointMatrix (const Array<Point<2>, PointIndex> & points,
+                  DenseMatrix & pmat) const
+  {
+    for (int i = 1; i <= GetNP(); i++)
+      {
+        const auto& p = points[PNum(i)];
+        pmat.Elem(1, i) = p[0];
+        pmat.Elem(2, i) = p[1];
+      }
+  }
+
   void Element2d :: 
   GetPointMatrix (const NgArray<Point<2>> & points,
                   DenseMatrix & pmat) const
@@ -844,7 +856,7 @@ namespace netgen
     };
 
   double Element2d :: 
-  CalcJacobianBadnessDirDeriv (const NgArray<Point<2>> & points,
+  CalcJacobianBadnessDirDeriv (const Array<Point<2>, PointIndex> & points,
                                int pi, Vec<2> & dir, double & dd) const
   {
     if (typ == QUAD)
@@ -854,7 +866,7 @@ namespace netgen
       
         for (int j = 0; j < 4; j++)
           {
-            const auto& p = points.Get( (*this)[j] );
+            const auto& p = points[(*this)[j]];
             pmat(0, j) = p[0];
             pmat(1, j) = p[1];
           }
@@ -2832,7 +2844,7 @@ namespace netgen
   void Identifications :: GetMap (int identnr, idmap_type & identmap, bool symmetric) const
   {
     identmap.SetSize (mesh.GetNP());
-    identmap = 0;
+    identmap = PointIndex(PointIndex::INVALID);
 
     if (identnr)
       for (int i = 0; i < idpoints_table[identnr].Size(); i++)

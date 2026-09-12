@@ -1650,7 +1650,7 @@ namespace netgen
 		INDEX_2 e2((*idmaps[k])[e1.I1()],
 			   (*idmaps[k])[e1.I2()]);
 		
-		if(e2.I1() == 0 || e2.I2() == 0 ||
+		if(!PointIndex(e2.I1()).IsValid() || !PointIndex(e2.I2()).IsValid() ||
 		   e1.I1() == e2.I1() || e1.I2() == e2.I2())
 		  continue;
 		

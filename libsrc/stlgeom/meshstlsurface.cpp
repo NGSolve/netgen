@@ -417,7 +417,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      else
 			{
 			  newpi = newpht.Get (i2);
-			  newp = mesh.Point (newpi);
+			  newp = mesh[PointIndex(newpi)];
 			}
 
 		      nseg1 = seg;
@@ -563,7 +563,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                   else
                     {
                       newpi = newpht.Get (i2);
-                      newp = mesh.Point (newpi);
+                      newp = mesh[PointIndex(newpi)];
                     }
 
                   nseg1 = seg;
@@ -660,12 +660,12 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   */
   NgArray<PointIndex> imeshsp;
   NgArray<int> ispiral_point;
-  for (int i = 1; i <= mesh.GetNP(); i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
       for (int j = 1; j <= spiralps.Size(); j++)
-	if (Dist2(geom.GetPoint(spiralps.Get(j)), mesh.Point(i)) < 1e-20) 
+	if (Dist2(geom.GetPoint(spiralps.Get(j)), mesh[pi]) < 1e-20) 
 	  {
-	    imeshsp.Append(i);
+	    imeshsp.Append(pi);
 	    ispiral_point.Append(spiralps.Get(j));
 	    break;
 	  }

@@ -143,10 +143,10 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	  
       ofstream mpc (mpcfilename);
 
-      int masternode(0);
+      PointIndex masternode = PointIndex::INVALID;
 
       NgArray<INDEX_2> pairs;
-      NgBitArray master(np), help(np);
+      TBitArray<PointIndex> master(np), help(np);
       master.Set();
       for (int i = 1; i <= 3; i++)
 	{
@@ -154,27 +154,28 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	  help.Clear();
 	  for (int j = 1; j <= pairs.Size(); j++)
 	    {
-	      help.Set (pairs.Get(j).I1());
+	      help.SetBit (PointIndex(pairs.Get(j).I1()));
 	    }
 	  master.And (help);
 	}
-      for (int i = 1; i <= np; i++)
-	if (master.Test(i))
-	  masternode = i;
+      for (PointIndex pi : mesh.Points().Range())
+	if (master.Test(pi))
+	  masternode = pi;
 
       cout << "masternode = " << masternode << " = "
-	   << mesh.Point(masternode) << endl;
-      NgArray<int> minions(3);
+	   << mesh[masternode] << endl;
+      NgArray<PointIndex> minions(3);
+      minions = PointIndex(PointIndex::INVALID);
       for (int i = 1; i <= 3; i++)
 	{
 	  mesh.GetIdentifications().GetPairs (i, pairs);
 	  for (int j = 1; j <= pairs.Size(); j++)
 	    {
-	      if (pairs.Get(j).I1() == masternode)
-		minions.Elem(i) = pairs.Get(j).I2();
+	      if (PointIndex(pairs.Get(j).I1()) == masternode)
+		minions.Elem(i) = PointIndex(pairs.Get(j).I2());
 	    }
 	  cout << "minion(" << i << ") = " << minions.Get(i)
-	       << " = " << mesh.Point(minions.Get(i)) << endl;
+	       << " = " << mesh[minions.Get(i)] << endl;
 	}
 	  
 	  
@@ -196,7 +197,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	      << "*BOUNDARY, OP=NEW\n";
       for (int j = 1; j <= 3; j++)
 	{
-	  Vec3d v(mesh.Point(masternode), mesh.Point(minions.Get(j)));
+	  Vec3d v(mesh[masternode], mesh[minions.Get(j)]);
 	  double vlen = v.Length();
 	  int dir = 0;
 	  if (fabs (v.X()) > 0.9 * vlen) dir = 2;
@@ -211,7 +212,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	      << "*EQUATION, INPUT=" << mpcfilename << endl;
 	  
 
-      NgBitArray eliminated(np);
+      TBitArray<PointIndex> eliminated(np);
       eliminated.Clear();
       for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
 	{
@@ -220,15 +221,15 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	    continue;
 	      
 	  for (int j = 1; j <= pairs.Size(); j++)
-	    if (pairs.Get(j).I1() != masternode && 
-		!eliminated.Test(pairs.Get(j).I2()))
+	    if (PointIndex(pairs.Get(j).I1()) != masternode && 
+		!eliminated.Test(PointIndex(pairs.Get(j).I2())))
 	      {
-		eliminated.Set (pairs.Get(j).I2());
+		eliminated.SetBit (PointIndex(pairs.Get(j).I2()));
 		for (int k = 1; k <= 3; k++)
 		  {
 		    mpc << "4" << "\n";
-		    mpc << pairs.Get(j).I2() << "," << k << ", -1.0, ";
-		    mpc << pairs.Get(j).I1() << "," << k << ", 1.0, ";
+		    mpc << PointIndex(pairs.Get(j).I2()) << "," << k << ", -1.0, ";
+		    mpc << PointIndex(pairs.Get(j).I1()) << "," << k << ", 1.0, ";
 		    mpc << minions.Get(i) << "," << k << ", 1.0, ";
 		    mpc << masternode << "," << k << ", -1.0 \n";
 		  }

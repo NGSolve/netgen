@@ -136,10 +136,9 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 
 
   
-  NgArray<PointIndex> pmat(onp);
-
-  for (i = 1; i <= onp; i++)
-    pmat.Elem(i) = mesh.AddPoint (othermesh.Point(i));
+  Array<PointIndex, PointIndex> pmat(onp);
+  for (PointIndex pi : othermesh.Points().Range())
+    pmat[pi] = mesh.AddPoint (othermesh[pi]);
 
   int fnum = 
     mesh.AddFaceDescriptor (FaceDescriptor(0,0,1,0));
@@ -148,13 +147,13 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     {
       Element2d tri = othermesh.SurfaceElement(i);
       for (j = 1; j <= 3; j++)
-	tri.PNum(j) = pmat.Get(tri.PNum(j));
+	tri.PNum(j) = pmat[tri.PNum(j)];
       tri.SetIndex(fnum);
       mesh.AddSurfaceElement (tri);
     }
 
-  for (i = 1; i <= onp; i++)
-    mesh.AddLockedPoint (pmat.Elem(i));
+  for (PointIndex pi : pmat.Range())
+    mesh.AddLockedPoint (pmat[pi]);
 
   mesh.CalcSurfacesOfNode();
   mesh.CalcLocalH(0.3);

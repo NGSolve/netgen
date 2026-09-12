@@ -328,8 +328,8 @@ namespace netgen
 
 	      for (int j = 0; j < 5; j++)
 		{
-		  int pi1 = pnums[betw[j][0]];
-		  int pi2 = pnums[betw[j][1]];
+		  PointIndex pi1 = pnums[betw[j][0]];
+		  PointIndex pi2 = pnums[betw[j][1]];
 
 		  INDEX_2 i2 (pi1, pi2);
 		  i2.Sort();
@@ -437,8 +437,8 @@ namespace netgen
 	       else
 	       {
 		  pnums.Elem(5+j) = mesh.AddPoint
-		  (Center (mesh.Point(i2.I1()),
-			   mesh.Point(i2.I2())));
+		  (Center (mesh[PointIndex(i2.I1())],
+			   mesh[PointIndex(i2.I2())]));
 		  between.Set (i2, pnums.Elem(5+j));
 	       }
 	       */
@@ -567,8 +567,8 @@ namespace netgen
 	       else
 	       {
 		  pnums.Elem(9+j) = mesh.AddPoint
-		  (Center (mesh.Point(i2.I1()),
-			   mesh.Point(i2.I2())));
+		  (Center (mesh[PointIndex(i2.I1())],
+			   mesh[PointIndex(i2.I2())]));
 		  between.Set (i2, pnums.Elem(9+j));
 	       }
 	    }
@@ -590,8 +590,8 @@ namespace netgen
 	       else
 		 {
 		   pnums.Elem(22+j) = mesh.AddPoint
-		     (Center (mesh.Point(i2a.I1()),
-			      mesh.Point(i2a.I2())));
+		     (Center (mesh[PointIndex(i2a.I1())],
+			      mesh[PointIndex(i2a.I2())]));
 
 		   between.Set (i2a, pnums.Elem(22+j));
 		 }
@@ -678,8 +678,8 @@ namespace netgen
 	       else
 	       {
 		  pnums.Elem(7+j) = mesh.AddPoint
-		  (Center (mesh.Point(i2.I1()),
-			   mesh.Point(i2.I2())));
+		  (Center (mesh[PointIndex(i2.I1())],
+			   mesh[PointIndex(i2.I2())]));
 		  between.Set (i2, pnums.Elem(7+j));
 	       }
            }
@@ -701,8 +701,8 @@ namespace netgen
 	       else
 		 {
 		   pnums.Elem(16+j) = mesh.AddPoint
-		     (Center (mesh.Point(i2a.I1()),
-			      mesh.Point(i2a.I2())));
+		     (Center (mesh[PointIndex(i2a.I1())],
+			      mesh[PointIndex(i2a.I2())]));
 
 		   between.Set (i2a, pnums.Elem(16+j));
 		 }
@@ -761,6 +761,7 @@ namespace netgen
 	      PointIndices<2> i2;
 	      PointIndex newpi;
 	      between.GetData (j, k, i2, newpi);
+	      if (!identmap[i2[0]].IsValid() || !identmap[i2[1]].IsValid()) continue;
 	      PointIndices<2> oi2(identmap[i2[0]], 
                                   identmap[i2[1]]);
 	      oi2.Sort();
@@ -808,20 +809,18 @@ namespace netgen
 	cout << "WARNING: " << wrongels << " with wrong orientation found" << endl;
 
 	int np = mesh.GetNP();
-	NgArray<Point<3> > should(np);
-	NgArray<Point<3> > can(np);
-	for (int i = 1; i <= np; i++)
-	  {
-	    should.Elem(i) = can.Elem(i) = mesh.Point(i);
-	  }
+	Array<Point<3>, PointIndex> should(np);
+	Array<Point<3>, PointIndex> can(np);
+	for (PointIndex pi : mesh.Points().Range())
+	  should[pi] = can[pi] = mesh[pi];
 	for (int i = 1; i <= between.GetNBags(); i++)
 	  for (int j = 1; j <= between.GetBagSize(i); j++)
 	    {
 	      INDEX_2 parent;
 	      PointIndex child;
 	      between.GetData (i, j, parent, child);
-	      can.Elem(child) = Center (can.Elem(parent.I1()),
-					can.Elem(parent.I2()));
+	      can[child] = Center (can[PointIndex(parent.I1())],
+				   can[PointIndex(parent.I2())]);
 	    }
 
 	TBitArray<PointIndex> boundp(np);
@@ -843,16 +842,16 @@ namespace netgen
 
 		cout << "lam = " << lam << endl;
 
-		for (int i = 1; i <= np; i++)
-		  if (boundp.Test(i))
+		for (PointIndex pi : mesh.Points().Range())
+		  if (boundp.Test(pi))
 		    {
 		      for (int j = 0; j < 3; j++)
-			mesh.Point(i)(j) = 
-			  lam * should.Get(i)(j) +
-			  (1-lam) * can.Get(i)(j);
+			mesh[pi](j) = 
+			  lam * should[pi](j) +
+			  (1-lam) * can[pi](j);
 		    }
 		  else
-		    mesh.Point(i) = can.Get(i);
+		    mesh[pi] = can[pi];
 	      
 
 		TBitArray<PointIndex> free (mesh.GetNP()), fhelp(mesh.GetNP());
@@ -919,8 +918,8 @@ namespace netgen
 	      }
 	    while (wrongels && cnttrials > 0);
 	  
-	    for (int i = 1; i <= np; i++)
-	      can.Elem(i) = mesh.Point(i);
+	    for (PointIndex pi : mesh.Points().Range())
+	      can[pi] = mesh[pi];
 	  }
       }
 
