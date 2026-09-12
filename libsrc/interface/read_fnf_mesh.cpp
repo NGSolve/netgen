@@ -266,7 +266,7 @@ namespace netgen
                         string propid;
                         sbuf >> elnr >> def >> ch;
                         sbuf >> typid >> matid >> propid;
-                        NgArray<int> pnums;
+                        Array<int> pnums;
                         while (1)
                           {
                             int pn;
@@ -307,7 +307,7 @@ namespace netgen
                         sbuf >> nr >> kw >> ch;
                         if (kw == "NODES")
                           {
-                            NgArray<int> enums;
+                            Array<int> enums;
                             while (1)
                               {
                                 int en;
@@ -330,7 +330,7 @@ namespace netgen
                         sbuf >> nr >> kw >> ch;
                         if (kw == "FACES")
                           {
-                            NgArray<int> fnums;
+                            Array<int> fnums;
                             while (1)
                               {
                                 int fn;
@@ -376,7 +376,7 @@ namespace netgen
  
             else if (token == "LOADS")
               {
-                NgArray<LoadType*> loadtypes;
+                Array<LoadType*> loadtypes;
 
                 while (1)
                   {

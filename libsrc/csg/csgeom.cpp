@@ -165,7 +165,7 @@ namespace netgen
 
   void CSGeometry :: Clean ()
   {
-    NgArray< Solid* > to_delete;
+    Array< Solid* > to_delete;
     
     for (int i = 0; i < solids.Size(); i++)
       if(!to_delete.Contains(solids[i]->S1()))
@@ -1247,7 +1247,7 @@ namespace netgen
     //return;
 
     int pinds[6];
-    NgArrayMem<int,500> surfused(GetNSurf());
+    ArrayMem<int,500> surfused(GetNSurf());
   
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;

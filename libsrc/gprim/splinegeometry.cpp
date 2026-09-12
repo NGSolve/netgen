@@ -50,7 +50,7 @@ namespace netgen
     splines.SetSize(int(raw_data[pos]));
     pos++;
 
-    NgArray< Point<D> > pts(3);
+    Array< Point<D> > pts(3);
 
     for(int i=0; i<splines.Size(); i++)
       {

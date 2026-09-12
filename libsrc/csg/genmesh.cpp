@@ -11,7 +11,7 @@
 namespace netgen
 {
 
-  DLL_HEADER NgArray<SpecialPoint> global_specpoints;  // for visualization
+  DLL_HEADER Array<SpecialPoint> global_specpoints;  // for visualization
   //static NgArray<MeshPoint> spoints;
   
 #define TCL_OK 0
@@ -161,7 +161,7 @@ namespace netgen
 	  }
       }
 
-    NgArray<int> loc;
+    Array<int> loc;
     if (!ec.point_on_edge_problem)
       for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
 	{

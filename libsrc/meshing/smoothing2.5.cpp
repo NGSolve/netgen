@@ -139,8 +139,8 @@ namespace netgen
     int cnt = 0;
 
 
-    NgArray<SurfaceElementIndex> locelements(0);
-    NgArray<int> locrots(0);
+    Array<SurfaceElementIndex> locelements(0);
+    Array<int> locrots(0);
 
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
     for (PointIndex pi : mesh.Points().Range())

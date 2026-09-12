@@ -188,8 +188,8 @@ namespace netgen
     Vec<3> normal, t1, t2;
     NgArray<SurfaceElementIndex> locelements;
     NgArray<int> locrots;
-    NgArray<double> lochs;
-    NgArray<Point<3> > loc_pnts2, loc_pnts3;
+    Array<double> lochs;
+    Array<Point<3> > loc_pnts2, loc_pnts3;
   // static int locerr2;
     double locmetricweight;
     double loch;
@@ -716,7 +716,7 @@ namespace netgen
             }
 
         Array<int, PointIndex> compress(mesh.GetNP());
-        NgArray<PointIndex> icompress;
+        Array<PointIndex> icompress;
         for (int i = 0; i < seia.Size(); i++)
           {
             const Element2d & el = mesh[seia[i]];

@@ -552,7 +552,7 @@ namespace netgen
         edge2segment = -1;
 
         // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
-	// NgArray<int> vertex2;
+	// Array<int> vertex2;
 	// for (PointIndex v = IndexBASE<PointIndex>(); v < nv+IndexBASE<PointIndex>(); v++)
 
         ParallelForRange
@@ -1274,7 +1274,7 @@ namespace netgen
 #endif
 
         (*tracer) ("Topology::Update count face_els", false);
-	NgArray<short int> face_els(nfa), face_surfels(nfa);
+	Array<short int> face_els(nfa), face_surfels(nfa);
 	face_els = 0;
 	face_surfels = 0;
 
@@ -1283,7 +1283,7 @@ namespace netgen
            [&] (IntRange r)
             {
               /*
-              NgArray<int> hfaces;              
+              Array<int> hfaces;              
               for (ElementIndex ei : r)
               {
                   GetElementFaces (ei+1, hfaces);
@@ -2304,7 +2304,7 @@ namespace netgen
 
   void MeshTopology :: GetFaceEdges (int fnr, NgArray<int> & fedges, bool withorientation) const
   {
-    // NgArrayMem<int,4> pi(4);
+    // ArrayMem<int,4> pi(4);
     // NgArrayMem<int,12> eledges;
   
     fedges.SetSize (0);
@@ -2317,7 +2317,7 @@ namespace netgen
     // e3 = op e1(f2,f3) 
     // e4 = op e2(f1,f3) 
 
-    /*  NgArrayMem<int,4> fp; 
+    /*  ArrayMem<int,4> fp; 
 	fp[0] = pi[0]; 
 	for(int k=1;k<pi.Size();k++) 
 	if(fp[k]>fp[0]) swap(fp[k],fp[0]); 

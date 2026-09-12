@@ -1136,16 +1136,16 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 
   //  mincalch = 1E10;
   //maxcalch = -1E10;  
-  NgArray<int> limes1;
-  NgArray<int> limes2;
+  Array<int> limes1;
+  Array<int> limes2;
 	  
   NgArray<Point3d> plimes1;
   NgArray<Point3d> plimes2;
 	  
-  NgArray<int> plimes1trigs; //check from which trig the points come
-  NgArray<int> plimes2trigs;
+  Array<int> plimes1trigs; //check from which trig the points come
+  Array<int> plimes2trigs;
 	  
-  NgArray<int> plimes1origin; //either the original pointnumber or zero, if new point
+  Array<int> plimes1origin; //either the original pointnumber or zero, if new point
 
   int divisions = 10;
 	  

@@ -11,7 +11,7 @@ namespace netgen
   public:
     NgArray<Element2d> oldels;
     NgArray<Element2d> newels;
-    NgArray<PointIndices<2>> deledges;
+    Array<PointIndices<2>> deledges;
     Array<int,PointIndex> incelsonnode;
     Array<int,PointIndex> reused;
     int bonus;
@@ -52,9 +52,9 @@ namespace netgen
     bool ok;
     int olddef, newdef;
 
-    NgArray<ImprovementRule*> rules;
-    NgArray<SurfaceElementIndex> elmap;
-    NgArray<int> elrot;
+    Array<ImprovementRule*> rules;
+    Array<SurfaceElementIndex> elmap;
+    Array<int> elrot;
     Array<PointIndex,PointIndex> pmap;
     Array<PointGeomInfo,PointIndex> pgi;
 
@@ -206,8 +206,8 @@ namespace netgen
 
 
 
-    NgArray<int> mapped(rules.Size());
-    NgArray<int> used(rules.Size());
+    Array<int> mapped(rules.Size());
+    Array<int> used(rules.Size());
     used = 0;
     mapped = 0;
 
@@ -315,7 +315,7 @@ namespace netgen
 	    if (mesh[sei].IsDeleted()) continue;
 
 	    elmap[0] = sei;
-	    NgFlatArray<SurfaceElementIndex> neighbours = nbels[sei];
+	    FlatArray<SurfaceElementIndex> neighbours = nbels[sei];
 	    
 	    for (elrot[0] = 0; elrot[0] < mesh[sei].GetNP(); elrot[0]++)
 	      {

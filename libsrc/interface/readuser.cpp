@@ -102,7 +102,7 @@ namespace netgen
 	int dim = 3;
 	int bccounter = 0;
 
-        NgArray<Segment> tmp_segments;
+        Array<Segment> tmp_segments;
         while (in.good())
           {
             in >> reco;

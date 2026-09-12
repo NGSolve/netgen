@@ -50,8 +50,8 @@ namespace netgen
 
 #ifdef SOCKETS
   extern AutoPtr<ClientSocket> clientsocket;
-  //extern NgArray< AutoPtr < ServerInfo > > servers;
-  extern NgArray< ServerInfo* > servers;
+  //extern Array< AutoPtr < ServerInfo > > servers;
+  extern Array< ServerInfo* > servers;
 #endif
 
   

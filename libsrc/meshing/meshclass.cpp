@@ -4772,7 +4772,7 @@ namespace netgen
     Point3d pmin, pmax;
     GetBox (pmin, pmax);
     BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
-    // NgArray<SurfaceElementIndex> inters;
+    // Array<SurfaceElementIndex> inters;
 
     bool overlap = 0;
     bool incons_layers = 0;
@@ -6969,7 +6969,7 @@ namespace netgen
             auto el = volelements[ei];
             map<PointIndex, Array<PointIndex>> mapped_points;
             int nmapped = 0;
-            // NgArray<int> eledges;
+            // Array<int> eledges;
             // topology.GetElementEdges(ei+1, eledges);
             // for(auto edgei : eledges)
             for(auto edgei : topology.GetEdges(ElementIndex(ei)))

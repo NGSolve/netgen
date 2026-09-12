@@ -172,7 +172,7 @@ namespace netgen
                                            const Vec<3> & v,
                                            double eps) const
   {
-    NgArray<int> point_on_faces;
+    Array<int> point_on_faces;
     INSOLID_TYPE res(DOES_INTERSECT);
 
     Vec<3> vn = v;

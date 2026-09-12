@@ -308,19 +308,19 @@ namespace netgen
 
     if ( id == 0 )
       {
-	NgArray<NgArray<int>*> sendarrays(ntasks);
+	Array<NgArray<int>*> sendarrays(ntasks);
 	for (int dest = 1; dest < ntasks; dest++)
 	  sendarrays[dest] = new NgArray<int>;
 
-	NgArray<int> edges, faces;
+	Array<int> edges, faces;
 	for (int el = 1; el <= mesh.GetNE(); el++)
 	  {
 	    topology.GetElementFaces (el, faces);
 	    topology.GetElementEdges (el, edges);
 	    // const Element & volel = mesh.VolumeElement (el);
 
-	    // NgArray<int> & sendarray = *sendarrays[volel.GetPartition()];
-            NgArray<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
+	    // Array<int> & sendarray = *sendarrays[volel.GetPartition()];
+            Array<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
 
 	    for ( int i = 0; i < edges.Size(); i++ )
 	      sendarray.Append (edges[i]);
@@ -332,8 +332,8 @@ namespace netgen
 	  {
 	    topology.GetSurfaceElementEdges (el, edges);
 	    // const Element2d & surfel = mesh.SurfaceElement (el);
-	    // NgArray<int> & sendarray = *sendarrays[surfel.GetPartition()];
-            NgArray<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
+	    // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
+            Array<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
 	    for ( int i = 0; i < edges.Size(); i++ )
 	      sendarray.Append (edges[i]);
@@ -353,14 +353,14 @@ namespace netgen
     else
 
       {
-	// NgArray<int> recvarray;
+	// Array<int> recvarray;
 	// MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
 	Array<int> recvarray;
 	comm.Recv (recvarray, 0, NG_MPI_TAG_MESH+10); // MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
 
 	int ii = 0;
 
-	NgArray<int> faces, edges;
+	Array<int> faces, edges;
 
 	for (int volel = 1; volel <= mesh.GetNE(); volel++)
 	  {
@@ -535,7 +535,7 @@ namespace netgen
 	  }
       }
 
-    NgArray<int> sendarray, recvarray;
+    Array<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 
     // static Timer timerv("UpdateCoarseGrid - ex vertices");
@@ -610,7 +610,7 @@ namespace netgen
 
     Array<int> cnt_send(ntasks);
 
-    // NgArray<int> sendarray, recvarray;
+    // Array<int> sendarray, recvarray;
     // cout << "UpdateCoarseGrid - edges" << endl;
 
     // static int timerv = NgProfiler::CreateTimer ("UpdateCoarseGrid - ex vertices");

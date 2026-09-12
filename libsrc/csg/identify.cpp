@@ -486,7 +486,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   if (geom.GetSurface(surfnr) == s1 ||
       geom.GetSurface(surfnr) == s2)
     {
-      NgArray<int> copy_points;
+      Array<int> copy_points;
 
       for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	{
@@ -994,7 +994,7 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
     if (s2->PointOnSurface (mesh[pi]))
       points_on_surf2.Append (pi);
     
-  NgArray<int> surfs_of_p1;
+  Array<int> surfs_of_p1;
 
   for (PointIndex i1 : mesh.Points().Range())
     {
@@ -1116,7 +1116,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 	s2rep = geom.GetSurfaceClassRepresentant(i);
     }
 
-  NgArray<int> segs_on_face1, segs_on_face2;
+  Array<int> segs_on_face1, segs_on_face2;
 
   identfaces.DeleteData();
 
@@ -1280,7 +1280,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   //(*testout) << "segs = " << endl << segs << endl;
   //(*testout) << "identmap = " << endl << identmap << endl;
   
-  //NgArray<bool> foundseg(segs.Size());
+  //Array<bool> foundseg(segs.Size());
   //foundseg = false;
 
   // insert quad layer:
@@ -1341,7 +1341,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
     {
       PrintMessage(3, "insert quad layer of ", cntquads,
 		   " elements at face ", seg_fdi(segs.Get(1)));
-      //NgArray<Segment> aux;
+      //Array<Segment> aux;
       //for(int i=0; i<segs.Size();i++)
       //	if(!foundseg[i])
       //	  aux.Append(segs[i]);

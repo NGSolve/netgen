@@ -21,7 +21,7 @@ namespace netgen
   DLL_HEADER extern NgArray<SpecialPoint> global_specpoints;
   NgArray<SpecialPoint> & specpoints = global_specpoints;
   
-  DLL_HEADER extern NgArray<Box<3> > boxes;
+  DLL_HEADER extern Array<Box<3> > boxes;
 
 
 

@@ -223,9 +223,9 @@ namespace netgen
 			 DTREE & tettree,
 			 MeshNB & meshnb,
 			 NgArray<Point<3> > & centers, NgArray<double> & radi2,
-			 NgArray<int> & connected, NgArray<int> & treesearch, 
-			 NgArray<int> & freelist, SphereList & list,
-			 IndexSet & insphere, IndexSet & closesphere, Array<DelaunayTet> & newels)
+			 Array<int> & connected, Array<int> & treesearch, 
+			 Array<int> & freelist, SphereList & list,
+			 IndexSet & insphere, IndexSet & closesphere, NgArray<DelaunayTet> & newels)
   {
     static Timer t("Meshing3::AddDelaunayPoint", NoTracing, NoTiming); RegionTimer reg(t);
     static Timer tsearch("addpoint, search", NoTracing, NoTiming);
@@ -635,7 +635,7 @@ namespace netgen
       }
     }
 
-    NgArray<int> freelist;
+    Array<int> freelist;
 
     int cntp = 0;
 
@@ -651,7 +651,7 @@ namespace netgen
     tempels.Append (startel);
     meshnb.Add (1);
     list.AddElement (1);
-    NgArray<int> connected, treesearch;
+    Array<int> connected, treesearch;
 
     Box<3> tbox(Box<3>::EMPTY_BOX);
     for (size_t k = 0; k < 4; k++)
@@ -694,7 +694,7 @@ namespace netgen
       // mixed[pi] = PointIndex ( (prim * pi) % np + PointIndex::BASE );
       mixed[pi] = (prim * (pi-IndexBASE<PointIndex>()+1)) % np + IndexBASE<PointIndex>() ;
 
-    Array<DelaunayTet> newels;
+    NgArray<DelaunayTet> newels;
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
     for (PointIndex pi : mesh.Points().Range().Modify(0, -4))      
       {
@@ -1304,7 +1304,7 @@ namespace netgen
     BitArray inner(ne+1), outer(ne+1);
     inner.Clear();
     outer.Clear();
-    NgArray<int> elstack;
+    Array<int> elstack;
 
     /*
       int starti = 0;

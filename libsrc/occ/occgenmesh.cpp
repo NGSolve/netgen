@@ -684,7 +684,7 @@ namespace netgen
 
             int sections = 100;
 
-            NgArray<Line> lines(sections*nedges);
+            Array<Line> lines(sections*nedges);
 
             /*
             BoxTree<3> * searchtree =
@@ -742,7 +742,7 @@ namespace netgen
                   }
               }
 
-            NgArray<int> linenums;
+            Array<int> linenums;
             auto is_identified_edge = [&](int e0, int e1) {
                 const auto& edge0 = geom.GetEdge(e0-1);
                 const auto& edge1 = geom.GetEdge(e1-1);

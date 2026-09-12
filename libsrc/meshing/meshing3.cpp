@@ -203,7 +203,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
   Array<Point3d, PointIndex> plainpoints;    // points in reference coordinates
-  // NgArray<int> delpoints;   // points to be deleted
+  // Array<int> delpoints;   // points to be deleted
   NgArray<int> delfaces;    // lines to be deleted
   NgArray<Element> locelements;       // new generated elements
 

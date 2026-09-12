@@ -14,7 +14,7 @@ namespace netgen
     pure_badness.SetSize(np+PointIndex::BASE+1);
     pure_badness = -1;
 
-    NgArray< Point<3>* > backup(np);
+    Array< Point<3>* > backup(np);
 
     for(int i=0; i<np; i++)
       {

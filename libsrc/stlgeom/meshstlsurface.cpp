@@ -654,12 +654,12 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
     for (int j = 1; j <= spiralps.Size(); j++)
       if (Dist2(geom.GetPoint(spiralps.Get(j)), mesh.Point(i)) < 1e-20) 
 	meshsp.Elem(i) = spiralps.Get(j);
-  NgArray<PointIndex> imeshsp;
+  Array<PointIndex> imeshsp;
   for (int i = 1; i <= meshsp.Size(); i++)
     if (meshsp.Elem(i)) imeshsp.Append(i);
   */
-  NgArray<PointIndex> imeshsp;
-  NgArray<int> ispiral_point;
+  Array<PointIndex> imeshsp;
+  Array<int> ispiral_point;
   for (PointIndex pi : mesh.Points().Range())
     {
       for (int j = 1; j <= spiralps.Size(); j++)
@@ -678,7 +678,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   NgArray<int,PointIndex::BASE> compress(mesh.GetNP());
   compress = 0;
-  NgArray<PointIndex> icompress; 
+  Array<PointIndex> icompress; 
 
   NgArray<int, 1> opensegsperface(mesh.GetNFD());
   opensegsperface = 0;
@@ -736,7 +736,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 		}
 	}
       */
-      NgFlatArray<int> segs = opensegments[fnr];
+      FlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
 	{
 	  int i = segs[hi];
@@ -805,7 +805,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       */
 
 
-      // NgFlatArray<int> segs = opensegments[fnr];
+      // FlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
 	{
 	  int i = segs[hi];

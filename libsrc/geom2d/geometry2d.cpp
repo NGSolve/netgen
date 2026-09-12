@@ -603,8 +603,8 @@ namespace netgen
 
     string keyword;
 
-    NgArray < GeomPoint<D> > infilepoints (0);
-    NgArray <int> pointnrs (0);
+    Array < GeomPoint<D> > infilepoints (0);
+    Array <int> pointnrs (0);
     nump = 0;
     int numdomains = 0;
 

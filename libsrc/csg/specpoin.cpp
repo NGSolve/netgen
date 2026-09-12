@@ -21,7 +21,7 @@
 
 namespace netgen
 {
-  DLL_HEADER NgArray<Box<3> > boxes; // for visualization
+  DLL_HEADER Array<Box<3> > boxes; // for visualization
 
 
   void ProjectToEdge (const Surface * f1, const Surface * f2, Point<3> & hp);
@@ -64,7 +64,7 @@ namespace netgen
   }
 
 
-  // static NgArray<int> numprim_hist;
+  // static Array<int> numprim_hist;
 
   SpecialPointCalculation :: SpecialPointCalculation ()
   {
@@ -1725,10 +1725,10 @@ namespace netgen
 
     NgArray<int> surfind, rep_surfind, surfind2, rep_surfind2, surfind3;
 
-    NgArray<Vec<3> > normalvecs;
+    Array<Vec<3> > normalvecs;
     Vec<3> nsurf = 0.0;
 
-    NgArray<int> specpoint2point;
+    Array<int> specpoint2point;
     specpoints.SetSize (0);
 
     geometry = &ageometry;

@@ -520,7 +520,7 @@ namespace netgen
             for (ElementIndex ei : Range(mesh->VolumeElements()))
 	      {
 		// const ELEMENTTYPE & eltype = mesh->ElementType(i);
-		NgArray<int> pnums;
+		Array<int> pnums;
 
 		Point3d p;
 		const Element & el = mesh->VolumeElement (ei);

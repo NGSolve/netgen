@@ -100,7 +100,7 @@ int Meshing3 :: ApplyRules
   NgArrayMem<bool,100> pfixed;                      // point mapped by face-map
   NgArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
   NgArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
-  NgArrayMem<Point3d,100> transfreezone;            // transformed free-zone
+  ArrayMem<Point3d,100> transfreezone;            // transformed free-zone
   INDEX_2_CLOSED_HASHTABLE<int> ledges(100); // edges in local environment
   
   NgArrayMem<Point3d,100> tempnewpoints;

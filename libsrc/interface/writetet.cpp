@@ -23,7 +23,7 @@ namespace netgen
 
 
     NgArray<int> point_ids,edge_ids,face_ids;
-    NgArray<int> elnum(mesh.GetNE());
+    Array<int> elnum(mesh.GetNE());
     elnum = -1;
 
     
@@ -97,9 +97,9 @@ namespace netgen
     INDEX_2_CLOSED_HASHTABLE<int> edgenumbers(6*mesh.GetNE()+3*mesh.GetNSE());;
     INDEX_3_CLOSED_HASHTABLE<int> facenumbers(4*mesh.GetNE()+mesh.GetNSE());
 
-    NgArray<INDEX_2> edge2node;
-    NgArray<INDEX_3> face2edge;
-    NgArray<INDEX_4> element2face;
+    Array<INDEX_2> edge2node;
+    Array<INDEX_3> face2edge;
+    Array<INDEX_4> element2face;
 
     int numelems(0),numfaces(0),numedges(0),numnodes(0);
 
@@ -285,7 +285,7 @@ namespace netgen
     int numObj0D,numObj1D,numObj2D,numObj3D;
     int numports = ports.Size();
 
-    NgArray<int> nodenum(point_ids.Size()+1);
+    Array<int> nodenum(point_ids.Size()+1);
 
     nodenum = -1;
 	    
@@ -367,7 +367,7 @@ namespace netgen
       uidpid = "UID";
     
 
-    NgArray< idmap_type* > idmaps;
+    Array< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
 	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
@@ -377,8 +377,8 @@ namespace netgen
 	  }
       }
 
-    NgArray<int> id_num,id_type;
-    NgArray< NgArray<int> *> id_groups;
+    Array<int> id_num,id_type;
+    Array< NgArray<int> *> id_groups;
 
 
 	// sst 2008-03-12: Write problem class...
@@ -591,11 +591,11 @@ namespace netgen
 
     
       
-    NgArray< NgArray<int>* > vertex_to_edge(mesh.GetNP()+1);
+    Array< NgArray<int>* > vertex_to_edge(mesh.GetNP()+1);
     for(int i=0; i<=mesh.GetNP(); i++)
       vertex_to_edge[i] = new NgArray<int>;
 
-    NgArray< NgArray<int,PointIndex::BASE>* > idmaps_edge(idmaps.Size());
+    Array< NgArray<int,PointIndex::BASE>* > idmaps_edge(idmaps.Size());
     for(int i=0; i<idmaps_edge.Size(); i++)
       {
 	idmaps_edge[i] = new NgArray<int,PointIndex::BASE>(numedges);
@@ -806,7 +806,7 @@ namespace netgen
 
     
     
-    NgArray< NgArray<int>* > edge_to_face(numedges+1);
+    Array< NgArray<int>* > edge_to_face(numedges+1);
     for(int i=0; i<edge_to_face.Size(); i++)
       edge_to_face[i] = new NgArray<int>;
 
@@ -982,7 +982,7 @@ namespace netgen
 	    << endl;
 
 
-    NgArray< NgArray<int> * > groups;
+    Array< NgArray<int> * > groups;
 
     int maxg = -1;
     for(int i = 0; i<uid_to_group_3D.Size(); i++)

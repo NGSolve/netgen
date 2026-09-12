@@ -64,7 +64,7 @@ namespace netgen
     if(discr < 0)
       return;
 
-    NgArray<double> t;
+    Array<double> t;
 
     if(fabs(discr) < 1e-20)
       t.Append(-0.5*c2/c1);

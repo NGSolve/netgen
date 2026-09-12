@@ -2493,10 +2493,10 @@ namespace netgen
   
   void UpdateEdgeMarks (Mesh & mesh,
 			const NgArray< idmap_type* > & idmaps)
-  //const NgArray < NgArray<Element>* > & elements_before,
-  //const NgArray < NgArray<int>* > & markedelts_num,
-  //		const NgArray < NgArray<Element2d>* > & surfelements_before,
-  //		const NgArray < NgArray<int>* > & markedsurfelts_num)
+  //const Array < NgArray<Element>* > & elements_before,
+  //const Array < NgArray<int>* > & markedelts_num,
+  //		const Array < NgArray<Element2d>* > & surfelements_before,
+  //		const Array < NgArray<int>* > & markedsurfelts_num)
   {
     /*
     T_MTETS mtets_old; mtets_old.Copy(mtets);

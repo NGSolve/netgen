@@ -1040,8 +1040,8 @@ double MeshOptimize3d :: SwapImproveEdge (
     {
       PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID);
 
-      NgArrayMem<PointIndex, 50> suroundpts(nsuround);
-      NgArrayMem<bool, 50> tetused(nsuround);
+      ArrayMem<PointIndex, 50> suroundpts(nsuround);
+      ArrayMem<bool, 50> tetused(nsuround);
 
       Element & elem = mesh[hasbothpoints[0]];
 
@@ -1240,7 +1240,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
 
   auto elementsonnode = mesh.CreatePoint2ElementTable(free_points, mp.only3D_domain_nr );
 
-  NgArray<ElementIndex> hasbothpoints;
+  Array<ElementIndex> hasbothpoints;
 
   PrintMessage (3, "SwapImprove ");
   (*testout) << "\n" << "Start SwapImprove" << endl;
@@ -1388,8 +1388,8 @@ void MeshOptimize3d :: SwapImproveSurface (
   DynamicTable<SurfaceElementIndex,PointIndex> surfaceelementsonnode(np);
   DynamicTable<int,PointIndex> surfaceindicesonnode(np);
 
-  NgArray<ElementIndex> hasbothpoints;
-  NgArray<ElementIndex> hasbothpointsother;
+  Array<ElementIndex> hasbothpoints;
+  Array<ElementIndex> hasbothpointsother;
 
   PrintMessage (3, "SwapImproveSurface ");
   (*testout) << "\n" << "Start SwapImproveSurface" << endl;
@@ -1709,7 +1709,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  int nsuround = hasbothpoints.Size();
 	  int nsuroundother = hasbothpointsother.Size();
 
-	  NgArray < PointIndex > outerpoints(nsuround+1);
+	  Array < PointIndex > outerpoints(nsuround+1);
 	  outerpoints[0] = sp1;
 
 	  for(int i=0; i<nsuround; i++)
@@ -1766,7 +1766,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 	    }
 
 	  
-	  NgArray < PointIndex > outerpointsother;
+	  Array < PointIndex > outerpointsother;
 
 	  if(nsuroundother > 0)
 	    {
@@ -1880,8 +1880,8 @@ void MeshOptimize3d :: SwapImproveSurface (
 	    startpointsother = outerpointsother.Size();
 	  
 
-	  NgArray < NgArray < Element* > * > newelts(startpoints);
-	  NgArray < NgArray < Element* > * > neweltsother(startpointsother);
+	  Array < NgArray < Element* > * > newelts(startpoints);
+	  Array < NgArray < Element* > * > neweltsother(startpointsother);
 
 	  double minbad = 1e50, minbadother = 1e50, currbad;
 	  int minpos = -1, minposother = -1;
@@ -1931,7 +1931,7 @@ void MeshOptimize3d :: SwapImproveSurface (
 
 
 		  // not two new faces on same surface
-		  NgArray<int> face_index;
+		  Array<int> face_index;
 		  for(int k = 0; k<surfaceindicesonnode[(*(*newelts[i])[jj])[0]].Size(); k++)
 		    face_index.Append(surfaceindicesonnode[(*(*newelts[i])[jj])[0]][k]);
 

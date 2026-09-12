@@ -58,7 +58,7 @@ namespace netgen
 
   static NgArray<POINT3D> points;
   static NgArray<VOLELEMENT> volelements;
-  static NgArray<SURFELEMENT> surfelements;
+  static Array<SURFELEMENT> surfelements;
 
   static NgArray<FACE> faces;
   static NgArray<EDGE> edges;

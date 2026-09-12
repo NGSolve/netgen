@@ -13,7 +13,7 @@ namespace netgen
         interesting_points = false;
 
         mesh->FindOpenElements(dom);
-        NgArray<Element2d> openelements;
+        Array<Element2d> openelements;
         openelements = mesh->OpenElements();
 
         for (auto & el : openelements)

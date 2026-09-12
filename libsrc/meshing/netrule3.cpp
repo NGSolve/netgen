@@ -143,7 +143,7 @@ int vnetrule :: ConvexFreeZone () const
     {
       const DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
 
-      // const NgArray<int> & freeset = *freesets.Get(fs);
+      // const Array<int> & freeset = *freesets.Get(fs);
       const NgArray<twoint> & freesetedges = *freeedges.Get(fs);
       // const NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
       

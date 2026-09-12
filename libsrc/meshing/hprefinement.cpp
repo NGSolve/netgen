@@ -1061,7 +1061,7 @@ namespace netgen
 
 	      for (int j = 0; j < 6; j++)  
 		{
-		  NgArray<int> pts;
+		  Array<int> pts;
 		  for (int k = 0; k < 4; k++)
 		    {
 		      bool same = 0;
@@ -1395,7 +1395,7 @@ namespace netgen
         
     InitHPElements(mesh,hpelements); 
 
-    NgArray<int> nplevel;
+    Array<int> nplevel;
     nplevel.Append (mesh.GetNP());
     
     int act_ref=1;
@@ -1911,7 +1911,7 @@ namespace netgen
     if(sing==0) return(sing); 
 
     int cnt_undef = 0, cnt_nonimplement = 0;
-    NgArray<int> misses(10000);
+    Array<int> misses(10000);
     misses = 0;
 
     // (*testout) << "edgepoint_dom = " << endl << edgepoint_dom << endl;

@@ -284,8 +284,8 @@ namespace netgen
    void AutoColourAlg_Sorted(Mesh & mesh)
    {
       NgArray<Vec<4>> all_colours;
-      NgArray<int> faces_sorted;
-      NgArray<int> colours_sorted;
+      Array<int> faces_sorted;
+      Array<int> colours_sorted;
 
       // Extract all the colours to see how many there are
       GetFaceColours(mesh,all_colours);

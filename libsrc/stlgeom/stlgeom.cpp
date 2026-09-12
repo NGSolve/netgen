@@ -1630,7 +1630,7 @@ void STLGeometry :: ShowSelectedTrigCoords()
 
   /*
   //testing!!!!
-  NgArray<int> trigs;
+  Array<int> trigs;
   GetSortedTrianglesAroundPoint(GetTriangle(st).PNum(GetNodeOfSelTrig()),st,trigs);
   */
 

@@ -102,7 +102,7 @@ namespace netgen
   void EdgeCalculation :: CalcEdges1 (double h, Mesh & mesh)
   {
     NgArray<int> hsp(specpoints.Size());
-    NgArray<int> glob2hsp(specpoints.Size());
+    Array<int> glob2hsp(specpoints.Size());
     NgArray<int> startpoints, endpoints;
 
 
@@ -963,7 +963,7 @@ namespace netgen
     RefEdge re;
     NgArray<int> locsurfind, locsurfind2;
 
-    NgArray<int> edges_priority;
+    Array<int> edges_priority;
 
     double size = geometry.MaxSize();
     bool debug = 0;

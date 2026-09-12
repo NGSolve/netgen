@@ -29,7 +29,7 @@ namespace netgen
   void TriangleApproximation :: RemoveUnusedPoints ()
   {
     NgBitArray used(GetNP());
-    NgArray<int> map (GetNP());
+    Array<int> map (GetNP());
     int i, j;
     int cnt = 0;
 

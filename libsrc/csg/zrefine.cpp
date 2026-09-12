@@ -303,7 +303,7 @@ namespace netgen
 		    }
 		  else
 		    {   
-		      //const NgArray<double> & slices = csid->GetSlices();
+		      //const Array<double> & slices = csid->GetSlices();
 		      INDEX_4 i4;
 		      // i4[0] = pair.I1();
 		      // i4[1] = pair.I2();

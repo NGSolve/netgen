@@ -399,7 +399,7 @@ namespace netgen
 	      int inputface = 0;
 	      while (1)
 		{
-		  NgArray<int> pnums,cleaned_pnums;
+		  Array<int> pnums,cleaned_pnums;
 		  for(int i=0; i<3; i++)
 		    {
 		      pnums.Append((int) (ParseNumber (scan)));

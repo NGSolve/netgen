@@ -8,7 +8,7 @@
 namespace netgen
 {
 
-  NgArray<Point<3> > project1, project2;
+  Array<Point<3> > project1, project2;
 
 
 
@@ -76,7 +76,7 @@ namespace netgen
 
     int pos=0;
 
-    NgArray< Point<2> > p(3);
+    Array< Point<2> > p(3);
 
     int ptype = int(raw_data[pos]); pos++;
 
@@ -160,7 +160,7 @@ namespace netgen
     double cutdist = -1;
     
 
-    NgArray<double> mindist(path->GetNSplines());
+    Array<double> mindist(path->GetNSplines());
 
     for(int i = 0; i < path->GetNSplines(); i++)
       {

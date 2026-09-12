@@ -15,13 +15,13 @@ namespace netgen
 		      // double l, 
 		      MeshingParameters & mp, Mesh & mesh, 
 		      // double h, double h1, double h2, double hcurve, 
-		      double elto0, NgArray<double> & points)
+		      double elto0, Array<double> & points)
   {
     double fperel, oldf, f;
 
     int n = 1;
-    NgArray<Point<2> > xi;
-    NgArray<double> hi;
+    Array<Point<2> > xi;
+    Array<double> hi;
 
     // do one extra step
     int not_fine_enough = 2;
@@ -114,7 +114,7 @@ namespace netgen
     int n = 100;
 
     Point<2> mark, oldmark;
-    NgArray<double> curvepoints;
+    Array<double> curvepoints;
     double edgelength, edgelengthold;
 
     // create edge descriptor for this spline edge
@@ -600,7 +600,7 @@ namespace netgen
 
 
 
-          NgArray<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
+          Array<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
           pts = -1;
 
           int i = 0;

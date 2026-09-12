@@ -335,7 +335,7 @@ namespace netgen
 	  {
 	  double values[3], sumvalues[3] = { 0, 0, 0 };
 
-	  NgFlatArray<int> els = mesh->GetTopology().GetVertexElements(pi);
+	  FlatArray<int> els = mesh->GetTopology().GetVertexElements(pi);
 
 	  for (int j = 0; j < els.Size(); j++)
 	  {
@@ -1151,7 +1151,7 @@ namespace netgen
     int ncomp = 0;
     if (sol) ncomp = sol->components;
     if (vsol) ncomp = vsol->components;
-    NgArray<double> mvalues(ncomp);
+    Array<double> mvalues(ncomp);
 
 
     for (int i = 0; i < npt; i++)
@@ -1284,26 +1284,26 @@ namespace netgen
     NgArray<Point<2> > pref (npt);
     NgArray<Point<3> > points (npt);
     NgArray<Mat<3,2> > dxdxis (npt);
-    NgArray<Vec<3> > nvs(npt);
-    NgArray<double> values(npt);
+    Array<Vec<3> > nvs(npt);
+    Array<double> values(npt);
 
-    NgArray<double> mvalues(npt);
+    Array<double> mvalues(npt);
     int sol_comp = (sol && sol->draw_surface) ? sol->components : 0;
-    NgArray<Point<2,SIMD<double>> > simd_pref ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    NgArray<Point<3,SIMD<double>> > simd_points ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    NgArray<Mat<3,2,SIMD<double>> > simd_dxdxis ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    NgArray<Vec<3,SIMD<double>> > simd_nvs( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
-    NgArray<SIMD<double>> simd_values( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() * sol_comp);
+    Array<Point<2,SIMD<double>> > simd_pref ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    Array<Point<3,SIMD<double>> > simd_points ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    Array<Mat<3,2,SIMD<double>> > simd_dxdxis ( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    Array<Vec<3,SIMD<double>> > simd_nvs( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() );
+    Array<SIMD<double>> simd_values( (npt+SIMD<double>::Size()-1)/SIMD<double>::Size() * sol_comp);
 
     
     
-    // NgArray<Point<3,float>> glob_pnts;
-    // NgArray<Vec<3,float>> glob_nvs;
-    // NgArray<double> glob_values;
+    // Array<Point<3,float>> glob_pnts;
+    // Array<Vec<3,float>> glob_nvs;
+    // Array<double> glob_values;
     
     if (sol && sol->draw_surface) mvalues.SetSize (npt * sol->components);
       
-    NgArray<complex<double> > valuesc(npt);
+    Array<complex<double> > valuesc(npt);
     
 #ifdef USE_BUFFERS
     if (has_surfel_vbo)
@@ -1495,7 +1495,7 @@ namespace netgen
         simd_pref[i](1) = [&] (size_t j) { size_t ii = i*simd_size+j; return (ii < npt) ? pref[ii](1) : 0; };
       }
 
-    NgArray<int> ind_reftrig;
+    Array<int> ind_reftrig;
     for (int iy = 0, ii = 0; iy < n; iy++,ii++)
       for (int ix = 0; ix < n-iy; ix++, ii++)
         {
@@ -1505,7 +1505,7 @@ namespace netgen
           for (int j = 0; j < nv; j++)
             ind_reftrig.Append (ind[j]);
         }
-    NgArray<int> glob_ind;
+    Array<int> glob_ind;
     glob_ind.SetSize(ind_reftrig.Size());    
 
     
@@ -1915,9 +1915,9 @@ namespace netgen
     NgArray<Point<3> > grid(n3);
     NgArray<Point<3> > locgrid(n3);
     NgArray<Mat<3,3> > trans(n3);
-    NgArray<double> val1(n3*sol->components);
-    NgArray<Vec<3> > grads1(n3);
-    NgArray<int> compress(n3);
+    Array<double> val1(n3*sol->components);
+    Array<Vec<3> > grads1(n3);
+    Array<int> compress(n3);
     
     MatrixFixWidth<3> pointmat(8);
     grads1 = Vec<3> (0.0);
@@ -2806,7 +2806,7 @@ namespace netgen
 
     if (comp == 0)
       {
-        NgArrayMem<double,20> values(data->components);
+        ArrayMem<double,20> values(data->components);
         ok = GetValues (data, elnr, xref, x, dxdxref, &values[0]);
 
 	val = ExtractValue (data, 0, &values[0]);
@@ -2977,7 +2977,7 @@ namespace netgen
 
     if (comp == 0)
       {
-        NgArrayMem<double,20> values(data->components);
+        ArrayMem<double,20> values(data->components);
         ok = GetValues (data, elnr, lam1, lam2, lam3, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3360,7 +3360,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          NgArrayMem<double,20> values(data->components);
+          ArrayMem<double,20> values(data->components);
           bool ok;
           
           ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
@@ -3390,7 +3390,7 @@ namespace netgen
     if (comp == 0)
       {
         val = 0;
-        NgArrayMem<double,20> values(data->components);
+        ArrayMem<double,20> values(data->components);
         ok = GetSurfValues (data, selnr, facetnr, lam1, lam2, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3402,7 +3402,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
   
-          NgArrayMem<double,20> values(data->components);
+          ArrayMem<double,20> values(data->components);
           bool ok;
 
           ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
@@ -3632,7 +3632,7 @@ namespace netgen
     if (comp == 0)
       {
         val = 0;
-        NgArrayMem<double,20> values(data->components);
+        ArrayMem<double,20> values(data->components);
         ok = GetSurfValues (data, selnr, facetnr, xref, x, dxdxref, &values[0]);
 	val = ExtractValue (data, 0, &values[0]);
 	return ok;
@@ -3643,7 +3643,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          NgArrayMem<double,20> values(data->components);
+          ArrayMem<double,20> values(data->components);
           bool ok;
 
           // ok = data->solclass->GetSurfValue (selnr, lam1, lam2, &values[0]);
@@ -3970,9 +3970,9 @@ namespace netgen
     int cntce;
     int cpe1 = 0, cpe2 = 0, cpe3 = 0;
 
-    // NgArray<Element> loctets;
-    // NgArray<Element> loctetsloc;
-    // NgArray<Point<3> > pointsloc;
+    // Array<Element> loctets;
+    // Array<Element> loctetsloc;
+    // Array<Point<3> > pointsloc;
 
     int n = 1 << subdivisions;
     int n3 = (n+1)*(n+1)*(n+1);
@@ -3980,9 +3980,9 @@ namespace netgen
     NgArray<Point<3> > grid(n3);
     NgArray<Point<3> > locgrid(n3);
     NgArray<Mat<3,3> > trans(n3);
-    NgArray<double> val(n3);
-    NgArray<bool> locposval(n3);
-    NgArray<int> compress(n3);
+    Array<double> val(n3);
+    Array<bool> locposval(n3);
+    Array<int> compress(n3);
 
     // NgProfiler::StartTimer (timer_vals);
     NgArray<double,PointIndex::BASE> vertval(mesh->GetNP());
@@ -4372,7 +4372,7 @@ namespace netgen
       {
 	InitParallelGL();
 
-	NgArray<int> parlists (ntasks);
+	Array<int> parlists (ntasks);
 
 	MyMPI_SendCmd ("redraw");
 	MyMPI_SendCmd ("clipplanetrigs");
@@ -4428,14 +4428,14 @@ namespace netgen
       for (int j = 0; j < 3; j++)
         maxlpnr = max2 (maxlpnr, trigs[i].points[j].locpnr);
 
-    NgArray<double> vals(maxlpnr+1);
-    NgArray<complex<double> > valsc(maxlpnr+1);
-    NgArray<int> elnrs(maxlpnr+1);
-    NgArray<bool> trigok(maxlpnr+1);
+    Array<double> vals(maxlpnr+1);
+    Array<complex<double> > valsc(maxlpnr+1);
+    Array<int> elnrs(maxlpnr+1);
+    Array<bool> trigok(maxlpnr+1);
     NgArray<Point<3> > locpoints(maxlpnr+1);
     NgArray<Point<3> > globpoints(maxlpnr+1);
     NgArray<Mat<3> > jacobi(maxlpnr+1);
-    NgArray<double> mvalues( (maxlpnr+1) * sol->components);
+    Array<double> mvalues( (maxlpnr+1) * sol->components);
     trigok = false;
     elnrs = -1;
 
