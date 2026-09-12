@@ -18,8 +18,8 @@ namespace netgen
   /* *********************** Draw Geometry **************** */
 
   DLL_HEADER extern shared_ptr<Mesh> mesh;
-  DLL_HEADER extern NgArray<SpecialPoint> global_specpoints;
-  NgArray<SpecialPoint> & specpoints = global_specpoints;
+  DLL_HEADER extern Array<SpecialPoint> global_specpoints;
+  Array<SpecialPoint> & specpoints = global_specpoints;
   
   DLL_HEADER extern Array<Box<3> > boxes;
 
@@ -266,10 +266,10 @@ namespace netgen
       {
 	glColor3d (1, 0, 0);
 	glBegin (GL_LINES);
-	for (int i = 1; i <= specpoints.Size(); i++)
+	for (const auto & sp : specpoints)
 	  {
-	    const Point3d p1 = specpoints.Get(i).p;
-	    const Point3d p2 = specpoints.Get(i).p + len * specpoints.Get(i).v;
+	    const Point3d p1 = sp.p;
+	    const Point3d p2 = sp.p + len * sp.v;
 	    glVertex3d (p1.X(), p1.Y(), p1.Z());
 	    glVertex3d (p2.X(), p2.Y(), p2.Z());
 	  }
@@ -463,9 +463,9 @@ namespace netgen
       }
     else if (specpoints.Size() >= 2)
       {
-	box.SetPoint (specpoints.Get(1).p);
-	for (int i = 2; i <= specpoints.Size(); i++)
-	  box.AddPoint (specpoints.Get(i).p);
+	box.SetPoint (specpoints[0].p);
+	for (size_t i = 1; i < specpoints.Size(); i++)
+	  box.AddPoint (specpoints[i].p);
       }
     else
       {

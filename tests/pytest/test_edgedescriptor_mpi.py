@@ -53,7 +53,7 @@ def test_mpi_edge_descriptors_distributed():
     if comm.rank > 0:
         ned = mesh.GetNED()
         assert ned > 0, "non-root rank should have edge descriptors"
-        for i in range(ned):
+        for i in range(1, ned + 1):  # EdgeDescriptor(i) is 1-based like Segment.index
             ed = mesh.EdgeDescriptor(i)
             assert ed.edgenr > 0, f"ED[{i}] edgenr={ed.edgenr} should be > 0"
 
