@@ -73,9 +73,9 @@ namespace netgen
 
     Vector x(3);
 
-    NgArray<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
+    Array<MeshPoint, PointIndex> savepoints(mesh.GetNP());
 
-    NgArray<int, PointIndex::BASE> nelementsonpoint(mesh.GetNP());
+    Array<int, PointIndex> nelementsonpoint(mesh.GetNP());
     nelementsonpoint = 0;
 
     for (i = 0; i < seia.Size(); i++)
@@ -86,7 +86,7 @@ namespace netgen
       }
 
 
-    TABLE<SurfaceElementIndex,PointIndex::BASE> elementsonpoint(nelementsonpoint);
+    DynamicTable<SurfaceElementIndex, PointIndex> elementsonpoint(mesh.GetNP());
     for (i = 0; i < seia.Size(); i++)
       {
 	const Element2d & el = mesh[seia[i]];

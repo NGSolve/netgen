@@ -701,7 +701,7 @@ namespace netgen
     bool mixed = false;
     // auto elementsonpoint = mesh.CreatePoint2SurfaceElementTable( faceindex );
     auto elementsonpoint = mesh.CreateCompressedPoint2SurfaceElementTable( faceindex );
-    NgArray<MeshPoint, PointIndex::BASE> savepoints(mesh.GetNP());
+    Array<MeshPoint, PointIndex> savepoints(mesh.GetNP());
 
     Table<PointIndex> color_table;
     if(faceindex)

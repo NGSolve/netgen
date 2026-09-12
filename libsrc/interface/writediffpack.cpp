@@ -83,7 +83,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 
 
       // setup point-to-surfaceelement table 
-      TABLE<SurfaceElementIndex, PointIndex::BASE> point2sel(np);
+      DynamicTable<SurfaceElementIndex, PointIndex> point2sel(np);
       for (SurfaceElementIndex sei = 0; sei < nse; sei++)
 	{
 	  const Element2d & el = mesh[sei];
@@ -112,7 +112,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	      /*
 	      for (j = 1; j <= nse; j++) 
 	      */
-	      FlatArray<SurfaceElementIndex> sels = point2sel[i];
+	      FlatArray<SurfaceElementIndex> sels = point2sel[PointIndex(i)];
 	      for (int jj = 0; jj < sels.Size(); jj++)
 		{
 		  for (int k = 1; k <= mesh[sels[jj]].GetNP(); k++) 

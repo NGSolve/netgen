@@ -676,7 +676,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   // int oldnp = mesh.GetNP();
 
-  NgArray<int,PointIndex::BASE> compress(mesh.GetNP());
+  Array<int, PointIndex> compress(mesh.GetNP());
   compress = 0;
   Array<PointIndex> icompress; 
 

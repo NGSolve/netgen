@@ -398,7 +398,7 @@ namespace netgen
     (*testout) << "nv   = " << nv << endl;
 
     (*tracer) ("Topology::Update setup tables", false);
-    NgArray<int,PointIndex::BASE> cnt(nv);
+    Array<int, PointIndex> cnt(nv);
 
     /*
       generate:
@@ -471,9 +471,9 @@ namespace netgen
 	cnt = 0;
 	for (int i = 0; i < edge2vert.Size(); i++)
 	  cnt[edge2vert[i][0]]++;
-	TABLE<int,PointIndex::BASE> vert2edge (cnt);
+	DynamicTable<int, PointIndex> vert2edge (nv);
 	for (int i = 0; i < edge2vert.Size(); i++)
-	  vert2edge.AddSave (edge2vert[i][0], i);
+	  vert2edge.Add (edge2vert[i][0], i);
 
 	// ensure all coarse grid and intermediate level edges
 	cnt = 0;
@@ -483,12 +483,12 @@ namespace netgen
 	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
 	    if (parents[0].IsValid()) cnt[parents[0]]++;
 	  }
-	TABLE<int,PointIndex::BASE> vert2vertcoarse (cnt);
+	DynamicTable<int, PointIndex> vert2vertcoarse (nv);
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (int i : mesh->mlbetweennodes.Range())
 	  {
 	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
-	    if (parents[0].IsValid()) vert2vertcoarse.AddSave (parents[0], parents[1]);
+	    if (parents[0].IsValid()) vert2vertcoarse.Add (parents[0], parents[1]);
 	  }
 
 
@@ -541,7 +541,7 @@ namespace netgen
         // accumulate number of edges
         int ned = edge2vert.Size();
 
-        for (size_t v : cnt.Range())
+        for (auto v : cnt.Range())
           {
             auto hv = cnt[v];
             cnt[v] = ned;
@@ -647,9 +647,9 @@ namespace netgen
           static Timer t("build_hierarchy"); RegionTimer reg(t);
           cnt = 0;
           for (auto verts : edge2vert) cnt[verts[0]]++;
-          TABLE<int,PointIndex::BASE> vert2edge (cnt);
+          DynamicTable<int, PointIndex> vert2edge (nv);
           for (auto i : edge2vert.Range())
-            vert2edge.AddSave (edge2vert[i][0], i);
+            vert2edge.Add (edge2vert[i][0], i);
 
           // build edge hierarchy:
           parent_edges.SetSize (ned);
@@ -941,9 +941,9 @@ namespace netgen
 	cnt = 0;
 	for (int i = 0; i < face2vert.Size(); i++)
 	  cnt[face2vert[i][0]]++;
-	TABLE<int,PointIndex::BASE> vert2oldface(cnt);
+	DynamicTable<int, PointIndex> vert2oldface(nv);
 	for (int i = 0; i < face2vert.Size(); i++)
-	  vert2oldface.AddSave (face2vert[i][0], i);
+	  vert2oldface.Add (face2vert[i][0], i);
 
         // find all potential intermediate faces
         Array<IVec<3>> intermediate_faces;
@@ -1019,9 +1019,9 @@ namespace netgen
 	cnt = 0;
 	for (int i = 0; i < intermediate_faces.Size(); i++)
 	  cnt[intermediate_faces[i][0]]++;
-	TABLE<int,PointIndex::BASE> vert2intermediate(cnt);
+	DynamicTable<int, PointIndex> vert2intermediate(nv);
 	for (int i = 0; i < intermediate_faces.Size(); i++)
-	  vert2intermediate.AddSave (intermediate_faces[i][0], i);
+	  vert2intermediate.Add (intermediate_faces[i][0], i);
         // cout << "vert2intermediate = " << endl << vert2intermediate << endl;
 
         

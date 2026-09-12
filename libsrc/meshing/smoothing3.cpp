@@ -1676,7 +1676,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	  badnodes.SetBit (el.PNum(j));
     }
 
-  NgArray<double, PointIndex::BASE> pointh (points.Size());
+  Array<double, PointIndex> pointh (points.Size());
  
   if(HasLocalHFunction())
     {

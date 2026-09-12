@@ -2921,7 +2921,7 @@ namespace netgen
            }, GetNP());
 
 
-    NgArray<int,PointIndex::BASE> numonpoint(np);
+    Array<int, PointIndex> numonpoint(np);
     /*
     numonpoint = 0;
     for (ElementIndex ei = 0; ei < ne; ei++)
@@ -2942,7 +2942,7 @@ namespace netgen
           }
       }
 
-    TABLE<ElementIndex,PointIndex::BASE> elsonpoint(numonpoint);
+    DynamicTable<ElementIndex, PointIndex> elsonpoint(np);
     for (ElementIndex ei = 0; ei < ne; ei++)
       {
         const Element & el = (*this)[ei];
@@ -3004,7 +3004,7 @@ namespace netgen
           }
       }
 
-    TABLE<SurfaceElementIndex,PointIndex::BASE> selsonpoint(numonpoint);
+    DynamicTable<SurfaceElementIndex, PointIndex> selsonpoint(np);
     for (SurfaceElementIndex sii = 0; sii < nse; sii++)
       {
         int ind = surfelements[sii].GetIndex();

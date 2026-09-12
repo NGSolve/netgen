@@ -1636,7 +1636,7 @@ namespace netgen
 	/*
 	// check, if point has as least 3 different surfs:
 
-	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
+	Array<INDEX_3, PointIndex> surfonpoint(mesh.GetNP());
   	surfonpoint = INDEX_3(0,0,0);
 
 	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
@@ -1782,7 +1782,7 @@ namespace netgen
 	// 2D case
 
 	// check, if point has as least 3 different surfs:
-	NgArray<INDEX_3, PointIndex::BASE> surfonpoint(mesh.GetNP());
+	Array<INDEX_3, PointIndex> surfonpoint(mesh.GetNP());
 
 	surfonpoint = INDEX_3(0,0,0);
 	

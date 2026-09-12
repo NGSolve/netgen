@@ -474,7 +474,7 @@ namespace netgen
 	    // TABLE<int> send_verts(cnt_send);
             DynamicTable<int> send_verts(cnt_send);
 
-	    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+	    Array<int, PointIndex> loc2exchange(mesh.GetNV());
 
 	    for (int dest = 0; dest < ntasks; dest++)
 	      if (dest != id)
@@ -670,7 +670,7 @@ namespace netgen
       }
 
 
-    NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+    Array<int, PointIndex> loc2exchange(mesh.GetNV());
     for (int dest = 0; dest < ntasks; dest++)
       {
         loc2exchange = -1;
@@ -767,7 +767,7 @@ namespace netgen
 	for (int & c : cnt_send) c*=3;
 	// TABLE<int> send_faces(cnt_send);
         DynamicTable<int> send_faces(cnt_send);
-	NgArray<int, PointIndex::BASE> loc2exchange(mesh.GetNV());
+	Array<int, PointIndex> loc2exchange(mesh.GetNV());
 	for (int dest = 0; dest < ntasks; dest++)
 	  if (dest != id)
 	    {

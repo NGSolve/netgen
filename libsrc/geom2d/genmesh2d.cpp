@@ -671,7 +671,7 @@ namespace netgen
 
 	Meshing2 meshing (geometry, mp, Box<3> (pmin, pmax));
 
-	NgArray<int, PointIndex::BASE> compress(mesh->GetNP());
+	Array<int, PointIndex> compress(mesh->GetNP());
 	compress = -1;
 	int cnt = 0;
 

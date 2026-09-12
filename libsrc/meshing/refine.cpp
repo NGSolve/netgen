@@ -155,13 +155,13 @@ namespace netgen
       }
 
     mesh.SetNP(mesh.GetNV() + parents.Size());
-    NgArray<bool, PointIndex::BASE> pointset(mesh.GetNP());
+    Array<bool, PointIndex> pointset(mesh.GetNP());
     pointset = false;
     
     PrintMessage (5, "sorting complete");
     
     // refine edges
-    NgArray<EdgePointGeomInfo,PointIndex::BASE> epgi;
+    Array<EdgePointGeomInfo, PointIndex> epgi;
 
     int oldns = mesh.GetNSeg();
     for (SegmentIndex si = 0; si < oldns; si++)

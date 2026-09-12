@@ -3985,8 +3985,8 @@ namespace netgen
     Array<int> compress(n3);
 
     // NgProfiler::StartTimer (timer_vals);
-    NgArray<double,PointIndex::BASE> vertval(mesh->GetNP());
-    NgArray<bool,PointIndex::BASE> posval(mesh->GetNP());
+    Array<double, PointIndex> vertval(mesh->GetNP());
+    Array<bool, PointIndex> posval(mesh->GetNP());
     // for (PointIndex pi = vertval.Begin(); pi < vertval.End(); pi++)
     for (PointIndex pi : vertval.Range())
       {

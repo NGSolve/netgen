@@ -316,7 +316,7 @@ namespace netgen
 	idents.GetPairs(idnr, pp2);
 	per_pairs.Append(pp2);
       }
-    NgArray<int, PointIndex::BASE> npvs(GetNV());
+    Array<int, PointIndex> npvs(GetNV());
     npvs = 0;
     for (int k = 0; k < per_pairs.Size(); k++) {
       npvs[per_pairs[k].I1()]++;
@@ -324,7 +324,7 @@ namespace netgen
     }
 
     /** for each vertex, gives us all identified vertices **/
-    TABLE<PointIndex, PointIndex::BASE> per_verts(npvs);
+    DynamicTable<PointIndex, PointIndex> per_verts(GetNV());
     for (int k = 0; k < per_pairs.Size(); k++) {
       per_verts.Add(per_pairs[k].I1(), per_pairs[k].I2());
       per_verts.Add(per_pairs[k].I2(), per_pairs[k].I1());
@@ -335,7 +335,7 @@ namespace netgen
 
     /** The same table as per_verts, but TRANSITIVE!! **/
     auto iterate_per_verts_trans = [&](auto f){
-      NgArray<int> allvs;
+      Array<PointIndex> allvs;
       // for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
       for (PointIndex k = IndexBASE<PointIndex>();
            k < GetNV()+IndexBASE<PointIndex>(); k++)      
@@ -363,7 +363,7 @@ namespace netgen
     iterate_per_verts_trans([&](auto k, auto & allvs) {
 	npvs[k] = allvs.Size();
       });
-    TABLE<PointIndex, PointIndex::BASE> per_verts_trans(npvs);
+    DynamicTable<PointIndex, PointIndex> per_verts_trans(GetNV());
     iterate_per_verts_trans([&](auto k, auto & allvs) {
 	for (int j = 0; j<allvs.Size(); j++)
 	  per_verts_trans.Add(k, allvs[j]);
@@ -374,8 +374,8 @@ namespace netgen
 
     /** Now we build the vertex-data to send to the workers. **/
     tbuildvertex.Start();
-    NgArray<int, PointIndex::BASE> vert_flag (GetNV());
-    NgArray<int, PointIndex::BASE> num_procs_on_vert (GetNV());
+    Array<int, PointIndex> vert_flag (GetNV());
+    Array<int, PointIndex> num_procs_on_vert (GetNV());
     NgArray<int> num_verts_on_proc (ntasks);
     num_verts_on_proc = 0;
     num_procs_on_vert = 0;
@@ -427,8 +427,8 @@ namespace netgen
     tbuildvertexb.Start();    
     
     TABLE<PointIndex> verts_of_proc (num_verts_on_proc);
-    TABLE<int, PointIndex::BASE> procs_of_vert (num_procs_on_vert);
-    TABLE<int, PointIndex::BASE> loc_num_of_vert (num_procs_on_vert);
+    DynamicTable<int, PointIndex> procs_of_vert (GetNV());
+    DynamicTable<int, PointIndex> loc_num_of_vert (GetNV());
     /** Write vertex/proc mappingfs to tables **/
     iterate_vertices([&](auto vertex, auto dest) {
 	auto addit = [&] (auto vertex, auto dest) {
@@ -1435,7 +1435,7 @@ namespace netgen
     
         
     // surface elements attached to volume elements
-    NgArray<bool, PointIndex::BASE> boundarypoints (GetNP());
+    Array<bool, PointIndex> boundarypoints (GetNP());
     boundarypoints = false;
 
     if(GetDimension() == 3)
@@ -1455,7 +1455,7 @@ namespace netgen
 
     
     // Build Pnt2Element table, boundary points only
-    NgArray<int, PointIndex::BASE> cnt(GetNP());
+    Array<int, PointIndex> cnt(GetNP());
     cnt = 0;
 
     auto loop_els_2d = [&](auto f) {
@@ -1489,7 +1489,7 @@ namespace netgen
 	  if(boundarypoints[vertex])
 	    cnt[vertex]++;
 	});
-    TABLE<int, PointIndex::BASE> pnt2el(cnt);
+    DynamicTable<int, PointIndex> pnt2el(GetNP());
     loop_els([&](auto vertex, int index)
 	{
 	  if(boundarypoints[vertex])
@@ -2154,13 +2154,13 @@ namespace netgen
     Array<idxtype> adjacency(ne*4);
 
     // first, build the vertex 2 element table:
-    NgArray<int, PointIndex::BASE> cnt(nv);
+    Array<int, PointIndex> cnt(nv);
     cnt = 0;
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       for (int j = 0; j < (*this)[sei].GetNP(); j++)
 	cnt[ (*this)[sei][j] ] ++;
     
-    TABLE<SurfaceElementIndex, PointIndex::BASE> vert2els(cnt);
+    DynamicTable<SurfaceElementIndex, PointIndex> vert2els(nv);
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       for (int j = 0; j < (*this)[sei].GetNP(); j++)
 	vert2els.Add ((*this)[sei][j], sei);
