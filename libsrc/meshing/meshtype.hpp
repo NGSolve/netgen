@@ -463,6 +463,9 @@ namespace std
   template <auto N>
   struct tuple_size<netgen::PointIndices<N>> : std::integral_constant<std::size_t, N> {};
   template<size_t N, auto M> struct tuple_element<N,netgen::PointIndices<M>> { using type = netgen::PointIndex; };
+  template <auto N>
+  struct tuple_size<netgen::SortedPointIndices<N>> : std::integral_constant<std::size_t, N> {};
+  template<size_t N, auto M> struct tuple_element<N,netgen::SortedPointIndices<M>> { using type = netgen::PointIndex; };
 }
 
 namespace netgen

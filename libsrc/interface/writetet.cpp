@@ -998,7 +998,7 @@ namespace netgen
     for(int i=0; i<groups.Size(); i++)
       groups[i] = new NgArray<int>;
 
-    for(ElementIndex i=0; i<mesh.GetNE(); i++)
+    for(ElementIndex i=0; i<mesh.GetNE() && uid_to_group_3D.Size(); i++)
       if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)
 	groups[uid_to_group_3D[mesh[i].GetIndex()]]->Append(i+1);
       
@@ -1017,7 +1017,7 @@ namespace netgen
     for(int i=0; i<groups.Size(); i++)
       groups[i]->SetSize(0);
 
-    for(int i=0; i<face_ids.Size(); i++)
+    for(int i=0; i<face_ids.Size() && uid_to_group_2D.Size(); i++)
       if(uid_to_group_2D[face_ids[i]] >= 0)
 	groups[uid_to_group_2D[face_ids[i]]]->Append(i+1);
       
@@ -1041,7 +1041,7 @@ namespace netgen
     for(int i=0; i<groups.Size(); i++)
       groups[i]->SetSize(0);
 
-    for(int i=0; i<edge_ids.Size(); i++)
+    for(int i=0; i<edge_ids.Size() && uid_to_group_1D.Size(); i++)
       if(uid_to_group_1D[edge_ids[i]] >= 0)
 	groups[uid_to_group_1D[edge_ids[i]]]->Append(i+1);
 
@@ -1063,7 +1063,7 @@ namespace netgen
     //     for(PointIndex i = mesh.Points().Begin(); i < mesh.Points().End(); i++)
     for(PointIndex i : mesh.Points().Range())
       {
-	if(uid_to_group_0D[point_ids[i]] >= 0)
+	if(uid_to_group_0D.Size() && uid_to_group_0D[point_ids[i]] >= 0)
 	  groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-IndexBASE<PointIndex>());
       }
 

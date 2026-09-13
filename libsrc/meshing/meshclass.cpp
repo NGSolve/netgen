@@ -3329,10 +3329,7 @@ namespace netgen
         if (boundaryedges)
           for (int j = 1; j <= sel.GetNP(); j++)
             {
-              PointIndices<2> i2;
-              i2.I1() = sel.PNumMod(j);
-              i2.I2() = sel.PNumMod(j+1);
-              i2.Sort();
+              SortedPointIndices<2> i2 (sel.PNumMod(j), sel.PNumMod(j+1));
               boundaryedges->Set (i2, 1);
             }
 
@@ -4709,7 +4706,7 @@ namespace netgen
   {
     int nf = GetNOpenElements();
     INDEX_2_HASHTABLE<int> edges(nf+2);
-    PointIndices<2> i2, i2s, edge;
+    PointIndices<2> i2;
     int err = 0;
 
     for (int i = 1; i <= nf; i++)
@@ -4718,10 +4715,9 @@ namespace netgen
 
         for (int j = 1; j <= sel.GetNP(); j++)
           {
-            i2.I1() = sel.PNumMod(j);
-            i2.I2() = sel.PNumMod(j+1);
+            i2 = { sel.PNumMod(j), sel.PNumMod(j+1) };
 
-            int sign = (i2.I2() > i2.I1()) ? 1 : -1;
+            int sign = (i2[1] > i2[0]) ? 1 : -1;
             i2.Sort();
             if (!edges.Used (i2))
               edges.Set (i2, 0);
@@ -4736,19 +4732,16 @@ namespace netgen
           edges.GetData (i, j, i2, cnt);
           if (cnt)
             {
-              PrintError ("Edge ", int(i2.I1()) , " - ", int(i2.I2()), " multiple times in surface mesh");
+              PrintError ("Edge ", int(i2[0]) , " - ", int(i2[1]), " multiple times in surface mesh");
 
               (*testout) << "Edge " << i2 << " multiple times in surface mesh" << endl;
-              i2s = i2;
-              i2s.Sort();
+              SortedPointIndices<2> i2s = i2;
               for (int k = 1; k <= nf; k++)
                 {
                   const Element2d & sel = OpenElement(k);
                   for (int l = 1; l <= sel.GetNP(); l++)
                     {
-                      edge.I1() = sel.PNumMod(l);
-                      edge.I2() = sel.PNumMod(l+1);
-                      edge.Sort();
+                      SortedPointIndices<2> edge (sel.PNumMod(l), sel.PNumMod(l+1));
 
                       if (edge == i2s) 
                         (*testout) << "edge of element " << sel << endl;

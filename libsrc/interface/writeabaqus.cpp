@@ -152,8 +152,8 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	{
 	  mesh.GetIdentifications().GetPairs (i, pairs);
 	  help.Clear();
-	  for (auto pair : pairs)
-	    help.SetBit (pair.I1());
+	  for (auto [master_pi, minion_pi] : pairs)
+	    help.SetBit (master_pi);
 	  master.And (help);
 	}
       for (PointIndex pi : mesh.Points().Range())
@@ -167,9 +167,9 @@ void WriteAbaqusFormat (const Mesh & mesh,
       for (int i = 1; i <= 3; i++)
 	{
 	  mesh.GetIdentifications().GetPairs (i, pairs);
-	  for (auto pair : pairs)
-	    if (pair.I1() == masternode)
-	      minions.Elem(i) = pair.I2();
+	  for (auto [master_pi, minion_pi] : pairs)
+	    if (master_pi == masternode)
+	      minions.Elem(i) = minion_pi;
 	  cout << "minion(" << i << ") = " << minions.Get(i)
 	       << " = " << mesh[minions.Get(i)] << endl;
 	}
@@ -216,16 +216,16 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	  if (!pairs.Size())
 	    continue;
 	      
-	  for (auto pair : pairs)
-	    if (pair.I1() != masternode && 
-		!eliminated.Test(pair.I2()))
+	  for (auto [master_pi, minion_pi] : pairs)
+	    if (master_pi != masternode && 
+		!eliminated.Test(minion_pi))
 	      {
-		eliminated.SetBit (pair.I2());
+		eliminated.SetBit (minion_pi);
 		for (int k = 1; k <= 3; k++)
 		  {
 		    mpc << "4" << "\n";
-		    mpc << pair.I2() << "," << k << ", -1.0, ";
-		    mpc << pair.I1() << "," << k << ", 1.0, ";
+		    mpc << minion_pi << "," << k << ", -1.0, ";
+		    mpc << master_pi << "," << k << ", 1.0, ";
 		    mpc << minions.Get(i) << "," << k << ", 1.0, ";
 		    mpc << masternode << "," << k << ", -1.0 \n";
 		  }

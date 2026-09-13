@@ -318,16 +318,16 @@ namespace netgen
       }
     Array<int, PointIndex> npvs(GetNV());
     npvs = 0;
-    for (auto pair : per_pairs) {
-      npvs[pair.I1()]++;
-      npvs[pair.I2()]++;
+    for (auto [p1, p2] : per_pairs) {
+      npvs[p1]++;
+      npvs[p2]++;
     }
 
     /** for each vertex, gives us all identified vertices **/
     DynamicTable<PointIndex, PointIndex> per_verts(GetNV());
-    for (auto pair : per_pairs) {
-      per_verts.Add(pair.I1(), pair.I2());
-      per_verts.Add(pair.I2(), pair.I1());
+    for (auto [p1, p2] : per_pairs) {
+      per_verts.Add(p1, p2);
+      per_verts.Add(p2, p1);
     }
     for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++) {
       BubbleSort(per_verts[k]);

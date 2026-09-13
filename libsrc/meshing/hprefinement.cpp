@@ -736,10 +736,10 @@ namespace netgen
 	      
 	      if (!newfacepts.Used (i3))
 		{
+		  auto [pi1, pi2, pi3] = i3;
 		  Point<3> np; 
 		  	for( int l=0;l<3;l++)
-			  np(l) = (1-2*fac2)*mesh[PointIndex(i3.I1())](l) 
-			    + fac2*mesh[PointIndex(i3.I2())](l)  + fac2*mesh[PointIndex(i3.I3())](l);  
+			  np(l) = (1-2*fac2)*mesh[pi1](l) + fac2*mesh[pi2](l) + fac2*mesh[pi3](l);  
 		  PointIndex npi = mesh.AddPoint (np);
 		  newfacepts.Set (i3, npi);
 		}
@@ -1712,10 +1712,10 @@ namespace netgen
 		    ek.Sort();
 		    if (edges.Used(ej) && edges.Used(ek))
 		      {
-			if (ej.I1() == ek.I1()) cornerpoint.SetBit (ek.I1());
-			if (ej.I1() == ek.I2()) cornerpoint.SetBit (ek.I2());
-			if (ej.I2() == ek.I1()) cornerpoint.SetBit (ek.I1());
-			if (ej.I2() == ek.I2()) cornerpoint.SetBit (ek.I2());
+			auto [ej1, ej2] = ej;
+			auto [ek1, ek2] = ek;
+			if (ej1 == ek1 || ej2 == ek1) cornerpoint.SetBit (ek1);
+			if (ej1 == ek2 || ej2 == ek2) cornerpoint.SetBit (ek2);
 		      }
 		  }
 	  }

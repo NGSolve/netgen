@@ -639,15 +639,16 @@ namespace netgen
 	  int val;
 	  osedgesht.GetData (i, j, i2, val);
 
-	  const Point<3> & p1 = mesh[PointIndex(i2.I1())];
-	  const Point<3> & p2 = mesh[PointIndex(i2.I2())];
+	  auto [pi1, pi2] = i2;
+	  const Point<3> & p1 = mesh[pi1];
+	  const Point<3> & p2 = mesh[pi2];
 	  Vec<3> v = p2 - p1;
 	  double vlen = v.Length();
 	  v /= vlen;
 	  for (PointIndex pi = IndexBASE<PointIndex>(); 
 	       pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 
-	    if (pi != i2.I1() && pi != i2.I2())
+	    if (pi != pi1 && pi != pi2)
 	      {
 		const Point<3> & p = mesh[pi];
 		Vec<3> v2 = p - p1;
@@ -666,8 +667,8 @@ namespace netgen
 				   << "seg = " << i2 << ", p = " << pi << endl
 				   << "pos = " << p << ", projected = " << hp << endl
                                    << "seg is = "
-                                   << mesh.Point(PointIndex(i2.I1())) << " - "
-                                   << mesh.Point(PointIndex(i2.I2())) << endl;
+                                   << mesh.Point(pi1) << " - "
+                                   << mesh.Point(pi2) << endl;
 		      }
 		  }
 	      }
