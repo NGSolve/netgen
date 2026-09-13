@@ -330,7 +330,7 @@ namespace netgen
               gi1.v = seg.GeomInfo(1).v;
               
               //if(orientation & 1)
-              meshing.AddBoundaryElement (glob2loc[seg[0]], glob2loc[seg[1]], gi0, gi1);
+              meshing.AddBoundaryElement (seg[0], seg[1], gi0, gi1);
 
             }
       }
@@ -368,7 +368,7 @@ namespace netgen
             gi[1].u = seg.GeomInfo(1).u;
             gi[1].v = seg.GeomInfo(1).v;
 
-            int locpnum[2] = {0, 0};
+            Front2PointIndex locpnum[2];
 
             for (int j = 0; j < 2; j++)
             {
@@ -378,19 +378,19 @@ namespace netgen
                 bool found = false;
                 for(auto& fp : found_points)
                   {
-                    if(meshing.GetGlobalIndex(fp - 1) == seg[j])
+                    if(meshing.GetGlobalIndex(Front2PointIndex(fp-1)) == seg[j])
                       {
-                        locpnum[j] = fp;
+                        locpnum[j] = fp-1;     // uv_tree stores front nr + 1
                         found = true;
                       }
                   }
                 if(!found)
                 {
                     PointIndex pi = seg[j];
-                    locpnum[j] = meshing.AddPoint (mesh.Point(pi), pi) + 1;
-                    glob2loc[pi] = locpnum[j];
+                    locpnum[j] = meshing.AddPoint (mesh.Point(pi), pi);
+                    glob2loc[pi] = int(locpnum[j])+1;
                     gis.Append (gi[j]);
-                    uv_tree.Insert(uv, locpnum[j]);
+                    uv_tree.Insert(uv, int(locpnum[j])+1);
                 }
             }
 
@@ -404,7 +404,7 @@ namespace netgen
                 auto gi = occface.Project(mesh[pi]);
                 MultiPointGeomInfo mgi;
                 mgi.AddPointGeomInfo(gi);
-                glob2loc[pi] = meshing.AddPoint(mesh[pi], pi, &mgi) + 1;
+                glob2loc[pi] = int(meshing.AddPoint(mesh[pi], pi, &mgi))+1;
                 gis.Append(gi);
                 Point<2> uv = { gi.u, gi.v };
                 uv_tree.Insert(uv, glob2loc[pi]);

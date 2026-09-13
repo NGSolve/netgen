@@ -31,7 +31,7 @@ class FrontPoint3
   /// distance to original boundary
   int frontnr;
   /// 
-  PointIndex cluster;
+  Front3PointIndex cluster;
 public:
   ///
   FrontPoint3 ();
@@ -76,49 +76,12 @@ public:
 
 
 
-class MiniElement2d
-{
-protected:
-  int np;
-  PointIndex pnum[4]; // can be global or local nums
-  bool deleted;
-public:
-  MiniElement2d ()
-  { np = 3; deleted = 0; }
-  MiniElement2d (int anp)
-  { np = anp; deleted = 0; }
-
-  int GetNP() const { return np; }
-  PointIndex & operator[] (int i) { return pnum[i]; }
-  const PointIndex operator[] (int i) const { return pnum[i]; }
-
-  const PointIndex PNum (int i) const { return pnum[i-1]; }
-  PointIndex & PNum (int i) { return pnum[i-1]; }
-  const PointIndex PNumMod (int i) const { return pnum[(i-1)%np]; }
-  auto PNums() { return FlatArray<PointIndex> (np, &pnum[0]); }
-  auto PNums() const { return FlatArray<const PointIndex> (np, &pnum[0]); }
-  void Delete () { deleted = true; for (PointIndex & p : pnum) p.Invalidate(); }
-  bool IsDeleted () const { return deleted; }
-};
-
-
-inline ostream & operator<<(ostream  & s, const MiniElement2d & el)
-{
-  s << "np = " << el.GetNP();
-  for (int j = 0; j < el.GetNP(); j++)
-    s << " " << el[j];
-  return s;
-}
-
-
-
-
 /// Face in advancing front
 class FrontFace
 {
 private:
   ///
-  MiniElement2d f;
+  FrontElement2d f;
   ///
   int qualclass;
   ///
@@ -126,15 +89,15 @@ private:
   ///
   int hashvalue;
   ///
-  PointIndex cluster;
+  Front3PointIndex cluster;
   
 public:
   ///
   FrontFace ();
   ///
-  FrontFace (const MiniElement2d & af);
+  FrontFace (const FrontElement2d & af);
   ///
-  const MiniElement2d & Face () const
+  const FrontElement2d & Face () const
   { return f; }
   
   ///
@@ -173,7 +136,7 @@ public:
   ///
   friend class AdFront3;
 
-  PointIndex Cluster () const { return cluster; }
+  Front3PointIndex Cluster () const { return cluster; }
 };  
 
 
@@ -184,16 +147,15 @@ class AdFront3
 {
   ///
   // NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
-  Array<FrontPoint3, PointIndex> points
-;
+  Array<FrontPoint3, Front3PointIndex> points;
   ///
   NgArray<FrontFace> faces;
   ///
-  Array<PointIndex> delpointl;
+  Array<Front3PointIndex> delpointl;
   
   /// which points are connected to pi ?
   // TABLE<PointIndex, PointIndex::BASE> * connectedpairs;
-  unique_ptr<DynamicTable<PointIndex, PointIndex>> connectedpairs;
+  unique_ptr<DynamicTable<Front3PointIndex, Front3PointIndex>> connectedpairs;
   
   /// number of total front faces;
   int nff;
@@ -218,8 +180,8 @@ class AdFront3
   int lasti;
   /// minimal selection-value of baseelements
   int minval;
-  Array<PointIndex, PointIndex> invpindex;
-  Array<char, PointIndex> pingroup;
+  Array<LocalPointIndex, Front3PointIndex> invpindex;   // front -> local
+  Array<char, Front3PointIndex> pingroup;
   
   ///
   class BoxTree<3> * facetree;
@@ -235,13 +197,13 @@ public:
   int GetNP() const 
   { return points.Size(); }
   ///
-  const Point<3> & GetPoint (PointIndex pi) const
+  const Point<3> & GetPoint (Front3PointIndex pi) const
   { return points[pi].P(); }
   ///
   int GetNF() const
   { return nff; }
   /// 1-based
-  const MiniElement2d & GetFace (int i) const
+  const FrontElement2d & GetFace (int i) const
   { return faces[i-1].Face(); }
   const auto & Faces() const { return faces; }
   ///
@@ -266,7 +228,7 @@ public:
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
 			     NgArray<int> & ifaces) const;
 
-  bool PointInsideGroup(const Array<PointIndex, PointIndex> &grouppindex,
+  bool PointInsideGroup(const Array<Front3PointIndex, LocalPointIndex> &grouppindex,
                         const Array<MiniElement2d>& groupfaces) const;
 
   ///
@@ -274,9 +236,9 @@ public:
 
   ///
   int GetLocals (int baseelement,
-		 Array<Point3d, PointIndex> & locpoints,
+		 Array<Point3d, LocalPointIndex> & locpoints,
                  Array<MiniElement2d> & locfaces,   // local index
-                 Array<PointIndex, PointIndex> & pindex,
+                 Array<Front3PointIndex, LocalPointIndex> & pindex,   // local -> front
                  Array<INDEX> & findex,
 		 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
@@ -285,19 +247,19 @@ public:
   
   ///
   void GetGroup (int fi,
-                 Array<MeshPoint, PointIndex> & grouppoints,
+                 Array<MeshPoint, LocalPointIndex> & grouppoints,
                  Array<MiniElement2d> & groupelements,
-                 Array<PointIndex, PointIndex> & pindex,
+                 Array<Front3PointIndex, LocalPointIndex> & pindex,
                  Array<INDEX> & findex);
 
   ///
   void DeleteFace (INDEX fi);
   ///
-  PointIndex AddPoint (const Point<3> & p, PointIndex globind);
+  Front3PointIndex AddPoint (const Point<3> & p, PointIndex globind);
   ///
-  INDEX AddFace (const MiniElement2d & e);
+  INDEX AddFace (const FrontElement2d & e);
   ///
-  INDEX AddConnectedPair (PointIndices<2> pair);
+  INDEX AddConnectedPair (IVec<2,Front3PointIndex> pair);
   ///
   void IncrementClass (INDEX fi)
   { faces[fi-1].IncrementQualClass(); }
@@ -317,7 +279,7 @@ public:
 
 
   ///
-  PointIndex GetGlobalIndex (PointIndex pi) const
+  PointIndex GetGlobalIndex (Front3PointIndex pi) const
   { return points[pi].GlobalIndex(); }
   ///
   double Volume () const

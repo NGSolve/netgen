@@ -995,13 +995,13 @@ namespace netgen
 	else
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
 
-	int pi1 = loclines.Get(i).I1();
-	int pi2 = loclines.Get(i).I2();
+	LocalPointIndex pi1 = loclines.Get(i)[0];
+	LocalPointIndex pi2 = loclines.Get(i)[1];
 
-	if (pi1 >= 1 && pi2 >= 1)
+	if (pi1.IsValid() && pi2.IsValid())
 	  {
-	    Point3d p1 = locpoints.Get(pi1);
-	    Point3d p2 = locpoints.Get(pi2);
+	    Point3d p1 = locpoints[pi1];
+	    Point3d p2 = locpoints[pi2];
 
 	    glBegin (GL_LINES);
 	    glVertex3f (p1.X(), p1.Y(), p1.Z());
@@ -1022,7 +1022,7 @@ namespace netgen
     glBegin (GL_POINTS);
     for (int i = 1; i <= locpoints.Size(); i++)
       {
-	Point3d p = locpoints.Get(i);
+	Point3d p = locpoints[i];
 	glVertex3f (p.X(), p.Y(), p.Z());
       }
     glEnd();
@@ -1044,13 +1044,13 @@ namespace netgen
 	if (i == 1)
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
 
-	int pi1 = loclines.Get(i).I1();
-	int pi2 = loclines.Get(i).I2();
+	LocalPointIndex pi1 = loclines.Get(i)[0];
+	LocalPointIndex pi2 = loclines.Get(i)[1];
 
-	if (pi1 >= 1 && pi2 >= 1)
+	if (pi1.IsValid() && pi2.IsValid())
 	  {
-	    const auto& p1 = plainpoints.Get(pi1);
-	    const auto& p2 = plainpoints.Get(pi2);
+	    const auto& p1 = plainpoints[pi1];
+	    const auto& p2 = plainpoints[pi2];
 
 	    glBegin (GL_LINES);
 	    glVertex3f (scalex * p1[0] + shiftx, scaley * p1[1] + shifty, -5);
@@ -1065,7 +1065,7 @@ namespace netgen
     glBegin (GL_POINTS);
     for (int i = 1; i <= plainpoints.Size(); i++)
       {
-	const auto& p = plainpoints.Get(i);
+	const auto& p = plainpoints[i];
 	glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);
       }
     glEnd();
@@ -1103,9 +1103,9 @@ namespace netgen
   }
 
   void Impl_UpdateVisSurfaceMeshData(int oldnl,
-            shared_ptr<NgArray<Point<3>>> locpointsptr,
-            shared_ptr<NgArray<INDEX_2>> loclinesptr,
-            shared_ptr<NgArray<Point<2>>> plainpointsptr)
+            shared_ptr<Array<Point<3>, LocalPointIndex>> locpointsptr,
+            shared_ptr<NgArray<IVec<2,LocalPointIndex>>> loclinesptr,
+            shared_ptr<Array<Point<2>, LocalPointIndex>> plainpointsptr)
   {
       vssurfacemeshing.oldnl = oldnl;
       if(locpointsptr) vssurfacemeshing.locpointsptr = locpointsptr;

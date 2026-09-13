@@ -106,9 +106,9 @@ namespace netgen
   {
     double scalex = 1., scaley = 1., shiftx = 0., shifty = 0.;
   public:
-    shared_ptr<NgArray<Point<3>>> locpointsptr;
-    shared_ptr<NgArray<INDEX_2>> loclinesptr;
-    shared_ptr<NgArray<Point<2>>> plainpointsptr;
+    shared_ptr<Array<Point<3>, LocalPointIndex>> locpointsptr;
+    shared_ptr<NgArray<IVec<2,LocalPointIndex>>> loclinesptr;
+    shared_ptr<Array<Point<2>, LocalPointIndex>> plainpointsptr;
     int oldnl;
     bool clearptr;
     VisualSceneSurfaceMeshing ();

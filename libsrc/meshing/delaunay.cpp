@@ -574,8 +574,8 @@ namespace netgen
     Box<3> bbox(Box<3>::EMPTY_BOX);
 
     for (auto & face : adfront.Faces())
-      for (PointIndex pi : face.Face().PNums())      
-        bbox.Add (mesh.Point(pi));
+      for (Front3PointIndex fpi : face.Face().PNums())      
+        bbox.Add (mesh.Point(adfront.GetGlobalIndex(fpi)));
 
     for (PointIndex pi : mesh.LockedPoints())
       bbox.Add (mesh.Point (pi));
@@ -611,8 +611,8 @@ namespace netgen
     usep = false;
 
     for (auto & face : adfront.Faces())
-      for (PointIndex pi : face.Face().PNums())      
-        usep[pi] = true;
+      for (Front3PointIndex fpi : face.Face().PNums())      
+        usep[adfront.GetGlobalIndex(fpi)] = true;
 
     /*
     for (size_t i = oldnp + PointIndex::BASE; 

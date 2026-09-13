@@ -465,19 +465,12 @@ namespace netgen
 
          Meshing3 meshing(tetrules);
 
-         Array<PointIndex, PointIndex> glob2loc(mesh.GetNP());
-         glob2loc = PointIndex::INVALID;
-
          for (PointIndex pi : mesh.Points().Range())
            if (domain_bbox.IsIn (mesh[pi]))
-             glob2loc[pi] = meshing.AddPoint (mesh[pi], pi);
+             meshing.AddPoint (mesh[pi], pi);
 
          for (auto sel : mesh.OpenElements())
-           {
-             for(auto & pi : sel.PNums())
-               pi = glob2loc[pi];
-             meshing.AddBoundaryElement (sel);
-           }
+           meshing.AddBoundaryElement (sel);
 
          int oldne = mesh.GetNE();
 

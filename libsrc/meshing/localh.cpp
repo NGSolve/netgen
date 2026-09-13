@@ -659,8 +659,8 @@ namespace netgen
       {
 	faceinds[i] = i;
 	const FrontLine & line = adfront.GetLine(i);
-        Point<3> p1 = adfront.GetPoint (line.L().I1());
-        Point<3> p2 = adfront.GetPoint (line.L().I2());
+        Point<3> p1 = adfront.GetPoint (line.L()[0]);
+        Point<3> p2 = adfront.GetPoint (line.L()[1]);
         
 	faceboxes[i].Set (Point<2> (p1(0), p1(1)));
 	faceboxes[i].Add (Point<2> (p2(0), p2(1)));

@@ -855,9 +855,7 @@ namespace netgen
         gi0.v = seg.GeomInfo(0).v;
         gi1.u = seg.GeomInfo(1).u;
         gi1.v = seg.GeomInfo(1).v;
-        meshing.AddBoundaryElement(glob2loc[seg[0]],
-                                   glob2loc[seg[1]],
-                                   gi0, gi1);
+        meshing.AddBoundaryElement(seg[0], seg[1], gi0, gi1);
       }
 
     // TODO Set max area 2* area of face

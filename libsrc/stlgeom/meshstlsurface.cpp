@@ -810,7 +810,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 	{
 	  int i = segs[hi];
 	  const Segment & seg = mesh.GetOpenSegment (i);
-	  meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], 
+	  meshing.AddBoundaryElement (seg[0], seg[1], 
 				      seg.GeomInfo(0), seg.GeomInfo(1));
 	}
 

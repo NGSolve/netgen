@@ -381,8 +381,8 @@ namespace netgen
       {
 	const FrontLine & line = adfront.GetLine (i);
 
-	const Point<3> & p1 = adfront.GetPoint(line.L().I1());
-	const Point<3> & p2 = adfront.GetPoint(line.L().I2());
+	const Point<3> & p1 = adfront.GetPoint(line.L()[0]);
+	const Point<3> & p2 = adfront.GetPoint(line.L()[1]);
 	
         maxh = max (maxh, Dist (p1, p2));
 	
@@ -418,8 +418,8 @@ namespace netgen
 	  {
 	    const FrontLine & line = adfront.GetLine(i);
 	    
-	    Box<3> bbox (adfront.GetPoint (line.L().I1()));
-	    bbox.Add (adfront.GetPoint (line.L().I2()));
+	    Box<3> bbox (adfront.GetPoint (line.L()[0]));
+	    bbox.Add (adfront.GetPoint (line.L()[1]));
 
 	    
 	    double filld = filldist * bbox.Diam();
@@ -505,8 +505,8 @@ namespace netgen
       {
 	const FrontLine & line = adfront.GetLine(i);
 	
-	Box<3> bbox (adfront.GetPoint (line.L().I1()));
-	bbox.Add (adfront.GetPoint (line.L().I2()));
+	Box<3> bbox (adfront.GetPoint (line.L()[0]));
+	bbox.Add (adfront.GetPoint (line.L()[1]));
 	
 	loch2.SetH (bbox.Center(), bbox.Diam());
       }
@@ -516,8 +516,8 @@ namespace netgen
       {
 	const FrontLine & line = adfront.GetLine(i);
 	
-	Box<3> bbox (adfront.GetPoint (line.L().I1()));
-	bbox.Add (adfront.GetPoint (line.L().I2()));
+	Box<3> bbox (adfront.GetPoint (line.L()[0]));
+	bbox.Add (adfront.GetPoint (line.L()[1]));
 
 	bbox.Increase (filldist * bbox.Diam());
 	loch2.CutBoundary (bbox);

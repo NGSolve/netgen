@@ -730,12 +730,10 @@ namespace netgen
 	  {
 	    const auto & ed = mesh->GetEdgeDescriptor(seg->GetIndex());
 	    if (ed.DomainIn() == domnr)
-              meshing.AddBoundaryElement (compress[(*seg)[0]], 
-                                          compress[(*seg)[1]], gi, gi);
+              meshing.AddBoundaryElement ((*seg)[0], (*seg)[1], gi, gi);
             
 	    if (ed.DomainOut() == domnr)
-              meshing.AddBoundaryElement (compress[(*seg)[1]],
-                                          compress[(*seg)[0]], gi, gi);
+              meshing.AddBoundaryElement ((*seg)[1], (*seg)[0], gi, gi);
 	  }
 
         

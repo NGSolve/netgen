@@ -481,9 +481,7 @@ namespace netgen
 	  {
 	    PointGeomInfo gi;
 	    gi.trignum = k;
-	    meshing.AddBoundaryElement (segments[si][0] + 1 - IndexBASE<PointIndex>(), 
-					segments[si][1] + 1 - IndexBASE<PointIndex>(), 
-					gi, gi);
+	    meshing.AddBoundaryElement (segments[si][0], segments[si][1], gi, gi);
 	  }
 
 	double maxh = mparam.maxh;

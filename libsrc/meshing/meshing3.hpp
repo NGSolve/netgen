@@ -32,6 +32,8 @@ class Meshing3
   Array<string> problems;
   /// tolerance criterion
   double tolfak;
+  /// mesh point number -> front point number
+  Array<Front3PointIndex, PointIndex> glob2front;
 public:
   /// 
   Meshing3 (const string & rulefilename); 
@@ -46,21 +48,19 @@ public:
   MESHING3_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp);
   
   ///
-  int ApplyRules (Array<Point3d, PointIndex> & lpoints,
-                  Array<int, PointIndex> & allowpoint,
+  int ApplyRules (Array<Point3d, LocalPointIndex> & lpoints,
+                  Array<int, LocalPointIndex> & allowpoint,
 		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
-		  NgArray<Element> & elements,
+		  NgArray<LocalElement> & elements,
 		  NgArray<INDEX> & delfaces, int tolerance, 
 		  double sloppy, int rotind1,
 		  float & retminerr);
   
   ///
-  PointIndex AddPoint (const Point3d & p, PointIndex globind);
-  ///
+  Front3PointIndex AddPoint (const Point3d & p, PointIndex globind);
+  /// elem is given in mesh point numbers
   void AddBoundaryElement (const Element2d & elem);
-  ///
-  void AddBoundaryElement (const MiniElement2d & elem);
   ///
   int AddConnectedPair (PointIndices<2> pair);
   

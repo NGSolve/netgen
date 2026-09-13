@@ -155,28 +155,31 @@ static double CalcLocH (const NgArray<Point3d> & locpoints,
 }
 */
 
-PointIndex Meshing3 :: AddPoint (const Point3d & p, PointIndex globind)
+Front3PointIndex Meshing3 :: AddPoint (const Point3d & p, PointIndex globind)
 {
-  return adfront -> AddPoint (p, globind);  
+  Front3PointIndex fpi = adfront -> AddPoint (p, globind);
+  if (globind >= glob2front.Range().Next())
+    {
+      size_t oldsize = glob2front.Size();
+      glob2front.SetSize (globind+1-IndexBASE<PointIndex>());
+      for (PointIndex pi = IndexBASE<PointIndex>()+oldsize; pi < glob2front.Range().Next(); pi++)
+        glob2front[pi] = Front3PointIndex::INVALID;
+    }
+  glob2front[globind] = fpi;
+  return fpi;
 }  
 
 void Meshing3 :: AddBoundaryElement (const Element2d & elem)
 {
-  MiniElement2d mini(elem.GetNP());
+  FrontElement2d mini(elem.GetNP());
   for (int j = 0; j < elem.GetNP(); j++)
-    mini[j] = elem[j];
+    mini[j] = glob2front[elem[j]];
   adfront -> AddFace(mini);
 }  
 
-
-void Meshing3 :: AddBoundaryElement (const MiniElement2d & elem)
-{
-  adfront -> AddFace(elem);
-}
-
 int Meshing3 :: AddConnectedPair (PointIndices<2> apair)
 {
-  return adfront -> AddConnectedPair (apair);
+  return adfront -> AddConnectedPair ( { glob2front[apair[0]], glob2front[apair[1]] } );
 }
 
 MESHING3_RESULT Meshing3 :: 
@@ -195,17 +198,17 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // RegionTimer reg (meshing3_timer);
 
 
-  Array<Point3d, PointIndex> locpoints;      // local points
+  Array<Point3d, LocalPointIndex> locpoints;      // local points
   Array<MiniElement2d> locfaces;                   // local faces
-  Array<PointIndex, PointIndex> pindex;      // mapping from local to front point numbering
-  Array<int, PointIndex> allowpoint;         // point is allowed (0/1/2) ?
+  Array<Front3PointIndex, LocalPointIndex> pindex;  // mapping from local to front point numbering
+  Array<int, LocalPointIndex> allowpoint;         // point is allowed (0/1/2) ?
   Array<INDEX> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
-  Array<Point3d, PointIndex> plainpoints;    // points in reference coordinates
+  Array<Point3d, LocalPointIndex> plainpoints;    // points in reference coordinates
   // Array<int> delpoints;   // points to be deleted
   NgArray<int> delfaces;    // lines to be deleted
-  NgArray<Element> locelements;       // new generated elements
+  NgArray<LocalElement> locelements;       // new generated elements
 
   int j, oldnp, oldnf;
   int found;
@@ -225,9 +228,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
   
   // for star-shaped domain meshing
-  Array<MeshPoint, PointIndex> grouppoints;      
+  Array<MeshPoint, LocalPointIndex> grouppoints;      
   Array<MiniElement2d> groupfaces;
-  Array<PointIndex, PointIndex> grouppindex;
+  Array<Front3PointIndex, LocalPointIndex> grouppindex;
   Array<INDEX> groupfindex;
   
   
@@ -240,7 +243,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   NgArray<Point3d> tempnewpoints;
   NgArray<MiniElement2d> tempnewfaces;
   NgArray<int> tempdelfaces;
-  NgArray<Element> templocelements;
+  NgArray<LocalElement> templocelements;
 
 
   stat.h = mp.maxh;
@@ -287,7 +290,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  continue;
 	}
 
-      const MiniElement2d & bel = adfront->GetFace (baseelem);
+      const FrontElement2d & bel = adfront->GetFace (baseelem);
       const Point<3> p1 = adfront->GetPoint (bel[0]);
       const Point<3> p2 = adfront->GetPoint (bel[1]);
       const Point<3> p3 = adfront->GetPoint (bel[2]);
@@ -693,21 +696,22 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      
 	      tetvol += (1.0 / 6.0) * ( Cross ( *hp2 - *hp1, *hp3 - *hp1) * (*hp4 - *hp1) );
 
-	      for (j = 1; j <= locelements.Get(i).NP(); j++)
-		locelements.Elem(i).PNum(j) =
-		  adfront -> GetGlobalIndex (pindex[locelements.Get(i).PNum(j)]);
+	      const LocalElement & locel = locelements.Get(i);
+	      Element el(locel.GetNP());
+	      el.SetType (locel.GetType());
+	      for (j = 1; j <= locel.GetNP(); j++)
+		el.PNum(j) = adfront -> GetGlobalIndex (pindex[locel.PNum(j)]);
 
-	      mesh.AddVolumeElement (locelements.Get(i));
+	      mesh.AddVolumeElement (el);
 	      stat.cntelem++;
 	    }
 
 	  for(int i = oldnf; i < locfaces.Size(); i++)
 	    {
+	      FrontElement2d frontface(locfaces[i].GetNP());
 	      for (j = 1; j <= locfaces[i].GetNP(); j++)
-		locfaces[i].PNum(j) = 
-		  pindex[locfaces[i].PNum(j)];
-	      // (*testout) << "add face " << locfaces.Get(i) << endl;
-	      adfront->AddFace (locfaces[i]);
+		frontface.PNum(j) = pindex[locfaces[i].PNum(j)];
+	      adfront->AddFace (frontface);
 	    }
 	  
 	  for(int i = 1; i <= delfaces.Size(); i++)
@@ -771,7 +775,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   for(int i = 1; i <= adfront->GetNP(); i++)
     {
-      const Point3d & p = adfront->GetPoint(PointIndex(i));
+      const Point3d & p = adfront->GetPoint(Front3PointIndex(i));
       if (i == 1)
 	{
 	  xmin = xmax = p.X();
@@ -802,7 +806,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
   NgArray<blocktyp> inner(n);
   NgArray<PointIndex> pointnr(n);
-  NgArray<int> frontpointnr(n);
+  NgArray<Front3PointIndex> frontpointnr(n);
 
 
   // initialize inner to 1
@@ -815,7 +819,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
   for(int i = 1; i <= adfront->GetNF(); i++)
     {
-      const MiniElement2d & el = adfront->GetFace(i);
+      const FrontElement2d & el = adfront->GetFace(i);
       xminb = xmax; xmaxb = xmin;
       yminb = ymax; ymaxb = ymin;
       zminb = zmax; zmaxb = zmin;
@@ -953,7 +957,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   for(int i = 1; i <= n; i++)
     {
       pointnr.Elem(i) = PointIndex::INVALID;
-      frontpointnr.Elem(i) = 0;
+      frontpointnr.Elem(i) = Front3PointIndex::INVALID;
     }
   
   for (i1 = 1; i1 <= n1-1; i1++)
@@ -1028,16 +1032,16 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
 	  if (inner.Elem(i) == BLOCKINNER)
 	    {    
-	      int pi1(0), pi2(0), pi3(0), pi4(0);
+	      Front3PointIndex pi1, pi2, pi3, pi4;
 
-	      int pn1 = frontpointnr.Get(i);
-	      int pn2 = frontpointnr.Get(i+1);
-	      int pn3 = frontpointnr.Get(i+n3);
-	      int pn4 = frontpointnr.Get(i+n3+1);
-	      int pn5 = frontpointnr.Get(i+n2*n3);
-	      int pn6 = frontpointnr.Get(i+n2*n3+1);
-	      int pn7 = frontpointnr.Get(i+n2*n3+n3);
-	      int pn8 = frontpointnr.Get(i+n2*n3+n3+1);
+	      Front3PointIndex pn1 = frontpointnr.Get(i);
+	      Front3PointIndex pn2 = frontpointnr.Get(i+1);
+	      Front3PointIndex pn3 = frontpointnr.Get(i+n3);
+	      Front3PointIndex pn4 = frontpointnr.Get(i+n3+1);
+	      Front3PointIndex pn5 = frontpointnr.Get(i+n2*n3);
+	      Front3PointIndex pn6 = frontpointnr.Get(i+n2*n3+1);
+	      Front3PointIndex pn7 = frontpointnr.Get(i+n2*n3+n3);
+	      Front3PointIndex pn8 = frontpointnr.Get(i+n2*n3+n3+1);
 
 	      for (int k = 1; k <= 6; k++)
 		{
@@ -1089,16 +1093,16 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
 		  if (inner.Get(j) == BLOCKBOUND)
 		    {
-		      MiniElement2d face;
+		      FrontElement2d face;
 		      face.PNum(1) = pi4;
 		      face.PNum(2) = pi1;
 		      face.PNum(3) = pi3;
-		      AddBoundaryElement (face);
+		      adfront->AddFace (face);
 
 		      face.PNum(1) = pi1;
 		      face.PNum(2) = pi4;
 		      face.PNum(3) = pi2;
-		      AddBoundaryElement (face);
+		      adfront->AddFace (face);
 
 		    }
 		}
@@ -1142,7 +1146,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   for (int i = 1; i <= adfront->GetNF(); i++)
     {
-      const MiniElement2d & el = adfront->GetFace(i);
+      const FrontElement2d & el = adfront->GetFace(i);
       for (int j = 1; j <= 3; j++)
 	{
 	  const Point3d & p1 = adfront->GetPoint (el.PNumMod(j));
@@ -1184,7 +1188,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       tbox.Start();
       for (int i = 1; i <= adfront->GetNF(); i++)
 	{
-	  const MiniElement2d & el = adfront->GetFace(i);
+	  const FrontElement2d & el = adfront->GetFace(i);
 	  
 	  Box<3> bbox (adfront->GetPoint (el[0]));
 	  bbox.Add (adfront->GetPoint (el[1]));
@@ -1249,7 +1253,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   for (int i = 1; i <= adfront->GetNF(); i++)
     {
-      const MiniElement2d & el = adfront->GetFace(i);
+      const FrontElement2d & el = adfront->GetFace(i);
       Point3d pmin = adfront->GetPoint (el.PNum(1));
       Point3d pmax = pmin;
       
@@ -1265,7 +1269,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
 
   for (int i = 1; i <= adfront->GetNF(); i++)
     {
-      const MiniElement2d & el = adfront->GetFace(i);
+      const FrontElement2d & el = adfront->GetFace(i);
       Point3d pmin = adfront->GetPoint (el.PNum(1));
       Point3d pmax = pmin;
       

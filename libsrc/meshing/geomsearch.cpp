@@ -20,7 +20,7 @@ namespace netgen
       } 
   }
 
-  void GeomSearch3d :: Init (Array <FrontPoint3,PointIndex> *pointsi, NgArray <FrontFace> *facesi)
+  void GeomSearch3d :: Init (Array <FrontPoint3,Front3PointIndex> *pointsi, NgArray <FrontFace> *facesi)
   {
     points = pointsi;
     faces = facesi;
@@ -29,7 +29,7 @@ namespace netgen
     hashcount = 1;
   }
 
-  void GeomSearch3d :: ElemMaxExt(Point3d& minp, Point3d& maxp, const MiniElement2d& elem)
+  void GeomSearch3d :: ElemMaxExt(Point3d& minp, Point3d& maxp, const FrontElement2d& elem)
   {
     maxp.X()=(*points)[elem.PNum(1)].P()(0);
     maxp.Y()=(*points)[elem.PNum(1)].P()(1);
@@ -156,7 +156,7 @@ namespace netgen
   
   }
 
-  void GeomSearch3d :: AddElem(const MiniElement2d& elem, INDEX elemnum)
+  void GeomSearch3d :: AddElem(const FrontElement2d& elem, INDEX elemnum)
   {
     Point3d minp, maxp;
     ElemMaxExt(minp, maxp, elem);
@@ -182,7 +182,7 @@ namespace netgen
           }
   }
 
-  void GeomSearch3d :: GetLocals(NgArray<MiniElement2d> & locfaces,  NgArray<INDEX> & findex,
+  void GeomSearch3d :: GetLocals(NgArray<FrontElement2d> & locfaces,  NgArray<INDEX> & findex,
 				 INDEX fstind, const Point3d& p0, double xh)
   {
     hashcount++;
@@ -196,7 +196,7 @@ namespace netgen
     MinCoords(maxextreal,maxp);
 
 
-    PointIndex cluster = faces->Get(fstind).Cluster();
+    Front3PointIndex cluster = faces->Get(fstind).Cluster();
   
     int sx = int((minp.X()-minext.X())/elemsize.X()+1.);
     int ex = int((maxp.X()-minext.X())/elemsize.X()+1.);
@@ -230,7 +230,7 @@ namespace netgen
 			i != fstind)
 		      {
 			cnt1++;
-			const MiniElement2d & face = faces->Get(i).Face();
+			const FrontElement2d & face = faces->Get(i).Face();
 		      
 			const Point3d & p1 = (*points)[face.PNum(1)].P();
 			const Point3d & p2 = (*points)[face.PNum(2)].P();

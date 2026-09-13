@@ -28,8 +28,8 @@ extern double minwithoutother;
     return pow(l*l*l/vol, 1.0/3.0) / 12.0;
   }
 
-  static double CalcElementBadness (const Array<Point3d, PointIndex> & points,
-                                    const Element & elem)
+  static double CalcElementBadness (const Array<Point3d, LocalPointIndex> & points,
+                                    const LocalElement & elem)
 {
   if(elem.GetNP() == 4)
     return TetBadnessFromPoints (points[elem.PNum(1)],
@@ -65,12 +65,12 @@ extern double minwithoutother;
 
 int Meshing3 :: ApplyRules 
 (
- Array<Point3d, PointIndex> & lpoints,     // in: local points, out: old+new local points
- Array<int, PointIndex> & allowpoint,      // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
+ Array<Point3d, LocalPointIndex> & lpoints,     // in: local points, out: old+new local points
+ Array<int, LocalPointIndex> & allowpoint,     // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
  Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
  INDEX lfacesplit,	       // for local faces in outer radius
  INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
- NgArray<Element> & elements,    // out: new elements
+ NgArray<LocalElement> & elements,    // out: new elements
  NgArray<INDEX> & delfaces,      // out: face indices of faces to delete
  int tolerance,                // quality class: 1 best 
  double sloppy,                // quality strength
@@ -94,9 +94,9 @@ int Meshing3 :: ApplyRules
   int loktestmode;
 
 
-  NgArray<int, PointIndex::BASE> pused;      // point is already mapped, number of uses
+  Array<int, LocalPointIndex> pused;         // point is already mapped, number of uses
   NgArrayMem<char,100> fused;                       // face is already mapped
-  NgArrayMem<PointIndex,100> pmap;                  // map of reference point to local point
+  NgArrayMem<LocalPointIndex,100> pmap;             // map of reference point to local point
   NgArrayMem<bool,100> pfixed;                      // point mapped by face-map
   NgArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
   NgArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
@@ -106,10 +106,10 @@ int Meshing3 :: ApplyRules
   NgArrayMem<Point3d,100> tempnewpoints;
   NgArray<MiniElement2d> tempnewfaces;
   NgArrayMem<int,100> tempdelfaces;
-  NgArray<Element> tempelements;
+  NgArray<LocalElement> tempelements;
   NgArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
 
-  NgArray<int, PointIndex::BASE> pnearness;
+  Array<int, LocalPointIndex> pnearness;
   NgArray<int> fnearness;
 
   static int cnt = 0;
@@ -126,7 +126,7 @@ int Meshing3 :: ApplyRules
 
   pnearness = INT_MAX/10;
 
-  for (PointIndex pi : lfaces[0].PNums())
+  for (LocalPointIndex pi : lfaces[0].PNums())
     pnearness[pi] = 0;
   
   // NgProfiler::RegionTimer reg2(98);
@@ -141,13 +141,13 @@ int Meshing3 :: ApplyRules
 	  const MiniElement2d & hface = lfaces[i];
 
 	  int minn = INT_MAX-1;
-	  for (PointIndex pi : hface.PNums())
+	  for (LocalPointIndex pi : hface.PNums())
 	    {
 	      int hi = pnearness[pi];
 	      if (hi < minn) minn = hi;
 	    }
 	  if (minn < INT_MAX/10)
-	    for (PointIndex pi : hface.PNums())
+	    for (LocalPointIndex pi : hface.PNums())
 	      if (pnearness[pi] > minn+1)
 		pnearness[pi] = minn+1;
 	}
@@ -170,7 +170,7 @@ int Meshing3 :: ApplyRules
   for (int i : fnearness.Range())
     {
       int sum = 0;
-      for (PointIndex pi : lfaces[i].PNums())
+      for (LocalPointIndex pi : lfaces[i].PNums())
         sum += pnearness[pi];
       fnearness[i] = sum;
     }
@@ -292,7 +292,7 @@ int Meshing3 :: ApplyRules
 
       for (int j = 1; j <= lfaces[0].GetNP(); j++)
 	{
-	  PointIndex locpi = lfaces[0].PNumMod (j+rotind1);
+	  LocalPointIndex locpi = lfaces[0].PNumMod (j+rotind1);
 	  pmap.Set (rule->GetPointNr (1, j), locpi);
 	  pused[locpi]++;
 	}
@@ -348,7 +348,7 @@ int Meshing3 :: ApplyRules
 		      // reference point already mapped differently ?
 		      for (int j = 1; j <= actfnp && ok; j++)
 			{
-			  PointIndex locpi = pmap.Get(rule->GetPointNr (nfok, j));
+			  LocalPointIndex locpi = pmap.Get(rule->GetPointNr (nfok, j));
 			  if (locpi.IsValid() && locpi != locface->PNumMod(j+locfr))
 			    ok = 0;
 			}
@@ -360,7 +360,7 @@ int Meshing3 :: ApplyRules
 			  
 			  if (!pmap.Get(refpi).IsValid())
 			    {
-			      PointIndex locpi = locface->PNumMod (j + locfr);
+			      LocalPointIndex locpi = locface->PNumMod (j + locfr);
 
 			      if (pused[locpi])
 				ok = 0;
@@ -391,9 +391,9 @@ int Meshing3 :: ApplyRules
 		  
 		  for (int j = 1; j <= rule->GetNP (nfok); j++)
 		    {
-		      PointIndex locpi = locface->PNumMod(j+locfr);
+		      LocalPointIndex locpi = locface->PNumMod(j+locfr);
 		      
-		      if (rule->GetPointNr (nfok, j) < IndexBASE<PointIndex>()+3 &&
+		      if (rule->GetPointNr (nfok, j) < IndexBASE<LocalPointIndex>()+3 &&
 			  pmap.Get(rule->GetPointNr(nfok, j)) != locpi)
 			(*testout) << "change face1 point, mark1" << endl;
 		      
@@ -468,13 +468,13 @@ int Meshing3 :: ApplyRules
 		      else
 			
 			{
-			  PointIndex locpi = pmap.Elem(npok);
+			  LocalPointIndex locpi = pmap.Elem(npok);
 			  ok = 0;
 			  
 			  if (locpi.IsValid())
 			    pused[locpi]--;
 			  
-			  while (!ok && locpi < lpoints.Size()-1+IndexBASE<PointIndex>())
+			  while (!ok && locpi < lpoints.Size()-1+IndexBASE<LocalPointIndex>())
 			    {
 			      ok = 1;
 			      locpi++;
@@ -714,7 +714,7 @@ int Meshing3 :: ApplyRules
 				  for (li = 1; li <= lfacei.GetNP(); li++)
 				    {
 				      int lpii = 0;
-				      PointIndex pi = lfacei.PNum(li);
+				      LocalPointIndex pi = lfacei.PNum(li);
 				      for (lj = 1; lj <= rule->GetNOldP(); lj++)
 					if (pmap.Get(lj) == pi)
 					  lpii = lj;
@@ -809,9 +809,9 @@ int Meshing3 :: ApplyRules
 				  hc = 0;
 				  for (int k = rule->GetNOldF() + 1; k <= rule->GetNF(); k++)
 				    {
-				      if (rule->GetPointNr(k, 1) < IndexBASE<PointIndex>()+rule->GetNOldP() &&
-					  rule->GetPointNr(k, 2) < IndexBASE<PointIndex>()+rule->GetNOldP() &&
-					  rule->GetPointNr(k, 3) < IndexBASE<PointIndex>()+rule->GetNOldP())
+				      if (rule->GetPointNr(k, 1) < IndexBASE<LocalPointIndex>()+rule->GetNOldP() &&
+					  rule->GetPointNr(k, 2) < IndexBASE<LocalPointIndex>()+rule->GetNOldP() &&
+					  rule->GetPointNr(k, 3) < IndexBASE<LocalPointIndex>()+rule->GetNOldP())
 					{
 					  for (int j = 1; j <= 3; j++)
 					    if (lfaces[i-1].PNumMod(j  ) == pmap.Get(rule->GetPointNr(k, 1)) &&
@@ -969,9 +969,12 @@ int Meshing3 :: ApplyRules
 			  
 			  for (int i = 1; i <= rule->GetNE(); i++)
 			    {
-			      elements.Append (rule->GetElement(i));
-			      for (int j = 1; j <= elements.Get(i).NP(); j++)
-				elements.Elem(i).PNum(j) = pmap.Get(elements.Get(i).PNum(j));
+			      const Element & rel = rule->GetElement(i);
+			      LocalElement el;
+			      el.SetType (rel.GetType());
+			      for (int j = 1; j <= rel.GetNP(); j++)
+				el.PNum(j) = pmap.Get(int(rel.PNum(j)));   // rule nr -> local nr
+			      elements.Append (el);
 			    }
 			  
 

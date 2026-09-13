@@ -81,28 +81,42 @@ namespace netgen
   Meshing2 :: ~Meshing2 ()
   { ; } 
 
-  int Meshing2 :: AddPoint (const Point3d & p, PointIndex globind,
-                            MultiPointGeomInfo * mgi,
-                            bool pointonsurface)
+  Front2PointIndex Meshing2 :: AddPoint (const Point3d & p, PointIndex globind,
+                                        MultiPointGeomInfo * mgi,
+                                        bool pointonsurface)
   {
     //(*testout) << "add point " << globind << endl;
-    return adfront.AddPoint (p, globind, mgi, pointonsurface);
+    Front2PointIndex fpi = adfront.AddPoint (p, globind, mgi, pointonsurface);
+    if (globind >= glob2front.Range().Next())
+      {
+        size_t oldsize = glob2front.Size();
+        glob2front.SetSize (globind+1-IndexBASE<PointIndex>());
+        for (PointIndex pi = IndexBASE<PointIndex>()+oldsize; pi < glob2front.Range().Next(); pi++)
+          glob2front[pi] = Front2PointIndex::INVALID;
+      }
+    glob2front[globind] = fpi;
+    return fpi;
   }
 
-  PointIndex Meshing2 :: GetGlobalIndex(int pi) const
+  PointIndex Meshing2 :: GetGlobalIndex(Front2PointIndex pi) const
   {
     return adfront.GetGlobalIndex(pi);
   }
 
-  void Meshing2 :: AddBoundaryElement (int i1, int i2,
+  void Meshing2 :: AddBoundaryElement (PointIndex pi1, PointIndex pi2,
 				       const PointGeomInfo & gi1, const PointGeomInfo & gi2)
   {
-    //    (*testout) << "add line " << i1 << " - " << i2 << endl;
+    AddBoundaryElement (glob2front[pi1], glob2front[pi2], gi1, gi2);
+  }
+
+  void Meshing2 :: AddBoundaryElement (Front2PointIndex fpi1, Front2PointIndex fpi2,
+				       const PointGeomInfo & gi1, const PointGeomInfo & gi2)
+  {
     if (!gi1.trignum || !gi2.trignum)
       {
 	PrintSysError ("addboundaryelement: illegal geominfo");
       }
-    adfront.AddLine (i1-1, i2-1, gi1, gi2);
+    adfront.AddLine (fpi1, fpi2, gi1, gi2);
   }
 
 
@@ -259,13 +273,14 @@ namespace netgen
 
     ts1.Start();
 
-    NgArray<int> pindex, lindex;
+    Array<Front2PointIndex, LocalPointIndex> pindex;   // local -> front
+    NgArray<int> lindex;
     NgArray<int> delpoints, dellines;
 
-    NgArray<PointGeomInfo> upgeominfo;  // unique info
-    NgArray<MultiPointGeomInfo> mpgeominfo;  // multiple info
+    Array<PointGeomInfo, LocalPointIndex> upgeominfo;  // unique info
+    Array<MultiPointGeomInfo, LocalPointIndex> mpgeominfo;  // multiple info
 
-    NgArray<Element2d> locelements;
+    NgArray<MiniElement2d> locelements;      // in local numbering
 
     int z1, z2, oldnp(-1);
     bool found;
@@ -279,13 +294,13 @@ namespace netgen
 
     // double h;
 
-    auto locpointsptr = make_shared<NgArray<Point<3>>>();
+    auto locpointsptr = make_shared<Array<Point<3>, LocalPointIndex>>();
     auto& locpoints = *locpointsptr;
-    NgArray<int> legalpoints;
-    auto plainpointsptr = make_shared<NgArray<Point<2>>>();
+    Array<int, LocalPointIndex> legalpoints;
+    auto plainpointsptr = make_shared<Array<Point<2>, LocalPointIndex>>();
     auto& plainpoints = *plainpointsptr;
-    NgArray<int> plainzones;
-    auto loclinesptr = make_shared<NgArray<INDEX_2>>();
+    Array<int, LocalPointIndex> plainzones;
+    auto loclinesptr = make_shared<NgArray<IVec<2,LocalPointIndex>>>();
     auto &loclines = *loclinesptr;
     int trials = 0, nfaces = 0;
     int oldnl = 0;
@@ -514,8 +529,8 @@ namespace netgen
 	morerisc = 0;
 
 
-	PointIndex gpi1 = adfront.GetGlobalIndex (pindex.Get(loclines[0].I1()));
-	PointIndex gpi2 = adfront.GetGlobalIndex (pindex.Get(loclines[0].I2()));
+	PointIndex gpi1 = adfront.GetGlobalIndex (pindex[loclines[0][0]]);
+	PointIndex gpi2 = adfront.GetGlobalIndex (pindex[loclines[0][1]]);
 
 
 	debugflag = 
@@ -577,7 +592,7 @@ namespace netgen
 
             {
               // RegionTimer reg2 (timer2);
-              for (size_t i = 0; i < locpoints.Size(); i++)
+              for (LocalPointIndex i : locpoints.Range())
                 {
                   Point<2> pp;
                   TransformToPlain (locpoints[i], mpgeominfo[i],
@@ -589,12 +604,12 @@ namespace netgen
 	    for (int i = 1; i <= locpoints.Size(); i++)
 	      {
 		// (*testout) << "pindex(i) = " << pindex[i-1] << endl;
-		TransformToPlain (locpoints.Get(i), 
-				  mpgeominfo.Get(i),
-				  plainpoints.Elem(i), h, plainzones.Elem(i));
-		//		(*testout) << mpgeominfo.Get(i).GetPGI(1).u << " " << mpgeominfo.Get(i).GetPGI(1).v << " ";
-		//		(*testout) << plainpoints.Get(i).X() << " " << plainpoints.Get(i).Y() << endl;
-		//(*testout) << "transform " << locpoints.Get(i) << " to " << plainpoints.Get(i).X() << " " << plainpoints.Get(i).Y() << endl;
+		TransformToPlain (locpoints[i], 
+				  mpgeominfo[i],
+				  plainpoints[i], h, plainzones[i]);
+		//		(*testout) << mpgeominfo[i].GetPGI(1).u << " " << mpgeominfo[i].GetPGI(1).v << " ";
+		//		(*testout) << plainpoints[i].X() << " " << plainpoints[i].Y() << endl;
+		//(*testout) << "transform " << locpoints[i] << " to " << plainpoints[i].X() << " " << plainpoints[i].Y() << endl;
 	      }
             */
 	    //	    (*testout) << endl << endl << endl;
@@ -604,13 +619,13 @@ namespace netgen
 	      *testout << "2d points: " << endl << plainpoints << endl;
 
 
-	    // p12d = plainpoints.Get(1);
-	    // p22d = plainpoints.Get(2);
+	    // p12d = plainpoints[1];
+	    // p22d = plainpoints[2];
 
 	    /*
 	    // last idea on friday
-	    plainzones.Elem(1) = 0;
-	    plainzones.Elem(2) = 0;
+	    plainzones[1] = 0;
+	    plainzones[2] = 0;
 	    */
 
 
@@ -618,8 +633,8 @@ namespace netgen
 	    // old netgen:
 	    for (i = 2; i <= loclines.Size(); i++)  // don't remove first line
 	    {
-	    z1 = plainzones.Get(loclines.Get(i).I1());
-	    z2 = plainzones.Get(loclines.Get(i).I2());
+	    z1 = plainzones[loclines.Get(i)[0]];
+	    z2 = plainzones[loclines.Get(i)[1]];
 	      
 	    if (z1 && z2 && (z1 != z2) || (z1 == -1) || (z2 == -1) )
 	    {
@@ -631,37 +646,37 @@ namespace netgen
 	    }
 
 	    // 	  for (i = 1; i <= plainpoints.Size(); i++)
-	    // 	    if (plainzones.Elem(i) == -1)
-	    // 	      plainpoints.Elem(i) = Point2d (1e4, 1e4);
+	    // 	    if (plainzones[i] == -1)
+	    // 	      plainpoints[i] = Point2d (1e4, 1e4);
 	    */
 	  
 	  
 	    for (int i = 2; i <= loclines.Size(); i++)  // don't remove first line
 	      {
-		// (*testout) << "loclines(i) = " << loclines.Get(i).I1() << " - " << loclines.Get(i).I2() << endl;
-		z1 = plainzones.Get(loclines.Get(i).I1());
-		z2 = plainzones.Get(loclines.Get(i).I2());
+		// (*testout) << "loclines(i) = " << loclines.Get(i)[0] << " - " << loclines.Get(i)[1] << endl;
+		z1 = plainzones[loclines.Get(i)[0]];
+		z2 = plainzones[loclines.Get(i)[1]];
 	      
 	      
 		// one inner point, one outer
 		if ( (z1 >= 0) != (z2 >= 0))
 		  {
 		    int innerp = (z1 >= 0) ? 1 : 2;
-		    if (IsLineVertexOnChart (locpoints.Get(loclines.Get(i).I1()),
-					     locpoints.Get(loclines.Get(i).I2()),
+		    if (IsLineVertexOnChart (locpoints[loclines.Get(i)[0]],
+					     locpoints[loclines.Get(i)[1]],
 					     innerp,
 					     adfront.GetLineGeomInfo (lindex.Get(i), innerp)))
-		      // pgeominfo.Get(loclines.Get(i).I(innerp))))
+		      // pgeominfo.Get(loclines.Get(i)[innerp-1])))
 		      {		
 
 			if (!morerisc)
 			  {
 			    // use one end of line
-			    int pini = loclines.Get(i).I(innerp);
-			    int pouti = loclines.Get(i).I(3-innerp);
+			    LocalPointIndex pini = loclines.Get(i)[innerp-1];
+			    LocalPointIndex pouti = loclines.Get(i)[3-innerp-1];
 			  
-			    const auto& pin = plainpoints.Get(pini);
-			    const auto& pout = plainpoints.Get(pouti);
+			    const auto& pin = plainpoints[pini];
+			    const auto& pout = plainpoints[pouti];
 			    auto v = pout - pin;
 			    double len = v.Length();
 			    if (len <= 1e-6)
@@ -681,16 +696,16 @@ namespace netgen
 
 			  
 			    plainpoints.Append (newpout);
-			    auto pout3d = locpoints.Get(pouti);
+			    auto pout3d = locpoints[pouti];
 			    locpoints.Append (pout3d);
 
 			    plainzones.Append (0);
 			    pindex.Append (-1);
 			    oldnp++;
-			    loclines.Elem(i).I(3-innerp) = oldnp;
+			    loclines.Elem(i)[3-innerp-1] = oldnp;
 			  }
 			else
-			  plainzones.Elem(loclines.Get(i).I(3-innerp)) = 0;
+			  plainzones[loclines.Get(i)[3-innerp-1]] = 0;
 			
 
 			//		  (*testout) << "inner - outer correction" << endl;
@@ -722,11 +737,11 @@ namespace netgen
             legalpoints = 1;
             /*
 	    for (int i = 1; i <= legalpoints.Size(); i++)
-	      legalpoints.Elem(i) = 1;
+	      legalpoints[i] = 1;
             */
             
 	    double avy = 0;
-	    for (size_t i = 0; i < plainpoints.Size(); i++)
+	    for (LocalPointIndex i : plainpoints.Range())
 	      avy += plainpoints[i][1];
 	    avy *= 1./plainpoints.Size();
 		
@@ -751,15 +766,15 @@ namespace netgen
 	      }
 	    /*
 	      for (i = 3; i <= plainpoints.Size(); i++)
-	      if (sqr (plainpoints.Get(i).X()) + sqr (plainpoints.Get(i).Y())
+	      if (sqr (plainpoints[i].X()) + sqr (plainpoints[i].Y())
 	      > sqr (2 + 0.2 * qualclass))
-	      legalpoints.Elem(i) = 0;
+	      legalpoints[i] = 0;
 	    */  
 
 	    /*	  
 		 int clp = 0;
 		 for (i = 1; i <= plainpoints.Size(); i++)
-		 if (legalpoints.Get(i))
+		 if (legalpoints[i])
 		 clp++;
 		 (*testout) << "legalpts: " << clp << "/" << plainpoints.Size() << endl; 
 
@@ -769,12 +784,12 @@ namespace netgen
 
 		 while (lastleg < firstilleg)
 		 {
-		 while (legalpoints.Get(loclines.Get(lastleg).I1()) &&
-		 legalpoints.Get(loclines.Get(lastleg).I2()) &&
+		 while (legalpoints[loclines.Get(lastleg)[0]] &&
+		 legalpoints[loclines.Get(lastleg)[1]] &&
 		 lastleg < firstilleg)
 		 lastleg++;
-		 while ( ( !legalpoints.Get(loclines.Get(firstilleg).I1()) ||
-		 !legalpoints.Get(loclines.Get(firstilleg).I2())) &&
+		 while ( ( !legalpoints[loclines.Get(firstilleg)[0]] ||
+		 !legalpoints[loclines.Get(firstilleg)[1]]) &&
 		 lastleg < firstilleg)
 		 firstilleg--;
 	      
@@ -813,8 +828,8 @@ namespace netgen
 
 		for (int i = 1; i <= chartboundlines.Size(); i++)
 		  {
-		    INDEX_2 line (chartboundlines.Get(i).I1()+oldnp,
-				  chartboundlines.Get(i).I2()+oldnp);
+		    IVec<2,LocalPointIndex> line (LocalPointIndex(chartboundlines.Get(i).I1()+oldnp),
+                                                  LocalPointIndex(chartboundlines.Get(i).I2()+oldnp));
 		    loclines.Append (line);
 		    //	      (*testout) << "line: " << line.I1() << "-" << line.I2() << endl;
 		  }
@@ -856,11 +871,11 @@ namespace netgen
 
 	for (int i = 1; i <= locelements.Size() && found; i++)
 	  {
-	    const Element2d & el = locelements.Get(i);
+	    const MiniElement2d & el = locelements.Get(i);
 
 	    for (int j = 1; j <= el.GetNP(); j++)
-	      // if (el.PNum(j) <= oldnp && pindex.Get(el.PNum(j)) == -1)
-              if (int(el.PNum(j)) <= oldnp && pindex.Get(el.PNum(j)) == -1)  // local 1-based numbering
+	      // if (el.PNum(j) <= oldnp && pindex[el.PNum(j)] == -1)
+              if (int(el.PNum(j)) <= oldnp && pindex[el.PNum(j)] == -1)  // local 1-based numbering
 		{
 		  found = 0;
 		  PrintSysError ("meshing2, index missing");
@@ -876,11 +891,11 @@ namespace netgen
 	    for (int i = oldnp+1; i <= plainpoints.Size(); i++)
 	      {
                 Point<3> locp;
-                upgeominfo.Elem(i) = *blgeominfo1;
+                upgeominfo[i] = *blgeominfo1;
 		int err =
-		  TransformFromPlain (plainpoints.Elem(i), locp, 
-				      upgeominfo.Elem(i), h);
-                locpoints.Elem(i) = locp;
+		  TransformFromPlain (plainpoints[i], locp, 
+				      upgeominfo[i], h);
+                locpoints[i] = locp;
 
 		if (err)
 		  {
@@ -910,12 +925,12 @@ namespace netgen
 	  {
 	  for (i = 1; i <= locelements.Size(); i++)
 	  {
-	  Point3d pmin = locpoints.Get(locelements.Get(i).PNum(1));
+	  Point3d pmin = locpoints[locelements.Get(i).PNum(1)];
 	  Point3d pmax = pmin;
 	  for (j = 2; j <= 3; j++)
 	  {
 	  const Point3d & hp = 
-	  locpoints.Get(locelements.Get(i).PNum(j));
+	  locpoints[locelements.Get(i).PNum(j)];
 	  pmin.SetToMin (hp);
 	  pmax.SetToMax (hp);
 	  }
@@ -938,12 +953,12 @@ namespace netgen
 	    double newedgemaxh = 0;
 	    for (int i = oldnl+1; i <= loclines.Size(); i++)
 	      {
-		double eh = Dist (locpoints.Get(loclines.Get(i).I1()),
-				  locpoints.Get(loclines.Get(i).I2()));
+		double eh = Dist (locpoints[loclines.Get(i)[0]],
+				  locpoints[loclines.Get(i)[1]]);
 
 		// Markus (brute force method to avoid bad elements on geometries like \_/ )
-		//if(eh > 4.*mesh.GetH(locpoints.Get(loclines.Get(i).I1()))) found = 0;
-		//if(eh > 4.*mesh.GetH(locpoints.Get(loclines.Get(i).I2()))) found = 0;
+		//if(eh > 4.*mesh.GetH(locpoints[loclines.Get(i)[0]])) found = 0;
+		//if(eh > 4.*mesh.GetH(locpoints[loclines.Get(i)[1]])) found = 0;
 		// Markus end
 
 		if (eh > newedgemaxh)
@@ -952,12 +967,12 @@ namespace netgen
 
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      {
-		Point3d pmin = locpoints.Get(locelements.Get(i).PNum(1));
+		Point3d pmin = locpoints[locelements.Get(i).PNum(1)];
 		Point3d pmax = pmin;
 		for (int j = 2; j <= locelements.Get(i).GetNP(); j++)
 		  {
 		    const Point3d & hp = 
-		      locpoints.Get(locelements.Get(i).PNum(j));
+		      locpoints[locelements.Get(i).PNum(j)];
 		    pmin.SetToMin (hp);
 		    pmax.SetToMax (hp);
 		  }
@@ -968,7 +983,7 @@ namespace netgen
 
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      for (int j = 1; j <= locelements.Get(i).GetNP(); j++)
-		if (Dist2 (locpoints.Get(locelements.Get(i).PNum(j)), pmid) > hinner*hinner)
+		if (Dist2 (locpoints[locelements.Get(i).PNum(j)], pmid) > hinner*hinner)
 		  found = 0;
 
 	    //	  cout << "violate = " << newedgemaxh / minh << endl;
@@ -1005,8 +1020,8 @@ namespace netgen
 	int gisize;
 	void *geominfo;
 
-	if (ComputeLineGeoInfo (locpoints.Get(loclines.Get(i).I1()),
-	locpoints.Get(loclines.Get(i).I2()),
+	if (ComputeLineGeoInfo (locpoints[loclines.Get(i)[0]],
+	locpoints[loclines.Get(i)[1]],
 	gisize, geominfo))
 	found = 0;
 	}
@@ -1024,7 +1039,7 @@ namespace netgen
 	      for (i = 1; i <= dellines.Size(); i++)
 	      for (j = 1; j <= 2; j++)
 	      {
-	      upgeominfo.Elem(loclines.Get(dellines.Get(i)).I(j)) =
+	      upgeominfo[loclines.Get(dellines.Get(i)).I(j)] =
 	      adfront.GetLineGeomInfo (lindex.Get(dellines.Get(i)), j);
 	      }
 	    */
@@ -1037,11 +1052,11 @@ namespace netgen
 		  if (pi <= oldnp)
 		    {
 		    
-		      if (ChooseChartPointGeomInfo (mpgeominfo.Get(pi), upgeominfo.Elem(pi)))
+		      if (ChooseChartPointGeomInfo (mpgeominfo[pi], upgeominfo[pi]))
 			{
 			  // cannot select, compute new one
 			  PrintWarning ("calc point geominfo instead of using");
-			  if (ComputePointGeomInfo (locpoints.Get(pi), upgeominfo.Elem(pi)))
+			  if (ComputePointGeomInfo (locpoints[pi], upgeominfo[pi]))
 			    {
 			      found = 0;
 			      PrintSysError ("meshing2d, geominfo failed");
@@ -1054,7 +1069,7 @@ namespace netgen
 	    // use upgeominfo from ProjectFromPlane
 	    for (i = oldnp+1; i <= locpoints.Size(); i++)
 	    {
-	    if (ComputePointGeomInfo (locpoints.Get(i), upgeominfo.Elem(i)))
+	    if (ComputePointGeomInfo (locpoints[i], upgeominfo[i]))
 	    {
 	    found = 0;
 	    if ( debugflag || debugparam.haltnosuccess )
@@ -1076,7 +1091,7 @@ namespace netgen
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      for (int j = 1; j <= locelements.Get(i).GetNP(); j++)
 		{
-		  const Point3d & p = locpoints.Get(locelements.Get(i).PNum(j));
+		  const Point3d & p = locpoints[locelements.Get(i).PNum(j)];
 		  hullmin.SetToMin (p);
 		  hullmax.SetToMax (p);
 		}
@@ -1087,16 +1102,16 @@ namespace netgen
 
 	    critpoints.SetSize (0);
 	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
-	      critpoints.Append (locpoints.Get(i));
+	      critpoints.Append (locpoints[i]);
 
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      {
-		const Element2d & tri = locelements.Get(i);
+		const MiniElement2d & tri = locelements.Get(i);
 		if (tri.GetNP() == 3)
 		  {
-		    const Point3d & tp1 = locpoints.Get(tri.PNum(1));
-		    const Point3d & tp2 = locpoints.Get(tri.PNum(2));
-		    const Point3d & tp3 = locpoints.Get(tri.PNum(3));
+		    const Point3d & tp1 = locpoints[tri.PNum(1)];
+		    const Point3d & tp2 = locpoints[tri.PNum(2)];
+		    const Point3d & tp3 = locpoints[tri.PNum(3)];
 		  
 		    Vec3d tv1 (tp1, tp2);
 		    Vec3d tv2 (tp1, tp3);
@@ -1111,10 +1126,10 @@ namespace netgen
 		  }
 		else if (tri.GetNP() == 4)
 		  {
-		    const Point3d & tp1 = locpoints.Get(tri.PNum(1));
-		    const Point3d & tp2 = locpoints.Get(tri.PNum(2));
-		    const Point3d & tp3 = locpoints.Get(tri.PNum(3));
-		    const Point3d & tp4 = locpoints.Get(tri.PNum(4));
+		    const Point3d & tp1 = locpoints[tri.PNum(1)];
+		    const Point3d & tp2 = locpoints[tri.PNum(2)];
+		    const Point3d & tp3 = locpoints[tri.PNum(3)];
+		    const Point3d & tp4 = locpoints[tri.PNum(4)];
 		  
 		    double l1, l2;
 		    for (l1 = 0.1; l1 <= 0.9; l1 += 0.1)
@@ -1145,8 +1160,8 @@ namespace netgen
 	    /*
 	      for (i = oldnl+1; i <= loclines.Size(); i++)
 	      {
-	      Point3d hp = locpoints.Get(loclines.Get(i).I1());
-	      Vec3d hv(hp, locpoints.Get(loclines.Get(i).I2()));
+	      Point3d hp = locpoints[loclines.Get(i)[0]];
+	      Vec3d hv(hp, locpoints[loclines.Get(i)[1]]);
 	      int ncp = 2;
 	      for (j = 1; j <= ncp; j++)
 	      critpoints.Append ( hp + (double(j)/(ncp+1)) * hv);
@@ -1157,7 +1172,7 @@ namespace netgen
 	    /*
 	      for (i = oldnp+1; i <= locpoints.Size(); i++)
 	      {
-	      const Point3d & p = locpoints.Get(i);
+	      const Point3d & p = locpoints[i];
 	    */
 
 
@@ -1253,12 +1268,12 @@ namespace netgen
 
 	    for (int i = oldnl+1; i <= loclines.Size(); i++)
 	      {
-		int nlgpi1 = loclines.Get(i).I1();
-		int nlgpi2 = loclines.Get(i).I2();
+		int nlgpi1 = loclines.Get(i)[0];
+		int nlgpi2 = loclines.Get(i)[1];
 		if (nlgpi1 <= pindex.Size() && nlgpi2 <= pindex.Size())
 		  {
-		    nlgpi1 = adfront.GetGlobalIndex (pindex.Get(nlgpi1));
-		    nlgpi2 = adfront.GetGlobalIndex (pindex.Get(nlgpi2));
+		    nlgpi1 = adfront.GetGlobalIndex (pindex[nlgpi1]);
+		    nlgpi2 = adfront.GetGlobalIndex (pindex[nlgpi2]);
 
 		    int exval = adfront.ExistsLine (nlgpi1, nlgpi2);
 		    if (exval)
@@ -1289,8 +1304,8 @@ namespace netgen
 	  int tpi2 = locelements.Get(i).PNumMod (j+1);
 	  if (tpi1 <= pindex.Size() && tpi2 <= pindex.Size())
 	  {
-	  tpi1 = adfront.GetGlobalIndex (pindex.Get(tpi1));
-	  tpi2 = adfront.GetGlobalIndex (pindex.Get(tpi2));
+	  tpi1 = adfront.GetGlobalIndex (pindex[tpi1]);
+	  tpi2 = adfront.GetGlobalIndex (pindex[tpi2]);
 
 	  if (doubleedge.Used (INDEX_2(tpi1, tpi2)))
 	  {
@@ -1318,8 +1333,8 @@ namespace netgen
 	      
 	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
 	      {
-		PointIndex globind = mesh.AddPoint (locpoints.Get(i), layer);
-		pindex.Elem(i) = adfront.AddPoint (locpoints.Get(i), globind);
+		PointIndex globind = mesh.AddPoint (locpoints[i], layer);
+		pindex[i] = adfront.AddPoint (locpoints[i], globind);
 	      }
 	      
 	    for (int i = oldnl+1; i <= loclines.Size(); i++)
@@ -1327,55 +1342,45 @@ namespace netgen
 		/*
 		  for (j = 1; j <= locpoints.Size(); j++)
 		  {
-		  (*testout) << j << ": " << locpoints.Get(j) << endl;
+		  (*testout) << j << ": " << locpoints[j] << endl;
 		  }
 		*/
 	      
 		/*
-		  ComputeLineGeoInfo (locpoints.Get(loclines.Get(i).I1()),
-		  locpoints.Get(loclines.Get(i).I2()),
+		  ComputeLineGeoInfo (locpoints[loclines.Get(i)[0]],
+		  locpoints[loclines.Get(i)[1]],
 		  gisize, geominfo);
 		*/		  
 
-		if (pindex.Get(loclines.Get(i).I1()) == -1 || 
-		    pindex.Get(loclines.Get(i).I2()) == -1)
+		if (pindex[loclines.Get(i)[0]] == -1 || 
+		    pindex[loclines.Get(i)[1]] == -1)
 		  {
 		    (*testout) << "pindex is 0" << endl;
 		  }
 
-		if (!upgeominfo.Get(loclines.Get(i).I1()).trignum || 
-		    !upgeominfo.Get(loclines.Get(i).I2()).trignum)
+		if (!upgeominfo[loclines.Get(i)[0]].trignum || 
+		    !upgeominfo[loclines.Get(i)[1]].trignum)
 		  {
 		    cout << "new el: illegal geominfo" << endl;
 		  }
 
-		adfront.AddLine (pindex.Get(loclines.Get(i).I1()),
-				    pindex.Get(loclines.Get(i).I2()),
-				    upgeominfo.Get(loclines.Get(i).I1()),
-				    upgeominfo.Get(loclines.Get(i).I2()));
+		adfront.AddLine (pindex[loclines.Get(i)[0]],
+				    pindex[loclines.Get(i)[1]],
+				    upgeominfo[loclines.Get(i)[0]],
+				    upgeominfo[loclines.Get(i)[1]]);
 	      }
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      {
-		Element2d mtri(locelements.Get(i).GetNP());
-		mtri = locelements.Get(i);
+		const MiniElement2d & locel = locelements.Get(i);
+		Element2d mtri(locel.GetNP());
 		mtri.SetIndex (facenr);
 
-
 		// compute triangle geominfo:
-		//	      (*testout) << "triggeominfo: ";
-		for (int j = 1; j <= locelements.Get(i).GetNP(); j++)
-		  {
-		    mtri.GeomInfoPi(j) = upgeominfo.Get(locelements.Get(i).PNum(j));
-		    //		  (*testout) << mtri.GeomInfoPi(j).trignum << " ";
-		  }
-		//	      (*testout) << endl;
+		for (int j = 1; j <= locel.GetNP(); j++)
+		  mtri.GeomInfoPi(j) = upgeominfo[locel.PNum(j)];
 
-		for (int j = 1; j <= locelements.Get(i).GetNP(); j++)
-		  {
-		    mtri.PNum(j) = 
-		      locelements.Elem(i).PNum(j) =
-		      adfront.GetGlobalIndex (pindex.Get(locelements.Get(i).PNum(j)));
-		  }
+		for (int j = 1; j <= locel.GetNP(); j++)
+		  mtri.PNum(j) = adfront.GetGlobalIndex (pindex[locel.PNum(j)]);
 	      
 		
 	      
@@ -1418,9 +1423,9 @@ namespace netgen
 	      
 
 
-		for (int j = 1; j <= locelements.Get(i).GetNP(); j++)
+		for (int j = 1; j <= mtri.GetNP(); j++)
 		  {
-		    int gpi = locelements.Get(i).PNum(j);
+		    PointIndex gpi = mtri.PNum(j);
 
 		    int oldts = trigsonnode.Size();
 		    if (gpi >= oldts+PointIndex::BASE)
@@ -1488,8 +1493,8 @@ namespace netgen
 		  stlgeometry->ClearMarkedSegs();
 		  for (i = 1; i <= loclines.Size(); i++)
 		  {
-		  stlgeometry->AddMarkedSeg(locpoints.Get(loclines.Get(i).I1()),
-		  locpoints.Get(loclines.Get(i).I2()));
+		  stlgeometry->AddMarkedSeg(locpoints[loclines.Get(i)[0]],
+		  locpoints[loclines.Get(i)[1]]);
 		  }
 		*/
 
@@ -1498,7 +1503,7 @@ namespace netgen
 
 		(*testout) << "locpoints " << endl;
 		for (int i = 1; i <= pindex.Size(); i++)
-		  (*testout) << adfront.GetGlobalIndex (pindex.Get(i)) << endl;
+		  (*testout) << adfront.GetGlobalIndex (pindex[i]) << endl;
 
 		(*testout) << "old number of lines = " << oldnl << endl;
 
@@ -1510,17 +1515,17 @@ namespace netgen
 		    for (int j = 1; j <= 2; j++)
 		      {
 			int hi = 0;
-			if (loclines.Get(i).I(j) >= 1 &&
-			    loclines.Get(i).I(j) <= pindex.Size())
-			  hi = adfront.GetGlobalIndex (pindex.Get(loclines.Get(i).I(j)));
+			if (loclines.Get(i)[j-1] >= 1 &&
+			    loclines.Get(i)[j-1] <= pindex.Size())
+			  hi = adfront.GetGlobalIndex (pindex[loclines.Get(i)[j-1]]);
 
 			(*testout) << hi << " ";
 		      }
 		    (*testout) << " : " 
-			       << plainpoints.Get(loclines.Get(i).I1()) << " - "
-			       << plainpoints.Get(loclines.Get(i).I2()) << " 3d: "
-			       << locpoints.Get(loclines.Get(i).I1()) << " - "
-			       << locpoints.Get(loclines.Get(i).I2()) 
+			       << plainpoints[loclines.Get(i)[0]] << " - "
+			       << plainpoints[loclines.Get(i)[1]] << " 3d: "
+			       << locpoints[loclines.Get(i)[0]] << " - "
+			       << locpoints[loclines.Get(i)[1]] 
 			       << endl;
 		  }
 
@@ -1551,8 +1556,8 @@ namespace netgen
 		  stlgeometry->ClearMarkedSegs();
 		  for (i = 1; i <= loclines.Size(); i++)
 		  {
-		  stlgeometry->AddMarkedSeg(locpoints.Get(loclines.Get(i).I1()),
-		  locpoints.Get(loclines.Get(i).I2()));
+		  stlgeometry->AddMarkedSeg(locpoints[loclines.Get(i)[0]],
+		  locpoints[loclines.Get(i)[1]]);
 		  }
 		*/
 
@@ -1562,17 +1567,17 @@ namespace netgen
 		    for (int j = 1; j <= 2; j++)
 		      {
 			int hi = 0;
-			if (loclines.Get(i).I(j) >= 1 &&
-			    loclines.Get(i).I(j) <= pindex.Size())
-			  hi = adfront.GetGlobalIndex (pindex.Get(loclines.Get(i).I(j)));
+			if (loclines.Get(i)[j-1] >= 1 &&
+			    loclines.Get(i)[j-1] <= pindex.Size())
+			  hi = adfront.GetGlobalIndex (pindex[loclines.Get(i)[j-1]]);
 
 			(*testout) << hi << " ";
 		      }
 		    (*testout) << " : " 
-			       << plainpoints.Get(loclines.Get(i).I1()) << " - "
-			       << plainpoints.Get(loclines.Get(i).I2()) << " 3d: "
-			       << locpoints.Get(loclines.Get(i).I1()) << " - "
-			       << locpoints.Get(loclines.Get(i).I2()) 
+			       << plainpoints[loclines.Get(i)[0]] << " - "
+			       << plainpoints[loclines.Get(i)[1]] << " 3d: "
+			       << locpoints[loclines.Get(i)[0]] << " - "
+			       << locpoints[loclines.Get(i)[1]] 
 			       << endl;
 		  }
 

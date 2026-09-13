@@ -5,8 +5,23 @@ namespace netgen
 {
 
 
-  static double CalcElementBadness (const NgArray<Point<2>> & points,
-				    const Element2d & elem)
+  /// quad badness of a local element, via the mesh Element2d implementation
+  static double CalcJacobianBadness (const MiniElement2d & elem,
+                                     const Array<Point<2>, LocalPointIndex> & points)
+  {
+    NgArray<Point<2>> hpoints(points.Size());
+    for (LocalPointIndex pi : points.Range())
+      hpoints.Elem(pi-IndexBASE<LocalPointIndex>()+1) = points[pi];
+
+    Element2d hel(elem.GetNP());
+    for (int j = 1; j <= elem.GetNP(); j++)
+      hel.PNum(j) = PointIndex(int(elem.PNum(j)));   // local nr as raw number
+
+    return hel.CalcJacobianBadness (hpoints);
+  }
+
+  static double CalcElementBadness (const Array<Point<2>, LocalPointIndex> & points,
+				    const MiniElement2d & elem)
   {
     // badness = sqrt(3) /36 * circumference^2 / area - 1 +
     //           h / li + li / h - 2
@@ -15,9 +30,9 @@ namespace netgen
     double l12, l13, l23, cir, area;
     static const double c = sqrt(3.0) / 36;
 
-    v12 = points.Get(elem.PNum(2)) - points.Get(elem.PNum(1));
-    v13 = points.Get(elem.PNum(3)) - points.Get(elem.PNum(1));
-    v23 = points.Get(elem.PNum(3)) - points.Get(elem.PNum(2));
+    v12 = points[elem.PNum(2)] - points[elem.PNum(1)];
+    v13 = points[elem.PNum(3)] - points[elem.PNum(1)];
+    v23 = points[elem.PNum(3)] - points[elem.PNum(2)];
 
     l12 = v12.Length();
     l13 = v13.Length();
@@ -45,12 +60,12 @@ namespace netgen
 
 
 
-  int Meshing2 ::ApplyRules (NgArray<Point<2>> & lpoints, 
-			     NgArray<int> & legalpoints,
+  int Meshing2 ::ApplyRules (Array<Point<2>, LocalPointIndex> & lpoints, 
+			     Array<int, LocalPointIndex> & legalpoints,
 			     int maxlegalpoint,
-			     NgArray<INDEX_2> & llines1,
+			     NgArray<IVec<2,LocalPointIndex>> & llines1,
 			     int maxlegalline,
-			     NgArray<Element2d> & elements,
+			     NgArray<MiniElement2d> & elements,
 			     NgArray<INDEX> & dellines, int tolerance,
 			     const MeshingParameters & mp)
   {
@@ -64,15 +79,19 @@ namespace netgen
     int noldll = llines1.Size();
 
 
-    NgArrayMem<int,100> pused(maxlegalpoint), lused(maxlegalline);
-    NgArrayMem<int,100> pnearness(noldlp), lnearness(llines1.Size());
+    Array<int,LocalPointIndex> pused(maxlegalpoint);
+    NgArrayMem<int,100> lused(maxlegalline);
+    Array<int,LocalPointIndex> pnearness(noldlp);
+    NgArrayMem<int,100> lnearness(llines1.Size());
 
-    NgArrayMem<int, 20> pmap, pfixed, lmap;
+    NgArrayMem<LocalPointIndex, 20> pmap;     // rule point -> local point
+    NgArrayMem<bool, 20> pfixed;
+    NgArrayMem<int, 20> lmap;
   
-    NgArrayMem<Point<2>,100> tempnewpoints;
-    NgArrayMem<INDEX_2,100> tempnewlines;
+    ArrayMem<Point<2>,100> tempnewpoints;
+    NgArrayMem<IVec<2,LocalPointIndex>,100> tempnewlines;
     NgArrayMem<int,100> tempdellines;
-    NgArrayMem<Element2d,100> tempelements;
+    NgArrayMem<MiniElement2d,100> tempelements;
 
     // a least 2 * maximal number of old points in rules,
     // what is actually 4 now
@@ -91,7 +110,7 @@ namespace netgen
 	(*testout) << endl << endl << "Check new environment" << endl;
 	(*testout) << "tolerance = " << tolerance << endl;
 	for (int i = 1; i <= lpoints.Size(); i++)
-	  (*testout) << "P" << i << " = " << lpoints.Get(i) << endl;
+	  (*testout) << "P" << i << " = " << lpoints[i] << endl;
 	(*testout) << endl;
 	for (int i = 1; i <= llines1.Size(); i++)
 	  (*testout) << "(" << llines1.Get(i).I1() << "-" << llines1.Get(i).I2() << ")" << endl;
@@ -105,7 +124,7 @@ namespace netgen
     pnearness = 1000;
   
     for (int j = 0; j < 2; j++)
-      pnearness.Set(llines1[0][j], 0);
+      pnearness[llines1[0][j]] = 0;
 
 
 
@@ -116,15 +135,15 @@ namespace netgen
 	bool ok = true;
 	for (int i = 0; i < maxlegalline; i++)
 	  {
-	    const INDEX_2 & hline = llines1[i];
+	    const IVec<2,LocalPointIndex> & hline = llines1[i];
 
-	    int minn = min2 (pnearness.Get(hline[0]),  pnearness.Get(hline[1]));
+	    int minn = min2 (pnearness[hline[0]],  pnearness[hline[1]]);
 
 	    for (int j = 0; j < 2; j++)
-	      if (pnearness.Get(hline[j]) > minn+1)
+	      if (pnearness[hline[j]] > minn+1)
 		{
 		  ok = false;
-		  pnearness.Set(hline[j], minn+1);
+		  pnearness[hline[j]] = minn+1;
 		}
 	  }
 	if (!ok) break;
@@ -132,11 +151,11 @@ namespace netgen
 
 
     for (int i = 0; i < maxlegalline; i++)
-      lnearness[i] = pnearness.Get(llines1[i][0]) + pnearness.Get(llines1[i][1]);
+      lnearness[i] = pnearness[llines1[i][0]] + pnearness[llines1[i][1]];
 
 
     // resort lines after lnearness
-    NgArray<INDEX_2> llines(llines1.Size());
+    NgArray<IVec<2,LocalPointIndex>> llines(llines1.Size());
     NgArray<int> sortlines(llines1.Size());
     int lnearness_class[MAX_NEARNESS];
 
@@ -176,7 +195,7 @@ namespace netgen
       }
 
     for (int i = 0; i < maxlegalline; i++)
-      lnearness[i] = pnearness.Get(llines[i][0]) + pnearness.Get(llines[i][1]);
+      lnearness[i] = pnearness[llines[i][0]] + pnearness[llines[i][1]];
 
 
 
@@ -230,7 +249,7 @@ namespace netgen
 	for (int j = 0; j < 2; j++)
 	  {
 	    pmap.Elem(rule->GetLine(1)[j]) = llines[0][j];
-	    pused.Elem(llines[0][j])++;
+	    pused[llines[0][j]]++;
 	  }
 
 
@@ -262,8 +281,8 @@ namespace netgen
 
 		    ok = 1;
 
-		    INDEX_2 loclin = llines.Get(locli);
-		    auto linevec = lpoints.Get(loclin.I2()) - lpoints.Get(loclin.I1());
+		    IVec<2,LocalPointIndex> loclin = llines.Get(locli);
+		    auto linevec = lpoints[loclin[1]] - lpoints[loclin[0]];
 
 		    if (rule->CalcLineError (nlok, linevec) > maxerr)
 		      {
@@ -293,20 +312,20 @@ namespace netgen
 			  }
 			else
 			  {
-			    if (rule->CalcPointDist (refpi, lpoints.Get(loclin[j])) > maxerr
-				|| !legalpoints.Get(loclin[j])
-				|| pused.Get(loclin[j]))
+			    if (rule->CalcPointDist (refpi, lpoints[loclin[j]]) > maxerr
+				|| !legalpoints[loclin[j]]
+				|| pused[loclin[j]])
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
 				if(loctestmode)
 				  {
 				    (*testout) << "nok pos3" << endl;
-				    //if(rule->CalcPointDist (refpi, lpoints.Get(loclin[j])) > maxerr)
+				    //if(rule->CalcPointDist (refpi, lpoints[loclin[j]]) > maxerr)
 				    //(*testout) << "r1" << endl;
-				    //if(!legalpoints.Get(loclin[j]))
+				    //if(!legalpoints[loclin[j]])
 				    //(*testout) << "r2 legalpoints " << legalpoints << " loclin " << loclin << " j " << j << endl;
-				    //if(pused.Get(loclin[j]))
+				    //if(pused[loclin[j]])
 				    //(*testout) << "r3" << endl;
 				  }
 #endif
@@ -319,13 +338,13 @@ namespace netgen
 		if (ok)
 		  {
 		    int locli = lmap.Get(nlok);
-		    INDEX_2 loclin = llines.Get(locli);
+		    IVec<2,LocalPointIndex> loclin = llines.Get(locli);
 
 		    lused.Elem (locli) = 1;
 		    for (int j = 0; j < 2; j++)
 		      {
 			pmap.Set(rule->GetLine (nlok)[j], loclin[j]);
-			pused.Elem(loclin[j])++;
+			pused[loclin[j]]++;
 		      }
 
 		    nlok++;
@@ -338,8 +357,8 @@ namespace netgen
 		    lused.Elem (lmap.Get(nlok)) = 0;
 		    for (int j = 0; j < 2; j++)
 		      {
-			pused.Elem(llines.Get(lmap.Get(nlok))[j]) --;
-			if (! pused.Get (llines.Get (lmap.Get (nlok))[j]))
+			pused[llines.Get(lmap.Get(nlok))[j]] --;
+			if (! pused[llines.Get (lmap.Get (nlok))[j]])
 			  pmap.Set (rule->GetLine (nlok)[j], 0);
 		      }
 		  }
@@ -382,7 +401,7 @@ namespace netgen
 			    ok = 0;
 
 			    if (pmap.Get(npok))
-			      pused.Elem(pmap.Get(npok))--;
+			      pused[pmap.Get(npok)]--;
 
 			    while (!ok && pmap.Get(npok) < maxlegalpoint)
 			      {
@@ -390,14 +409,14 @@ namespace netgen
 
 				pmap.Elem(npok)++;
 
-				if (pused.Get(pmap.Get(npok)))
+				if (pused[pmap.Get(npok)])
 				  {
 				    ok = 0;
 				  }
 				else
 				  {
-				    if (rule->CalcPointDist (npok, lpoints.Get(pmap.Get(npok))) > maxerr 
-					|| !legalpoints.Get(pmap.Get(npok))) 
+				    if (rule->CalcPointDist (npok, lpoints[pmap.Get(npok)]) > maxerr 
+					|| !legalpoints[pmap.Get(npok)]) 
                                     
 				      ok = 0;
 				  }
@@ -405,7 +424,7 @@ namespace netgen
 
 			    if (ok)
 			      {
-				pused.Elem(pmap.Get(npok))++;
+				pused[pmap.Get(npok)]++;
 				npok++;
 				incnpok = 1;
 			      }
@@ -442,9 +461,9 @@ namespace netgen
 
 			for (int i = 1; i <= rule->GetNOrientations(); i++)
 			  {
-			    if (CW (lpoints.Get(pmap.Get(rule->GetOrientation(i).i1)),
-				    lpoints.Get(pmap.Get(rule->GetOrientation(i).i2)),
-				    lpoints.Get(pmap.Get(rule->GetOrientation(i).i3))) )
+			    if (CW (lpoints[pmap.Get(rule->GetOrientation(i).i1)],
+				    lpoints[pmap.Get(rule->GetOrientation(i).i2)],
+				    lpoints[pmap.Get(rule->GetOrientation(i).i3)]) )
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -463,7 +482,7 @@ namespace netgen
 		      
 			for (int i = 1; i <= rule->GetNOldP(); i++)
 			  {
-			    Vec2d ui(rule->GetPoint(i), lpoints.Get(pmap.Get(i)));
+			    Vec2d ui(rule->GetPoint(i), lpoints[pmap.Get(i)]);
 			    oldu (2*i-2) = ui.X();
 			    oldu (2*i-1) = ui.Y();
 			  }
@@ -497,8 +516,8 @@ namespace netgen
 			if (!ok) continue;
 			for (int i = 1; i <= maxlegalpoint && ok; i++)
 			  {
-			    if ( !pused.Get(i) &&
-				 rule->IsInFreeZone (lpoints.Get(i)) )
+			    if ( !pused[i] &&
+				 rule->IsInFreeZone (lpoints[i]) )
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -512,7 +531,7 @@ namespace netgen
 			if (!ok) continue;
 			for (int i = maxlegalpoint+1; i <= lpoints.Size(); i++)
 			  {
-			    if ( rule->IsInFreeZone (lpoints.Get(i)) )
+			    if ( rule->IsInFreeZone (lpoints[i]) )
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -528,14 +547,14 @@ namespace netgen
 			for (int i = 1; i <= maxlegalline; i++)
 			  {
 			    if (!lused.Get(i) && 
-				rule->IsLineInFreeZone (lpoints.Get(llines.Get(i).I1()),
-							lpoints.Get(llines.Get(i).I2())))
+				rule->IsLineInFreeZone (lpoints[llines.Get(i)[0]],
+							lpoints[llines.Get(i)[1]]))
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
 				if (loctestmode)
-				  (*testout) << "line " << llines.Get(i).I1() << "-"
-					     << llines.Get(i).I2() << " in freezone" << endl;
+				  (*testout) << "line " << llines.Get(i)[0] << "-"
+					     << llines.Get(i)[1] << " in freezone" << endl;
 #endif
 				break;
 			      }
@@ -545,14 +564,14 @@ namespace netgen
 
 			for (int i = maxlegalline+1; i <= llines.Size(); i++)
 			  {
-			    if (rule->IsLineInFreeZone (lpoints.Get(llines.Get(i).I1()),
-							lpoints.Get(llines.Get(i).I2())))
+			    if (rule->IsLineInFreeZone (lpoints[llines.Get(i)[0]],
+							lpoints[llines.Get(i)[1]]))
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
 				if (loctestmode)
-				  (*testout) << "line " << llines.Get(i).I1() << "-"
-					     << llines.Get(i).I2() << " in freezone" << endl;
+				  (*testout) << "line " << llines.Get(i)[0] << "-"
+					     << llines.Get(i)[1] << " in freezone" << endl;
 #endif
 				break;
 			      }
@@ -564,9 +583,9 @@ namespace netgen
 
 			for (i = 1; i <= rule->GetNOrientations() && ok; i++)
 			{
-			if (CW (lpoints.Get(pmap.Get(rule->GetOrientation(i).i1)),
-			lpoints.Get(pmap.Get(rule->GetOrientation(i).i2)),
-			lpoints.Get(pmap.Get(rule->GetOrientation(i).i3))) )
+			if (CW (lpoints[pmap.Get(rule->GetOrientation(i).i1)],
+			lpoints[pmap.Get(rule->GetOrientation(i).i2)],
+			lpoints[pmap.Get(rule->GetOrientation(i).i3)]) )
 			{
 			ok = 0;
 			if (loctestmode)
@@ -605,8 +624,8 @@ namespace netgen
 
 			for (int i = rule->GetNOldL() + 1; i <= rule->GetNL(); i++)
 			  {
-			    llines.Append (INDEX_2 (pmap.Get(rule->GetLine (i)[0]),
-						    pmap.Get(rule->GetLine (i)[1])));
+			    llines.Append (IVec<2,LocalPointIndex> (pmap.Get(rule->GetLine (i)[0]),
+                                                                   pmap.Get(rule->GetLine (i)[1])));
 			  }
 
 
@@ -623,9 +642,11 @@ namespace netgen
 
 			for (int i = 1; i <= rule->GetNE(); i++)
 			  {
-			    elements.Append (rule->GetElement(i));
-			    for (int j = 1; j <= elements.Get(i).GetNP(); j++)
-			      elements.Elem(i).PNum(j) = pmap.Get(elements.Get(i).PNum(j));
+			    const Element2d & rel = rule->GetElement(i);
+			    MiniElement2d el(rel.GetNP());
+			    for (int j = 1; j <= rel.GetNP(); j++)
+			      el.PNum(j) = pmap.Get(int(rel.PNum(j)));   // rule nr -> local nr
+			    elements.Append (el);
 			  }
 
 
@@ -636,7 +657,7 @@ namespace netgen
 			    if (!mp.quad)
 			      hf = CalcElementBadness (lpoints, elements.Get(i));
 			    else
-			      hf = elements.Get(i).CalcJacobianBadness (lpoints) * 5;
+			      hf = CalcJacobianBadness (elements.Get(i), lpoints) * 5;
 #ifdef LOCDEBUG
 			    if (loctestmode)
 			      (*testout) << "r " << rule->Name() << "bad = " << hf << endl;
@@ -660,10 +681,10 @@ namespace netgen
 				(*testout) << "class = " << tolerance << endl;
 				(*testout) << "lpoints: " << endl;
 				for (int i = 1; i <= lpoints.Size(); i++)
-				  (*testout) << lpoints.Get(i) << endl;
+				  (*testout) << lpoints[i] << endl;
 				(*testout) << "llines: " << endl;
 				for (int i = 1; i <= llines.Size(); i++)
-				  (*testout) << llines.Get(i).I1() << " " << llines.Get(i).I2() << endl;
+				  (*testout) << llines.Get(i)[0] << " " << llines.Get(i)[1] << endl;
 
 				(*testout) << "Freezone: ";
 				for (int i = 1; i <= rule -> GetTransFreeZone().Size(); i++)
@@ -695,10 +716,11 @@ namespace netgen
 		for (int j = 1; j <= 2; j++)
 		  {
 		    int refpi = rule->GetPointNr (nlok, j);
-		    pused.Elem(pmap.Get(refpi))--;
+		    if (!pmap.Get(refpi).IsValid()) continue;   // point not mapped
+		    pused[pmap.Get(refpi)]--;
 
-		    if (pused.Get(pmap.Get(refpi)) == 0)
-		      pmap.Set(refpi, 0);
+		    if (pused[pmap.Get(refpi)] == 0)
+		      pmap.Set(refpi, LocalPointIndex::INVALID);
 		  }
 	      }
 	  }

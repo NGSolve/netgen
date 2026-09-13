@@ -18,9 +18,9 @@ namespace netgen
                                     const char *cmdName, Tcl_CmdProc *proc) = nullptr;
     void (*Ptr_Render)(bool) = nullptr;
     void (*Ptr_UpdateVisSurfaceMeshData)(int,
-            shared_ptr<NgArray<Point<3>>>,
-            shared_ptr<NgArray<INDEX_2>>,
-            shared_ptr<NgArray<Point<2>>>
+            shared_ptr<Array<Point<3>, LocalPointIndex>>,
+            shared_ptr<NgArray<IVec<2,LocalPointIndex>>>,
+            shared_ptr<Array<Point<2>, LocalPointIndex>>
             ) = nullptr;
 } // namespace netgen
 

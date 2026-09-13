@@ -37,6 +37,8 @@ class Meshing2
 {
   /// the current advancing front
   AdFront2 adfront;
+  /// mesh point number -> front point number
+  Array<Front2PointIndex, PointIndex> glob2front;
   /// rules for mesh generation
   Array<unique_ptr<netrule>> rules;
   /// statistics
@@ -73,12 +75,16 @@ public:
 
 
   ///
-  DLL_HEADER int AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
+  DLL_HEADER Front2PointIndex AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
 		 bool pointonsurface = true);
-  DLL_HEADER PointIndex GetGlobalIndex(int pi) const;
+  DLL_HEADER PointIndex GetGlobalIndex(Front2PointIndex pi) const;
 
   ///
-  DLL_HEADER void AddBoundaryElement (INDEX i1, INDEX i2,
+  /// pi1, pi2 are mesh point numbers
+  DLL_HEADER void AddBoundaryElement (PointIndex pi1, PointIndex pi2,
+			   const PointGeomInfo & gi1, const PointGeomInfo & gi2);
+  /// fpi1, fpi2 are front point numbers (as returned by AddPoint)
+  DLL_HEADER void AddBoundaryElement (Front2PointIndex fpi1, Front2PointIndex fpi2,
 			   const PointGeomInfo & gi1, const PointGeomInfo & gi2);
   
   ///
@@ -147,12 +153,12 @@ protected:
 
 /** Applies 2D rules.
  Tests all 2D rules */
-  int ApplyRules (NgArray<Point<2>> & lpoints, 
-		  NgArray<int> & legalpoints,
+  int ApplyRules (Array<Point<2>, LocalPointIndex> & lpoints, 
+		  Array<int, LocalPointIndex> & legalpoints,
 		  int maxlegalpoint,
-		  NgArray<INDEX_2> & llines,
+		  NgArray<IVec<2,LocalPointIndex>> & llines,
 		  int maxlegelline,
-		  NgArray<Element2d> & elements, NgArray<INDEX> & dellines,
+		  NgArray<MiniElement2d> & elements, NgArray<INDEX> & dellines,
 		  int tolerance,
 		  const MeshingParameters & mp);
   
