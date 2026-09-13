@@ -24,7 +24,8 @@ namespace netgen
   class VOLELEMENT
   {
   public:
-    int domnr, p1, p2, p3, p4;
+    int domnr;
+    PointIndex p1, p2, p3, p4;
     int faces[4];
 
     VOLELEMENT () 
@@ -35,14 +36,15 @@ namespace netgen
   {
   public:
     SURFELEMENT () { };
-    int snr, p1, p2, p3;
+    int snr;
+    PointIndex p1, p2, p3;
   };
   
 
   class FACE
   {
   public:
-    int p1, p2, p3;
+    PointIndex p1, p2, p3;
     int edges[3];
 
     FACE () 
@@ -53,7 +55,7 @@ namespace netgen
   {
   public:
     EDGE () { };
-    int p1, p2;
+    PointIndex p1, p2;
   };
 
   static NgArray<POINT3D> points;
@@ -66,7 +68,7 @@ namespace netgen
 
   void ReadFile (char * filename)
   {
-    int i, n;
+    int n;
     ifstream infile(filename);
     char reco[100];
   
@@ -76,7 +78,7 @@ namespace netgen
     infile >> n;   // number of surface elements
     cout << n << " Surface elements" << endl;
   
-    for (i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
       {
         SURFELEMENT sel;
         infile >> sel.snr >> sel.p1 >> sel.p2 >> sel.p3;
@@ -86,7 +88,7 @@ namespace netgen
     infile >> n;   // number of volume elements
     cout << n << " Volume elements" << endl;
   
-    for (i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
       {
         VOLELEMENT el;
         infile >> el.p1 >> el.p2 >> el.p3 >> el.p4;
@@ -96,7 +98,7 @@ namespace netgen
     infile >> n;   // number of points 
     cout << n << " Points" << endl;
   
-    for (i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
       {
         POINT3D p;
         infile >> p.x >> p.y >> p.z;
@@ -108,12 +110,10 @@ namespace netgen
 
   void ReadFileMesh (const Mesh & mesh)
   {
-    int i, n;
-  
-    n = mesh.GetNSE();   // number of surface elements
+    int n = mesh.GetNSE();   // number of surface elements
     cout << n << " Surface elements" << endl;
   
-    for (i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
       {
         SURFELEMENT sel;
         const Element2d & el = mesh.SurfaceElement(i);
@@ -127,7 +127,7 @@ namespace netgen
     n = mesh.GetNE();   // number of volume elements
     cout << n << " Volume elements" << endl;
   
-    for (i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
       {
         VOLELEMENT el;
         const Element & nel = mesh.VolumeElement(i);
@@ -142,13 +142,13 @@ namespace netgen
     n = mesh.GetNP();   // number of points 
     cout << n << " Points" << endl;
   
-    for (i = 1; i <= n; i++)
+    for (int i = 1; i <= n; i++)
       {
         POINT3D p;
-        Point3d mp = mesh.Point(i);
-        p.x = mp.X();
-        p.y = mp.Y();
-        p.z = mp.Z();
+        const auto & mp = mesh.Point(i);
+        p.x = mp(0);
+        p.y = mp(1);
+        p.z = mp(2);
         //      infile >> p.x >> p.y >> p.z;
         points.Append (p);
       }
@@ -159,108 +159,70 @@ namespace netgen
 
   void Convert ()
   {
-    int i, j, facei, edgei;
-    INDEX_3 i3;
-    INDEX_2 i2;
-
     INDEX_3_HASHTABLE<int> faceindex(volelements.Size()/5 + 1);
     INDEX_2_HASHTABLE<int> edgeindex(volelements.Size()/5 + 1);
-  
-    for (i = 1; i <= volelements.Size(); i++)
+
+    // face j of a tet is the one opposite to its point j
+    static const int facepoints[4][3] = { {1,2,3}, {0,2,3}, {0,1,3}, {0,1,2} };
+
+    for (int i = 1; i <= volelements.Size(); i++)
       {
-        for (j = 1; j <= 4; j++)
+        const auto & vel = volelements.Get(i);
+        PointIndex vp[4] = { vel.p1, vel.p2, vel.p3, vel.p4 };
+
+        for (int j = 0; j < 4; j++)
           {
-            switch (j)
-              {
-              case 1:
-                i3.I1() = volelements.Get(i).p2;
-                i3.I2() = volelements.Get(i).p3;
-                i3.I3() = volelements.Get(i).p4;
-                break;
-              case 2:
-                i3.I1() = volelements.Get(i).p1;
-                i3.I2() = volelements.Get(i).p3;
-                i3.I3() = volelements.Get(i).p4;
-                break;
-              case 3:
-                i3.I1() = volelements.Get(i).p1;
-                i3.I2() = volelements.Get(i).p2;
-                i3.I3() = volelements.Get(i).p4;
-                break;
-              case 4:
-                i3.I1() = volelements.Get(i).p1;
-                i3.I2() = volelements.Get(i).p2;
-                i3.I3() = volelements.Get(i).p3;
-                break;
-              default:
-                i3.I1()=i3.I2()=i3.I3()=0;
-              }
-            i3.Sort();
-            if (faceindex.Used (i3)) 
+            SortedPointIndices<3> i3 (vp[facepoints[j][0]],
+                                      vp[facepoints[j][1]],
+                                      vp[facepoints[j][2]]);
+            int facei;
+            if (faceindex.Used (i3))
               facei = faceindex.Get(i3);
             else
               {
                 FACE fa;
-                fa.p1 = i3.I1();
-                fa.p2 = i3.I2();
-                fa.p3 = i3.I3();
+                auto [fp1, fp2, fp3] = i3;
+                fa.p1 = fp1; fa.p2 = fp2; fa.p3 = fp3;
                 faces.Append (fa);
                 facei = faces.Size();
                 faceindex.Set (i3, facei);
-              } 
-        
-            volelements.Elem(i).faces[j-1] = facei;  
-          }    
-    
-      } 
- 
-
-    for (i = 1; i <= faces.Size(); i++)
-      {
-        for (j = 1; j <= 3; j++)
-          {
-            switch (j)
-              {
-              case 1:
-                i2.I1() = faces.Get(i).p2;
-                i2.I2() = faces.Get(i).p3;
-                break;
-              case 2:
-                i2.I1() = faces.Get(i).p1;
-                i2.I2() = faces.Get(i).p3;
-                break;
-              case 3:
-                i2.I1() = faces.Get(i).p1;
-                i2.I2() = faces.Get(i).p2;
-                break;
-              default:
-                i2.I1()=i2.I2()=0;
               }
-            if (i2.I1() > i2.I2()) swap (i2.I1(), i2.I2());
-            if (edgeindex.Used (i2)) 
+
+            volelements.Elem(i).faces[j] = facei;
+          }
+      }
+
+    // edge j of a face is the one opposite to its point j
+    static const int edgepoints[3][2] = { {1,2}, {0,2}, {0,1} };
+
+    for (int i = 1; i <= faces.Size(); i++)
+      {
+        PointIndex fp[3] = { faces.Get(i).p1, faces.Get(i).p2, faces.Get(i).p3 };
+
+        for (int j = 0; j < 3; j++)
+          {
+            SortedPointIndices<2> i2 (fp[edgepoints[j][0]], fp[edgepoints[j][1]]);
+            int edgei;
+            if (edgeindex.Used (i2))
               edgei = edgeindex.Get(i2);
             else
               {
                 EDGE ed;
-                ed.p1 = i2.I1();
-                ed.p2 = i2.I2();
+                auto [ep1, ep2] = i2;
+                ed.p1 = ep1; ed.p2 = ep2;
                 edges.Append (ed);
                 edgei = edges.Size();
                 edgeindex.Set (i2, edgei);
-              } 
-        
-            faces.Elem(i).edges[j-1] = edgei;  
-          }    
-    
-      }  
- 
-  }  
-  
-  
+              }
+
+            faces.Elem(i).edges[j] = edgei;
+          }
+      }
+  }
+
+
   void WriteFile (ostream & outfile)
   {
-    int i;
-  
     outfile 
       << "#VERSION: 1.0" << endl
       << "#PROGRAM: NETGEN" << endl
@@ -277,26 +239,26 @@ namespace netgen
             << faces.Size() << "  " << volelements.Size() << "  0  0  0  0" << endl;
   
     outfile << "#VERTEX:   " << points.Size() << endl;
-    for (i = 1; i <= points.Size(); i++)
+    for (int i = 1; i <= points.Size(); i++)
       outfile << "  " << i << "  " << points.Get(i).x << "  " << points.Get(i).y 
               << "  " << points.Get(i).z << endl;
     	
     outfile << "#EDGE:  " << edges.Size() << endl;
-    for (i = 1; i <= edges.Size(); i++)
+    for (int i = 1; i <= edges.Size(); i++)
       outfile << "  " << i << "  1  " 
               << edges.Get(i).p1 << "  " 
               << edges.Get(i).p2 
               << "  0" << endl;
     
     outfile << "#FACE:  " << faces.Size() << endl;  
-    for (i = 1; i <= faces.Size(); i++)
+    for (int i = 1; i <= faces.Size(); i++)
       outfile << "  " << i << "  1  3  " 
               << faces.Get(i).edges[0] << "  " 
               << faces.Get(i).edges[1] << "  " 
               << faces.Get(i).edges[2] << endl;
     	
     outfile << "#SOLID:  " << volelements.Size() << endl;
-    for (i = 1; i <= volelements.Size(); i++)
+    for (int i = 1; i <= volelements.Size(); i++)
       outfile << "  " << i << "  1  4  " 
               << volelements.Get(i).faces[0] << "  "
               << volelements.Get(i).faces[1] << "  "
