@@ -325,7 +325,7 @@ namespace netgen
     PointIndices & operator= (PointIndices&&) = default;
     constexpr PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
     constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; }
-    PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
+    constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
 
     template <typename ARCHIVE>
@@ -334,14 +334,14 @@ namespace netgen
     PointIndex & I1 () { return (*this)[0]; }
     PointIndex & I2 () { return (*this)[1]; }
     PointIndex & I3 () { return (*this)[2]; }
-    PointIndex I1 () const { return (*this)[0]; }
-    PointIndex I2 () const { return (*this)[1]; }
-    PointIndex I3 () const { return (*this)[2]; }
+    constexpr PointIndex I1 () const { return (*this)[0]; }
+    constexpr PointIndex I2 () const { return (*this)[1]; }
+    constexpr PointIndex I3 () const { return (*this)[2]; }
 
     using INDEX_3::Sort;
     static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(i1, i2, i3); }
     template <size_t J>
-    PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
+    constexpr PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
   };
   
   template <> class PointIndices<4> : public INDEX_4
@@ -350,7 +350,7 @@ namespace netgen
     PointIndices () = default;
     PointIndices (INDEX_4 i4) : INDEX_4(i4) { ; }
     PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(i1,i2,i3,i4) { ; } 
-    PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
+    constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
 
     template <typename ARCHIVE>
@@ -360,15 +360,15 @@ namespace netgen
     PointIndex & I2 () { return (*this)[1]; }
     PointIndex & I3 () { return (*this)[2]; }
     PointIndex & I4 () { return (*this)[3]; }
-    PointIndex I1 () const { return (*this)[0]; }
-    PointIndex I2 () const { return (*this)[1]; }
-    PointIndex I3 () const { return (*this)[2]; }
-    PointIndex I4 () const { return (*this)[3]; }
+    constexpr PointIndex I1 () const { return (*this)[0]; }
+    constexpr PointIndex I2 () const { return (*this)[1]; }
+    constexpr PointIndex I3 () const { return (*this)[2]; }
+    constexpr PointIndex I4 () const { return (*this)[3]; }
     
     using INDEX_4::Sort;
     // static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) { return INDEX_4::Sort(i1, i2, i3, i4); }
     template <size_t J>
-    PointIndex get() const { return PointIndex(INDEX_4::operator[](J)); }    
+    constexpr PointIndex get() const { return PointIndex(INDEX_4::operator[](J)); }    
   };
 
 

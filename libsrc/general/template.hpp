@@ -263,7 +263,7 @@ public:
   ///
   int & operator[] (int j) { return i[j]; }
   ///
-  const int & operator[] (int j) const { return i[j]; }
+  constexpr const int & operator[] (int j) const { return i[j]; }
 
   ///
   friend ostream & operator<<(ostream  & s, const INDEX_3 & i3);
@@ -320,7 +320,7 @@ public:
   ///
   int & operator[] (int j) { return i[j]; }
   ///
-  const int & operator[] (int j) const { return i[j]; }
+  constexpr const int & operator[] (int j) const { return i[j]; }
 
   ///
   friend ostream & operator<<(ostream  & s, const INDEX_4 & i4);

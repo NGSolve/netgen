@@ -3329,7 +3329,7 @@ namespace netgen
         if (boundaryedges)
           for (int j = 1; j <= sel.GetNP(); j++)
             {
-              INDEX_2 i2;
+              PointIndices<2> i2;
               i2.I1() = sel.PNumMod(j);
               i2.I2() = sel.PNumMod(j+1);
               i2.Sort();
@@ -3397,7 +3397,7 @@ namespace netgen
 
         if (surfnr == 0 || seg_fdi(seg) == surfnr)
           {
-            INDEX_3 key(seg[0], seg[1], seg_fdi(seg));
+            INDEX_3 key(int(seg[0]), int(seg[1]), seg_fdi(seg));
             int data = -i;
 
             if (faceht.Used (key))
@@ -3511,14 +3511,14 @@ namespace netgen
     for (int i = 1; i <= faceht.GetNBags(); i++)
       for (int j = 1; j <= faceht.GetBagSize(i); j++)
         {
-          PointIndices<3> i2;
+          INDEX_3 i2;
           int data;
           faceht.GetData (i, j, i2, data);
           if (data)  // surfnr
             {
               Segment seg;
-              seg[0] = i2.I1();
-              seg[1] = i2.I2();
+              seg[0] = PointIndex(i2.I1());
+              seg[1] = PointIndex(i2.I2());
               int face = i2.I3();
 
               // find geomdata:
@@ -4709,7 +4709,7 @@ namespace netgen
   {
     int nf = GetNOpenElements();
     INDEX_2_HASHTABLE<int> edges(nf+2);
-    INDEX_2 i2, i2s, edge;
+    PointIndices<2> i2, i2s, edge;
     int err = 0;
 
     for (int i = 1; i <= nf; i++)
@@ -4736,7 +4736,7 @@ namespace netgen
           edges.GetData (i, j, i2, cnt);
           if (cnt)
             {
-              PrintError ("Edge ", i2.I1() , " - ", i2.I2(), " multiple times in surface mesh");
+              PrintError ("Edge ", int(i2.I1()) , " - ", int(i2.I2()), " multiple times in surface mesh");
 
               (*testout) << "Edge " << i2 << " multiple times in surface mesh" << endl;
               i2s = i2;
@@ -4917,7 +4917,7 @@ namespace netgen
         const Element2d & sel = surfelements[sei];
         if (sel.IsDeleted()) continue;
 
-        INDEX_3 i3(sel[0], sel[1], sel[2]);
+        PointIndices<3> i3(sel[0], sel[1], sel[2]);
         i3.Sort();
         if(temp_tab.Used(i3))
           {
@@ -4936,7 +4936,7 @@ namespace netgen
         const Element2d & sel = surfelements[sei];
         if (sel.IsDeleted()) continue;
 
-        INDEX_3 i3(sel[0], sel[1], sel[2]);
+        PointIndices<3> i3(sel[0], sel[1], sel[2]);
         i3.Sort();
         if(temp_tab.Get(i3)==-1)
             illegal_trigs -> Set (i3, 1);
@@ -4948,7 +4948,7 @@ namespace netgen
   {
       if(illegal_trigs)
       {
-          INDEX_3 i3 (el[0], el[1], el[2]);
+          PointIndices<3> i3 (el[0], el[1], el[2]);
           i3.Sort();
           if(illegal_trigs->Used(i3))
               return false;
@@ -5070,7 +5070,7 @@ namespace netgen
     int bface[4];
     for (int i = 0; i < 4; i++)
       {
-        bface[i] = surfelementht->Used (INDEX_3::Sort(el[gftetfacesa[i][0]],
+        bface[i] = surfelementht->Used (PointIndices<3>::Sort(el[gftetfacesa[i][0]],
                                                       el[gftetfacesa[i][1]],
                                                       el[gftetfacesa[i][2]]));
       }
@@ -5093,7 +5093,7 @@ namespace netgen
         {
           bool sege = false, be = false;
 
-          int pos = boundaryedges -> Position0(INDEX_2::Sort(el[i], el[j]));
+          int pos = boundaryedges -> Position0(PointIndices<2>::Sort(el[i], el[j]));
           if (pos != -1)
             {
               be = true;
@@ -5262,7 +5262,7 @@ namespace netgen
     const Element2d & tri = SurfaceElement(1);
     for (int j = 1; j <= 3; j++)
       {
-        INDEX_2 i2(tri.PNumMod(j), tri.PNumMod(j+1));
+        PointIndices<2> i2(tri.PNumMod(j), tri.PNumMod(j+1));
         edges.Set (i2, 1);
       }
     used.SetBit(1);
@@ -5281,7 +5281,7 @@ namespace netgen
                   int found = 0, foundrev = 0;
                   for (int j = 1; j <= 3; j++)
                     {
-                      INDEX_2 i2(el.PNumMod(j), el.PNumMod(j+1));
+                      PointIndices<2> i2(el.PNumMod(j), el.PNumMod(j+1));
                       if (edges.Used(i2))
                         foundrev = 1;
                       swap (i2.I1(), i2.I2());
@@ -5297,7 +5297,7 @@ namespace netgen
                       changed = 1;
                       for (int j = 1; j <= 3; j++)
                         {
-                          INDEX_2 i2(el.PNumMod(j), el.PNumMod(j+1));
+                          PointIndices<2> i2(el.PNumMod(j), el.PNumMod(j+1));
                           edges.Set (i2, 1);
                         }
                       used.SetBit (i);
@@ -5317,7 +5317,7 @@ namespace netgen
               const Element2d & tri = SurfaceElement(i);
               for (int j = 1; j <= 3; j++)
                 {
-                  INDEX_2 i2(tri.PNumMod(j), tri.PNumMod(j+1));
+                  PointIndices<2> i2(tri.PNumMod(j), tri.PNumMod(j+1));
                   edges.Set (i2, 1);
                 }
               used.SetBit(i);
@@ -6423,10 +6423,10 @@ namespace netgen
 
 
             Point3d pp = 
-              pointsloc.Get(le.PNum(1)) 
-              + sol.X() * Vec3d (pointsloc.Get(le.PNum(1)), pointsloc.Get(le.PNum(2))) 
-              + sol.Y() * Vec3d (pointsloc.Get(le.PNum(1)), pointsloc.Get(le.PNum(3))) 
-              + sol.Z() * Vec3d (pointsloc.Get(le.PNum(1)), pointsloc.Get(le.PNum(4))) ;
+              pointsloc.Get(int(le.PNum(1))) 
+              + sol.X() * Vec3d (pointsloc.Get(int(le.PNum(1))), pointsloc.Get(int(le.PNum(2)))) 
+              + sol.Y() * Vec3d (pointsloc.Get(int(le.PNum(1))), pointsloc.Get(int(le.PNum(3)))) 
+              + sol.Z() * Vec3d (pointsloc.Get(int(le.PNum(1))), pointsloc.Get(int(le.PNum(4)))) ;
 
             lami[0] = pp.X();
             lami[1] = pp.Y();
@@ -6833,7 +6833,7 @@ namespace netgen
 
     std::map<std::pair<PointIndex, PointIndex>,
              Array<PointIndex>> inserted_points;
-    BitArray mapped_points(GetNV()+1);
+    TBitArray<PointIndex> mapped_points(GetNV());
     mapped_points = false;
 
     // Add new points
@@ -7286,7 +7286,7 @@ namespace netgen
     auto nr = ident->GetNr(id_name);
     ident->SetType(nr, Identifications::PERIODIC);
     // double lami[4];
-    set<int> identified_points;
+    set<PointIndex> identified_points;
     if(pointTolerance < 0.)
       {
         Point3d pmin, pmax;
@@ -7781,7 +7781,7 @@ namespace netgen
     auto ndomains = GetNDomains();
     auto nfaces = GetNFD();
 
-    BitArray keep_point(GetNP()+1);
+    TBitArray<PointIndex> keep_point(GetNP());
     BitArray keep_face(nfaces+1);
     BitArray keep_domain(ndomains+1);
     keep_point.Clear();

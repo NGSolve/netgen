@@ -45,11 +45,11 @@ namespace netgen
 
     // new version with consistent ordering across sub-domains
 
-    NgArray<INDEX_2> parents;
+    NgArray<PointIndices<2>> parents;
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & el = mesh[si];
-	INDEX_2 i2 = INDEX_2::Sort(el[0], el[1]);
+	PointIndices<2> i2 = PointIndices<2>::Sort(el[0], el[1]);
         if (!between.Used(i2))
           {
             between.Set (i2, 0);          
@@ -127,7 +127,7 @@ namespace netgen
 
               for (int j = 0; j < 6; j++)
                 {
-                  INDEX_2 i2 = INDEX_2::Sort(el.PNum(betw[j][0]),el.PNum(betw[j][1]));
+                  PointIndices<2> i2 = PointIndices<2>::Sort(el.PNum(betw[j][0]),el.PNum(betw[j][1]));
                   if (!between.Used(i2))
                     {
                       between.Set (i2, 0);          
@@ -168,7 +168,7 @@ namespace netgen
       {
 	const Segment & el = mesh.LineSegment(si);
 
-	INDEX_2 i2 = INDEX_2::Sort(el[0], el[1]);
+	PointIndices<2> i2 = PointIndices<2>::Sort(el[0], el[1]);
 	PointIndex pinew = between.Get(i2);
 	EdgePointGeomInfo ngi;
 
@@ -246,7 +246,7 @@ namespace netgen
 		  PointIndex pi1 = pnums.Elem(betw[j][0]);
 		  PointIndex pi2 = pnums.Elem(betw[j][1]);
 
-		  INDEX_2 i2 (pi1, pi2);
+		  PointIndices<2> i2 (pi1, pi2);
 		  i2.Sort();
 
 		  Point<3> pb;
@@ -331,7 +331,7 @@ namespace netgen
 		  PointIndex pi1 = pnums[betw[j][0]];
 		  PointIndex pi2 = pnums[betw[j][1]];
 
-		  INDEX_2 i2 (pi1, pi2);
+		  PointIndices<2> i2 (pi1, pi2);
 		  i2.Sort();
                   
                   if (j == 4)
@@ -428,7 +428,7 @@ namespace netgen
                {
                  PointIndex pi1 = pnums.Get(betw[j][0]);
                  PointIndex pi2 = pnums.Get(betw[j][1]);
-                 INDEX_2 i2 (pi1, pi2);
+                 PointIndices<2> i2 (pi1, pi2);
                  i2.Sort();
 
 	       /*
@@ -437,8 +437,7 @@ namespace netgen
 	       else
 	       {
 		  pnums.Elem(5+j) = mesh.AddPoint
-		  (Center (mesh[PointIndex(i2.I1())],
-			   mesh[PointIndex(i2.I2())]));
+		  (Center (mesh[i2.I1()], mesh[i2.I2()]));
 		  between.Set (i2, pnums.Elem(5+j));
 	       }
 	       */
@@ -557,7 +556,7 @@ namespace netgen
 
 	     for (int j = 0; j < 13; j++)
 	     {
-	       INDEX_2 i2;
+	       PointIndices<2> i2;
 	       i2.I1() = pnums.Get(betw[j][0]);
 	       i2.I2() = pnums.Get(betw[j][1]);
 	       i2.Sort();
@@ -567,15 +566,14 @@ namespace netgen
 	       else
 	       {
 		  pnums.Elem(9+j) = mesh.AddPoint
-		  (Center (mesh[PointIndex(i2.I1())],
-			   mesh[PointIndex(i2.I2())]));
+		  (Center (mesh[i2.I1()], mesh[i2.I2()]));
 		  between.Set (i2, pnums.Elem(9+j));
 	       }
 	    }
 
 	    for (int j = 0; j < 6; j++)
 	    {
-	       INDEX_2 i2a, i2b;
+	       PointIndices<2> i2a, i2b;
 	       i2a.I1() = pnums.Get(fbetw[2*j][0]);
 	       i2a.I2() = pnums.Get(fbetw[2*j][1]);
 	       i2a.Sort();
@@ -590,8 +588,7 @@ namespace netgen
 	       else
 		 {
 		   pnums.Elem(22+j) = mesh.AddPoint
-		     (Center (mesh[PointIndex(i2a.I1())],
-			      mesh[PointIndex(i2a.I2())]));
+		     (Center (mesh[i2a.I1()], mesh[i2a.I2()]));
 
 		   between.Set (i2a, pnums.Elem(22+j));
 		 }
@@ -668,7 +665,7 @@ namespace netgen
 
 	   for (int j = 0; j < 9; j++)
            {
-	       INDEX_2 i2;
+	       PointIndices<2> i2;
 	       i2.I1() = pnums.Get(betw[j][0]);
 	       i2.I2() = pnums.Get(betw[j][1]);
 	       i2.Sort();
@@ -678,15 +675,14 @@ namespace netgen
 	       else
 	       {
 		  pnums.Elem(7+j) = mesh.AddPoint
-		  (Center (mesh[PointIndex(i2.I1())],
-			   mesh[PointIndex(i2.I2())]));
+		  (Center (mesh[i2.I1()], mesh[i2.I2()]));
 		  between.Set (i2, pnums.Elem(7+j));
 	       }
            }
 
            for (int j = 0; j < 3; j++)
 	   {
-	       INDEX_2 i2a, i2b;
+	       PointIndices<2> i2a, i2b;
 	       i2a.I1() = pnums.Get(fbetw[2*j][0]);
 	       i2a.I2() = pnums.Get(fbetw[2*j][1]);
 	       i2a.Sort();
@@ -701,8 +697,7 @@ namespace netgen
 	       else
 		 {
 		   pnums.Elem(16+j) = mesh.AddPoint
-		     (Center (mesh[PointIndex(i2a.I1())],
-			      mesh[PointIndex(i2a.I2())]));
+		     (Center (mesh[i2a.I1()], mesh[i2a.I2()]));
 
 		   between.Set (i2a, pnums.Elem(16+j));
 		 }
@@ -816,11 +811,10 @@ namespace netgen
 	for (int i = 1; i <= between.GetNBags(); i++)
 	  for (int j = 1; j <= between.GetBagSize(i); j++)
 	    {
-	      INDEX_2 parent;
+	      PointIndices<2> parent;
 	      PointIndex child;
 	      between.GetData (i, j, parent, child);
-	      can[child] = Center (can[PointIndex(parent.I1())],
-				   can[PointIndex(parent.I2())]);
+	      can[child] = Center (can[parent.I1()], can[parent.I2()]);
 	    }
 
 	TBitArray<PointIndex> boundp(np);
