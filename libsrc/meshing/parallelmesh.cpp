@@ -39,7 +39,7 @@ namespace ngcore
   class SurfPointPackage
   {
   public:
-    int num;     // point number
+    netgen::PointIndex num;   // point number
     int trignum; // STL geo info
     double u, v; // OCC geo info
     SurfPointPackage () { ; }
@@ -92,7 +92,7 @@ namespace ngcore
       }
       /** otherwise, we use uninitialized values **/
       for (int k : Range(np, ELEMENT2D_MAXPOINTS)) {
-	points[k].num = -1;
+	points[k].num = netgen::PointIndex::INVALID;
 	points[k].trignum = -1;
 	points[k].u = -1;
 	points[k].v = -1;
@@ -426,9 +426,9 @@ namespace netgen
     
     tbuildvertexb.Start();    
     
-    TABLE<PointIndex> verts_of_proc (num_verts_on_proc);
+    TABLE<int> verts_of_proc (num_verts_on_proc);   // 0-based offsets into points
     DynamicTable<int, PointIndex> procs_of_vert (GetNV());
-    DynamicTable<int, PointIndex> loc_num_of_vert (GetNV());
+    DynamicTable<PointIndex, PointIndex> loc_num_of_vert (GetNV());
     /** Write vertex/proc mappingfs to tables **/
     iterate_vertices([&](auto vertex, auto dest) {
 	auto addit = [&] (auto vertex, auto dest) {
@@ -465,9 +465,8 @@ namespace netgen
     Array<NG_MPI_Datatype> point_types(ntasks-1);
     for (int dest = 1; dest < ntasks; dest++)
       {
-	FlatArray<PointIndex> verts = verts_of_proc[dest];
-	// sendrequests.Append (MyMPI_ISend (verts, dest, NG_MPI_TAG_MESH+1, comm));
-        sendrequests += comm.ISend (FlatArray<PointIndex>(verts), dest, NG_MPI_TAG_MESH+1);
+	FlatArray<int> verts = verts_of_proc[dest];
+        sendrequests += comm.ISend (verts, dest, NG_MPI_TAG_MESH+1);
 
 	NG_MPI_Datatype mptype = MeshPoint::MyGetMPIType();
 
@@ -477,7 +476,7 @@ namespace netgen
 	blocklen = 1;
 	
 	NG_MPI_Type_indexed (numv, (numv == 0) ? nullptr : &blocklen[0], 
-			  (numv == 0) ? nullptr : reinterpret_cast<int*> (&verts[0]), 
+			  (numv == 0) ? nullptr : &verts[0], 
 			  mptype, &point_types[dest-1]);
 	NG_MPI_Type_commit (&point_types[dest-1]);
 
@@ -569,9 +568,9 @@ namespace netgen
 	  for (int k = 0; k < procs.Size(); k++)
 	    if (j != k)
 	      {
-		distpnums.Add (procs[j], loc_num_of_vert[vert][j]);
+		distpnums.Add (procs[j], int(loc_num_of_vert[vert][j]));
 		distpnums.Add (procs[j], procs_of_vert[vert][k]);
-		distpnums.Add (procs[j], loc_num_of_vert[vert][k]);
+		distpnums.Add (procs[j], int(loc_num_of_vert[vert][k]));
 	      }
       }
 
@@ -607,7 +606,7 @@ namespace netgen
 	elementarrays.Add (dest, el.GetIndex());
 	elementarrays.Add (dest, el.GetNP());
         for (PointIndex pi : el.PNums())
-	  elementarrays.Add (dest, pi);
+	  elementarrays.Add (dest, int(pi));
       }
     tbuildelementtable.Stop();
     
@@ -863,8 +862,8 @@ namespace netgen
 		    bool has_ed = seg.GetIndex() >= 1 && seg.GetIndex() <= GetNED();
 		    int fdi = has_ed ? GetEdgeDescriptor(seg.GetIndex()).GetIndex() : -1;
 		    segm_buf.Add (dest, fdi);
-		    segm_buf.Add (dest, seg[0]);
-		    segm_buf.Add (dest, seg[1]);
+		    segm_buf.Add (dest, int(seg[0]));
+		    segm_buf.Add (dest, int(seg[1]));
 		    segm_buf.Add (dest, seg.GeomInfo(0).trignum);
 		    segm_buf.Add (dest, seg.GeomInfo(1).trignum);
 		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(0) : -1);
@@ -1043,14 +1042,14 @@ namespace netgen
     paralleltop -> SetNV_Loc2Glob (numvert);
     
     // INDEX_CLOSED_HASHTABLE<int> glob2loc_vert_ht (3*numvert+1);
-    INDEX_HASHTABLE<int> glob2loc_vert_ht (3*numvert+1);
+    INDEX_HASHTABLE<PointIndex> glob2loc_vert_ht (3*numvert+1);
 
     for (int vert = 0; vert < numvert; vert++)
       {
 	PointIndex globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
-        // paralleltop->SetLoc2Glob_Vert ( vert+1, globvert  );
-        paralleltop->L2G (PointIndex(vert+PointIndex::BASE)) = globvert;
-	glob2loc_vert_ht.Set (globvert, vert+PointIndex::BASE);
+	PointIndex locvert = vert + IndexBASE<PointIndex>();
+        paralleltop->L2G (locvert) = int(globvert);
+	glob2loc_vert_ht.Set (int(globvert), locvert);
       }
     
     for (int i = 0; i < numvert; i++)
@@ -1162,7 +1161,7 @@ namespace netgen
 	pack.Unpack(el);
 	/** map global point numbers to local ones **/
 	for (int k : Range(1, 1+el.GetNP()))
-	  { el.PNum(k) = glob2loc_vert_ht.Get(el.PNum(k)); }
+	  { el.PNum(k) = glob2loc_vert_ht.Get(int(el.PNum(k))); }
 	paralleltop->SetLoc2Glob_SurfEl (sel+1, pack.sei);
 	AddSurfaceElement (el);
 	sel++;
@@ -1220,7 +1219,7 @@ namespace netgen
       pointelements.SetSize(zdes.Size());
       for (auto k : Range(pointelements)) {
 	auto & el = pointelements[k];
-	el.pnum = glob2loc_vert_ht.Get(zdes[k].pnum);
+	el.pnum = glob2loc_vert_ht.Get(int(zdes[k].pnum));
 	el.index = zdes[k].index;
       }
     }
@@ -1676,7 +1675,7 @@ namespace netgen
 	    nwgt.Append (volume_weights[ind -1]);
 	
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-1);
+	  eind.Append (el[j]-IndexBASE<PointIndex>());
       }
     for (int i = 0; i < GetNSE(); i++)
       {
@@ -1693,7 +1692,7 @@ namespace netgen
 
 	
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-1);
+	  eind.Append (el[j]-IndexBASE<PointIndex>());
       }
     for (int i = 0; i < GetNSeg(); i++)
       {
@@ -1707,8 +1706,8 @@ namespace netgen
 	else
 	    nwgt.Append (segment_weights[ind -1]);
 	
-	eind.Append (el[0]);
-	eind.Append (el[1]);
+	eind.Append (el[0]-IndexBASE<PointIndex>());
+	eind.Append (el[1]-IndexBASE<PointIndex>());
       }
       
     eptr.Append (eind.Size());
