@@ -148,10 +148,9 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 	  (*testout) << "   charts p1: " << geom.GetChartNr(trig1) << " - " << geom.GetChartNr(trig2) << endl;
 	  (*testout) << "   charts p2: " << geom.GetChartNr(trig1b) << " - " << geom.GetChartNr(trig2b) << endl;
 	  */
-	  Point3d hp, hp2;
 	  Segment seg;
-	  seg[0] = p1 + PointIndex::BASE-1;
-	  seg[1] = p2 + PointIndex::BASE-1;
+	  seg[0] = p1 + IndexBASE<PointIndex>()-1;
+	  seg[1] = p2 + IndexBASE<PointIndex>()-1;
 	  seg.EPGeomInfo(0).dist = line->GetDist(j);
 	  seg.EPGeomInfo(1).dist = line->GetDist(j+1);
 	  /*
@@ -202,8 +201,8 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
           if(trig2 != 0)
             {
 	  Segment seg2;
-	  seg2[0] = p2 + PointIndex::BASE-1;;
-	  seg2[1] = p1 + PointIndex::BASE-1;;
+	  seg2[0] = p2 + IndexBASE<PointIndex>()-1;
+	  seg2[1] = p1 + IndexBASE<PointIndex>()-1;
 	  seg2.EPGeomInfo(0).dist = line->GetDist(j+1);
 	  seg2.EPGeomInfo(1).dist = line->GetDist(j);
 	  /*
@@ -368,9 +367,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
 		{
 		  const Segment & seg = mesh.GetOpenSegment (i);
-		  INDEX_2 i2(seg[0], seg[1]);
-		  i2.Sort();
-		  openseght.Set (i2, 1);
+		  openseght.Set (SortedPointIndices<2>(seg[0], seg[1]), 1);
 		}
 
 	      
@@ -380,14 +377,13 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      mesh.RemoveOneLayerSurfaceElements();
 	      
 
-	      INDEX_2_HASHTABLE<int> newpht(100);
+	      INDEX_2_HASHTABLE<PointIndex> newpht(100);
 
 	      int nsegold = mesh.GetNSeg();
 	      for (int i = 1; i <= nsegold; i++)
 		{
 		  Segment seg = mesh.LineSegment(i);
-		  INDEX_2 i2(seg[0], seg[1]);
-		  i2.Sort();
+		  SortedPointIndices<2> i2(seg[0], seg[1]);
 		  if (openseght.Used (i2))
 		    {
 		      // segment will be split
@@ -403,8 +399,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 		      int hi;
 		      
-		      Point3d newp;
-		      int newpi;
+		      Point<3> newp;
+		      PointIndex newpi;
 		      
 		      auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
 		      if (!newpht.Used (i2))
@@ -417,7 +413,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      else
 			{
 			  newpi = newpht.Get (i2);
-			  newp = mesh[PointIndex(newpi)];
+			  newp = mesh[newpi];
 			}
 
 		      nseg1 = seg;
@@ -467,14 +463,13 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	  for (int i = 1; i <= mesh.GetNSE(); i++)
 	    if (mesh.SurfaceElement(i).BadElement())
 	      {
-		int trig = mesh.SurfaceElement(i).PNum(1);
-		geom.SetMarkedTrig(trig,1);
+		geom.SetMarkedTrig(mesh.SurfaceElement(i).GeomInfoPi(1).trignum, 1);
 		PrintMessage(7, "overlapping element, will be removed");
 	      }
 	  
 	  
 
-	  NgArray<Point3d> refpts;
+	  NgArray<Point<3>> refpts;
 	  NgArray<double> refh;
 
 	  // was commented:
@@ -520,20 +515,17 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
 		{
 		  const Segment & seg = mesh.GetOpenSegment (i);
-		  INDEX_2 i2(seg[0], seg[1]);
-		  i2.Sort();
-		  openseght.Set (i2, 1);
+		  openseght.Set (SortedPointIndices<2>(seg[0], seg[1]), 1);
 		}
           mesh.FindOpenSegments ();
           mesh.RemoveOneLayerSurfaceElements();
           mesh.FindOpenSegments ();
           int nsegold = mesh.GetNSeg();
-          INDEX_2_HASHTABLE<int> newpht(100);
+          INDEX_2_HASHTABLE<PointIndex> newpht(100);
           for (int i = 1; i <= nsegold; i++)
             {
               Segment seg = mesh.LineSegment(i);
-              INDEX_2 i2(seg[0], seg[1]);
-              i2.Sort();
+              SortedPointIndices<2> i2(seg[0], seg[1]);
               if (openseght.Used (i2))
                 {
                   // segment will be split
@@ -549,8 +541,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
                   int hi;
 		      
-                  Point3d newp;
-                  int newpi;
+                  Point<3> newp;
+                  PointIndex newpi;
 		      
                   auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
                   if (!newpht.Used (i2))
@@ -563,7 +555,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                   else
                     {
                       newpi = newpht.Get (i2);
-                      newp = mesh[PointIndex(newpi)];
+                      newp = mesh[newpi];
                     }
 
                   nseg1 = seg;
