@@ -73,7 +73,7 @@ extern double CalcTetBadnessGrad (const Point3d & p1, const Point3d & p2,
 
 /** The total volume of all elements is computed.
   This function calculates the volume of the mesh */
-extern double CalcVolume (const NgArray<Point3d> & points, 
+extern double CalcVolume (FlatArray<Point3d, PointIndex> points, 
 	const NgArray<Element> & elements);
 
 ///

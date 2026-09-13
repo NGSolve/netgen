@@ -12,29 +12,25 @@ namespace netgen
     PrintMessage (3, "Check Surface mesh");
 
     int nf = mesh.GetNSE();
-    INDEX_2_HASHTABLE<int> edges(nf+2);
-    int i, j;
-    INDEX_2 i2;
+    ClosedHashTable<PointIndices<2>, int> edges(nf+2);
     int cnt1 = 0, cnt2 = 0;
 
-    for (i = 1; i <= nf; i++)
-      for (j = 1; j <= 3; j++)
+    for (int i = 1; i <= nf; i++)
+      for (int j = 1; j <= 3; j++)
 	{
-	  i2.I1() = mesh.SurfaceElement(i).PNumMod(j);
-	  i2.I2() = mesh.SurfaceElement(i).PNumMod(j+1);
-	  if (edges.Used(i2))
+	  PointIndex pi1 = mesh.SurfaceElement(i).PNumMod(j);
+	  PointIndex pi2 = mesh.SurfaceElement(i).PNumMod(j+1);
+	  if (edges.Used ( { pi1, pi2 } ))
 	    {
-	      int hi;
-	      hi = edges.Get(i2);
+	      int hi = edges.Get ( { pi1, pi2 } );
 	      if (hi != 1) 
 		PrintSysError ("CheckSurfaceMesh, hi = ", hi);
-	      edges.Set(i2, 2);
+	      edges.Set ( { pi1, pi2 }, 2);
 	      cnt2++;
 	    }
 	  else
 	    {
-	      Swap (i2.I1(), i2.I2());
-	      edges.Set(i2, 1);
+	      edges.Set ( { pi2, pi1 }, 1);
 	      cnt1++;
 	    }
 	}
@@ -54,15 +50,14 @@ namespace netgen
 
   int CheckSurfaceMesh2 (const Mesh & mesh)
   {
-    int i, j, k;
     const Point<3> *tri1[3], *tri2[3];
 
-    for (i = 1; i <= mesh.GetNOpenElements(); i++)
+    for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	PrintDot ();
-	for (j = 1; j < i; j++)
+	for (int j = 1; j < i; j++)
 	  {
-	    for (k = 1; k <= 3; k++)
+	    for (int k = 1; k <= 3; k++)
 	      {
 		tri1[k-1] = &mesh.Point (mesh.OpenElement(i).PNum(k));
 		tri2[k-1] = &mesh.Point (mesh.OpenElement(j).PNum(k));
@@ -71,10 +66,10 @@ namespace netgen
 	      {
 		PrintSysError ("Surface elements are intersecting");
 		(*testout) << "Intersecting: " << endl;
-		for (k = 0; k <= 2; k++)
+		for (int k = 0; k <= 2; k++)
 		  (*testout) << *tri1[k] << "   ";
 		(*testout) << endl;
-		for (k = 0; k <= 2; k++)
+		for (int k = 0; k <= 2; k++)
 		  (*testout) << *tri2[k] << "   ";
 		(*testout) << endl;
 	      }
@@ -128,21 +123,18 @@ namespace netgen
 
   void MeshQuality2d (const Mesh & mesh)
   {
-    int ncl = 20, cl;
+    int ncl = 20;
     NgArray<INDEX> incl(ncl);
-    INDEX i;
-    SurfaceElementIndex sei;
-    double qual;
 
     incl = 0;
 
-    for (sei = 0; sei < mesh.GetNSE(); sei++)
+    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
       {
-	qual = TriangleQualityInst (mesh[mesh[sei][0]],
-				    mesh[mesh[sei][1]],
-				    mesh[mesh[sei][2]]);
+	double qual = TriangleQualityInst (mesh[mesh[sei][0]],
+					   mesh[mesh[sei][1]],
+					   mesh[mesh[sei][2]]);
 
-	cl = int ( (ncl-1e-3) * qual ) + 1;
+	int cl = int ( (ncl-1e-3) * qual ) + 1;
 	incl.Elem(cl)++;
       }
 
@@ -155,7 +147,7 @@ namespace netgen
     (*testout) << "Elements in qualityclasses:" << endl;
     // (*testout).precision(2);
     (*testout) << setprecision(2);
-    for (i = 1; i <= ncl; i++)
+    for (INDEX i = 1; i <= ncl; i++)
       {
 	(*testout) << setw(4) << double (i-1)/ncl << " - "
 		   << setw(4) << double (i) / ncl << ": "
@@ -554,7 +546,7 @@ namespace netgen
     }  
   */
 
-  double CalcVolume (const NgArray<Point3d> & points, 
+  double CalcVolume (FlatArray<Point3d, PointIndex> points, 
 		     const NgArray<Element> & elements)
   {
     double vol;
@@ -563,9 +555,9 @@ namespace netgen
     vol = 0;
     for (int i = 0; i < elements.Size(); i++)
       {
-	v1 = points.Get(elements[i][1]) - points.Get(elements[i][0]);
-	v2 = points.Get(elements[i][2]) - points.Get(elements[i][0]);
-	v3 = points.Get(elements[i][3]) - points.Get(elements[i][0]);
+	v1 = points[elements[i][1]] - points[elements[i][0]];
+	v2 = points[elements[i][2]] - points[elements[i][0]];
+	v3 = points[elements[i][3]] - points[elements[i][0]];
 	vol -= (Cross (v1, v2) * v3) / 6;	 
       }
     return vol;
@@ -577,14 +569,11 @@ namespace netgen
   void MeshQuality3d (const Mesh & mesh, NgArray<int> * inclass)
   { 
     int ncl = 20;
-    signed int cl;
     NgArray<INDEX> incl(ncl);
-    INDEX i;
-    double qual;
     double sum = 0;
     int nontet  = 0;
 
-    for (i = 1; i <= incl.Size(); i++)
+    for (INDEX i = 1; i <= incl.Size(); i++)
       incl.Elem(i) = 0;
 
     for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
@@ -595,13 +584,13 @@ namespace netgen
 	    continue;
 	  }
 
-	qual = TetElementQuality (mesh.Point(mesh[ei][0]),
-				  mesh.Point(mesh[ei][1]),
-				  mesh.Point(mesh[ei][2]),
-				  mesh.Point(mesh[ei][3]));
+	double qual = TetElementQuality (mesh.Point(mesh[ei][0]),
+					 mesh.Point(mesh[ei][1]),
+					 mesh.Point(mesh[ei][2]),
+					 mesh.Point(mesh[ei][3]));
 
 	if (qual > 1) qual = 1;
-	cl = int (ncl * qual ) + 1;
+	signed int cl = int (ncl * qual ) + 1;
      
 	if (cl < 1) cl = 1; 
 	if (cl > ncl) cl = ncl;
@@ -620,7 +609,7 @@ namespace netgen
 
     (*testout) << "Volume elements in qualityclasses:" << endl;
     (*testout) << setprecision(2);
-    for (i = 1; i <= ncl; i++)
+    for (INDEX i = 1; i <= ncl; i++)
       {
 	(*testout) << setw(4) << double (i-1)/ncl << " - "
 		   << setw(4) << double (i) / ncl << ": "
@@ -633,23 +622,21 @@ namespace netgen
   void SaveEdges (const Mesh & mesh, const char * geomfile, double h, char * filename)
   {
     ofstream of (filename);
-    int i;
-    const Segment * seg;
   
     of << "edges" << endl;
     of << geomfile << endl;
     of << h << endl;
 
     of << mesh.GetNP() << endl;
-    for (i = 1; i <= mesh.GetNP(); i++)
+    for (int i = 1; i <= mesh.GetNP(); i++)
       of << mesh.Point(i)(0) << " "
 	 << mesh.Point(i)(1) << " "
 	 << mesh.Point(i)(2) << "\n";
     
     of << 2 * mesh.GetNSeg() << endl;
-    for (i = 1; i <= mesh.GetNSeg(); i++)
+    for (int i = 1; i <= mesh.GetNSeg(); i++)
       {
-	seg = &mesh.LineSegment(i);
+	const Segment * seg = &mesh.LineSegment(i);
 
 	int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
 	of << (*seg)[1] << " " << (*seg)[0] << " " << seg_face << "\n";
@@ -663,15 +650,13 @@ namespace netgen
 			char * filename)
 
   {
-    INDEX i;
-
     ofstream outfile(filename);
 
     outfile << "surfacemesh" << endl;
     outfile << h << endl;
 
     outfile << mesh.GetNP() << endl;
-    for (i = 1; i <= mesh.GetNP(); i++)
+    for (INDEX i = 1; i <= mesh.GetNP(); i++)
       outfile << mesh.Point(i)(0) << " "
 	      << mesh.Point(i)(1) << " "
 	      << mesh.Point(i)(2) << endl;
@@ -679,7 +664,7 @@ namespace netgen
   
 
     outfile << mesh.GetNSE() << endl;
-    for (i = 1; i <= mesh.GetNSE(); i++)
+    for (INDEX i = 1; i <= mesh.GetNSE(); i++)
       {
 	const Element2d & el = mesh.SurfaceElement(i);
 
@@ -702,7 +687,6 @@ namespace netgen
 		   ostream & outfile)
 
   {
-    int i, j;
     outfile.precision (6);
   
     outfile << "areamesh2" << endl;
@@ -710,31 +694,31 @@ namespace netgen
 
     outfile << endl;
     outfile << mesh2d.GetNSeg() << endl;
-    for (i = 1; i <= mesh2d.GetNSeg(); i++)
+    for (int i = 1; i <= mesh2d.GetNSeg(); i++)
       outfile << mesh2d.LineSegment(i).GetIndex() << "        "
 	      << mesh2d.LineSegment(i)[0] << " "
 	      << mesh2d.LineSegment(i)[1] << "  " << endl;
   
 
     outfile << mesh2d.GetNSE() << endl;
-    for (i = 1; i <= mesh2d.GetNSE(); i++)
+    for (int i = 1; i <= mesh2d.GetNSE(); i++)
       {
 	outfile << mesh2d.SurfaceElement(i).GetIndex() << "         ";
 	outfile << mesh2d.SurfaceElement(i).GetNP() << " ";
-	for (j = 1; j <= mesh2d.SurfaceElement(i).GetNP(); j++)
+	for (int j = 1; j <= mesh2d.SurfaceElement(i).GetNP(); j++)
 	  outfile << mesh2d.SurfaceElement(i).PNum(j) << " ";
 	outfile << endl;
       }
 
     outfile << mesh2d.GetNP() << endl;
-    for (i = 1; i <= mesh2d.GetNP(); i++)
+    for (int i = 1; i <= mesh2d.GetNP(); i++)
       outfile << mesh2d.Point(i).X() << " "
 	      << mesh2d.Point(i).Y() << endl;
 
     if (splines)
       {
 	outfile << splines->Size() << endl;
-	for (i = 1; i <= splines->Size(); i++)
+	for (int i = 1; i <= splines->Size(); i++)
 	  splines->Get(i) -> PrintCoeff (outfile);
       }
     else
@@ -753,13 +737,11 @@ namespace netgen
 		       const NetgenGeometry & geometry,
 		       char * filename)
   {
-    INDEX i;
-
     ofstream outfile(filename);
     outfile << "volumemesh" << endl;
 
     outfile << mesh.GetNSE() << endl;
-    for (i = 1; i <= mesh.GetNSE(); i++)
+    for (INDEX i = 1; i <= mesh.GetNSE(); i++)
       {
 	if (mesh.SurfaceElement(i).GetIndex())
 	  outfile << mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex ()).SurfNr()
@@ -777,14 +759,14 @@ namespace netgen
 	      << mesh[ei][2] << " " << mesh[ei][3] << endl;
 
     outfile << mesh.GetNP() << endl;
-    for (i = 1; i <= mesh.GetNP(); i++)
+    for (INDEX i = 1; i <= mesh.GetNP(); i++)
       outfile << mesh.Point(i)(0) << " "
 	      << mesh.Point(i)(1) << " "
 	      << mesh.Point(i)(2) << endl;
 
 #ifdef SOLIDGEOM
     outfile << geometry.GetNSurf() << endl;
-    for (i = 1; i <= geometry.GetNSurf(); i++)
+    for (INDEX i = 1; i <= geometry.GetNSurf(); i++)
       geometry.GetSurface(i) -> Print (outfile);
 #endif
   }
@@ -814,45 +796,33 @@ namespace netgen
   /// Checks, whether mesh contains a valid 3d mesh
   int CheckMesh3D (const Mesh & mesh)
   {
-    INDEX_3_HASHTABLE<int> faceused(mesh.GetNE()/3);
-    INDEX i;
-    int j, k, l;
-    INDEX_3 i3;
+    ClosedHashTable<SortedPointIndices<3>, int> faceused(mesh.GetNE()/3);
     int ok = 1;
-    ElementIndex ei;
 
-    for (i = 1; i <= mesh.GetNSE(); i++)
+    for (INDEX i = 1; i <= mesh.GetNSE(); i++)
       {
 	const Element2d & el = mesh.SurfaceElement(i);
       
 	if (mesh.GetFaceDescriptor(el.GetIndex()).DomainIn() == 0 ||
 	    mesh.GetFaceDescriptor(el.GetIndex()).DomainOut() == 0)
 	  {
-	    for (j = 1; j <= 3; j++)
-	      i3.I(j) = el.PNum(j);
-	  
-	    i3.Sort();
-	    faceused.Set (i3, 1);
+	    faceused.Set ( { el.PNum(1), el.PNum(2), el.PNum(3) }, 1);
 	  }
       }
   
-    for (ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
       {
 	const Element & el = mesh[ei];
 
-	for (j = 1; j <= 4; j++)
+	for (int j = 1; j <= 4; j++)
 	  {
-	    l = 0;
-	    for (k = 1; k <= 4; k++)
-	      {
-		if (j != k)
-		  {
-		    l++;
-		    i3.I(l) = el.PNum(k);
-		  }
-	      }
+	    PointIndex fp[3];
+	    int l = 0;
+	    for (int k = 1; k <= 4; k++)
+	      if (j != k)
+		fp[l++] = el.PNum(k);
 
-	    i3.Sort();
+	    SortedPointIndices<3> i3(fp[0], fp[1], fp[2]);
 	    if (faceused.Used(i3))
 	      faceused.Set(i3, faceused.Get(i3)+1);
 	    else
@@ -861,49 +831,42 @@ namespace netgen
       }
 
 
-    for (i = 1; i <= mesh.GetNSE(); i++)
+    for (INDEX i = 1; i <= mesh.GetNSE(); i++)
       {
 	const Element2d & el = mesh.SurfaceElement(i);
 
-	for (j = 1; j <= 3; j++)
-	  i3.I(j) = el.PNum(j);
-      
-	i3.Sort();
-	k = faceused.Get (i3);
-	if (k != 2)
+	SortedPointIndices<3> i3(el.PNum(1), el.PNum(2), el.PNum(3));
+	int nel = faceused.Used(i3) ? faceused.Get(i3) : 0;
+	if (nel != 2)
 	  {
 	    ok = 0;
 	    (*testout) << "face " << i << " with points " 
 		       << i3.I1() << "-" << i3.I2() << "-" << i3.I3() 
-		       << " has " << k << " elements" << endl;
+		       << " has " << nel << " elements" << endl;
 	  }
       }
   
-    for (ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
       {
 	const Element & el = mesh[ei];
 
-	for (j = 1; j <= 4; j++)
+	for (int j = 1; j <= 4; j++)
 	  {
-	    l = 0;
-	    for (k = 1; k <= 4; k++)
-	      {
-		if (j != k)
-		  {
-		    l++;
-		    i3.I(l) = el.PNum(k);
-		  }
-	      }
+	    PointIndex fp[3];
+	    int l = 0;
+	    for (int k = 1; k <= 4; k++)
+	      if (j != k)
+		fp[l++] = el.PNum(k);
 
-	    i3.Sort();
-	    k = faceused.Get(i3);
-	    if (k != 2)
+	    SortedPointIndices<3> i3(fp[0], fp[1], fp[2]);
+	    int nel = faceused.Used(i3) ? faceused.Get(i3) : 0;
+	    if (nel != 2)
 	      {
 		ok = 0;
 		(*testout) << "element " << ei << " with face " 
 			   << i3.I1() << "-" << i3.I2() << "-"
 			   << i3.I3() 
-			   << " has " << k << " elements" << endl;
+			   << " has " << nel << " elements" << endl;
 	      }
 	  }
       }
@@ -932,7 +895,7 @@ namespace netgen
     if (!ok)
       {
 	(*testout) << "surfelements: " << endl;
-	for (i = 1; i <= mesh.GetNSE(); i++)
+	for (INDEX i = 1; i <= mesh.GetNSE(); i++)
 	  {
 	    const Element2d & el = mesh.SurfaceElement(i);
 	    (*testout) << setw(5) << i << ":" 
@@ -942,10 +905,10 @@ namespace netgen
 		       << setw(4) << el.PNum(3)  << endl;
 	  }
 	(*testout) << "volelements: " << endl;
-	for (ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
 	  {
 	    const Element & el = mesh[ei];
-	    (*testout) << setw(5) << i << ":" 
+	    (*testout) << setw(5) << ei << ":" 
 		       << setw(6) << el.GetIndex() 
 		       << setw(6) << el[0] << setw(4) << el[1]
 		       << setw(4) << el[2] << setw(4) << el[3] << endl;
@@ -960,8 +923,6 @@ namespace netgen
 
   void RemoveProblem (Mesh & mesh, int domainnr)
   {
-    int i, j, k;
-  
     mesh.FindOpenElements(domainnr);
     int np = mesh.GetNP();
 
@@ -971,16 +932,16 @@ namespace netgen
 
     PrintMessage (3, "Elements before Remove: ", mesh.GetNE());
     // for (k = 1; k <= ndom; k++)
-    k = domainnr;
+    int k = domainnr;
       {
 	ppoints = false;
       
-	for (i = 1; i <= mesh.GetNOpenElements(); i++)
+	for (int i = 1; i <= mesh.GetNOpenElements(); i++)
 	  {
 	    const Element2d & sel = mesh.OpenElement(i);
 	    if (sel.GetIndex() == k)
 	      {
-		for (j = 1; j <= sel.GetNP(); j++)
+		for (int j = 1; j <= sel.GetNP(); j++)
 		  ppoints[sel.PNum(j)] = true;
 	      }
 	  }
@@ -991,7 +952,7 @@ namespace netgen
 	    if (el.GetIndex() == k)
 	      {
 		int todel = 0;
-		for (j = 0; j < el.GetNP(); j++)
+		for (int j = 0; j < el.GetNP(); j++)
 		  if (ppoints[el[j]])
 		    todel = 1;
 	      
