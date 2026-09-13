@@ -16,27 +16,26 @@ namespace netgen
       cout << "Boundary Nr:";
       cin >> surfid;
 
-      int i;
       int np = mesh.GetNP();
 
       cout << "Old NP: " << mesh.GetNP() << endl;
       cout << "Trigs: " << mesh.GetNSE() << endl;
 
-      NgBitArray bndnodes(np);
+      TBitArray<PointIndex> bndnodes(np);
       Array<PointIndex, PointIndex> mapto(np);
 
       bndnodes.Clear();
-      for (i = 1; i <= mesh.GetNSeg(); i++)
+      for (int i = 1; i <= mesh.GetNSeg(); i++)
       {
          int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          cout << "snr = " << snr << endl;
          if (snr == surfid)
          {
-            bndnodes.Set (mesh.LineSegment(i)[0]);
-            bndnodes.Set (mesh.LineSegment(i)[1]);
+            bndnodes.SetBit (mesh.LineSegment(i)[0]);
+            bndnodes.SetBit (mesh.LineSegment(i)[1]);
          }
       }
-      for (i = 1; i <= mesh.GetNSeg(); i++)
+      for (int i = 1; i <= mesh.GetNSeg(); i++)
       {
          int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          if (snr != surfid)
@@ -49,7 +48,7 @@ namespace netgen
       for (PointIndex pi : mesh.Points().Range())
         mapto[pi] = bndnodes.Test(pi) ? mesh.AddPoint (mesh[pi]) : PointIndex(PointIndex::INVALID);
 
-      for (i = 1; i <= mesh.GetNSE(); i++)
+      for (int i = 1; i <= mesh.GetNSE(); i++)
       {
          Element2d & el = mesh.SurfaceElement(i);
          for (int j = 1; j <= el.GetNP(); j++)
@@ -59,7 +58,7 @@ namespace netgen
 
 
       int nq = 0;
-      for (i = 1; i <= mesh.GetNSeg(); i++)
+      for (int i = 1; i <= mesh.GetNSeg(); i++)
       {
          int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
          if (snr == surfid)
@@ -242,7 +241,7 @@ namespace netgen
        AddDirection(growthvectors[seg[1]], n);
      }
 
-     BitArray is_junction(np+1);
+     TBitArray<PointIndex> is_junction(np);
      is_junction.Clear();
 
      for(auto segi : Range(line_segments))
@@ -282,7 +281,7 @@ namespace netgen
 
      //////////////////////////////////////////////////////////////////////////
      // average growthvectors along straight lines to avoid overlaps in corners
-     BitArray points_done(np+1);
+     TBitArray<PointIndex> points_done(np);
      points_done.Clear();
 
      auto nextActive = [&] (PointIndex pi, SegmentIndex from, SegmentIndex & to)
@@ -625,7 +624,7 @@ namespace netgen
         return ed_to_bl_ed[old_ed_idx];
      };
 
-     for(PointIndex pi = PointIndex::BASE; pi < np + PointIndex::BASE; pi++)
+     for(PointIndex pi = IndexBASE<PointIndex>(); pi < np + IndexBASE<PointIndex>(); pi++)
      {
         if(!is_junction.Test(pi)) continue;
         if(mapto[pi].Size() == 0) continue;
