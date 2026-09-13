@@ -423,6 +423,28 @@ namespace ngcore
   
 
   template <>
+  struct CHT_trait<netgen::PointIndices<3>>
+  {
+    constexpr static inline netgen::PointIndices<3> Invalid()
+    { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID }; }
+    constexpr static inline size_t HashValue (const netgen::PointIndices<3> & hash, size_t mask)
+    { return HashValue2(IVec<3>(hash[0]-IndexBASE<netgen::PointIndex>(),
+                                hash[1]-IndexBASE<netgen::PointIndex>(),
+                                hash[2]-IndexBASE<netgen::PointIndex>()), mask); }
+  };
+
+
+  template <>
+  struct CHT_trait<netgen::SortedPointIndices<3>>
+  {
+    constexpr static inline netgen::SortedPointIndices<3> Invalid()
+    { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID }; }
+    constexpr static inline size_t HashValue (const netgen::SortedPointIndices<3> & hash, size_t mask)
+    { return CHT_trait<netgen::PointIndices<3>>::HashValue (hash, mask); }
+  };
+
+
+  template <>
   constexpr inline netgen::PointIndices<3> InvalidHash<netgen::PointIndices<3>> ()
   { return netgen::PointIndices<3>{netgen::PointIndex::INVALID, netgen::PointIndex::INVALID, netgen::PointIndex::INVALID}; }
 

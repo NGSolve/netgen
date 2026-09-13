@@ -233,11 +233,11 @@ public:
     return INDEX_3 (i1, i2, i3);
   }
 
-  INDEX_3 Sort ()
+  constexpr INDEX_3 Sort ()
   {
-    if (i[0] > i[1]) Swap (i[0], i[1]);
-    if (i[1] > i[2]) Swap (i[1], i[2]);
-    if (i[0] > i[1]) Swap (i[0], i[1]);
+    if (i[0] > i[1]) { INDEX hi = i[0]; i[0] = i[1]; i[1] = hi; }
+    if (i[1] > i[2]) { INDEX hi = i[1]; i[1] = i[2]; i[2] = hi; }
+    if (i[0] > i[1]) { INDEX hi = i[0]; i[0] = i[1]; i[1] = hi; }
     return *this;
   }
 

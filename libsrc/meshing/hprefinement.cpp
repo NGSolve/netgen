@@ -612,9 +612,9 @@ namespace netgen
   }
 
   template <typename HT_EDGEPOINT_DOM>
-  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, HT_EDGEPOINT_DOM & edgepoiclt_dom, 
-		       NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
+  bool CheckSingularities(Mesh & mesh, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoiclt_dom, 
+		       NgBitArray & cornerpoint, NgBitArray & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
+			HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
 
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   
@@ -683,8 +683,8 @@ namespace netgen
 		     Refinement * ref, double fac1) 
   {
     elements.SetAllocSize (5 * elements.Size());
-    INDEX_2_HASHTABLE<int> newpts(elements.Size()+1);
-    INDEX_3_HASHTABLE<int> newfacepts(elements.Size()+1);
+    ClosedHashTable<PointIndices<2>, PointIndex> newpts(elements.Size()+1);
+    ClosedHashTable<PointIndices<3>, PointIndex> newfacepts(elements.Size()+1);
 
     double fac2 = max(0.001,min(1.0/3,fac1)); // factor for face points
     PrintMessage(3, " in HP-REFINEMENT with fac1 ", fac1); 
@@ -707,7 +707,7 @@ namespace netgen
 	int j = 0;
 	while (hprs->splitedges[j][0])
 	  {
-	    INDEX_2 i2(el.pnums[hprs->splitedges[j][0]-1],
+	    PointIndices<2> i2(el.pnums[hprs->splitedges[j][0]-1],
 		       el.pnums[hprs->splitedges[j][1]-1]);
             if (fac1 == 0.5) i2.Sort();
             
@@ -718,7 +718,7 @@ namespace netgen
 		  np(l) = (1-fac1)*mesh[PointIndex(i2.I1())](l) 
 		    + fac1 * mesh[PointIndex(i2.I2())](l); 
 	
-		int npi = mesh.AddPoint (np);
+		PointIndex npi = mesh.AddPoint (np);
 		newpts.Set (i2, npi);
 	      }
 	    j++;
@@ -728,7 +728,7 @@ namespace netgen
 	if (hprs->splitfaces)
 	  while (hprs->splitfaces[j][0])
 	    {
-	      INDEX_3 i3(el.pnums[hprs->splitfaces[j][0]-1],
+	      PointIndices<3> i3(el.pnums[hprs->splitfaces[j][0]-1],
 			 el.pnums[hprs->splitfaces[j][1]-1],
 			 el.pnums[hprs->splitfaces[j][2]-1]);
 
@@ -740,7 +740,7 @@ namespace netgen
 		  	for( int l=0;l<3;l++)
 			  np(l) = (1-2*fac2)*mesh[PointIndex(i3.I1())](l) 
 			    + fac2*mesh[PointIndex(i3.I2())](l)  + fac2*mesh[PointIndex(i3.I3())](l);  
-		  int npi = mesh.AddPoint (np);
+		  PointIndex npi = mesh.AddPoint (np);
 		  newfacepts.Set (i3, npi);
 		}
 	      j++;
@@ -782,7 +782,7 @@ namespace netgen
 
 	if (!hprs) continue;
 
-	int newpnums[64];
+	PointIndex newpnums[64];
 	double newparam[64][3];
 
 	int j;
@@ -797,11 +797,11 @@ namespace netgen
 	j = 0;
 	while (hprs->splitedges[j][0])
 	  {
-	    INDEX_2 i2(el.pnums[hprs->splitedges[j][0]-1],
+	    PointIndices<2> i2(el.pnums[hprs->splitedges[j][0]-1],
 		       el.pnums[hprs->splitedges[j][1]-1]);
             if (fac1 == 0.5) i2.Sort();
             
-	    int npi = newpts.Get(i2);
+	    PointIndex npi = newpts.Get(i2);
 	    newpnums[hprs->splitedges[j][2]-1] = npi;
 
 	    for (int l = 0; l < 3; l++)
@@ -817,12 +817,12 @@ namespace netgen
 	if (hprs->splitfaces)
 	  while (hprs->splitfaces[j][0])
 	    {
-	      INDEX_3 i3(el.pnums[hprs->splitfaces[j][0]-1],
+	      PointIndices<3> i3(el.pnums[hprs->splitfaces[j][0]-1],
 			 el.pnums[hprs->splitfaces[j][1]-1],
 			 el.pnums[hprs->splitfaces[j][2]-1]);
 	      if (i3.I2() > i3.I3())
 		Swap (i3.I2(), i3.I3());
-	      int npi = newfacepts.Get(i3);
+	      PointIndex npi = newfacepts.Get(i3);
 	      newpnums[hprs->splitfaces[j][3]-1] = npi;
 	    
 
@@ -846,7 +846,7 @@ namespace netgen
 		    + fac1* mesh.Point(el.pnums[hprs->splitelements[j][2]-1])(l)
 		    + fac1* mesh.Point(el.pnums[hprs->splitelements[j][3]-1])(l); 
 	      
-	      int npi = mesh.AddPoint (np);
+	      PointIndex npi = mesh.AddPoint (np);
 	      
 	      newpnums[hprs->splitelements[j][4]-1] = npi;
 	      
@@ -963,7 +963,7 @@ namespace netgen
 
 	int newlevel = el.levelx;
 
-	int newpnums[8];
+	PointIndex newpnums[8];
 	int j;
 	for (j = 0; j < 8; j++)
 	  newpnums[j] = el.pnums[j];
@@ -1055,7 +1055,7 @@ namespace netgen
                   
 		}
 
-	      int npi = mesh.AddPoint (center);
+	      PointIndex npi = mesh.AddPoint (center);
 
 	      const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (HEX);
 
@@ -1626,9 +1626,9 @@ namespace netgen
   }
 
   template <typename HT_EDGEPOINT_DOM>
-  bool CheckSingularities(Mesh & mesh, INDEX_2_HASHTABLE<int> & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
-		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-			INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref)
+  bool CheckSingularities(Mesh & mesh, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
+		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
+			HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref)
 {
   bool sing = 0; 
   if (mesh.GetDimension() == 3)
@@ -1673,19 +1673,19 @@ namespace netgen
 	for (int i = 1; i <= mesh.GetNSeg(); i++)
 	  if (mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).SingEdgeLeft() * levels >= act_ref)
 	    {
-	      INDEX_2 i2 (mesh.LineSegment(i)[0], 
+	      PointIndices<2> i2 (mesh.LineSegment(i)[0], 
 			  mesh.LineSegment(i)[1]);
 
 	      /*
 		// before
 	      edges.Set (i2, 1);
 	      i2.Sort();   
-	      INDEX_2 i2s(i2.I2(), i2.I1());
+	      PointIndices<2> i2s(i2.I2(), i2.I1());
 	      edges.Set (i2s, 1);
 	      */
 
 	      edges.Set (i2, 1);
-	      INDEX_2 i2s(i2.I2(), i2.I1());
+	      PointIndices<2> i2s(i2.I2(), i2.I1());
 	      edges.Set (i2s, 1);
 
 
@@ -1706,9 +1706,9 @@ namespace netgen
 	      for (int k = 0; k < nedges; k++)
 		if (j != k)
 		  {
-		    INDEX_2 ej(el.PNum(eledges[j][0]), el.PNum(eledges[j][1]));
+		    PointIndices<2> ej(el.PNum(eledges[j][0]), el.PNum(eledges[j][1]));
 		    ej.Sort();
-		    INDEX_2 ek(el.PNum(eledges[k][0]), el.PNum(eledges[k][1]));
+		    PointIndices<2> ek(el.PNum(eledges[k][0]), el.PNum(eledges[k][1]));
 		    ek.Sort();
 		    if (edges.Used(ej) && edges.Used(ek))
 		      {
@@ -1751,23 +1751,23 @@ namespace netgen
 		sing = 1;
 	      } 
   
-	    INDEX_3 i3;
+	    PointIndices<3> i3;
 	    if (el.GetNP() == 3) 
-	      i3 = INDEX_3::Sort (el[0], el[1], el[2]);
+	      i3 = PointIndices<3>::Sort (el[0], el[1], el[2]);
 	    else
 	      {
-		INDEX_4 i4 (el[0], el[1], el[2], el[3]);
+		PointIndices<4> i4 (el[0], el[1], el[2], el[3]);
 		i4.Sort();
-		i3 = INDEX_3(i4.I1(), i4.I2(), i4.I3());
+		i3 = PointIndices<3>(i4.I1(), i4.I2(), i4.I3());
 	      }
 	    faces.Set (i3, domnr);
             *testout << "set face " << i3 << ", domnr = " << domnr << endl;
 	
 	    for (int j = 0; j < el.GetNP(); j++)
 	      {
-		face_edges.Set (INDEX_2::Sort (el[j], el[(j+1)%el.GetNP()]), domnr);
+		face_edges.Set (PointIndices<2>::Sort (el[j], el[(j+1)%el.GetNP()]), domnr);
 	
-		surf_edges.Set (INDEX_2::Sort (el[j], el[(j+1)%el.GetNP()]), fd.SurfNr()+1);
+		surf_edges.Set (PointIndices<2>::Sort (el[j], el[(j+1)%el.GetNP()]), fd.SurfNr()+1);
 		
 		facepoint[el[j]] = domnr;
 	      }
@@ -1794,7 +1794,7 @@ namespace netgen
 	    
 	    if (ed.SingEdgeLeft() * levels >= act_ref)
 	      {
-		INDEX_2 i2 = INDEX_2::Sort(mesh.LineSegment(i)[0], 
+		PointIndices<2> i2 = PointIndices<2>::Sort(mesh.LineSegment(i)[0], 
                                            mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
 		edgepoint.SetBit(i2.I1());
@@ -1810,7 +1810,7 @@ namespace netgen
 	    
 	    if (ed.SingEdgeRight() * levels >= act_ref)
 	      {
-		PointIndices<2> i2 = INDEX_2::Sort(mesh.LineSegment(i)[1], 
+		PointIndices<2> i2 = PointIndices<2>::Sort(mesh.LineSegment(i)[1], 
                                                    mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
 		edgepoint.SetBit(i2.I1());
@@ -1833,7 +1833,7 @@ namespace netgen
 	      {
 		for (int j = 0; j < 2; j++)
 		  {
-		    int pi = (j == 0) ? seg[0] : seg[1];
+		    PointIndex pi = (j == 0) ? seg[0] : seg[1];
 		    INDEX_3 & i3 = surfonpoint[pi];
 		    if (ind != i3.I1() &&
 			ind != i3.I2())
@@ -1883,7 +1883,7 @@ namespace netgen
 
   bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
   {
-    INDEX_2_HASHTABLE<int> edges(mesh.GetNSeg()+1);
+    HT_EDGES edges(mesh.GetNSeg()+1);
     TBitArray<PointIndex> edgepoint(mesh.GetNP());
     // INDEX_2_HASHTABLE<int> edgepoint_dom(mesh.GetNSeg()+1);
 
@@ -1895,9 +1895,9 @@ namespace netgen
 
     // value = nr > 0 ... refine elements in domain nr
     // value = -1   ..... refine elements in any domain
-    INDEX_3_HASHTABLE<int> faces(mesh.GetNSE()+1);
-    INDEX_2_HASHTABLE<int> face_edges(mesh.GetNSE()+1);
-    INDEX_2_HASHTABLE<int> surf_edges(mesh.GetNSE()+1);
+    HT_FACES faces(mesh.GetNSE()+1);
+    HT_FACE_EDGES face_edges(mesh.GetNSE()+1);
+    HT_FACE_EDGES surf_edges(mesh.GetNSE()+1);
     Array<int, PointIndex> facepoint(mesh.GetNP());
 
     bool sing = CheckSingularities(mesh, edges, edgepoint_dom, 
