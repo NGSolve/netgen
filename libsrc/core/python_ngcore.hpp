@@ -400,11 +400,9 @@ namespace ngcore
                 size_t start, stop, step, slicelength;
                 if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
                   throw py::error_already_set();
-                static constexpr int base = int(IndexBASE<TIND>());
-                if (start < base || start+(slicelength-1)*step >= self.Size()+base)
-                  throw py::index_error();
+                // pybind slices are 0-based
                 for (size_t i = 0; i < slicelength; i++, start+=step)
-                  self[start] = val;
+                  self[IndexBASE<TIND>()+start] = val;
               })
 
         .def("__iter__", [] ( TFlat & self) {

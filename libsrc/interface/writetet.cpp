@@ -89,8 +89,8 @@ namespace netgen
     point_ids.SetSize(mesh.GetNP());
     point_ids = -1;
     for(PointIndex pi : mesh.Points().Range())
-      if(int(pi) < point_ids_ud.Size())
-        point_ids[pi] = point_ids_ud[int(pi)];
+      if(pi.Nr0() < point_ids_ud.Size())
+        point_ids[pi] = point_ids_ud[pi.Nr0()];
 
 
     INDEX_2_CLOSED_HASHTABLE<int> edgenumbers(6*mesh.GetNE()+3*mesh.GetNSE());;
@@ -868,7 +868,7 @@ namespace netgen
 	    int startsize = group.Size();
 	    for(int k=0; k<startsize; k++)
 	      {
-		int id = int((*idmaps[j])[PointIndex(group[k])]);   // point idmap indexed by face nr (pre-existing)
+		int id = (*idmaps[j])[PointIndex::FromNr0(group[k])].Nr0();   // point idmap indexed by face nr (pre-existing)
 		if(id != 0 && !group.Contains(id))
 		  {
 		    group.Append(id);

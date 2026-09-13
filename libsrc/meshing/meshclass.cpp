@@ -441,8 +441,8 @@ namespace netgen
 
     // int maxn = max2 (s[0], s[1]);
     // maxn += 1-PointIndex::BASE;
-    int maxn = max2 (s[0].Nr0()+1,
-                     s[1].Nr0()+1);
+    int maxn = max2 (s[0].Nr1(),
+                     s[1].Nr1());
 
     /*
       if (maxn > ptyps.Size())
@@ -539,7 +539,7 @@ namespace netgen
     PointIndex maxpi = el[0];
     for (int i = 1; i < el.GetNP(); i++)
       if (el[i] > maxpi) maxpi = el[i];
-    int maxn = maxpi.Nr0()+1;
+    int maxn = maxpi.Nr1();
 
     
     if (maxn <= points.Size())
@@ -4730,7 +4730,7 @@ namespace netgen
           edges.GetData (i, j, i2, cnt);
           if (cnt)
             {
-              PrintError ("Edge ", int(i2[0]) , " - ", int(i2[1]), " multiple times in surface mesh");
+              PrintError ("Edge ", i2[0].Nr1() , " - ", i2[1].Nr1(), " multiple times in surface mesh");
 
               (*testout) << "Edge " << i2 << " multiple times in surface mesh" << endl;
               SortedPointIndices<2> i2s = i2;
@@ -6413,7 +6413,7 @@ namespace netgen
 
 
             auto locp = [&](int j) -> const netgen::Point<3> &
-              { return pointsloc.Get(le.PNum(j).Nr0()+1); };
+              { return pointsloc.Get(le.PNum(j).Nr1()); };
             const auto & lp1 = locp(1);
             netgen::Point<3> pp =
               lp1

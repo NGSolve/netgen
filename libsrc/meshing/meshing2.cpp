@@ -702,7 +702,7 @@ namespace netgen
 			    plainzones.Append (0);
 			    pindex.Append (Front2PointIndex::INVALID);
 			    oldnp++;
-			    loclines.Elem(i)[3-innerp-1] = LocalPointIndex::FromNr0(oldnp-1);
+			    loclines.Elem(i)[3-innerp-1] = LocalPointIndex::FromNr1(oldnp);
 			  }
 			else
 			  plainzones[loclines.Get(i)[3-innerp-1]] = 0;

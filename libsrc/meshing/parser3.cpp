@@ -374,7 +374,7 @@ void vnetrule :: LoadRule (istream & ist)
 	      p.X() = p.Y() = p.Z() = 0;
 	      for (auto pi : points.Range())
 		{
-		  int i = pi.Nr0()+1;
+		  int i = pi.Nr1();
 		  p.X() += hm1.Get(1, 3*i-2) * points[pi].X();
 		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
 		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
@@ -436,7 +436,7 @@ void vnetrule :: LoadRule (istream & ist)
 	      p.X() = p.Y() = p.Z() = 0;
 	      for (auto pi : points.Range())
 		{
-		  int i = pi.Nr0()+1;
+		  int i = pi.Nr1();
 		  p.X() += hm1.Get(1, 3*i-2) * points[pi].X();
 		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
 		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
@@ -673,7 +673,7 @@ void vnetrule :: LoadRule (istream & ist)
   for (i = 1; i <= freezone.Size(); i++)
     for (auto pj : points.Range().Modify(0, noldp-points.Size()))
       if (Dist (freezone.Get(i), points[pj]) < 1e-8)
-	freezonepi.Elem(i) = pj.Nr0()+1;
+	freezonepi.Elem(i) = pj.Nr1();
 
 
 

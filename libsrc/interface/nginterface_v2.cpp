@@ -1197,12 +1197,12 @@ void Ngx_Mesh::GetElementOrders (int enr, int * ox, int * oy, int * oz) const
 {
   if (mesh->GetDimension() == 3)
     {
-      ElementIndex ei = IndexBASE<ElementIndex>() + enr-1;
+      ElementIndex ei = ElementIndex::FromNr1(enr);
       mesh->VolumeElement(ei).GetOrder(*ox, *oy, *oz);
     }
   else
     {
-      SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() + enr-1;      
+      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(enr);      
       mesh->SurfaceElement(sei).GetOrder(*ox, *oy, *oz);
     }
 }

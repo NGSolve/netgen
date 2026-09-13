@@ -2262,15 +2262,15 @@ namespace netgen
   {
     vertices.SetSize(4);
     for (int i = 0; i < 4; i++)
-      vertices[i] = int(face2vert[fnr-1][i]);
-    if (vertices[3]+1==PointIndex::BASE)
+      vertices[i] = face2vert[fnr-1][i].Nr1();
+    if (vertices[3] == 0)
       vertices.SetSize(3);
   }
 
   void MeshTopology :: GetFaceVertices (int fnr, int * vertices) const
   {
     for (int i = 0; i <= 3; i++)
-      vertices[i] = int(face2vert[fnr-1][i]);
+      vertices[i] = face2vert[fnr-1][i].Nr1();
   }
 
 
@@ -2281,8 +2281,8 @@ namespace netgen
       cerr << "illegal edge nr: " << ednr << ", numedges = " << edge2vert.Size() 
 	   << " id = " << id 
 	   << endl;
-    v1 = int(edge2vert[ednr-1][0]);
-    v2 = int(edge2vert[ednr-1][1]);
+    v1 = edge2vert[ednr-1][0].Nr1();
+    v2 = edge2vert[ednr-1][1].Nr1();
   }
 
   void MeshTopology :: GetEdgeVertices (int ednr, PointIndex & v1, PointIndex & v2) const

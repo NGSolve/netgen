@@ -692,7 +692,7 @@ namespace netgen
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
     for (PointIndex pi : mesh.Points().Range().Modify(0, -4))
       // mixed[pi] = PointIndex ( (prim * pi) % np + PointIndex::BASE );
-      mixed[pi] = (prim * (pi-IndexBASE<PointIndex>()+1)) % np + IndexBASE<PointIndex>() ;
+      mixed[pi] = (prim * (pi.Nr1())) % np + IndexBASE<PointIndex>() ;
 
     NgArray<DelaunayTet> newels;
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
@@ -1021,7 +1021,7 @@ namespace netgen
 	    for (int j = 0; j < 4; j++)
 	      {
 		pp[j] = &mesh.Point(el[j]);
-		tetpi[j] = el[j]-IndexBASE<PointIndex>()+1;
+		tetpi[j] = el[j].Nr1();
 	      }
 	  
 	    Point3d tetpmin(*pp[0]);
@@ -1050,7 +1050,7 @@ namespace netgen
 		for (int k = 1; k <= 3; k++)
 		  {
 		    tripp[k-1] = &mesh.Point (tri.PNum(k));
-		    tripi[k-1] = tri.PNum(k)-IndexBASE<PointIndex>()+1;
+		    tripi[k-1] = tri.PNum(k).Nr1();
 		  }
 	      
 		if (IntersectTetTriangle (&pp[0], &tripp[0], tetpi, tripi))

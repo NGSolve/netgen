@@ -483,7 +483,7 @@ namespace netgen
 			for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
 			  {
 			    Vec2d ui(rule->GetPoint(pi), lpoints[pmap[pi]]);
-			    int i = pi.Nr0()+1;
+			    int i = pi.Nr1();
 			    oldu (2*i-2) = ui.X();
 			    oldu (2*i-1) = ui.Y();
 			  }
@@ -614,7 +614,7 @@ namespace netgen
 			    for (auto pi : pmap.Range().Modify(oldnp, 0))
 			      {
 				auto np = rule->GetPoint(pi);
-				int i = pi.Nr0()+1;
+				int i = pi.Nr1();
 				np[0] += newu (2 * (i-oldnp) - 2);
 				np[1] += newu (2 * (i-oldnp) - 1);
 

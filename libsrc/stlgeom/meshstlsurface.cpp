@@ -387,7 +387,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		  if (openseght.Used (i2))
 		    {
 		      // segment will be split
-		      PrintMessage(7,"Split segment ", int(seg[0]), "-", int(seg[1]));
+		      PrintMessage(7,"Split segment ", seg[0].Nr1(), "-", seg[1].Nr1());
 	      
 		      Segment nseg1, nseg2;
 		      EdgePointGeomInfo newgi;
@@ -529,7 +529,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
               if (openseght.Used (i2))
                 {
                   // segment will be split
-                  PrintMessage(7,"Split segment ", int(seg[0]), "-", int(seg[1]));
+                  PrintMessage(7,"Split segment ", seg[0].Nr1(), "-", seg[1].Nr1());
 	      
                   Segment nseg1, nseg2;
                   EdgePointGeomInfo newgi;

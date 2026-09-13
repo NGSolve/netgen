@@ -535,8 +535,8 @@ namespace netgen
 	      {
 		auto p = ps[l];
 		pp_data[p][maxidentnr + idnr]++;
-		pp_data.Add(p, int(pair.I1()));
-		pp_data.Add(p, int(pair.I2()));
+		pp_data.Add(p, pair.I1().Nr0());
+		pp_data.Add(p, pair.I2().Nr0());
 	      }
 	  }
       }
@@ -568,9 +568,9 @@ namespace netgen
 	  for (int k = 0; k < procs.Size(); k++)
 	    if (j != k)
 	      {
-		distpnums.Add (procs[j], int(loc_num_of_vert[vert][j]));
+		distpnums.Add (procs[j], loc_num_of_vert[vert][j].Nr0());
 		distpnums.Add (procs[j], procs_of_vert[vert][k]);
-		distpnums.Add (procs[j], int(loc_num_of_vert[vert][k]));
+		distpnums.Add (procs[j], loc_num_of_vert[vert][k].Nr0());
 	      }
       }
 
@@ -606,7 +606,7 @@ namespace netgen
 	elementarrays.Add (dest, el.GetIndex());
 	elementarrays.Add (dest, el.GetNP());
         for (PointIndex pi : el.PNums())
-	  elementarrays.Add (dest, int(pi));
+	  elementarrays.Add (dest, pi.Nr0());
       }
     tbuildelementtable.Stop();
     
@@ -1048,8 +1048,8 @@ namespace netgen
       {
 	PointIndex globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
 	PointIndex locvert = vert + IndexBASE<PointIndex>();
-        paralleltop->L2G (locvert) = int(globvert);
-	glob2loc_vert_ht.Set (int(globvert), locvert);
+        paralleltop->L2G (locvert) = globvert.Nr1();
+	glob2loc_vert_ht.Set (globvert.Nr0(), locvert);
       }
     
     for (int i = 0; i < numvert; i++)
@@ -1086,7 +1086,7 @@ namespace netgen
     for (int hi = 0; hi < dist_pnums.Size(); hi += 3)
       paralleltop ->
 	// SetDistantPNum (dist_pnums[hi+1], dist_pnums[hi]); // , dist_pnums[hi+2]);
-        AddDistantProc (PointIndex(dist_pnums[hi]), dist_pnums[hi+1]);
+        AddDistantProc (PointIndex::FromNr0(dist_pnums[hi]), dist_pnums[hi+1]);
     
     timer_pts.Stop();
     *testout << "got " << numvert << " vertices" << endl;
@@ -1161,7 +1161,7 @@ namespace netgen
 	pack.Unpack(el);
 	/** map global point numbers to local ones **/
 	for (int k : Range(1, 1+el.GetNP()))
-	  { el.PNum(k) = glob2loc_vert_ht.Get(int(el.PNum(k))); }
+	  { el.PNum(k) = glob2loc_vert_ht.Get(el.PNum(k).Nr0()); }
 	paralleltop->SetLoc2Glob_SurfEl (sel+1, pack.sei);
 	AddSurfaceElement (el);
 	sel++;
@@ -1188,8 +1188,8 @@ namespace netgen
 	  globsegi = int (segmbuf[ii++]);
 	  ii++; // fdi (now on EdgeDescriptor)
 	  
-	  seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]) + PointIndex::BASE);
-	  seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]) + PointIndex::BASE);
+	  seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
+	  seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
 	  seg.GeomInfo(0).trignum = int( segmbuf[ii++] );
 	  seg.GeomInfo(1).trignum = int ( segmbuf[ii++]);
 	  ii++; // surfnr1 (on EdgeDescriptor)
@@ -1219,7 +1219,7 @@ namespace netgen
       pointelements.SetSize(zdes.Size());
       for (auto k : Range(pointelements)) {
 	auto & el = pointelements[k];
-	el.pnum = glob2loc_vert_ht.Get(int(zdes[k].pnum));
+	el.pnum = glob2loc_vert_ht.Get(zdes[k].pnum.Nr0());
 	el.index = zdes[k].index;
       }
     }

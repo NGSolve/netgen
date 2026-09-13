@@ -199,6 +199,10 @@ namespace netgen
     constexpr T Nr0 () const { return i - BASE_; }
     /// index for a 0-based number
     static constexpr TIndex FromNr0 (T i0) { return TIndex(T(BASE_) + i0); }
+    /// 1-based number of this index (file formats, external interfaces)
+    constexpr T Nr1 () const { return i - BASE_ + 1; }
+    /// index for a 1-based number
+    static constexpr TIndex FromNr1 (T i1) { return TIndex(T(BASE_) + i1 - 1); }
 
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
@@ -257,6 +261,7 @@ namespace netgen
   public:
     using Index::Index;
     operator int () const = delete;    // a PointIndex stays a PointIndex
+    operator int & () = delete;
     template <int N> friend class PointIndices;    
   };
 
@@ -276,14 +281,14 @@ namespace netgen
   {
     // int i; ist >> i; pi = PointIndex(i); return ist;
     int i; ist >> i;
-    pi = IndexBASE<PointIndex>()+i-1;
+    pi = PointIndex::FromNr1(i);
     return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const PointIndex & pi)
   {
     // return (ost << int(pi));
-    int intpi = pi - IndexBASE<PointIndex>() + 1;
+    int intpi = pi.Nr1();
     return (ost << intpi);    
   }
 
@@ -305,7 +310,7 @@ namespace netgen
     PointIndices & operator= (PointIndices&&) = default;
     
     constexpr PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
-    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(int(i1),int(i2)) { ; } 
+    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1.i,i2.i) { ; } 
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
 
@@ -318,7 +323,7 @@ namespace netgen
     PointIndex I2 () const { return (*this)[1]; }
     
     using INDEX_2::Sort;
-    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(int(i1), int(i2)); }
+    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1.i, i2.i); }
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
@@ -332,7 +337,7 @@ namespace netgen
     PointIndices & operator= (const PointIndices&) = default;
     PointIndices & operator= (PointIndices&&) = default;
     constexpr PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
-    constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(int(i1),int(i2),int(i3)) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1.i,i2.i,i3.i) { ; }
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
 
@@ -347,7 +352,7 @@ namespace netgen
     constexpr PointIndex I3 () const { return (*this)[2]; }
 
     using INDEX_3::Sort;
-    static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(int(i1), int(i2), int(i3)); }
+    static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(i1.i, i2.i, i3.i); }
     template <size_t J>
     constexpr PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
   };
@@ -357,7 +362,7 @@ namespace netgen
   public:
     PointIndices () = default;
     PointIndices (INDEX_4 i4) : INDEX_4(i4) { ; }
-    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(int(i1),int(i2),int(i3),int(i4)) { ; } 
+    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(i1.i,i2.i,i3.i,i4.i) { ; } 
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
 
@@ -670,12 +675,12 @@ namespace netgen
   }
 
   // rule files number their points 1-based
-  inline constexpr RulePointIndex RuleP (int nr) { return IndexBASE<RulePointIndex>()+nr-1; }
+  inline constexpr RulePointIndex RuleP (int nr) { return RulePointIndex::FromNr1(nr); }
 
   inline istream & operator>> (istream & ist, RulePointIndex & rpi)
   {
     int i; ist >> i;
-    rpi = IndexBASE<RulePointIndex>()+i-1;
+    rpi = RulePointIndex::FromNr1(i);
     return ist;
   }
 
@@ -1065,10 +1070,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       // archive stores 1-based point numbers, independent of BASE
       int nr1[ELEMENT2D_MAXPOINTS];
       if (ar.Output())
-        for (int k = 0; k < np; k++) nr1[k] = pnum[k] - IndexBASE<PointIndex>() + 1;
+        for (int k = 0; k < np; k++) nr1[k] = pnum[k].Nr1();
       ar.Do (nr1, np);
       if (ar.Input())
-        for (int k = 0; k < np; k++) pnum[k] = IndexBASE<PointIndex>() + nr1[k] - 1;
+        for (int k = 0; k < np; k++) pnum[k] = PointIndex::FromNr1(nr1[k]);
     }
 
 #ifdef PARALLEL
@@ -1380,10 +1385,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       // archive stores 1-based point numbers, independent of BASE
       int nr1[ELEMENT_MAXPOINTS];
       if (ar.Output())
-        for (int k = 0; k < np; k++) nr1[k] = pnum[k] - IndexBASE<PointIndex>() + 1;
+        for (int k = 0; k < np; k++) nr1[k] = pnum[k].Nr1();
       ar.Do (nr1, np);
       if (ar.Input())
-        for (int k = 0; k < np; k++) pnum[k] = IndexBASE<PointIndex>() + nr1[k] - 1;
+        for (int k = 0; k < np; k++) pnum[k] = PointIndex::FromNr1(nr1[k]);
     }
     
 #ifdef PARALLEL

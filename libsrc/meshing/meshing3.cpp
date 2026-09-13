@@ -775,7 +775,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   for(int i = 1; i <= adfront->GetNP(); i++)
     {
-      const auto & p = adfront->GetPoint(Front3PointIndex::FromNr0(i-1));
+      const auto & p = adfront->GetPoint(Front3PointIndex::FromNr1(i));
       if (i == 1)
 	{
 	  xmin = xmax = p(0);

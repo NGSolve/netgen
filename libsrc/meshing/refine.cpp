@@ -276,8 +276,8 @@ namespace netgen
 		      between.Set (i2, pnums.Get(4+j));
 		    }
                   */
-		  if (surfgi.Size() < pnums.Elem(4+j)-IndexBASE<PointIndex>()+1)
-		    surfgi.SetSize (pnums.Elem(4+j)-IndexBASE<PointIndex>()+1);
+		  if (surfgi.Size() < pnums.Elem(4+j).Nr1())
+		    surfgi.SetSize (pnums.Elem(4+j).Nr1());
 		  surfgi[pnums.Elem(4+j)] = pgis.Elem(4+j);
 		}
 
@@ -359,8 +359,8 @@ namespace netgen
                       mesh.Point(pinew) = pb;                      
                     }
                   
-                  if (surfgi.Size() < pnums[4+j]-IndexBASE<PointIndex>()+1)
-                    surfgi.SetSize (pnums[4+j]-IndexBASE<PointIndex>()+1);
+                  if (surfgi.Size() < pnums[4+j].Nr1())
+                    surfgi.SetSize (pnums[4+j].Nr1());
                   surfgi[pnums[4+j]] = pgis[4+j];
                 }
 

@@ -609,9 +609,9 @@ namespace netgen
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
         
-        Element0d el(pi, pi-IndexBASE<PointIndex>()+1);
+        Element0d el(pi, pi.Nr1());
         el.name = vert->properties.GetName();
-        mesh.SetCD3Name(pi-IndexBASE<PointIndex>()+1, el.name);
+        mesh.SetCD3Name(pi.Nr1(), el.name);
         mesh.pointelements.Append (el);
       }
 

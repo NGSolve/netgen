@@ -165,26 +165,26 @@ namespace netgen
 
 	      for (int k = 0; k < locsearch.Size(); k++)
 		{
-		  PointIndex pk = locsearch[k];
+		  PointIndex pk = PointIndex::FromNr0(locsearch[k]);
 		  if (mesh[pk].GetLayer() == spline.layer) pi1 = pk;
 		}
 	      
 	      searchtree.GetIntersecting (mark3 - v, mark3 + v, locsearch);
 	      for (int k = 0; k < locsearch.Size(); k++)
 		{
-		  PointIndex pk = locsearch[k];
+		  PointIndex pk = PointIndex::FromNr0(locsearch[k]);
 		  if (mesh[pk].GetLayer() == spline.layer) pi2 = pk;
 		}
 
 	      if (!pi1.IsValid())
 		{
 		  pi1 = mesh.AddPoint(oldmark3, spline.layer);
-		  searchtree.Insert (oldmark3, int(pi1));
+		  searchtree.Insert (oldmark3, pi1.Nr0());
 		}
 	      if (!pi2.IsValid())
 		{
 		  pi2 = mesh.AddPoint(mark3, spline.layer);
-		  searchtree.Insert (mark3, int(pi2));
+		  searchtree.Insert (mark3, pi2.Nr0());
 		}
 
 	      Segment seg;
@@ -288,11 +288,11 @@ namespace netgen
           Point<3> newp(point(0), point(1), 0);
           PointIndex npi = mesh2d.AddPoint (newp, 1, FIXEDPOINT);
           mesh2d.AddLockedPoint(npi);
-          Element0d el(npi, npi-IndexBASE<PointIndex>()+1);
+          Element0d el(npi, npi.Nr1());
           el.name = point.name;
-          mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, point.name);
+          mesh2d.SetCD2Name(npi.Nr1(), point.name);
           mesh2d.pointelements.Append (el);
-          searchtree.Insert (newp, int(npi));          
+          searchtree.Insert (newp, npi.Nr0());          
         }
 
     // first add all vertices (for compatible orientation on periodic bnds)
@@ -313,11 +313,11 @@ namespace netgen
 	    if (!npi.IsValid())
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
-		searchtree.Insert (newp, int(npi));
+		searchtree.Insert (newp, npi.Nr0());
                 mesh2d.AddLockedPoint(npi);
-                Element0d el(npi, npi-IndexBASE<PointIndex>()+1);
+                Element0d el(npi, npi.Nr1());
                 el.name = "";
-                mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, "");
+                mesh2d.SetCD2Name(npi.Nr1(), "");
                 mesh2d.pointelements.Append (el);
 	      }
           }
@@ -389,7 +389,7 @@ namespace netgen
 	    if (!npi.IsValid())
 	      {
 		npi = mesh.AddPoint (newp3);
-		searchtree.Insert (newp3, int(npi));
+		searchtree.Insert (newp3, npi.Nr0());
 	      }
 
 	    mappoints[i] = npi;

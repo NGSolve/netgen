@@ -288,7 +288,7 @@ namespace netgen
     {
       // return points.Elem(i);
       // return Point (PointIndex(i+PointIndex::BASE-1));
-      return Point (PointIndex(IndexBASE<PointIndex>()+i-1)); 
+      return Point (PointIndex::FromNr1(i)); 
     } 
     MeshPoint & Point(PointIndex pi) { return points[pi]; }
     // [[deprecated("Use Point(PointIndex) instead of int !")]]            
@@ -296,7 +296,7 @@ namespace netgen
     {
       // return points.Get(i);
       // return Point (PointIndex(i+PointIndex::BASE-1));
-      return Point (PointIndex(IndexBASE<PointIndex>()+i-1));       
+      return Point (PointIndex::FromNr1(i));       
     }
     const MeshPoint & Point(PointIndex pi) const { return points[pi]; }
 

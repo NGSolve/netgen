@@ -201,9 +201,9 @@ namespace nglib
       Mesh * m = (Mesh*)mesh;
       Element2d el (3);
       el.SetIndex (1);
-      el.PNum(1) = IndexBASE<PointIndex>()+pi[0]-1;
-      el.PNum(2) = IndexBASE<PointIndex>()+pi[1]-1;
-      el.PNum(3) = IndexBASE<PointIndex>()+pi[2]-1;
+      el.PNum(1) = PointIndex::FromNr1(pi[0]);
+      el.PNum(2) = PointIndex::FromNr1(pi[1]);
+      el.PNum(3) = PointIndex::FromNr1(pi[2]);
       m->AddSurfaceElement (el);
    }
 
@@ -217,10 +217,10 @@ namespace nglib
       Mesh * m = (Mesh*)mesh;
       Element el (4);
       el.SetIndex (1);
-      el.PNum(1) = IndexBASE<PointIndex>()+pi[0]-1;
-      el.PNum(2) = IndexBASE<PointIndex>()+pi[1]-1;
-      el.PNum(3) = IndexBASE<PointIndex>()+pi[2]-1;
-      el.PNum(4) = IndexBASE<PointIndex>()+pi[3]-1;
+      el.PNum(1) = PointIndex::FromNr1(pi[0]);
+      el.PNum(2) = PointIndex::FromNr1(pi[1]);
+      el.PNum(3) = PointIndex::FromNr1(pi[2]);
+      el.PNum(4) = PointIndex::FromNr1(pi[3]);
       m->AddVolumeElement (el);
    }
 
@@ -272,7 +272,7 @@ namespace nglib
    {
      const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex(num-1));
       for (int i = 1; i <= el.GetNP(); i++)
-         pi[i-1] = el.PNum(i) - IndexBASE<PointIndex>() + 1;
+         pi[i-1] = el.PNum(i).Nr1();
       Ng_Surface_Element_Type et;
       switch (el.GetNP())
       {
@@ -303,7 +303,7 @@ namespace nglib
    {
      const Element & el = ((Mesh*)mesh)->VolumeElement(ElementIndex(num-1));
       for (int i = 1; i <= el.GetNP(); i++)
-         pi[i-1] = el.PNum(i) - IndexBASE<PointIndex>() + 1;
+         pi[i-1] = el.PNum(i).Nr1();
       Ng_Volume_Element_Type et;
       switch (el.GetNP())
       {
@@ -441,7 +441,7 @@ namespace nglib
    {
      const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex(num-1));
       for (int i = 1; i <= el.GetNP(); i++)
-         pi[i-1] = el.PNum(i) - IndexBASE<PointIndex>() + 1;
+         pi[i-1] = el.PNum(i).Nr1();
 
       Ng_Surface_Element_Type et;
       switch (el.GetNP())
@@ -474,8 +474,8 @@ namespace nglib
    NGLIB_API void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum)
    {
       const Segment & seg = ((Mesh*)mesh)->LineSegment(num);
-      pi[0] = seg[0] - IndexBASE<PointIndex>() + 1;
-      pi[1] = seg[1] - IndexBASE<PointIndex>() + 1;
+      pi[0] = seg[0].Nr1();
+      pi[1] = seg[1].Nr1();
 
       if (matnum)
          *matnum = ((Mesh*)mesh)->GetEdgeDescriptor(seg.GetIndex()).EdgeNr();

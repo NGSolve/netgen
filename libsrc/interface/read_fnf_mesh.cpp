@@ -318,9 +318,9 @@ namespace netgen
                             for (int j = 0; j+2 < enums.Size(); j+=2)
                               {
                                 Segment seg;
-                                seg[0] = IndexBASE<PointIndex>()+enums[j]-1;
-                                seg[1] = IndexBASE<PointIndex>()+enums[j+2]-1;
-                                seg[2] = IndexBASE<PointIndex>()+enums[j+1]-1;
+                                seg[0] = PointIndex::FromNr1(enums[j]);
+                                seg[1] = PointIndex::FromNr1(enums[j+2]);
+                                seg[2] = PointIndex::FromNr1(enums[j+1]);
                                 mesh.AddSegment (seg);
                               }
                           }

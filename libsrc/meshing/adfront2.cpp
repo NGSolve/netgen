@@ -345,7 +345,7 @@ namespace netgen
 		line[i] = locpoints.Range().Next()-1;
 	      }
 	    else
-	      line[i] = LocalPointIndex::FromNr0(invpindex[pi]-1);
+	      line[i] = LocalPointIndex::FromNr1(invpindex[pi]);
 	  }
         loclines.Append (line);
       }

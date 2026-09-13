@@ -623,7 +623,7 @@ int Meshing3 :: ApplyRules
 			{
 			  const Point3d & lp = lpoints[pmap[pi]];
 			  const Point3d & rp = rule->GetPoint(pi);
-			  int i = pi.Nr0()+1;
+			  int i = pi.Nr1();
 			  oldu (3*i-3) = lp.X()-rp.X();
                           oldu (3*i-2) = lp.Y()-rp.Y();
 			  oldu (3*i-1) = lp.Z()-rp.Z();
@@ -644,7 +644,7 @@ int Meshing3 :: ApplyRules
 		      for (auto pi : pmap.Range().Modify(rule->GetNOldP(), 0))
 			{
 			  const Point3d & rp = rule->GetPoint(pi);
-			  int i = pi.Nr0()+1;
+			  int i = pi.Nr1();
 			  allp (3*i-3) = rp.X() + newu(3*i-3 - idiff);
                           allp (3*i-2) = rp.Y() + newu(3*i-2 - idiff);
                           allp (3*i-1) = rp.Z() + newu(3*i-1 - idiff);
@@ -716,7 +716,7 @@ int Meshing3 :: ApplyRules
 				      LocalPointIndex pi = lfacei.PNum(li);
 				      for (auto pj : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
 					if (pmap[pj] == pi)
-					  lpii = pj.Nr0()+1;
+					  lpii = pj.Nr1();
 				      lpi.Elem(li) = lpii;
 				    }
 
@@ -890,7 +890,7 @@ int Meshing3 :: ApplyRules
 			  for (auto pi : pmap.Range().Modify(oldnp, 0))
 			    {
 			      np = rule->GetPoint(pi);
-			      int i = pi.Nr0()+1;
+			      int i = pi.Nr1();
 			      np.X() += newu (3 * (i-oldnp) - 3);
 			      np.Y() += newu (3 * (i-oldnp) - 2);
 			      np.Z() += newu (3 * (i-oldnp) - 1);

@@ -62,7 +62,7 @@ using namespace netgen;
 
 namespace {
   // the Ng_* interface numbers points 1-based, independent of PointIndex::BASE
-  inline int PointNr (PointIndex pi) { return pi - IndexBASE<PointIndex>() + 1; }
+  inline int PointNr (PointIndex pi) { return pi.Nr1(); }
   inline PointIndex PointIdx (int nr) { return nr + IndexBASE<PointIndex>() - 1; }
 }
 
@@ -1616,8 +1616,8 @@ void Ng_GetEdge_Vertices (int ednr, int * vert)
   // topology.GetEdgeVertices (ednr, vert[0], vert[1]);
   // tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
   auto [v1,v2] = topology.GetEdgeVertices(ednr-1);
-  vert[0] = v1-IndexBASE<PointIndex>()+1;
-  vert[1] = v2-IndexBASE<PointIndex>()+1;
+  vert[0] = v1.Nr1();
+  vert[1] = v2.Nr1();
 }
 
 
@@ -1829,8 +1829,8 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   for (size_t i = 0; i < apairs.Size(); i++)
     {
-      pairs[2*i] = apairs[i].I1() - IndexBASE<PointIndex>() + 1;
-      pairs[2*i+1] = apairs[i].I2() - IndexBASE<PointIndex>() + 1;
+      pairs[2*i] = apairs[i].I1().Nr1();
+      pairs[2*i+1] = apairs[i].I2().Nr1();
     }
       
 }

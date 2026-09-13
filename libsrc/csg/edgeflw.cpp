@@ -42,7 +42,7 @@ namespace netgen
     PushStatus ("Find edges");
 
     for (PointIndex pi : mesh.Points().Range())    
-      meshpoint_tree->Insert (mesh[pi], int(pi));
+      meshpoint_tree->Insert (mesh[pi], pi.Nr0());
 
 
     // add all special points before edge points (important for periodic identification)
@@ -60,7 +60,7 @@ namespace netgen
 	  if (locsearch.Size() == 0)
             {
               PointIndex pi = mesh.AddPoint (p, specpoints[i].GetLayer(), FIXEDPOINT);
-              meshpoint_tree -> Insert (p, int(pi)); 
+              meshpoint_tree -> Insert (p, pi.Nr0()); 
             }
         }
            
@@ -698,7 +698,7 @@ namespace netgen
 
 		edgenewp.Elem(seg_ednr) = 
 		  mesh.AddPoint (newp, mesh[seg[0]].GetLayer(), EDGEPOINT);
-		meshpoint_tree -> Insert (newp, int(edgenewp.Elem(seg_ednr)));
+		meshpoint_tree -> Insert (newp, edgenewp.Elem(seg_ednr).Nr0());
 	      }
 	  }
       }
@@ -1413,14 +1413,14 @@ namespace netgen
     meshpoint_tree -> GetIntersecting (p-Vec<3> (di,di,di),
 				       p+Vec<3> (di,di,di), locsearch);
     if (locsearch.Size())
-      lastpi = locsearch[0];
+      lastpi = PointIndex::FromNr0(locsearch[0]);
 				       
 
 
     if (!lastpi.IsValid())
       {
 	lastpi = mesh.AddPoint (p, layer, FIXEDPOINT);
-	meshpoint_tree -> Insert (p, int(lastpi)); 
+	meshpoint_tree -> Insert (p, lastpi.Nr0()); 
 	// (*testout) << "test1, store point " << lastpi << ", p = " << p << endl;
       }
   
@@ -1450,7 +1450,7 @@ namespace netgen
 	    meshpoint_tree -> GetIntersecting (np-Vec<3> (di,di,di),
 					       np+Vec<3> (di,di,di), locsearch);
 	    if (locsearch.Size())
-	      thispi = locsearch[0];
+	      thispi = PointIndex::FromNr0(locsearch[0]);
 	  }
 
 	if (!thispi.IsValid())
@@ -1458,7 +1458,7 @@ namespace netgen
 	    ProjectToEdge (surf1, surf2, np);
 	    thispi = mesh.AddPoint (np, layer, (i==ne) ? FIXEDPOINT : EDGEPOINT);
 	   
-	    meshpoint_tree -> Insert (np, int(thispi));
+	    meshpoint_tree -> Insert (np, thispi.Nr0());
 	    // (*testout) << "test2, store point " << thispi << ", p = " << np << endl;
 	  }
 
@@ -1573,7 +1573,7 @@ namespace netgen
     if (!pi1.IsValid())
       {
 	pi1 = mesh.AddPoint (p, layer, FIXEDPOINT);
-	meshpoint_tree -> Insert (p, int(pi1));
+	meshpoint_tree -> Insert (p, pi1.Nr0());
 	// (*testout) << "test3, store point " << pi1 << ", p = " << p << endl;
       }
 
@@ -1590,7 +1590,7 @@ namespace netgen
     if (!pi2.IsValid())
       {
 	pi2 = mesh.AddPoint (p, layer, FIXEDPOINT);
-	meshpoint_tree -> Insert (p, int(pi2));
+	meshpoint_tree -> Insert (p, pi2.Nr0());
 	// (*testout) << "test4, store point " << pi2 << ", p = " << p << endl;
       }
 
@@ -1697,7 +1697,7 @@ namespace netgen
 	if (!topi.IsValid())
 	  {
 	    topi = mesh.AddPoint (top, layer, FIXEDPOINT);
-	    meshpoint_tree -> Insert (top, int(topi));
+	    meshpoint_tree -> Insert (top, topi.Nr0());
 	  }
 
 	const Identification & csi = 

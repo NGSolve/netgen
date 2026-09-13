@@ -1430,7 +1430,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 1; j <= 4; j++)
-                tet.PNum(j) = ElementVertexIndex::FromNr0(linels[i][j-1]-1);
+                tet.PNum(j) = ElementVertexIndex::FromNr1(linels[i][j-1]);
               locels.Append (tet);
             }
           break;
@@ -1450,7 +1450,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 1; j <= 4; j++)
-                tet.PNum(j) = ElementVertexIndex::FromNr0(linels[i][j-1]-1);
+                tet.PNum(j) = ElementVertexIndex::FromNr1(linels[i][j-1]);
               locels.Append (tet);
             }
           break;
@@ -1464,7 +1464,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 1; j <= 4; j++)
-                tet.PNum(j) = ElementVertexIndex::FromNr0(linels[i][j-1]-1);
+                tet.PNum(j) = ElementVertexIndex::FromNr1(linels[i][j-1]);
               locels.Append (tet);
             }
           break;
@@ -1481,7 +1481,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 0; j < 4; j++)
-                tet[j] = ElementVertexIndex::FromNr0(linels[i][j]-1);
+                tet[j] = ElementVertexIndex::FromNr1(linels[i][j]);
               locels.Append (tet);
             }
           break;
@@ -1500,7 +1500,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 0; j < 4; j++)
-                tet[j] = ElementVertexIndex::FromNr0(linels[i][j]-1);
+                tet[j] = ElementVertexIndex::FromNr1(linels[i][j]);
               locels.Append (tet);
             }
           break;
@@ -1866,7 +1866,7 @@ namespace netgen
       {
         surftrigs.Elem(j+1) = ElementFace(3);
         for (int k = 0; k < 3; k++)
-          surftrigs.Elem(j+1).PNum(k+1) = ElementVertexIndex::FromNr0(fp[j][k]-1);
+          surftrigs.Elem(j+1).PNum(k+1) = ElementVertexIndex::FromNr1(fp[j][k]);
       }
   }
 
@@ -2746,17 +2746,23 @@ namespace netgen
       ar & maxidentnr;
       ar & identifiedpoints & identifiedpoints_nr;
       // idpoints_table is archived as raw bytes: store 1-based numbers, independent of BASE
-      auto shift = [&](int d)
+      auto to_nr1 = [&]()
       {
         for (int i = 0; i < idpoints_table.Size(); i++)
           for (auto & p : idpoints_table[i])
             for (int k = 0; k < 2; k++)
-              p[k] = PointIndex(int(p[k]) + d);
+              p[k] = PointIndex::FromNr0(p[k].Nr1());
       };
-      int d = 1 - int(IndexBASE<PointIndex>());
-      if (ar.Output()) shift(d);
+      auto from_nr1 = [&]()
+      {
+        for (int i = 0; i < idpoints_table.Size(); i++)
+          for (auto & p : idpoints_table[i])
+            for (int k = 0; k < 2; k++)
+              p[k] = PointIndex::FromNr1(p[k].Nr0());
+      };
+      if (ar.Output()) to_nr1();
       ar & idpoints_table;
-      shift(-d);
+      from_nr1();
       
       if (ar.Output())
         {
@@ -2950,8 +2956,8 @@ namespace netgen
     // can we get data by reference ? 
     for (auto [hash,data] : identifiedpoints)
       {
-        if (hash.I1() > PointIndex::FromNr0(maxpnum-1) ||
-            hash.I2() > PointIndex::FromNr0(maxpnum-1))
+        if (hash.I1() > PointIndex::FromNr1(maxpnum) ||
+            hash.I2() > PointIndex::FromNr1(maxpnum))
           {
             identifiedpoints[hash] = -1;
           }

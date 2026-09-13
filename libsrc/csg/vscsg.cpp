@@ -418,7 +418,7 @@ namespace netgen
 	    const Point3d & p = mesh->Point(i);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	  
-	    snprintf (buf, sizeof(buf), "%d", int(i));
+	    snprintf (buf, sizeof(buf), "%d", i.Nr1());
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
 	    MyOpenGLText (buf);
 	  }
