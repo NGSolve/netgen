@@ -8,7 +8,7 @@ namespace netgen
 
   // find singular edges
   void SelectSingularEdges (const Mesh & mesh, const CSGeometry & geom, 
-			    INDEX_2_HASHTABLE<int> & singedges,
+			    ClosedHashTable<SortedPointIndices<2>, int> & singedges,
 			    ZRefinementOptions & opt)
   {
     // edges selected in csg input file
@@ -20,7 +20,7 @@ namespace netgen
 	const SingularEdge & se = *geom.singedges.Get(i);
 	for (int j = 1; j <= se.segms.Size(); j++)
 	  {
-	    INDEX_2 i2 = se.segms.Get(j);
+	    PointIndices<2> i2 = se.segms.Get(j);
 	    singedges.Set (i2, 1);
 	  }
       }
@@ -32,8 +32,7 @@ namespace netgen
 	auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
 	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
 	  {
-	    INDEX_2 i2(seg[0], seg[1]);
-	    i2.Sort();
+	    PointIndices<2> i2(seg[0], seg[1]);
 	    singedges.Set (i2, 1);
 	  }
       }
@@ -43,7 +42,7 @@ namespace netgen
   /**
      Convert elements (vol-tets, surf-trigs) into prisms/quads
   */
-  void MakePrismsSingEdge (Mesh & mesh, INDEX_2_HASHTABLE<int> & singedges)
+  void MakePrismsSingEdge (Mesh & mesh, ClosedHashTable<SortedPointIndices<2>, int> & singedges)
   {
     // volume elements
     // for (int i = 1; i <= mesh.GetNE(); i++)
@@ -55,16 +54,15 @@ namespace netgen
 	for (int j = 1; j <= 3; j++)
 	  for (int k = j+1; k <= 4; k++)
 	    {
-	      INDEX_2 edge(el.PNum(j), el.PNum(k));
-	      edge.Sort();
+	      SortedPointIndices<2> edge(el.PNum(j), el.PNum(k));
 	      if (singedges.Used (edge))
 		{
 		  int pi3 = 1, pi4 = 1;
 		  while (pi3 == j || pi3 == k) pi3++;
 		  pi4 = 10 - j - k - pi3;
 		
-		  int p3 = el.PNum(pi3);
-		  int p4 = el.PNum(pi4);
+		  PointIndex p3 = el.PNum(pi3);
+		  PointIndex p4 = el.PNum(pi4);
 
 		  el.SetType(PRISM);
 		  el.PNum(1) = edge.I1();
@@ -86,15 +84,14 @@ namespace netgen
 	for (int j = 1; j <= 3; j++)
 	  {
 	    int k = (j % 3) + 1;
-	    INDEX_2 edge(el.PNum(j), el.PNum(k));
-	    edge.Sort();
+	    SortedPointIndices<2> edge(el.PNum(j), el.PNum(k));
 
 	    if (singedges.Used (edge))
 	      {
 		int pi3 = 6-j-k;
-		int p3 = el.PNum(pi3);
-		int p1 = el.PNum(j);
-		int p2 = el.PNum(k);
+		PointIndex p3 = el.PNum(pi3);
+		PointIndex p1 = el.PNum(j);
+		PointIndex p2 = el.PNum(k);
 
 		el.SetType(QUAD);
 		el.PNum(1) = p2;
@@ -121,16 +118,15 @@ namespace netgen
 	    for (int j = 1; j <= 3; j++)
 	      for (int k = j+1; k <= 4; k++)
 		{
-		  INDEX_2 edge(el.PNum(j), el.PNum(k));
-		  edge.Sort();
+		  SortedPointIndices<2> edge(el.PNum(j), el.PNum(k));
 		  if (mesh.GetIdentifications().UsedSymmetric (el.PNum(j), el.PNum(k)))
 		    {
 		      int pi3 = 1, pi4 = 1;
 		      while (pi3 == j || pi3 == k) pi3++;
 		      pi4 = 10 - j - k - pi3;
 		    
-		      int p3 = el.PNum(pi3);
-		      int p4 = el.PNum(pi4);
+		      PointIndex p3 = el.PNum(pi3);
+		      PointIndex p4 = el.PNum(pi4);
 		    
 		      el.SetType(PRISM);
 		      el.PNum(1) = edge.I1();
@@ -155,10 +151,6 @@ namespace netgen
 		PointIndex pi4 = el.PNum( (j+3) % 4 + 1);
 		PointIndex pi5 = el.PNum(5);
 
-		INDEX_2 edge1(pi1, pi4);
-		INDEX_2 edge2(pi2, pi3);
-		edge1.Sort();
-		edge2.Sort();
 		if (mesh.GetIdentifications().UsedSymmetric (pi1, pi4) &&
 		    mesh.GetIdentifications().UsedSymmetric (pi2, pi3))
 		  {
@@ -185,15 +177,12 @@ namespace netgen
 	for (int j = 1; j <= 3; j++)
 	  {
 	    int k = (j % 3) + 1;
-	    INDEX_2 edge(el.PNum(j), el.PNum(k));
-	    edge.Sort();
-
 	    if (mesh.GetIdentifications().UsedSymmetric (el.PNum(j), el.PNum(k)))
 	      {
 		int pi3 = 6-j-k;
-		int p3 = el.PNum(pi3);
-		int p1 = el.PNum(j);
-		int p2 = el.PNum(k);
+		PointIndex p3 = el.PNum(pi3);
+		PointIndex p1 = el.PNum(j);
+		PointIndex p2 = el.PNum(k);
 
 		el.SetType(QUAD);
 		el.PNum(1) = p2;
@@ -251,11 +240,12 @@ namespace netgen
     int cnt = 0;
 
 
-    // markers for z-refinement:  p1, p2, levels  
-    // p1-p2 is an edge to be refined
-    NgArray<INDEX_3> ref_uniform;
-    NgArray<INDEX_3> ref_singular;
-    NgArray<INDEX_4 > ref_slices;
+    // markers for z-refinement: the edge pts[0]-pts[1] is to be refined
+    struct RefEdge { PointIndices<2> pts; int levels; };
+    struct RefSliceEdge { PointIndices<2> pts; int idnr, slicenr; };
+    Array<RefEdge> ref_uniform;
+    Array<RefEdge> ref_singular;
+    Array<RefSliceEdge> ref_slices;
 
     NgBitArray first_id(geom->identifications.Size());
     first_id.Set();
@@ -295,23 +285,17 @@ namespace netgen
 			  ref_singular.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels1()));
 			  ref_singular.Append (INDEX_3 (pair.I2(), pair.I1(), csid->RefLevels2()));
                           */
-			  ref_uniform.Append (INDEX_3 (pi1, pi2, csid->RefLevels()));
-			  ref_singular.Append (INDEX_3 (pi1, pi2, csid->RefLevels1()));
-			  ref_singular.Append (INDEX_3 (pi2, pi1, csid->RefLevels2()));
+			  ref_uniform.Append ( { { pi1, pi2 }, csid->RefLevels() } );
+			  ref_singular.Append ( { { pi1, pi2 }, csid->RefLevels1() } );
+			  ref_singular.Append ( { { pi2, pi1 }, csid->RefLevels2() } );
                           
 			}
 		    }
 		  else
 		    {   
 		      //const Array<double> & slices = csid->GetSlices();
-		      INDEX_4 i4;
-		      // i4[0] = pair.I1();
-		      // i4[1] = pair.I2();
-		      i4[0] = pi1; 
-		      i4[1] = pi2; 
-		      i4[2] = idnr;
-		      i4[3] = csid->GetSlices().Size();
-		      ref_slices.Append (i4);
+		      ref_slices.Append ( { { pi1, pi2 }, idnr,
+                                            int(csid->GetSlices().Size()) } );
 		    }
 		}
 	    }
@@ -325,26 +309,25 @@ namespace netgen
       {
 	cnt++;
 	PrintMessage (3, "Z-Refinement, level = ", cnt);
-	INDEX_2_HASHTABLE<int> refedges(mesh.GetNSE()+1);
+	ClosedHashTable<SortedPointIndices<2>, PointIndex> refedges(mesh.GetNSE()+1);
 
 
 	found = 0;
 	// mark prisms due to close surface flags:
-	int oldsize = ref_uniform.Size();
-	for (int i = 1; i <= oldsize; i++)
+	size_t oldsize = ref_uniform.Size();
+	for (size_t i = 0; i < oldsize; i++)
 	  {
-	    int pi1 = ref_uniform.Get(i).I1();
-	    int pi2 = ref_uniform.Get(i).I2();
-	    int levels = ref_uniform.Get(i).I3();
+	    PointIndex pi1 = ref_uniform[i].pts[0];
+	    PointIndex pi2 = ref_uniform[i].pts[1];
+	    int levels = ref_uniform[i].levels;
 
 	    if (levels > 0)
 	      {
-		const Point3d & p1 = mesh[PointIndex(pi1)];
-		const Point3d & p2 = mesh[PointIndex(pi2)];
-		int npi(0);
+		const Point3d & p1 = mesh[pi1];
+		const Point3d & p2 = mesh[pi2];
+		PointIndex npi = PointIndex::INVALID;
 	      
-		INDEX_2 edge(pi1, pi2);
-		edge.Sort();
+		SortedPointIndices<2> edge(pi1, pi2);
 		if (!refedges.Used(edge))
 		  {
 		    Point3d np = Center (p1, p2);
@@ -353,24 +336,23 @@ namespace netgen
 		    found = 1;
 		  }
 
-		ref_uniform.Elem(i) = INDEX_3(pi1, npi, levels-1);
-		ref_uniform.Append (INDEX_3(pi2, npi, levels-1));
+		ref_uniform[i] = { { pi1, npi }, levels-1 };
+		ref_uniform.Append ( { { pi2, npi }, levels-1 } );
 	      }
 	  }
-	for (int i = 1; i <= ref_singular.Size(); i++)
+	for (size_t i = 0; i < ref_singular.Size(); i++)
 	  {
-	    int pi1 = ref_singular.Get(i).I1();
-	    int pi2 = ref_singular.Get(i).I2();
-	    int levels = ref_singular.Get(i).I3();
+	    PointIndex pi1 = ref_singular[i].pts[0];
+	    PointIndex pi2 = ref_singular[i].pts[1];
+	    int levels = ref_singular[i].levels;
 
 	    if (levels > 0)
 	      {
-		const Point3d & p1 = mesh[PointIndex(pi1)];
-		const Point3d & p2 = mesh[PointIndex(pi2)];
-		int npi;
+		const Point3d & p1 = mesh[pi1];
+		const Point3d & p2 = mesh[pi2];
+		PointIndex npi;
 	      
-		INDEX_2 edge(pi1, pi2);
-		edge.Sort();
+		SortedPointIndices<2> edge(pi1, pi2);
 		if (!refedges.Used(edge))
 		  {
 		    Point3d np = Center (p1, p2);
@@ -381,30 +363,29 @@ namespace netgen
 		else
 		  npi = refedges.Get (edge);
 
-		ref_singular.Elem(i) = INDEX_3(pi1, npi, levels-1);
+		ref_singular[i] = { { pi1, npi }, levels-1 };
 	      }
 	  }
 
-	for (int i = 1; i <= ref_slices.Size(); i++)
+	for (size_t i = 0; i < ref_slices.Size(); i++)
 	  {
-	    int pi1 = ref_slices.Get(i)[0];
-	    int pi2 = ref_slices.Get(i)[1];
-	    int idnr = ref_slices.Get(i)[2];
-	    int slicenr = ref_slices.Get(i)[3];
+	    PointIndex pi1 = ref_slices[i].pts[0];
+	    PointIndex pi2 = ref_slices[i].pts[1];
+	    int idnr = ref_slices[i].idnr;
+	    int slicenr = ref_slices[i].slicenr;
 
 	    if (slicenr > 0)
 	      {
-		const Point3d & p1 = mesh[PointIndex(pi1)];
-		const Point3d & p2 = mesh[PointIndex(pi2)];
-		int npi;
+		const Point3d & p1 = mesh[pi1];
+		const Point3d & p2 = mesh[pi2];
+		PointIndex npi;
 
 		const CloseSurfaceIdentification * csid = 
 		  dynamic_cast<const CloseSurfaceIdentification*> 
 		  (geom->identifications.Get(idnr));
 
 	      
-		INDEX_2 edge(pi1, pi2);
-		edge.Sort();
+		SortedPointIndices<2> edge(pi1, pi2);
 		if (!refedges.Used(edge))
 		  {
 		    const auto& slices = csid->GetSlices();
@@ -423,8 +404,8 @@ namespace netgen
 		else
 		  npi = refedges.Get (edge);
 		
-		ref_slices.Elem(i)[1] = npi;
-		ref_slices.Elem(i)[3] --;
+		ref_slices[i].pts[1] = npi;
+		ref_slices[i].slicenr--;
 	      }
 	  }
 
@@ -439,10 +420,10 @@ namespace netgen
 
 	    for (int j = 1; j <= 3; j++)
 	      {
-		int pi1 = el.PNum(j);
-		int pi2 = el.PNum(j+3);
-		const Point3d & p1 = mesh[PointIndex(pi1)];
-		const Point3d & p2 = mesh[PointIndex(pi2)];
+		PointIndex pi1 = el.PNum(j);
+		PointIndex pi2 = el.PNum(j+3);
+		const Point3d & p1 = mesh[pi1];
+		const Point3d & p2 = mesh[pi2];
 
 		bool ref = 0;
 
@@ -462,12 +443,11 @@ namespace netgen
 		*/
 		if (ref == 1)
 		  {
-		    INDEX_2 edge(pi1, pi2);
-		    edge.Sort();
+		    SortedPointIndices<2> edge(pi1, pi2);
 		    if (!refedges.Used(edge))
 		      {
 			Point3d np = Center (p1, p2);
-			int npi = mesh.AddPoint (np);
+			PointIndex npi = mesh.AddPoint (np);
 			refedges.Set (edge, npi);
 			found = 1;
 		      }
@@ -492,12 +472,11 @@ namespace netgen
 		bool hasref = 0, hasnonref = 0;
 		for (int j = 1; j <= 3; j++)
 		  {
-		    int pi1 = el.PNum(j);
-		    int pi2 = el.PNum(j+3);
+		    PointIndex pi1 = el.PNum(j);
+		    PointIndex pi2 = el.PNum(j+3);
 		    if (pi1 != pi2)
 		      {
-			INDEX_2 edge(pi1, pi2);
-			edge.Sort();
+			SortedPointIndices<2> edge(pi1, pi2);
 			if (refedges.Used(edge))
 			  hasref = 1;
 			else 
@@ -511,17 +490,16 @@ namespace netgen
 		    change = 1;
 		    for (int j = 1; j <= 3; j++)
 		      {
-			int pi1 = el.PNum(j);
-			int pi2 = el.PNum(j+3);
-			const Point3d & p1 = mesh[PointIndex(pi1)];
-			const Point3d & p2 = mesh[PointIndex(pi2)];
+			PointIndex pi1 = el.PNum(j);
+			PointIndex pi2 = el.PNum(j+3);
+			const Point3d & p1 = mesh[pi1];
+			const Point3d & p2 = mesh[pi2];
 		      
-			INDEX_2 edge(pi1, pi2);
-			edge.Sort();
+			SortedPointIndices<2> edge(pi1, pi2);
 			if (!refedges.Used(edge))
 			  {
 			    Point3d np = Center (p1, p2);
-			    int npi = mesh.AddPoint (np);
+			    PointIndex npi = mesh.AddPoint (np);
 			    refedges.Set (edge, npi);
 			  }
 		      }
@@ -540,10 +518,9 @@ namespace netgen
 	  {
 	    const Segment & el = mesh.LineSegment(i);
 
-	    INDEX_2 i2(el[0], el[1]);
-	    i2.Sort();
+	    SortedPointIndices<2> i2(el[0], el[1]);
 	  
-	    int pnew;
+	    PointIndex pnew;
 	    EdgePointGeomInfo ngi;
       
 	    if (refedges.Used(i2))
@@ -596,18 +573,17 @@ namespace netgen
 	    if (el.GetNP() != 6)
 	      continue;
 
-	    int npi[3];
+	    PointIndex npi[3];
 	    for (int j = 1; j <= 3; j++)
 	      {
-		int pi1 = el.PNum(j);
-		int pi2 = el.PNum(j+3);
+		PointIndex pi1 = el.PNum(j);
+		PointIndex pi2 = el.PNum(j+3);
 
 		if (pi1 == pi2)
 		  npi[j-1] = pi1;
 		else
 		  {
-		    INDEX_2 edge(pi1, pi2);
-		    edge.Sort();
+		    SortedPointIndices<2> edge(pi1, pi2);
 		    if (refedges.Used (edge))
 		      npi[j-1] = refedges.Get(edge);
 		    else
@@ -617,12 +593,12 @@ namespace netgen
 			  << ", edge = " << edge << endl;
 			  cerr << "ERROR: prism " << i << " has hanging node !!" << endl;
 			*/
-			npi[j-1] = 0;
+			npi[j-1] = PointIndex::INVALID;
 		      }
 		  }
 	      }
 
-	    if (npi[0])
+	    if (npi[0].IsValid())
 	      {
 		Element nel1(6), nel2(6);
 		for (int j = 1; j <= 3; j++)
@@ -653,10 +629,10 @@ namespace netgen
 	      continue;
 
 	    int index = el.GetIndex();
-	    int npi[2];
+	    PointIndex npi[2];
 	    for (int j = 1; j <= 2; j++)
 	      {
-		int pi1, pi2;
+		PointIndex pi1, pi2;
 
 		if (j == 1)
 		  {
@@ -673,18 +649,17 @@ namespace netgen
 		  npi[j-1] = pi1;
 		else
 		  {
-		    INDEX_2 edge(pi1, pi2);
-		    edge.Sort();
+		    SortedPointIndices<2> edge(pi1, pi2);
 		    if (refedges.Used (edge))
 		      npi[j-1] = refedges.Get(edge);
 		    else
 		      {
-			npi[j-1] = 0;
+			npi[j-1] = PointIndex::INVALID;
 		      }
 		  }
 	      }
 
-	    if (npi[0])
+	    if (npi[0].IsValid())
 	      {
 		Element2d nel1(QUAD), nel2(QUAD);
 		for (int j = 1; j <= 4; j++)
@@ -713,13 +688,13 @@ namespace netgen
 
 		int si = mesh.GetFaceDescriptor (index).SurfNr();
 
-		Point<3> hp = mesh[PointIndex(npi[0])];
+		Point<3> hp = mesh[npi[0]];
 		geom->GetSurface(si)->Project (hp);
-		mesh[PointIndex(npi[0])].SetPoint (hp);
+		mesh[npi[0]].SetPoint (hp);
 
-		hp = mesh[PointIndex(npi[1])];
+		hp = mesh[npi[1]];
 		geom->GetSurface(si)->Project (hp);
-		mesh[PointIndex(npi[1])].SetPoint (hp);
+		mesh[npi[1]].SetPoint (hp);
 
 		//	      geom->GetSurface(si)->Project (mesh[PointIndex(npi[0])]);
 		//	      geom->GetSurface(si)->Project (mesh[PointIndex(npi[1])]);
@@ -748,7 +723,7 @@ namespace netgen
             else
               {
                 el.SetType(PYRAMID);
-                int pnr5 = el.PNum(3);
+                PointIndex pnr5 = el.PNum(3);
                 el.PNum(3) = el.PNum(5);
                 el.PNum(5) = pnr5;
               }
@@ -762,7 +737,7 @@ namespace netgen
     const CSGeometry * geom = dynamic_cast<const CSGeometry*> (hgeom);
     if (!geom) return;
 
-    INDEX_2_HASHTABLE<int> singedges(mesh.GetNSeg());
+    ClosedHashTable<SortedPointIndices<2>, int> singedges(mesh.GetNSeg());
 
     SelectSingularEdges (mesh, *geom, singedges, opt);
     //MakePrismsSingEdge (mesh, singedges);

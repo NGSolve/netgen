@@ -2828,12 +2828,7 @@ namespace netgen
 
   bool Identifications :: Get (PointIndex pi1, PointIndex pi2, int nr) const
   {
-    // INDEX_3 tripl(pi1, pi2, nr);
-    // if (identifiedpoints_nr.Used (tripl))
-    if (identifiedpoints_nr.Used ( { { pi1, pi1 }, nr } ) )
-      return 1;
-    else
-      return 0;
+    return identifiedpoints_nr.Used ( { { pi1, pi2 }, nr } );
   }
 
 
