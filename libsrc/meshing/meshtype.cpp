@@ -556,7 +556,7 @@ namespace netgen
   }
 
   void Element2d :: 
-  GetTransformation (int ip, const NgArray<Point<2>> & points,
+  GetTransformation (int ip, FlatArray<Point<2>, PointIndex> points,
                      DenseMatrix & trans) const
   {
     int np = GetNP();
@@ -775,7 +775,7 @@ namespace netgen
 
 
   void Element2d ::
-  GetPointMatrix (const Array<Point<2>, PointIndex> & points,
+  GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
                   DenseMatrix & pmat) const
   {
     for (int i = 1; i <= GetNP(); i++)
@@ -786,33 +786,11 @@ namespace netgen
       }
   }
 
-  void Element2d :: 
-  GetPointMatrix (const NgArray<Point<2>> & points,
-                  DenseMatrix & pmat) const
-  {
-    int np = GetNP();
-
-#ifdef DEBUG
-    if (pmat.Width() != np || pmat.Height() != 2)
-      {
-        cerr << "Element::GetPointMatrix: sizes don't fit" << endl;
-        return;
-      }
-#endif
-  
-    for (int i = 1; i <= np; i++)
-      {
-        const auto& p = points.Get(PNum(i));
-        pmat.Elem(1, i) = p[0];
-        pmat.Elem(2, i) = p[1];
-      }
-  }
 
 
 
 
-
-  double Element2d :: CalcJacobianBadness (const NgArray<Point<2>> & points) const
+  double Element2d :: CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const
   {
     int i, j;
     int nip = GetNIP();
@@ -856,7 +834,7 @@ namespace netgen
     };
 
   double Element2d :: 
-  CalcJacobianBadnessDirDeriv (const Array<Point<2>, PointIndex> & points,
+  CalcJacobianBadnessDirDeriv (FlatArray<Point<2>, PointIndex> points,
                                int pi, Vec<2> & dir, double & dd) const
   {
     if (typ == QUAD)
@@ -1426,14 +1404,18 @@ namespace netgen
 
   void Element :: GetTets (NgArray<Element> & locels) const
   {
-    GetTetsLocal (locels);
-    int i, j;
-    for (i = 1; i <= locels.Size(); i++)
-      for (j = 1; j <= 4; j++)
-        locels.Elem(i).PNum(j) = PNum ( locels.Elem(i).PNum(j) );
+    NgArray<ElementTet> loctets;
+    GetTetsLocal (loctets);
+    locels.SetSize (loctets.Size());
+    for (int i = 1; i <= loctets.Size(); i++)
+      {
+        locels.Elem(i) = Element(4);
+        for (int j = 1; j <= 4; j++)
+          locels.Elem(i).PNum(j) = PNum ( loctets.Get(i).PNum(j) );
+      }
   }
 
-  void Element :: GetTetsLocal (NgArray<Element> & locels) const
+  void Element :: GetTetsLocal (NgArray<ElementTet> & locels) const
   {
     int i, j;
     locels.SetSize(0);
@@ -1446,7 +1428,7 @@ namespace netgen
             };
           for (i = 0; i < 1; i++)
             {
-              Element tet(4);
+              ElementTet tet(4);
               for (j = 1; j <= 4; j++)
                 tet.PNum(j) = linels[i][j-1];
               locels.Append (tet);
@@ -1466,7 +1448,7 @@ namespace netgen
               { 6, 8, 10, 9 } };
           for (i = 0; i < 8; i++)
             {
-              Element tet(4);
+              ElementTet tet(4);
               for (j = 1; j <= 4; j++)
                 tet.PNum(j) = linels[i][j-1];
               locels.Append (tet);
@@ -1480,7 +1462,7 @@ namespace netgen
               { 1, 3, 4, 5 } };
           for (i = 0; i < 2; i++)
             {
-              Element tet(4);
+              ElementTet tet(4);
               for (j = 1; j <= 4; j++)
                 tet.PNum(j) = linels[i][j-1];
               locels.Append (tet);
@@ -1497,7 +1479,7 @@ namespace netgen
             };
           for (i = 0; i < 3; i++)
             {
-              Element tet(4);
+              ElementTet tet(4);
               for (j = 0; j < 4; j++)
                 tet[j] = linels[i][j];
               locels.Append (tet);
@@ -1516,7 +1498,7 @@ namespace netgen
             };
           for (i = 0; i < 6; i++)
             {
-              Element tet(4);
+              ElementTet tet(4);
               for (j = 0; j < 4; j++)
                 tet[j] = linels[i][j];
               locels.Append (tet);

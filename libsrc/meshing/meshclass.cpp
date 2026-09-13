@@ -405,12 +405,12 @@ namespace netgen
 
 
 
-  PointIndex Mesh :: AddPoint (const Point3d & p, int layer)
+  PointIndex Mesh :: AddPoint (const netgen::Point<3> & p, int layer)
   { 
     return AddPoint (p, layer, INNERPOINT);
   }
 
-  PointIndex Mesh :: AddPoint (const Point3d & p, int layer, POINTTYPE type)
+  PointIndex Mesh :: AddPoint (const netgen::Point<3> & p, int layer, POINTTYPE type)
   { 
 
     // PointIndex pi = points.End();
@@ -676,7 +676,6 @@ namespace netgen
       return -1;
     };
     */
-    int i, j;
 
     double scale = 1;  // globflags.GetNumFlag ("scale", 1);
     int inverttets = 0;  // globflags.GetDefineFlag ("inverttets");
@@ -735,17 +734,17 @@ namespace netgen
           sel.Invert();
 
         outfile << " " << sel.GetNP();
-        for (j = 0; j < sel.GetNP(); j++)
+        for (int j = 0; j < sel.GetNP(); j++)
           outfile << " " << sel[j];
 
         switch (geomtype)
           {
           case GEOM_STL:
-            for (j = 1; j <= sel.GetNP(); j++)
+            for (int j = 1; j <= sel.GetNP(); j++)
               outfile << " " << sel.GeomInfoPi(j).trignum;
             break;
           case GEOM_OCC: case GEOM_ACIS:
-            for (j = 1; j <= sel.GetNP(); j++)
+            for (int j = 1; j <= sel.GetNP(); j++)
               {
                 outfile << " " << sel.GeomInfoPi(j).u;
                 outfile << " " << sel.GeomInfoPi(j).v;
@@ -770,7 +769,7 @@ namespace netgen
         Element el = (*this)[ei];
         if (inverttets) el.Invert();
 
-        for (j = 0; j < el.GetNP(); j++)
+        for (int j = 0; j < el.GetNP(); j++)
 	  outfile << " " << el[j];
         outfile << "\n";
       }
@@ -782,7 +781,7 @@ namespace netgen
     outfile << "edgesegmentsgi3" << "\n";
     outfile << GetNSeg() << "\n";
 
-    for (i = 1; i <= GetNSeg(); i++)
+    for (int i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment (i);
         outfile.width(8);
@@ -818,7 +817,6 @@ namespace netgen
     outfile.setf (ios::showpoint);
 
     /*
-    PointIndex pi;
     for (pi = PointIndex::BASE; 
          pi < GetNP()+PointIndex::BASE; pi++)
     */
@@ -837,7 +835,7 @@ namespace netgen
     outfile << "pointelements" << "\n";
     outfile << pointelements.Size() << "\n";
 
-    for (i = 0; i < pointelements.Size(); i++)
+    for (int i = 0; i < pointelements.Size(); i++)
       {
         outfile.width(8);
         outfile << pointelements[i].pnum << "  ";
@@ -850,13 +848,13 @@ namespace netgen
         outfile << "identifications\n";
         Array<PointIndices<2>> identpairs;
         int cnt = 0;
-        for (i = 1; i <= ident -> GetMaxNr(); i++)
+        for (int i = 1; i <= ident -> GetMaxNr(); i++)
           {
             ident -> GetPairs (i, identpairs);
             cnt += identpairs.Size();
           }
         outfile << cnt << "\n";
-        for (i = 1; i <= ident -> GetMaxNr(); i++)
+        for (int i = 1; i <= ident -> GetMaxNr(); i++)
           {
             ident -> GetPairs (i, identpairs);
             for (auto pair : identpairs)
@@ -872,7 +870,7 @@ namespace netgen
 
         outfile << "identificationtypes\n";
         outfile << ident -> GetMaxNr() << "\n";
-        for (i = 1; i <= ident -> GetMaxNr(); i++)
+        for (int i = 1; i <= ident -> GetMaxNr(); i++)
           {
             int type = ident -> GetType(i);
             outfile << " " << type;
@@ -880,7 +878,7 @@ namespace netgen
         outfile << "\n";
         outfile << "identificationnames\n";
         outfile << ident -> GetMaxNr() << "\n";
-        for (i = 1; i <= ident -> GetMaxNr(); i++)
+        for (int i = 1; i <= ident -> GetMaxNr(); i++)
           {
             string name = ident -> GetName(i);
             if(name == "")
@@ -911,7 +909,7 @@ namespace netgen
     if ( cntbcnames )
       {
         outfile << "\n\nbcnames" << endl << bcnames.Size() << endl;
-        for ( i = 0; i < bcnames.Size(); i++ )
+        for ( int i = 0; i < bcnames.Size(); i++ )
           outfile << i+1 << "\t" << GetBCName(i) << endl;
         outfile << endl << endl;
       }
@@ -926,7 +924,7 @@ namespace netgen
     if(cntcd2names)
       {
 	outfile << "\n\ncd2names" << endl << ncd2 << endl;
-	for (i=0; i<ncd2; i++)
+	for (int i=0; i<ncd2; i++)
 	  outfile << i+1 << "\t" << GetCD2Name(i) << endl;
 	outfile << endl << endl;
       }
@@ -954,7 +952,7 @@ namespace netgen
     if(cntcd3names)
       {
 	outfile << "\n\ncd3names" << endl << cd3names.Size() << endl;
-	for (i=0; i<cd3names.Size(); i++)
+	for (int i=0; i<cd3names.Size(); i++)
 	  outfile << i+1 << "\t" << GetCD3Name(i) << endl;
 	outfile << endl << endl;
       }
@@ -1105,7 +1103,7 @@ namespace netgen
        outfile.setf(ios::fixed, ios::floatfield);
        outfile.setf(ios::showpoint);
 
-       for(i = 1; i <= cnt_facedesc; i++)
+       for(int i = 1; i <= cnt_facedesc; i++)
        {
           outfile.width(8);
           outfile << GetFaceDescriptor(i).SurfNr()+1 << " ";
@@ -1119,7 +1117,7 @@ namespace netgen
        }
 
        outfile << "face_transparencies" << endl << cnt_facedesc << endl;
-       for(i = 1; i <= cnt_facedesc; i++)
+       for(int i = 1; i <= cnt_facedesc; i++)
          {
            outfile.width(8);
            outfile << GetFaceDescriptor(i).SurfNr()+1 << " ";
@@ -1222,7 +1220,7 @@ namespace netgen
     int ntasks = GetCommunicator().Size();
     
     char str[100];
-    int i, n;
+    int n;
 
     double scale = 1;  // globflags.GetNumFlag ("scale", 1);
     int inverttets = 0;  // globflags.GetDefineFlag ("inverttets");
@@ -1280,7 +1278,7 @@ namespace netgen
 	    bool uv = strcmp (str, "surfaceelementsuv") == 0;
 
 
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 int surfnr, bcp, domin, domout, nep, faceind = 0;
 
@@ -1340,7 +1338,7 @@ namespace netgen
             static Timer t1("read volume elements"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " volume elements");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Element el(TET);
                 int hi, nep;
@@ -1365,7 +1363,7 @@ namespace netgen
           {
             static Timer t1("read edge segments"); RegionTimer rt1(t1);
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int hi;
@@ -1382,7 +1380,7 @@ namespace netgen
           {
             static Timer t1("read edge segmentsgi"); RegionTimer rt1(t1);
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int hi;
@@ -1404,7 +1402,7 @@ namespace netgen
 
             PrintMessage (3, n, " curve elements");
 
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int hi;
@@ -1444,7 +1442,7 @@ namespace netgen
             infile >> n;
             PrintMessage (3, n, " curve elements (gi3)");
 
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int edsi;
@@ -1464,13 +1462,13 @@ namespace netgen
             static Timer t1("read points"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " points");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
-                Point3d p;
-                infile >> p.X() >> p.Y() >> p.Z();
-                p.X() *= scale;
-                p.Y() *= scale;
-                p.Z() *= scale;
+                netgen::Point<3> p;
+                infile >> p(0) >> p(1) >> p(2);
+                p(0) *= scale;
+                p(1) *= scale;
+                p(2) *= scale;
                 AddPoint (p);
               }
 	    PrintMessage (3, n, " points done");
@@ -1481,7 +1479,7 @@ namespace netgen
             static Timer t1("read point elements"); RegionTimer rt1(t1);
             infile >> n;
             PrintMessage (3, n, " pointelements");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Element0d el;
                 infile >> el.pnum >> el.index;
@@ -1494,7 +1492,7 @@ namespace netgen
           {
             infile >> n;
             PrintMessage (3, n, " identifications");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 PointIndex pi1, pi2;
                 int ind;
@@ -1507,7 +1505,7 @@ namespace netgen
           {
             infile >> n;
             PrintMessage (3, n, " identificationtypes");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 int type;
                 infile >> type;
@@ -1518,7 +1516,7 @@ namespace netgen
           {
             infile >> n;
             PrintMessage (3, n, " identificationnames");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 string name;
                 infile >> name;
@@ -1645,7 +1643,7 @@ namespace netgen
         if (strcmp (str, "singular_points") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 PointIndex pi;
                 double s; 
@@ -1658,7 +1656,7 @@ namespace netgen
         if (strcmp (str, "singular_edge_left") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 SegmentIndex si;
                 double s; 
@@ -1672,7 +1670,7 @@ namespace netgen
         if (strcmp (str, "singular_edge_right") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 SegmentIndex si;
                 double s; 
@@ -1687,7 +1685,7 @@ namespace netgen
         if (strcmp (str, "singular_face_inside") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 SurfaceElementIndex sei;
                 double s; 
@@ -1700,7 +1698,7 @@ namespace netgen
         if (strcmp (str, "singular_face_outside") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 SurfaceElementIndex sei;
                 double s; 
@@ -1719,7 +1717,7 @@ namespace netgen
            infile >> n;
            if(n == cnt_facedesc)
            {
-              for(i = 1; i <= n; i++)
+              for(int i = 1; i <= n; i++)
               {
                  int surfnr = 0;
                  Vec<4> surfcolour(0.0,1.0,0.0,1.0);
@@ -2159,7 +2157,7 @@ namespace netgen
   void Mesh :: Merge (istream & infile, const int surfindex_offset)
   {
     char str[100];
-    int i, n;
+    int n;
 
     Array<std::pair<int,int>> merge_seg_surfnrs;
     Array<int> merge_seg_edgenrs;
@@ -2175,7 +2173,7 @@ namespace netgen
       for(int j=1; j<=(*this)[si].GetNP(); j++) (*this)[si].GeomInfoPi(j).trignum = -1;
 
     int max_surfnr = 0;
-    for (i = 1; i <= GetNFD(); i++)
+    for (int i = 1; i <= GetNFD(); i++)
       max_surfnr = max2 (max_surfnr, GetFaceDescriptor(i).SurfNr());
     max_surfnr++;
 
@@ -2192,9 +2190,8 @@ namespace netgen
           {
             infile >> n;
             PrintMessage (3, n, " surface elements");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
-                int j;
                 int surfnr, bcp, domin, domout, nep, faceind = 0;
                 infile >> surfnr >> bcp >> domin >> domout;
 
@@ -2205,7 +2202,7 @@ namespace netgen
                 surfnr += max_surfnr;
 
 
-                for (j = 1; j <= facedecoding.Size(); j++)
+                for (int j = 1; j <= facedecoding.Size(); j++)
                   if (GetFaceDescriptor(j).SurfNr() == surfnr &&
                       GetFaceDescriptor(j).BCProperty() == bcp &&
                       GetFaceDescriptor(j).DomainIn() == domin &&
@@ -2225,7 +2222,7 @@ namespace netgen
                 Element2d tri(nep);
                 tri.SetIndex(faceind);
 
-                for (j = 1; j <= nep; j++)
+                for (int j = 1; j <= nep; j++)
                   {
                     infile >> tri.PNum(j);
                     tri.PNum(j) = tri.PNum(j) + oldnp;
@@ -2233,7 +2230,7 @@ namespace netgen
 
 
                 if (strcmp (str, "surfaceelementsgi") == 0)
-                  for (j = 1; j <= nep; j++)
+                  for (int j = 1; j <= nep; j++)
                     {
                       infile >> tri.GeomInfoPi(j).trignum;
                       tri.GeomInfoPi(j).trignum = -1;
@@ -2247,7 +2244,7 @@ namespace netgen
         if (strcmp (str, "edgesegments") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int hi;
@@ -2265,7 +2262,7 @@ namespace netgen
         if (strcmp (str, "edgesegmentsgi") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int hi;
@@ -2284,7 +2281,7 @@ namespace netgen
             infile >> n;
             PrintMessage (3, n, " curve elements");
 
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Segment seg;
                 int hi;
@@ -2324,7 +2321,7 @@ namespace netgen
           {
             infile >> n;
             PrintMessage (3, n, " volume elements");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 Element el(TET);
                 int hi, nep;
@@ -2352,10 +2349,10 @@ namespace netgen
           {
             infile >> n;
             PrintMessage (3, n, " points");
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
-                Point3d p;
-                infile >> p.X() >> p.Y() >> p.Z();
+                netgen::Point<3> p;
+                infile >> p(0) >> p(1) >> p(2);
                 AddPoint (p);
               }
           }
@@ -2370,7 +2367,7 @@ namespace netgen
         if (strcmp (str, "materials") == 0)
           {
             infile >> n;
-            for (i = 1; i <= n; i++)
+            for (int i = 1; i <= n; i++)
               {
                 int nr;
                 string mat;
@@ -3769,7 +3766,7 @@ namespace netgen
     SetLocalH(make_unique<LocalH> (pmin2, pmax2, grading, dimension), layer);
   }
 
-  void Mesh :: RestrictLocalH (const Point3d & p, double hloc, int layer)
+  void Mesh :: RestrictLocalH (const netgen::Point<3> & p, double hloc, int layer)
   {
     if(hloc < hmin)
       hloc = hmin;
@@ -3779,7 +3776,7 @@ namespace netgen
       {
         PrintWarning("RestrictLocalH called, creating mesh-size tree");
 
-        Point3d boxmin, boxmax;
+        netgen::Point<3> boxmin, boxmax;
         GetBox (boxmin, boxmax);
         SetLocalH (boxmin, boxmax, 0.8, layer);
       }
@@ -3787,21 +3784,20 @@ namespace netgen
     lochfunc[layer-1] -> SetH (p, hloc);
   }
 
-  void Mesh :: RestrictLocalHLine (const Point3d & p1, 
-                                   const Point3d & p2,
+  void Mesh :: RestrictLocalHLine (const netgen::Point<3> & p1, 
+                                   const netgen::Point<3> & p2,
                                    double hloc, int layer)
   {
     if(hloc < hmin)
       hloc = hmin;
 
     // cout << "restrict h along " << p1 << " - " << p2 << " to " << hloc << endl;
-    int i;
     int steps = int (Dist (p1, p2) / hloc) + 2;
-    Vec3d v(p1, p2);
+    Vec<3> v = p2 - p1;
 
-    for (i = 0; i <= steps; i++)
+    for (int i = 0; i <= steps; i++)
       {
-        Point3d p = p1 + (double(i)/double(steps) * v);
+        netgen::Point<3> p = p1 + (double(i)/double(steps) * v);
         RestrictLocalH (p, hloc, layer);
       }
   }
@@ -3834,7 +3830,7 @@ namespace netgen
   }
 
 
-  double Mesh :: GetH (const Point3d & p, int layer) const
+  double Mesh :: GetH (const netgen::Point<3> & p, int layer) const
   {
     const auto& lh = GetLocalH(layer);
     double hmin = hglob;
@@ -3847,7 +3843,7 @@ namespace netgen
     return hmin;
   }
 
-  double Mesh :: GetMinH (const Point3d & pmin, const Point3d & pmax, int layer)
+  double Mesh :: GetMinH (const netgen::Point<3> & pmin, const netgen::Point<3> & pmax, int layer)
   {
     const auto& lh = GetLocalH(layer);
     double hmin = hglob;
@@ -3866,18 +3862,18 @@ namespace netgen
 
   double Mesh :: AverageH (int surfnr) const
   {
-    int i, j, n;
+    int n;
     double hi, hsum;
     double maxh = 0, minh = 1e10;
 
     hsum = 0;
     n = 0;
-    for (i = 1; i <= GetNSE(); i++)
+    for (int i = 1; i <= GetNSE(); i++)
       {
         const Element2d & el = SurfaceElement(i);
         if (surfnr == 0 || el.GetIndex() == surfnr)
           {
-            for (j = 1; j <= 3; j++)
+            for (int j = 1; j <= 3; j++)
               {
                 hi = Dist (Point (el.PNumMod(j)), 
                            Point (el.PNumMod(j+1)));
@@ -3903,7 +3899,7 @@ namespace netgen
     
     if (!lochfunc[layer-1])
       {
-        Point3d pmin, pmax;
+        netgen::Point<3> pmin, pmax;
         GetBox (pmin, pmax);
         // SetLocalH (pmin, pmax, mparam.grading);
 	SetLocalH (pmin, pmax, grading, layer);
@@ -3919,15 +3915,14 @@ namespace netgen
     for (int i = 0; i < GetNSE(); i++)
       {
         const Element2d & el = surfelements[i];
-        int j;
 
         if (el.GetNP() == 3)
           {
             double hel = -1;
-            for (j = 1; j <= 3; j++)
+            for (int j = 1; j <= 3; j++)
               {
-                const Point3d & p1 = points[el.PNumMod(j)];
-                const Point3d & p2 = points[el.PNumMod(j+1)];
+                const auto & p1 = points[el.PNumMod(j)];
+                const auto & p2 = points[el.PNumMod(j+1)];
 
                 /*
                   INDEX_2 i21(el.PNumMod(j), el.PNumMod(j+1));
@@ -3949,22 +3944,22 @@ namespace netgen
 
             if (hel > 0)
               {
-                const Point3d & p1 = points[el.PNum(1)];
-                const Point3d & p2 = points[el.PNum(2)];
-                const Point3d & p3 = points[el.PNum(3)];
+                const auto & p1 = points[el.PNum(1)];
+                const auto & p2 = points[el.PNum(2)];
+                const auto & p3 = points[el.PNum(3)];
                 lochfunc[layer-1]->SetH (Center (p1, p2, p3), hel);
               }
           }
         else
           {
             {
-              const Point3d & p1 = points[el.PNum(1)];
-              const Point3d & p2 = points[el.PNum(2)];
+              const auto & p1 = points[el.PNum(1)];
+              const auto & p2 = points[el.PNum(2)];
               lochfunc[layer-1]->SetH (Center (p1, p2), 2 * Dist (p1, p2));
             }
             {
-              const Point3d & p1 = points[el.PNum(3)];
-              const Point3d & p2 = points[el.PNum(4)];
+              const auto & p1 = points[el.PNum(3)];
+              const auto & p2 = points[el.PNum(4)];
               lochfunc[layer-1]->SetH (Center (p1, p2), 2 * Dist (p1, p2));
             }
           }
@@ -3973,8 +3968,8 @@ namespace netgen
     for (int i = 0; i < GetNSeg(); i++)
       {
         const Segment & seg = segments[i];
-        const Point3d & p1 = points[seg[0]];
-        const Point3d & p2 = points[seg[1]];
+        const auto & p1 = points[seg[0]];
+        const auto & p2 = points[seg[1]];
         /*
           INDEX_2 i21(seg[0], seg[1]);
           INDEX_2 i22(seg[1], seg[0]);
@@ -3997,8 +3992,8 @@ namespace netgen
       for (j = 2; j <= 4; j++)
       for (k = 1; k < j; k++)  
       {
-      const Point3d & p1 = Point (el.PNum(j));
-      const Point3d & p2 = Point (el.PNum(k));
+      const auto & p1 = Point (el.PNum(j));
+      const auto & p2 = Point (el.PNum(k));
       lochfunc->SetH (Center (p1, p2), 2 * Dist (p1, p2));
       (*testout) << "set vol h to " << (2 * Dist (p1, p2)) << endl;
 
@@ -4039,7 +4034,7 @@ namespace netgen
 
     if (!lochfunc[layer-1])
       {
-        Point3d pmin, pmax;
+        netgen::Point<3> pmin, pmax;
         GetBox (pmin, pmax);
 
         // SetLocalH (pmin, pmax, mparam.grading);
@@ -4053,8 +4048,8 @@ namespace netgen
       {
         for(PointIndex j=i+1; j<GetNP()+IndexBASE<PointIndex>(); j++)
           {
-            const Point3d & p1 = points[i];
-            const Point3d & p2 = points[j];
+            const auto & p1 = points[i];
+            const auto & p2 = points[j];
             double hl = Dist(p1,p2);
             RestrictLocalH(p1,hl);
             RestrictLocalH(p2,hl);
@@ -4072,7 +4067,7 @@ namespace netgen
 
     if (!lochfunc[layer-1])
       {
-        Point3d pmin, pmax;
+        netgen::Point<3> pmin, pmax;
         GetBox (pmin, pmax);
 
         // SetLocalH (pmin, pmax, mparam.grading);
@@ -4082,21 +4077,20 @@ namespace netgen
 
     INDEX_2_HASHTABLE<int> edges(3 * GetNP() + 2);
     INDEX_2_HASHTABLE<int> bedges(GetNSeg() + 2);
-    int i, j;
 
-    for (i = 1; i <= GetNSeg(); i++)
+    for (int i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment(i);
         PointIndices<2> i2(seg[0], seg[1]);
         i2.Sort();
         bedges.Set (i2, 1);
       }
-    for (i = 1; i <= GetNSE(); i++)
+    for (int i = 1; i <= GetNSE(); i++)
       {
         const Element2d & sel = SurfaceElement(i);
         if (!sel.PNum(1).IsValid())
           continue;
-        for (j = 1; j <= 3; j++)
+        for (int j = 1; j <= 3; j++)
           {
             PointIndices<2> i2(sel.PNumMod(j), sel.PNumMod(j+1));
             i2.Sort();
@@ -4145,11 +4139,11 @@ namespace netgen
 
     // Restrict h due to line segments
 
-    for (i = 1; i <= GetNSeg(); i++)
+    for (int i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment(i);
-        const Point3d & p1 = Point(seg[0]);
-        const Point3d & p2 = Point(seg[1]);
+        const auto & p1 = Point(seg[0]);
+        const auto & p2 = Point(seg[1]);
         RestrictLocalH (Center (p1, p2),  Dist (p1, p2));
       }
 
@@ -4215,12 +4209,11 @@ namespace netgen
 
   void Mesh :: RestrictLocalH (resthtype rht, int nr, double loch)
   {
-    int i;
     switch (rht)
       {
       case RESTRICTH_FACE:
         {
-          for (i = 1; i <= GetNSE(); i++)
+          for (int i = 1; i <= GetNSE(); i++)
             {
               const Element2d & sel = SurfaceElement(i);
               if (sel.GetIndex() == nr)
@@ -4230,7 +4223,7 @@ namespace netgen
         }
       case RESTRICTH_EDGE:
         {
-          for (i = 1; i <= GetNSeg(); i++)
+          for (int i = 1; i <= GetNSeg(); i++)
             {
               const Segment & seg = LineSegment(i);
               if (GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == nr)
@@ -4247,9 +4240,9 @@ namespace netgen
       case RESTRICTH_SURFACEELEMENT:
         {
           const Element2d & sel = SurfaceElement(nr);
-          Point3d p = Center (Point(sel.PNum(1)),
-                              Point(sel.PNum(2)),
-                              Point(sel.PNum(3)));
+          auto p = Center (Point(sel.PNum(1)),
+                           Point(sel.PNum(2)),
+                           Point(sel.PNum(3)));
           RestrictLocalH (p, loch);
           break;
         }
@@ -4297,9 +4290,9 @@ namespace netgen
 
     for (int i = 0; i < nmsp; i++)
       {
-        Point3d pi;
+        netgen::Point<3> pi;
         double hi;
-        msf >> pi.X() >> pi.Y() >> pi.Z();
+        msf >> pi(0) >> pi(1) >> pi(2);
         msf >> hi;
         if (!msf.good())
           throw NgException ("Mesh-size file error: Number of points don't match specified list size\n");
@@ -4315,10 +4308,10 @@ namespace netgen
 
     for (int i = 0; i < nmsl; i++)
       {
-        Point3d p1, p2;
+        netgen::Point<3> p1, p2;
         double hi;
-        msf >> p1.X() >> p1.Y() >> p1.Z();
-        msf >> p2.X() >> p2.Y() >> p2.Z();
+        msf >> p1(0) >> p1(1) >> p1(2);
+        msf >> p2(0) >> p2(1) >> p2(2);
         msf >> hi;
         if (!msf.good())
           throw NgException ("Mesh-size file error: Number of line definitions don't match specified list size\n");
@@ -4342,76 +4335,81 @@ namespace netgen
       lochfunc[layer-1] = loch;
   }
 
-  void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, int dom) const
+  void Mesh :: GetBox (netgen::Point<3> & pmin, netgen::Point<3> & pmax, int dom) const
   {
     if (points.Size() == 0)
       {
-        pmin = pmax = Point3d(0,0,0);
+        pmin = pmax = netgen::Point<3>(0,0,0);
         return;
       }
 
+    pmin = netgen::Point<3> (1e10, 1e10, 1e10);
+    pmax = netgen::Point<3> (-1e10, -1e10, -1e10);
+
+    auto grow = [&] (const netgen::Point<3> & p)
+      {
+        for (int j = 0; j < 3; j++)
+          {
+            pmin(j) = min2 (pmin(j), p(j));
+            pmax(j) = max2 (pmax(j), p(j));
+          }
+      };
+
     if (dom <= 0)
       {
-        pmin = Point3d (1e10, 1e10, 1e10);
-        pmax = Point3d (-1e10, -1e10, -1e10); 
-
-        // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
         for (PointIndex pi : points.Range())
-          {
-            pmin.SetToMin ( (*this) [pi] );
-            pmax.SetToMax ( (*this) [pi] );
-          }
+          grow ((*this)[pi]);
       }
     else
       {
-        int j, nse = GetNSE();
-        SurfaceElementIndex sei;
-
-        pmin = Point3d (1e10, 1e10, 1e10);
-        pmax = Point3d (-1e10, -1e10, -1e10); 
-        for (sei = 0; sei < nse; sei++)
+        for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
           {
             const Element2d & el = (*this)[sei];
             if (el.IsDeleted() ) continue;
 
             if (dom == -1 || el.GetIndex() == dom)
-              {
-                for (j = 0; j < 3; j++)
-                  {
-                    pmin.SetToMin ( (*this) [el[j]] );
-                    pmax.SetToMax ( (*this) [el[j]] );
-                  }
-              }
+              for (int j = 0; j < 3; j++)
+                grow ((*this)[el[j]]);
           }
       }
 
-    if (pmin.X() > 0.5e10)
-      {
-        pmin = pmax = Point3d(0,0,0);
-      }
+    if (pmin(0) > 0.5e10)
+      pmin = pmax = netgen::Point<3>(0,0,0);
   }
 
-
-
-
-  void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, POINTTYPE ptyp) const
+  void Mesh :: GetBox (netgen::Point<3> & pmin, netgen::Point<3> & pmax, POINTTYPE ptyp) const
   {
     if (points.Size() == 0)
       {
-        pmin = pmax = Point3d(0,0,0);
+        pmin = pmax = netgen::Point<3>(0,0,0);
         return;
       }
 
-    pmin = Point3d (1e10, 1e10, 1e10);
-    pmax = Point3d (-1e10, -1e10, -1e10); 
+    pmin = netgen::Point<3> (1e10, 1e10, 1e10);
+    pmax = netgen::Point<3> (-1e10, -1e10, -1e10);
 
-    // for (PointIndex pi = points.Begin(); pi < points.End(); pi++)
     for (PointIndex pi : points.Range())
       if (points[pi].Type() <= ptyp)
-        {
-          pmin.SetToMin ( (*this) [pi] );
-          pmax.SetToMax ( (*this) [pi] );
-        }
+        for (int j = 0; j < 3; j++)
+          {
+            pmin(j) = min2 (pmin(j), (*this)[pi](j));
+            pmax(j) = max2 (pmax(j), (*this)[pi](j));
+          }
+  }
+
+  // legacy Point3d interface
+  void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, int dom) const
+  {
+    netgen::Point<3> hmin, hmax;
+    GetBox (hmin, hmax, dom);
+    pmin = hmin; pmax = hmax;
+  }
+
+  void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, POINTTYPE ptyp) const
+  {
+    netgen::Point<3> hmin, hmax;
+    GetBox (hmin, hmax, ptyp);
+    pmin = hmin; pmax = hmax;
   }
 
 
@@ -4762,7 +4760,7 @@ namespace netgen
   {
     static Timer t("Mesh::CheckOverlappingBoundary"); RegionTimer reg(t);
     
-    Point3d pmin, pmax;
+    netgen::Point<3> pmin, pmax;
     GetBox (pmin, pmax);
     BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
     // Array<SurfaceElementIndex> inters;
@@ -4876,15 +4874,14 @@ namespace netgen
 
     int ne = GetNE();
     DenseMatrix dtrans(3,3);
-    int i, j;
 
     PrintMessage (5, "elements: ", ne);
-    for (i = 1; i <= ne; i++)
+    for (int i = 1; i <= ne; i++)
       {
         Element & el = (Element&) VolumeElement(i);
         el.Flags().badel = 0;
         int nip = el.GetNIP();
-        for (j = 1; j <= nip; j++)
+        for (int j = 1; j <= nip; j++)
           {
             el.GetTransformation (j, Points(), dtrans);
             double det = dtrans.Det();
@@ -5647,10 +5644,10 @@ namespace netgen
         for (int i = 1; i <= GetNE(); i++)
           {
             Element & el = VolumeElement(i);
-            const Point3d & p1 = Point (el.PNum(1));
-            const Point3d & p2 = Point (el.PNum(2));
-            const Point3d & p3 = Point (el.PNum(3));
-            const Point3d & p4 = Point (el.PNum(4));
+            const auto & p1 = Point (el.PNum(1));
+            const auto & p2 = Point (el.PNum(2));
+            const auto & p3 = Point (el.PNum(3));
+            const auto & p4 = Point (el.PNum(4));
 
             double vol = (Vec3d (p1, p2) * 
                           Cross (Vec3d (p1, p3), Vec3d(p1, p4)));
@@ -5682,7 +5679,7 @@ namespace netgen
       PrintMessage (4, "Rebuild element searchtree dim " + ToString(dim));
           
 
-      Point3d pmin, pmax;
+      netgen::Point<3> pmin, pmax;
       GetBox(pmin, pmax);
       Box<3> box(pmin, pmax);
       box.Scale(1.2);
@@ -5793,7 +5790,7 @@ namespace netgen
     return (lami[0]<=1.+eps && lami[0]>=0.-eps && lami[1]<=1.+eps && lami[1]>=0.-eps && lami[2]<=1.+eps && lami[2]>=0.-eps );
   }
 
-  bool Mesh :: PointContainedIn2DElement(const Point3d & p,
+  bool Mesh :: PointContainedIn2DElement(const netgen::Point<3> & p,
                                          double lami[3],
                                          SurfaceElementIndex ei,
                                          bool consider3D) const
@@ -5810,10 +5807,10 @@ namespace netgen
       {
         const Element2d & el = surfelements[ei];
 
-        const Point3d & p1 = Point(el.PNum(1)); 
-        const Point3d & p2 = Point(el.PNum(2));
-        const Point3d & p3 = Point(el.PNum(3));
-        const Point3d & p4 = Point(el.PNum(4));
+        const auto & p1 = Point(el.PNum(1)); 
+        const auto & p2 = Point(el.PNum(2));
+        const auto & p3 = Point(el.PNum(3));
+        const auto & p4 = Point(el.PNum(4));
 
         if (el.GetOrder() > 1 || el.GetHpElnr() != -1) {
           netgen::Point<2> lam(0.5,0.5);
@@ -5845,7 +5842,7 @@ namespace netgen
 
         // Coefficients of Bilinear Mapping from Ref-Elem to global Elem
         // X = a + b x + c y + d x y 
-        Vec3d a = p1; 
+        Vec3d a = Point3d(p1); 
         Vec3d b = p2 - a; 
         Vec3d c = p4 - a; 
         Vec3d d = p3 - a - b - c;
@@ -6165,9 +6162,9 @@ namespace netgen
             const Element2d & el = loctrigs.Get(j);
 
 
-            const Point3d & p1 = Point(el.PNum(1));
-            const Point3d & p2 = Point(el.PNum(2));
-            const Point3d & p3 = Point(el.PNum(3));
+            const auto & p1 = Point(el.PNum(1));
+            const auto & p2 = Point(el.PNum(2));
+            const auto & p3 = Point(el.PNum(3));
             /*
               Box3d box;
               box.SetPoint (p1);
@@ -6263,7 +6260,7 @@ namespace netgen
 
 
 
-  bool Mesh :: PointContainedIn3DElement(const Point3d & p,
+  bool Mesh :: PointContainedIn3DElement(const netgen::Point<3> & p,
                                          double lami[3],
                                          ElementIndex ei,
                                          double eps) const
@@ -6325,7 +6322,7 @@ namespace netgen
     if(i==maxits)
       return false;
 
-    for(i=0; i<3; i++)
+    for (int i = 0; i < 3; i++)
       lami[i] = lam(i);
 
 
@@ -6367,7 +6364,7 @@ namespace netgen
 
 
 
-  bool Mesh :: PointContainedIn3DElementOld(const Point3d & p,
+  bool Mesh :: PointContainedIn3DElementOld(const netgen::Point<3> & p,
                                             double lami[3],
                                             ElementIndex element,
                                             double eps) const
@@ -6383,10 +6380,10 @@ namespace netgen
       {
         const Element & el = loctets.Get(j);
 
-        const Point3d & p1 = Point(el.PNum(1));
-        const Point3d & p2 = Point(el.PNum(2));
-        const Point3d & p3 = Point(el.PNum(3));
-        const Point3d & p4 = Point(el.PNum(4));
+        const auto & p1 = Point(el.PNum(1));
+        const auto & p2 = Point(el.PNum(2));
+        const auto & p3 = Point(el.PNum(3));
+        const auto & p4 = Point(el.PNum(4));
 
         Box3d box;
         box.SetPoint (p1);
@@ -6406,24 +6403,25 @@ namespace netgen
         if (sol.X() >= -eps && sol.Y() >= -eps && sol.Z() >= -eps &&
             sol.X() + sol.Y() + sol.Z() <= 1+eps)
           {
-            NgArray<Element> loctetsloc;
+            NgArray<ElementTet> loctetsloc;
             NgArray<netgen::Point<3> > pointsloc;
 
             VolumeElement(element).GetTetsLocal (loctetsloc);
             VolumeElement(element).GetNodesLocalNew (pointsloc);
 
-            const Element & le = loctetsloc.Get(j);
+            const ElementTet & le = loctetsloc.Get(j);
 
 
-            Point3d pp = 
-              pointsloc.Get(int(le.PNum(1))) 
-              + sol.X() * Vec3d (pointsloc.Get(int(le.PNum(1))), pointsloc.Get(int(le.PNum(2)))) 
-              + sol.Y() * Vec3d (pointsloc.Get(int(le.PNum(1))), pointsloc.Get(int(le.PNum(3)))) 
-              + sol.Z() * Vec3d (pointsloc.Get(int(le.PNum(1))), pointsloc.Get(int(le.PNum(4)))) ;
+            const auto & lp1 = pointsloc.Get(le.PNum(1));
+            netgen::Point<3> pp =
+              lp1
+              + sol.X() * (pointsloc.Get(le.PNum(2)) - lp1)
+              + sol.Y() * (pointsloc.Get(le.PNum(3)) - lp1)
+              + sol.Z() * (pointsloc.Get(le.PNum(4)) - lp1);
 
-            lami[0] = pp.X();
-            lami[1] = pp.Y();
-            lami[2] = pp.Z();
+            lami[0] = pp(0);
+            lami[1] = pp(1);
+            lami[2] = pp(2);
             return true;
           }
       }
@@ -6495,7 +6493,7 @@ namespace netgen
   }
 
 
-  void Mesh::GetIntersectingVolEls(const Point3d& p1, const Point3d& p2, 
+  void Mesh::GetIntersectingVolEls(const netgen::Point<3>& p1, const netgen::Point<3>& p2, 
                                    Array<ElementIndex> & locels) const
   {
     elementsearchtree_vol->GetIntersecting (p1, p2, locels);
@@ -7051,7 +7049,6 @@ namespace netgen
 
   void Mesh :: CalcMinMaxAngle (double badellimit, double * retvalues) 
   {
-    int lpi1, lpi2, lpi3, lpi4;
     double phimax = 0, phimin = 10;
     double facephimax = 0, facephimin = 10;
     int illegaltets = 0, negativetets = 0, badtets = 0;
@@ -7088,18 +7085,18 @@ namespace netgen
 
 
         // angles between faces
-        for (lpi1 = 1; lpi1 <= 3; lpi1++)
-          for (lpi2 = lpi1+1; lpi2 <= 4; lpi2++)
+        for (int lpi1 = 1; lpi1 <= 3; lpi1++)
+          for (int lpi2 = lpi1+1; lpi2 <= 4; lpi2++)
             {
-              lpi3 = 1;
+              int lpi3 = 1;
               while (lpi3 == lpi1 || lpi3 == lpi2)
                 lpi3++;
-              lpi4 = 10 - lpi1 - lpi2 - lpi3;
+              int lpi4 = 10 - lpi1 - lpi2 - lpi3;
 
-              const Point3d & p1 = Point (el.PNum(lpi1));
-              const Point3d & p2 = Point (el.PNum(lpi2));
-              const Point3d & p3 = Point (el.PNum(lpi3));
-              const Point3d & p4 = Point (el.PNum(lpi4));
+              const auto & p1 = Point (el.PNum(lpi1));
+              const auto & p2 = Point (el.PNum(lpi2));
+              const auto & p3 = Point (el.PNum(lpi3));
+              const auto & p4 = Point (el.PNum(lpi4));
 
               Vec3d n(p1, p2);
               n /= n.Length();
@@ -7124,14 +7121,14 @@ namespace netgen
           {
             Element2d face(TRIG);
             el.GetFace (j, face);
-            for (lpi1 = 1; lpi1 <= 3; lpi1++)
+            for (int lpi1 = 1; lpi1 <= 3; lpi1++)
               {
-                lpi2 = lpi1 % 3 + 1;
-                lpi3 = lpi2 % 3 + 1;
+                int lpi2 = lpi1 % 3 + 1;
+                int lpi3 = lpi2 % 3 + 1;
 
-                const Point3d & p1 = Point (el.PNum(lpi1));
-                const Point3d & p2 = Point (el.PNum(lpi2));
-                const Point3d & p3 = Point (el.PNum(lpi3));
+                const auto & p1 = Point (el.PNum(lpi1));
+                const auto & p2 = Point (el.PNum(lpi2));
+                const auto & p3 = Point (el.PNum(lpi3));
 
                 Vec3d v1(p1, p2);
                 Vec3d v2(p1, p3);
@@ -7282,7 +7279,7 @@ namespace netgen
     set<PointIndex> identified_points;
     if(pointTolerance < 0.)
       {
-        Point3d pmin, pmax;
+        netgen::Point<3> pmin, pmax;
         GetBox(pmin, pmax);
         pointTolerance = 1e-8 * (pmax-pmin).Length();
       }
@@ -7336,7 +7333,7 @@ namespace netgen
     pointcurves_green.Append(green);
     pointcurves_blue.Append(blue);
   }
-  void Mesh :: AddPointCurvePoint(const Point3d & pt) const
+  void Mesh :: AddPointCurvePoint(const netgen::Point<3> & pt) const
   {
     pointcurves.Append(pt);
   }
@@ -7352,7 +7349,7 @@ namespace netgen
       return (pointcurves_startpoint[curve+1]-pointcurves_startpoint[curve]);
   }
 
-  Point3d & Mesh :: GetPointCurvePoint(int curve, int n) const
+  netgen::Point<3> & Mesh :: GetPointCurvePoint(int curve, int n) const
   {
     return pointcurves[pointcurves_startpoint[curve]+n];
   }
@@ -8176,8 +8173,8 @@ namespace netgen
     ost << "Mesh Mem:" << endl;
 
     ost << GetNP() << " Points, of size " 
-        << sizeof (Point3d) << " + " << sizeof(POINTTYPE) << " = "
-        << GetNP() * (sizeof (Point3d) + sizeof(POINTTYPE)) << endl;
+        << sizeof (netgen::Point<3>) << " + " << sizeof(POINTTYPE) << " = "
+        << GetNP() * (sizeof (netgen::Point<3>) + sizeof(POINTTYPE)) << endl;
 
     ost << GetNSE() << " Surface elements, of size " 
         << sizeof (Element2d) << " = " 
@@ -8206,7 +8203,7 @@ namespace netgen
     Mesh & nm = *nm_;
     nm = m;
 
-    Point3d pmin, pmax;
+    netgen::Point<3> pmin, pmax;
     GetBox(pmin, pmax);
     auto v = pmax-pmin;
     double eps = v.Length()*1e-8;

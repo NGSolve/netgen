@@ -297,7 +297,7 @@ namespace netgen
     PointIndices & operator= (PointIndices&&) = default;
     
     constexpr PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
-    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1,i2) { ; } 
+    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(int(i1),int(i2)) { ; } 
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
 
@@ -310,7 +310,7 @@ namespace netgen
     PointIndex I2 () const { return (*this)[1]; }
     
     using INDEX_2::Sort;
-    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1, i2); }
+    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(int(i1), int(i2)); }
     template <size_t J>
     PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
   };
@@ -324,7 +324,7 @@ namespace netgen
     PointIndices & operator= (const PointIndices&) = default;
     PointIndices & operator= (PointIndices&&) = default;
     constexpr PointIndices (INDEX_3 i3) : INDEX_3(i3) { ; }
-    constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(i1,i2,i3) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2, PointIndex i3) : INDEX_3(int(i1),int(i2),int(i3)) { ; }
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_3::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_3::operator[](i)); }
 
@@ -339,7 +339,7 @@ namespace netgen
     constexpr PointIndex I3 () const { return (*this)[2]; }
 
     using INDEX_3::Sort;
-    static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(i1, i2, i3); }
+    static PointIndices Sort(PointIndex i1, PointIndex i2, PointIndex i3) { return INDEX_3::Sort(int(i1), int(i2), int(i3)); }
     template <size_t J>
     constexpr PointIndex get() const { return PointIndex(INDEX_3::operator[](J)); }    
   };
@@ -349,7 +349,7 @@ namespace netgen
   public:
     PointIndices () = default;
     PointIndices (INDEX_4 i4) : INDEX_4(i4) { ; }
-    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(i1,i2,i3,i4) { ; } 
+    PointIndices (PointIndex i1, PointIndex i2, PointIndex i3, PointIndex i4) : INDEX_4(int(i1),int(i2),int(i3),int(i4)) { ; } 
     constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_4::operator[](i)); }
     PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_4::operator[](i)); }
 
@@ -741,6 +741,8 @@ public:
 using LocalElement = MiniElementT<LocalPointIndex>;
 /// volume element in rule numbering
 using RuleElement = MiniElementT<RulePointIndex>;
+/// sub-tet of a volume element, in element-vertex numbering
+using ElementTet = MiniElementT<ElementVertexIndex>;
 
 template <typename TINDEX>
 inline ostream & operator<< (ostream & ost, const MiniElementT<TINDEX> & el)
@@ -1068,7 +1070,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int GetNIP () const;
     void GetIntegrationPoint (int ip, Point<2> & p, double & weight) const;
 
-    void GetTransformation (int ip, const NgArray<Point<2>> & points,
+    void GetTransformation (int ip, FlatArray<Point<2>, PointIndex> points,
 			    class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
 			    class DenseMatrix & trans) const;
@@ -1083,18 +1085,16 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
     /// matrix 2 * np
-    void GetPointMatrix (const NgArray<Point<2>> & points,
-			 class DenseMatrix & pmat) const; 
-    void GetPointMatrix (const Array<Point<2>, PointIndex> & points,
+    void GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
 			 class DenseMatrix & pmat) const;
 
     void ComputeIntegrationPointData () const;
   
 
-    double CalcJacobianBadness (const NgArray<Point<2>> & points) const;
+    double CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const;
     double CalcJacobianBadness (const T_POINTS & points, 
 				const Vec<3> & n) const;
-    double CalcJacobianBadnessDirDeriv (const Array<Point<2>, PointIndex> & points,
+    double CalcJacobianBadnessDirDeriv (FlatArray<Point<2>, PointIndex> points,
 					int pi, Vec<2> & dir, double & dd) const;
 
 
@@ -1399,7 +1399,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// split into 4 node tets
     void GetTets (NgArray<Element> & locels) const;
     /// split into 4 node tets, local point nrs
-    void GetTetsLocal (NgArray<Element> & locels) const;
+    void GetTetsLocal (NgArray<ElementTet> & locels) const;
     /// returns coordinates of nodes
     // void GetNodesLocal (NgArray<Point<3> > & points) const;
     void GetNodesLocalNew (NgArray<Point<3> > & points) const;

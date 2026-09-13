@@ -189,7 +189,7 @@ namespace netgen
     SymbolTable< NgArray<double>* > userdata_double;
 
 
-    mutable NgArray< Point3d > pointcurves;
+    mutable NgArray< netgen::Point<3> > pointcurves;
     mutable NgArray<int> pointcurves_startpoint;
     mutable NgArray<double> pointcurves_red,pointcurves_green,pointcurves_blue;
 
@@ -210,15 +210,15 @@ namespace netgen
   public:
     DLL_HEADER void BuildBoundaryEdges(bool rebuild=true);
 
-    DLL_HEADER bool PointContainedIn2DElement(const Point3d & p,
+    DLL_HEADER bool PointContainedIn2DElement(const netgen::Point<3> & p,
 				   double lami[3],
 				   SurfaceElementIndex element,
 				   bool consider3D = false) const;
-    DLL_HEADER bool PointContainedIn3DElement(const Point3d & p,
+    DLL_HEADER bool PointContainedIn3DElement(const netgen::Point<3> & p,
 				   double lami[3],
                                    ElementIndex element,
                                    double tol=1e-4) const;
-    DLL_HEADER bool PointContainedIn3DElementOld(const Point3d & p,
+    DLL_HEADER bool PointContainedIn3DElementOld(const netgen::Point<3> & p,
 				      double lami[3],
                                       ElementIndex element,
                                       double tol=1e-4) const;
@@ -278,8 +278,8 @@ namespace netgen
     void SetAllocSize(int nnodes, int nsegs, int nsel, int nel);
     
 
-    DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer = 1);
-    DLL_HEADER PointIndex AddPoint (const Point3d & p, int layer, POINTTYPE type);
+    DLL_HEADER PointIndex AddPoint (const netgen::Point<3> & p, int layer = 1);
+    DLL_HEADER PointIndex AddPoint (const netgen::Point<3> & p, int layer, POINTTYPE type);
 
     auto GetNP () const { return points.Size(); }
 
@@ -494,9 +494,9 @@ namespace netgen
     ///
     DLL_HEADER void SetLocalH (netgen::Point<3> pmin, netgen::Point<3> pmax, double grading, int layer=1);
     ///
-    DLL_HEADER void RestrictLocalH (const Point3d & p, double hloc, int layer=1);
+    DLL_HEADER void RestrictLocalH (const netgen::Point<3> & p, double hloc, int layer=1);
     ///
-    DLL_HEADER void RestrictLocalHLine (const Point3d & p1, const Point3d & p2, 
+    DLL_HEADER void RestrictLocalHLine (const netgen::Point<3> & p1, const netgen::Point<3> & p2, 
 			     double hloc, int layer=1);
     /// number of elements per radius
     DLL_HEADER void CalcLocalHFromSurfaceCurvature(double grading, double elperr, int layer=1);
@@ -515,10 +515,10 @@ namespace netgen
     ///
 	DLL_HEADER void SetMaxHDomain (const NgArray<double> & mhd);
     ///
-    DLL_HEADER double GetH (const Point3d & p, int layer=1) const;
+    DLL_HEADER double GetH (const netgen::Point<3> & p, int layer=1) const;
     DLL_HEADER double GetH (PointIndex pi) const { return GetH(points[pi], points[pi].GetLayer()); }
     ///
-    double GetMinH (const Point3d & pmin, const Point3d & pmax, int layer=1);
+    double GetMinH (const netgen::Point<3> & pmin, const netgen::Point<3> & pmax, int layer=1);
     ///
     bool HasLocalHFunction (int layer=1) { return lochfunc[layer-1] != nullptr; }
     ///
@@ -536,9 +536,11 @@ namespace netgen
     bool LocalHFunctionGenerated(int layer=1) const { return (lochfunc[layer-1] != NULL); }
 
     /// Find bounding box
+    DLL_HEADER void GetBox (netgen::Point<3> & pmin, netgen::Point<3> & pmax, int dom = -1) const;
     DLL_HEADER void GetBox (Point3d & pmin, Point3d & pmax, int dom = -1) const;
 
     /// Find bounding box of points of typ ptyp or less
+    DLL_HEADER void GetBox (netgen::Point<3> & pmin, netgen::Point<3> & pmax, POINTTYPE ptyp ) const;
     DLL_HEADER void GetBox (Point3d & pmin, Point3d & pmax, POINTTYPE ptyp ) const;
 
     ///
@@ -721,7 +723,7 @@ namespace netgen
                               bool allowindex = true) const;
 
     /// give list of vol elements which are int the box(p1,p2)
-    void GetIntersectingVolEls(const Point3d& p1, const Point3d& p2, 
+    void GetIntersectingVolEls(const netgen::Point<3>& p1, const netgen::Point<3>& p2, 
 			       Array<ElementIndex> & locels) const;
 
     ///
@@ -915,10 +917,10 @@ namespace netgen
     bool HasIdentifications() const { return ident != nullptr; }
 
     DLL_HEADER void InitPointCurve(double red = 1, double green = 0, double blue = 0) const;
-    DLL_HEADER void AddPointCurvePoint(const Point3d & pt) const;
+    DLL_HEADER void AddPointCurvePoint(const netgen::Point<3> & pt) const;
     DLL_HEADER int GetNumPointCurves(void) const;
     DLL_HEADER int GetNumPointsOfPointCurve(int curve) const;
-    DLL_HEADER Point3d & GetPointCurvePoint(int curve, int n) const;
+    DLL_HEADER netgen::Point<3> & GetPointCurvePoint(int curve, int n) const;
     DLL_HEADER void GetPointCurveColor(int curve, double & red, double & green, double & blue) const;
 
 

@@ -9,13 +9,13 @@ namespace netgen
   static double CalcJacobianBadness (const MiniElement2d & elem,
                                      const Array<Point<2>, LocalPointIndex> & points)
   {
-    NgArray<Point<2>> hpoints(points.Size());
+    Array<Point<2>, PointIndex> hpoints(points.Size());
     for (LocalPointIndex pi : points.Range())
-      hpoints.Elem(pi-IndexBASE<LocalPointIndex>()+1) = points[pi];
+      hpoints[pi-IndexBASE<LocalPointIndex>()+IndexBASE<PointIndex>()] = points[pi];
 
     Element2d hel(elem.GetNP());
     for (int j = 1; j <= elem.GetNP(); j++)
-      hel.PNum(j) = PointIndex(int(elem.PNum(j)));   // local nr as raw number
+      hel.PNum(j) = elem.PNum(j)-IndexBASE<LocalPointIndex>()+IndexBASE<PointIndex>();
 
     return hel.CalcJacobianBadness (hpoints);
   }
