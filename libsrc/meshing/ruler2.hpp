@@ -13,9 +13,9 @@ private:
   
   class threeint 
   { 
-  public: int i1, i2, i3; 
+  public: RulePointIndex i1, i2, i3; 
     threeint() { } 
-    threeint(int ai1, int ai2, int ai3) 
+    threeint(RulePointIndex ai1, RulePointIndex ai2, RulePointIndex ai3) 
     { i1 = ai1; i2 = ai2; i3 = ai3; } 
   };
 
@@ -25,9 +25,9 @@ private:
   ///
   string name;
   ///
-  NgArray<Point<2>> points;
+  Array<Point<2>, RulePointIndex> points;
   ///
-  NgArray<INDEX_2> lines;
+  NgArray<IVec<2,RulePointIndex>> lines;
   ///
   NgArray<Point<2>> freezone, freezonelimit;
   ///
@@ -38,9 +38,11 @@ private:
   ///
   NgArray<int> dellines;
   ///
-  NgArray<Element2d> elements;
+  NgArray<RuleElement2d> elements;
   ///
-  NgArray<threefloat> tolerances, linetolerances;
+  Array<threefloat, RulePointIndex> tolerances;
+  ///
+  NgArray<threefloat> linetolerances;
   ///
   NgArray<threeint> orientations;
   ///
@@ -88,11 +90,11 @@ public:
   int GetLNearness (int li) const { return lnearness.Get(li); }
 
   ///
-  const Point<2>& GetPoint (int i) const { return points.Get(i); }
+  const Point<2>& GetPoint (RulePointIndex i) const { return points[i]; }
   ///
-  const INDEX_2 & GetLine (int i) const { return lines.Get(i); }
+  const IVec<2,RulePointIndex> & GetLine (int i) const { return lines.Get(i); }
   ///
-  const Element2d & GetElement (int i) const { return elements.Get(i); }
+  const RuleElement2d & GetElement (int i) const { return elements.Get(i); }
   ///
   const threeint & GetOrientation (int i) const { return orientations.Get(i); }
   ///
@@ -103,11 +105,11 @@ public:
   void GetFreeZone (NgArray<Point<2>> & afreearea);
   ///
 
-  double CalcPointDist (int pi, const Point<2> & p) const
+  double CalcPointDist (RulePointIndex pi, const Point<2> & p) const
   {
-    double dx = p[0] - points.Get(pi)[0];
-    double dy = p[1] - points.Get(pi)[1];
-    const threefloat * tfp = &tolerances.Get(pi);
+    double dx = p[0] - points[pi][0];
+    double dy = p[1] - points[pi][1];
+    const threefloat * tfp = &tolerances[pi];
     return tfp->f1 * dx * dx + tfp->f2 * dx * dy + tfp->f3 * dy * dy;
   }
 
@@ -149,7 +151,7 @@ public:
   const NgArray<Point<2>> & GetTransFreeZone () { return transfreezone; }
 
   ///
-  int GetPointNr (int ln, int endp) const { return lines.Get(ln).I(endp); }
+  RulePointIndex GetPointNr (int ln, int endp) const { return lines.Get(ln)[endp-1]; }
 
   ///
   const DenseMatrix & GetOldUToNewU () const { return oldutonewu; }

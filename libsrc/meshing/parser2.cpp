@@ -43,7 +43,7 @@ void netrule :: LoadRule (istream & ist)
   char buf[256];
   char ch;
   Point<2> p;
-  INDEX_2 lin;
+  IVec<2,RulePointIndex> lin;
   int i, j;
   DenseMatrix tempoldutonewu(20, 20), tempoldutofreearea(20, 20),
     tempoldutofreearealimit(20, 20);
@@ -97,20 +97,20 @@ void netrule :: LoadRule (istream & ist)
 	      noldp++;
 
 	      tolerances.SetSize (noldp);
-	      tolerances.Elem(noldp).f1 = 1.0;
-	      tolerances.Elem(noldp).f2 = 0;
-	      tolerances.Elem(noldp).f3 = 1.0;
+	      tolerances[noldp].f1 = 1.0;
+	      tolerances[noldp].f2 = 0;
+	      tolerances[noldp].f3 = 1.0;
 
 	      ist >> ch;
 	      while (ch != ';')
 		{
 		  if (ch == '{')
 		    {
-		      ist >> tolerances.Elem(noldp).f1;
+		      ist >> tolerances[noldp].f1;
 		      ist >> ch;  // ','
-		      ist >> tolerances.Elem(noldp).f2;
+		      ist >> tolerances[noldp].f2;
 		      ist >> ch;  // ','
-		      ist >> tolerances.Elem(noldp).f3;
+		      ist >> tolerances[noldp].f3;
 		      ist >> ch;  // '}'
 		    }
 		  else if (ch == 'd')
@@ -136,15 +136,15 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> lin.I1();
+	      ist >> (int&)lin[0];
 	      ist >> ch;    // ','
-	      ist >> lin.I2();
+	      ist >> (int&)lin[1];
 	      ist >> ch;    // ')'
 
 
 	      //(*testout) << "read line " << lin.I1() << " " << lin.I2() << endl;
 	      lines.Append (lin);
-	      linevecs.Append (points.Get(lin.I2()) - points.Get(lin.I1()));
+	      linevecs.Append (points[lin[1]] - points[lin[0]]);
 	      noldl++;
 	      linetolerances.SetSize (noldl);
 	      linetolerances.Elem(noldl).f1 = 0;
@@ -226,13 +226,13 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> lin.I1();
+	      ist >> (int&)lin[0];
 	      ist >> ch;    // ','
-	      ist >> lin.I2();
+	      ist >> (int&)lin[1];
 	      ist >> ch;    // ')'
 
 	      lines.Append (lin);
-	      linevecs.Append (points.Get(lin.I2()) - points.Get(lin.I1()));
+	      linevecs.Append (points[lin[1]] - points[lin[0]]);
 
 	      ist >> ch;
 	      while (ch != ';')
@@ -332,7 +332,7 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      elements.Append (Element2d(TRIG));
+	      elements.Append (RuleElement2d(3));
 
 	      ist >> (int&)elements.Last().PNum(1);
 	      ist >> ch;    // ','
@@ -349,7 +349,7 @@ void netrule :: LoadRule (istream & ist)
 		}
 	      if (ch == COMMASIGN)
 		{
-		  elements.Last().SetType (QUAD);
+		  elements.Last().SetNP (4);
 		  ist >> (int&)elements.Last().PNum(4);
 		  ist >> ch;    // ','
 		  
@@ -384,11 +384,11 @@ void netrule :: LoadRule (istream & ist)
 	      //        threeint a = threeint();
 	      orientations.Append (threeint());
 
-	      ist >> orientations.Last().i1;
+	      ist >> (int&)orientations.Last().i1;
 	      ist >> ch;    // ','
-	      ist >> orientations.Last().i2;
+	      ist >> (int&)orientations.Last().i2;
 	      ist >> ch;    // ','
-	      ist >> orientations.Last().i3;
+	      ist >> (int&)orientations.Last().i3;
 	      ist >> ch;    // ','
 
 	      ist >> ch;
@@ -432,13 +432,12 @@ void netrule :: LoadRule (istream & ist)
   {
     char ok;
     int minn;
-    NgArray<int> pnearness (noldp);
+    Array<int,RulePointIndex> pnearness (noldp);
 
-    for (i = 1; i <= pnearness.Size(); i++)
-      pnearness.Elem(i) = 1000;
+    pnearness = 1000;
 
     for (j = 1; j <= 2; j++)
-      pnearness.Elem(GetPointNr (1, j)) = 0;
+      pnearness[GetPointNr (1, j)] = 0;
 
     do
       {
@@ -448,13 +447,13 @@ void netrule :: LoadRule (istream & ist)
 	  {
 	    minn = 1000;
 	    for (j = 1; j <= 2; j++)
-	      minn = min2 (minn, pnearness.Get(GetPointNr (i, j)));
+	      minn = min2 (minn, pnearness[GetPointNr (i, j)]);
 
 	    for (j = 1; j <= 2; j++)
-	      if (pnearness.Get(GetPointNr (i, j)) > minn+1)
+	      if (pnearness[GetPointNr (i, j)] > minn+1)
 		{
 		  ok = 0;
-		  pnearness.Elem(GetPointNr (i, j)) = minn+1;
+		  pnearness[GetPointNr (i, j)] = minn+1;
 		}
 	  }
       }
@@ -466,7 +465,7 @@ void netrule :: LoadRule (istream & ist)
       {
 	lnearness.Elem(i) = 0;
 	for (j = 1; j <= 2; j++)
-	  lnearness.Elem(i) += pnearness.Get(GetPointNr (i, j));
+	  lnearness.Elem(i) += pnearness[GetPointNr (i, j)];
       }
   }
 

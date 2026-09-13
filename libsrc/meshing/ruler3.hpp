@@ -15,9 +15,9 @@ private:
   /// name of rule
   char * name;
   /// point coordinates in reference position
-  NgArray<Point3d> points;
+  Array<Point3d, RulePointIndex> points;
   /// old and new faces in reference numbering
-  NgArray<Element2d> faces;
+  NgArray<RuleElement2d> faces;
   /// additional edges of rule
   NgArray<twoint> edges;
 
@@ -39,9 +39,10 @@ private:
   /// face numbers to be deleted
   NgArray<int> delfaces;
   /// elements to be generated
-  NgArray<Element> elements;
+  NgArray<RuleElement> elements;
   /// tolerances for points and faces (used ??)
-  NgArray<double> tolerances, linetolerances;
+  Array<double, RulePointIndex> tolerances;
+  NgArray<double> linetolerances;
   /// transformation matrix 
   DenseMatrix oldutonewu;
   /// transformation matrix: deviation old point to dev. freezone
@@ -71,7 +72,7 @@ private:
     non-connected: > 100  (??) 
     */
   NgArray<int> fnearness;
-  NgArray<int> pnearness;
+  Array<int, RulePointIndex> pnearness;
   int maxpnearness;
 
   /// number of old points in rule
@@ -110,17 +111,17 @@ public:
   ///
   int GetFNearness (int fi) const { return fnearness.Get(fi); }
   ///
-  int GetPNearness (int pi) const { return pnearness.Get(pi); }
+  int GetPNearness (RulePointIndex pi) const { return pnearness[pi]; }
   ///
   int GetMaxPNearness () const { return maxpnearness; }
 
 
   ///
-  const Point3d & GetPoint (int i) const { return points.Get(i); }
+  const Point3d & GetPoint (RulePointIndex i) const { return points[i]; }
   ///
-  const Element2d & GetFace (int i) const { return faces.Get(i); }
+  const RuleElement2d & GetFace (int i) const { return faces.Get(i); }
   ///
-  const Element & GetElement (int i) const { return elements.Get(i); }
+  const RuleElement & GetElement (int i) const { return elements.Get(i); }
   ///
   const twoint & GetEdge (int i) const { return edges.Get(i); }
   ///
@@ -129,11 +130,11 @@ public:
   int IsDelFace (int fn) const;
   
   ///
-  float CalcPointDist (int pi, const Point3d & p) const;
+  float CalcPointDist (RulePointIndex pi, const Point3d & p) const;
   ///
-  double PointDistFactor (int pi) const
+  double PointDistFactor (RulePointIndex pi) const
     {
-      return tolerances.Get(pi);
+      return tolerances[pi];
     }
   ///
   void SetFreeZoneTransformation (const Vector & allp,
@@ -172,10 +173,10 @@ public:
   int GetNP (int fn) const
   { return faces.Get(fn).GetNP(); }
   ///
-  PointIndex GetPointNr (int fn, int endp) const
+  RulePointIndex GetPointNr (int fn, int endp) const
   { return faces.Get(fn).PNum(endp); }
   ///
-  PointIndex GetPointNrMod (int fn, int endp) const
+  RulePointIndex GetPointNrMod (int fn, int endp) const
   { return faces.Get(fn).PNumMod(endp); }
   ///
   const fourint & GetOrientation (int i) { return orientations.Get(i); }

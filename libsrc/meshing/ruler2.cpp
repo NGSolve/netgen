@@ -84,8 +84,8 @@ namespace netgen
     Array<int,LocalPointIndex> pnearness(noldlp);
     NgArrayMem<int,100> lnearness(llines1.Size());
 
-    NgArrayMem<LocalPointIndex, 20> pmap;     // rule point -> local point
-    NgArrayMem<bool, 20> pfixed;
+    ArrayMem<LocalPointIndex, 20, RulePointIndex> pmap;   // rule point -> local point
+    ArrayMem<bool, 20, RulePointIndex> pfixed;
     NgArrayMem<int, 20> lmap;
   
     ArrayMem<Point<2>,100> tempnewpoints;
@@ -240,7 +240,7 @@ namespace netgen
 	pmap.SetSize (rule->GetNP());
 	lmap.SetSize (rule->GetNL());
       
-	pmap = 0;
+	for (auto & p : pmap) p.Invalidate();
 	lmap = 0;
 
 	lused[0] = 1; 
@@ -248,7 +248,7 @@ namespace netgen
 
 	for (int j = 0; j < 2; j++)
 	  {
-	    pmap.Elem(rule->GetLine(1)[j]) = llines[0][j];
+	    pmap[rule->GetLine(1)[j]] = llines[0][j];
 	    pused[llines[0][j]]++;
 	  }
 
@@ -296,11 +296,11 @@ namespace netgen
 
 		    for (int j = 0; j < 2; j++)
 		      {
-			int refpi = rule->GetLine(nlok)[j];
+			RulePointIndex refpi = rule->GetLine(nlok)[j];
 
-			if (pmap.Get(refpi) != 0)
+			if (pmap[refpi].IsValid())
 			  {
-			    if (pmap.Get(refpi) != loclin[j])
+			    if (pmap[refpi] != loclin[j])
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -343,7 +343,7 @@ namespace netgen
 		    lused.Elem (locli) = 1;
 		    for (int j = 0; j < 2; j++)
 		      {
-			pmap.Set(rule->GetLine (nlok)[j], loclin[j]);
+			pmap[rule->GetLine (nlok)[j]] = loclin[j];
 			pused[loclin[j]]++;
 		      }
 
@@ -359,7 +359,7 @@ namespace netgen
 		      {
 			pused[llines.Get(lmap.Get(nlok))[j]] --;
 			if (! pused[llines.Get (lmap.Get (nlok))[j]])
-			  pmap.Set (rule->GetLine (nlok)[j], 0);
+			  pmap[rule->GetLine (nlok)[j]].Invalidate();
 		      }
 		  }
 	      }
@@ -377,8 +377,8 @@ namespace netgen
 		int incnpok = 1;
 
 		pfixed.SetSize (pmap.Size());
-		for (int i = 0; i < pmap.Size(); i++)
-		  pfixed[i] = (pmap[i] >= 1);
+		for (auto i : pmap.Range())
+		  pfixed[i] = pmap[i].IsValid();
  
 		while (npok >= 1)
 		  {
@@ -386,7 +386,7 @@ namespace netgen
 		    if (npok <= rule->GetNOldP())
 
 		      {
-			if (pfixed.Get(npok))
+			if (pfixed[npok])
 
 			  {
 			    if (incnpok)
@@ -400,23 +400,23 @@ namespace netgen
 			  {
 			    ok = 0;
 
-			    if (pmap.Get(npok))
-			      pused[pmap.Get(npok)]--;
+			    if (pmap[npok].IsValid())
+			      pused[pmap[npok]]--;
 
-			    while (!ok && pmap.Get(npok) < maxlegalpoint)
+			    while (!ok && pmap[npok] < maxlegalpoint)
 			      {
 				ok = 1;
 
-				pmap.Elem(npok)++;
+				pmap[npok]++;
 
-				if (pused[pmap.Get(npok)])
+				if (pused[pmap[npok]])
 				  {
 				    ok = 0;
 				  }
 				else
 				  {
-				    if (rule->CalcPointDist (npok, lpoints[pmap.Get(npok)]) > maxerr 
-					|| !legalpoints[pmap.Get(npok)]) 
+				    if (rule->CalcPointDist (npok, lpoints[pmap[npok]]) > maxerr 
+					|| !legalpoints[pmap[npok]]) 
                                     
 				      ok = 0;
 				  }
@@ -424,7 +424,7 @@ namespace netgen
 
 			    if (ok)
 			      {
-				pused[pmap.Get(npok)]++;
+				pused[pmap[npok]]++;
 				npok++;
 				incnpok = 1;
 			      }
@@ -432,7 +432,7 @@ namespace netgen
 			    else
 
 			      {
-				pmap.Elem(npok) = 0;
+				pmap[npok].Invalidate();
 				npok--;
 				incnpok = 0;
 			      }
@@ -461,9 +461,9 @@ namespace netgen
 
 			for (int i = 1; i <= rule->GetNOrientations(); i++)
 			  {
-			    if (CW (lpoints[pmap.Get(rule->GetOrientation(i).i1)],
-				    lpoints[pmap.Get(rule->GetOrientation(i).i2)],
-				    lpoints[pmap.Get(rule->GetOrientation(i).i3)]) )
+			    if (CW (lpoints[pmap[rule->GetOrientation(i).i1]],
+				    lpoints[pmap[rule->GetOrientation(i).i2]],
+				    lpoints[pmap[rule->GetOrientation(i).i3]]) )
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -482,7 +482,7 @@ namespace netgen
 		      
 			for (int i = 1; i <= rule->GetNOldP(); i++)
 			  {
-			    Vec2d ui(rule->GetPoint(i), lpoints[pmap.Get(i)]);
+			    Vec2d ui(rule->GetPoint(i), lpoints[pmap[i]]);
 			    oldu (2*i-2) = ui.X();
 			    oldu (2*i-1) = ui.Y();
 			  }
@@ -583,9 +583,9 @@ namespace netgen
 
 			for (i = 1; i <= rule->GetNOrientations() && ok; i++)
 			{
-			if (CW (lpoints[pmap.Get(rule->GetOrientation(i).i1)],
-			lpoints[pmap.Get(rule->GetOrientation(i).i2)],
-			lpoints[pmap.Get(rule->GetOrientation(i).i3)]) )
+			if (CW (lpoints[pmap[rule->GetOrientation(i).i1]],
+			lpoints[pmap[rule->GetOrientation(i).i2]],
+			lpoints[pmap[rule->GetOrientation(i).i3]]) )
 			{
 			ok = 0;
 			if (loctestmode)
@@ -616,7 +616,7 @@ namespace netgen
 				np[1] += newu (2 * (i-oldnp) - 1);
 
                                 lpoints.Append (np);
-				pmap.Elem(i) = lpoints.Size();
+				pmap[i] = lpoints.Size();
 			      }
 			  }
 
@@ -624,8 +624,8 @@ namespace netgen
 
 			for (int i = rule->GetNOldL() + 1; i <= rule->GetNL(); i++)
 			  {
-			    llines.Append (IVec<2,LocalPointIndex> (pmap.Get(rule->GetLine (i)[0]),
-                                                                   pmap.Get(rule->GetLine (i)[1])));
+			    llines.Append (IVec<2,LocalPointIndex> (pmap[rule->GetLine (i)[0]],
+                                                                   pmap[rule->GetLine (i)[1]]));
 			  }
 
 
@@ -642,10 +642,10 @@ namespace netgen
 
 			for (int i = 1; i <= rule->GetNE(); i++)
 			  {
-			    const Element2d & rel = rule->GetElement(i);
+			    const RuleElement2d & rel = rule->GetElement(i);
 			    MiniElement2d el(rel.GetNP());
 			    for (int j = 1; j <= rel.GetNP(); j++)
-			      el.PNum(j) = pmap.Get(int(rel.PNum(j)));   // rule nr -> local nr
+			      el.PNum(j) = pmap[rel.PNum(j)];   // rule nr -> local nr
 			    elements.Append (el);
 			  }
 
@@ -715,12 +715,12 @@ namespace netgen
 
 		for (int j = 1; j <= 2; j++)
 		  {
-		    int refpi = rule->GetPointNr (nlok, j);
-		    if (!pmap.Get(refpi).IsValid()) continue;   // point not mapped
-		    pused[pmap.Get(refpi)]--;
+		    RulePointIndex refpi = rule->GetPointNr (nlok, j);
+		    if (!pmap[refpi].IsValid()) continue;   // point not mapped
+		    pused[pmap[refpi]]--;
 
-		    if (pused[pmap.Get(refpi)] == 0)
-		      pmap.Set(refpi, LocalPointIndex::INVALID);
+		    if (pused[pmap[refpi]] == 0)
+		      pmap[refpi] = LocalPointIndex::INVALID;
 		  }
 	      }
 	  }

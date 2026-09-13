@@ -972,15 +972,13 @@ int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
 
 
 
-float vnetrule :: CalcPointDist (int pi, const Point3d & p) const
+float vnetrule :: CalcPointDist (RulePointIndex pi, const Point3d & p) const
 {
-  float dx = p.X() - points.Get(pi).X();
-  float dy = p.Y() - points.Get(pi).Y();
-  float dz = p.Z() - points.Get(pi).Z();
+  float dx = p.X() - points[pi].X();
+  float dy = p.Y() - points[pi].Y();
+  float dz = p.Z() - points[pi].Z();
   
-  //  const threefloat * tf = &tolerances.Get(pi);
-  //  return tf->f1 * dx * dx + tf->f2 * dx * dy + tf->f3 * dy * dy;
-  return tolerances.Get(pi) * (dx * dx + dy * dy + dz * dz);
+  return tolerances[pi] * (dx * dx + dy * dy + dz * dz);
 }
 
 

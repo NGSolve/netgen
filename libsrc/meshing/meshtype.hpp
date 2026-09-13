@@ -589,6 +589,16 @@ namespace netgen
     using Index::Index;
   };
 
+  /**
+     Point number within a meshing rule (as parsed from the .rls files),
+     mapped to a LocalPointIndex by the rule application.
+  */
+  class RulePointIndex : public Index<int,RulePointIndex,1>
+  {
+  public:
+    using Index::Index;
+  };
+
 }
 
 namespace ngcore
@@ -597,6 +607,8 @@ namespace ngcore
   constexpr netgen::Front3PointIndex IndexBASE<netgen::Front3PointIndex> () { return netgen::Front3PointIndex::Base(); }
   template<>
   constexpr netgen::LocalPointIndex IndexBASE<netgen::LocalPointIndex> () { return netgen::LocalPointIndex::Base(); }
+  template<>
+  constexpr netgen::RulePointIndex IndexBASE<netgen::RulePointIndex> () { return netgen::RulePointIndex::Base(); }
 }
 
 namespace netgen
@@ -616,6 +628,11 @@ namespace netgen
     return ost << (lpi - IndexBASE<LocalPointIndex>());
   }
 
+  inline ostream & operator<< (ostream & ost, const RulePointIndex & rpi)
+  {
+    return ost << (rpi - IndexBASE<RulePointIndex>());
+  }
+
 
 template <typename TINDEX>
 class MiniElement2dT
@@ -631,6 +648,7 @@ public:
   { np = anp; deleted = 0; }
 
   int GetNP() const { return np; }
+  void SetNP (int anp) { np = anp; }
   TINDEX & operator[] (int i) { return pnum[i]; }
   const TINDEX operator[] (int i) const { return pnum[i]; }
 
@@ -647,17 +665,20 @@ public:
 using MiniElement2d = MiniElement2dT<LocalPointIndex>;
 /// face in advancing-front numbering
 using FrontElement2d = MiniElement2dT<Front3PointIndex>;
+/// 2d element / face in rule numbering
+using RuleElement2d = MiniElement2dT<RulePointIndex>;
 
 
-/// volume element in local (GetLocals) numbering, as produced by the meshing rules
-class LocalElement
+/// volume element in a non-mesh numbering (local or rule)
+template <typename TINDEX>
+class MiniElementT
 {
   ELEMENT_TYPE typ;
   int np;
-  LocalPointIndex pnum[8];
+  TINDEX pnum[8];
 public:
-  LocalElement () : typ(TET), np(4) { }
-  LocalElement (int anp) { SetNP(anp); }
+  MiniElementT () : typ(TET), np(4) { }
+  MiniElementT (int anp) { SetNP(anp); }
 
   ELEMENT_TYPE GetType () const { return typ; }
   int GetNP () const { return np; }
@@ -672,7 +693,7 @@ public:
       case 6: typ = PRISM; break;
       case 7: typ = HEX7; break;
       case 8: typ = HEX; break;
-      default: cerr << "LocalElement::SetNP unknown element with " << np << " points" << endl;
+      default: cerr << "MiniElementT::SetNP unknown element with " << np << " points" << endl;
       }
   }
 
@@ -686,19 +707,25 @@ public:
       case PRISM: np = 6; break;
       case HEX7: np = 7; break;
       case HEX: np = 8; break;
-      default: cerr << "LocalElement::SetType unknown type " << int(typ) << endl;
+      default: cerr << "MiniElementT::SetType unknown type " << int(typ) << endl;
       }
   }
 
-  LocalPointIndex & operator[] (int i) { return pnum[i]; }
-  LocalPointIndex operator[] (int i) const { return pnum[i]; }
-  LocalPointIndex & PNum (int i) { return pnum[i-1]; }
-  LocalPointIndex PNum (int i) const { return pnum[i-1]; }
-  auto PNums() { return FlatArray<LocalPointIndex> (np, &pnum[0]); }
-  auto PNums() const { return FlatArray<const LocalPointIndex> (np, &pnum[0]); }
+  TINDEX & operator[] (int i) { return pnum[i]; }
+  TINDEX operator[] (int i) const { return pnum[i]; }
+  TINDEX & PNum (int i) { return pnum[i-1]; }
+  TINDEX PNum (int i) const { return pnum[i-1]; }
+  auto PNums() { return FlatArray<TINDEX> (np, &pnum[0]); }
+  auto PNums() const { return FlatArray<const TINDEX> (np, &pnum[0]); }
 };
 
-inline ostream & operator<< (ostream & ost, const LocalElement & el)
+/// volume element in local (GetLocals) numbering, as produced by the meshing rules
+using LocalElement = MiniElementT<LocalPointIndex>;
+/// volume element in rule numbering
+using RuleElement = MiniElementT<RulePointIndex>;
+
+template <typename TINDEX>
+inline ostream & operator<< (ostream & ost, const MiniElementT<TINDEX> & el)
 {
   ost << "np = " << el.GetNP();
   for (int j = 1; j <= el.GetNP(); j++)

@@ -738,7 +738,7 @@ namespace ngcore
 
     /// Generate array in user data
     NETGEN_INLINE Array(size_t asize, T* adata, bool ownMemory = false)
-      : FlatArray<T> (asize, adata)
+      : FlatArray<T,IndexType> (asize, adata)
     {
       allocsize = asize;
       if(ownMemory)
@@ -1197,22 +1197,22 @@ namespace ngcore
      If the dynamic size fits into the static size, use static memory, 
      otherwise perform dynamic allocation
   */
-  template <class T, int S> 
-  class ArrayMem : public Array<T>
+  template <class T, int S, typename TIND = size_t> 
+  class ArrayMem : public Array<T,TIND>
   {
     T mem[S];    
 
-    using Array<T>::size;
-    using Array<T>::allocsize;
-    using Array<T>::data;
-    using Array<T>::mem_to_delete;
-    using Array<T>::mt;
-    // using Array<T>::ownmem;
+    using Array<T,TIND>::size;
+    using Array<T,TIND>::allocsize;
+    using Array<T,TIND>::data;
+    using Array<T,TIND>::mem_to_delete;
+    using Array<T,TIND>::mt;
+    // using Array<T,TIND>::ownmem;
 
   public:
     /// Generate array of logical and physical size asize
     explicit ArrayMem(size_t asize = 0)    
-      : Array<T> (S, mem)
+      : Array<T,TIND> (S, mem)
     {
       size = asize;
       if (asize > S)
@@ -1226,20 +1226,20 @@ namespace ngcore
 
     /// copies from Array a2
     explicit ArrayMem(const Array<T> & a2)
-      : Array<T> (S, (T*)mem)
+      : Array<T,TIND> (S, (T*)mem)
     {
-      Array<T>::operator= (a2);
+      Array<T,TIND>::operator= (a2);
     }
 
     /// copies from ArrayMem a2
     explicit ArrayMem(const ArrayMem & a2)
-      : Array<T> (S, (T*)mem)
+      : Array<T,TIND> (S, (T*)mem)
     {
-      Array<T>::operator= (a2);
+      Array<T,TIND>::operator= (a2);
     }
   
     ArrayMem(ArrayMem && a2)
-      : Array<T> (a2.Size(), (T*)mem)
+      : Array<T,TIND> (a2.Size(), (T*)mem)
     {
       mt = std::move(a2.mt);
       if (a2.mem_to_delete)
@@ -1278,7 +1278,7 @@ namespace ngcore
     
     ArrayMem & operator= (const T & val)
     {
-      FlatArray<T>::operator= (val);
+      FlatArray<T,TIND>::operator= (val);
       return *this;
     }
 
@@ -1303,10 +1303,10 @@ namespace ngcore
 
 
     /// array copy
-    ArrayMem & operator= (const FlatArray<T> & a2)
+    ArrayMem & operator= (const FlatArray<T,TIND> & a2)
     {
       this->SetSize (a2.Size());
-      for (size_t i = 0; i < size; i++)
+      for (auto i : a2.Range())
         (*this)[i] = a2[i];
       return *this;
     }

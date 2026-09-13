@@ -96,8 +96,8 @@ int Meshing3 :: ApplyRules
 
   Array<int, LocalPointIndex> pused;         // point is already mapped, number of uses
   NgArrayMem<char,100> fused;                       // face is already mapped
-  NgArrayMem<LocalPointIndex,100> pmap;             // map of reference point to local point
-  NgArrayMem<bool,100> pfixed;                      // point mapped by face-map
+  ArrayMem<LocalPointIndex,100,RulePointIndex> pmap;   // map of reference point to local point
+  ArrayMem<bool,100,RulePointIndex> pfixed;            // point mapped by face-map
   NgArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
   NgArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
   ArrayMem<Point3d,100> transfreezone;            // transformed free-zone
@@ -293,7 +293,7 @@ int Meshing3 :: ApplyRules
       for (int j = 1; j <= lfaces[0].GetNP(); j++)
 	{
 	  LocalPointIndex locpi = lfaces[0].PNumMod (j+rotind1);
-	  pmap.Set (rule->GetPointNr (1, j), locpi);
+	  pmap[rule->GetPointNr (1, j)] = locpi;
 	  pused[locpi]++;
 	}
 
@@ -348,7 +348,7 @@ int Meshing3 :: ApplyRules
 		      // reference point already mapped differently ?
 		      for (int j = 1; j <= actfnp && ok; j++)
 			{
-			  LocalPointIndex locpi = pmap.Get(rule->GetPointNr (nfok, j));
+			  LocalPointIndex locpi = pmap[rule->GetPointNr (nfok, j)];
 			  if (locpi.IsValid() && locpi != locface->PNumMod(j+locfr))
 			    ok = 0;
 			}
@@ -356,9 +356,9 @@ int Meshing3 :: ApplyRules
 		      // local point already used or point outside tolerance ?
 		      for (int j = 1; j <= actfnp && ok; j++)
 			{
-			  int refpi = rule->GetPointNr (nfok, j);
+			  RulePointIndex refpi = rule->GetPointNr (nfok, j);
 			  
-			  if (!pmap.Get(refpi).IsValid())
+			  if (!pmap[refpi].IsValid())
 			    {
 			      LocalPointIndex locpi = locface->PNumMod (j + locfr);
 
@@ -394,10 +394,10 @@ int Meshing3 :: ApplyRules
 		      LocalPointIndex locpi = locface->PNumMod(j+locfr);
 		      
 		      if (rule->GetPointNr (nfok, j) < IndexBASE<LocalPointIndex>()+3 &&
-			  pmap.Get(rule->GetPointNr(nfok, j)) != locpi)
+			  pmap[rule->GetPointNr(nfok, j)] != locpi)
 			(*testout) << "change face1 point, mark1" << endl;
 		      
-		      pmap.Set(rule->GetPointNr (nfok, j), locpi);
+		      pmap[rule->GetPointNr (nfok, j)] = locpi;
 		      pused[locpi]++;
 		    }
 		  
@@ -413,13 +413,13 @@ int Meshing3 :: ApplyRules
 		  fused.Set (fmapi.Get(nfok), 0);
 		  for (int j = 1; j <= rule->GetNP (nfok); j++)
 		    {
-		      int refpi = rule->GetPointNr (nfok, j);
-		      pused[pmap.Get(refpi)]--;
+		      RulePointIndex refpi = rule->GetPointNr (nfok, j);
+		      pused[pmap[refpi]]--;
                       
-		      if (pused[pmap.Get(refpi)] == 0)
+		      if (pused[pmap[refpi]] == 0)
 			{
-			  // pmap.Set(refpi, 0);
-                          pmap.Elem(refpi).Invalidate();
+			  // pmap[refpi] = 0;
+                          pmap[refpi].Invalidate();
 			}
 		    }
 		}
@@ -443,11 +443,7 @@ int Meshing3 :: ApplyRules
 	      int incnpok = 1;
 	      
 	      pfixed.SetSize (pmap.Size());
-              /*
-	      for (int i = 1; i <= pmap.Size(); i++)
-		pfixed.Set(i, (pmap.Get(i) != 0) );
-              */
-              for (int i : pmap.Range())
+              for (auto i : pmap.Range())
                 pfixed[i] = pmap[i].IsValid();
                   
 	      while (npok >= 1)
@@ -456,7 +452,7 @@ int Meshing3 :: ApplyRules
 		  if (npok <= rule->GetNOldP())
 		    {
 		      
-		      if (pfixed.Get(npok))
+		      if (pfixed[npok])
 			
 			{
 			  if (incnpok)
@@ -468,7 +464,7 @@ int Meshing3 :: ApplyRules
 		      else
 			
 			{
-			  LocalPointIndex locpi = pmap.Elem(npok);
+			  LocalPointIndex locpi = pmap[npok];
 			  ok = 0;
 			  
 			  if (locpi.IsValid())
@@ -506,7 +502,7 @@ int Meshing3 :: ApplyRules
 			  
 			  if (ok)
 			    {
-			      pmap.Set (npok, locpi);
+			      pmap[npok] = locpi;
 			      
 			      if (npok <= 3)
 				(*testout) << "set face1 point, mark3" << endl;
@@ -519,8 +515,8 @@ int Meshing3 :: ApplyRules
 			  else
 			    
 			    {
-			      // pmap.Set (npok, 0);
-                              pmap.Elem(npok).Invalidate();
+			      // pmap[npok] = 0;
+                              pmap[npok].Invalidate();
 			      
 			      if (npok <= 3)
 				(*testout) << "set face1 point, mark4" << endl;
@@ -554,8 +550,8 @@ int Meshing3 :: ApplyRules
 		      // check mapedges:
 		      for (int i = 1; i <= rule->GetNEd(); i++)
 			{
-			  INDEX_2 in2(pmap.Get(rule->GetEdge(i).i1),
-				      pmap.Get(rule->GetEdge(i).i2));
+			  INDEX_2 in2(pmap[rule->GetEdge(i).i1],
+				      pmap[rule->GetEdge(i).i2]);
 			  in2.Sort();
 			  if (!ledges.Used (in2)) ok = 0;
 			}
@@ -564,13 +560,13 @@ int Meshing3 :: ApplyRules
 		      // check prism edges:
 		      for (int i = 1; i <= rule->GetNE(); i++)
 			{
-			  const Element & el = rule->GetElement (i);
+			  const RuleElement & el = rule->GetElement (i);
 			  if (el.GetType() == PRISM) 
 			    { 
 			      for (int j = 1; j <= 3; j++)
 				{
-				  INDEX_2 in2(pmap.Get(el.PNum(j)),
-					      pmap.Get(el.PNum(j+3)));      
+				  INDEX_2 in2(pmap[el.PNum(j)],
+					      pmap[el.PNum(j+3)]);      
 				  in2.Sort();
 				  if (!connectedpairs.Used (in2)) ok = 0;
 				}
@@ -584,13 +580,13 @@ int Meshing3 :: ApplyRules
 				  INDEX_2 in2;
 				  if (j == 1)
 				    {
-				      in2.I1() = pmap.Get(el.PNum(2));
-				      in2.I2() = pmap.Get(el.PNum(3));
+				      in2.I1() = pmap[el.PNum(2)];
+				      in2.I2() = pmap[el.PNum(3)];
 				    }
 				  else
 				    {
-				      in2.I1() = pmap.Get(el.PNum(1));
-				      in2.I2() = pmap.Get(el.PNum(4));
+				      in2.I1() = pmap[el.PNum(1)];
+				      in2.I2() = pmap[el.PNum(4)];
 				    }
 				  in2.Sort();
 				  if (!connectedpairs.Used (in2)) 
@@ -623,7 +619,7 @@ int Meshing3 :: ApplyRules
 		      
 		      for (int i = 1; i <= rule->GetNOldP(); i++)
 			{
-			  const Point3d & lp = lpoints[pmap.Get(i)];
+			  const Point3d & lp = lpoints[pmap[i]];
 			  const Point3d & rp = rule->GetPoint(i);
 			  oldu (3*i-3) = lp.X()-rp.X();
                           oldu (3*i-2) = lp.Y()-rp.Y();
@@ -716,7 +712,7 @@ int Meshing3 :: ApplyRules
 				      int lpii = 0;
 				      LocalPointIndex pi = lfacei.PNum(li);
 				      for (lj = 1; lj <= rule->GetNOldP(); lj++)
-					if (pmap.Get(lj) == pi)
+					if (pmap[lj] == pi)
 					  lpii = lj;
 				      lpi.Elem(li) = lpii;
 				    }
@@ -814,9 +810,9 @@ int Meshing3 :: ApplyRules
 					  rule->GetPointNr(k, 3) < IndexBASE<LocalPointIndex>()+rule->GetNOldP())
 					{
 					  for (int j = 1; j <= 3; j++)
-					    if (lfaces[i-1].PNumMod(j  ) == pmap.Get(rule->GetPointNr(k, 1)) &&
-						lfaces[i-1].PNumMod(j+1) == pmap.Get(rule->GetPointNr(k, 3)) &&
-						lfaces[i-1].PNumMod(j+2) == pmap.Get(rule->GetPointNr(k, 2)))
+					    if (lfaces[i-1].PNumMod(j  ) == pmap[rule->GetPointNr(k, 1)] &&
+						lfaces[i-1].PNumMod(j+1) == pmap[rule->GetPointNr(k, 3)] &&
+						lfaces[i-1].PNumMod(j+2) == pmap[rule->GetPointNr(k, 2)])
 					      {
 						fmapi.Elem(k) = i;
 						hc = 1;
@@ -824,9 +820,9 @@ int Meshing3 :: ApplyRules
 						
  // 						(*testout) << "found from other side: " 
 //  							   << rule->Name() 
-//  							   << " ( " << pmap.Get (rule->GetPointNr(k, 1))
-//  							   << " - " << pmap.Get (rule->GetPointNr(k, 2))
-//  							   << " - " << pmap.Get (rule->GetPointNr(k, 3)) << " ) "
+//  							   << " ( " << pmap[rule->GetPointNr(k, 1)]
+//  							   << " - " << pmap[rule->GetPointNr(k, 2)]
+//  							   << " - " << pmap[rule->GetPointNr(k, 3)] << " ) "
 //  							   << endl;
 
 						problems[rim] = "other";
@@ -869,7 +865,7 @@ int Meshing3 :: ApplyRules
 			  err = 0;
 			  for (int i = 1; i <= rule->GetNOldP(); i++)
 			    {
-			      double hf = rule->CalcPointDist (i, lpoints[pmap.Get(i)]);
+			      double hf = rule->CalcPointDist (i, lpoints[pmap[i]]);
 			      if (hf > err) err = hf;
 			    }
 			  
@@ -895,7 +891,7 @@ int Meshing3 :: ApplyRules
 			      np.Y() += newu (3 * (i-oldnp) - 2);
 			      np.Z() += newu (3 * (i-oldnp) - 1);
 			      lpoints.Append (np);
-                              pmap.Elem(i) = lpoints.Size()-1+PointIndex::BASE;
+                              pmap[i] = lpoints.Size()-1+IndexBASE<LocalPointIndex>();
 			    }
 			  
 			  // Set new Faces:
@@ -905,7 +901,7 @@ int Meshing3 :: ApplyRules
 			      {
 				MiniElement2d nface(rule->GetNP(i));
 				for (int j = 1; j <= nface.GetNP(); j++)
-				  nface.PNum(j) = pmap.Get(rule->GetPointNr (i, j));
+				  nface.PNum(j) = pmap[rule->GetPointNr (i, j)];
 				
 				lfaces.Append (nface);
 			      }
@@ -928,12 +924,12 @@ int Meshing3 :: ApplyRules
 			      const fourint * fouri;
 			      
 			      fouri = &rule->GetOrientation(i);
-			      Vec3d v1 (lpoints[pmap.Get(fouri->i1)], 
-					lpoints[pmap.Get(fouri->i2)]);
-			      Vec3d v2 (lpoints[pmap.Get(fouri->i1)], 
-					lpoints[pmap.Get(fouri->i3)]);
-			      Vec3d v3 (lpoints[pmap.Get(fouri->i1)], 
-					lpoints[pmap.Get(fouri->i4)]);
+			      Vec3d v1 (lpoints[pmap[fouri->i1]], 
+					lpoints[pmap[fouri->i2]]);
+			      Vec3d v2 (lpoints[pmap[fouri->i1]], 
+					lpoints[pmap[fouri->i3]]);
+			      Vec3d v3 (lpoints[pmap[fouri->i1]], 
+					lpoints[pmap[fouri->i4]]);
 
 			      Vec3d n;
 			      Cross (v1, v2, n);
@@ -953,11 +949,11 @@ int Meshing3 :: ApplyRules
 
 			  // new points in free-zone ?
 			  for (int i = rule->GetNOldP() + 1; i <= rule->GetNP() && ok; i++)
-			    if (!rule->IsInFreeZone (lpoints[pmap.Get(i)]))
+			    if (!rule->IsInFreeZone (lpoints[pmap[i]]))
 			      {
 				if (loktestmode)
 				  {
-				    (*testout) << "Newpoint " << lpoints[pmap.Get(i)]
+				    (*testout) << "Newpoint " << lpoints[pmap[i]]
 					       << " outside convex hull" << endl;
 				    problems[rim] = "newpoint outside convex hull";
 				  }
@@ -969,11 +965,11 @@ int Meshing3 :: ApplyRules
 			  
 			  for (int i = 1; i <= rule->GetNE(); i++)
 			    {
-			      const Element & rel = rule->GetElement(i);
+			      const RuleElement & rel = rule->GetElement(i);
 			      LocalElement el;
 			      el.SetType (rel.GetType());
 			      for (int j = 1; j <= rel.GetNP(); j++)
-				el.PNum(j) = pmap.Get(int(rel.PNum(j)));   // rule nr -> local nr
+				el.PNum(j) = pmap[rel.PNum(j)];   // rule nr -> local nr
 			      elements.Append (el);
 			    }
 			  
@@ -1008,27 +1004,27 @@ int Meshing3 :: ApplyRules
 
 			      for (int i = 1; i <= rule->GetNDelF(); i++)
 				{
-				  const Element2d & face = 
+				  const RuleElement2d & face = 
 				    rule->GetFace (rule->GetDelFace(i));
 				  for (int j = 1; j <= 3; j++)
 				    {
 				      const Point3d & p1 =
-					lpoints[pmap.Get(face.PNumMod(j))];
+					lpoints[pmap[face.PNumMod(j)]];
 				      const Point3d & p2 =
-					lpoints[pmap.Get(face.PNumMod(j+1))];
+					lpoints[pmap[face.PNumMod(j+1)]];
 				      oldlen += Dist(p1, p2);
 				    }
 				}
 
 			      for (int i = rule->GetNOldF()+1; i <= rule->GetNF(); i++)
 				{
-				  const Element2d & face = rule->GetFace (i);
+				  const RuleElement2d & face = rule->GetFace (i);
 				  for (int j = 1; j <= 3; j++)
 				    {
 				      const Point3d & p1 =
-					lpoints[pmap.Get(face.PNumMod(j))];
+					lpoints[pmap[face.PNumMod(j)]];
 				      const Point3d & p2 =
-					lpoints[pmap.Get(face.PNumMod(j+1))];
+					lpoints[pmap[face.PNumMod(j+1)]];
 				      newlen += Dist(p1, p2);
 				    }
 				}
@@ -1055,7 +1051,7 @@ int Meshing3 :: ApplyRules
 			      (*testout) << "can use rule " << rule->Name() 
 					 << ", err = " << teterr << endl;
 			      for (i = 1; i <= pmap.Size(); i++)
-				(*testout) << pmap.Get(i) << " ";
+				(*testout) << pmap[i] << " ";
 			      (*testout) << endl;
 			      */
 
@@ -1089,7 +1085,7 @@ int Meshing3 :: ApplyRules
 				    {
 				      (*testout) << "P" << i << ": Ref: "
 						 << rule->GetPoint (i) << "  is: "
-						 << lpoints[pmap.Get(i)] << endl;
+						 << lpoints[pmap[i]] << endl;
 				    }
 				}
 			      
@@ -1130,11 +1126,11 @@ int Meshing3 :: ApplyRules
 	      
 	      for (int j = 1; j <= rule->GetNP (nfok); j++)
 		{
-		  int refpi = rule->GetPointNr (nfok, j);
-		  pused[pmap.Get(refpi)]--;
+		  RulePointIndex refpi = rule->GetPointNr (nfok, j);
+		  pused[pmap[refpi]]--;
 		  
-		  if (pused[pmap.Get(refpi)] == 0)
-                    pmap.Elem(refpi).Invalidate();
+		  if (pused[pmap[refpi]] == 0)
+                    pmap[refpi].Invalidate();
 		}
 	      
 	    }
