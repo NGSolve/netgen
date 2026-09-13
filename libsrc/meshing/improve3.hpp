@@ -128,7 +128,7 @@ class JacobianPointFunction : public MinFunction
 public:
   Mesh::T_POINTS & points;
   const Array<Element, ElementIndex> & elements;
-  TABLE<INDEX> elementsonpoint;
+  Table<ElementIndex, PointIndex> elementsonpoint;
   PointIndex actpind;
 
   bool onplane;

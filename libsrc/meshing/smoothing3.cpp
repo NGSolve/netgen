@@ -241,17 +241,16 @@ namespace netgen
       }
     */
 
-    int i;
     double badness = 0;
     VectorMem<4> hv;
     Vector res(m.Height());
 
-    for (i = 0;i < 3; i++)
+    for (int i = 0;i < 3; i++)
       hv(i) = vp(i);
     hv(3) = 1;
     m.Mult (hv, res);
 
-    for (i = 1; i <= res.Size(); i++)
+    for (int i = 1; i <= res.Size(); i++)
       {
 	if (res(i-1) < 1e-10)
 	  badness += 1e24;
@@ -524,19 +523,18 @@ namespace netgen
     actpind = aactpind; 
 
     int ne = elementsonpoint[actpind].Size();
-    int i, j;
     PointIndex pi1, pi2, pi3;
 
     m.SetSize (ne, 4);
 
-    for (i = 0; i < ne; i++)
+    for (int i = 0; i < ne; i++)
       {
 	pi1 = 0;
 	pi2 = 0;
 	pi3 = 0;
 
 	const Element & el = elements[elementsonpoint[actpind][i]];
-	for (j = 1; j <= 4; j++)
+	for (int j = 1; j <= 4; j++)
 	  if (el.PNum(j) != actpind)
 	    {
 	      pi3 = pi2;
@@ -999,11 +997,15 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 JacobianPointFunction :: 
 JacobianPointFunction (Mesh::T_POINTS & apoints, 
 		       const Array<Element, ElementIndex> & aelements)
-  : points(apoints), elements(aelements), elementsonpoint(apoints.Size())
+  : points(apoints), elements(aelements)
 {
-  for (int i = 0; i < elements.Size(); i++)
-      for (int j = 1; j <= elements[i].NP(); j++)
-          elementsonpoint.Add1 (elements[i].PNum(j), i+1);
+  elementsonpoint = ngcore::CreateSortedTable<ElementIndex, PointIndex>
+    ( elements.Range(),
+      [&](auto & table, ElementIndex ei)
+      {
+        for (PointIndex pi : elements[ei].PNums())
+          table.Add (pi, ei);
+      }, apoints.Size());
 
   onplane = false;
 }
@@ -1041,7 +1043,6 @@ double JacobianPointFunction :: Func (const Vector & v) const
 double JacobianPointFunction :: 
 FuncGrad (const Vector & x, Vector & g) const
 {
-  int k;
   int lpi;
   double badness = 0;//, hbad;
 
@@ -1061,7 +1062,7 @@ FuncGrad (const Vector & x, Vector & g) const
       const Element & el = elements[ei];
 
       lpi = 0;
-      for (k = 1; k <= el.GetNP(); k++)
+      for (int k = 1; k <= el.GetNP(); k++)
 	if (el.PNum(k) == actpind)
 	  lpi = k;
       if (!lpi) cerr << "loc point not found" << endl;
@@ -1069,7 +1070,7 @@ FuncGrad (const Vector & x, Vector & g) const
       badness += elements[ei].
 	CalcJacobianBadnessGradient (points, lpi, hderiv);
 
-      for(k=0; k<3; k++)
+      for(int k=0; k<3; k++)
 	g(k) += hderiv(k);
 	
       /*
@@ -1108,7 +1109,6 @@ FuncGrad (const Vector & x, Vector & g) const
 double JacobianPointFunction :: 
 FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
 {
-  int k;
   int lpi;
   double badness = 0;
 
@@ -1133,7 +1133,7 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
       const Element & el = elements[ei];
 
       lpi = 0;
-      for (k = 1; k <= el.GetNP(); k++)
+      for (int k = 1; k <= el.GetNP(); k++)
 	if (el.PNum(k) == actpind)
 	  lpi = k;
       if (!lpi) cerr << "loc point not found" << endl;
@@ -1161,8 +1161,7 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
 #ifdef SOLIDGEOMxxxx
 void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
 {
-  INDEX i, eli;
-  int j;
+  INDEX eli;
   int typ = 1;
 
   if (!&geometry || geometry.GetNSurf() == 0)
@@ -1187,8 +1186,8 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
   //  (*mycout) << "Vol = " << CalcVolume (points, volelements) << endl;
 
 
-  for (i = 1; i <= surfelements.Size(); i++)
-    for (j = 1; j <= 3; j++)
+  for (INDEX i = 1; i <= surfelements.Size(); i++)
+    for (int j = 1; j <= 3; j++)
       surfelementsonpoint.Add1 (surfelements.Get(i).PNum(j), i);
 
 
@@ -1221,7 +1220,7 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
       printdot = '*';
     }
 
-  for (i = 1; i <= points.Size(); i++)
+  for (INDEX i = 1; i <= points.Size(); i++)
     {
       //      if (ptyps.Get(i) == FIXEDPOINT) continue;
       if (ptyps.Get(i) != INNERPOINT) continue;
@@ -1258,7 +1257,7 @@ void Mesh :: ImproveMesh (const CSG eometry & geometry, OPTIMIZEGOAL goal)
 
       surf1 = surf2 = surf3 = 0;
 
-      for (j = 1; j <= surfelementsonpoint.EntrySize(i); j++)
+      for (int j = 1; j <= surfelementsonpoint.EntrySize(i); j++)
 	{
 	  eli = surfelementsonpoint.Get(i, j);
 	  int surfi = surfelements.Get(eli).GetIndex();
@@ -1567,12 +1566,12 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
       if (multithread.terminate)
 	throw NgException ("Meshing stopped");
 
-      multithread.percent = 100.0 * pi / points.Size();
+      multithread.percent = 100.0 * (pi-IndexBASE<PointIndex>()) / points.Size();
 
       if (points.Size() < 1000)
 	PrintDot ();
       else
-	if (pi % 10 == 0)
+	if ((pi-IndexBASE<PointIndex>()) % 10 == 0)
 	  PrintDot ('+');
 
       double lh = pointh[pi];
@@ -1718,12 +1717,12 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	if (multithread.terminate)
 	  throw NgException ("Meshing stopped");
 
-	multithread.percent = 100.0 * pi / points.Size();
+	multithread.percent = 100.0 * (pi-IndexBASE<PointIndex>()) / points.Size();
 
 	if (points.Size() < 1000)
 	  PrintDot ();
 	else
-	  if (pi % 10 == 0)
+	  if ((pi-IndexBASE<PointIndex>()) % 10 == 0)
 	    PrintDot ('+');
 
 	double lh = pointh[pi];//GetH(points.Get(i));
@@ -1750,7 +1749,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
             if(brother-pi >= 0)
 	      {
 		pf2ptr->SetPointIndex(brother);
-		pf2ptr->SetNV(*nv[brother-1]);
+		pf2ptr->SetNV(*nv[brother-IndexBASE<PointIndex>()]);
 	      }
 	  }
 
@@ -1761,7 +1760,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 	//pf.UnSetNV(); x = 0;
 	//(*testout) << "before " << pf.Func(x);
 
-	pf.SetNV(*nv[pi-1]);
+	pf.SetNV(*nv[pi-IndexBASE<PointIndex>()]);
 
 	x = 0;
 	int pok = (brother == statem1) ? (pf.Func (x) < 1e10) : (pf_sum.Func (x) < 1e10);
