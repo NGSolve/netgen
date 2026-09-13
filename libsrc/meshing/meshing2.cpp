@@ -332,8 +332,8 @@ namespace netgen
 
     // illegal points: points with more then 50 elements per node
     int maxlegalpoint(-1), maxlegalline(-1);
-    NgArray<int,PointIndex::BASE> trigsonnode;
-    NgArray<int,PointIndex::BASE> illegalpoint;
+    Array<int,PointIndex> trigsonnode;
+    Array<int,PointIndex> illegalpoint;
 
     trigsonnode.SetSize (mesh.GetNP());
     illegalpoint.SetSize (mesh.GetNP());
@@ -1268,12 +1268,12 @@ namespace netgen
 
 	    for (int i = oldnl+1; i <= loclines.Size(); i++)
 	      {
-		int nlgpi1 = loclines.Get(i)[0];
-		int nlgpi2 = loclines.Get(i)[1];
-		if (nlgpi1 <= pindex.Size() && nlgpi2 <= pindex.Size())
+		LocalPointIndex nllpi1 = loclines.Get(i)[0];
+		LocalPointIndex nllpi2 = loclines.Get(i)[1];
+		if (nllpi1 <= pindex.Size() && nllpi2 <= pindex.Size())
 		  {
-		    nlgpi1 = adfront.GetGlobalIndex (pindex[nlgpi1]);
-		    nlgpi2 = adfront.GetGlobalIndex (pindex[nlgpi2]);
+		    PointIndex nlgpi1 = adfront.GetGlobalIndex (pindex[nllpi1]);
+		    PointIndex nlgpi2 = adfront.GetGlobalIndex (pindex[nllpi2]);
 
 		    int exval = adfront.ExistsLine (nlgpi1, nlgpi2);
 		    if (exval)
@@ -1423,17 +1423,14 @@ namespace netgen
 	      
 
 
-		for (int j = 1; j <= mtri.GetNP(); j++)
+		for (PointIndex gpi : mtri.PNums())
 		  {
-		    PointIndex gpi = mtri.PNum(j);
-
-		    int oldts = trigsonnode.Size();
-		    if (gpi >= oldts+PointIndex::BASE)
+		    size_t oldts = trigsonnode.Size();
+		    if (gpi >= oldts+IndexBASE<PointIndex>())
 		      {
-			trigsonnode.SetSize (gpi+1-PointIndex::BASE);
-			illegalpoint.SetSize (gpi+1-PointIndex::BASE);
-			for (int k = oldts+PointIndex::BASE; 
-			     k <= gpi; k++)
+			trigsonnode.SetSize (gpi+1-IndexBASE<PointIndex>());
+			illegalpoint.SetSize (gpi+1-IndexBASE<PointIndex>());
+			for (PointIndex k = oldts+IndexBASE<PointIndex>(); k <= gpi; k++)
 			  {
 			    trigsonnode[k] = 0;
 			    illegalpoint[k] = 0;
@@ -1514,7 +1511,7 @@ namespace netgen
 		    (*testout) << "line ";
 		    for (int j = 1; j <= 2; j++)
 		      {
-			int hi = 0;
+			PointIndex hi = PointIndex::INVALID;
 			if (loclines.Get(i)[j-1] >= 1 &&
 			    loclines.Get(i)[j-1] <= pindex.Size())
 			  hi = adfront.GetGlobalIndex (pindex[loclines.Get(i)[j-1]]);
@@ -1566,7 +1563,7 @@ namespace netgen
 		    (*testout) << "line ";
 		    for (int j = 1; j <= 2; j++)
 		      {
-			int hi = 0;
+			PointIndex hi = PointIndex::INVALID;
 			if (loclines.Get(i)[j-1] >= 1 &&
 			    loclines.Get(i)[j-1] <= pindex.Size())
 			  hi = adfront.GetGlobalIndex (pindex[loclines.Get(i)[j-1]]);
