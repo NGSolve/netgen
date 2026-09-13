@@ -519,9 +519,9 @@ namespace netgen
 	    // for (int i = 1; i <= mesh->GetNE(); i++)
             for (ElementIndex ei : Range(mesh->VolumeElements()))
 	      {
-		Point3d p;
+		netgen::Point<3> p;
 		const Element & el = mesh->VolumeElement (ei);
-		auto P = [&] (int j) -> const Point3d & { return mesh->Point(el.PNum(j)); };
+		auto P = [&] (int j) -> const netgen::Point<3> & { return mesh->Point(el.PNum(j)); };
 
 		switch (el.GetNV())
 		  {
@@ -530,11 +530,10 @@ namespace netgen
 		    break;
 		  case 5:
 		    {
-		      Point3d c = Center (Center(P(1),P(3)), Center(P(2),P(4)));
-		      const Point3d & p5 = P(5);
-		      p.X() = 0.3 * p5.X() + 0.7 * c.X();
-		      p.Y() = 0.3 * p5.Y() + 0.7 * c.Y();
-		      p.Z() = 0.3 * p5.Z() + 0.7 * c.Z();
+		      auto c = Center (Center(P(1),P(3)), Center(P(2),P(4)));
+		      const auto & p5 = P(5);
+		      for (int j = 0; j < 3; j++)
+			p(j) = 0.3 * p5(j) + 0.7 * c(j);
 		      break;
 		    }
 		  case 6:
@@ -546,7 +545,7 @@ namespace netgen
 		    break;
 		  }
 
-		glRasterPos3d (p.X(), p.Y(), p.Z());
+		glRasterPos3d (p(0), p(1), p(2));
 		snprintf (buf, size(buf),  "%d", ei-IndexBASE(ei));
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);

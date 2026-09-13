@@ -27,7 +27,7 @@ namespace netgen
       {
         auto & seg = mesh[si];
         if (seg.GetType() == SEGMENT3)
-          between.Set(INDEX_2::Sort(seg[0],seg[1]), seg[2]);
+          between.Set(SortedPointIndices<2>(seg[0],seg[1]), seg[2]);
       }
     
     
@@ -72,9 +72,7 @@ namespace netgen
         if (betw)
           for (int j = 0; j < el.GetNP()-onp; j++)
             {
-              int pi1 = el[betw[j][0]];
-              int pi2 = el[betw[j][1]];
-              INDEX_2 i2 = INDEX_2::Sort (pi1, pi2);
+              SortedPointIndices<2> i2 (el[betw[j][0]], el[betw[j][1]]);
               between.Set (i2, el[onp+j]);
             }
       }
@@ -92,7 +90,7 @@ namespace netgen
       {
 	Segment & el = mesh.LineSegment(si);
 
-	INDEX_2 i2 = INDEX_2::Sort (el[0], el[1]);
+	SortedPointIndices<2> i2 (el[0], el[1]);
 
 	if (between.Used(i2))
 	  el[2] = between.Get(i2);
@@ -179,7 +177,7 @@ namespace netgen
 	    PointIndex pi1 = newel[betw[j][0]];
 	    PointIndex pi2 = newel[betw[j][1]];
 	  
-	    INDEX_2 i2 = INDEX_2::Sort (pi1, pi2);
+	    SortedPointIndices<2> i2 (pi1, pi2);
 	  
 	    if (between.Used(i2))
 	      {
@@ -336,18 +334,16 @@ namespace netgen
 
 	for (int j = 0; j < nnp-onp; j++)
 	  {
-	    INDEX_2 i2(newel[betw[j][0]],
-		       newel[betw[j][1]]);
-	    i2.Sort();
+	    SortedPointIndices<2> i2 (newel[betw[j][0]], newel[betw[j][1]]);
+	    auto [pi1, pi2] = i2;
 	  
 	    if (between.Used(i2))
 	      newel.PNum(onp+1+j) = between.Get(i2);
 	    else
 	      {
 		newel.PNum(onp+1+j) = mesh.AddPoint
-		  (Center (mesh[PointIndex(i2.I1())],
-			   mesh[PointIndex(i2.I2())]),
-		   mesh[PointIndex(i2.I1())].GetLayer(), 
+		  (Center (mesh[pi1], mesh[pi2]),
+		   mesh[pi1].GetLayer(), 
 		   INNERPOINT);
 
 		between.Set (i2, newel.PNum(onp+1+j));
@@ -404,10 +400,10 @@ namespace netgen
 
 
     //  mesh.mglevels++;
-    int oldsize = mesh.mlbetweennodes.Size();
+    size_t oldsize = mesh.mlbetweennodes.Size();
     mesh.mlbetweennodes.SetSize(mesh.GetNP());
-    for (int i = oldsize; i < mesh.GetNP(); i++)
-      mesh.mlbetweennodes[i] = INDEX_2(0,0);
+    for (PointIndex pi : mesh.mlbetweennodes.Range().Modify(oldsize, 0))
+      mesh.mlbetweennodes[pi] = { PointIndex::INVALID, PointIndex::INVALID };
 
     /*
     for (i = 1; i <= between.GetNBags(); i++)

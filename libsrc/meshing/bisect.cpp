@@ -4116,11 +4116,10 @@ namespace netgen
     reptimer.Start();
 
     NgArray<ElementIndex> bad_elts;
-    NgArray<double> pure_badness;
+    Array<double, PointIndex> pure_badness;
    
     if(do_repair || quality_loss != NULL)
       {
-	pure_badness.SetSize(mesh.GetNP()+2);
 	GetPureBadness(mesh,pure_badness,isnewpoint);
       }
 

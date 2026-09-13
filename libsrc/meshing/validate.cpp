@@ -5,27 +5,24 @@
 
 namespace netgen
 {
-  void GetPureBadness(Mesh & mesh, NgArray<double> & pure_badness,
+  void GetPureBadness(Mesh & mesh, Array<double, PointIndex> & pure_badness,
 		      const TBitArray<PointIndex> & isnewpoint)
   {
     //const int ne = mesh.GetNE();
     const int np = mesh.GetNP();
 
-    pure_badness.SetSize(np+PointIndex::BASE+1);
+    pure_badness.SetSize(np+1);   // one extra slot for the maximum
     pure_badness = -1;
 
-    Array< Point<3>* > backup(np);
+    Array<Point<3>, PointIndex> backup(np);
 
-    for(int i=0; i<np; i++)
+    for (PointIndex pi : mesh.Points().Range())
       {
-	backup[i] = new Point<3>(mesh.Point(i+1));
+	backup[pi] = mesh.Point(pi);
 
-	if(isnewpoint.Test(i+IndexBASE<PointIndex>()) &&
-	   mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][0].IsValid())
-	  {
-	    mesh.Point(i+1) = Center(mesh.Point(mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][0]),
-				     mesh.Point(mesh.mlbetweennodes[i+IndexBASE<PointIndex>()][1]));
-	  }
+	if (isnewpoint.Test(pi) && mesh.mlbetweennodes[pi][0].IsValid())
+	  mesh.Point(pi) = Center (mesh.Point(mesh.mlbetweennodes[pi][0]),
+				   mesh.Point(mesh.mlbetweennodes[pi][1]));
       }
     for (ElementIndex i = 0; i < mesh.GetNE(); i++)
       {
@@ -39,16 +36,13 @@ namespace netgen
 	  pure_badness.Last() = bad; 
       }
     
-    for(int i=0; i<np; i++)
-      {
-	mesh.Point(i+1) = *backup[i];
-	delete backup[i];
-      }
+    for (PointIndex pi : mesh.Points().Range())
+      mesh.Point(pi) = backup[pi];
   }
 
 
   double Validate(const Mesh & mesh, NgArray<ElementIndex> & bad_elements,
-		  const NgArray<double> & pure_badness,
+		  const Array<double, PointIndex> & pure_badness,
 		  double max_worsening, const bool uselocalworsening,
 		  NgArray<double> * quality_loss)
   {
@@ -153,7 +147,7 @@ namespace netgen
 
   void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
 		       const TBitArray<PointIndex> & isnewpoint, const Refinement & refinement,
-		       const NgArray<double> & pure_badness, 
+		       const Array<double, PointIndex> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
 		       const NgArray< idmap_type* > & idmaps)
   {
