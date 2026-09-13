@@ -599,6 +599,15 @@ namespace netgen
     using Index::Index;
   };
 
+  /**
+     Vertex number within a single element, 1 .. GetNP().
+  */
+  class ElementVertexIndex : public Index<int,ElementVertexIndex,1>
+  {
+  public:
+    using Index::Index;
+  };
+
 }
 
 namespace ngcore
@@ -609,6 +618,8 @@ namespace ngcore
   constexpr netgen::LocalPointIndex IndexBASE<netgen::LocalPointIndex> () { return netgen::LocalPointIndex::Base(); }
   template<>
   constexpr netgen::RulePointIndex IndexBASE<netgen::RulePointIndex> () { return netgen::RulePointIndex::Base(); }
+  template<>
+  constexpr netgen::ElementVertexIndex IndexBASE<netgen::ElementVertexIndex> () { return netgen::ElementVertexIndex::Base(); }
 }
 
 namespace netgen
@@ -631,6 +642,11 @@ namespace netgen
   inline ostream & operator<< (ostream & ost, const RulePointIndex & rpi)
   {
     return ost << (rpi - IndexBASE<RulePointIndex>());
+  }
+
+  inline ostream & operator<< (ostream & ost, const ElementVertexIndex & evi)
+  {
+    return ost << (evi - IndexBASE<ElementVertexIndex>());
   }
 
 
@@ -667,6 +683,8 @@ using MiniElement2d = MiniElement2dT<LocalPointIndex>;
 using FrontElement2d = MiniElement2dT<Front3PointIndex>;
 /// 2d element / face in rule numbering
 using RuleElement2d = MiniElement2dT<RulePointIndex>;
+/// face of a volume element, in element-vertex numbering
+using ElementFace = MiniElement2dT<ElementVertexIndex>;
 
 
 /// volume element in a non-mesh numbering (local or rule)
@@ -1387,7 +1405,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void GetNodesLocalNew (NgArray<Point<3> > & points) const;
 
     /// split surface into 3 node trigs
-    DLL_HEADER void GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const;
+    DLL_HEADER void GetSurfaceTriangles (NgArray<ElementFace> & surftrigs) const;
 
 
     /// get number of 'integration points'

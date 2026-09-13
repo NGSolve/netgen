@@ -1725,7 +1725,7 @@ namespace netgen
     if (strcmp (argv[1], "point") == 0)
       {
 	cout << "Restrict h at point to " << loch << endl;
-	mesh -> RestrictLocalH  (RESTRICTH_POINT, vsmesh.SelectedPoint(), loch);
+	mesh -> RestrictLocalH  (RESTRICTH_POINT, int(vsmesh.SelectedPoint()), loch);
       }
 
     return TCL_OK;

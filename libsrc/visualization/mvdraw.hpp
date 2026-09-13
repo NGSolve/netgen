@@ -249,7 +249,7 @@ namespace netgen
     { return seledge; }
 	NGGUI_API int SelectedElement () const
     { return selelement; }
-	NGGUI_API int SelectedPoint () const
+	NGGUI_API PointIndex SelectedPoint () const
     { return selpoint; }
     void BuildFilledList (bool select);
     void BuildColorTexture();
@@ -259,10 +259,10 @@ namespace netgen
     void BuildEdgeList();
     void BuildPointNumberList();
 
-    void BuildTetList(const BitArray & shownode);
-    void BuildPrismList(const BitArray & shownode);
-    void BuildPyramidList(const BitArray & shownode);
-    void BuildHexList(const BitArray & shownode);
+    void BuildTetList(const TBitArray<PointIndex> & shownode);
+    void BuildPrismList(const TBitArray<PointIndex> & shownode);
+    void BuildPyramidList(const TBitArray<PointIndex> & shownode);
+    void BuildHexList(const TBitArray<PointIndex> & shownode);
 
     void BuildBadelList();
     void BuildIdentifiedList();

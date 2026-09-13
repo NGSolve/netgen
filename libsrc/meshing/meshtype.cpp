@@ -1758,7 +1758,7 @@ namespace netgen
 
 
 
-  void Element :: GetSurfaceTriangles (NgArray<Element2d> & surftrigs) const
+  void Element :: GetSurfaceTriangles (NgArray<ElementFace> & surftrigs) const
   {
     static int tet4trigs[][3] = 
       { { 2, 3, 4 },
@@ -1882,7 +1882,7 @@ namespace netgen
     surftrigs.SetSize (nf);
     for (j = 0; j < nf; j++)
       {
-        surftrigs.Elem(j+1) = Element2d(TRIG);
+        surftrigs.Elem(j+1) = ElementFace(3);
         surftrigs.Elem(j+1).PNum(1) = fp[j][0];
         surftrigs.Elem(j+1).PNum(2) = fp[j][1];
         surftrigs.Elem(j+1).PNum(3) = fp[j][2];

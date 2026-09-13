@@ -60,6 +60,12 @@ namespace netgen
 
 using namespace netgen;
 
+namespace {
+  // the Ng_* interface numbers points 1-based, independent of PointIndex::BASE
+  inline int PointNr (PointIndex pi) { return pi - IndexBASE<PointIndex>() + 1; }
+  inline PointIndex PointIdx (int nr) { return nr + IndexBASE<PointIndex>() - 1; }
+}
+
 
 void Ng_LoadGeometry (const char * filename)
 {
@@ -309,7 +315,7 @@ void Ng_GetPoint (int pi, double * p)
       return;
     }
 
-  const Point3d & hp = mesh->Point (pi);
+  const Point3d & hp = mesh->Point (PointIdx(pi));
   p[0] = hp.X();
   p[1] = hp.Y();
   if (mesh->GetDimension() == 3)
@@ -324,7 +330,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
       int i;
       const Element & el = mesh->VolumeElement (ei);
       for (i = 0; i < el.GetNP(); i++)
-	epi[i] = el.PNum(i+1);
+	epi[i] = PointNr(el.PNum(i+1));
       
       if (np)
 	*np = el.GetNP();
@@ -350,7 +356,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
                 if (printmessage_importance>0)
                   cout << "degenerated prism found, deg = 1" << endl;
 		for (i = 0; i < 5; i++)
-		  epi[i] = el.PNum (map[i]);
+		  epi[i] = PointNr(el.PNum (map[i]));
 		
 		if (np) *np = 5;
 		return NG_PYRAMID;
@@ -360,9 +366,9 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
 	      {
                 if (printmessage_importance>0)
                   cout << "degenerated prism found, deg = 2" << endl;
-		if (!deg1) epi[3] = el.PNum(4);
-		if (!deg2) epi[3] = el.PNum(5);
-		if (!deg3) epi[3] = el.PNum(6);
+		if (!deg1) epi[3] = PointNr(el.PNum(4));
+		if (!deg2) epi[3] = PointNr(el.PNum(5));
+		if (!deg3) epi[3] = PointNr(el.PNum(6));
 		
 		if (np) *np = 4;
 		return NG_TET;
@@ -380,7 +386,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
     {
       const Element2d & el = mesh->SurfaceElement (ei);
       for (int i = 0; i < el.GetNP(); i++)
-	epi[i] = el.PNum(i+1);      
+	epi[i] = PointNr(el.PNum(i+1));      
 
       if (np) *np = el.GetNP();
       return NG_ELEMENT_TYPE (el.GetType());
@@ -497,7 +503,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
     {
       const Element2d & el = mesh->SurfaceElement (ei);
       for (int i = 0; i < el.GetNP(); i++)
-	epi[i] = el[i];
+	epi[i] = PointNr(el[i]);
       
       if (np) *np = el.GetNP();
       
@@ -509,17 +515,17 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
 
       if (!seg[2].IsValid())
 	{
-	  epi[0] = seg[0];
-	  epi[1] = seg[1];
+	  epi[0] = PointNr(seg[0]);
+	  epi[1] = PointNr(seg[1]);
 	  
 	  if (np) *np = 2;
 	  return NG_SEGM;
 	}
       else
 	{
-	  epi[0] = seg[0];
-	  epi[1] = seg[1];
-	  epi[2] = seg[2];
+	  epi[0] = PointNr(seg[0]);
+	  epi[1] = PointNr(seg[1]);
+	  epi[2] = PointNr(seg[2]);
 
 	  if (np) *np = 3;
 	  return NG_SEGM3;
@@ -863,8 +869,8 @@ NG_ELEMENT_TYPE Ng_GetSegment (int ei, int * epi, int * np)
 {
   const Segment & seg = mesh->LineSegment (ei);
   
-  epi[0] = seg[0];
-  epi[1] = seg[1];
+  epi[0] = PointNr(seg[0]);
+  epi[1] = PointNr(seg[1]);
 
   if (!seg[2].IsValid())
     {
@@ -873,7 +879,7 @@ NG_ELEMENT_TYPE Ng_GetSegment (int ei, int * epi, int * np)
     }
   else
     {
-      epi[2] = seg[2];
+      epi[2] = PointNr(seg[2]);
       if (np) *np = 3;
       return NG_SEGM3;
     }
@@ -1742,8 +1748,8 @@ void Ng_GetParentNodes (int ni, int * parents)
 {
   if (ni <= mesh->mlbetweennodes.Size())
     {
-      parents[0] = mesh->mlbetweennodes[ni].I1();
-      parents[1] = mesh->mlbetweennodes[ni].I2();
+      parents[0] = PointNr(mesh->mlbetweennodes[PointIdx(ni)].I1());
+      parents[1] = PointNr(mesh->mlbetweennodes[PointIdx(ni)].I2());
     }
   else
     parents[0] = parents[1] = 0;

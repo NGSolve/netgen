@@ -134,7 +134,7 @@ namespace netgen
     if (vispar.drawbadels)
       glCallList (badellist);
 
-    BitArray shownode(mesh->GetNP()+1);
+    TBitArray<PointIndex> shownode(mesh->GetNP());
     if (vispar.clipping.enable)
       {
 	shownode.Clear();
@@ -340,7 +340,7 @@ namespace netgen
 
 
 
-    NgArray<Element2d> faces;
+    NgArray<ElementFace> faces;
 
     int meshtimestamp = mesh->GetTimeStamp();
     if (meshtimestamp > vstimestamp || zoomall)
@@ -519,76 +519,32 @@ namespace netgen
 	    // for (int i = 1; i <= mesh->GetNE(); i++)
             for (ElementIndex ei : Range(mesh->VolumeElements()))
 	      {
-		// const ELEMENTTYPE & eltype = mesh->ElementType(i);
-		Array<int> pnums;
-
 		Point3d p;
 		const Element & el = mesh->VolumeElement (ei);
+		auto P = [&] (int j) -> const Point3d & { return mesh->Point(el.PNum(j)); };
 
-		if ( ! el.PNum(5)) //  eltype == TET )
-                  {
-
-		    pnums.SetSize(4);
-		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
-
-
-		    const Point3d & p1 = mesh->Point(pnums[0]);
-		    const Point3d & p2 = mesh->Point(pnums[1]);
-		    const Point3d & p3 = mesh->Point(pnums[2]);
-		    const Point3d & p4 = mesh->Point(pnums[3]);
-		    p = Center (p1, p2, p3, p4);
-                  }
-		else if ( ! el.PNum(6)) // eltype == PYRAMID
-                  {
-		    pnums.SetSize(5);
-		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
-
-
-		    const Point3d & p1 = mesh->Point(pnums[0]);
-		    const Point3d & p2 = mesh->Point(pnums[1]);
-		    const Point3d & p3 = mesh->Point(pnums[2]);
-		    const Point3d & p4 = mesh->Point(pnums[3]);
-		    const Point3d & p5 = mesh->Point(pnums[4]);
-
-		    p.X()  = 0.3 * p5.X() + 0.7 * Center ( Center(p1, p3) , Center(p2, p4) ) . X();
-		    p.Y()  = 0.3 * p5.Y() + 0.7 * Center ( Center(p1, p3) , Center(p2, p4) ) . Y();
-		    p.Z()  = 0.3 * p5.Z() + 0.7 * Center ( Center(p1, p3) , Center(p2, p4) ) . Z();
-
-                  }
-		else if ( ! el.PNum(7) ) // eltype == PRISM
-                  {
-		    pnums.SetSize(6);
-		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
-
-		    const Point3d & p1 = mesh->Point(pnums[0]);
-		    const Point3d & p2 = mesh->Point(pnums[1]);
-		    const Point3d & p3 = mesh->Point(pnums[2]);
-		    const Point3d & p11 = mesh->Point(pnums[3]);
-		    const Point3d & p12 = mesh->Point(pnums[4]);
-		    const Point3d & p13 = mesh->Point(pnums[5]);
-		    p = Center (  Center (p1, p2, p3) , Center(p11, p12, p13) )  ;
-
-                  }
-		else if (! el.PNum(9) ) // eltype == HEX
-                  {
-		    pnums.SetSize(8);
-		    for( int j = 0; j < pnums.Size(); j++)
-		      pnums[j] = mesh->VolumeElement(ei).PNum(j+1);
-
-		    const Point3d & p1 = mesh->Point(pnums[0]);
-		    const Point3d & p2 = mesh->Point(pnums[1]);
-		    const Point3d & p3 = mesh->Point(pnums[2]);
-		    const Point3d & p4 = mesh->Point(pnums[3]);
-		    const Point3d & p5 = mesh->Point(pnums[4]);
-		    const Point3d & p6 = mesh->Point(pnums[5]);
-		    const Point3d & p7 = mesh->Point(pnums[6]);
-		    const Point3d & p8 = mesh->Point(pnums[7]);
-
-		    p = Center ( Center ( Center(p1, p3), Center(p2, p4) ) , Center( Center(p5, p7) , Center(p6, p8 ) ) );
-                  }
+		switch (el.GetNV())
+		  {
+		  case 4:
+		    p = Center (P(1), P(2), P(3), P(4));
+		    break;
+		  case 5:
+		    {
+		      Point3d c = Center (Center(P(1),P(3)), Center(P(2),P(4)));
+		      const Point3d & p5 = P(5);
+		      p.X() = 0.3 * p5.X() + 0.7 * c.X();
+		      p.Y() = 0.3 * p5.Y() + 0.7 * c.Y();
+		      p.Z() = 0.3 * p5.Z() + 0.7 * c.Z();
+		      break;
+		    }
+		  case 6:
+		    p = Center (Center(P(1),P(2),P(3)), Center(P(4),P(5),P(6)));
+		    break;
+		  case 8:
+		    p = Center (Center(Center(P(1),P(3)), Center(P(2),P(4))),
+				Center(Center(P(5),P(7)), Center(P(6),P(8))));
+		    break;
+		  }
 
 		glRasterPos3d (p.X(), p.Y(), p.Z());
 		snprintf (buf, size(buf),  "%d", ei-IndexBASE(ei));
@@ -634,13 +590,13 @@ namespace netgen
 
 
 		//	  if ( (el.GetNP() == 4) || (el.GetNP() == 10))
-		if (el.PNum(1))
+		if (el.PNum(1).IsValid())
 		  {
 		    glBegin (GL_TRIANGLES);
 
 		    for (int j = 1; j <= faces.Size(); j++)
 		      {
-			Element2d & face = faces.Elem(j);
+			ElementFace & face = faces.Elem(j);
 			const Point3d & lp1 = mesh->Point (el.PNum(face.PNum(1)));
 			const Point3d & lp2 = mesh->Point (el.PNum(face.PNum(2)));
 			const Point3d & lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -1274,7 +1230,7 @@ namespace netgen
 
     glLineWidth (1.0f);
 
-    Vector locms;
+    Array<double, PointIndex> locms;
 
     if (vispar.colormeshsize)
       {
@@ -1283,12 +1239,11 @@ namespace netgen
 	locms.SetSize (mesh->GetNP());
 	maxh = -1;
 	minh = 1e99;
-	for (int i = 1; i <= locms.Size(); i++)
+	for (PointIndex pi : mesh->Points().Range())
 	  {
-            Point3d p = mesh->Point(i);
-            locms(i-1) = mesh->GetH (p);
-            if (locms(i-1) > maxh) maxh = locms(i-1);
-            if (locms(i-1) < minh) minh = locms(i-1);
+            locms[pi] = mesh->GetH (mesh->Point(pi));
+            if (locms[pi] > maxh) maxh = locms[pi];
+            if (locms[pi] < minh) minh = locms[pi];
 	  }
 	if (!locms.Size())
 	  { 
@@ -1347,7 +1302,7 @@ namespace netgen
           auto & el = (*mesh)[sei];
           if(el.GetType() == TRIG && !curv.IsHighOrder()) {
             if (vispar.colormeshsize)
-              SetOpenGlColor  (locms(el[0]-1), minh, maxh, 0);
+              SetOpenGlColor  (locms[el[0]], minh, maxh, 0);
           }
         }
         return true;
@@ -1840,7 +1795,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildTetList(const BitArray & shownode)
+  void VisualSceneMesh :: BuildTetList(const TBitArray<PointIndex> & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -1864,7 +1819,7 @@ namespace netgen
     glNewList (tetlist, GL_COMPILE);
 
 
-    Vector locms;
+    Array<double, PointIndex> locms;
 
     // Philippose - 16/02/2010
     // Add Mesh size based coloring of 
@@ -1875,12 +1830,11 @@ namespace netgen
 	locms.SetSize (mesh->GetNP());
 	maxh = -1;
 	minh = 1e99;
-	for (int i = 1; i <= locms.Size(); i++)
+	for (PointIndex pi : mesh->Points().Range())
 	  {
-            Point3d p = mesh->Point(i);
-            locms(i-1) = mesh->GetH (p);
-            if (locms(i-1) > maxh) maxh = locms(i-1);
-            if (locms(i-1) < minh) minh = locms(i-1);
+            locms[pi] = mesh->GetH (mesh->Point(pi));
+            if (locms[pi] > maxh) maxh = locms[pi];
+            if (locms[pi] < minh) minh = locms[pi];
 	  }
 	if (!locms.Size())
 	  { 
@@ -1893,7 +1847,7 @@ namespace netgen
 
 
 
-    NgArray<Element2d> faces;
+    NgArray<ElementFace> faces;
 
     static float tetcols[][4] =
       {
@@ -2095,31 +2049,31 @@ namespace netgen
 		    n = Cross (pts[1]-pts[0], pts[2]-pts[0]);
 		    glNormal3dv (n);
 
-		    SetOpenGlColor (locms(el[0]-1), minh, maxh, 0);
+		    SetOpenGlColor (locms[el[0]], minh, maxh, 0);
 		    glVertex3dv (pts[0]);
 
-		    SetOpenGlColor (locms(el[1]-1), minh, maxh, 0);
+		    SetOpenGlColor (locms[el[1]], minh, maxh, 0);
 		    glVertex3dv (pts[1]);
 
-		    SetOpenGlColor (locms(el[2]-1), minh, maxh, 0);
+		    SetOpenGlColor (locms[el[2]], minh, maxh, 0);
 		    glVertex3dv (pts[2]);
 
 		    n = Cross (pts[3]-pts[1], pts[2]-pts[1]);
 		    glNormal3dv (n);
 
-		    SetOpenGlColor (locms(el[3]-1), minh, maxh, 0);
+		    SetOpenGlColor (locms[el[3]], minh, maxh, 0);
 		    glVertex3dv (pts[3]);
 
 		    n = Cross (pts[3]-pts[2], pts[0]-pts[2]);
 		    glNormal3dv (n);
 
-		    SetOpenGlColor (locms(el[0]-1), minh, maxh, 0);
+		    SetOpenGlColor (locms[el[0]], minh, maxh, 0);
 		    glVertex3dv (pts[0]);
 
 		    n = Cross (pts[1]-pts[3], pts[0]-pts[3]);
 		    glNormal3dv (n);
 
-		    SetOpenGlColor (locms(el[1]-1), minh, maxh, 0);
+		    SetOpenGlColor (locms[el[1]], minh, maxh, 0);
 		    glVertex3dv (pts[1]);
 		    glEnd();
 		  }
@@ -2170,7 +2124,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildPrismList(const BitArray & shownode)
+  void VisualSceneMesh :: BuildPrismList(const TBitArray<PointIndex> & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2197,7 +2151,7 @@ namespace netgen
     static float prismcol[] = { 0.0f, 1.0f, 1.0f, 1.0f };
     glLineWidth (1.0f);
 
-    NgArray<Element2d> faces;
+    NgArray<ElementFace> faces;
 
 
     glDisable (GL_COLOR_MATERIAL);
@@ -2479,7 +2433,7 @@ namespace netgen
 		glBegin (GL_TRIANGLES);
 		for (j = 1; j <= faces.Size(); j++)
 		  {
-		    Element2d & face = faces.Elem(j);
+		    ElementFace & face = faces.Elem(j);
 		    Point3d lp1 = mesh->Point (el.PNum(face.PNum(1)));
 		    Point3d lp2 = mesh->Point (el.PNum(face.PNum(2)));
 		    Point3d lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -2507,7 +2461,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildHexList(const BitArray & shownode)
+  void VisualSceneMesh :: BuildHexList(const TBitArray<PointIndex> & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2534,7 +2488,7 @@ namespace netgen
     glDisable (GL_COLOR_MATERIAL);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hexcol);
 
-    NgArray<Element2d> faces;
+    NgArray<ElementFace> faces;
     // int hoplotn = 1 << vispar.subdivisions;
 
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
@@ -2688,7 +2642,7 @@ namespace netgen
 		el.GetSurfaceTriangles (faces);
 		for (int j = 1; j <= faces.Size(); j++)
 		  {
-		    Element2d & face = faces.Elem(j);
+		    ElementFace & face = faces.Elem(j);
 		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
 		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
 		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -2801,7 +2755,7 @@ namespace netgen
 		el.GetSurfaceTriangles (faces);
 		for (int j = 1; j <= faces.Size(); j++)
 		  {
-		    Element2d & face = faces.Elem(j);
+		    ElementFace & face = faces.Elem(j);
 		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
 		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
 		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -2838,7 +2792,7 @@ namespace netgen
 
 
 
-  void VisualSceneMesh :: BuildPyramidList(const BitArray & shownode)
+  void VisualSceneMesh :: BuildPyramidList(const TBitArray<PointIndex> & shownode)
   {
     shared_ptr<Mesh> mesh = GetMesh();
     
@@ -2867,7 +2821,7 @@ namespace netgen
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, pyramidcol);
 
     glLineWidth (1.0f);
-    NgArray<Element2d> faces;
+    NgArray<ElementFace> faces;
 
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
       {
@@ -3156,13 +3110,13 @@ namespace netgen
 
 		el.GetSurfaceTriangles (faces);
 
-		if (el.PNum(1))
+		if (el.PNum(1).IsValid())
 		  {
 		    glBegin (GL_TRIANGLES);
 
 		    for (int j = 1; j <= faces.Size(); j++)
 		      {
-			Element2d & face = faces.Elem(j);
+			ElementFace & face = faces.Elem(j);
 			Point3d lp1 = mesh->Point (el.PNum(face.PNum(1)));
 			Point3d lp2 = mesh->Point (el.PNum(face.PNum(2)));
 			Point3d lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -3223,7 +3177,7 @@ namespace netgen
 	int drawel = 1;
 	for (j = 1; j <= el.GetNP(); j++)
 	  {
-            if (!el.PNum(j))
+            if (!el.PNum(j).IsValid())
 	      drawel = 0;
 	  }
 
