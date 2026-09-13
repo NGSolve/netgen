@@ -210,7 +210,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   NgArray<int> delfaces;    // lines to be deleted
   NgArray<LocalElement> locelements;       // new generated elements
 
-  int j, oldnp, oldnf;
+  int oldnp, oldnf;
   int found;
   referencetransform trans;
   Point3d inp;
@@ -400,7 +400,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 		adfront -> DeleteFace (groupfindex[i]);
               
 	      for(int i = 1; i <= groupfaces.Size(); i++)
-		for (j = 1; j <= locfaces.Size(); j++)
+		for (int j = 1; j <= locfaces.Size(); j++)
 		  if (findex[j-1] == groupfindex[i-1])
 		    delfaces.Append (j);
 	      
@@ -415,7 +415,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      
 	      for(int i = 0; i < groupfaces.Size(); i++)
 		{
-		  for (j = 1; j <= 3; j++)
+		  for (int j = 1; j <= 3; j++)
 		    {
 		      newel.PNum(j) = 
 			adfront->GetGlobalIndex 
@@ -539,7 +539,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 		{
 		  Point3d pmin = locpoints[locelements.Get(i).PNum(1)];
 		  Point3d pmax = pmin;
-		  for (j = 2; j <= 4; j++)
+		  for (int j = 2; j <= 4; j++)
 		    {
 		      const Point3d & hp = locpoints[locelements.Get(i).PNum(j)];
 		      pmin.SetToMin (hp);
@@ -699,7 +699,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      const LocalElement & locel = locelements.Get(i);
 	      Element el(locel.GetNP());
 	      el.SetType (locel.GetType());
-	      for (j = 1; j <= locel.GetNP(); j++)
+	      for (int j = 1; j <= locel.GetNP(); j++)
 		el.PNum(j) = adfront -> GetGlobalIndex (pindex[locel.PNum(j)]);
 
 	      mesh.AddVolumeElement (el);
@@ -709,7 +709,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  for(int i = oldnf; i < locfaces.Size(); i++)
 	    {
 	      FrontElement2d frontface(locfaces[i].GetNP());
-	      for (j = 1; j <= locfaces[i].GetNP(); j++)
+	      for (int j = 1; j <= locfaces[i].GetNP(); j++)
 		frontface.PNum(j) = pindex[locfaces[i].PNum(j)];
 	      adfront->AddFace (frontface);
 	    }
@@ -723,7 +723,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  if (impossible && mp.check_impossible)
 	    {
 	      (*testout) << "skip face since it is impossible" << endl;
-	      for (j = 0; j < 100; j++)
+	      for (int j = 0; j < 100; j++)
 		adfront->IncrementClass (findex[0]);
 	    }
 	}
@@ -766,7 +766,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   PrintMessage (3, "Block-filling called (obsolete) ");
 
-  int i, j(0), i1, i2, i3, j1, j2, j3;
+  int i;
   int n1, n2, n3, n, min1, min2, min3, max1, max2, max3;
   int changed, filled;
   double xmin(0), xmax(0), ymin(0), ymax(0), zmin(0), zmax(0);
@@ -775,21 +775,21 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   for(int i = 1; i <= adfront->GetNP(); i++)
     {
-      const Point3d & p = adfront->GetPoint(Front3PointIndex(i));
+      const auto & p = adfront->GetPoint(Front3PointIndex(i));
       if (i == 1)
 	{
-	  xmin = xmax = p.X();
-	  ymin = ymax = p.Y();
-	  zmin = zmax = p.Z();
+	  xmin = xmax = p(0);
+	  ymin = ymax = p(1);
+	  zmin = zmax = p(2);
 	}
       else
 	{
-	  if (p.X() < xmin) xmin = p.X();
-	  if (p.X() > xmax) xmax = p.X();
-	  if (p.Y() < ymin) ymin = p.Y();
-	  if (p.Y() > ymax) ymax = p.Y();
-	  if (p.Z() < zmin) zmin = p.Z();
-	  if (p.Z() > zmax) zmax = p.Z();
+	  if (p(0) < xmin) xmin = p(0);
+	  if (p(0) > xmax) xmax = p(0);
+	  if (p(1) < ymin) ymin = p(1);
+	  if (p(1) > ymax) ymax = p(1);
+	  if (p(2) < zmin) zmin = p(2);
+	  if (p(2) > zmax) zmax = p(2);
 	}
     }
   
@@ -824,15 +824,15 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       yminb = ymax; ymaxb = ymin;
       zminb = zmax; zmaxb = zmin;
 
-      for (j = 1; j <= 3; j++)
+      for (int j = 1; j <= 3; j++)
 	{
-	  const Point3d & p = adfront->GetPoint (el.PNum(j));
-	  if (p.X() < xminb) xminb = p.X();
-	  if (p.X() > xmaxb) xmaxb = p.X();
-	  if (p.Y() < yminb) yminb = p.Y();
-	  if (p.Y() > ymaxb) ymaxb = p.Y();
-	  if (p.Z() < zminb) zminb = p.Z();
-	  if (p.Z() > zmaxb) zmaxb = p.Z();
+	  const auto & p = adfront->GetPoint (el.PNum(j));
+	  if (p(0) < xminb) xminb = p(0);
+	  if (p(0) > xmaxb) xmaxb = p(0);
+	  if (p(1) < yminb) yminb = p(1);
+	  if (p(1) > ymaxb) ymaxb = p(1);
+	  if (p(2) < zminb) zminb = p(2);
+	  if (p(2) > zmaxb) zmaxb = p(2);
 	}
 
 	
@@ -853,9 +853,9 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       max3 = int ((zmaxb - zmin) / gh) + 1;
 
 
-      for (i1 = min1; i1 <= max1; i1++)
-	for (i2 = min2; i2 <= max2; i2++)
-	  for (i3 = min3; i3 <= max3; i3++)
+      for (int i1 = min1; i1 <= max1; i1++)
+	for (int i2 = min2; i2 <= max2; i2++)
+	  for (int i3 = min3; i3 <= max3; i3++)
 	    inner.Elem(i3 + (i2-1) * n3 + (i1-1) * n2 * n3) = BLOCKBOUND;      
     }
 
@@ -867,9 +867,9 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       int undefi = 0;
       Point3d undefp;
 
-      for (i1 = 1; i1 <= n1 && !undefi; i1++)
-	for (i2 = 1; i2 <= n2 && !undefi; i2++)
-	  for (i3 = 1; i3 <= n3 && !undefi; i3++)
+      for (int i1 = 1; i1 <= n1 && !undefi; i1++)
+	for (int i2 = 1; i2 <= n2 && !undefi; i2++)
+	  for (int i3 = 1; i3 <= n3 && !undefi; i3++)
 	    {
 	      i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
 	      if (inner.Elem(i) == BLOCKUNDEF)
@@ -900,14 +900,15 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       do
 	{
 	  changed = 0;
-	  for (i1 = 1; i1 <= n1; i1++)
-	    for (i2 = 1; i2 <= n2; i2++)
-	      for (i3 = 1; i3 <= n3; i3++)
+	  for (int i1 = 1; i1 <= n1; i1++)
+	    for (int i2 = 1; i2 <= n2; i2++)
+	      for (int i3 = 1; i3 <= n3; i3++)
 		{
 		  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
 
 		  for (int k = 1; k <= 3; k++)
 		    {
+		      int j = 0;
 		      switch (k)
 			{
 			case 1: j = i + n2 * n3; break;
@@ -960,18 +961,18 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       frontpointnr.Elem(i) = Front3PointIndex::INVALID;
     }
   
-  for (i1 = 1; i1 <= n1-1; i1++)
-    for (i2 = 1; i2 <= n2-1; i2++)
-      for (i3 = 1; i3 <= n3-1; i3++)
+  for (int i1 = 1; i1 <= n1-1; i1++)
+    for (int i2 = 1; i2 <= n2-1; i2++)
+      for (int i3 = 1; i3 <= n3-1; i3++)
 	{
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
 	  if (inner.Elem(i) == BLOCKINNER)
 	    {
-	      for (j1 = i1; j1 <= i1+1; j1++)
-		for (j2 = i2; j2 <= i2+1; j2++)
-		  for (j3 = i3; j3 <= i3+1; j3++)
+	      for (int j1 = i1; j1 <= i1+1; j1++)
+		for (int j2 = i2; j2 <= i2+1; j2++)
+		  for (int j3 = i3; j3 <= i3+1; j3++)
 		    {
-		      j = j3 + (j2-1) * n3 + (j1-1) * n2 * n3;
+		      int j = j3 + (j2-1) * n3 + (j1-1) * n2 * n3;
 		      if (!pointnr.Get(j).IsValid())
 			{
 			  Point3d hp(xmin + (j1-1) * gh, 
@@ -987,14 +988,14 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 	}
 
 
-  for (i1 = 2; i1 <= n1-1; i1++)
-    for (i2 = 2; i2 <= n2-1; i2++)
-      for (i3 = 2; i3 <= n3-1; i3++)
+  for (int i1 = 2; i1 <= n1-1; i1++)
+    for (int i2 = 2; i2 <= n2-1; i2++)
+      for (int i3 = 2; i3 <= n3-1; i3++)
 	{
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
 	  if (inner.Elem(i) == BLOCKINNER)
 	    {
-	      int pn[9];
+	      PointIndex pn[9];
 	      pn[1] = pointnr.Get(i);
 	      pn[2] = pointnr.Get(i+1);
 	      pn[3] = pointnr.Get(i+n3);
@@ -1012,7 +1013,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 		{ 1, 8, 5, 6 },
 		{ 1, 8, 6, 2 }
 	      };
-	      for (j = 1; j <= 6; j++)
+	      for (int j = 1; j <= 6; j++)
 		{
 		  Element el(4);
 		  for (int k = 1; k <= 4;  k++)
@@ -1025,9 +1026,9 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
 
 
-  for (i1 = 2; i1 <= n1-1; i1++)
-    for (i2 = 2; i2 <= n2-1; i2++)
-      for (i3 = 2; i3 <= n3-1; i3++)
+  for (int i1 = 2; i1 <= n1-1; i1++)
+    for (int i2 = 2; i2 <= n2-1; i2++)
+      for (int i3 = 2; i3 <= n3-1; i3++)
 	{
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
 	  if (inner.Elem(i) == BLOCKINNER)
@@ -1045,6 +1046,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
 	      for (int k = 1; k <= 6; k++)
 		{
+		  int j = 0;
 		  switch (k)
 		    {
 		    case 1: // j3 = i3+1
@@ -1149,8 +1151,8 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       const FrontElement2d & el = adfront->GetFace(i);
       for (int j = 1; j <= 3; j++)
 	{
-	  const Point3d & p1 = adfront->GetPoint (el.PNumMod(j));
-	  const Point3d & p2 = adfront->GetPoint (el.PNumMod(j+1));
+	  const auto & p1 = adfront->GetPoint (el.PNumMod(j));
+	  const auto & p2 = adfront->GetPoint (el.PNumMod(j+1));
 
 	  double hi = Dist (p1, p2);
 	  if (hi > maxh) maxh = hi;
@@ -1160,14 +1162,14 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
     }
 
 
-  Point3d mpmin = bbox.PMin();
-  Point3d mpmax = bbox.PMax();
-  Point3d mpc = Center (mpmin, mpmax);
-  double d = max3(mpmax.X()-mpmin.X(), 
-		  mpmax.Y()-mpmin.Y(), 
-		  mpmax.Z()-mpmin.Z()) / 2;
-  mpmin = mpc - Vec3d (d, d, d);
-  mpmax = mpc + Vec3d (d, d, d);
+  Point<3> mpmin = bbox.PMin();
+  Point<3> mpmax = bbox.PMax();
+  Point<3> mpc = Center (mpmin, mpmax);
+  double d = max3(mpmax(0)-mpmin(0), 
+		  mpmax(1)-mpmin(1), 
+		  mpmax(2)-mpmin(2)) / 2;
+  mpmin = mpc - Vec<3> (d, d, d);
+  mpmax = mpc + Vec<3> (d, d, d);
   Box3d meshbox (mpmin, mpmax);
 
   LocalH loch2 (mpmin, mpmax, 1);
@@ -1259,7 +1261,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       
       for (int j = 2; j <= 3; j++)
 	{
-	  const Point3d & p = adfront->GetPoint (el.PNum(j));
+	  const auto & p = adfront->GetPoint (el.PNum(j));
 	  pmin.SetToMin (p);
 	  pmax.SetToMax (p);
 	}
@@ -1275,7 +1277,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       
       for (int j = 2; j <= 3; j++)
 	{
-	  const Point3d & p = adfront->GetPoint (el.PNum(j));
+	  const auto & p = adfront->GetPoint (el.PNum(j));
 	  pmin.SetToMin (p);
 	  pmax.SetToMax (p);
 	}
