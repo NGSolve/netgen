@@ -991,9 +991,8 @@ namespace netgen
                   
                     int n = 1 << subdivisions;
                     int ii = 0;
-                    int ix, iy;
-                    for (iy = 0; iy <= n; iy++)
-                      for (ix = 0; ix <= n-iy; ix++)
+                    for (int iy = 0; iy <= n; iy++)
+                      for (int ix = 0; ix <= n-iy; ix++)
                         {
                           double x = double(ix) / n;
                           double y = double(iy) / n;
@@ -1016,8 +1015,8 @@ namespace netgen
                         }
                   
                     ii = 0;
-                    for (iy = 0; iy < n; iy++, ii++)
-                      for (ix = 0; ix < n-iy; ix++, ii++)
+                    for (int iy = 0; iy < n; iy++, ii++)
+                      for (int ix = 0; ix < n-iy; ix++, ii++)
                         {
                           int index[] = { ii, ii+1, ii+n-iy+1,
                                           ii+1, ii+n-iy+2, ii+n-iy+1 };
@@ -2162,7 +2161,6 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
 
     int dir,dir1,dir2;
-    double s,t;
 
     Vec<3> n = Cross (lp[1]-lp[0], lp[2]-lp[0]);
     Vec<3> na (fabs (n(0)), fabs(n(1)), fabs(n(2)));
@@ -2178,9 +2176,8 @@ namespace netgen
 
     Point<2> p2d[3];
 
-    int k;
 
-    for (k = 0; k < 3; k++)
+    for (int k = 0; k < 3; k++)
       {
         p2d[k] = Point<2> ((lp[k](dir1-1) - pmin(dir1-1)) / (2*rad),
                            (lp[k](dir2-1) - pmin(dir2-1)) / (2*rad));
@@ -2190,7 +2187,7 @@ namespace netgen
     double minx2d, maxx2d, miny2d, maxy2d;
     minx2d = maxx2d = p2d[0](0);
     miny2d = maxy2d = p2d[0](1);
-    for (k = 1; k < 3; k++)
+    for (int k = 1; k < 3; k++)
       {
         minx2d = min2 (minx2d, p2d[k](0));
         maxx2d = max2 (maxx2d, p2d[k](0));
@@ -2212,9 +2209,9 @@ namespace netgen
     //    cout << "drawsurfacevectors. xoffset = " << xoffset << ", yoffset = ";
     //    cout << yoffset << endl;
     
-    for (s = xoffset/gridsize; s <= 1+xoffset/gridsize; s += 1.0 / gridsize)
+    for (double s = xoffset/gridsize; s <= 1+xoffset/gridsize; s += 1.0 / gridsize)
       if (s >= minx2d && s <= maxx2d)
-        for (t = yoffset/gridsize; t <= 1+yoffset/gridsize; t += 1.0 / gridsize)
+        for (double t = yoffset/gridsize; t <= 1+yoffset/gridsize; t += 1.0 / gridsize)
           if (t >= miny2d && t <= maxy2d)
             {
               double lam1 = inv11 * (s - p2d[0](0)) + inv12 * (t-p2d[0](1));
@@ -2229,7 +2226,7 @@ namespace netgen
                     lam2 = 1.0-lam2;
                   }
                   Point<3> cp;
-                  for (k = 0; k < 3; k++)
+                  for (int k = 0; k < 3; k++)
                     cp(k) = lp[0](k) + 
                       lam1 * (lp[1](k)-lp[0](k)) + 
                       lam2 * (lp[2](k)-lp[0](k));
@@ -2244,15 +2241,15 @@ namespace netgen
                     GetSurfValues (vsol, sei, -1, lam1, lam2, values);
                   
                   if (!vsol->iscomplex)
-                    for (k = 0; k < 3; k++)
+                    for (int k = 0; k < 3; k++)
                       v(k) = values[k];
                   else
                     {
                       if (!imag_part)
-                        for (k = 0; k < 3; k++)
+                        for (int k = 0; k < 3; k++)
                           v(k) = values[2*k];
                       else
-                        for (k = 0; k < 3; k++)
+                        for (int k = 0; k < 3; k++)
                           v(k) = values[2*k+1];
                     }
                   
@@ -2283,7 +2280,6 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    SurfaceElementIndex sei;
 
     const SolData * vsol = NULL;
     // bool drawelem;
@@ -2307,7 +2303,7 @@ namespace netgen
     if (vsol->draw_surface && showsurfacesolution)
       {
         int nse = mesh->GetNSE();
-        for (sei = 0; sei < nse; sei++)
+        for (SurfaceElementIndex sei = 0; sei < nse; sei++)
           {
             const Element2d & el = (*mesh)[sei];
             if(!SurfaceElementActive(vsol, *mesh, el))
@@ -2861,7 +2857,7 @@ namespace netgen
             }
 
           for (int i = 0; i < np; i++)
-            val += lami[i] * data->data[(el[i]-1) * data->dist + comp-1];
+            val += lami[i] * data->data[(el[i]-IndexBASE<PointIndex>()) * data->dist + comp-1];
 
           return 1;
         }
@@ -3031,7 +3027,7 @@ namespace netgen
             }
 
           for (int i = 0; i < np; i++)
-            val += lami[i] * data->data[(el[i]-1) * data->dist + comp-1];
+            val += lami[i] * data->data[(el[i]-IndexBASE<PointIndex>()) * data->dist + comp-1];
 
           return 1;
         }
@@ -3287,13 +3283,12 @@ namespace netgen
                 case 3: d = 2; break;
                 case 6: d = 3; break;
                 }
-              int ci;
               double trace = 0.;
-              for (ci = 0; ci < d; ci++)
+              for (int ci = 0; ci < d; ci++)
                 trace += 1./3.*(values[ci]);
-              for (ci = 0; ci < d; ci++)
+              for (int ci = 0; ci < d; ci++)
                 val += sqr (values[ci]-trace);
-              for (ci = d; ci < data->components; ci++)
+              for (int ci = d; ci < data->components; ci++)
                 val += 2.*sqr (values[ci]);
               val = sqrt (val);
               break;
@@ -3309,8 +3304,7 @@ namespace netgen
                 }
               Mat<3,3> m ;
               Vec<3> ev;
-              int ci;
-              for (ci = 0; ci < d; ci++)
+              for (int ci = 0; ci < d; ci++)
                 m(ci,ci) = (values[ci]);
               m(0,1) = m(1,0) = values[3];
               m(0,2) = m(2,0) = values[4];
@@ -3437,7 +3431,7 @@ namespace netgen
           const Element2d & el = (*mesh)[selnr];
 
           double lami[8];
-          int np, i;
+          int np;
           val = 0;
           double lam3 = 1-lam1-lam2;
 
@@ -3485,8 +3479,8 @@ namespace netgen
               np = 0;
             }
 
-          for (i = 0; i < np; i++)
-            val += lami[i] * data->data[(el[i]-1) * data->dist + comp-1];
+          for (int i = 0; i < np; i++)
+            val += lami[i] * data->data[(el[i]-IndexBASE<PointIndex>()) * data->dist + comp-1];
 
           return 1;
         }
@@ -3679,7 +3673,7 @@ namespace netgen
           const Element2d & el = (*mesh)[selnr];
 
           double lami[8];
-          int np, i;
+          int np;
           val = 0;
           double lam3 = 1-lam1-lam2;
 
@@ -3727,8 +3721,8 @@ namespace netgen
               np = 0;
             }
 
-          for (i = 0; i < np; i++)
-            val += lami[i] * data->data[(el[i]-1) * data->dist + comp-1];
+          for (int i = 0; i < np; i++)
+            val += lami[i] * data->data[(el[i]-IndexBASE<PointIndex>()) * data->dist + comp-1];
 
           return 1;
         }
@@ -4319,15 +4313,14 @@ namespace netgen
     n.GetNormal (t1);
     t2 = Cross (n, t1);
 
-    double xi1, xi2;
 
     double xi1mid = (center - p) * t1;
     double xi2mid = (center - p) * t2;
 
     pts.SetSize(0);
 
-    for (xi1 = xi1mid-rad+xoffset/gridsize; xi1 <= xi1mid+rad+xoffset/gridsize; xi1 += rad / gridsize)
-      for (xi2 = xi2mid-rad+yoffset/gridsize; xi2 <= xi2mid+rad+yoffset/gridsize; xi2 += rad / gridsize)
+    for (double xi1 = xi1mid-rad+xoffset/gridsize; xi1 <= xi1mid+rad+xoffset/gridsize; xi1 += rad / gridsize)
+      for (double xi2 = xi2mid-rad+yoffset/gridsize; xi2 <= xi2mid+rad+yoffset/gridsize; xi2 += rad / gridsize)
         {
           Point3d hp = p + xi1 * t1 + xi2 * t2;
         
