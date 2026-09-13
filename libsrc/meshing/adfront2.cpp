@@ -96,10 +96,10 @@ namespace netgen
       }
 
     if (mgi)
-      cpointsearchtree.Insert (p, pi.Nr0());
+      cpointsearchtree.Insert (p, pi);
 
     if (pointonsurface)
-      pointsearchtree.Insert (p, pi.Nr0());
+      pointsearchtree.Insert (p, pi);
     
     return pi;
   }
@@ -183,12 +183,12 @@ namespace netgen
 	    delpointl.Append (pi);
 	    if (points[pi].mgi)
 	      {
-		cpointsearchtree.DeleteElement (pi.Nr0());
+		cpointsearchtree.DeleteElement (pi);
 		delete points[pi].mgi;
 		points[pi].mgi = NULL;
 	      }
 
-            pointsearchtree.DeleteElement (pi.Nr0());
+            pointsearchtree.DeleteElement (pi);
 	  }
       }
 
@@ -296,7 +296,7 @@ namespace netgen
     lindex.Append(baselineindex);  
 
     ArrayMem<int, 1000> nearlines(0);
-    NgArrayMem<int, 1000> nearpoints(0);
+    NgArrayMem<Front2PointIndex, 1000> nearpoints(0);
 
     // dominating costs !!
     linesearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
@@ -322,7 +322,7 @@ namespace netgen
     invpindex.SetSize (points.Size()); 
     // invpindex = -1;
     for(auto n : nearpoints)
-      invpindex[Front2PointIndex::FromNr0(n)] = -1;
+      invpindex[n] = -1;
 
     for(const auto& li : frontlines)
       {
@@ -352,9 +352,8 @@ namespace netgen
 
 
     // double xh2 = xh*xh;
-    for(auto n : nearpoints)
+    for(auto i : nearpoints)
       {
-	Front2PointIndex i = Front2PointIndex::FromNr0(n);
 	if (points[i].Valid() && 
 	    points[i].OnSurface() &&
 	    // Dist2 (points.Get(i).P(), p0) <= xh2 &&

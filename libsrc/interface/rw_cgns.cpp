@@ -43,7 +43,7 @@ namespace netgen::cg
 
       Segment s;
       for (auto i : Range(np))
-          s[i] = verts[i];
+          s[i] = PointIndex::FromNr1(verts[i]);
       return s;
     }
 
@@ -78,7 +78,7 @@ namespace netgen::cg
 
       Element2d el(np);
       for (auto i : Range(np))
-          el[i] = verts[i];
+          el[i] = PointIndex::FromNr1(verts[i]);
       return el;
     }
 
@@ -113,15 +113,15 @@ namespace netgen::cg
 
       Element el(np);
       for (auto i : Range(np))
-          el[i] = verts[map[i]];
+          el[i] = PointIndex::FromNr1(verts[map[i]]);
       return el;
     }
 
   void WriteCGNSElement( const Segment & el, Array<cgsize_t> & verts )
     {
       verts.Append(BAR_2);
-      verts.Append(el[0]);
-      verts.Append(el[1]);
+      verts.Append(el[0].Nr1());
+      verts.Append(el[1].Nr1());
     }
 
   void WriteCGNSElement( const Element2d & el, Array<cgsize_t> & verts )
@@ -156,7 +156,7 @@ namespace netgen::cg
       verts.Append(type);
 
       for (auto i : Range(el.GetNP()))
-          verts.Append(el[i]);
+          verts.Append(el[i].Nr1());
     }
 
   void WriteCGNSElement( const Element & el, Array<cgsize_t> & verts )
@@ -195,7 +195,7 @@ namespace netgen::cg
       verts.Append(type);
 
       for (auto i : Range(el.GetNP()))
-          verts.Append(el[map[i]]);
+          verts.Append(el[map[i]].Nr1());
     }
 
   int WriteCGNSRegion( const Mesh & mesh, int dim, int index, int fn, int base, int zone, int ne_before )
@@ -427,7 +427,7 @@ namespace netgen::cg
             // check if this point is new
             if( point_table.PositionCreate (hash, pos) )
             {
-              pi_ng = mesh.AddPoint( {x[i], y[i], z[i]} );
+              pi_ng = mesh.AddPoint( {x[i], y[i], z[i]} ).Nr1();
               point_table.SetData(pos, pi_ng);
             }
             else

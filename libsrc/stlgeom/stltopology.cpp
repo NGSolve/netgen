@@ -498,7 +498,7 @@ void STLTopology :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrigs)
   Box<3> bb = boundingbox;
   bb.Increase (1);
 
-  pointtree = new Point3dTree (bb.PMin(), bb.PMax());
+  pointtree = new Point3dTree<> (bb.PMin(), bb.PMax());
 
   NgArray<int> pintersect;
 

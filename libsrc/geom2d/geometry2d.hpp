@@ -205,7 +205,7 @@ namespace netgen
     
     void PartitionBoundary (MeshingParameters & mp, double h, Mesh & mesh2d);
 
-    void CopyEdgeMesh (int from, int to, Mesh & mesh2d, Point3dTree & searchtree);
+    void CopyEdgeMesh (int from, int to, Mesh & mesh2d, Point3dTree<PointIndex> & searchtree);
 
 
     size_t GetNDomains() const { return materials.Size(); }

@@ -87,47 +87,229 @@ public:
 
 
 
+template <typename T>
 class ADTreeNode3
 {
 public:
   ADTreeNode3 *left, *right, *father;
   float sep;
   float data[3];
-  int pi;
+  T pi;
   int nchilds;
 
-  ADTreeNode3 ();
-  void DeleteChilds ();
-  friend class ADTree3;
+  ADTreeNode3 ()
+  {
+    SetInvalid(pi);
+    left = nullptr;
+    right = nullptr;
+    father = nullptr;
+    nchilds = 0;
+  }
+
+  void DeleteChilds ()
+  {
+    if (left)
+      {
+	left->DeleteChilds();
+	delete left;
+	left = nullptr;
+      }
+    if (right)
+      {
+	right->DeleteChilds();
+	delete right;
+	right = nullptr;
+      }
+  }
 
   static BlockAllocator ball;
-  void * operator new(size_t);
-  void operator delete (void *);
+  void * operator new (size_t) { return ball.Alloc(); }
+  void operator delete (void * p) { ball.Free(p); }
 };
 
+template <typename T>
+BlockAllocator ADTreeNode3<T> :: ball(sizeof (ADTreeNode3<T>));
 
+
+template <typename T = INDEX>
 class ADTree3
 {
-  ADTreeNode3 * root;
+  ADTreeNode3<T> * root;
   float cmin[3], cmax[3];
-  NgArray<ADTreeNode3*> ela;
+  Array<ADTreeNode3<T>*, T> ela;
 
 public:
-  ADTree3 (const float * acmin, 
-	   const float * acmax);
-  ~ADTree3 ();
+  ADTree3 (const Point<3> & pmin, const Point<3> & pmax)
+  {
+    for (int i = 0; i < 3; i++)
+      {
+	cmin[i] = pmin(i);
+	cmax[i] = pmax(i);
+      }
 
-  void Insert (const float * p, int pi);
+    root = new ADTreeNode3<T>;
+    root->sep = (cmin[0] + cmax[0]) / 2;
+  }
+
+  ~ADTree3 ()
+  {
+    root->DeleteChilds();
+    delete root;
+  }
+
+  void Insert (const float * p, T pi)
+  {
+    ADTreeNode3<T> *node(nullptr);
+    ADTreeNode3<T> *next;
+    int dir;
+    int lr(0);
+
+    float bmin[3];
+    float bmax[3];
+
+    memcpy (bmin, cmin, 3 * sizeof(float));
+    memcpy (bmax, cmax, 3 * sizeof(float));
+
+    size_t nr0 = size_t(pi - IndexBASE<T>());
+
+    next = root;
+    dir = 0;
+    while (next)
+      {
+	node = next;
+
+	if (IsInvalid(node->pi))
+	  {
+	    memcpy (node->data, p, 3 * sizeof(float));
+	    node->pi = pi;
+
+	    if (ela.Size() < nr0+1)
+	      ela.SetSize (nr0+1);
+	    ela[pi] = node;
+
+	    return;
+	  }
+
+	if (node->sep > p[dir])
+	  {
+	    next = node->left;
+	    bmax[dir] = node->sep;
+	    lr = 0;
+	  }
+	else
+	  {
+	    next = node->right;
+	    bmin[dir] = node->sep;
+	    lr = 1;
+	  }
+
+	dir++;
+	if (dir == 3)
+	  dir = 0;
+      }
+
+
+    next = new ADTreeNode3<T>;
+    memcpy (next->data, p, 3 * sizeof(float));
+    next->pi = pi;
+    next->sep = (bmin[dir] + bmax[dir]) / 2;
+
+    if (ela.Size() < nr0+1)
+      ela.SetSize (nr0+1);
+    ela[pi] = next;
+
+    if (lr)
+      node->right = next;
+    else
+      node->left = next;
+    next -> father = node;
+
+    while (node)
+      {
+	node->nchilds++;
+	node = node->father;
+      }
+  }
+
   void GetIntersecting (const float * bmin, const float * bmax,
-			NgArray<int> & pis) const;
-  
-  void DeleteElement (int pi);
+			NgArray<T> & pis) const
+  {
+    ArrayMem<ADTreeNode3<T>*, 1000> stack(1000);
+    ArrayMem<int, 1000> stackdir(1000);
+    ADTreeNode3<T> * node;
+    int dir, stacks;
 
+    pis.SetSize(0);
+
+    stack[0] = root;
+    stackdir[0] = 0;
+    stacks = 0;
+
+    while (stacks >= 0)
+      {
+	node = stack[stacks];
+	dir = stackdir[stacks];
+	stacks--;
+
+	if (!IsInvalid(node->pi))
+	  {
+	    if (node->data[0] >= bmin[0] && node->data[0] <= bmax[0] &&
+		node->data[1] >= bmin[1] && node->data[1] <= bmax[1] &&
+		node->data[2] >= bmin[2] && node->data[2] <= bmax[2])
+
+	      pis.Append (node->pi);
+	  }
+
+
+	int ndir = dir+1;
+	if (ndir == 3)
+	  ndir = 0;
+
+	if (node->left && bmin[dir] <= node->sep)
+	  {
+	    stacks++;
+	    stack[stacks] = node->left;
+	    stackdir[stacks] = ndir;
+	  }
+	if (node->right && bmax[dir] >= node->sep)
+	  {
+	    stacks++;
+	    stack[stacks] = node->right;
+	    stackdir[stacks] = ndir;
+	  }
+      }
+  }
+
+  void DeleteElement (T pi)
+  {
+    ADTreeNode3<T> * node = ela[pi];
+
+    SetInvalid (node->pi);
+
+    node = node->father;
+    while (node)
+      {
+	node->nchilds--;
+	node = node->father;
+      }
+  }
 
   void Print (ostream & ost) const
     { PrintRec (ost, root); }
 
-  void PrintRec (ostream & ost, const ADTreeNode3 * node) const;
+  void PrintRec (ostream & ost, const ADTreeNode3<T> * node) const
+  {
+    ost << node->pi << ": ";
+    ost << node->nchilds << " childs, ";
+    for (int i = 0; i < 3; i++)
+      ost << node->data[i] << " ";
+    ost << endl;
+
+    if (node->left)
+      PrintRec (ost, node->left);
+    if (node->right)
+      PrintRec (ost, node->right);
+  }
 };
 
 
@@ -731,19 +913,41 @@ public:
 
 
 
-class Point3dTree 
+template <typename T = INDEX>
+class Point3dTree
 {
-  ADTree3 * tree;
+  ADTree3<T> tree;
+
+  static void ToFloat (const Point<3> & p, float * pf)
+  {
+    for (int i = 0; i < 3; i++)
+      pf[i] = p(i);
+  }
 
 public:
-  DLL_HEADER Point3dTree (const Point<3> & pmin, const Point<3> & pmax);
-  DLL_HEADER ~Point3dTree ();
-  DLL_HEADER void Insert (const Point<3> & p, int pi);
-  void DeleteElement (int pi) 
-    { tree->DeleteElement(pi); }
-  DLL_HEADER void GetIntersecting (const Point<3> & pmin, const Point<3> & pmax, 
-			NgArray<int> & pis) const;
-  const ADTree3 & Tree() const { return *tree; };
+  Point3dTree (const Point<3> & pmin, const Point<3> & pmax)
+    : tree (pmin, pmax) { }
+
+  void Insert (const Point<3> & p, T pi)
+  {
+    float pf[3];
+    ToFloat (p, pf);
+    tree.Insert (pf, pi);
+  }
+
+  void DeleteElement (T pi)
+    { tree.DeleteElement(pi); }
+
+  void GetIntersecting (const Point<3> & pmin, const Point<3> & pmax,
+			NgArray<T> & pis) const
+  {
+    float pmi[3], pma[3];
+    ToFloat (pmin, pmi);
+    ToFloat (pmax, pma);
+    tree.GetIntersecting (pmi, pma, pis);
+  }
+
+  const ADTree3<T> & Tree() const { return tree; }
 };
 
 template<int dim, typename T=INDEX>

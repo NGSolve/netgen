@@ -165,8 +165,8 @@ class AdFront2
 
   Box3d boundingbox;
   BoxTree<3> linesearchtree;       /// search tree for lines
-  Point3dTree pointsearchtree;    /// search tree for points
-  Point3dTree cpointsearchtree;   /// search tree for cone points (not used ???)
+  Point3dTree<Front2PointIndex> pointsearchtree;    /// search tree for points
+  Point3dTree<Front2PointIndex> cpointsearchtree;   /// search tree for cone points (not used ???)
 
   Array<Front2PointIndex> delpointl;     /// list of deleted front points
   Array<int> dellinel;      /// list of deleted front lines

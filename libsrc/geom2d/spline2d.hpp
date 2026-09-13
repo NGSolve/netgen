@@ -71,7 +71,7 @@ public:
   virtual Point<2> GetPoint (double t) const = 0;
   /// partitionizes curve
   void Partition (double h, double elto0,
-		  Mesh & mesh, Point3dTree & searchtree, int segnr) const;
+		  Mesh & mesh, Point3dTree<PointIndex> & searchtree, int segnr) const;
   /// returns initial point on curve
   virtual const GeomPoint2d & StartPI () const = 0;
   /// returns terminal point on curve

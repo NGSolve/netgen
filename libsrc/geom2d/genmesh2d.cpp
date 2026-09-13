@@ -107,7 +107,7 @@ namespace netgen
   // partitionizes spline curve
   void Partition (const SplineSegExt & spline,
 		  MeshingParameters & mp, double hxxx, double elto0,
-		  Mesh & mesh, Point3dTree & searchtree, int segnr) 
+		  Mesh & mesh, Point3dTree<PointIndex> & searchtree, int segnr) 
   {
     int n = 100;
 
@@ -139,7 +139,7 @@ namespace netgen
     double lold = 0;
     oldmark = pold;
     edgelengthold = 0;
-    NgArray<int> locsearch;
+    NgArray<PointIndex> locsearch;
     
     for (int i = 1; i <= n; i++)
       {
@@ -163,28 +163,22 @@ namespace netgen
 	      Vec<3> v (1e-4*h, 1e-4*h, 1e-4*h);
 	      searchtree.GetIntersecting (oldmark3 - v, oldmark3 + v, locsearch);
 
-	      for (int k = 0; k < locsearch.Size(); k++)
-		{
-		  PointIndex pk = PointIndex::FromNr0(locsearch[k]);
-		  if (mesh[pk].GetLayer() == spline.layer) pi1 = pk;
-		}
+	      for (PointIndex pk : locsearch)
+		if (mesh[pk].GetLayer() == spline.layer) pi1 = pk;
 	      
 	      searchtree.GetIntersecting (mark3 - v, mark3 + v, locsearch);
-	      for (int k = 0; k < locsearch.Size(); k++)
-		{
-		  PointIndex pk = PointIndex::FromNr0(locsearch[k]);
-		  if (mesh[pk].GetLayer() == spline.layer) pi2 = pk;
-		}
+	      for (PointIndex pk : locsearch)
+		if (mesh[pk].GetLayer() == spline.layer) pi2 = pk;
 
 	      if (!pi1.IsValid())
 		{
 		  pi1 = mesh.AddPoint(oldmark3, spline.layer);
-		  searchtree.Insert (oldmark3, pi1.Nr0());
+		  searchtree.Insert (oldmark3, pi1);
 		}
 	      if (!pi2.IsValid())
 		{
 		  pi2 = mesh.AddPoint(mark3, spline.layer);
-		  searchtree.Insert (mark3, pi2.Nr0());
+		  searchtree.Insert (mark3, pi2);
 		}
 
 	      Segment seg;
@@ -224,7 +218,7 @@ namespace netgen
 	pmax(j) = bbox.PMax()(j);
       }
 
-    Point3dTree searchtree (pmin, pmax);
+    Point3dTree<PointIndex> searchtree (pmin, pmax);
 
     for (int i = 0; i < splines.Size(); i++)
       for (int side = 0; side <= 1; side++)
@@ -292,7 +286,7 @@ namespace netgen
           el.name = point.name;
           mesh2d.SetCD2Name(npi.Nr1(), point.name);
           mesh2d.pointelements.Append (el);
-          searchtree.Insert (newp, npi.Nr0());          
+          searchtree.Insert (newp, npi);          
         }
 
     // first add all vertices (for compatible orientation on periodic bnds)
@@ -313,7 +307,7 @@ namespace netgen
 	    if (!npi.IsValid())
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
-		searchtree.Insert (newp, npi.Nr0());
+		searchtree.Insert (newp, npi);
                 mesh2d.AddLockedPoint(npi);
                 Element0d el(npi, npi.Nr1());
                 el.name = "";
@@ -347,7 +341,7 @@ namespace netgen
 
 
 
-  void SplineGeometry2d :: CopyEdgeMesh (int from, int to, Mesh & mesh, Point3dTree & searchtree)
+  void SplineGeometry2d :: CopyEdgeMesh (int from, int to, Mesh & mesh, Point3dTree<PointIndex> & searchtree)
   {
     Array<PointIndex, PointIndex> mappoints (mesh.GetNP());
     Array<double, PointIndex> param (mesh.GetNP());
@@ -389,7 +383,7 @@ namespace netgen
 	    if (!npi.IsValid())
 	      {
 		npi = mesh.AddPoint (newp3);
-		searchtree.Insert (newp3, npi.Nr0());
+		searchtree.Insert (newp3, npi);
 	      }
 
 	    mappoints[i] = npi;

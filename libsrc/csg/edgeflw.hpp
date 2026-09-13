@@ -62,8 +62,8 @@ namespace netgen
   {
     const CSGeometry & geometry;
     NgArray<SpecialPoint> & specpoints;
-    Point3dTree * searchtree;
-    Point3dTree * meshpoint_tree;
+    Point3dTree<> * searchtree;
+    Point3dTree<PointIndex> * meshpoint_tree;
     int cntedge;
 
   public:
