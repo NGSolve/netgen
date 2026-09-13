@@ -22,7 +22,9 @@ namespace netgen
     cout << "starting .tet export to file " << filename.string() << endl;
 
 
-    NgArray<int> point_ids,edge_ids,face_ids;
+    NgArray<int> point_ids_ud;    // user data, indexed by the raw point number
+    NgArray<int> edge_ids,face_ids;
+    Array<int, PointIndex> point_ids;
     Array<int> elnum(mesh.GetNE());
     elnum = -1;
 
@@ -40,7 +42,7 @@ namespace netgen
       (mesh.GetUserData("TETmesh:double",userdata_double) &&
        mesh.GetUserData("TETmesh:int",userdata_int) && 
        mesh.GetUserData("TETmesh:ports",ports) &&
-       mesh.GetUserData("TETmesh:point_id",point_ids,PointIndex::BASE) &&
+       mesh.GetUserData("TETmesh:point_id",point_ids_ud,PointIndex::BASE) &&
        mesh.GetUserData("TETmesh:uid_to_group_3D",uid_to_group_3D) &&
        mesh.GetUserData("TETmesh:uid_to_group_2D",uid_to_group_2D) &&
        mesh.GetUserData("TETmesh:uid_to_group_1D",uid_to_group_1D) &&
@@ -84,20 +86,17 @@ namespace netgen
 
 
 
-    int startsize = point_ids.Size();
-    point_ids.SetSize(mesh.GetNP()+1);
-    for(int i=startsize; i<point_ids.Size(); i++)
-      point_ids[i] = -1;
-
-
-    for(int i=0; i<PointIndex::BASE; i++)
-      point_ids[i] = -1;
+    point_ids.SetSize(mesh.GetNP());
+    point_ids = -1;
+    for(PointIndex pi : mesh.Points().Range())
+      if(int(pi) < point_ids_ud.Size())
+        point_ids[pi] = point_ids_ud[int(pi)];
 
 
     INDEX_2_CLOSED_HASHTABLE<int> edgenumbers(6*mesh.GetNE()+3*mesh.GetNSE());;
     INDEX_3_CLOSED_HASHTABLE<int> facenumbers(4*mesh.GetNE()+mesh.GetNSE());
 
-    Array<INDEX_2> edge2node;
+    Array<PointIndices<2>> edge2node;
     Array<INDEX_3> face2edge;
     Array<INDEX_4> element2face;
 
@@ -106,7 +105,7 @@ namespace netgen
     for(SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & seg = mesh[si];
-	INDEX_2 i2(seg[0],seg[1]);
+	PointIndices<2> i2(seg[0],seg[1]);
 	i2.Sort();
 	if(edgenumbers.Used(i2))
 	  continue;
@@ -132,9 +131,9 @@ namespace netgen
 	const Element2d & elem = mesh[si];
 
 	numfaces++;
-	INDEX_3 i3(elem[0], elem[1], elem[2]);
+	PointIndices<3> i3(elem[0], elem[1], elem[2]);
 
-	int min = i3[0];
+	PointIndex min = i3[0];
 	int minpos = 0;
 	for(int j=1; j<3; j++)
 	  if(i3[j] < min)
@@ -143,11 +142,11 @@ namespace netgen
 	    }
 	if(minpos == 1)
 	  {
-	    int aux = i3[0]; i3[0] = i3[1]; i3[1] = i3[2]; i3[2] = aux;
+	    PointIndex aux = i3[0]; i3[0] = i3[1]; i3[1] = i3[2]; i3[2] = aux;
 	  }
 	else if(minpos == 2)
 	  {
-	    int aux = i3[0]; i3[0] = i3[2]; i3[2] = i3[1]; i3[1] = aux;
+	    PointIndex aux = i3[0]; i3[0] = i3[2]; i3[2] = i3[1]; i3[1] = aux;
 	  }
 	facenumbers.Set(i3,numfaces);
 
@@ -158,11 +157,11 @@ namespace netgen
 	  if(point_ids[elem[j]] == -1)
 	    point_ids[elem[j]] = (version >= 2) ? bc : 0;
 
-	INDEX_2 i2a,i2b;
+	PointIndices<2> i2a,i2b;
 	INDEX_3 f_to_n;
 	for(int j=0; j<3; j++)
 	  {
-	    i2a = INDEX_2(i3[j],i3[(j+1)%3]);
+	    i2a = PointIndices<2>(i3[j],i3[(j+1)%3]);
 	    i2b[0] = i2a[1]; i2b[1] = i2a[0];
 	    if(edgenumbers.Used(i2a))
 	      f_to_n[j] = edgenumbers.Get(i2a);
@@ -207,9 +206,9 @@ namespace netgen
 
 	for(int i = 0; i < 4; i++)
 	  {
-	    INDEX_3 i3a(el[tetfaces[i][0]],el[tetfaces[i][1]],el[tetfaces[i][2]]);
+	    PointIndices<3> i3a(el[tetfaces[i][0]],el[tetfaces[i][1]],el[tetfaces[i][2]]);
 	    
-	    int min = i3a[0];
+	    PointIndex min = i3a[0];
 	    int minpos = 0;
 	    for(int j=1; j<3; j++)
 	      if(i3a[j] < min)
@@ -218,13 +217,13 @@ namespace netgen
 		}
 	    if(minpos == 1)
 	      {
-		int aux = i3a[0]; i3a[0] = i3a[1]; i3a[1] = i3a[2]; i3a[2] = aux;
+		PointIndex aux = i3a[0]; i3a[0] = i3a[1]; i3a[1] = i3a[2]; i3a[2] = aux;
 	      }
 	    else if(minpos == 2)
 	      {
-		int aux = i3a[0]; i3a[0] = i3a[2]; i3a[2] = i3a[1]; i3a[1] = aux;
+		PointIndex aux = i3a[0]; i3a[0] = i3a[2]; i3a[2] = i3a[1]; i3a[1] = aux;
 	      }
-	    INDEX_3 i3b(i3a[0],i3a[2],i3a[1]);
+	    PointIndices<3> i3b(i3a[0],i3a[2],i3a[1]);
 	    
 
 	    if(facenumbers.Used(i3a))
@@ -241,11 +240,11 @@ namespace netgen
 		else
 		  face_ids.Append(0);
 
-		INDEX_2 i2a,i2b;
+		PointIndices<2> i2a,i2b;
 		INDEX_3 f_to_n;
 		for(int j=0; j<3; j++)
 		  {
-		    i2a = INDEX_2(i3a[j],i3a[(j+1)%3]);
+		    i2a = PointIndices<2>(i3a[j],i3a[(j+1)%3]);
 		    i2b[0] = i2a[1]; i2b[1] = i2a[0];
 		    if(edgenumbers.Used(i2a))
 		      f_to_n[j] = edgenumbers.Get(i2a);
@@ -285,19 +284,17 @@ namespace netgen
     int numObj0D,numObj1D,numObj2D,numObj3D;
     int numports = ports.Size();
 
-    Array<int> nodenum(point_ids.Size()+1);
+    Array<int, PointIndex> nodenum(mesh.GetNP());
 
     nodenum = -1;
-	    
-
 
     numnodes = 0;
-    for(int i=0; i<point_ids.Size(); i++)
+    for(PointIndex pi : mesh.Points().Range())
       {
-	if(point_ids[i] != -1)
+	if(point_ids[pi] != -1)
 	  {
 	    numnodes++;
-	    nodenum[i] = numnodes;
+	    nodenum[pi] = numnodes;
 	  }
       }
 
@@ -377,8 +374,10 @@ namespace netgen
 	  }
       }
 
-    Array<int> id_num,id_type;
+    Array<int> id_num,id_type;                  // edge / face passes
     Array< NgArray<int> *> id_groups;
+    Array<int, PointIndex> pid_num,pid_type;    // point pass
+    Array< Array<PointIndex> *> pid_groups;
 
 
 	// sst 2008-03-12: Write problem class...
@@ -432,59 +431,59 @@ namespace netgen
        
 
 
-    id_num.SetSize(mesh.GetNP()+1);
-    id_type.SetSize(mesh.GetNP()+1);
-    id_num = 0;
-    id_type = 0;
+    pid_num.SetSize(mesh.GetNP());
+    pid_type.SetSize(mesh.GetNP());
+    pid_num = 0;
+    pid_type = 0;
 
     int n2,n4,n8;
     n2 = n4 = n8 = 0;
 
  
-    for(int i=PointIndex::BASE; i<mesh.GetNP()+PointIndex::BASE; i++)
+    for(PointIndex i : mesh.Points().Range())
       {
-	if(id_num[i] != 0)
+	if(pid_num[i] != 0)
 	  continue;
 
 	if(nodenum[i] == -1)
 	  continue;
 
-	NgArray<int> group;
+	Array<PointIndex> group;
 	group.Append(i);
 	for(int j=0; j<idmaps.Size(); j++)
 	  {
-	    startsize = group.Size();
+	    int startsize = group.Size();
 	    for(int k=0; k<startsize; k++)
 	      {
-		int id = (*idmaps[j])[group[k]];
-		if(PointIndex(id).IsValid() && !group.Contains(id) && nodenum[id] != -1)
+		PointIndex id = (*idmaps[j])[group[k]];
+		if(id.IsValid() && !group.Contains(id) && nodenum[id] != -1)
 		  {
 		    group.Append(id);
-		    id_num[id] = j+1+id_num[group[k]];
+		    pid_num[id] = j+1+pid_num[group[k]];
 		  }
 	      }
 	  }
 	if(group.Size() > 1)
 	  {
-	    id_groups.Append(new NgArray<int>(group));
+	    pid_groups.Append(new Array<PointIndex>(group));
 	    if(group.Size() == 2)
 	      {
-		id_type[i] = 1;
-		id_type[group[1]] = 2;
+		pid_type[i] = 1;
+		pid_type[group[1]] = 2;
 		n2++;
 	      }
 	    else if(group.Size() == 4)
 	      {
-		id_type[i] = 3;
+		pid_type[i] = 3;
 		for(int j=1; j<group.Size(); j++)
-		  id_type[group[j]] = 4;
+		  pid_type[group[j]] = 4;
 		n4++;
 	      }
 	    else if(group.Size() == 8)
 	      {
-		id_type[i] = 5;
+		pid_type[i] = 5;
 		for(int j=1; j<group.Size(); j++)
-		  id_type[group[j]] = 6;
+		  pid_type[group[j]] = 6;
 		n8++;
 	      }
 	    else
@@ -502,11 +501,8 @@ namespace netgen
 	outfile << nodenum[i] << " "
 		<< mesh[i](0) << " "
 		<< mesh[i](1) << " "
-		<< mesh[i](2) << " " << id_type[i] << " ";
-	if(i-IndexBASE<PointIndex>() < point_ids.Size())
-	  outfile << point_ids[i];
-	else
-	  outfile << "0";
+		<< mesh[i](2) << " " << pid_type[i] << " ";
+	outfile << point_ids[i];
 	outfile << "\n";
       }
     outfile << endl;
@@ -517,19 +513,19 @@ namespace netgen
 	    << "\n" \
 	    << "// MasterNodeID, MinionNodeID, TranslCode (1=dS1 2=dS2 3=dS1+dS2):\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
-    for(int i=0; i<id_groups.Size(); i++)
+    for(int i=0; i<pid_groups.Size(); i++)
       {
-	if(id_groups[i]->Size() != 2)
+	if(pid_groups[i]->Size() != 2)
 	  continue;
 
-	for(int j=0; j<id_groups[i]->Size(); j++)
-	  outfile << nodenum[(*id_groups[i])[j]] << " ";
-	for(int j=1; j<id_groups[i]->Size(); j++)
-	  outfile << id_num[(*id_groups[i])[j]] << " ";
+	for(int j=0; j<pid_groups[i]->Size(); j++)
+	  outfile << nodenum[(*pid_groups[i])[j]] << " ";
+	for(int j=1; j<pid_groups[i]->Size(); j++)
+	  outfile << pid_num[(*pid_groups[i])[j]] << " ";
 	outfile << "\n";
 
-	delete id_groups[i];
-	id_groups[i] = NULL;
+	delete pid_groups[i];
+	pid_groups[i] = NULL;
       }
     outfile << endl;
 	
@@ -542,21 +538,21 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
 
-    for(int i=0; i<id_groups.Size(); i++)
+    for(int i=0; i<pid_groups.Size(); i++)
       {
-	if(!id_groups[i] || id_groups[i]->Size() != 4)
+	if(!pid_groups[i] || pid_groups[i]->Size() != 4)
 	  continue;
 
-	for(int j=0; j<id_groups[i]->Size(); j++)
-	  outfile << nodenum[(*id_groups[i])[j]] << " ";
-	for(int j=1; j<id_groups[i]->Size(); j++)
+	for(int j=0; j<pid_groups[i]->Size(); j++)
+	  outfile << nodenum[(*pid_groups[i])[j]] << " ";
+	for(int j=1; j<pid_groups[i]->Size(); j++)
 	  {
-	    outfile << id_num[(*id_groups[i])[j]] << " ";
+	    outfile << pid_num[(*pid_groups[i])[j]] << " ";
 	  }
 	outfile << "\n";
 
-	delete id_groups[i];
-	id_groups[i] = NULL;
+	delete pid_groups[i];
+	pid_groups[i] = NULL;
       }
     outfile << endl;
 
@@ -567,19 +563,19 @@ namespace netgen
 	    << "\n" \
 	    << "// MasterNodeID, 7-MinionNodeID's, TranslCodes:\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
-    for(int i=0; i<id_groups.Size(); i++)
+    for(int i=0; i<pid_groups.Size(); i++)
       {
-	if(!id_groups[i] || id_groups[i]->Size() != 8)
+	if(!pid_groups[i] || pid_groups[i]->Size() != 8)
 	  continue;
 
-	for(int j=0; j<id_groups[i]->Size(); j++)
-	  outfile << nodenum[(*id_groups[i])[j]] << " ";
-	for(int j=1; j<id_groups[i]->Size(); j++)
-	  outfile << id_num[(*id_groups[i])[j]] << " ";
+	for(int j=0; j<pid_groups[i]->Size(); j++)
+	  outfile << nodenum[(*pid_groups[i])[j]] << " ";
+	for(int j=1; j<pid_groups[i]->Size(); j++)
+	  outfile << pid_num[(*pid_groups[i])[j]] << " ";
 	outfile << "\n";
 
-	delete id_groups[i];
-	id_groups[i] = NULL;
+	delete pid_groups[i];
+	pid_groups[i] = NULL;
       }
     outfile << endl;
 
@@ -591,7 +587,7 @@ namespace netgen
 
     
       
-    Array< NgArray<int>* > vertex_to_edge(mesh.GetNP()+1);
+    Array< NgArray<int>*, PointIndex > vertex_to_edge(mesh.GetNP());
     for(int i=0; i<=mesh.GetNP(); i++)
       vertex_to_edge[i] = new NgArray<int>;
 
@@ -605,11 +601,11 @@ namespace netgen
     NgArray<int> possible;
     for(int i=0; i<edge2node.Size(); i++)
       {
-	const INDEX_2 & v = edge2node[i];
+	const PointIndices<2> & v = edge2node[i];
 	for(int j=0; j<idmaps.Size(); j++)
 	  {
-	    INDEX_2 vid((*idmaps[j])[v[0]], (*idmaps[j])[v[1]]);
-	    if(PointIndex(vid[0]).IsValid() && vid[0] != v[0] && PointIndex(vid[1]).IsValid() && vid[1] != v[1])
+	    PointIndices<2> vid((*idmaps[j])[v[0]], (*idmaps[j])[v[1]]);
+	    if(vid[0].IsValid() && vid[0] != v[0] && vid[1].IsValid() && vid[1] != v[1])
 	      {
 		Intersection(*vertex_to_edge[vid[0]],*vertex_to_edge[vid[1]],possible);
 		if(possible.Size() == 1)
@@ -654,7 +650,7 @@ namespace netgen
 	group.Append(i);
 	for(int j=0; j<idmaps_edge.Size(); j++)
 	  {
-	    startsize = group.Size();
+	    int startsize = group.Size();
 	    for(int k=0; k<startsize; k++)
 	      {
 		int id = (*idmaps_edge[j])[group[k]];
@@ -706,7 +702,7 @@ namespace netgen
 	group.Append(i);
 	for(int j=0; j<idmaps_edge.Size(); j++)
 	  {
-	    startsize = group.Size();
+	    int startsize = group.Size();
 	    for(int k=0; k<startsize; k++)
 	      {
 		int id = (*idmaps_edge[j])[group[k]];
@@ -869,10 +865,10 @@ namespace netgen
 	group.Append(i);
 	for(int j=0; j<idmaps.Size(); j++)
 	  {
-	    startsize = group.Size();
+	    int startsize = group.Size();
 	    for(int k=0; k<startsize; k++)
 	      {
-		int id = (*idmaps[j])[group[k]];
+		int id = int((*idmaps[j])[PointIndex(group[k])]);   // point idmap indexed by face nr (pre-existing)
 		if(id != 0 && !group.Contains(id))
 		  {
 		    group.Append(id);
@@ -1067,13 +1063,8 @@ namespace netgen
     //     for(PointIndex i = mesh.Points().Begin(); i < mesh.Points().End(); i++)
     for(PointIndex i : mesh.Points().Range())
       {
-	if(i-IndexBASE<PointIndex>() < point_ids.Size())
-	  {
-	    if(uid_to_group_0D[point_ids[i]] >= 0)
-	      groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-IndexBASE<PointIndex>());
-	  }
-	else
-	  groups[uid_to_group_0D[0]]->Append(i+1-IndexBASE<PointIndex>());
+	if(uid_to_group_0D[point_ids[i]] >= 0)
+	  groups[uid_to_group_0D[point_ids[i]]]->Append(i+1-IndexBASE<PointIndex>());
       }
 
 
