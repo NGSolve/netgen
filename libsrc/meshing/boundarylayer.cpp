@@ -1455,7 +1455,7 @@ void BoundaryLayerTool ::Perform ()
     }
 
   auto& identifications = mesh.GetIdentifications();
-  NgArray<INDEX_2> pairs;
+  Array<PointIndices<2>> pairs;
   for (auto nr : Range(0, identifications.GetMaxNr() + 1))
     {
       identifications.GetPairs(nr, pairs);

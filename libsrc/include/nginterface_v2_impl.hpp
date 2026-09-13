@@ -362,15 +362,16 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int n
 
 NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr) const
 {
-  NgArray<INDEX_2> apairs;
+  Array<PointIndices<2>> apairs;
   mesh->GetIdentifications().GetPairs (idnr+1, apairs);
-  for(auto& ind : apairs)
-    {
-      ind.I1() -= IndexBASE<PointIndex>();
-      ind.I2() -= IndexBASE<PointIndex>();
-    }
   typedef int ti2[2];
-  return { apairs.Size(), (ti2*)(void*)apairs.Release() };
+  ti2 * pairs = new ti2[apairs.Size()];
+  for (size_t i = 0; i < apairs.Size(); i++)
+    {
+      pairs[i][0] = apairs[i].I1() - IndexBASE<PointIndex>();
+      pairs[i][1] = apairs[i].I2() - IndexBASE<PointIndex>();
+    }
+  return { apairs.Size(), pairs };
 }
 
 

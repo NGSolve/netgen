@@ -307,27 +307,27 @@ namespace netgen
      **/
 
     /** First, we build tables for vertex identification. **/
-    NgArray<INDEX_2> per_pairs;
-    NgArray<INDEX_2> pp2;
+    Array<PointIndices<2>> per_pairs;
+    Array<PointIndices<2>> pp2;
     auto & idents = GetIdentifications();
     for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
       {
 	if(idents.GetType(idnr)!=Identifications::PERIODIC) continue;
 	idents.GetPairs(idnr, pp2);
-	per_pairs.Append(pp2);
+	per_pairs += pp2;
       }
     Array<int, PointIndex> npvs(GetNV());
     npvs = 0;
-    for (int k = 0; k < per_pairs.Size(); k++) {
-      npvs[per_pairs[k].I1()]++;
-      npvs[per_pairs[k].I2()]++;
+    for (auto pair : per_pairs) {
+      npvs[pair.I1()]++;
+      npvs[pair.I2()]++;
     }
 
     /** for each vertex, gives us all identified vertices **/
     DynamicTable<PointIndex, PointIndex> per_verts(GetNV());
-    for (int k = 0; k < per_pairs.Size(); k++) {
-      per_verts.Add(per_pairs[k].I1(), per_pairs[k].I2());
-      per_verts.Add(per_pairs[k].I2(), per_pairs[k].I1());
+    for (auto pair : per_pairs) {
+      per_verts.Add(pair.I1(), pair.I2());
+      per_verts.Add(pair.I2(), pair.I1());
     }
     for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++) {
       BubbleSort(per_verts[k]);
@@ -505,9 +505,8 @@ namespace netgen
       {
 	if(idents.GetType(idnr)!=Identifications::PERIODIC) continue;
 	idents.GetPairs(idnr, pp2);
-	for(int j = 0; j<pp2.Size(); j++)
+	for (auto pair : pp2)
 	  {
-	    INDEX_2 & pair = pp2[j];
 	    // both are on same procs!
 	    auto ps = procs_of_vert[pair.I1()];
 	    for (int l = 0; l < ps.Size(); l++)
@@ -530,16 +529,15 @@ namespace netgen
       {
 	if(idents.GetType(idnr)!=Identifications::PERIODIC) continue;
 	idents.GetPairs(idnr, pp2);
-	for(int j = 0; j<pp2.Size(); j++)
+	for (auto pair : pp2)
 	  {
-	    INDEX_2 & pair = pp2[j];
 	    auto ps = procs_of_vert[pair.I1()];
 	    for (int l = 0; l < ps.Size(); l++)
 	      {
 		auto p = ps[l];
 		pp_data[p][maxidentnr + idnr]++;
-		pp_data.Add(p, pair.I1());
-		pp_data.Add(p, pair.I2());
+		pp_data.Add(p, int(pair.I1()));
+		pp_data.Add(p, int(pair.I2()));
 	      }
 	  }
       }

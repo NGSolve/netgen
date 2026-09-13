@@ -188,7 +188,7 @@ namespace netgen
 
           for(auto n : Range(1,nmax+1))
           {
-              NgArray<INDEX_2> pairs;
+              Array<PointIndices<2>> pairs;
               identifications.GetPairs(n, pairs);
 
               for(auto pair : pairs)
@@ -346,7 +346,7 @@ namespace netgen
            for (PointIndex pi : mesh.Points().Range())
              meshing.AddPoint (mesh[pi], pi);
 
-           NgArray<INDEX_2> connectednodes;
+           Array<PointIndices<2>> connectednodes;
            for (int nr = 1; nr <= mesh.GetIdentifications().GetMaxNr(); nr++)
              if (mesh.GetIdentifications().GetType(nr) != Identifications::PERIODIC)
                {

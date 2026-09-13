@@ -174,7 +174,7 @@ void Meshing3 :: AddBoundaryElement (const MiniElement2d & elem)
   adfront -> AddFace(elem);
 }
 
-int Meshing3 :: AddConnectedPair (const INDEX_2 & apair)
+int Meshing3 :: AddConnectedPair (PointIndices<2> apair)
 {
   return adfront -> AddConnectedPair (apair);
 }

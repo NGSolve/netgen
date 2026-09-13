@@ -848,7 +848,7 @@ namespace netgen
     if (ident -> GetMaxNr() > 0)
       {
         outfile << "identifications\n";
-        NgArray<INDEX_2> identpairs;
+        Array<PointIndices<2>> identpairs;
         int cnt = 0;
         for (i = 1; i <= ident -> GetMaxNr(); i++)
           {
@@ -859,12 +859,12 @@ namespace netgen
         for (i = 1; i <= ident -> GetMaxNr(); i++)
           {
             ident -> GetPairs (i, identpairs);
-            for (j = 1; j <= identpairs.Size(); j++)
+            for (auto pair : identpairs)
               {
                 outfile.width (8);
-                outfile << PointIndex(identpairs.Get(j).I1());
+                outfile << pair.I1();
                 outfile.width (8);
-                outfile << PointIndex(identpairs.Get(j).I2());
+                outfile << pair.I2();
                 outfile.width (8);
                 outfile << i << "\n";
               }

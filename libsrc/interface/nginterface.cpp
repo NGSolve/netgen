@@ -1810,7 +1810,7 @@ int Ng_GetClusterRepElement (int pi)
 		
 int Ng_GetNPeriodicVertices (int idnr)
 {
-  NgArray<INDEX_2> apairs;
+  Array<PointIndices<2>> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   return apairs.Size();
 }
@@ -1819,9 +1819,9 @@ int Ng_GetNPeriodicVertices (int idnr)
 // pairs should be an integer array of 2*npairs
 void Ng_GetPeriodicVertices (int idnr, int * pairs)
 {
-  NgArray<INDEX_2> apairs;
+  Array<PointIndices<2>> apairs;
   mesh->GetIdentifications().GetPairs (idnr, apairs);
-  for (int i = 0; i < apairs.Size(); i++)
+  for (size_t i = 0; i < apairs.Size(); i++)
     {
       pairs[2*i] = apairs[i].I1() - IndexBASE<PointIndex>() + 1;
       pairs[2*i+1] = apairs[i].I2() - IndexBASE<PointIndex>() + 1;

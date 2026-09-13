@@ -62,7 +62,7 @@ public:
   ///
   void AddBoundaryElement (const MiniElement2d & elem);
   ///
-  int AddConnectedPair (const INDEX_2 & pair);
+  int AddConnectedPair (PointIndices<2> pair);
   
   ///
   void BlockFill (Mesh & mesh, double gh);

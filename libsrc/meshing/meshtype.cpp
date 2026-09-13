@@ -2819,7 +2819,7 @@ namespace netgen
 
   int Identifications :: Get (PointIndex pi1, PointIndex pi2) const
   {
-    INDEX_2 pair(pi1, pi2);
+    PointIndices<2> pair(pi1, pi2);
     if (identifiedpoints.Used (pair))
       return identifiedpoints.Get(pair);
     else
@@ -2840,11 +2840,11 @@ namespace netgen
 
   int Identifications :: GetSymmetric (PointIndex pi1, PointIndex pi2) const
   {
-    INDEX_2 pair(pi1, pi2);
+    PointIndices<2> pair(pi1, pi2);
     if (identifiedpoints.Used (pair))
       return identifiedpoints.Get(pair);
 
-    pair = INDEX_2 (pi2, pi1);
+    pair = PointIndices<2> (pi2, pi1);
     if (identifiedpoints.Used (pair))
       return identifiedpoints.Get(pair);
 
@@ -2860,7 +2860,7 @@ namespace netgen
     if (identnr)
       for (int i = 0; i < idpoints_table[identnr].Size(); i++)
         {
-          INDEX_2 pair = idpoints_table[identnr][i];
+          PointIndices<2> pair = idpoints_table[identnr][i];
           identmap[pair.I1()] = pair.I2();
           if(symmetric)
             identmap[pair.I2()] = pair.I1();
@@ -2901,20 +2901,16 @@ namespace netgen
   }
 
 
-  Array<INDEX_3> Identifications :: GetPairs () const
+  Array<std::tuple<PointIndices<2>, int>> Identifications :: GetPairs () const
   {
-    Array<INDEX_3> pairs;
+    Array<std::tuple<PointIndices<2>, int>> pairs;
     for(auto [hash, dummy] : identifiedpoints_nr)
-      // pairs.Append(i3);
-      {
-        auto [pts,nr] = hash;
-        pairs.Append ( { pts[0], pts[1], nr } );
-      }
+      pairs.Append (hash);
     return pairs;
   }
 
   void Identifications :: GetPairs (int identnr, 
-                                    NgArray<INDEX_2> & identpairs) const
+                                    Array<PointIndices<2>> & identpairs) const
   {
     identpairs.SetSize(0);
   
@@ -2994,12 +2990,12 @@ namespace netgen
     auto pairs = GetPairs();
     Delete();
 
-    for(auto pair : pairs)
+    for(auto [pts, nr] : pairs)
       {
-        auto p1 = op2np[pair.I1()];
-        auto p2 = op2np[pair.I2()];
+        auto p1 = op2np[pts.I1()];
+        auto p2 = op2np[pts.I2()];
         if(p1.IsValid() && p2.IsValid())
-          Add(p1, p2, pair.I3());
+          Add(p1, p2, nr);
       }
   }
 

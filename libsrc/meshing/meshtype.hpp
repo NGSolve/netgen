@@ -1944,8 +1944,8 @@ namespace netgen
     }
     
     ///
-    DLL_HEADER void GetPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
-    DLL_HEADER Array<INDEX_3> GetPairs () const;
+    DLL_HEADER void GetPairs (int identnr, Array<PointIndices<2>> & identpairs) const;
+    DLL_HEADER Array<std::tuple<PointIndices<2>, int>> GetPairs () const;
     ///
     int GetMaxNr () const { return maxidentnr; }  
 
