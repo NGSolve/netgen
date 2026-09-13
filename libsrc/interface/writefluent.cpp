@@ -145,7 +145,7 @@ void WriteFluentFormat (const Mesh & mesh,
 	    }
 	  if (eli2 == 0) 
 	    {
-	      surfaceelp.Append(INDEX_3(face.PNum(2),face.PNum(1),face.PNum(3)));
+	      surfaceelp.Append(PointIndices<3>(face.PNum(2),face.PNum(1),face.PNum(3)));
 	      surfaceeli.Append(i);
 	    }
 	}

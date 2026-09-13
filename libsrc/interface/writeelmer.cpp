@@ -103,8 +103,8 @@ void WriteElmerFormat (const Mesh &mesh,
 
   auto get3FacePoints = [](const Element2d & el)
   {
-      INDEX_3 i3;
-      INDEX_4 i4;
+      PointIndices<3> i3;
+      PointIndices<4> i4;
       auto eltype = el.GetType();
       switch (eltype)
       {

@@ -432,7 +432,7 @@ struct GrowthVectorLimiter
   Intersection_ isIntersectingTrig (PointIndex pi_from, PointIndex pi_to, SurfaceElementIndex sei, double shift = 0.0)
   {
     // JS: where is that GetSeg function ?
-    return isIntersectingTrig(GetSeg(pi_from, pi_to), GetTrig(sei, shift));
+    return isIntersectingTrig(GetSeg(pi_from, int(pi_to)), GetTrig(sei, shift));
   }
 
   void BuildSearchTree (double trig_shift)

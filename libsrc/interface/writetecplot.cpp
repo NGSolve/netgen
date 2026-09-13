@@ -42,7 +42,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
   for (i = 1; i <= ne; i++)
     {
       const Element & el = mesh.VolumeElement(i);
-      INDEX_3 i3;
+      PointIndices<3> i3;
       int l;
       for (j = 1; j <= 4; j++)   // loop over faces of tet
 	{
@@ -51,7 +51,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
 	    if (k != j)
 	      {
 		l++;
-		i3.I(l) = el.PNum(k);
+		i3[l-1] = el.PNum(k);
 	      }
 	  i3.Sort();
 	  face2volelement.Set (i3, i);
@@ -114,9 +114,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 	      for (k = 1; k <= nse; k++)
 		{
 		  const Element2d & sel = mesh.SurfaceElement(k);
-		  INDEX_3 i3;
+		  PointIndices<3> i3;
 		  for (j = 1; j <= 3; j++)
-		    i3.I(j) = sel.PNum(j);
+		    i3[j-1] = sel.PNum(j);
 		  i3.Sort();
 		  
 		  //int elind = face2volelement.Get(i3);

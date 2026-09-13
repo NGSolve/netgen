@@ -9,7 +9,7 @@ namespace netgen
 {
   struct PointTree
   {
-      std::map<int, BoxTree<3>> tree;
+      std::map<int, BoxTree<3, PointIndex>> tree;
       Box<3> bounding_box;
 
       PointTree( Box<3> bb ) : bounding_box(bb) {}
@@ -23,7 +23,7 @@ namespace netgen
 
       PointIndex Find(Point<3> p, int index) const
       {
-          ArrayMem<int, 1> points;
+          ArrayMem<PointIndex, 1> points;
           tree.at(index).GetIntersecting(p, p, points);
           if(points.Size()==0)
               throw Exception("cannot find mapped point " + ToString(p));

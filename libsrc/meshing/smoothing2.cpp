@@ -568,7 +568,8 @@ namespace netgen
   {
     // from 2d:
 
-    int lpi, gpi;
+    int lpi;
+    PointIndex gpi;
     Vec<3> vgrad;
     Point<3> pp1;
     Vec<2> g1, vdir;
@@ -640,7 +641,8 @@ namespace netgen
   {
     // from 2d:
 
-    int j, k, lpi, gpi;
+    int j, k, lpi;
+    PointIndex gpi;
     Vec<3> vgrad;
     Point<3> pp1;
     Vec<2> g1, vdir;

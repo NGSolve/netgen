@@ -79,7 +79,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 	{
 	  const Element & el = mesh.VolumeElement(i);
 	  int has = 0, hasnot = 0;
-	  if (el[0])
+	  if (el[0].IsValid())
 	    {
 	      for (j = 0; j < 4; j++)
 		{
@@ -105,7 +105,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     {
       const Element & el = mesh.VolumeElement(i);
       int hasnot = 0;
-      if (el[0])
+      if (el[0].IsValid())
 	{
 	  for (j = 0; j < 4; j++)
 	    {

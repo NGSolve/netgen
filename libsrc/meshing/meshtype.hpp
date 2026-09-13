@@ -242,6 +242,8 @@ namespace netgen
   inline void SetInvalid (Index<T,TIndex,Base> & id) { id.Invalidate(); }
   template <typename T, typename TIndex, int Base>        
   inline bool IsInvalid (const Index<T,TIndex,Base> & id) { return !id.IsValid(); }
+  template <typename T, typename TIndex, int Base>
+  inline size_t HashValue (Index<T,TIndex,Base> id, size_t size) { return (113*size_t(id)) % size; }
 
 
   

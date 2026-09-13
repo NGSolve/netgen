@@ -474,8 +474,8 @@ namespace nglib
    NGLIB_API void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum)
    {
       const Segment & seg = ((Mesh*)mesh)->LineSegment(num);
-      pi[0] = seg[0];
-      pi[1] = seg[1];
+      pi[0] = seg[0] - IndexBASE<PointIndex>() + 1;
+      pi[1] = seg[1] - IndexBASE<PointIndex>() + 1;
 
       if (matnum)
          *matnum = ((Mesh*)mesh)->GetEdgeDescriptor(seg.GetIndex()).EdgeNr();

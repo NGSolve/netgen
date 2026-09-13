@@ -124,7 +124,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       Point3d pmin, pmax;
       mesh->GetBox (pmin, pmax, -1);
 
-      if (vispar.centerpoint)
+      if (vispar.centerpoint.IsValid())
 	center = mesh->Point (vispar.centerpoint);
       else
 	center = Center (pmin, pmax);
@@ -167,7 +167,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       int drawel = 1;
       for (int j = 1; j <= el.GetNP(); j++)
 	{
-	  if (!el.PNum(j))
+	  if (!el.PNum(j).IsValid())
 	    drawel = 0;
 	}
 
@@ -280,7 +280,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       int drawel = 1;
       for (int j = 1; j <= el.GetNP(); j++)
 	{
-	  if (!el.PNum(j))
+	  if (!el.PNum(j).IsValid())
 	    drawel = 0;
 	}
 

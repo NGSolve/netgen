@@ -486,7 +486,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   if (geom.GetSurface(surfnr) == s1 ||
       geom.GetSurface(surfnr) == s2)
     {
-      Array<int> copy_points;
+      Array<PointIndex> copy_points;
 
       for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	{

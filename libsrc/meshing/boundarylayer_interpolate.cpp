@@ -334,7 +334,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors ()
   for (auto sei : mesh.SurfaceElements().Range())
     surf_normals[sei] = getNormal(mesh[sei]);
 
-  BitArray interpolate_tangent(mesh.GetNP() + 1);
+  TBitArray<PointIndex> interpolate_tangent(mesh.GetNP());
   interpolate_tangent = false;
   for (auto pi : points)
     {

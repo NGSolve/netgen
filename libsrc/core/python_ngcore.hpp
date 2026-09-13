@@ -400,7 +400,7 @@ namespace ngcore
                 size_t start, stop, step, slicelength;
                 if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
                   throw py::error_already_set();
-                static constexpr int base = IndexBASE<TIND>();
+                static constexpr int base = int(IndexBASE<TIND>());
                 if (start < base || start+(slicelength-1)*step >= self.Size()+base)
                   throw py::index_error();
                 for (size_t i = 0; i < slicelength; i++, start+=step)
@@ -448,8 +448,8 @@ namespace ngcore
                   {
                     size_t s = x.size();
                     TArray tmp(s);
-                    for (size_t i : Range(tmp))
-                      tmp[TIND(i)] = x[i];
+                    for (auto i : Range(tmp))
+                      tmp[i] = x[i-IndexBASE<TIND>()];
                     return tmp;
                   }), py::arg("vec"), "Makes array with given list of elements")
         ;
