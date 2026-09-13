@@ -3394,7 +3394,7 @@ namespace netgen
 
         if (surfnr == 0 || seg_fdi(seg) == surfnr)
           {
-            INDEX_3 key(int(seg[0]), int(seg[1]), seg_fdi(seg));
+            INDEX_3 key{ int(seg[0]), int(seg[1]), seg_fdi(seg) };
             int data = -i;
 
             if (faceht.Used (key))
