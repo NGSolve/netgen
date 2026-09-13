@@ -984,15 +984,14 @@ float vnetrule :: CalcPointDist (RulePointIndex pi, const Point3d & p) const
 
 int vnetrule :: TestOk () const
 {
-  NgArray<int> cntpused(points.Size());
-  NgArray<int> edge1, edge2;
+  Array<int, RulePointIndex> cntpused(points.Size());
+  NgArray<RulePointIndex> edge1, edge2;
   NgArray<int> delf(faces.Size());
   int i, j, k;
-  int pi1, pi2;
+  RulePointIndex pi1, pi2;
   int found;
 
-  for (i = 1; i <= cntpused.Size(); i++)
-    cntpused.Elem(i) = 0;
+  cntpused = 0;
   for (i = 1; i <= faces.Size(); i++)
     delf.Elem(i) = 0;
   for (i = 1; i <= delfaces.Size(); i++)
@@ -1002,10 +1001,10 @@ int vnetrule :: TestOk () const
   for (i = 1; i <= faces.Size(); i++)
     if (delf.Get(i) || i > noldf)
       for (j = 1; j <= faces.Get(i).GetNP(); j++)
-        cntpused.Elem(faces.Get(i).PNum(j))++;
+        cntpused[faces.Get(i).PNum(j)]++;
 
-  for (i = 1; i <= cntpused.Size(); i++)
-    if (cntpused.Get(i) > 0 && cntpused.Get(i) < 2)
+  for (auto pi : cntpused.Range())
+    if (cntpused[pi] > 0 && cntpused[pi] < 2)
       {
 	return 0;
       }
@@ -1017,7 +1016,7 @@ int vnetrule :: TestOk () const
       //      (*testout) << "face " << i << endl;
       for (j = 1; j <= faces.Get(i).GetNP(); j++)
 	{
-	  pi1 = 0; pi2 = 0;
+	  pi1.Invalidate(); pi2.Invalidate();
 	  if (delf.Get(i))
 	    {
 	      pi1 = faces.Get(i).PNumMod(j);
@@ -1030,7 +1029,7 @@ int vnetrule :: TestOk () const
 	    }
 
 	  found = 0;
-	  if (pi1)
+	  if (pi1.IsValid())
 	    {
 	      for (k = 1; k <= edge1.Size(); k++)
 		if (edge1.Get(k) == pi1 && edge2.Get(k) == pi2)

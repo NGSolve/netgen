@@ -91,7 +91,7 @@ namespace netgen
       {
         size_t oldsize = glob2front.Size();
         glob2front.SetSize (globind+1-IndexBASE<PointIndex>());
-        for (PointIndex pi = IndexBASE<PointIndex>()+oldsize; pi < glob2front.Range().Next(); pi++)
+        for (PointIndex pi = PointIndex::FromNr0(oldsize); pi < glob2front.Range().Next(); pi++)
           glob2front[pi] = Front2PointIndex::INVALID;
       }
     glob2front[globind] = fpi;
@@ -700,9 +700,9 @@ namespace netgen
 			    locpoints.Append (pout3d);
 
 			    plainzones.Append (0);
-			    pindex.Append (-1);
+			    pindex.Append (Front2PointIndex::INVALID);
 			    oldnp++;
-			    loclines.Elem(i)[3-innerp-1] = oldnp;
+			    loclines.Elem(i)[3-innerp-1] = LocalPointIndex::FromNr0(oldnp-1);
 			  }
 			else
 			  plainzones[loclines.Get(i)[3-innerp-1]] = 0;
@@ -753,7 +753,7 @@ namespace netgen
 		    plainpoints[i] = {1e4, 1e4};
 		    legalpoints[i] = 0;
 		  }
-		if (pindex[i] == -1)
+		if (!pindex[i].IsValid())
 		  {
 		    legalpoints[i] = 0;
 		  }
@@ -819,7 +819,7 @@ namespace netgen
 	      {
 		for (int i = 1; i <= chartboundpoints.Size(); i++)
 		  {
-                    pindex.Append(-1);
+                    pindex.Append(Front2PointIndex::INVALID);
 		    plainpoints.Append (chartboundpoints.Get(i));
 		    locpoints.Append (chartboundpoints3d.Get(i));
 		    legalpoints.Append (0);
@@ -828,8 +828,8 @@ namespace netgen
 
 		for (int i = 1; i <= chartboundlines.Size(); i++)
 		  {
-		    IVec<2,LocalPointIndex> line (LocalPointIndex(chartboundlines.Get(i).I1()+oldnp),
-                                                  LocalPointIndex(chartboundlines.Get(i).I2()+oldnp));
+		    IVec<2,LocalPointIndex> line (LocalPointIndex::FromNr0(chartboundlines.Get(i).I1()+oldnp-1),
+                                                  LocalPointIndex::FromNr0(chartboundlines.Get(i).I2()+oldnp-1));
 		    loclines.Append (line);
 		    //	      (*testout) << "line: " << line.I1() << "-" << line.I2() << endl;
 		  }
@@ -875,7 +875,7 @@ namespace netgen
 
 	    for (int j = 1; j <= el.GetNP(); j++)
 	      // if (el.PNum(j) <= oldnp && pindex[el.PNum(j)] == -1)
-              if (int(el.PNum(j)) <= oldnp && pindex[el.PNum(j)] == -1)  // local 1-based numbering
+              if (el.PNum(j) <= oldnp+IndexBASE<LocalPointIndex>()-1 && !pindex[el.PNum(j)].IsValid())
 		{
 		  found = 0;
 		  PrintSysError ("meshing2, index missing");
@@ -888,7 +888,7 @@ namespace netgen
 	    locpoints.SetSize (plainpoints.Size());
 	    upgeominfo.SetSize(locpoints.Size());
 
-	    for (int i = oldnp+1; i <= plainpoints.Size(); i++)
+	    for (auto i : plainpoints.Range().Modify(oldnp, 0))
 	      {
                 Point<3> locp;
                 upgeominfo[i] = *blgeominfo1;
@@ -1048,8 +1048,8 @@ namespace netgen
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      for (int j = 1; j <= locelements.Get(i).GetNP(); j++)
 		{
-		  int pi = locelements.Get(i).PNum(j);
-		  if (pi <= oldnp)
+		  LocalPointIndex pi = locelements.Get(i).PNum(j);
+		  if (pi <= oldnp+IndexBASE<LocalPointIndex>()-1)
 		    {
 		    
 		      if (ChooseChartPointGeomInfo (mpgeominfo[pi], upgeominfo[pi]))
@@ -1101,7 +1101,7 @@ namespace netgen
 	    surfeltree.GetIntersecting (hullmin, hullmax, intersecttrias);
 
 	    critpoints.SetSize (0);
-	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
+	    for (auto i : locpoints.Range().Modify(oldnp, 0))
 	      critpoints.Append (locpoints[i]);
 
 	    for (int i = 1; i <= locelements.Size(); i++)
@@ -1270,7 +1270,7 @@ namespace netgen
 	      {
 		LocalPointIndex nllpi1 = loclines.Get(i)[0];
 		LocalPointIndex nllpi2 = loclines.Get(i)[1];
-		if (nllpi1 <= pindex.Size() && nllpi2 <= pindex.Size())
+		if (pindex.Range().Contains(nllpi1) && pindex.Range().Contains(nllpi2))
 		  {
 		    PointIndex nlgpi1 = adfront.GetGlobalIndex (pindex[nllpi1]);
 		    PointIndex nlgpi2 = adfront.GetGlobalIndex (pindex[nllpi2]);
@@ -1331,7 +1331,7 @@ namespace netgen
 
 	    pindex.SetSize(locpoints.Size());
 	      
-	    for (int i = oldnp+1; i <= locpoints.Size(); i++)
+	    for (auto i : locpoints.Range().Modify(oldnp, 0))
 	      {
 		PointIndex globind = mesh.AddPoint (locpoints[i], layer);
 		pindex[i] = adfront.AddPoint (locpoints[i], globind);
@@ -1352,8 +1352,8 @@ namespace netgen
 		  gisize, geominfo);
 		*/		  
 
-		if (pindex[loclines.Get(i)[0]] == -1 || 
-		    pindex[loclines.Get(i)[1]] == -1)
+		if (!pindex[loclines.Get(i)[0]].IsValid() || 
+		    !pindex[loclines.Get(i)[1]].IsValid())
 		  {
 		    (*testout) << "pindex is 0" << endl;
 		  }
@@ -1499,7 +1499,7 @@ namespace netgen
 		(*testout) << "trials = " << trials << endl;
 
 		(*testout) << "locpoints " << endl;
-		for (int i = 1; i <= pindex.Size(); i++)
+		for (auto i : pindex.Range())
 		  (*testout) << adfront.GetGlobalIndex (pindex[i]) << endl;
 
 		(*testout) << "old number of lines = " << oldnl << endl;
@@ -1512,8 +1512,7 @@ namespace netgen
 		    for (int j = 1; j <= 2; j++)
 		      {
 			PointIndex hi = PointIndex::INVALID;
-			if (loclines.Get(i)[j-1] >= 1 &&
-			    loclines.Get(i)[j-1] <= pindex.Size())
+			if (pindex.Range().Contains(loclines.Get(i)[j-1]))
 			  hi = adfront.GetGlobalIndex (pindex[loclines.Get(i)[j-1]]);
 
 			(*testout) << hi << " ";
@@ -1564,8 +1563,7 @@ namespace netgen
 		    for (int j = 1; j <= 2; j++)
 		      {
 			PointIndex hi = PointIndex::INVALID;
-			if (loclines.Get(i)[j-1] >= 1 &&
-			    loclines.Get(i)[j-1] <= pindex.Size())
+			if (pindex.Range().Contains(loclines.Get(i)[j-1]))
 			  hi = adfront.GetGlobalIndex (pindex[loclines.Get(i)[j-1]]);
 
 			(*testout) << hi << " ";

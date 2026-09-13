@@ -11,11 +11,11 @@ namespace netgen
   {
     Array<Point<2>, PointIndex> hpoints(points.Size());
     for (LocalPointIndex pi : points.Range())
-      hpoints[pi-IndexBASE<LocalPointIndex>()+IndexBASE<PointIndex>()] = points[pi];
+      hpoints[pi.Nr0()+IndexBASE<PointIndex>()] = points[pi];
 
     Element2d hel(elem.GetNP());
     for (int j = 1; j <= elem.GetNP(); j++)
-      hel.PNum(j) = elem.PNum(j)-IndexBASE<LocalPointIndex>()+IndexBASE<PointIndex>();
+      hel.PNum(j) = elem.PNum(j).Nr0()+IndexBASE<PointIndex>();
 
     return hel.CalcJacobianBadness (hpoints);
   }
@@ -373,17 +373,17 @@ namespace netgen
 
 		// map also all points:
 
-		int npok = 1;
+		RulePointIndex npok = IndexBASE<RulePointIndex>();
 		int incnpok = 1;
 
 		pfixed.SetSize (pmap.Size());
 		for (auto i : pmap.Range())
 		  pfixed[i] = pmap[i].IsValid();
  
-		while (npok >= 1)
+		while (npok >= IndexBASE<RulePointIndex>())
 		  {
 
-		    if (npok <= rule->GetNOldP())
+		    if (npok <= RuleP(rule->GetNOldP()))
 
 		      {
 			if (pfixed[npok])
@@ -403,7 +403,7 @@ namespace netgen
 			    if (pmap[npok].IsValid())
 			      pused[pmap[npok]]--;
 
-			    while (!ok && pmap[npok] < maxlegalpoint)
+			    while (!ok && pmap[npok] < maxlegalpoint+IndexBASE<LocalPointIndex>()-1)
 			      {
 				ok = 1;
 
@@ -444,7 +444,7 @@ namespace netgen
 		      {
 			// NgProfiler::RegionTimer reg(timers2[ri-1]);
 
-			npok = rule->GetNOldP();
+			npok = RuleP(rule->GetNOldP());
 			incnpok = 0;
 
 			if (ok)
@@ -480,9 +480,10 @@ namespace netgen
 			// Vector oldu (2 * rule->GetNOldP());
                         Vector oldu (2 * rule->GetNOldP(), &oldumem[0]);
 		      
-			for (int i = 1; i <= rule->GetNOldP(); i++)
+			for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
 			  {
-			    Vec2d ui(rule->GetPoint(i), lpoints[pmap[i]]);
+			    Vec2d ui(rule->GetPoint(pi), lpoints[pmap[pi]]);
+			    int i = pi.Nr0()+1;
 			    oldu (2*i-2) = ui.X();
 			    oldu (2*i-1) = ui.Y();
 			  }
@@ -514,8 +515,9 @@ namespace netgen
 
 			// check freezone:
 			if (!ok) continue;
-			for (int i = 1; i <= maxlegalpoint && ok; i++)
+			for (auto i : lpoints.Range().Modify(0, maxlegalpoint-lpoints.Size()))
 			  {
+			    if (!ok) break;
 			    if ( !pused[i] &&
 				 rule->IsInFreeZone (lpoints[i]) )
 			      {
@@ -529,7 +531,7 @@ namespace netgen
 			  }
 
 			if (!ok) continue;
-			for (int i = maxlegalpoint+1; i <= lpoints.Size(); i++)
+			for (auto i : lpoints.Range().Modify(maxlegalpoint, 0))
 			  {
 			    if ( rule->IsInFreeZone (lpoints[i]) )
 			      {
@@ -609,14 +611,15 @@ namespace netgen
 			    rule->GetOldUToNewU().Mult (oldu, newu);
 			    
 			    int oldnp = rule->GetNOldP();
-			    for (int i = oldnp + 1; i <= rule->GetNP(); i++)
+			    for (auto pi : pmap.Range().Modify(oldnp, 0))
 			      {
-				auto np = rule->GetPoint(i);
+				auto np = rule->GetPoint(pi);
+				int i = pi.Nr0()+1;
 				np[0] += newu (2 * (i-oldnp) - 2);
 				np[1] += newu (2 * (i-oldnp) - 1);
 
                                 lpoints.Append (np);
-				pmap[i] = lpoints.Size();
+				pmap[pi] = lpoints.Range().Next()-1;
 			      }
 			  }
 

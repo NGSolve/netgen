@@ -378,9 +378,9 @@ namespace netgen
                 bool found = false;
                 for(auto& fp : found_points)
                   {
-                    if(meshing.GetGlobalIndex(Front2PointIndex(fp-1)) == seg[j])
+                    if(meshing.GetGlobalIndex(Front2PointIndex::FromNr0(fp-1)) == seg[j])
                       {
-                        locpnum[j] = fp-1;     // uv_tree stores front nr + 1
+                        locpnum[j] = Front2PointIndex::FromNr0(fp-1);   // uv_tree stores front nr + 1
                         found = true;
                       }
                   }
@@ -388,9 +388,9 @@ namespace netgen
                 {
                     PointIndex pi = seg[j];
                     locpnum[j] = meshing.AddPoint (mesh.Point(pi), pi);
-                    glob2loc[pi] = int(locpnum[j])+1;
+                    glob2loc[pi] = locpnum[j].Nr0()+1;
                     gis.Append (gi[j]);
-                    uv_tree.Insert(uv, int(locpnum[j])+1);
+                    uv_tree.Insert(uv, locpnum[j].Nr0()+1);
                 }
             }
 
@@ -404,7 +404,7 @@ namespace netgen
                 auto gi = occface.Project(mesh[pi]);
                 MultiPointGeomInfo mgi;
                 mgi.AddPointGeomInfo(gi);
-                glob2loc[pi] = int(meshing.AddPoint(mesh[pi], pi, &mgi))+1;
+                glob2loc[pi] = meshing.AddPoint(mesh[pi], pi, &mgi).Nr0()+1;
                 gis.Append(gi);
                 Point<2> uv = { gi.u, gi.v };
                 uv_tree.Insert(uv, glob2loc[pi]);

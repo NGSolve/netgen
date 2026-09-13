@@ -149,14 +149,14 @@ void vnetrule :: LoadRule (istream & ist)
 	      noldp++;
 
 	      tolerances.SetSize (noldp);
-	      tolerances[noldp] = 1;
+	      tolerances[tolerances.Range().Next()-1] = 1;
 
 	      ist >> ch;
 	      while (ch != ';')
 		{
 		  if (ch == '{')
 		    {
-		      ist >> tolerances[noldp];
+		      ist >> tolerances[tolerances.Range().Next()-1];
 		      ist >> ch;  // '}'
 		    }
 
@@ -177,16 +177,16 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      face.SetNP(3);
-	      ist >> (int&)face.PNum(1);
+	      ist >> face.PNum(1);
 	      ist >> ch;    // ','
-	      ist >> (int&)face.PNum(2);
+	      ist >> face.PNum(2);
 	      ist >> ch;    // ','
-	      ist >> (int&)face.PNum(3);
+	      ist >> face.PNum(3);
 	      ist >> ch;    // ')' or ','
 	      if (ch == COMMASIGN)
 		{
 		  face.SetNP(4);
-		  ist >> (int&)face.PNum(4);
+		  ist >> face.PNum(4);
 		  ist >> ch;    // ')' 
 		}
 	      faces.Append (face);
@@ -285,16 +285,16 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      face.SetNP(3);
-	      ist >> (int&)face.PNum(1);
+	      ist >> face.PNum(1);
 	      ist >> ch;    // ','
-	      ist >> (int&)face.PNum(2);
+	      ist >> face.PNum(2);
 	      ist >> ch;    // ','
-	      ist >> (int&)face.PNum(3);
+	      ist >> face.PNum(3);
 	      ist >> ch;    // ')' or ','
 	      if (ch == COMMASIGN)
 		{
 		  face.SetNP(4);
-		  ist >> (int&)face.PNum(4);
+		  ist >> face.PNum(4);
 		  ist >> ch;    // ')' 
 		}
 	      faces.Append (face);
@@ -372,11 +372,12 @@ void vnetrule :: LoadRule (istream & ist)
 
 
 	      p.X() = p.Y() = p.Z() = 0;
-	      for (i = 1; i <= points.Size(); i++)
+	      for (auto pi : points.Range())
 		{
-		  p.X() += hm1.Get(1, 3*i-2) * points[i].X();
-		  p.Y() += hm1.Get(1, 3*i-2) * points[i].Y();
-		  p.Z() += hm1.Get(1, 3*i-2) * points[i].Z();
+		  int i = pi.Nr0()+1;
+		  p.X() += hm1.Get(1, 3*i-2) * points[pi].X();
+		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
+		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
 		}
 	      freezone.Append (p);
 	      freezonelimit.Append (p);
@@ -433,11 +434,12 @@ void vnetrule :: LoadRule (istream & ist)
 
 
 	      p.X() = p.Y() = p.Z() = 0;
-	      for (i = 1; i <= points.Size(); i++)
+	      for (auto pi : points.Range())
 		{
-		  p.X() += hm1.Get(1, 3*i-2) * points[i].X();
-		  p.Y() += hm1.Get(1, 3*i-2) * points[i].Y();
-		  p.Z() += hm1.Get(1, 3*i-2) * points[i].Z();
+		  int i = pi.Nr0()+1;
+		  p.X() += hm1.Get(1, 3*i-2) * points[pi].X();
+		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
+		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
 		}
 	      freezonelimit.Elem(nfp) = p;
 	    
@@ -494,40 +496,40 @@ void vnetrule :: LoadRule (istream & ist)
 	      elements.Append (RuleElement(4));
 
 	      //	      elements.Last().SetNP(1);
-	      ist >> (int&)elements.Last().PNum(1);
+	      ist >> elements.Last().PNum(1);
 	      ist >> ch;    // ','
 
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(2);
-		  ist >> (int&)elements.Last().PNum(2);
+		  ist >> elements.Last().PNum(2);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(3);
-		  ist >> (int&)elements.Last().PNum(3);
+		  ist >> elements.Last().PNum(3);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(4);
 		  elements.Last().SetType(TET);
-		  ist >> (int&)elements.Last().PNum(4);
+		  ist >> elements.Last().PNum(4);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(5);
 		  elements.Last().SetType(PYRAMID);
-		  ist >> (int&)elements.Last().PNum(5);
+		  ist >> elements.Last().PNum(5);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(PRISM);
-		  ist >> (int&)elements.Last().PNum(6);
+		  ist >> elements.Last().PNum(6);
 		  ist >> ch;    // ','
 		}
               
@@ -535,19 +537,19 @@ void vnetrule :: LoadRule (istream & ist)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(HEX);
-		  ist >> (int&)elements.Last().PNum(7);
+		  ist >> elements.Last().PNum(7);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  //		  elements.Last().SetNP(6);
 		  elements.Last().SetType(HEX);
-		  ist >> (int&)elements.Last().PNum(8);
+		  ist >> elements.Last().PNum(8);
 		  ist >> ch;    // ','
 		}
 
 	      /*
-	      orientations.Append (fourint());
+	      orientations.Append (fourpoints());
 	      orientations.Last().i1 = elements.Last().PNum(1);
 	      orientations.Last().i2 = elements.Last().PNum(2);
 	      orientations.Last().i3 = elements.Last().PNum(3);
@@ -574,7 +576,7 @@ void vnetrule :: LoadRule (istream & ist)
 	  while (ch == '(')
 	    {
 	      //        fourint a = fourint();
-	      orientations.Append (fourint());
+	      orientations.Append (fourpoints());
 
 	      ist >> orientations.Last().i1;
 	      ist >> ch;    // ','
@@ -669,9 +671,9 @@ void vnetrule :: LoadRule (istream & ist)
   for (i = 1; i <= freezonepi.Size(); i++)
     freezonepi.Elem(i) = 0;
   for (i = 1; i <= freezone.Size(); i++)
-    for (j = 1; j <= noldp; j++)
-      if (Dist (freezone.Get(i), points[j]) < 1e-8)
-	freezonepi.Elem(i) = j;
+    for (auto pj : points.Range().Modify(0, noldp-points.Size()))
+      if (Dist (freezone.Get(i), points[pj]) < 1e-8)
+	freezonepi.Elem(i) = pj.Nr0()+1;
 
 
 
@@ -680,7 +682,7 @@ void vnetrule :: LoadRule (istream & ist)
     {
       if (elements.Elem(i).GetNP() == 4)
 	{
-	  orientations.Append (fourint());
+	  orientations.Append (fourpoints());
 	  orientations.Last().i1 = elements.Get(i).PNum(1);
 	  orientations.Last().i2 = elements.Get(i).PNum(2);
 	  orientations.Last().i3 = elements.Get(i).PNum(3);
@@ -688,13 +690,13 @@ void vnetrule :: LoadRule (istream & ist)
 	}
       if (elements.Elem(i).GetNP() == 5)
 	{
-	  orientations.Append (fourint());
+	  orientations.Append (fourpoints());
 	  orientations.Last().i1 = elements.Get(i).PNum(1);
 	  orientations.Last().i2 = elements.Get(i).PNum(2);
 	  orientations.Last().i3 = elements.Get(i).PNum(3);
 	  orientations.Last().i4 = elements.Get(i).PNum(5);
 
-	  orientations.Append (fourint());
+	  orientations.Append (fourpoints());
 	  orientations.Last().i1 = elements.Get(i).PNum(1);
 	  orientations.Last().i2 = elements.Get(i).PNum(3);
 	  orientations.Last().i3 = elements.Get(i).PNum(4);
@@ -723,8 +725,8 @@ void vnetrule :: LoadRule (istream & ist)
     {
       for (int i = 1; i <= 3; i++)
 	{
-	  for (int j = 1; j <= points.Size(); j++)
-	    vp(j-1) = points[j].X(i);
+	  for (auto pj : points.Range())
+	    vp(pj.Nr0()) = points[pj].X(i);
 	  oldutofreezone->Mult(vp, vfp);
 	  for (int j = 1; j <= freezone.Size(); j++)
 	    freezone.Elem(j).X(i) = vfp(j-1);
@@ -788,8 +790,7 @@ void vnetrule :: LoadRule (istream & ist)
     //    NgArray<int> pnearness (noldp);
     pnearness.SetSize (noldp);
 
-    for (i = 1; i <= pnearness.Size(); i++)
-      pnearness[i] = INT_MAX/10;
+    pnearness = INT_MAX/10;
 
     for (j = 1; j <= GetNP(1); j++)
       pnearness[GetPointNr (1, j)] = 0;
@@ -814,8 +815,8 @@ void vnetrule :: LoadRule (istream & ist)
 
 	for (i = 1; i <= edges.Size(); i++)
 	  {
-	    int pi1 = edges.Get(i).i1;
-	    int pi2 = edges.Get(i).i2;
+	    RulePointIndex pi1 = RuleP(edges.Get(i).i1);
+	    RulePointIndex pi2 = RuleP(edges.Get(i).i2);
 
 	    if (pnearness[pi1] > pnearness[pi2]+1)
 	      {
@@ -835,8 +836,8 @@ void vnetrule :: LoadRule (istream & ist)
 	    {
 	      for (j = 1; j <= 3; j++)
 		{
-		  int pi1 = elements.Get(i).PNum(j);
-		  int pi2 = elements.Get(i).PNum(j+3);
+		  RulePointIndex pi1 = elements.Get(i).PNum(j);
+		  RulePointIndex pi2 = elements.Get(i).PNum(j+3);
 
 		  if (pnearness[pi1] > pnearness[pi2]+1)
 		    {
@@ -854,8 +855,8 @@ void vnetrule :: LoadRule (istream & ist)
     while (!ok);
 
     maxpnearness = 0;
-    for (i = 1; i <= pnearness.Size(); i++)
-      maxpnearness = max2 (maxpnearness, pnearness[i]);
+    for (auto pi : pnearness.Range())
+      maxpnearness = max2 (maxpnearness, pnearness[pi]);
 
 
     fnearness.SetSize (noldf);
@@ -905,8 +906,8 @@ void vnetrule :: LoadRule (istream & ist)
 		      for (int f22 = 1; f22 <= 3; f22++)		    
 			if (f1.I(f11) == f2.I(f21) && f1.I(f12) == f2.I(f22))
 			{
-			  ed[0] = f1.I(f11);
-			  ed[1] = f1.I(f12);
+			  ed[0] = RuleP(f1.I(f11));
+			  ed[1] = RuleP(f1.I(f12));
 			}
 	      //	      (*testout) << "ed = " << ed.I(1) << "-" << ed.I(2) << endl;
 	      //	      (*testout) << "ind = " << ind << " ed = " << ed << endl;

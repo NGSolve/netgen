@@ -96,10 +96,10 @@ namespace netgen
       }
 
     if (mgi)
-      cpointsearchtree.Insert (p, int(pi));
+      cpointsearchtree.Insert (p, pi.Nr0());
 
     if (pointonsurface)
-      pointsearchtree.Insert (p, int(pi));
+      pointsearchtree.Insert (p, pi.Nr0());
     
     return pi;
   }
@@ -169,13 +169,13 @@ namespace netgen
 
   void AdFront2 :: DeleteLine (int li)
   {
-    int pi;
+    Front2PointIndex pi;
 
     nfl--;
 
-    for (int i = 1; i <= 2; i++)
+    for (int i = 0; i < 2; i++)
       {
-	pi = lines[li].L()[i-1];
+	pi = lines[li].L()[i];
 	points[pi].RemoveLine();
 
 	if (!points[pi].Valid())
@@ -183,12 +183,12 @@ namespace netgen
 	    delpointl.Append (pi);
 	    if (points[pi].mgi)
 	      {
-		cpointsearchtree.DeleteElement (pi);
+		cpointsearchtree.DeleteElement (pi.Nr0());
 		delete points[pi].mgi;
 		points[pi].mgi = NULL;
 	      }
 
-            pointsearchtree.DeleteElement (pi);
+            pointsearchtree.DeleteElement (pi.Nr0());
 	  }
       }
 
@@ -321,8 +321,8 @@ namespace netgen
     // static NgArray<int> invpindex;
     invpindex.SetSize (points.Size()); 
     // invpindex = -1;
-    for(auto pi : nearpoints)
-      invpindex[pi] = -1;
+    for(auto n : nearpoints)
+      invpindex[Front2PointIndex::FromNr0(n)] = -1;
 
     for(const auto& li : frontlines)
       {
@@ -342,18 +342,19 @@ namespace netgen
 		pindex.Append (pi);
 		invpindex[pi] = pindex.Size();
                 locpoints.Append (points[pi].P());
-		line[i] = LocalPointIndex(locpoints.Size());
+		line[i] = locpoints.Range().Next()-1;
 	      }
 	    else
-	      line[i] = LocalPointIndex(invpindex[pi]);
+	      line[i] = LocalPointIndex::FromNr0(invpindex[pi]-1);
 	  }
         loclines.Append (line);
       }
 
 
     // double xh2 = xh*xh;
-    for(auto i : nearpoints)
+    for(auto n : nearpoints)
       {
+	Front2PointIndex i = Front2PointIndex::FromNr0(n);
 	if (points[i].Valid() && 
 	    points[i].OnSurface() &&
 	    // Dist2 (points.Get(i).P(), p0) <= xh2 &&
@@ -453,7 +454,7 @@ namespace netgen
   {
     ost << points.Size() << " Points: " << endl;
     // for (int i = points.Begin(); i < points.End(); i++)
-    for (int i : points.Range())
+    for (auto i : points.Range())
       if (points[i].Valid())
 	ost << i << "  " << points[i].P() << endl;
 

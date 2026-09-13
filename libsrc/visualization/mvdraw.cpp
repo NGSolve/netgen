@@ -1020,7 +1020,7 @@ namespace netgen
     float mat_colp[] = { 1, 0, 0, 1 };
     glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
     glBegin (GL_POINTS);
-    for (int i = 1; i <= locpoints.Size(); i++)
+    for (auto i : locpoints.Range())
       {
 	Point3d p = locpoints[i];
 	glVertex3f (p.X(), p.Y(), p.Z());
@@ -1063,7 +1063,7 @@ namespace netgen
 
     glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colp);
     glBegin (GL_POINTS);
-    for (int i = 1; i <= plainpoints.Size(); i++)
+    for (auto i : plainpoints.Range())
       {
 	const auto& p = plainpoints[i];
 	glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);

@@ -99,12 +99,20 @@ namespace ngcore
     constexpr operator bool() const { return false; } };
 
   namespace detail {
+    // index types have no int conversion, report the offset from the first valid index
+    template <typename T, typename Tmin>
+    inline static constexpr ptrdiff_t RangeOffset (const T & n, Tmin first)
+    {
+      if constexpr (std::is_integral_v<T>) return ptrdiff_t(n) - ptrdiff_t(first);
+      else return ptrdiff_t(n-first);
+    }
+
     template <typename T, typename Tmin, typename Tmax>
     inline static constexpr void CheckRange(const char * s, const T& n, Tmin first, Tmax next)
     {
       if constexpr (!IsSafe<decltype(n)>())
         if (n<first || n>=next)
-          ThrowRangeException(s, ptrdiff_t(n), ptrdiff_t(first), ptrdiff_t(next));
+          ThrowRangeException(s, RangeOffset(n,first), 0, RangeOffset(next,first));
     }
 
     template <typename Ta, typename Tb>

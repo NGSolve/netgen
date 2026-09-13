@@ -649,7 +649,8 @@ int AdFront3 :: GetLocals (int fstind,
 		      // INDEX_2 coned(i, other);
 		      // coned.Sort();
 		      // (*testout) << "connected: " << locpoints.Get(i) << "-" << locpoints.Get(other) << endl;
-		      getconnectedpairs.Set (PointIndices<2>::Sort (i, other), 1);
+		      getconnectedpairs.Set (INDEX_2::Sort (i.Nr0(),
+							    other.Nr0()), 1);
 		    }
 		}
 	    }

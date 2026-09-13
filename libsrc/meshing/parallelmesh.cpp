@@ -862,8 +862,8 @@ namespace netgen
 		    bool has_ed = seg.GetIndex() >= 1 && seg.GetIndex() <= GetNED();
 		    int fdi = has_ed ? GetEdgeDescriptor(seg.GetIndex()).GetIndex() : -1;
 		    segm_buf.Add (dest, fdi);
-		    segm_buf.Add (dest, int(seg[0]));
-		    segm_buf.Add (dest, int(seg[1]));
+		    segm_buf.Add (dest, seg[0].Nr0());
+		    segm_buf.Add (dest, seg[1].Nr0());
 		    segm_buf.Add (dest, seg.GeomInfo(0).trignum);
 		    segm_buf.Add (dest, seg.GeomInfo(1).trignum);
 		    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(0) : -1);
@@ -1188,8 +1188,8 @@ namespace netgen
 	  globsegi = int (segmbuf[ii++]);
 	  ii++; // fdi (now on EdgeDescriptor)
 	  
-	  seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-	  seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
+	  seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]) + PointIndex::BASE);
+	  seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]) + PointIndex::BASE);
 	  seg.GeomInfo(0).trignum = int( segmbuf[ii++] );
 	  seg.GeomInfo(1).trignum = int ( segmbuf[ii++]);
 	  ii++; // surfnr1 (on EdgeDescriptor)
@@ -1370,21 +1370,21 @@ namespace netgen
 	eptr.Append (eind.Size());
 	const Element & el = VolumeElement(i+1);
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-IndexBASE<PointIndex>());
+	  eind.Append (el[j].Nr0());
       }
     for (int i = 0; i < GetNSE(); i++)
       {
 	eptr.Append (eind.Size());
 	const Element2d & el = SurfaceElement(i+1);
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-IndexBASE<PointIndex>());
+	  eind.Append (el[j].Nr0());
       }
     for (int i = 0; i < GetNSeg(); i++)
       {
 	eptr.Append (eind.Size());
 	const Segment & el = LineSegment(i+1);
-	eind.Append (el[0]-IndexBASE<PointIndex>());
-	eind.Append (el[1]-IndexBASE<PointIndex>());
+	eind.Append (el[0].Nr0());
+	eind.Append (el[1].Nr0());
       }
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
@@ -1675,7 +1675,7 @@ namespace netgen
 	    nwgt.Append (volume_weights[ind -1]);
 	
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-IndexBASE<PointIndex>());
+	  eind.Append (el[j].Nr0());
       }
     for (int i = 0; i < GetNSE(); i++)
       {
@@ -1692,7 +1692,7 @@ namespace netgen
 
 	
 	for (int j = 0; j < el.GetNP(); j++)
-	  eind.Append (el[j]-IndexBASE<PointIndex>());
+	  eind.Append (el[j].Nr0());
       }
     for (int i = 0; i < GetNSeg(); i++)
       {
@@ -1706,8 +1706,8 @@ namespace netgen
 	else
 	    nwgt.Append (segment_weights[ind -1]);
 	
-	eind.Append (el[0]-IndexBASE<PointIndex>());
-	eind.Append (el[1]-IndexBASE<PointIndex>());
+	eind.Append (el[0].Nr0());
+	eind.Append (el[1].Nr0());
       }
       
     eptr.Append (eind.Size());

@@ -274,13 +274,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   
   py::class_<PointIndex>(m, "PointId")
     .def(py::init<int>(), py::arg("nr"), "from raw index (base-dependent), prefer nr0= / nr1=")
-    .def(py::init([](int nr0) { return PointIndex(IndexBASE<PointIndex>() + nr0); }), py::kw_only(), py::arg("nr0"), "from 0-based point number")
-    .def(py::init([](int nr1) { return PointIndex(IndexBASE<PointIndex>() + nr1 - 1); }), py::kw_only(), py::arg("nr1"), "from 1-based point number")
+    .def(py::init([](int nr0) { return PointIndex(PointIndex::FromNr0(nr0)); }), py::kw_only(), py::arg("nr0"), "from 0-based point number")
+    .def(py::init([](int nr1) { return PointIndex(PointIndex::FromNr0(nr1-1)); }), py::kw_only(), py::arg("nr1"), "from 1-based point number")
     .def("__repr__", &ToString<PointIndex>)
     .def("__str__", &ToString<PointIndex>)
-    .def_property_readonly("nr", &PointIndex::operator int, "raw index (base-dependent), prefer nr0 / nr1")
-    .def_property_readonly("nr0", [](PointIndex pi) { return int(pi - IndexBASE<PointIndex>()); }, "0-based point number")
-    .def_property_readonly("nr1", [](PointIndex pi) { return int(pi - IndexBASE<PointIndex>()) + 1; }, "1-based point number")
+    .def_property_readonly("nr", [](PointIndex pi) { return int(pi); }, "raw index (base-dependent), prefer nr0 / nr1")
+    .def_property_readonly("nr0", [](PointIndex pi) { return int(pi.Nr0()); }, "0-based point number")
+    .def_property_readonly("nr1", [](PointIndex pi) { return int(pi.Nr0()) + 1; }, "1-based point number")
     .def_property_readonly_static("base", [](py::object) { return int(IndexBASE<PointIndex>()); }, "raw index of the first point")
     .def("__eq__" , FunctionPointer( [](PointIndex &self, PointIndex &other)
                   { return static_cast<int>(self)==static_cast<int>(other); }) )
@@ -1834,7 +1834,7 @@ py::arg("point_tolerance") = -1.)
                 {
                     const auto & seg = segs[i];
                     for(auto k : Range(2))
-                      output[2*i+k] = seg[k]-IndexBASE<PointIndex>();
+                      output[2*i+k] = seg[k].Nr0();
                 } });
             return output;
           })
@@ -1853,8 +1853,8 @@ py::arg("point_tolerance") = -1.)
                   // PointIndex p0,p1;
                   // topo.GetEdgeVertices(i+1, p0, p1);
                   auto [p0,p1] = topo.GetEdgeVertices(i);
-                    output[2*i] = p0-IndexBASE<PointIndex>();
-                    output[2*i+1] = p1-IndexBASE<PointIndex>();
+                    output[2*i] = p0.Nr0();
+                    output[2*i+1] = p1.Nr0();
                 } });
             return output;
           })
@@ -1872,7 +1872,7 @@ py::arg("point_tolerance") = -1.)
                     const auto & sel = surfels[i];
                     auto * trig = &trigs[3*i];
                     for(auto k : Range(3))
-                        trig[k] = sel[k]-IndexBASE<PointIndex>();
+                        trig[k] = sel[k].Nr0();
                         // todo: quads (store the second trig in thread-local extra array, merge them at the end (mutex)
                 } });
             return trigs;
@@ -1890,7 +1890,7 @@ py::arg("point_tolerance") = -1.)
                     const auto & el = els[i];
                     auto * trig = &tets[4*i];
                     for(auto k : Range(4))
-                        trig[k] = el[k]-IndexBASE<PointIndex>();
+                        trig[k] = el[k].Nr0();
                         // todo: prisms etc (store the extra tets in thread-local extra array, merge them at the end (mutex)
                 } });
             return tets;

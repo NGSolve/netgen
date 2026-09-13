@@ -195,6 +195,11 @@ namespace netgen
 
     // bool operator== (Index i2) const { return i==i2.i; }
     // bool operator!= (Index i2) const { return i!=i2.i; }
+    /// 0-based number of this index
+    constexpr T Nr0 () const { return i - BASE_; }
+    /// index for a 0-based number
+    static constexpr TIndex FromNr0 (T i0) { return TIndex(T(BASE_) + i0); }
+
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
@@ -251,6 +256,7 @@ namespace netgen
   {
   public:
     using Index::Index;
+    operator int () const = delete;    // a PointIndex stays a PointIndex
     template <int N> friend class PointIndices;    
   };
 
@@ -567,8 +573,12 @@ namespace netgen
   */
   class Front3PointIndex : public Index<int,Front3PointIndex,1>
   {
+    friend class Index<int,Front3PointIndex,1>;
+    constexpr Front3PointIndex (int ai) : Index(ai) { }   // use IndexBASE<Front3PointIndex>()+nr
   public:
     using Index::Index;
+    operator int () const = delete;
+    operator int & () = delete;
   };
 
   /**
@@ -577,8 +587,12 @@ namespace netgen
   */
   class Front2PointIndex : public Index<int,Front2PointIndex,0>
   {
+    friend class Index<int,Front2PointIndex,0>;
+    constexpr Front2PointIndex (int ai) : Index(ai) { }   // use IndexBASE<Front2PointIndex>()+nr
   public:
     using Index::Index;
+    operator int () const = delete;
+    operator int & () = delete;
   };
 
   /**
@@ -587,8 +601,12 @@ namespace netgen
   */
   class LocalPointIndex : public Index<int,LocalPointIndex,1>
   {
+    friend class Index<int,LocalPointIndex,1>;
+    constexpr LocalPointIndex (int ai) : Index(ai) { }   // use IndexBASE<LocalPointIndex>()+nr
   public:
     using Index::Index;
+    operator int () const = delete;
+    operator int & () = delete;
   };
 
   /**
@@ -597,8 +615,12 @@ namespace netgen
   */
   class RulePointIndex : public Index<int,RulePointIndex,1>
   {
+    friend class Index<int,RulePointIndex,1>;
+    constexpr RulePointIndex (int ai) : Index(ai) { }   // use IndexBASE<RulePointIndex>()+nr
   public:
     using Index::Index;
+    operator int () const = delete;
+    operator int & () = delete;
   };
 
   /**
@@ -606,8 +628,12 @@ namespace netgen
   */
   class ElementVertexIndex : public Index<int,ElementVertexIndex,1>
   {
+    friend class Index<int,ElementVertexIndex,1>;
+    constexpr ElementVertexIndex (int ai) : Index(ai) { }   // use IndexBASE<ElementVertexIndex>()+nr
   public:
     using Index::Index;
+    operator int () const = delete;
+    operator int & () = delete;
   };
 
 }
@@ -616,6 +642,8 @@ namespace ngcore
 {
   template<>
   constexpr netgen::Front3PointIndex IndexBASE<netgen::Front3PointIndex> () { return netgen::Front3PointIndex::Base(); }
+  template<>
+  constexpr netgen::Front2PointIndex IndexBASE<netgen::Front2PointIndex> () { return netgen::Front2PointIndex::Base(); }
   template<>
   constexpr netgen::LocalPointIndex IndexBASE<netgen::LocalPointIndex> () { return netgen::LocalPointIndex::Base(); }
   template<>
@@ -628,7 +656,7 @@ namespace netgen
 {
   inline ostream & operator<< (ostream & ost, const Front2PointIndex & fpi)
   {
-    return ost << int(fpi);
+    return ost << (fpi - IndexBASE<Front2PointIndex>());
   }
 
   inline ostream & operator<< (ostream & ost, const Front3PointIndex & fpi)
@@ -639,6 +667,16 @@ namespace netgen
   inline ostream & operator<< (ostream & ost, const LocalPointIndex & lpi)
   {
     return ost << (lpi - IndexBASE<LocalPointIndex>());
+  }
+
+  // rule files number their points 1-based
+  inline constexpr RulePointIndex RuleP (int nr) { return IndexBASE<RulePointIndex>()+nr-1; }
+
+  inline istream & operator>> (istream & ist, RulePointIndex & rpi)
+  {
+    int i; ist >> i;
+    rpi = IndexBASE<RulePointIndex>()+i-1;
+    return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const RulePointIndex & rpi)
@@ -984,8 +1022,11 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
+    /// vertex i of this element
+    PointIndex & PNum (ElementVertexIndex i) { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
     ///
     const PointIndex & PNum (int i) const { return pnum[i-1]; }
+    const PointIndex & PNum (ElementVertexIndex i) const { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
     ///
     PointIndex & PNumMod (int i) { return pnum[(i-1) % np]; }
     ///
@@ -1297,8 +1338,11 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
+    /// vertex i of this element
+    PointIndex & PNum (ElementVertexIndex i) { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
     ///
     const PointIndex & PNum (int i) const { return pnum[i-1]; }
+    const PointIndex & PNum (ElementVertexIndex i) const { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
     ///
     PointIndex & PNumMod (int i) { return pnum[(i-1) % np]; }
     ///

@@ -162,7 +162,7 @@ Front3PointIndex Meshing3 :: AddPoint (const Point3d & p, PointIndex globind)
     {
       size_t oldsize = glob2front.Size();
       glob2front.SetSize (globind+1-IndexBASE<PointIndex>());
-      for (PointIndex pi = IndexBASE<PointIndex>()+oldsize; pi < glob2front.Range().Next(); pi++)
+      for (PointIndex pi = PointIndex::FromNr0(oldsize); pi < glob2front.Range().Next(); pi++)
         glob2front[pi] = Front3PointIndex::INVALID;
     }
   glob2front[globind] = fpi;
@@ -331,9 +331,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       if (loktestmode)
 	{
 	  (*testout) << "baseel = " << baseelem << ", ind = " << findex[0] << endl;
-          int pi1 = pindex[locfaces[0].PNum(1)];
-          int pi2 = pindex[locfaces[0].PNum(2)];
-          int pi3 = pindex[locfaces[0].PNum(3)];
+          Front3PointIndex pi1 = pindex[locfaces[0].PNum(1)];
+          Front3PointIndex pi2 = pindex[locfaces[0].PNum(2)];
+          Front3PointIndex pi3 = pindex[locfaces[0].PNum(3)];
 	  (*testout) << "pi = " << pi1 << ", " << pi2 << ", " << pi3 << endl;
 	}
 
@@ -775,7 +775,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   for(int i = 1; i <= adfront->GetNP(); i++)
     {
-      const auto & p = adfront->GetPoint(Front3PointIndex(i));
+      const auto & p = adfront->GetPoint(Front3PointIndex::FromNr0(i-1));
       if (i == 1)
 	{
 	  xmin = xmax = p(0);

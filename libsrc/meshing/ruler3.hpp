@@ -7,6 +7,8 @@ namespace netgen
 /**
   3D element generation rule.
  */
+class fourpoints { public: RulePointIndex i1, i2, i3, i4; fourpoints() { } };
+
 class vnetrule
 {
 private:
@@ -60,7 +62,7 @@ private:
     */
   NgArray<DenseMatrix*> freefaceinequ;
   /// 
-  NgArray<fourint> orientations;
+  NgArray<fourpoints> orientations;
   /**
     flags specified in rule-description file:
     t .. test rule
@@ -179,7 +181,7 @@ public:
   RulePointIndex GetPointNrMod (int fn, int endp) const
   { return faces.Get(fn).PNumMod(endp); }
   ///
-  const fourint & GetOrientation (int i) { return orientations.Get(i); }
+  const fourpoints & GetOrientation (int i) { return orientations.Get(i); }
 
   ///
   int TestFlag (char flag) const;

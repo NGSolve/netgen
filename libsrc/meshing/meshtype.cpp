@@ -1430,7 +1430,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 1; j <= 4; j++)
-                tet.PNum(j) = linels[i][j-1];
+                tet.PNum(j) = ElementVertexIndex::FromNr0(linels[i][j-1]-1);
               locels.Append (tet);
             }
           break;
@@ -1450,7 +1450,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 1; j <= 4; j++)
-                tet.PNum(j) = linels[i][j-1];
+                tet.PNum(j) = ElementVertexIndex::FromNr0(linels[i][j-1]-1);
               locels.Append (tet);
             }
           break;
@@ -1464,7 +1464,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 1; j <= 4; j++)
-                tet.PNum(j) = linels[i][j-1];
+                tet.PNum(j) = ElementVertexIndex::FromNr0(linels[i][j-1]-1);
               locels.Append (tet);
             }
           break;
@@ -1481,7 +1481,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 0; j < 4; j++)
-                tet[j] = linels[i][j];
+                tet[j] = ElementVertexIndex::FromNr0(linels[i][j]-1);
               locels.Append (tet);
             }
           break;
@@ -1500,7 +1500,7 @@ namespace netgen
             {
               ElementTet tet(4);
               for (j = 0; j < 4; j++)
-                tet[j] = linels[i][j];
+                tet[j] = ElementVertexIndex::FromNr0(linels[i][j]-1);
               locels.Append (tet);
             }
           break;
@@ -1865,9 +1865,8 @@ namespace netgen
     for (j = 0; j < nf; j++)
       {
         surftrigs.Elem(j+1) = ElementFace(3);
-        surftrigs.Elem(j+1).PNum(1) = fp[j][0];
-        surftrigs.Elem(j+1).PNum(2) = fp[j][1];
-        surftrigs.Elem(j+1).PNum(3) = fp[j][2];
+        for (int k = 0; k < 3; k++)
+          surftrigs.Elem(j+1).PNum(k+1) = ElementVertexIndex::FromNr0(fp[j][k]-1);
       }
   }
 
@@ -2951,8 +2950,8 @@ namespace netgen
     // can we get data by reference ? 
     for (auto [hash,data] : identifiedpoints)
       {
-        if (hash.I1() > IndexBASE<PointIndex>()+maxpnum-1 ||
-            hash.I2() > IndexBASE<PointIndex>()+maxpnum-1)
+        if (hash.I1() > PointIndex::FromNr0(maxpnum-1) ||
+            hash.I2() > PointIndex::FromNr0(maxpnum-1))
           {
             identifiedpoints[hash] = -1;
           }

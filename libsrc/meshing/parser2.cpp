@@ -97,20 +97,21 @@ void netrule :: LoadRule (istream & ist)
 	      noldp++;
 
 	      tolerances.SetSize (noldp);
-	      tolerances[noldp].f1 = 1.0;
-	      tolerances[noldp].f2 = 0;
-	      tolerances[noldp].f3 = 1.0;
+	      auto & tol = tolerances[tolerances.Range().Next()-1];
+	      tol.f1 = 1.0;
+	      tol.f2 = 0;
+	      tol.f3 = 1.0;
 
 	      ist >> ch;
 	      while (ch != ';')
 		{
 		  if (ch == '{')
 		    {
-		      ist >> tolerances[noldp].f1;
+		      ist >> tol.f1;
 		      ist >> ch;  // ','
-		      ist >> tolerances[noldp].f2;
+		      ist >> tol.f2;
 		      ist >> ch;  // ','
-		      ist >> tolerances[noldp].f3;
+		      ist >> tol.f3;
 		      ist >> ch;  // '}'
 		    }
 		  else if (ch == 'd')
@@ -136,9 +137,9 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> (int&)lin[0];
+	      ist >> lin[0];
 	      ist >> ch;    // ','
-	      ist >> (int&)lin[1];
+	      ist >> lin[1];
 	      ist >> ch;    // ')'
 
 
@@ -226,9 +227,9 @@ void netrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> (int&)lin[0];
+	      ist >> lin[0];
 	      ist >> ch;    // ','
-	      ist >> (int&)lin[1];
+	      ist >> lin[1];
 	      ist >> ch;    // ')'
 
 	      lines.Append (lin);
@@ -334,23 +335,23 @@ void netrule :: LoadRule (istream & ist)
 	    {
 	      elements.Append (RuleElement2d(3));
 
-	      ist >> (int&)elements.Last().PNum(1);
+	      ist >> elements.Last().PNum(1);
 	      ist >> ch;    // ','
 	  
 	      if (ch == COMMASIGN)
 		{
-		  ist >> (int&)elements.Last().PNum(2);
+		  ist >> elements.Last().PNum(2);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
-		  ist >> (int&)elements.Last().PNum(3);
+		  ist >> elements.Last().PNum(3);
 		  ist >> ch;    // ','
 		}
 	      if (ch == COMMASIGN)
 		{
 		  elements.Last().SetNP (4);
-		  ist >> (int&)elements.Last().PNum(4);
+		  ist >> elements.Last().PNum(4);
 		  ist >> ch;    // ','
 		  
 		  // const Element2d & el = elements.Last();
@@ -384,11 +385,11 @@ void netrule :: LoadRule (istream & ist)
 	      //        threeint a = threeint();
 	      orientations.Append (threeint());
 
-	      ist >> (int&)orientations.Last().i1;
+	      ist >> orientations.Last().i1;
 	      ist >> ch;    // ','
-	      ist >> (int&)orientations.Last().i2;
+	      ist >> orientations.Last().i2;
 	      ist >> ch;    // ','
-	      ist >> (int&)orientations.Last().i3;
+	      ist >> orientations.Last().i3;
 	      ist >> ch;    // ','
 
 	      ist >> ch;

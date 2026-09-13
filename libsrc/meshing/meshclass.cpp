@@ -441,8 +441,8 @@ namespace netgen
 
     // int maxn = max2 (s[0], s[1]);
     // maxn += 1-PointIndex::BASE;
-    int maxn = max2 (s[0]-IndexBASE<PointIndex>()+1,
-                     s[1]-IndexBASE<PointIndex>()+1);
+    int maxn = max2 (s[0].Nr0()+1,
+                     s[1].Nr0()+1);
 
     /*
       if (maxn > ptyps.Size())
@@ -539,7 +539,7 @@ namespace netgen
     PointIndex maxpi = el[0];
     for (int i = 1; i < el.GetNP(); i++)
       if (el[i] > maxpi) maxpi = el[i];
-    int maxn = maxpi-IndexBASE<PointIndex>()+1;
+    int maxn = maxpi.Nr0()+1;
 
     
     if (maxn <= points.Size())
@@ -3391,7 +3391,7 @@ namespace netgen
 
         if (surfnr == 0 || seg_fdi(seg) == surfnr)
           {
-            INDEX_3 key{ int(seg[0]), int(seg[1]), seg_fdi(seg) };
+            PointIndices<3> key (seg[0], seg[1], seg_fdi(seg));
             int data = -i;
 
             if (faceht.Used (key))
@@ -5337,7 +5337,7 @@ namespace netgen
 
             // make minimal node to node 1
             int minpi=0;
-            PointIndex minpnum = IndexBASE<PointIndex>()+GetNP();
+            PointIndex minpnum = PointIndex::FromNr0(GetNP());
 
             for (int j = 1; j <= 6; j++)
               {
@@ -6412,12 +6412,14 @@ namespace netgen
             const ElementTet & le = loctetsloc.Get(j);
 
 
-            const auto & lp1 = pointsloc.Get(le.PNum(1));
+            auto locp = [&](int j) -> const netgen::Point<3> &
+              { return pointsloc.Get(le.PNum(j).Nr0()+1); };
+            const auto & lp1 = locp(1);
             netgen::Point<3> pp =
               lp1
-              + sol.X() * (pointsloc.Get(le.PNum(2)) - lp1)
-              + sol.Y() * (pointsloc.Get(le.PNum(3)) - lp1)
-              + sol.Z() * (pointsloc.Get(le.PNum(4)) - lp1);
+              + sol.X() * (locp(2) - lp1)
+              + sol.Y() * (locp(3) - lp1)
+              + sol.Z() * (locp(4) - lp1);
 
             lami[0] = pp(0);
             lami[1] = pp(1);
@@ -7377,12 +7379,12 @@ namespace netgen
 
     numvertices += 1-PointIndex::BASE;
     */
-    numvertices = 0;    
+    numvertices = -1;
     numvertices =
       ParallelReduce (VolumeElements().Size(),
                       [&](size_t nr)
                       {
-                        return int(Max(VolumeElements()[nr].Vertices()));
+                        return Max(VolumeElements()[nr].Vertices()) - IndexBASE<PointIndex>();
                       },
                       [](auto a, auto b) { return a > b ?  a : b; },
                       numvertices);
@@ -7390,7 +7392,7 @@ namespace netgen
       ParallelReduce (SurfaceElements().Size(),
                       [&](size_t nr)
                       {
-                        return int(Max(SurfaceElements()[nr].Vertices()));
+                        return Max(SurfaceElements()[nr].Vertices()) - IndexBASE<PointIndex>();
                       },
                       [](auto a, auto b) { return a > b ?  a : b; },
                       numvertices);
@@ -7398,11 +7400,11 @@ namespace netgen
       ParallelReduce (LineSegments().Size(),
                       [&](size_t nr)
                       {
-                        return int(Max(LineSegments()[nr].Vertices()));
+                        return Max(LineSegments()[nr].Vertices()) - IndexBASE<PointIndex>();
                       },
                       [](auto a, auto b) { return a > b ?  a : b; },
                       numvertices);
-    numvertices += 1-PointIndex::BASE;    
+    numvertices += 1;
   }
 
   int Mesh :: GetNV () const
