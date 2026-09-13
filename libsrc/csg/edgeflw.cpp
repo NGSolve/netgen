@@ -42,7 +42,7 @@ namespace netgen
     PushStatus ("Find edges");
 
     for (PointIndex pi : mesh.Points().Range())    
-      meshpoint_tree->Insert (mesh[pi], pi);
+      meshpoint_tree->Insert (mesh[pi], int(pi));
 
 
     // add all special points before edge points (important for periodic identification)
@@ -60,7 +60,7 @@ namespace netgen
 	  if (locsearch.Size() == 0)
             {
               PointIndex pi = mesh.AddPoint (p, specpoints[i].GetLayer(), FIXEDPOINT);
-              meshpoint_tree -> Insert (p, pi); 
+              meshpoint_tree -> Insert (p, int(pi)); 
             }
         }
            
@@ -328,8 +328,8 @@ namespace netgen
 
 	if (!shortedge)
 	  {
-	    mesh.RestrictLocalHLine (Point3d (specpoints[hsp.Get(pi1)].p), 
-				     Point3d (specpoints[hsp.Get(ep)].p), 
+	    mesh.RestrictLocalHLine (specpoints[hsp.Get(pi1)].p, 
+				     specpoints[hsp.Get(ep)].p, 
 				     elen / mparam.segmentsperedge);
 	  }
       
@@ -589,16 +589,16 @@ namespace netgen
   SplitEqualOneSegEdges (Mesh & mesh)
     {
     //    int i, j;
-    SegmentIndex si;
     // PointIndex pi;
 
     NgArray<int> osedges(cntedge);
+    NgArray<PointIndex> edgenewp(cntedge);    // new point inserted on edge
     INDEX_2_HASHTABLE<int> osedgesht (cntedge+1);
 
     osedges = 2;
 
     // count segments on edges
-    for (si = 0; si < mesh.GetNSeg(); si++)
+    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
@@ -610,7 +610,7 @@ namespace netgen
     for (int i = 0; i < cntedge; i++)
       osedges[i] = (osedges[i] > 0) ? 1 : 0;
 
-    for (si = 0; si < mesh.GetNSeg(); si++)
+    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
@@ -618,8 +618,7 @@ namespace netgen
 	  {
 	    if (osedges.Get(seg_ednr))
 	      {
-		INDEX_2 i2(seg[0], seg[1]);
-		i2.Sort ();
+		SortedPointIndices<2> i2(seg[0], seg[1]);
 		if (osedgesht.Used (i2))
 		  osedgesht.Set (i2, 2);
 		else
@@ -676,32 +675,30 @@ namespace netgen
 
 
     // insert new points
-    osedges = -1;
+    edgenewp = PointIndex::INVALID;
 
     int nseg = mesh.GetNSeg();
-    for (si = 0; si < nseg; si++)
+    for (SegmentIndex si = 0; si < nseg; si++)
       {
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
 	if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
-	    INDEX_2 i2(seg[0], seg[1]);
-	    i2.Sort ();
+	    SortedPointIndices<2> i2(seg[0], seg[1]);
 	    if (osedgesht.Used (i2) &&
 		osedgesht.Get (i2) == 2 &&
-		osedges.Elem(seg_ednr) == -1)
+		!edgenewp.Elem(seg_ednr).IsValid())
 	      {
-		Point<3> newp = Center (mesh[PointIndex(seg[0])],
-					mesh[PointIndex(seg[1])]);
+		Point<3> newp = Center (mesh[seg[0]], mesh[seg[1]]);
 
 		const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
 		ProjectToEdge (geometry.GetSurface(ed.SurfNr(0)), 
 			       geometry.GetSurface(ed.SurfNr(1)), 
 			       newp);
 
-		osedges.Elem(seg_ednr) = 
-		  mesh.AddPoint (newp, mesh[PointIndex(seg[0])].GetLayer(), EDGEPOINT);
-		meshpoint_tree -> Insert (newp, osedges.Elem(seg_ednr));
+		edgenewp.Elem(seg_ednr) = 
+		  mesh.AddPoint (newp, mesh[seg[0]].GetLayer(), EDGEPOINT);
+		meshpoint_tree -> Insert (newp, int(edgenewp.Elem(seg_ednr)));
 	      }
 	  }
       }
@@ -714,11 +711,11 @@ namespace netgen
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
 	if (seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
-	    if (osedges.Get(seg_ednr) != -1)
+	    if (edgenewp.Get(seg_ednr).IsValid())
 	      {
 		Segment newseg = seg;
-		newseg[0] = osedges.Get(seg_ednr);
-		seg[1] = osedges.Get(seg_ednr);
+		newseg[0] = edgenewp.Get(seg_ednr);
+		seg[1] = edgenewp.Get(seg_ednr);
 		mesh.AddSegment (newseg);
 		seg_seginfo.Append(seg_seginfo[si]);
 	      }
@@ -1372,7 +1369,7 @@ namespace netgen
   {
   
     // Calculate optimal element-length
-    int i, j, k;
+    int j;
     // PointIndex pi;
     int ne;
 
@@ -1423,12 +1420,12 @@ namespace netgen
     if (!lastpi.IsValid())
       {
 	lastpi = mesh.AddPoint (p, layer, FIXEDPOINT);
-	meshpoint_tree -> Insert (p, lastpi); 
+	meshpoint_tree -> Insert (p, int(lastpi)); 
 	// (*testout) << "test1, store point " << lastpi << ", p = " << p << endl;
       }
   
     j = 1;
-    for (i = 1; i <= ne; i++)
+    for (int i = 1; i <= ne; i++)
       {
 	while (curvelength.Get(j) < i * corr && j < curvelength.Size()) j++;
 
@@ -1461,11 +1458,11 @@ namespace netgen
 	    ProjectToEdge (surf1, surf2, np);
 	    thispi = mesh.AddPoint (np, layer, (i==ne) ? FIXEDPOINT : EDGEPOINT);
 	   
-	    meshpoint_tree -> Insert (np, thispi);
+	    meshpoint_tree -> Insert (np, int(thispi));
 	    // (*testout) << "test2, store point " << thispi << ", p = " << np << endl;
 	  }
 
-	for (k = 1; k <= refedges.Size(); k++)
+	for (int k = 1; k <= refedges.Size(); k++)
 	  {
 	    if (refedgesinv.Get(k))
 	      {
@@ -1540,7 +1537,6 @@ namespace netgen
   {
   
     // Calculate optimal element-length
-    PointIndex pi;
     // int ne;
     Segment seg;
 
@@ -1577,13 +1573,13 @@ namespace netgen
     if (!pi1.IsValid())
       {
 	pi1 = mesh.AddPoint (p, layer, FIXEDPOINT);
-	meshpoint_tree -> Insert (p, pi1);
+	meshpoint_tree -> Insert (p, int(pi1));
 	// (*testout) << "test3, store point " << pi1 << ", p = " << p << endl;
       }
 
     p = edgepoints.Last();
     PointIndex pi2 = PointIndex::INVALID;
-    for (pi = IndexBASE<PointIndex>(); 
+    for (PointIndex pi = IndexBASE<PointIndex>(); 
 	 pi < mesh.GetNP()+IndexBASE<PointIndex>(); pi++)
 
       if (Dist (mesh[pi], p) < 1e-6*geometry.MaxSize())
@@ -1594,7 +1590,7 @@ namespace netgen
     if (!pi2.IsValid())
       {
 	pi2 = mesh.AddPoint (p, layer, FIXEDPOINT);
-	meshpoint_tree -> Insert (p, pi2);
+	meshpoint_tree -> Insert (p, int(pi2));
 	// (*testout) << "test4, store point " << pi2 << ", p = " << p << endl;
       }
 
@@ -1666,7 +1662,6 @@ namespace netgen
 	    int layer,
 	    Mesh & mesh)
   {
-    int k;
     // PointIndex pi;
 
 #ifdef DEVELOP    
@@ -1702,7 +1697,7 @@ namespace netgen
 	if (!topi.IsValid())
 	  {
 	    topi = mesh.AddPoint (top, layer, FIXEDPOINT);
-	    meshpoint_tree -> Insert (top, topi);
+	    meshpoint_tree -> Insert (top, int(topi));
 	  }
 
 	const Identification & csi = 
@@ -1756,7 +1751,7 @@ namespace netgen
 
 	Segment seg;
 
-	for (k = 1; k <= refedges.Size(); k++)
+	for (int k = 1; k <= refedges.Size(); k++)
 	  {
 	    bool inv = refedgesinv.Get(k);
 
