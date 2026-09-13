@@ -17,8 +17,6 @@ namespace netgen
 		      // double h, double h1, double h2, double hcurve, 
 		      double elto0, Array<double> & points)
   {
-    double fperel, oldf, f;
-
     int n = 1;
     Array<Point<2> > xi;
     Array<double> hi;
@@ -73,19 +71,19 @@ namespace netgen
 
     int nel = int (sum+0.5);
     if (nel == 0) nel = 1;
-    fperel = sum / nel;
+    double fperel = sum / nel;
 
     points.Append (0);
 
     int i = 1;
-    oldf = 0;
+    double oldf = 0;
 
     for (int j = 1; j <= n && i < nel; j++)
       {
 	// double t = (j-0.5)*dt;
 	double fun = hi[j-1];
 
-	f = oldf + dt / fun;
+	double f = oldf + dt / fun;
 
 	while (i * fperel < f && i < nel)
 	  {
@@ -158,31 +156,35 @@ namespace netgen
 	      PointIndex pi2{PointIndex::INVALID};
 
 	  
-	      Point3d mark3(mark(0), mark(1), 0);
-	      Point3d oldmark3(oldmark(0), oldmark(1), 0);
+	      Point<3> mark3(mark(0), mark(1), 0);
+	      Point<3> oldmark3(oldmark(0), oldmark(1), 0);
 
 	      double h = mesh.GetH (Point<3> (oldmark(0), oldmark(1), 0));
 	      Vec<3> v (1e-4*h, 1e-4*h, 1e-4*h);
 	      searchtree.GetIntersecting (oldmark3 - v, oldmark3 + v, locsearch);
 
 	      for (int k = 0; k < locsearch.Size(); k++)
-		if ( mesh[PointIndex(locsearch[k])].GetLayer() == spline.layer)
-		  pi1 = locsearch[k];
+		{
+		  PointIndex pk = locsearch[k];
+		  if (mesh[pk].GetLayer() == spline.layer) pi1 = pk;
+		}
 	      
 	      searchtree.GetIntersecting (mark3 - v, mark3 + v, locsearch);
 	      for (int k = 0; k < locsearch.Size(); k++)
-		if ( mesh[PointIndex(locsearch[k])].GetLayer() == spline.layer)
-		  pi2 = locsearch[k];
+		{
+		  PointIndex pk = locsearch[k];
+		  if (mesh[pk].GetLayer() == spline.layer) pi2 = pk;
+		}
 
 	      if (!pi1.IsValid())
 		{
 		  pi1 = mesh.AddPoint(oldmark3, spline.layer);
-		  searchtree.Insert (oldmark3, pi1);
+		  searchtree.Insert (oldmark3, int(pi1));
 		}
 	      if (!pi2.IsValid())
 		{
 		  pi2 = mesh.AddPoint(mark3, spline.layer);
-		  searchtree.Insert (mark3, pi2);
+		  searchtree.Insert (mark3, int(pi2));
 		}
 
 	      Segment seg;
@@ -286,11 +288,11 @@ namespace netgen
           Point<3> newp(point(0), point(1), 0);
           PointIndex npi = mesh2d.AddPoint (newp, 1, FIXEDPOINT);
           mesh2d.AddLockedPoint(npi);
-          Element0d el(npi, npi);
+          Element0d el(npi, npi-IndexBASE<PointIndex>()+1);
           el.name = point.name;
           mesh2d.SetCD2Name(npi-IndexBASE<PointIndex>()+1, point.name);
           mesh2d.pointelements.Append (el);
-          searchtree.Insert (newp, npi);          
+          searchtree.Insert (newp, int(npi));          
         }
 
     // first add all vertices (for compatible orientation on periodic bnds)
@@ -311,7 +313,7 @@ namespace netgen
 	    if (!npi.IsValid())
 	      {
 		npi = mesh2d.AddPoint (newp, layer);
-		searchtree.Insert (newp, npi);
+		searchtree.Insert (newp, int(npi));
                 mesh2d.AddLockedPoint(npi);
                 Element0d el(npi, npi-IndexBASE<PointIndex>()+1);
                 el.name = "";
@@ -352,7 +354,7 @@ namespace netgen
     mappoints = PointIndex::INVALID;
     param = 0;
 
-    Point3d pmin, pmax;
+    Point<3> pmin, pmax;
     mesh.GetBox (pmin, pmax);
     double diam2 = Dist2(pmin, pmax);
 
@@ -387,7 +389,7 @@ namespace netgen
 	    if (!npi.IsValid())
 	      {
 		npi = mesh.AddPoint (newp3);
-		searchtree.Insert (newp3, npi);
+		searchtree.Insert (newp3, int(npi));
 	      }
 
 	    mappoints[i] = npi;
@@ -456,8 +458,8 @@ namespace netgen
     // mesh = make_shared<Mesh>();
     mesh->SetDimension (2);
 
-    Point3d pmin(bbox.PMin()(0), bbox.PMin()(1), -bbox.Diam());
-    Point3d pmax(bbox.PMax()(0), bbox.PMax()(1), bbox.Diam());
+    Point<3> pmin(bbox.PMin()(0), bbox.PMin()(1), -bbox.Diam());
+    Point<3> pmax(bbox.PMax()(0), bbox.PMax()(1), bbox.Diam());
 
     mesh->SetLocalH (pmin, pmax, mp.grading);
     mesh->SetGlobalH (mp.maxh);
@@ -562,12 +564,12 @@ namespace netgen
           Array<int, PointIndex> si1(bnp), si2(bnp);
           // PointIndex firstpi;
           
-          nextpi = -1;
+          nextpi = PointIndex::INVALID;
           si1 = -1;
           si2 = -1;
           for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
             {
-              int p1 = -1, p2 = -2;
+              PointIndex p1 = PointIndex::INVALID, p2 = PointIndex::INVALID;
 
               const auto & ed = mesh->GetEdgeDescriptor((*mesh)[si].GetIndex());
               if ( ed.DomainIn() == domnr)
@@ -575,7 +577,7 @@ namespace netgen
               if ( ed.DomainOut() == domnr)
                 { p1 = (*mesh)[si][1]; p2 = (*mesh)[si][0]; }
               
-              if (p1 == -1) continue;
+              if (!p1.IsValid()) continue;
 
               nextpi[p1] = p2;       // counter-clockwise
               
@@ -586,7 +588,7 @@ namespace netgen
                 { si2[p2] = si1[p2]; si1[p2] = index; }
             }
 
-          PointIndex c1(0), c2, c3, c4;  // 4 corner points
+          PointIndex c1 = PointIndex::INVALID, c2, c3, c4;  // 4 corner points
           int nex = 1, ney = 1;
 
           // for (PointIndex pi = 1; pi <= si2.Size(); pi++)
@@ -601,7 +603,7 @@ namespace netgen
 
 
           Array<PointIndex> pts ( (nex+1) * (ney+1) );   // x ... inner loop
-          pts = -1;
+          pts = PointIndex::INVALID;
 
           int i = 0;
           for (PointIndex pi = c1; pi != c2; pi = nextpi[pi], i++)
@@ -617,10 +619,12 @@ namespace netgen
             pts[(nex+1)*(ney-i)] = pi;
 
 
-          for (PointIndex pix = nextpi[c1], ix = 0; pix != c2; pix = nextpi[pix], ix++)
+          int ix = 0;
+          for (PointIndex pix = nextpi[c1]; pix != c2; pix = nextpi[pix], ix++)
           {
             Point<3> px = (*mesh)[pix];
-            for (PointIndex piy = nextpi[c2], iy = 0; piy != c3; piy = nextpi[piy], iy++)
+            int iy = 0;
+            for (PointIndex piy = nextpi[c2]; piy != c3; piy = nextpi[piy], iy++)
               {
                 double lam = Dist((*mesh)[piy],(*mesh)[c2]) / Dist((*mesh)[c3],(*mesh)[c2]);
                 auto pix1 = pts[(nex+1)*ney+ix+1];
