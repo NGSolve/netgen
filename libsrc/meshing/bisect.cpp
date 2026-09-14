@@ -527,8 +527,8 @@ namespace netgen
 			e2[0] = (*idmaps[k])[e1[0]];
 			e2[1] = (*idmaps[k])[e1[1]];
 			
-			if(!e2.I1().IsValid() || !e2.I2().IsValid() ||
-			   e1.I1() == e2.I1() || e1.I2() == e2.I2())
+			if(!e2[0].IsValid() || !e2[1].IsValid() ||
+			   e1[0] == e2[0] || e1[1] == e2[1])
 			  continue;
 			
 			e2.Sort();
@@ -681,7 +681,7 @@ namespace netgen
 	int cnt = 0;
 	bool found;
 	double len2, maxlen2;
-	INDEX_2 ep;
+	PointIndices<2> ep;
       
 	// sort edges by length, parallel edges (on prisms)
 	// are added in blocks
@@ -750,8 +750,8 @@ namespace netgen
 		    i2.Sort();
 		    if (!edgenumber.Used(i2))
 		      {
-			len2 = Dist (mesh.Point (i2.I1()),
-				     mesh.Point (i2.I2()));
+			len2 = Dist (mesh.Point (i2[0]),
+				     mesh.Point (i2[1]));
 			if (len2 < maxlen2)
 			  {
 			    maxlen2 = len2;
@@ -2018,7 +2018,7 @@ namespace netgen
 	mquads.SetSize(0);
 	
 	
-	INDEX_2_HASHTABLE<int> shortedges(100);
+	ClosedHashTable<SortedPointIndices<2>, int> shortedges(128);
 	// for (int i = 1; i <= ne; i++)
         for (auto ei : mesh.VolumeElements().Range())
 	  {
@@ -2293,7 +2293,7 @@ namespace netgen
     mquads.SetSize(0);
 
 
-    INDEX_2_HASHTABLE<int> shortedges(100);
+    ClosedHashTable<SortedPointIndices<2>, int> shortedges(128);
     for (i = 1; i <= ne; i++)
       {
 	const Element & el = mesh.VolumeElement(i);
@@ -3466,8 +3466,8 @@ namespace netgen
 			newp.Append(cutedges.Get(edges[j]));
 		      else
 			{
-			  Point<3> npt = Center (mesh.Point (edges[j].I1()),
-						mesh.Point (edges[j].I2()));
+			  Point<3> npt = Center (mesh.Point (edges[j][0]),
+						mesh.Point (edges[j][1]));
 			  newp.Append(mesh.AddPoint(npt));
 			  cutedges.Set(edges[j],newp[j]);
 			}			 
@@ -3599,12 +3599,12 @@ namespace netgen
 		  PointGeomInfo npgi1, npgi2;
 		
 		  int si = mesh.GetFaceDescriptor (oldquad.surfid).SurfNr();
-                  geo.PointBetween(mesh.Point (edge1.I1()), mesh.Point (edge1.I2()),
+                  geo.PointBetween(mesh.Point (edge1[0]), mesh.Point (edge1[1]),
                                    0.5, si,
                                    pgi11,
                                    pgi12,
                                    mesh.Point (newp1), npgi1);
-                  geo.PointBetween (mesh.Point (edge2.I1()), mesh.Point (edge2.I2()),
+                  geo.PointBetween (mesh.Point (edge2[0]), mesh.Point (edge2[1]),
                                     0.5, si,
                                     pgi21,
                                     pgi22,

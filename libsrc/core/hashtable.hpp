@@ -225,12 +225,23 @@ namespace ngcore
     return *this;
   }
 
+  template <int N, typename T>
+  NETGEN_INLINE bool operator< (const IVec<N,T> & a, const IVec<N,T> & b)
+  {
+    for (int j = 0; j < N; j++)
+      {
+        if (a[j] < b[j]) return true;
+        if (b[j] < a[j]) return false;
+      }
+    return false;
+  }
+
   /// Print integers
   template <int N, typename T>
   inline ostream & operator<<(ostream  & s, const IVec<N,T> & i2)
   {
     for (int j = 0; j < N; j++)
-      s << (int) i2[j] << " ";
+      s << i2[j] << " ";
     return s;
   }
   

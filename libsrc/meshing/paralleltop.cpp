@@ -698,7 +698,7 @@ namespace netgen
 	auto ex2loc = dest2vert[dest];
 	if (ex2loc.Size() == 0) continue;
 
-	INDEX_2_CLOSED_HASHTABLE<int> vert2edge(2*dest2edge[dest].Size()+10); 
+	ClosedHashTable<PointIndices<2>, int> vert2edge(4*dest2edge[dest].Size()+16);
 	for (int edge : dest2edge[dest])
 	  {
 	    // topology.GetEdgeVertices (edge, v1, v2);

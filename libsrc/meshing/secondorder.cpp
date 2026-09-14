@@ -21,7 +21,7 @@ namespace netgen
     // mesh.SetNP(mesh.GetNV());
     mesh.SetNP(mesh.GetNP());  // setup multilevel-table
 
-    INDEX_2_HASHTABLE<PointIndex> between(mesh.GetNP() + 5);
+    ClosedHashTable<SortedPointIndices<2>, PointIndex> between(2*mesh.GetNP() + 8);
 
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
@@ -362,12 +362,8 @@ namespace netgen
 	idmap_type identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
-	for (INDEX_2_HASHTABLE<PointIndex>::Iterator it = between.Begin();
-	     it != between.End(); it++)
+	for (auto [i2, newpi] : between)
 	  {
-              PointIndices<2> i2;
-	      PointIndex newpi;
-	      between.GetData (it, i2, newpi);
 	      if (!identmap[i2[0]].IsValid() || !identmap[i2[1]].IsValid()) continue;
 	      PointIndices<2> oi2(identmap[i2[0]], 
                                   identmap[i2[1]]);
@@ -416,11 +412,8 @@ namespace netgen
 	}
     */
 
-    for (INDEX_2_HASHTABLE<PointIndex>::Iterator it = between.Begin();
-	 it != between.End(); it++)
-      {
-	mesh.mlbetweennodes[between.GetData (it)] = between.GetHash(it);
-      }
+    for (auto [i2, newpi] : between)
+      mesh.mlbetweennodes[newpi] = i2;
 
     mesh.ComputeNVertices();
     mesh.RebuildSurfaceElementLists();

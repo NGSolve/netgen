@@ -699,7 +699,7 @@ namespace netgen
             return;
 
     // maps from edges to adjacent trigs
-    INDEX_2_HASHTABLE<tuple<SurfaceElementIndex, SurfaceElementIndex>> els_on_edge(2*elements.Size() + 2);
+    ClosedHashTable<SortedPointIndices<2>, tuple<SurfaceElementIndex, SurfaceElementIndex>> els_on_edge(4*elements.Size() + 8);
 
     // build els_on_edge table
     for (SurfaceElementIndex sei : elements)

@@ -299,37 +299,33 @@ namespace netgen
 
 
   /*
-    PointIndices<2> etc are derived from historic INDEX_2 etc to be useable in old HASHTABLEs.
-    Will change to IVec<2> or std::array when INDEX_2 is not needed anymore
+    PointIndices<2> is IVec<2,PointIndex> based; use operator[], not I1()/I2().
+    PointIndices<3>/<4> are still derived from historic INDEX_3/INDEX_4 to be
+    useable in the remaining old HASHTABLEs, and will follow once those are gone.
    */
   
   template <int N> class PointIndices;
-  template <> class PointIndices<2> : public INDEX_2
+  template <> class PointIndices<2> : public IVec<2,PointIndex>
   {
+    using BASE = IVec<2,PointIndex>;
   public:
     PointIndices () = default;
     constexpr PointIndices (const PointIndices&) = default;
     constexpr PointIndices (PointIndices&&) = default;
     PointIndices & operator= (const PointIndices&) = default;
     PointIndices & operator= (PointIndices&&) = default;
-    
-    constexpr PointIndices (INDEX_2 i2) : INDEX_2(i2) { ; }
-    constexpr PointIndices (PointIndex i1, PointIndex i2) : INDEX_2(i1.i,i2.i) { ; } 
-    constexpr PointIndex operator[] (int i) const { return PointIndex(INDEX_2::operator[](i)); }
-    PointIndex & operator[] (int i) { return reinterpret_cast<PointIndex&>(INDEX_2::operator[](i)); }
+
+    constexpr PointIndices (BASE i2) : BASE(i2) { ; }
+    constexpr PointIndices (PointIndex i1, PointIndex i2) : BASE(i1,i2) { ; }
 
     template <typename ARCHIVE>
     void DoArchive(ARCHIVE& ar) { for (int k = 0; k < 2; k++) (*this)[k].DoArchive(ar); }
-    
-    PointIndex & I1 () { return (*this)[0]; }
-    PointIndex & I2 () { return (*this)[1]; }
-    PointIndex I1 () const { return (*this)[0]; }
-    PointIndex I2 () const { return (*this)[1]; }
-    
-    using INDEX_2::Sort;
-    static PointIndices Sort(PointIndex i1, PointIndex i2) { return INDEX_2::Sort(i1.i, i2.i); }
+
+    using BASE::Sort;
+    static constexpr PointIndices Sort(PointIndex i1, PointIndex i2)
+    { return (i1 < i2) ? PointIndices(i1,i2) : PointIndices(i2,i1); }
     template <size_t J>
-    PointIndex get() const { return PointIndex(INDEX_2::operator[](J)); }    
+    PointIndex get() const { return (*this)[J]; }
   };
   
   template <> class PointIndices<3> : public INDEX_3
@@ -393,7 +389,13 @@ namespace netgen
   class SortedPointIndices : public PointIndices<N>
   {
     using PointIndices<N>::Sort;
+    struct ordered_t { };
+    constexpr SortedPointIndices (ordered_t, PointIndices<N> pnts)
+      : PointIndices<N>(pnts) { }
   public:
+    /// for values that are known to be ordered already (skips the sort)
+    static constexpr SortedPointIndices Ordered (PointIndices<N> pnts)
+    { return SortedPointIndices(ordered_t{}, pnts); }
     constexpr SortedPointIndices (PointIndices<N> pnts)
       : PointIndices<N>(pnts.Sort()) { } 
     
@@ -432,7 +434,8 @@ namespace ngcore
   template <>
   struct CHT_trait<netgen::SortedPointIndices<2>>
   {
-    constexpr static inline netgen::SortedPointIndices<2> Invalid() { return { netgen::PointIndex::INVALID, netgen::PointIndex::INVALID} ; }
+    constexpr static inline netgen::SortedPointIndices<2> Invalid()
+    { return netgen::SortedPointIndices<2>::Ordered ({ netgen::PointIndex::INVALID, netgen::PointIndex::INVALID }); }
     constexpr static inline size_t HashValue (const netgen::SortedPointIndices<2> & hash, size_t mask)
     // { return HashValue2(IVec<2,netgen::INDEX>(hash[0], hash[1]), mask); }
     { return CHT_trait<netgen::PointIndices<2>>::HashValue (hash, mask); }

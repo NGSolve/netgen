@@ -121,10 +121,10 @@ namespace netgen
           {
             PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
 
-            int edgedir = (edge.I1() > edge.I2());
-            if (edgedir) swap (edge.I1(), edge.I2());
+            int edgedir = (edge[0] > edge[1]);
+            if (edgedir) swap (edge[0], edge[1]);
             
-            if (edge.I1() != v) continue;
+            if (edge[0] != v) continue;
 
             func (edge, elnr, k, 2);
           }        
@@ -134,11 +134,11 @@ namespace netgen
       {
         const Segment & el = mesh[elnr];
         PointIndices<2> edge(el[0], el[1]);
-        int edgedir = (edge.I1() > edge.I2());
-        if (edgedir) swap (edge.I1(), edge.I2());
+        int edgedir = (edge[0] > edge[1]);
+        if (edgedir) swap (edge[0], edge[1]);
         
         edge.Sort();
-        if (edge.I1() != v) continue;
+        if (edge[0] != v) continue;
         
         func (edge, elnr, 0, 1);
       }
@@ -480,14 +480,14 @@ namespace netgen
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (PointIndex i : mesh->mlbetweennodes.Range())
 	  {
-	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
+	    PointIndices<2> parents = PointIndices<2>(mesh->mlbetweennodes[i]).Sort();
 	    if (parents[0].IsValid()) cnt[parents[0]]++;
 	  }
 	DynamicTable<PointIndex, PointIndex> vert2vertcoarse (nv);
 	// for (int i = mesh->mlbetweennodes.Begin(); i < mesh->mlbetweennodes.End(); i++)
         for (PointIndex i : mesh->mlbetweennodes.Range())
 	  {
-	    PointIndices<2> parents = Sort (mesh->mlbetweennodes[i]);
+	    PointIndices<2> parents = PointIndices<2>(mesh->mlbetweennodes[i]).Sort();
 	    if (parents[0].IsValid()) vert2vertcoarse.Add (parents[0], parents[1]);
 	  }
 
@@ -2111,7 +2111,7 @@ namespace netgen
 
     int k = locedgenr;
     PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
-    int edgedir = (edge.I1() > edge.I2());
+    int edgedir = (edge[0] > edge[1]);
     return edgedir;
   }
 
@@ -2180,7 +2180,7 @@ namespace netgen
 
     int k = locedgenr;
     PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
-    int edgedir = (edge.I1() > edge.I2());
+    int edgedir = (edge[0] > edge[1]);
     return edgedir;
   }
   
@@ -2252,7 +2252,7 @@ namespace netgen
 
     int k = 0;
     PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
-    int edgedir = (edge.I1() > edge.I2());
+    int edgedir = (edge[0] > edge[1]);
     return edgedir;
   }
 

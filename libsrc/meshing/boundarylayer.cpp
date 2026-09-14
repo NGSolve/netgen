@@ -268,7 +268,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segme
 
 void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Segment> new_segments)
 {
-  INDEX_2_HASHTABLE<bool> already_added(segments.Size() + 2 * new_segments.Size());
+  ClosedHashTable<SortedPointIndices<2>, bool> already_added(2*(segments.Size() + 2 * new_segments.Size())+8);
 
   mesh.LineSegments().SetSize0();
 

@@ -2844,9 +2844,9 @@ namespace netgen
       for (int i = 0; i < idpoints_table[identnr].Size(); i++)
         {
           PointIndices<2> pair = idpoints_table[identnr][i];
-          identmap[pair.I1()] = pair.I2();
+          identmap[pair[0]] = pair[1];
           if(symmetric)
-            identmap[pair.I2()] = pair.I1();
+            identmap[pair[1]] = pair[0];
         }
 
     else
@@ -2872,9 +2872,9 @@ namespace netgen
                   if(symmetric)
                     identmap.Elem(i3.I2()) = i3.I1();
                   */
-                  identmap[hash_pts.I1()] = hash_pts.I2();
+                  identmap[hash_pts[0]] = hash_pts[1];
                   if(symmetric)
-                    identmap[hash_pts.I2()] = hash_pts.I1();
+                    identmap[hash_pts[1]] = hash_pts[0];
                 }
             }  
       }
@@ -2955,8 +2955,8 @@ namespace netgen
     // can we get data by reference ? 
     for (auto [hash,data] : identifiedpoints)
       {
-        if (hash.I1() > PointIndex::FromNr1(maxpnum) ||
-            hash.I2() > PointIndex::FromNr1(maxpnum))
+        if (hash[0] > PointIndex::FromNr1(maxpnum) ||
+            hash[1] > PointIndex::FromNr1(maxpnum))
           {
             identifiedpoints[hash] = -1;
           }
@@ -2973,8 +2973,8 @@ namespace netgen
 
     for(auto [pts, nr] : pairs)
       {
-        auto p1 = op2np[pts.I1()];
-        auto p2 = op2np[pts.I2()];
+        auto p1 = op2np[pts[0]];
+        auto p2 = op2np[pts[1]];
         if(p1.IsValid() && p2.IsValid())
           Add(p1, p2, nr);
       }

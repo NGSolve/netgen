@@ -37,7 +37,7 @@ namespace netgen
       cpointsearchtree(boundingbox.PMin(), boundingbox.PMax())
   {
     nfl = 0;
-    allflines = 0;
+    allflines = nullptr;
 
     minval = 0;
     // starti = lines.Begin();
@@ -46,7 +46,6 @@ namespace netgen
 
   AdFront2 :: ~AdFront2 ()
   {
-    delete allflines;
   }
 
 

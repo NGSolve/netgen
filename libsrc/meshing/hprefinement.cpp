@@ -716,8 +716,8 @@ namespace netgen
 	      {
 		Point<3> np; 
 		for( int l=0;l<3;l++)
-		  np(l) = (1-fac1)*mesh[PointIndex(i2.I1())](l) 
-		    + fac1 * mesh[PointIndex(i2.I2())](l); 
+		  np(l) = (1-fac1)*mesh[PointIndex(i2[0])](l) 
+		    + fac1 * mesh[PointIndex(i2[1])](l); 
 	
 		PointIndex npi = mesh.AddPoint (np);
 		newpts.Set (i2, npi);
@@ -1686,12 +1686,12 @@ namespace netgen
 	      */
 
 	      edges.Set (i2, 1);
-	      PointIndices<2> i2s(i2.I2(), i2.I1());
+	      PointIndices<2> i2s(i2[1], i2[0]);
 	      edges.Set (i2s, 1);
 
 
-	      edgepoint.SetBit (i2.I1());
-	      edgepoint.SetBit (i2.I2());
+	      edgepoint.SetBit (i2[0]);
+	      edgepoint.SetBit (i2[1]);
 	      sing = 1; 
 	    }
 
@@ -1798,13 +1798,13 @@ namespace netgen
 		PointIndices<2> i2 = PointIndices<2>::Sort(mesh.LineSegment(i)[0], 
                                            mesh.LineSegment(i)[1]);
 		edges.Set(i2,1); 
-		edgepoint.SetBit(i2.I1());
-		edgepoint.SetBit(i2.I2());
+		edgepoint.SetBit(i2[0]);
+		edgepoint.SetBit(i2[1]);
 		*testout << " singleft " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << ed.DomainOut() << endl;      
 		*testout << " mesh.LineSegment(i).domin " << ed.DomainIn() << endl;      
-		edgepoint_dom.Set ( { ed.DomainIn(), i2.I1() }, 1);
-		edgepoint_dom.Set ( { ed.DomainIn(), i2.I2() }, 1);
+		edgepoint_dom.Set ( { ed.DomainIn(), i2[0] }, 1);
+		edgepoint_dom.Set ( { ed.DomainIn(), i2[1] }, 1);
 		sing = 1; 
 		
 	      }
@@ -1814,15 +1814,15 @@ namespace netgen
 		PointIndices<2> i2 = PointIndices<2>::Sort(mesh.LineSegment(i)[1], 
                                                    mesh.LineSegment(i)[0]);  
 		edges.Set (i2, 1);
-		edgepoint.SetBit(i2.I1());
-		edgepoint.SetBit(i2.I2());
+		edgepoint.SetBit(i2[0]);
+		edgepoint.SetBit(i2[1]);
 		
 		*testout << " singright " << endl;  
 		*testout << " mesh.LineSegment(i).domout " << ed.DomainOut() << endl;      
 		*testout << " mesh.LineSegment(i).domin " << ed.DomainIn() << endl;      
 		
-		edgepoint_dom.Set ( { ed.DomainOut(), i2.I1() }, 1);
-		edgepoint_dom.Set ( { ed.DomainOut(), i2.I2() }, 1);
+		edgepoint_dom.Set ( { ed.DomainOut(), i2[0] }, 1);
+		edgepoint_dom.Set ( { ed.DomainOut(), i2[1] }, 1);
 		sing = 1;
 	      }
 	    

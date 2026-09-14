@@ -65,10 +65,10 @@ namespace netgen
 		  PointIndex p4 = el.PNum(pi4);
 
 		  el.SetType(PRISM);
-		  el.PNum(1) = edge.I1();
+		  el.PNum(1) = edge[0];
 		  el.PNum(2) = p3;
 		  el.PNum(3) = p4;
-		  el.PNum(4) = edge.I2();
+		  el.PNum(4) = edge[1];
 		  el.PNum(5) = p3;
 		  el.PNum(6) = p4;
 		}
@@ -129,10 +129,10 @@ namespace netgen
 		      PointIndex p4 = el.PNum(pi4);
 		    
 		      el.SetType(PRISM);
-		      el.PNum(1) = edge.I1();
+		      el.PNum(1) = edge[0];
 		      el.PNum(2) = p3;
 		      el.PNum(3) = p4;
-		      el.PNum(4) = edge.I2();
+		      el.PNum(4) = edge[1];
 		      el.PNum(5) = p3;
 		      el.PNum(6) = p4;
 		    }

@@ -1416,7 +1416,7 @@ void MeshOptimize3d :: SwapImproveSurface (
   int idnum(-1);
 
   // INDEX_2_HASHTABLE<int> edgeused(2 * ne + 5);
-  INDEX_2_CLOSED_HASHTABLE<int> edgeused(12 * ne + 5);
+  ClosedHashTable<SortedPointIndices<2>, int> edgeused(12 * ne + 8);
 
   for (ElementIndex ei = 0; ei < ne; ei++)
     {

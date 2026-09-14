@@ -172,7 +172,7 @@ class AdFront2
   Array<int> dellinel;      /// list of deleted front lines
 
   int nfl;                  /// number of front lines;
-  INDEX_2_HASHTABLE<int> * allflines; /// all front lines ever have been
+  unique_ptr<ClosedHashTable<PointIndices<2>, int>> allflines; /// all front lines ever have been
 
   Array<int, Front2PointIndex> invpindex;   // front -> local number (0/-1 markers)
 

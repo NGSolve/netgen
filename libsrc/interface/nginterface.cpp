@@ -1748,8 +1748,8 @@ void Ng_GetParentNodes (int ni, int * parents)
 {
   if (ni <= mesh->mlbetweennodes.Size())
     {
-      parents[0] = PointNr(mesh->mlbetweennodes[PointIdx(ni)].I1());
-      parents[1] = PointNr(mesh->mlbetweennodes[PointIdx(ni)].I2());
+      parents[0] = PointNr(mesh->mlbetweennodes[PointIdx(ni)][0]);
+      parents[1] = PointNr(mesh->mlbetweennodes[PointIdx(ni)][1]);
     }
   else
     parents[0] = parents[1] = 0;
@@ -1829,8 +1829,8 @@ void Ng_GetPeriodicVertices (int idnr, int * pairs)
   mesh->GetIdentifications().GetPairs (idnr, apairs);
   for (size_t i = 0; i < apairs.Size(); i++)
     {
-      pairs[2*i] = apairs[i].I1().Nr1();
-      pairs[2*i+1] = apairs[i].I2().Nr1();
+      pairs[2*i] = apairs[i][0].Nr1();
+      pairs[2*i+1] = apairs[i][1].Nr1();
     }
       
 }

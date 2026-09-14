@@ -48,7 +48,7 @@ namespace netgen
     const CSGeometry& geom;
     const Solid *sol1, *sol2;
     Array<Point<3> > points;
-    Array<INDEX_2> segms;
+    Array<PointIndices<2>> segms;
     double factor; 
 
     double maxhinit;

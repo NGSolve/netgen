@@ -860,9 +860,9 @@ namespace netgen
             for (auto pair : identpairs)
               {
                 outfile.width (8);
-                outfile << pair.I1();
+                outfile << pair[0];
                 outfile.width (8);
-                outfile << pair.I2();
+                outfile << pair[1];
                 outfile.width (8);
                 outfile << i << "\n";
               }
@@ -4103,7 +4103,7 @@ namespace netgen
                                                     Point (pi3),
                                                     Point (pi4));
 
-                RestrictLocalHLine (Point(PointIndex(i2.I1())), Point(PointIndex(i2.I2())), rad/elperr);
+                RestrictLocalHLine (Point(PointIndex(i2[0])), Point(PointIndex(i2[1])), rad/elperr);
 
 
                 /*	      
@@ -5233,7 +5233,7 @@ namespace netgen
                       PointIndices<2> i2(el.PNumMod(j), el.PNumMod(j+1));
                       if (edges.Used(i2))
                         foundrev = 1;
-                      swap (i2.I1(), i2.I2());
+                      swap (i2[0], i2[1]);
                       if (edges.Used(i2))
                         found = 1;
                     }
@@ -6796,17 +6796,17 @@ namespace netgen
           continue;
         // auto& ipts = inserted_points[{p1p2.I1(), p1p2.I2()}];
         auto& ipts = inserted_points[ { hash_pts[0], hash_pts[1] }];
-        auto p1 = Point(hash_pts.I1());
-        auto p2 = Point(hash_pts.I2());
-        ipts.Append(hash_pts.I1());
-        mapped_points.SetBit(hash_pts.I1());
+        auto p1 = Point(hash_pts[0]);
+        auto p2 = Point(hash_pts[1]);
+        ipts.Append(hash_pts[0]);
+        mapped_points.SetBit(hash_pts[0]);
         for(auto slice : slices)
           {
             auto np = p1 + slice * (p2-p1);
             auto npi = AddPoint(np);
             ipts.Append(npi);
           }
-        ipts.Append(hash_pts.I2());
+        ipts.Append(hash_pts[1]);
       }
 
     // Store offset-point identifications for curving

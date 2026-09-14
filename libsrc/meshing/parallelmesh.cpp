@@ -507,7 +507,7 @@ namespace netgen
 	for (auto pair : pp2)
 	  {
 	    // both are on same procs!
-	    auto ps = procs_of_vert[pair.I1()];
+	    auto ps = procs_of_vert[pair[0]];
 	    for (int l = 0; l < ps.Size(); l++)
 	      {
 		ppd_sizes[ps[l]] += 2;
@@ -530,13 +530,13 @@ namespace netgen
 	idents.GetPairs(idnr, pp2);
 	for (auto pair : pp2)
 	  {
-	    auto ps = procs_of_vert[pair.I1()];
+	    auto ps = procs_of_vert[pair[0]];
 	    for (int l = 0; l < ps.Size(); l++)
 	      {
 		auto p = ps[l];
 		pp_data[p][maxidentnr + idnr]++;
-		pp_data.Add(p, pair.I1().Nr0());
-		pp_data.Add(p, pair.I2().Nr0());
+		pp_data.Add(p, pair[0].Nr0());
+		pp_data.Add(p, pair[1].Nr0());
 	      }
 	  }
       }

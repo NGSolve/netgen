@@ -40,7 +40,7 @@ namespace netgen
       mesh.level_nv.Append (mesh.GetNV());
     
     
-    INDEX_2_HASHTABLE<PointIndex> between(mesh.GetNP() + 5);
+    ClosedHashTable<SortedPointIndices<2>, PointIndex> between(2*mesh.GetNP() + 8);
 
 
     // new version with consistent ordering across sub-domains
@@ -734,12 +734,8 @@ namespace netgen
 	idmap_type identmap;
 	mesh.GetIdentifications().GetMap (i, identmap);
 
-	for (int j = 1; j <= between.GetNBags(); j++)
-	  for (int k = 1; k <= between.GetBagSize(j); k++)
+	for (auto [i2, newpi] : between)
 	    {
-	      PointIndices<2> i2;
-	      PointIndex newpi;
-	      between.GetData (j, k, i2, newpi);
 	      if (!identmap[i2[0]].IsValid() || !identmap[i2[1]].IsValid()) continue;
 	      PointIndices<2> oi2(identmap[i2[0]], 
                                   identmap[i2[1]]);
@@ -792,12 +788,8 @@ namespace netgen
 	Array<Point<3>, PointIndex> can(np);
 	for (PointIndex pi : mesh.Points().Range())
 	  should[pi] = can[pi] = mesh[pi];
-	for (int i = 1; i <= between.GetNBags(); i++)
-	  for (int j = 1; j <= between.GetBagSize(i); j++)
+	for (auto [parent, child] : between)
 	    {
-	      PointIndices<2> parent;
-	      PointIndex child;
-	      between.GetData (i, j, parent, child);
               auto [pa1, pa2] = parent;
 	      can[child] = Center (can[pa1], can[pa2]);
 	    }

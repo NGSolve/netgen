@@ -96,8 +96,8 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	{
 	  segms.Append (i2);
 	  //	  PrintMessage (5, "sing segment ", i2.I1(), " - ", i2.I2());
-	  points.Append (mesh[i2.I1()]);
-	  points.Append (mesh[i2.I2()]);
+	  points.Append (mesh[i2[0]]);
+	  points.Append (mesh[i2[1]]);
 	  mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SetSingEdgeLeft(factor);
 	  mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SetSingEdgeRight(factor);
 	}	    

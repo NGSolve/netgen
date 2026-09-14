@@ -1520,7 +1520,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            for(const auto& pair : self.GetIdentifications().GetIdentifiedPoints())
              {
                auto [pts, nr] = pair.first;
-               py::tuple pnts = py::make_tuple(pts.I1(), pts.I2(), nr);
+               py::tuple pnts = py::make_tuple(pts[0], pts[1], nr);
                points.append(pnts);
              }
            return points;
