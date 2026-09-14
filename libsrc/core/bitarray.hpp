@@ -218,6 +218,8 @@ private:
   public:
     using BitArray::BitArray;
 
+    TBitArray & operator= (bool b) { BitArray::operator=(b); return *this; }
+
     void SetBit (IndexType i) { BitArray::SetBit(i-IndexBASE<IndexType>()); }
     void Clear () { BitArray::Clear(); }
     void Clear (IndexType i) { BitArray::Clear(i-IndexBASE<IndexType>()); }
