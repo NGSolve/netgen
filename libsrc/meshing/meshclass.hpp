@@ -89,12 +89,12 @@ namespace netgen
     /// surface indices at boundary nodes
     // TABLE<int,PointIndex::BASE> surfacesonnode;
     /// boundary edges  (1..normal bedge, 2..segment)
-    unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> boundaryedges;
+    unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> boundaryedges;
     ///
-    unique_ptr<INDEX_2_CLOSED_HASHTABLE<int>> segmentht;
+    unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> segmentht;
     ///
-    unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> surfelementht;
-    unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> illegal_trigs;
+    unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> surfelementht;
+    unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> illegal_trigs;
 
     /// faces of rest-solid
     Array<Element2d> openelements;
@@ -557,9 +557,7 @@ namespace netgen
       if(!boundaryedges)
 	const_cast<Mesh *>(this)->BuildBoundaryEdges();
       
-      PointIndices<2> i2(pi1, pi2);
-      i2.Sort();
-      return boundaryedges->Used (i2);
+      return boundaryedges->Used ({pi1, pi2});
     }
 
     void DeleteBoundaryEdges ()
@@ -569,16 +567,12 @@ namespace netgen
 
     bool IsSegment (PointIndex pi1, PointIndex pi2) const
     {
-      PointIndices<2> i2 (pi1, pi2);
-      i2.Sort();
-      return segmentht->Used (i2);
+      return segmentht->Used ({pi1, pi2});
     }
 
     SegmentIndex SegmentNr (PointIndex pi1, PointIndex pi2) const
     {
-      PointIndices<2> i2(pi1, pi2);
-      i2.Sort();
-      return segmentht->Get (i2);
+      return segmentht->Get ({pi1, pi2});
     }
 
 

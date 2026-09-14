@@ -727,8 +727,7 @@ namespace ngcore
     void Set (const T_HASH & ahash, const T & acont)
     {
       size_t pos;
-      PositionCreate (ahash, pos);
-      hash[pos] = ahash;
+      PositionCreate (ahash, pos);   // stores the key already
       cont[pos] = acont;
     }
 

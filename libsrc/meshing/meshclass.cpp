@@ -2474,7 +2474,7 @@ namespace netgen
     if(!rebuild && boundaryedges)
       return;
 
-    boundaryedges = make_unique<INDEX_2_CLOSED_HASHTABLE<int>>
+    boundaryedges = make_unique<ClosedHashTable<SortedPointIndices<2>, int>>
       (3 * (GetNSE() + GetNOpenElements()) + GetNSeg() + 1);
 
 
@@ -2488,21 +2488,13 @@ namespace netgen
         if (sel.GetNP() <= 4)
           for (int j = 0; j < sel.GetNP(); j++)
             {
-              PointIndices<2> i2;
-              i2[0] = sel.PNumMod(j+1);
-              i2[1] = sel.PNumMod(j+2);
-              i2.Sort();
-              boundaryedges->Set (i2, 1);
+              boundaryedges->Set ({ sel.PNumMod(j+1), sel.PNumMod(j+2) }, 1);
             }
         else if (sel.GetType()==TRIG6)
           {
             for (int j = 0; j < 3; j++)
               {
-                PointIndices<2> i2;
-                i2[0] = sel[j];
-                i2[1] = sel[(j+1)%3];
-                i2.Sort();
-                boundaryedges->Set (i2, 1);
+                boundaryedges->Set ({ sel[j], sel[(j+1)%3] }, 1);
               }
           }
         else 
@@ -2528,9 +2520,7 @@ namespace netgen
     for (const Element2d & sel : openelements)
       for (int j = 0; j < sel.GetNP(); j++)
         {
-          PointIndices<2> i2 { sel.PNumMod(j+1), sel.PNumMod(j+2) };
-          i2.Sort();
-          boundaryedges->Set (i2, 1);
+          boundaryedges->Set ({ sel.PNumMod(j+1), sel.PNumMod(j+2) }, 1);
 
           points[sel[j]].SetType(FIXEDPOINT);
         }
@@ -2548,10 +2538,7 @@ namespace netgen
     */
     for (const Segment & seg : segments)
       {
-        PointIndices<2> i2 { seg[0], seg[1] };
-        i2.Sort();
-
-        boundaryedges -> Set (i2, 2);
+        boundaryedges -> Set ({ seg[0], seg[1] }, 2);
         //segmentht -> Set (i2, i);
       }
 
@@ -2689,8 +2676,8 @@ namespace netgen
     */
 
     if (dimension == 3)
-      surfelementht = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (3*GetNSE() + 1);
-    segmentht = make_unique<INDEX_2_CLOSED_HASHTABLE<int>> (3*GetNSeg() + 1);
+      surfelementht = make_unique<ClosedHashTable<SortedPointIndices<3>, int>> (3*GetNSE() + 1);
+    segmentht = make_unique<ClosedHashTable<SortedPointIndices<2>, int>> (3*GetNSeg() + 1);
 
     tn2se.Start();
     if (dimension == 3)
@@ -2753,12 +2740,7 @@ namespace netgen
         const Element2d & sel = surfelements[sei];
         if (sel.IsDeleted()) continue;
 
-        PointIndices<3> i3;
-        i3[0] = sel.PNum(1);
-        i3[1] = sel.PNum(2);
-        i3[2] = sel.PNum(3);
-        i3.Sort();
-        surfelementht -> Set (i3, sei);   // war das wichtig ???    sel.GetIndex());
+        surfelementht -> Set ({ sel.PNum(1), sel.PNum(2), sel.PNum(3) }, sei);   // war das wichtig ???    sel.GetIndex());
       }
     tht.Stop();
     
@@ -2853,11 +2835,8 @@ namespace netgen
     for (int i = 0; i < GetNSeg(); i++)
       {
         const Segment & seg = segments[i];
-        PointIndices<2> i2(seg[0], seg[1]);
-        i2.Sort();
-
-        //boundaryedges -> Set (i2, 2);
-        segmentht -> Set (i2, i);
+        //boundaryedges -> Set ({ seg[0], seg[1] }, 2);
+        segmentht -> Set ({ seg[0], seg[1] }, i);
       }
   }
 
@@ -4905,14 +4884,13 @@ namespace netgen
           }
       }
 
-    illegal_trigs = make_unique<INDEX_3_CLOSED_HASHTABLE<int>> (2*cnt+1);
+    illegal_trigs = make_unique<ClosedHashTable<SortedPointIndices<3>, int>> (2*cnt+1);
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
         if (sel.IsDeleted()) continue;
 
-        PointIndices<3> i3(sel[0], sel[1], sel[2]);
-        i3.Sort();
+        SortedPointIndices<3> i3(sel[0], sel[1], sel[2]);
         if(temp_tab.Get(i3)==-1)
             illegal_trigs -> Set (i3, 1);
       }
@@ -4923,9 +4901,7 @@ namespace netgen
   {
       if(illegal_trigs)
       {
-          PointIndices<3> i3 (el[0], el[1], el[2]);
-          i3.Sort();
-          if(illegal_trigs->Used(i3))
+          if(illegal_trigs->Used({ el[0], el[1], el[2] }))
               return false;
       }
 
@@ -5045,9 +5021,9 @@ namespace netgen
     int bface[4];
     for (int i = 0; i < 4; i++)
       {
-        bface[i] = surfelementht->Used (PointIndices<3>::Sort(el[gftetfacesa[i][0]],
-                                                      el[gftetfacesa[i][1]],
-                                                      el[gftetfacesa[i][2]]));
+        bface[i] = surfelementht->Used ({ el[gftetfacesa[i][0]],
+                                         el[gftetfacesa[i][1]],
+                                         el[gftetfacesa[i][2]] });
       }
 
     int bedge[4][4];
@@ -5068,11 +5044,11 @@ namespace netgen
         {
           bool sege = false, be = false;
 
-          int pos = boundaryedges -> Position0(PointIndices<2>::Sort(el[i], el[j]));
-          if (pos != -1)
+          size_t pos = boundaryedges -> Position(SortedPointIndices<2>(el[i], el[j]));
+          if (pos != size_t(-1))
             {
               be = true;
-              if (boundaryedges -> GetData0(pos) == 2)
+              if (boundaryedges -> GetData(pos) == 2)
                 sege = true;
             }
 
@@ -8174,13 +8150,21 @@ namespace netgen
     // ost << "surfs on node:";
     // surfacesonnode.PrintMemInfo (cout);
 
+    auto print_ht = [&ost] (const auto & ht, size_t elsize)
+    {
+      ost << "Hashtable: " << ht.Size()
+          << " entries of size " << elsize
+          << " = " << ht.Size() * elsize << " bytes."
+          << " Used els: " << ht.UsedElements() << endl;
+    };
+
     ost << "boundaryedges: ";
     if (boundaryedges)
-      boundaryedges->PrintMemInfo (cout);
+      print_ht (*boundaryedges, sizeof(SortedPointIndices<2>) + sizeof(int));
 
     ost << "surfelementht: ";
     if (surfelementht)
-      surfelementht->PrintMemInfo (cout);
+      print_ht (*surfelementht, sizeof(SortedPointIndices<3>) + sizeof(int));
   }
 
   shared_ptr<Mesh> Mesh :: Mirror ( netgen::Point<3> p_plane, Vec<3> n_plane )
