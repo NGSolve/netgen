@@ -2861,7 +2861,7 @@ namespace netgen
       }
   }
 
-  // NgBitArray base is PointIndex::BASE ... 
+  // BitArray base is PointIndex::BASE ... 
   void Mesh :: FixPoints (const TBitArray<PointIndex> & fixpoints)
   {
     if (fixpoints.Size() != GetNP())
@@ -4158,7 +4158,7 @@ namespace netgen
     int nse = GetNSE();
 
     Array<Vec3d> normals(np);
-    NgBitArray linepoint(np);
+    BitArray linepoint(np);
 
     linepoint.Clear();
     for (i = 1; i <= nseg; i++)

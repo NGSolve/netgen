@@ -2733,7 +2733,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   }
   }
 
-  NgBitArray original(GetNE());
+  BitArray original(GetNE());
   original.Set();
 
   for (i = 1; i <= GetNSE(); i++)

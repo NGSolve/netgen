@@ -247,7 +247,7 @@ namespace netgen
     Array<RefEdge> ref_singular;
     Array<RefSliceEdge> ref_slices;
 
-    NgBitArray first_id(geom->identifications.Size());
+    BitArray first_id(geom->identifications.Size());
     first_id.Set();
 
   

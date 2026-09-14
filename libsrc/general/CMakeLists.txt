@@ -2,7 +2,6 @@ target_sources(nglib PRIVATE
     gzstream.cpp
     hashtabl.cpp
     mystring.cpp
-    ngbitarray.cpp
     optmem.cpp
     parthreads.cpp
     seti.cpp
@@ -14,7 +13,7 @@ target_sources(nglib PRIVATE
 # dynamicmem.cpp
 
 install(FILES
-  autodiff.hpp autoptr.hpp ngbitarray.hpp
+  autodiff.hpp autoptr.hpp
   hashtabl.hpp myadt.hpp
   mystring.hpp netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp

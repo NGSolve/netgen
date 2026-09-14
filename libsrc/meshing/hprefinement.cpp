@@ -612,9 +612,10 @@ namespace netgen
   }
 
   template <typename HT_EDGEPOINT_DOM>
-  bool CheckSingularities(Mesh & mesh, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoiclt_dom, 
-		       NgBitArray & cornerpoint, NgBitArray & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
-			HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
+  bool CheckSingularities(Mesh & mesh, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoiclt_dom,
+		       TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint,
+		       HT_FACES & faces, HT_FACE_EDGES & face_edges,
+			HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref);
 
   bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   

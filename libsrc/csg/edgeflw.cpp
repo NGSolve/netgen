@@ -1302,7 +1302,7 @@ namespace netgen
     if(refedges.Size() == 0)
       throw Exception("No edges found, something wrong.");
     
-    NgBitArray todelete(refedges.Size());
+    BitArray todelete(refedges.Size());
     todelete.Clear();
 
 
@@ -1329,11 +1329,11 @@ namespace netgen
 		
 		if(edges_priority[i] < 10 && edges_priority[i] < edges_priority[j])
 		  {
-		    todelete.Set(i);
+		    todelete.SetBit(i);
 		  }
 		else if (edges_priority[j] < 10 && edges_priority[i] > edges_priority[j])
 		  {
-		    todelete.Set(j);
+		    todelete.SetBit(j);
 		  }
 	      }
 	  }
@@ -1816,7 +1816,7 @@ namespace netgen
     int nsol = geometry.GetNTopLevelObjects();
     
 
-    NgBitArray pointatsurface (nsurf);
+    BitArray pointatsurface (nsurf);
     pointatsurface.Clear();
   
     for (int i = 1; i <= mesh.GetNSeg(); i++)
@@ -1830,7 +1830,7 @@ namespace netgen
 	}
 #endif
 	int classrep = geometry.GetSurfaceClassRepresentant (seg_fdi(seg));
-	pointatsurface.Set (classrep);
+	pointatsurface.SetBit (classrep);
       }
 
   

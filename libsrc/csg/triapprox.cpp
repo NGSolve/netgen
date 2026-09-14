@@ -28,7 +28,7 @@ namespace netgen
 
   void TriangleApproximation :: RemoveUnusedPoints ()
   {
-    NgBitArray used(GetNP());
+    BitArray used(GetNP());
     Array<int> map (GetNP());
     int i, j;
     int cnt = 0;
@@ -36,7 +36,7 @@ namespace netgen
     used.Clear();
     for (i = 0; i < GetNT(); i++)
       for (j = 0; j < 3; j++)
-	used.Set (GetTriangle (i)[j]);
+	used.SetBit (GetTriangle (i)[j]);
 
     for (i = 0; i < GetNP(); i++)
       if (used.Test(i))
