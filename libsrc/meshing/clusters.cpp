@@ -47,10 +47,10 @@ namespace netgen
     cluster_reps.SetSize (nv+ned+nfa+ne);
     cluster_reps = -1;
 
-    NgArray<int> llist (nv+ned+nfa+ne);
+    Array<int> llist (nv+ned+nfa+ne);
     llist = 0;
   
-    NgArray<int> nnums, ednums, fanums;
+    Array<int> nnums, ednums, fanums;
     int changed;
 
     // NgProfiler::StartTimer(timer1);    
@@ -86,7 +86,7 @@ namespace netgen
       (mesh.VolumeElements().Range(),
        [&] (auto myrange)
        {
-         NgArray<int> nnums; // , ednums, fanums;
+         Array<int> nnums; // , ednums, fanums;
          for (auto i_ : myrange)
            {
              int i = i_.Nr1();
@@ -149,7 +149,7 @@ namespace netgen
       (mesh.SurfaceElements().Range(),
        [&] (auto myrange)
        {
-         NgArrayMem<int,9> nnums; // , ednums;
+         ArrayMem<int,9> nnums; // , ednums;
          for (SurfaceElementIndex i_ : myrange)
            {
              // int i = i_+1;

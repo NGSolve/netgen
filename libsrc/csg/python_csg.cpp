@@ -218,7 +218,7 @@ DLL_HEADER void ExportCSG(py::module &m)
     .def(py::init([](shared_ptr<SPSolid> base, py::list cuts)
 	     {
 	       auto primitive = dynamic_cast<OneSurfacePrimitive*> (base->GetSolid()->GetPrimitive());
-	       auto acuts = make_shared<NgArray<shared_ptr<OneSurfacePrimitive>>>();
+	       auto acuts = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
 	       for(int i = 0; i<py::len(cuts);i++)
 		 {
 		   py::extract<shared_ptr<SPSolid>> sps(cuts[i]);
@@ -461,7 +461,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                 if (py::extract<int>(val).check()) mod_nr = py::extract<int> (val)();
                 if (py::extract<string>(val).check()) bcname = new string ( py::extract<string> (val)());
 
-                NgArray<int> si;
+                Array<int> si;
                 mod_solid -> GetSolid() -> GetSurfaceIndices (si);
                 // cout << "change bc on surfaces: " << si << " to " << mod_nr << endl;
 
@@ -511,7 +511,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
 	    self.GetTopLevelObject(tlonr) -> SetBCProp(surf->GetBase()->GetBCProperty());
 	    self.GetTopLevelObject(tlonr) -> SetBCName(surf->GetBase()->GetBCName());
 	    self.GetTopLevelObject(tlonr) -> SetMaxH(surf->GetBase()->GetMaxH());
-            NgArray<Point<3>> non_midpoints;
+            Array<Point<3>> non_midpoints;
             for(auto spline : surf->GetSplines())
               {
                 non_midpoints.Append(spline->GetPoint(0));
@@ -546,7 +546,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
     .def("CloseSurfaces", FunctionPointer
          ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2, py::list aslices )
           {
-            NgArray<int> si1, si2;
+            Array<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
             s2->GetSolid()->GetSurfaceIndices (si2);
             Flags flags;
@@ -580,7 +580,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
          ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2,
               int reflevels, shared_ptr<SPSolid> domain_solid)
           {
-            NgArray<int> si1, si2;
+            Array<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
             s2->GetSolid()->GetSurfaceIndices (si2);
             cout << IM(3) << "surface ids1 = " << si1 << endl;
@@ -605,7 +605,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
          ([] (CSGeometry & self, shared_ptr<SPSolid> s1, shared_ptr<SPSolid> s2,
               Transformation<3> trafo)
           {
-            NgArray<int> si1, si2;
+            Array<int> si1, si2;
             s1->GetSolid()->GetSurfaceIndices (si1);
             s2->GetSolid()->GetSurfaceIndices (si2);
             cout << "identify surfaces " << si1[0] << " and " << si2[0] << endl;

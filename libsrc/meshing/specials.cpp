@@ -20,7 +20,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 		othermesh.GetNP(), " points, ",
 		othermesh.GetNSE(), " surface elements.");
 
-  NgArray<Box3d> otherbounds(nse);  
+  Array<Box3d> otherbounds(nse);  
   Box3d otherbox;
 
   double maxh = 0;

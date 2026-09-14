@@ -45,7 +45,7 @@ namespace netgen
    //extern void OCCAutoColourBcProps(Mesh & mesh, OCCGeometry & occgeometry, const char *occcolourfile);
    extern DLL_HEADER void AutoColourBcProps(Mesh & mesh, const char *bccolourfile);
 
-  extern DLL_HEADER void GetFaceColours(Mesh & mesh, NgArray<Vec<4>> & face_colours);
+  extern DLL_HEADER void GetFaceColours(Mesh & mesh, Array<Vec<4>> & face_colours);
 
    extern DLL_HEADER bool ColourMatch(Vec<4> col1, Vec<4> col2, double eps = 2.5e-05);
 }

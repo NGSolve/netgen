@@ -858,7 +858,7 @@ namespace netgen
             if (autoscale)
               GetMinMax (vecfunction, 0, minval, maxval);
 
-            NgArray<ClipPlanePoint> cpp;
+            Array<ClipPlanePoint> cpp;
             GetClippingPlaneGrid (cpp);
 
             for (int i = 0; i < cpp.Size(); i++)
@@ -1088,8 +1088,8 @@ namespace netgen
             clipplane_isolinelist = glGenLists (1);
             glNewList (clipplane_isolinelist, GL_COMPILE);
 
-            NgArray<ClipPlaneTrig> cpt;
-            NgArray<ClipPlanePoint> pts;
+            Array<ClipPlaneTrig> cpt;
+            Array<ClipPlanePoint> pts;
             GetClippingPlaneTrigs (sol, cpt, pts);
             bool drawelem;
           
@@ -1138,8 +1138,8 @@ namespace netgen
     glNewList (element1dlist, GL_COMPILE);
 
     int npt = (1 << subdivisions) + 1;
-    NgArray<double> pref(npt), values(npt);
-    NgArray<Point<3> > points(npt);
+    Array<double> pref(npt), values(npt);
+    Array<Point<3> > points(npt);
 
     const SolData * sol = NULL;
     if (scalfunction != -1) sol = soldata[scalfunction];
@@ -1280,9 +1280,9 @@ namespace netgen
     int n = 1 << subdivisions;
     int npt = sqr(n+1);
 
-    NgArray<Point<2> > pref (npt);
-    NgArray<Point<3> > points (npt);
-    NgArray<Mat<3,2> > dxdxis (npt);
+    Array<Point<2> > pref (npt);
+    Array<Point<3> > points (npt);
+    Array<Mat<3,2> > dxdxis (npt);
     Array<Vec<3> > nvs(npt);
     Array<double> values(npt);
 
@@ -1808,8 +1808,8 @@ namespace netgen
     CurvedElements & curv = mesh->GetCurvedElements();
 
     int n = 1 << subdivisions;
-    NgArrayMem<Point<2>, 65> ptsloc(n+1);
-    NgArrayMem<Point<3>, 65> ptsglob(n+1);
+    ArrayMem<Point<2>, 65> ptsloc(n+1);
+    ArrayMem<Point<3>, 65> ptsglob(n+1);
 
     double trigpts[3][2]  = { { 0, 0 }, { 0, 1 }, { 1, 0} };
     double trigvecs[3][2] = { { 1, 0 }, { 0, -1 }, { -1, 1} };
@@ -1911,9 +1911,9 @@ namespace netgen
     int n = 1 << subdivisions;
     int n3 = (n+1)*(n+1)*(n+1);
     
-    NgArray<Point<3> > grid(n3);
-    NgArray<Point<3> > locgrid(n3);
-    NgArray<Mat<3,3> > trans(n3);
+    Array<Point<3> > grid(n3);
+    Array<Point<3> > locgrid(n3);
+    Array<Mat<3,3> > trans(n3);
     Array<double> val1(n3*sol->components);
     Array<Vec<3> > grads1(n3);
     Array<int> compress(n3);
@@ -2154,7 +2154,7 @@ namespace netgen
 
 
 
-  void  VisualSceneSolution :: DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, 
+  void  VisualSceneSolution :: DrawTrigSurfaceVectors(const Array< Point<3> > & lp, 
                                                       const Point<3> & pmin, const Point<3> & pmax,
                                                       const int sei, const SolData * vsol, bool swap_lam)
   {
@@ -2312,7 +2312,7 @@ namespace netgen
             if (el.GetType() == TRIG || el.GetType() == TRIG6)
               {
           
-                NgArray< Point<3> > lp(3);
+                Array< Point<3> > lp(3);
 
                 lp[0] = mesh->Point(el[2]);
                 lp[1] = mesh->Point(el[0]);
@@ -2418,7 +2418,7 @@ namespace netgen
               }
             else if (el.GetType() == QUAD)
               {
-		  NgArray < Point<3> > lp(3);
+		  Array < Point<3> > lp(3);
 
 		  lp[0] = mesh->Point(el[0]);
 		  lp[1] = mesh->Point(el[1]);
@@ -3934,8 +3934,8 @@ namespace netgen
 
 
   void VisualSceneSolution :: GetClippingPlaneTrigs (SolData * sol,
-                                                     NgArray<ClipPlaneTrig> & trigs,
-                                                     NgArray<ClipPlanePoint> & pts)
+                                                     Array<ClipPlaneTrig> & trigs,
+                                                     Array<ClipPlanePoint> & pts)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -3971,9 +3971,9 @@ namespace netgen
     int n = 1 << subdivisions;
     int n3 = (n+1)*(n+1)*(n+1);
 
-    NgArray<Point<3> > grid(n3);
-    NgArray<Point<3> > locgrid(n3);
-    NgArray<Mat<3,3> > trans(n3);
+    Array<Point<3> > grid(n3);
+    Array<Point<3> > locgrid(n3);
+    Array<Mat<3,3> > trans(n3);
     Array<double> val(n3);
     Array<bool> locposval(n3);
     Array<int> compress(n3);
@@ -4298,7 +4298,7 @@ namespace netgen
       }
   }
 
-  void VisualSceneSolution :: GetClippingPlaneGrid (NgArray<ClipPlanePoint> & pts)
+  void VisualSceneSolution :: GetClippingPlaneGrid (Array<ClipPlanePoint> & pts)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -4398,8 +4398,8 @@ namespace netgen
     glNewList (clipplanelist_scal, GL_COMPILE);
 
 
-    NgArray<ClipPlaneTrig> trigs;
-    NgArray<ClipPlanePoint> points;
+    Array<ClipPlaneTrig> trigs;
+    Array<ClipPlanePoint> points;
 	    
     glNormal3d (-clipplane[0], -clipplane[1], -clipplane[2]);
     glColor3d (1.0, 1.0, 1.0);
@@ -4425,9 +4425,9 @@ namespace netgen
     Array<complex<double> > valsc(maxlpnr+1);
     Array<int> elnrs(maxlpnr+1);
     Array<bool> trigok(maxlpnr+1);
-    NgArray<Point<3> > locpoints(maxlpnr+1);
-    NgArray<Point<3> > globpoints(maxlpnr+1);
-    NgArray<Mat<3> > jacobi(maxlpnr+1);
+    Array<Point<3> > locpoints(maxlpnr+1);
+    Array<Point<3> > globpoints(maxlpnr+1);
+    Array<Mat<3> > jacobi(maxlpnr+1);
     Array<double> mvalues( (maxlpnr+1) * sol->components);
     trigok = false;
     elnrs = -1;

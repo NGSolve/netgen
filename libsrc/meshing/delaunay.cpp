@@ -73,12 +73,12 @@ namespace netgen
     INDEX_3_CLOSED_HASHTABLE<int> faces;
 
     // 
-    NgArray<DelaunayTet> & tets;
+    Array<DelaunayTet> & tets;
 
   public:
 
     // estimated number of points
-    MeshNB (NgArray<DelaunayTet> & atets, int np)
+    MeshNB (Array<DelaunayTet> & atets, int np)
       : faces(200), tets(atets)
     { ; }
 
@@ -147,7 +147,7 @@ namespace netgen
   */
   class SphereList 
   {
-    NgArray<int> links;
+    Array<int> links;
   public:
     SphereList () 
     { ; }
@@ -170,7 +170,7 @@ namespace netgen
       links[toi-1] = eli;
     }
       
-    void GetList (int eli, NgArray<int> & linked) const;
+    void GetList (int eli, Array<int> & linked) const;
 
     template <typename TFUNC>
     void IterateList (int eli, TFUNC func)
@@ -187,7 +187,7 @@ namespace netgen
   };
 
 
-  void SphereList :: GetList (int eli, NgArray<int> & linked) const
+  void SphereList :: GetList (int eli, Array<int> & linked) const
   {
     linked.SetSize (0);
     int pi = eli;
@@ -218,14 +218,14 @@ namespace netgen
 
 
   void AddDelaunayPoint (PointIndex newpi, const Point3d & newp, 
-			 NgArray<DelaunayTet> & tempels, 
+			 Array<DelaunayTet> & tempels, 
 			 Mesh & mesh,
 			 DTREE & tettree,
 			 MeshNB & meshnb,
-			 NgArray<Point<3> > & centers, NgArray<double> & radi2,
+			 Array<Point<3> > & centers, Array<double> & radi2,
 			 Array<int> & connected, Array<int> & treesearch, 
 			 Array<int> & freelist, SphereList & list,
-			 IndexSet & insphere, IndexSet & closesphere, NgArray<DelaunayTet> & newels)
+			 IndexSet & insphere, IndexSet & closesphere, Array<DelaunayTet> & newels)
   {
     static Timer t("Meshing3::AddDelaunayPoint", NoTracing, NoTiming); RegionTimer reg(t);
     static Timer tsearch("addpoint, search", NoTracing, NoTiming);
@@ -563,13 +563,13 @@ namespace netgen
 
 
   void Delaunay1 (Mesh & mesh, int domainnr, const MeshingParameters & mp, const AdFront3 & adfront,
-		  NgArray<DelaunayTet> & tempels,
+		  Array<DelaunayTet> & tempels,
 		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
   {
     static Timer t("Meshing3::Delaunay1"); RegionTimer reg(t);
     
-    NgArray<Point<3>> centers;
-    NgArray<double> radi2;
+    Array<Point<3>> centers;
+    Array<double> radi2;
   
     Box<3> bbox(Box<3>::EMPTY_BOX);
 
@@ -694,7 +694,7 @@ namespace netgen
       // mixed[pi] = PointIndex ( (prim * pi) % np + PointIndex::BASE );
       mixed[pi] = (prim * (pi.Nr1())) % np + IndexBASE<PointIndex>() ;
 
-    NgArray<DelaunayTet> newels;
+    Array<DelaunayTet> newels;
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End()-4; pi++)
     for (PointIndex pi : mesh.Points().Range().Modify(0, -4))      
       {
@@ -748,7 +748,7 @@ namespace netgen
   }
 
 
-  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, NgArray<DelaunayTet> & tempels, int np )
+  void DelaunayRemoveDegenerated( const Mesh::T_POINTS & points, Array<DelaunayTet> & tempels, int np )
   {
     static Timer tdegenerated("Delaunay - remove degenerated"); RegionTimer rt(tdegenerated);
 
@@ -807,7 +807,7 @@ namespace netgen
   }
 
   // Remove flat tets containing two adjacent surface trigs
-  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels )
+  void DelaunayRemoveTwoTriaTets( const Mesh & mesh, Array<DelaunayTet> & tempels, Array<int> & openels )
   {
     static Timer topenel("Delaunay - find openel"); RegionTimer rt(topenel);
 
@@ -974,7 +974,7 @@ namespace netgen
       }
   }
 
-  void DelaunayRemoveIntersecting( const Mesh & mesh, NgArray<DelaunayTet> & tempels, NgArray<int> & openels, Point3d pmin, Point3d pmax )
+  void DelaunayRemoveIntersecting( const Mesh & mesh, Array<DelaunayTet> & tempels, Array<int> & openels, Point3d pmin, Point3d pmax )
   {
     static Timer trem_intersect("Delaunay - remove intersecting"); RegionTimer rt(trem_intersect);
 
@@ -1009,7 +1009,7 @@ namespace netgen
 	      }
 	  }
       
-	NgArray<int> neartrias;
+	Array<int> neartrias;
 	for (int i = 1; i <= tempels.Size(); i++)
 	  {
 	    const Point<3> *pp[4];
@@ -1093,7 +1093,7 @@ namespace netgen
       }
   }
 
-  void DelaunayRemoveOuter( const Mesh & mesh, NgArray<DelaunayTet> & tempels, const AdFront3 & adfront )
+  void DelaunayRemoveOuter( const Mesh & mesh, Array<DelaunayTet> & tempels, const AdFront3 & adfront )
   {
     static Timer trem_outer("Delaunay - remove outer"); RegionTimer rt(trem_outer);
 
@@ -1571,7 +1571,7 @@ namespace netgen
     // PushStatus ("Delaunay meshing");
 
 
-    NgArray<DelaunayTet> tempels;
+    Array<DelaunayTet> tempels;
     Point3d pmin, pmax;
 
     DelaunayTet startel;
@@ -1685,7 +1685,7 @@ namespace netgen
 
     DelaunayRemoveDegenerated(mesh.Points(), tempels, np);
 
-    NgArray<int> openels;
+    Array<int> openels;
     DelaunayRemoveTwoTriaTets(mesh, tempels, openels);
     DelaunayRemoveIntersecting(mesh, tempels, openels, pmin, pmax);
     DelaunayRemoveOuter(mesh, tempels, *adfront);

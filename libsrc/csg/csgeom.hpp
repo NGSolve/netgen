@@ -105,10 +105,10 @@ namespace netgen
 
   public:
     /// primitive of surface
-    NgArray<const Primitive*> surf2prim;
+    Array<const Primitive*> surf2prim;
 
   private:
-    NgArray<Surface*> delete_them;
+    Array<Surface*> delete_them;
 
     /// all named solids
     SymbolTable<Solid*> solids;
@@ -119,7 +119,7 @@ namespace netgen
     SymbolTable<shared_ptr<SplineGeometry<3>>> splinecurves3d;
 
     /// all top level objects: solids and surfaces
-    NgArray<TopLevelObject*> toplevelobjects;
+    Array<TopLevelObject*> toplevelobjects;
 
   public:
     /// additional points specified by user
@@ -141,14 +141,14 @@ namespace netgen
     };
     
   private:
-    // NgArray<Point<3> > userpoints;
-    NgArray<UserPoint> userpoints;
-    NgArray<double> userpoints_ref_factor;
+    // Array<Point<3> > userpoints;
+    Array<UserPoint> userpoints;
+    Array<double> userpoints_ref_factor;
 
-    mutable NgArray<Point<3> > identpoints;
+    mutable Array<Point<3> > identpoints;
 
     /// triangular approximation of top level objects
-    NgArray<TriangleApproximation*> triapprox;
+    Array<TriangleApproximation*> triapprox;
 
     /// increment, if geometry is changed
     static int changeval;
@@ -161,7 +161,7 @@ namespace netgen
 
     /// identic surfaces are stored by pair of indizes, val = inverse
     INDEX_2_HASHTABLE<int> identicsurfaces;
-    NgArray<int> isidenticto;
+    Array<int> isidenticto;
     /// identification of boundaries (periodic, thin domains, ...)
 
     double ideps;
@@ -170,7 +170,7 @@ namespace netgen
     string filename;
 
     /// store splinesurfaces, such that added ones do not get deleted before geometry does
-    NgArray<shared_ptr<SplineSurface>> spline_surfaces;
+    Array<shared_ptr<SplineSurface>> spline_surfaces;
 
     shared_ptr<BlockAllocator> solid_ball = Solid::ball;
     
@@ -288,10 +288,10 @@ namespace netgen
 
 
     // quick implementations:
-    NgArray<SingularFace*> singfaces;
-    NgArray<SingularEdge*> singedges;
-    NgArray<SingularPoint*> singpoints;
-    NgArray<Identification*> identifications;
+    Array<SingularFace*> singfaces;
+    Array<SingularEdge*> singedges;
+    Array<SingularPoint*> singpoints;
+    Array<Identification*> identifications;
 
     int GetNIdentifications (void) const { return identifications.Size(); }
     void AddIdentification (Identification * ident);
@@ -305,19 +305,19 @@ namespace netgen
     ///
     void GetSurfaceIndices (const Solid * sol, 
 			    const BoxSphere<3> & box, 
-			    NgArray<int> & locsurf) const;
+			    Array<int> & locsurf) const;
     ///
     void GetIndependentSurfaceIndices (const Solid * sol, 
 				       const BoxSphere<3> & box, 
-				       NgArray<int> & locsurf) const;
+				       Array<int> & locsurf) const;
     ///
     /*
     void GetIndependentSurfaceIndices (const Solid * sol, 
 				       const Point<3> & p, Vec<3> & v,
-				       NgArray<int> & locsurf) const;
+				       Array<int> & locsurf) const;
     */
     ///
-    void GetIndependentSurfaceIndices (NgArray<int> & locsurf) const;
+    void GetIndependentSurfaceIndices (Array<int> & locsurf) const;
 
     ///
     int GetSurfaceClassRepresentant (int si) const
@@ -369,7 +369,7 @@ namespace netgen
       string * bcname;
     };
 
-    NgArray<BCModification> bcmodifications;
+    Array<BCModification> bcmodifications;
 
 
     map<tuple<Surface*,Surface*>, string> named_edges;

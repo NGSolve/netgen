@@ -8,11 +8,12 @@
 /**************************************************************************/
 
 #include <mydefs.hpp>
+#include <core/array.hpp>
 
-#include "ngarray.hpp"
 
 namespace netgen
 {
+  using namespace ngcore;
 
 /** 
     Optimized Memory allocation classes
@@ -26,7 +27,7 @@ private:
   ///
   void * freelist;
   ///
-  NgArray<char*> bablocks;
+  Array<char*> bablocks;
   mutex block_allocator_mutex;
 public:
   ///

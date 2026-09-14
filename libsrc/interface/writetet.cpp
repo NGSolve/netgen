@@ -22,18 +22,18 @@ namespace netgen
     cout << "starting .tet export to file " << filename.string() << endl;
 
 
-    NgArray<int> point_ids_ud;    // user data, indexed by the raw point number
-    NgArray<int> edge_ids,face_ids;
+    Array<int> point_ids_ud;    // user data, indexed by the raw point number
+    Array<int> edge_ids,face_ids;
     Array<int, PointIndex> point_ids;
     Array<int> elnum(mesh.GetNE());
     elnum = -1;
 
     
-    NgArray<int> userdata_int;
-    NgArray<double> userdata_double;
-    NgArray<int> ports;
+    Array<int> userdata_int;
+    Array<double> userdata_double;
+    Array<int> ports;
 
-    NgArray<int> uid_to_group_3D, uid_to_group_2D, uid_to_group_1D, uid_to_group_0D;
+    Array<int> uid_to_group_3D, uid_to_group_2D, uid_to_group_1D, uid_to_group_0D;
 
     int pos_int = 0;
     int pos_double = 0;
@@ -375,7 +375,7 @@ namespace netgen
       }
 
     Array<int> id_num,id_type;                  // edge / face passes
-    Array< NgArray<int> *> id_groups;
+    Array< Array<int> *> id_groups;
     Array<int, PointIndex> pid_num,pid_type;    // point pass
     Array< Array<PointIndex> *> pid_groups;
 
@@ -587,18 +587,18 @@ namespace netgen
 
     
       
-    Array< NgArray<int>*, PointIndex > vertex_to_edge(mesh.GetNP());
+    Array< Array<int>*, PointIndex > vertex_to_edge(mesh.GetNP());
     for(int i=0; i<=mesh.GetNP(); i++)
-      vertex_to_edge[i] = new NgArray<int>;
+      vertex_to_edge[i] = new Array<int>;
 
-    Array< NgArray<int,PointIndex::BASE>* > idmaps_edge(idmaps.Size());
+    Array< Array<int>* > idmaps_edge(idmaps.Size());   // 1-based edge numbers
     for(int i=0; i<idmaps_edge.Size(); i++)
       {
-	idmaps_edge[i] = new NgArray<int,PointIndex::BASE>(numedges);
+	idmaps_edge[i] = new Array<int>(numedges+1);
 	(*idmaps_edge[i]) = 0;
       }
 
-    NgArray<int> possible;
+    Array<int> possible;
     for(int i=0; i<edge2node.Size(); i++)
       {
 	const PointIndices<2> & v = edge2node[i];
@@ -646,7 +646,7 @@ namespace netgen
 	  continue;
 
 
-	NgArray<int> group;
+	Array<int> group;
 	group.Append(i);
 	for(int j=0; j<idmaps_edge.Size(); j++)
 	  {
@@ -664,7 +664,7 @@ namespace netgen
 	if(group.Size() > 1)
 	  {
 	    id_num[i] = 1;
-	    id_groups.Append(new NgArray<int>(group));
+	    id_groups.Append(new Array<int>(group));
 	    if(group.Size() == 2)
 	      {
 		id_type[i] = 1;
@@ -698,7 +698,7 @@ namespace netgen
 	  continue;
 
 
-	NgArray<int> group;
+	Array<int> group;
 	group.Append(i);
 	for(int j=0; j<idmaps_edge.Size(); j++)
 	  {
@@ -716,7 +716,7 @@ namespace netgen
 	if(group.Size() > 1)
 	  {
 	    id_num[i] = 1;
-	    id_groups.Append(new NgArray<int>(group));
+	    id_groups.Append(new Array<int>(group));
 	    if(group.Size() == 2)
 	      {
 		id_type[i] = 1;
@@ -802,9 +802,9 @@ namespace netgen
 
     
     
-    Array< NgArray<int>* > edge_to_face(numedges+1);
+    Array< Array<int>* > edge_to_face(numedges+1);
     for(int i=0; i<edge_to_face.Size(); i++)
-      edge_to_face[i] = new NgArray<int>;
+      edge_to_face[i] = new Array<int>;
 
     
     for(int i=0; i<idmaps.Size(); i++)
@@ -861,7 +861,7 @@ namespace netgen
 	if(id_num[i] != 0)
 	  continue;
 
-	NgArray<int> group;
+	Array<int> group;
 	group.Append(i);
 	for(int j=0; j<idmaps.Size(); j++)
 	  {
@@ -879,7 +879,7 @@ namespace netgen
 	if(group.Size() > 1)
 	  {
 	    id_num[i] = -1;
-	    id_groups.Append(new NgArray<int>(group));
+	    id_groups.Append(new Array<int>(group));
 	    if(group.Size() == 2)
 	      n2++;
 	    else
@@ -978,7 +978,7 @@ namespace netgen
 	    << endl;
 
 
-    Array< NgArray<int> * > groups;
+    Array< Array<int> * > groups;
 
     int maxg = -1;
     for(int i = 0; i<uid_to_group_3D.Size(); i++)
@@ -996,7 +996,7 @@ namespace netgen
 
     groups.SetSize(maxg+1);
     for(int i=0; i<groups.Size(); i++)
-      groups[i] = new NgArray<int>;
+      groups[i] = new Array<int>;
 
     for(ElementIndex i=0; i<mesh.GetNE() && uid_to_group_3D.Size(); i++)
       if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)

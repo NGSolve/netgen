@@ -16,7 +16,7 @@ namespace netgen
   */
 class IndexSet
 {
-  NgArray<int> set;
+  Array<int> set;
   NgBitArray flags;
 public:
   IndexSet (int maxind);
@@ -41,7 +41,7 @@ public:
   void Del (int ind);
   void Clear ();
   
-  const NgArray<int> & GetArray() { return set; }
+  const Array<int> & GetArray() { return set; }
 };
 
 }

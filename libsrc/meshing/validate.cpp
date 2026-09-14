@@ -41,10 +41,10 @@ namespace netgen
   }
 
 
-  double Validate(const Mesh & mesh, NgArray<ElementIndex> & bad_elements,
+  double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
 		  const Array<double, PointIndex> & pure_badness,
 		  double max_worsening, const bool uselocalworsening,
-		  NgArray<double> * quality_loss)
+		  Array<double> * quality_loss)
   {
     PrintMessage(3,"!!!! Validating !!!!");
     //if(max_worsening > 0)
@@ -99,7 +99,7 @@ namespace netgen
 
 
   void GetWorkingArea(BitArray & working_elements, TBitArray<PointIndex> & working_points,
-		      const Mesh & mesh, const NgArray<ElementIndex> & bad_elements,
+		      const Mesh & mesh, const Array<ElementIndex> & bad_elements,
 		      const int width)
   {
     working_elements.Clear();
@@ -145,11 +145,11 @@ namespace netgen
 
 
 
-  void RepairBisection(Mesh & mesh, NgArray<ElementIndex> & bad_elements, 
+  void RepairBisection(Mesh & mesh, Array<ElementIndex> & bad_elements, 
 		       const TBitArray<PointIndex> & isnewpoint, const Refinement & refinement,
 		       const Array<double, PointIndex> & pure_badness, 
 		       double max_worsening, const bool uselocalworsening,
-		       const NgArray< idmap_type* > & idmaps)
+		       const Array< idmap_type* > & idmaps)
   {
     ostringstream ostrstr;
 
@@ -171,7 +171,7 @@ namespace netgen
 
     Array<Point<3>, PointIndex> should(np);
     Array<Point<3>, PointIndex> can(np);
-    NgArray<Vec<3>* > nv(np);
+    Array<Vec<3>* > nv(np);
     for(int i=0; i<np; i++)
       nv[i] = new Vec<3>;
     

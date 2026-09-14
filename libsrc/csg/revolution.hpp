@@ -23,9 +23,9 @@ namespace netgen
     mutable Vector spline_coefficient_shifted;
 
 
-    NgArray < Vec<2>* > checklines_vec;
-    NgArray < Point<2>* > checklines_start;
-    NgArray < Vec<2>* > checklines_normal;
+    Array < Vec<2>* > checklines_vec;
+    Array < Point<2>* > checklines_start;
+    Array < Vec<2>* > checklines_normal;
   
   private:
     void Init (void);
@@ -44,7 +44,7 @@ namespace netgen
 		   bool last = false,
 		   const int id_in = 0);
 
-    RevolutionFace(const NgArray<double> & raw_data);
+    RevolutionFace(const Array<double> & raw_data);
     // default constructor for archive
     RevolutionFace() {}
 
@@ -90,7 +90,7 @@ namespace netgen
 
     /* INSOLID_TYPE */ bool PointInFace (const Point<3> & p, const double eps) const;
 
-    void GetRawData(NgArray<double> & data) const;
+    void GetRawData(Array<double> & data) const;
 
   };
 
@@ -147,7 +147,7 @@ namespace netgen
 				       double eps) const;
 
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      NgArray<int> & surfind, double eps) const;
+					      Array<int> & surfind, double eps) const;
     
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
@@ -160,7 +160,7 @@ namespace netgen
 				      double eps) const;
 
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  NgArray<int> & surfind, double eps) const;
+						  Array<int> & surfind, double eps) const;
 
     
     virtual int GetNSurfaces() const;

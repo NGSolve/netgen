@@ -12,7 +12,7 @@ namespace netgen
 {
 
   DLL_HEADER Array<SpecialPoint> global_specpoints;  // for visualization
-  //static NgArray<MeshPoint> spoints;
+  //static Array<MeshPoint> spoints;
   
 #define TCL_OK 0
 #define TCL_ERROR 1
@@ -20,8 +20,8 @@ namespace netgen
 
 
   static void FindPoints (CSGeometry & geom,
-                          NgArray<SpecialPoint> &  specpoints,
-                          NgArray<MeshPoint> & spoints,
+                          Array<SpecialPoint> &  specpoints,
+                          Array<MeshPoint> & spoints,
                           Mesh & mesh)
   {
     PrintMessage (1, "Start Findpoints");
@@ -78,8 +78,8 @@ namespace netgen
 
 
   static void FindEdges (CSGeometry & geom, Mesh & mesh,
-                         NgArray<SpecialPoint> &  specpoints,
-                         NgArray<MeshPoint> & spoints,
+                         Array<SpecialPoint> &  specpoints,
+                         Array<MeshPoint> & spoints,
                          MeshingParameters & mparam,
                          const bool setmeshsize = false)
   {
@@ -255,17 +255,17 @@ namespace netgen
     const char * savetask = multithread.task;
     multithread.task = "Surface meshing";
   
-    NgArray<Segment> segments;
+    Array<Segment> segments;
     int noldp = mesh.GetNP();
 
     double starttime = GetTime();
 
     // find master faces from identified
-    NgArray<int> masterface(mesh.GetNFD());
+    Array<int> masterface(mesh.GetNFD());
     for (int i = 1; i <= mesh.GetNFD(); i++)
       masterface[i-1] = i;
   
-    NgArray<INDEX_2> fpairs;
+    Array<INDEX_2> fpairs;
     bool changed;
     do
       {
@@ -403,7 +403,7 @@ namespace netgen
 
     for (int j = 0; j < geom.singfaces.Size(); j++)
       {
-	NgArray<int> surfs;
+	Array<int> surfs;
 	geom.GetIndependentSurfaceIndices (geom.singfaces[j]->GetSolid(),
 					   geom.BoundingBox(), surfs);
 	for (int k = 1; k <= mesh.GetNFD(); k++)
@@ -692,8 +692,8 @@ namespace netgen
   int CSGGenerateMesh (CSGeometry & geom, 
 		       shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
-    NgArray<SpecialPoint> specpoints;
-    NgArray<MeshPoint> spoints;
+    Array<SpecialPoint> specpoints;
+    Array<MeshPoint> spoints;
 
     
     if (mesh && mesh->GetNSE() &&
@@ -713,7 +713,7 @@ namespace netgen
 	mesh->SetGlobalH (mparam.maxh);
 	mesh->SetMinimalH (mparam.minh);
 
-	NgArray<double> maxhdom(geom.GetNTopLevelObjects());
+	Array<double> maxhdom(geom.GetNTopLevelObjects());
 	for (int i = 0; i < maxhdom.Size(); i++)
 	  maxhdom[i] = geom.GetTopLevelObject(i)->GetMaxH();
 

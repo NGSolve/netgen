@@ -80,8 +80,8 @@ namespace netgen
     Point<3> P() const { return p; }
     Vec<3> N() const { return n; }
     virtual void GetPrimitiveData (const char *& classname, 
-				   NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+				   Array<double> & coeffs) const;
+    virtual void SetPrimitiveData (Array<double> & coeffs);
     static Primitive * CreateDefault ();
 
     virtual Primitive * Copy () const;
@@ -153,8 +153,8 @@ namespace netgen
     }
 
     virtual void GetPrimitiveData (const char *& classname, 
-				   NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+				   Array<double> & coeffs) const;
+    virtual void SetPrimitiveData (Array<double> & coeffs);
     static Primitive * CreateDefault ();
 
     virtual Primitive * Copy () const;
@@ -208,7 +208,7 @@ namespace netgen
 
   public:
     Cylinder (const Point<3> & aa, const Point<3> & ab, double ar);
-    Cylinder (NgArray<double> & coeffs);
+    Cylinder (Array<double> & coeffs);
     // default constructor for archive
     Cylinder() {}
 
@@ -220,8 +220,8 @@ namespace netgen
     Point<3> A() const { return a; }
     Point<3> B() const { return b; }
     double R() const { return r; }
-    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+    virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
+    virtual void SetPrimitiveData (Array<double> & coeffs);
     static Primitive * CreateDefault ();
 
     virtual Primitive * Copy () const;
@@ -278,7 +278,7 @@ namespace netgen
     ///
     EllipticCylinder (const Point<3> & aa,
 		      const Vec<3> & avl, const Vec<3> & avs);
-    EllipticCylinder (NgArray<double> & coeffs);
+    EllipticCylinder (Array<double> & coeffs);
     // default constructor for archive
     EllipticCylinder() {}
 
@@ -289,8 +289,8 @@ namespace netgen
     }
 
     // static Primitive * CreateDefault ();
-    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+    virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
+    virtual void SetPrimitiveData (Array<double> & coeffs);
 
     ///
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
@@ -357,8 +357,8 @@ namespace netgen
 					   const Box<3> & bbox, 
 					   double facets) const override;
 
-    void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const override;
-    void SetPrimitiveData (NgArray<double> & coeffs) override;
+    void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const override;
+    void SetPrimitiveData (Array<double> & coeffs) override;
 
   private:
     void CalcData();
@@ -396,8 +396,8 @@ namespace netgen
       ar & a & b & ra & rb & minr & vab & t0vec & t1vec & vabl & t0 & t1 & cosphi;
     }
     static Primitive * CreateDefault ();
-    virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+    virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
+    virtual void SetPrimitiveData (Array<double> & coeffs);
 
     ///
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
@@ -448,8 +448,8 @@ namespace netgen
       ar & a & vl & vs & h & vlr;
     }
   static Primitive * CreateDefault ();
-  virtual void GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const;
-  virtual void SetPrimitiveData (NgArray<double> & coeffs);
+  virtual void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const;
+  virtual void SetPrimitiveData (Array<double> & coeffs);
 
   ///
   virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
@@ -516,9 +516,9 @@ namespace netgen
     virtual Point<3> GetSurfacePoint () const;
     /// OK
     virtual void GetPrimitiveData (const char *& classname, 
-				   NgArray<double> & coeffs) const;
+				   Array<double> & coeffs) const;
     /// OK			 
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+    virtual void SetPrimitiveData (Array<double> & coeffs);
     /// OK
     static Primitive * CreateDefault ();
     /// OK

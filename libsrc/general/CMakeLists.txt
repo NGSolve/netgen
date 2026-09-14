@@ -14,7 +14,7 @@ target_sources(nglib PRIVATE
 # dynamicmem.cpp
 
 install(FILES
-  ngarray.hpp autodiff.hpp autoptr.hpp ngbitarray.hpp
+  autodiff.hpp autoptr.hpp ngbitarray.hpp
   hashtabl.hpp myadt.hpp
   mystring.hpp netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp

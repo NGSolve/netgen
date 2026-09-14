@@ -483,7 +483,7 @@ void netrule :: LoadRule (istream & ist)
 	for (int k = 0; k < oldutofreearea.Width(); k++)
 	  mati(j,k) = lam1 * oldutofreearea(j,k) + (1 - lam1) * oldutofreearealimit(j,k);
 
-      freezone_i[i] = NgArray<Point<2>> (freezone.Size());
+      freezone_i[i] = Array<Point<2>> (freezone.Size());
       auto& fzi = freezone_i[i];
       for (int j = 0; j < freezone.Size(); j++)
 	fzi[j] = freezonelimit[j] + lam1 * (freezone[j] - freezonelimit[j]);

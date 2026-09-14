@@ -210,7 +210,7 @@ namespace netgen
   }
 
 
-  void VisualScene :: ArbitraryRotation (const NgArray<double> & alpha, const NgArray<Vec3d> & vec)
+  void VisualScene :: ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec)
   {
     glPushMatrix();
 
@@ -237,8 +237,8 @@ namespace netgen
 
   void VisualScene :: ArbitraryRotation (const double alpha, const Vec3d & vec)
   {
-    NgArray<double> a(1); a[0] = alpha;
-    NgArray<Vec3d> v(1); v[0] = vec;
+    Array<double> a(1); a[0] = alpha;
+    Array<Vec3d> v(1); v[0] = vec;
 
     ArbitraryRotation(a,v);
   } 
@@ -1104,7 +1104,7 @@ namespace netgen
 
   void Impl_UpdateVisSurfaceMeshData(int oldnl,
             shared_ptr<Array<Point<3>, LocalPointIndex>> locpointsptr,
-            shared_ptr<NgArray<IVec<2,LocalPointIndex>>> loclinesptr,
+            shared_ptr<Array<IVec<2,LocalPointIndex>>> loclinesptr,
             shared_ptr<Array<Point<2>, LocalPointIndex>> plainpointsptr)
   {
       vssurfacemeshing.oldnl = oldnl;

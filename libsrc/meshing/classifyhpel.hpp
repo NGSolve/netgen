@@ -1051,7 +1051,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
 #ifdef HPREF_OLD 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
 				NgBitArray & cornerpoint, NgBitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, NgArray<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   

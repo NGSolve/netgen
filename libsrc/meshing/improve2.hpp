@@ -115,8 +115,8 @@ public:
   DLL_HEADER void ImproveMesh (const MeshingParameters & mp);
   DLL_HEADER void ImproveMeshJacobian (const MeshingParameters & mp);
   DLL_HEADER void ImproveVolumeMesh ();
-  DLL_HEADER void ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
-			     const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest);
+  DLL_HEADER void ProjectBoundaryPoints(Array<int> & surfaceindex, 
+			     const Array<Point<3>* > & from, Array<Point<3>* > & dest);
 
   DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
                                 const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);

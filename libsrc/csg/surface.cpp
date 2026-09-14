@@ -232,13 +232,13 @@ void Primitive :: SetSurfaceId (int i, int id)
 
 
 void Primitive :: GetPrimitiveData (const char *& classname, 
-				    NgArray<double> & coeffs) const
+				    Array<double> & coeffs) const
 {
   classname = "undef";
   coeffs.SetSize (0);
 }
 
-void Primitive :: SetPrimitiveData (NgArray<double> & coeffs)
+void Primitive :: SetPrimitiveData (Array<double> & coeffs)
 {
   ;
 }
@@ -279,7 +279,7 @@ void Primitive :: Transform (Transformation<3> & trans)
 }
 
 void Primitive :: GetTangentialSurfaceIndices (const Point<3> & p, 
-					       NgArray<int> & surfind, double eps) const
+					       Array<int> & surfind, double eps) const
 {
   for (int j = 0; j < GetNSurfaces(); j++)
     if (fabs (GetSurface(j).CalcFunctionValue (p)) < eps)
@@ -290,7 +290,7 @@ void Primitive :: GetTangentialSurfaceIndices (const Point<3> & p,
 
 void Primitive :: 
 GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
-				NgArray<int> & surfind, double eps) const
+				Array<int> & surfind, double eps) const
 {
   cout << "get tangvecsurfind not implemented" << endl;
   surfind.SetSize (0);
@@ -298,7 +298,7 @@ GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
 
 void Primitive :: 
 GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-				 NgArray<int> & surfind, double eps) const
+				 Array<int> & surfind, double eps) const
 {
   for (int j = 0; j < GetNSurfaces(); j++)
     {

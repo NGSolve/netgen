@@ -370,7 +370,7 @@ namespace netgen
     
     PrintMessage (6, "blockfill local h");
 
-    NgArray<Point<3> > npoints;
+    Array<Point<3> > npoints;
     
     // adfront -> CreateTrees();
 
@@ -655,7 +655,7 @@ namespace netgen
     timer_addpoints.Start();
 
 //     // reorder points
-//     NgArray<PointIndex, PointIndex::BASE, PointIndex> mixed(old_points.Size());
+//     Array<PointIndex, PointIndex::BASE, PointIndex> mixed(old_points.Size());
 //     int prims[] = { 11, 13, 17, 19, 23, 29, 31, 37 };
 //     int prim;
 //   

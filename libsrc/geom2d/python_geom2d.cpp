@@ -170,7 +170,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
                          int leftdomain, int rightdomain, py::object bc, double maxh)
          {
            int n = 1000;
-           NgArray<Point<2>> points;
+           Array<Point<2>> points;
            for (int i = 0; i <= n; i++)
              {
                double t = double(i)/n;

@@ -9,7 +9,6 @@
 /**************************************************************************/
 
 #include <mydefs.hpp>
-#include <general/ngarray.hpp>
 #include <gprim/geomobjects.hpp>
 
 #include "meshtype.hpp"
@@ -24,16 +23,16 @@ class CurvedElements
 {
   const Mesh & mesh;
 
-  NgArray<int> edgeorder;
-  NgArray<int> faceorder;
+  Array<int> edgeorder;
+  Array<int> faceorder;
 
-  NgArray<int> edgecoeffsindex;
-  NgArray<int> facecoeffsindex;
+  Array<int> edgecoeffsindex;
+  Array<int> facecoeffsindex;
 
-  NgArray< Vec<3> > edgecoeffs;
-  NgArray< Vec<3> > facecoeffs;
+  Array< Vec<3> > edgecoeffs;
+  Array< Vec<3> > facecoeffs;
 
-  NgArray< double > edgeweight;  // for rational 2nd order splines
+  Array< double > edgeweight;  // for rational 2nd order splines
 
   int order;
   bool rational;
@@ -123,9 +122,9 @@ public:
 
 
   /*
-  void CalcMultiPointSegmentTransformation (NgArray<double> * xi, SegmentIndex segnr,
-					    NgArray<Point<3> > * x,
-					    NgArray<Vec<3> > * dxdxi);
+  void CalcMultiPointSegmentTransformation (Array<double> * xi, SegmentIndex segnr,
+					    Array<Point<3> > * x,
+					    Array<Vec<3> > * dxdxi);
   */
   
   template <int DIM_SPACE, typename T>
@@ -134,9 +133,9 @@ public:
                                             T * x, size_t sx,
                                             T * dxdxi, size_t sdxdxi);
 
-  DLL_HEADER void CalcMultiPointSurfaceTransformation (NgArray< Point<2> > * xi, SurfaceElementIndex elnr,
-					    NgArray< Point<3> > * x,
-					    NgArray< Mat<3,2> > * dxdxi);
+  DLL_HEADER void CalcMultiPointSurfaceTransformation (Array< Point<2> > * xi, SurfaceElementIndex elnr,
+					    Array< Point<3> > * x,
+					    Array< Mat<3,2> > * dxdxi);
 
   template <int DIM_SPACE, typename T>
   void CalcMultiPointSurfaceTransformation (SurfaceElementIndex elnr, int n,
@@ -144,9 +143,9 @@ public:
                                             T * x, size_t sx,
                                             T * dxdxi, size_t sdxdxi);
 
-  DLL_HEADER void CalcMultiPointElementTransformation (NgArray< Point<3> > * xi, ElementIndex elnr,
-					    NgArray< Point<3> > * x,
-					    NgArray< Mat<3,3> > * dxdxi);
+  DLL_HEADER void CalcMultiPointElementTransformation (Array< Point<3> > * xi, ElementIndex elnr,
+					    Array< Point<3> > * x,
+					    Array< Mat<3,3> > * dxdxi);
 
   template <typename T>
   void CalcMultiPointElementTransformation (ElementIndex elnr, int n,
@@ -187,7 +186,7 @@ private:
 
   template <typename T>
   void CalcElementShapes (SegmentInfo &  elnr, T xi, TFlatVector<T> shapes) const;
-  void GetCoefficients (SegmentInfo & elnr, NgArray<Vec<3> > & coefs) const;
+  void GetCoefficients (SegmentInfo & elnr, Array<Vec<3> > & coefs) const;
   template <typename T>
   void CalcElementDShapes (SegmentInfo & elnr, T xi, TFlatVector<T> dshapes) const;
 
@@ -243,7 +242,7 @@ private:
     int order;
     int nv;
     int ndof;
-    NgArrayMem<int,4> edgenrs;
+    ArrayMem<int,4> edgenrs;
     int facenr;
 
     void SetEdges (FlatArray<T_EDGE> edges)
@@ -258,7 +257,7 @@ private:
   template <typename T>
   void CalcElementShapes (SurfaceElementInfo & elinfo, const Point<2,T> xi, TFlatVector<T> shapes) const;
   template <int DIM_SPACE>
-  void GetCoefficients (SurfaceElementInfo & elinfo, NgArray<Vec<DIM_SPACE> > & coefs) const;
+  void GetCoefficients (SurfaceElementInfo & elinfo, Array<Vec<DIM_SPACE> > & coefs) const;
   template <typename T>
   void CalcElementDShapes (SurfaceElementInfo & elinfo, const Point<2,T> xi, MatrixFixWidth<2,T> & dshapes) const;
 

@@ -19,7 +19,7 @@ namespace netgen
     void (*Ptr_Render)(bool) = nullptr;
     void (*Ptr_UpdateVisSurfaceMeshData)(int,
             shared_ptr<Array<Point<3>, LocalPointIndex>>,
-            shared_ptr<NgArray<IVec<2,LocalPointIndex>>>,
+            shared_ptr<Array<IVec<2,LocalPointIndex>>>,
             shared_ptr<Array<Point<2>, LocalPointIndex>>
             ) = nullptr;
 } // namespace netgen

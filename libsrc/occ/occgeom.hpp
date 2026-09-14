@@ -184,29 +184,29 @@ namespace netgen
 
     TopoDS_Shape shape;
     TopTools_IndexedMapOfShape fmap, emap, vmap, somap, shmap, wmap;
-    NgArray<bool> fsingular, esingular, vsingular;
+    Array<bool> fsingular, esingular, vsingular;
     Box<3> boundingbox;
 
     mutable int changed;
-    mutable NgArray<int> facemeshstatus;
+    mutable Array<int> facemeshstatus;
 
     // Philippose - 15/01/2009
     // Maximum mesh size for a given face
     // (Used to explicitly define mesh size limits on individual faces)
-    NgArray<double> face_maxh;
+    Array<double> face_maxh;
      
     // Philippose - 14/01/2010
     // Boolean array to detect whether a face has been explicitly modified 
     // by the user or not
-    NgArray<bool> face_maxh_modified;
+    Array<bool> face_maxh_modified;
      
     // Philippose - 15/01/2009
     // Indicates which faces have been selected by the user in geometry mode
     // (Currently handles only selection of one face at a time, but an array would
     //  help to extend this to multiple faces)
-    NgArray<bool> face_sel_status;
+    Array<bool> face_sel_status;
      
-    NgArray<EntityVisualizationCode> fvispar, evispar, vvispar;
+    Array<EntityVisualizationCode> fvispar, evispar, vvispar;
      
     double tolerance;
     bool fixsmalledges;

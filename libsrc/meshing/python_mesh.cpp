@@ -1061,9 +1061,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 		      bool endfile = false;
 		      int n, dummy;
 	      
-		      NgArray<int> segment_weights;
-		      NgArray<int> surface_weights;
-		      NgArray<int> volume_weights;
+		      Array<int> segment_weights;
+		      Array<int> surface_weights;
+		      Array<int> volume_weights;
 	      
 		      while (weightsfile.good() && !endfile)
 			{
@@ -1556,7 +1556,7 @@ py::arg("point_tolerance") = -1.)
     .def ("CalcLocalH", &Mesh::CalcLocalH)
     .def ("SetMaxHDomain", [] (Mesh& self, py::list maxhlist)
           {
-            NgArray<double> maxh;
+            Array<double> maxh;
             for(auto el : maxhlist)
               maxh.Append(py::cast<double>(el));
             self.SetMaxHDomain(maxh);

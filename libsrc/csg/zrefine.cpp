@@ -202,7 +202,7 @@ namespace netgen
   {
     int i, j;
     int nseg = mesh.GetNSeg();
-    NgArray<int> edgesonpoint(mesh.GetNP());
+    Array<int> edgesonpoint(mesh.GetNP());
     for (i = 1; i <= mesh.GetNP(); i++)
       edgesonpoint.Elem(i) = 0;
 
@@ -303,7 +303,7 @@ namespace netgen
 
   
   
-    NgArray<EdgePointGeomInfo> epgi;
+    Array<EdgePointGeomInfo> epgi;
 
     while (1)
       {

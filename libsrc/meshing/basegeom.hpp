@@ -353,7 +353,7 @@ namespace netgen
     virtual void SetParameters (Tcl_Interp * /* interp */) { ; }
   };
 
-  class DLL_HEADER GeometryRegisterArray : public NgArray<GeometryRegister*>
+  class DLL_HEADER GeometryRegisterArray : public Array<GeometryRegister*>
   {
   public:
     virtual ~GeometryRegisterArray()

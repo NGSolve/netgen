@@ -185,7 +185,7 @@ void BoundaryLayerTool ::LimitGrowthVectorLengths ()
 bool HaveSingleSegments (const Mesh& mesh)
 {
   auto& topo = mesh.GetTopology();
-  NgArray<SurfaceElementIndex> surf_els;
+  Array<SurfaceElementIndex> surf_els;
 
   for (auto segi : Range(mesh.LineSegments()))
     {
@@ -224,7 +224,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segme
 {
   // auto& topo = mesh.GetTopology();
 
-  NgArray<SurfaceElementIndex> surf_els;
+  Array<SurfaceElementIndex> surf_els;
 
   for (auto segi : Range(mesh.LineSegments()))
     {

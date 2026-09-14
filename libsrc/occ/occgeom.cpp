@@ -2061,8 +2061,8 @@ namespace netgen
 
       // double dmax;
       // int cnt = 0;
-      NgArray <double> edgeLengths;
-      NgArray <int> order;
+      Array<double> edgeLengths;
+      Array<int> order;
       edgeLengths.SetSize (emap.Extent());
       order.SetSize (emap.Extent());
 

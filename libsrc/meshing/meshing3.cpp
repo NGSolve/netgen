@@ -90,8 +90,8 @@ Meshing3 :: ~Meshing3 ()
 
 /*
   // was war das ????
-static double CalcLocH (const NgArray<Point3d> & locpoints,
-			const NgArray<MiniElement2d> & locfaces,
+static double CalcLocH (const Array<Point3d> & locpoints,
+			const Array<MiniElement2d> & locfaces,
 			double h)
 {
   return h;
@@ -207,8 +207,8 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 
   Array<Point3d, LocalPointIndex> plainpoints;    // points in reference coordinates
   // Array<int> delpoints;   // points to be deleted
-  NgArray<int> delfaces;    // lines to be deleted
-  NgArray<LocalElement> locelements;       // new generated elements
+  Array<int> delfaces;    // lines to be deleted
+  Array<LocalElement> locelements;       // new generated elements
 
   int oldnp, oldnf;
   int found;
@@ -240,10 +240,10 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   // int giveup = 0;
 
   
-  NgArray<Point3d> tempnewpoints;
-  NgArray<MiniElement2d> tempnewfaces;
-  NgArray<int> tempdelfaces;
-  NgArray<LocalElement> templocelements;
+  Array<Point3d> tempnewpoints;
+  Array<MiniElement2d> tempnewfaces;
+  Array<int> tempdelfaces;
+  Array<LocalElement> templocelements;
 
 
   stat.h = mp.maxh;
@@ -804,9 +804,9 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   
   PrintMessage (5, "n1 = ", n1, " n2 = ", n2, " n3 = ", n3);
 
-  NgArray<blocktyp> inner(n);
-  NgArray<PointIndex> pointnr(n);
-  NgArray<Front3PointIndex> frontpointnr(n);
+  Array<blocktyp> inner(n);
+  Array<PointIndex> pointnr(n);
+  Array<Front3PointIndex> frontpointnr(n);
 
 
   // initialize inner to 1
@@ -1139,7 +1139,7 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
   PrintMessage (3, "blockfill local h");
 
 
-  NgArray<Point<3> > npoints;
+  Array<Point<3> > npoints;
   
   adfront -> CreateTrees();
 

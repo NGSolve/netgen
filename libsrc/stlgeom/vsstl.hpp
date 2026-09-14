@@ -12,7 +12,7 @@ namespace netgen
 
  class NGGUI_API VisualSceneSTLGeometry : public VisualScene
   {
-    NgArray<int> trilists;
+    Array<int> trilists;
     class STLGeometry * stlgeometry;
 
   public:
@@ -27,7 +27,7 @@ namespace netgen
 
   class NGGUI_API VisualSceneSTLMeshing : public VisualScene
   {
-    NgArray<int> trilists;
+    Array<int> trilists;
     int selecttrig, nodeofseltrig;
     class STLGeometry * stlgeometry;
 

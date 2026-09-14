@@ -240,9 +240,9 @@ namespace netgen
   }
 
   void Meshing2 ::
-  GetChartBoundary (NgArray<Point<2>> & points, 
-		    NgArray<Point<3>> & points3d, 
-		    NgArray<INDEX_2> & lines, double h) const
+  GetChartBoundary (Array<Point<2>> & points, 
+		    Array<Point<3>> & points3d, 
+		    Array<INDEX_2> & lines, double h) const
   {
     points.SetSize (0);
     points3d.SetSize (0);
@@ -274,13 +274,13 @@ namespace netgen
     ts1.Start();
 
     Array<Front2PointIndex, LocalPointIndex> pindex;   // local -> front
-    NgArray<int> lindex;
-    NgArray<int> delpoints, dellines;
+    Array<int> lindex;
+    Array<int> delpoints, dellines;
 
     Array<PointGeomInfo, LocalPointIndex> upgeominfo;  // unique info
     Array<MultiPointGeomInfo, LocalPointIndex> mpgeominfo;  // multiple info
 
-    NgArray<MiniElement2d> locelements;      // in local numbering
+    Array<MiniElement2d> locelements;      // in local numbering
 
     int z1, z2, oldnp(-1);
     bool found;
@@ -300,7 +300,7 @@ namespace netgen
     auto plainpointsptr = make_shared<Array<Point<2>, LocalPointIndex>>();
     auto& plainpoints = *plainpointsptr;
     Array<int, LocalPointIndex> plainzones;
-    auto loclinesptr = make_shared<NgArray<IVec<2,LocalPointIndex>>>();
+    auto loclinesptr = make_shared<Array<IVec<2,LocalPointIndex>>>();
     auto &loclines = *loclinesptr;
     int trials = 0, nfaces = 0;
     int oldnl = 0;
@@ -315,8 +315,8 @@ namespace netgen
     BoxTree<3> surfeltree (boundingbox.PMin(),
                            boundingbox.PMax());
 
-    NgArray<int> intersecttrias;
-    NgArray<Point3d> critpoints;
+    Array<int> intersecttrias;
+    Array<Point3d> critpoints;
 
     // test for doubled edges
     //INDEX_2_HASHTABLE<int> doubleedge(300000);
@@ -326,9 +326,9 @@ namespace netgen
 
     StartMesh();
 
-    NgArray<Point<2>> chartboundpoints;
-    NgArray<Point<3>> chartboundpoints3d;
-    NgArray<INDEX_2> chartboundlines;
+    Array<Point<2>> chartboundpoints;
+    Array<Point<3>> chartboundpoints3d;
+    Array<INDEX_2> chartboundlines;
 
     // illegal points: points with more then 50 elements per node
     int maxlegalpoint(-1), maxlegalline(-1);

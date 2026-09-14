@@ -13,7 +13,7 @@ namespace netgen
   class NGGUI_API VisualSceneGeometry : public VisualScene
   {
     class CSGeometry * geometry;
-    NgArray<int> trilists;
+    Array<int> trilists;
     int selsurf;
   public:
     VisualSceneGeometry ();

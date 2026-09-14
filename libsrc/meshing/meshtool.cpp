@@ -124,7 +124,7 @@ namespace netgen
   void MeshQuality2d (const Mesh & mesh)
   {
     int ncl = 20;
-    NgArray<INDEX> incl(ncl);
+    Array<INDEX> incl(ncl);
 
     incl = 0;
 
@@ -532,7 +532,7 @@ namespace netgen
 
   
   /*
-    double CalcVolume (const NgArray<Point3d> & points,
+    double CalcVolume (const Array<Point3d> & points,
     const Element & el)
     {
     Vec3d v1 = points.Get(el.PNum(2)) - 
@@ -547,7 +547,7 @@ namespace netgen
   */
 
   double CalcVolume (FlatArray<Point3d, PointIndex> points, 
-		     const NgArray<Element> & elements)
+		     const Array<Element> & elements)
   {
     double vol;
     Vec3d v1, v2, v3;
@@ -566,10 +566,10 @@ namespace netgen
   
   
 
-  void MeshQuality3d (const Mesh & mesh, NgArray<int> * inclass)
+  void MeshQuality3d (const Mesh & mesh, Array<int> * inclass)
   { 
     int ncl = 20;
-    NgArray<INDEX> incl(ncl);
+    Array<INDEX> incl(ncl);
     double sum = 0;
     int nontet  = 0;
 
@@ -683,7 +683,7 @@ namespace netgen
 #ifdef OLD
   void Save2DMesh (
 		   const Mesh & mesh2d,
-		   const NgArray<SplineSegment *> * splines,
+		   const Array<SplineSegment *> * splines,
 		   ostream & outfile)
 
   {

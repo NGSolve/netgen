@@ -9,8 +9,8 @@ namespace netgen
   class ImprovementRule
   {
   public:
-    NgArray<Element2d> oldels;
-    NgArray<Element2d> newels;
+    Array<Element2d> oldels;
+    Array<Element2d> newels;
     Array<PointIndices<2>> deledges;
     Array<int,PointIndex> incelsonnode;
     Array<int,PointIndex> reused;

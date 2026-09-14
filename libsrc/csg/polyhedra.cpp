@@ -7,7 +7,7 @@ namespace netgen
 {
 
   Polyhedra::Face::Face (int pi1, int pi2, int pi3,
-                         const NgArray<Point<3> > & points,
+                         const Array<Point<3> > & points,
                          int ainputnr)
   {
     inputnr = ainputnr;
@@ -146,7 +146,7 @@ namespace netgen
 
 
   void Polyhedra :: GetTangentialSurfaceIndices (const Point<3> & p, 
-                                                 NgArray<int> & surfind, double eps) const
+                                                 Array<int> & surfind, double eps) const
   {
     for (int i = 0; i < faces.Size(); i++)
       {
@@ -668,7 +668,7 @@ namespace netgen
   
 
   void Polyhedra :: GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-                                                     NgArray<int> & surfind, double eps) const
+                                                     Array<int> & surfind, double eps) const
   {
     Vec<3> v1n = v1;
     v1n.Normalize();
@@ -727,7 +727,7 @@ namespace netgen
 
 
   void Polyhedra :: GetPrimitiveData (const char *& classname, 
-                                      NgArray<double> & coeffs) const
+                                      Array<double> & coeffs) const
   {
     classname = "Polyhedra";
     coeffs.SetSize(0);
@@ -751,7 +751,7 @@ namespace netgen
     */
   }
 
-  void Polyhedra :: SetPrimitiveData (NgArray<double> & /* coeffs */)
+  void Polyhedra :: SetPrimitiveData (Array<double> & /* coeffs */)
   {
     ;
   }
@@ -870,7 +870,7 @@ namespace netgen
   }
 
 
-  void Polyhedra :: GetPolySurfs(NgArray < NgArray<int> * > & polysurfs)
+  void Polyhedra :: GetPolySurfs(Array < Array<int> * > & polysurfs)
   {
     int maxnum = -1;
   
@@ -882,14 +882,14 @@ namespace netgen
   
     polysurfs.SetSize(maxnum+1);
     for(int i=0; i<polysurfs.Size(); i++)
-      polysurfs[i] = new NgArray<int>;
+      polysurfs[i] = new Array<int>;
 
     for(int i = 0; i<faces.Size(); i++)
       polysurfs[faces[i].inputnr]->Append(faces[i].planenr);
   }
 
 
-  void Polyhedra::CalcSpecialPoints (NgArray<Point<3> > & pts) const
+  void Polyhedra::CalcSpecialPoints (Array<Point<3> > & pts) const
   {
     for (int i = 0; i < points.Size(); i++)
       pts.Append (points[i]);
@@ -897,7 +897,7 @@ namespace netgen
 
 
   void Polyhedra :: AnalyzeSpecialPoint (const Point<3> & /* pt */, 
-                                         NgArray<Point<3> > & /* specpts */) const
+                                         Array<Point<3> > & /* specpts */) const
   {
     ;
   }

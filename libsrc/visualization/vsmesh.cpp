@@ -340,7 +340,7 @@ namespace netgen
 
 
 
-    NgArray<ElementFace> faces;
+    Array<ElementFace> faces;
 
     int meshtimestamp = mesh->GetTimeStamp();
     if (meshtimestamp > vstimestamp || zoomall)
@@ -465,7 +465,7 @@ namespace netgen
           if (vispar.drawfacenumbers)
 	  {
 	    const MeshTopology & top = mesh->GetTopology();
-	    NgArray<int> v;
+	    Array<int> v;
 	    for (int i = 1; i <= top.GetNFaces(); i++)
 	      {
 		top.GetFaceVertices (i, v);
@@ -515,7 +515,7 @@ namespace netgen
 
         if (vispar.drawelementnumbers)
 	  {
-	    NgArray<int> v;
+	    Array<int> v;
 	    // for (int i = 1; i <= mesh->GetNE(); i++)
             for (ElementIndex ei : Range(mesh->VolumeElements()))
 	      {
@@ -1846,7 +1846,7 @@ namespace netgen
 
 
 
-    NgArray<ElementFace> faces;
+    Array<ElementFace> faces;
 
     static float tetcols[][4] =
       {
@@ -1964,8 +1964,8 @@ namespace netgen
 
 		int order = curv.GetOrder();
 
-		NgArray<Point<3> > ploc ( (order+1)*(order+1) );
-		NgArray<Point<3> > pglob ( (order+1)*(order+1) );
+		Array<Point<3> > ploc ( (order+1)*(order+1) );
+		Array<Point<3> > pglob ( (order+1)*(order+1) );
 		Point<3> fpts[3];
 
 		for (int trig = 0; trig < 4; trig++)
@@ -2150,7 +2150,7 @@ namespace netgen
     static float prismcol[] = { 0.0f, 1.0f, 1.0f, 1.0f };
     glLineWidth (1.0f);
 
-    NgArray<ElementFace> faces;
+    Array<ElementFace> faces;
 
 
     glDisable (GL_COLOR_MATERIAL);
@@ -2487,7 +2487,7 @@ namespace netgen
     glDisable (GL_COLOR_MATERIAL);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hexcol);
 
-    NgArray<ElementFace> faces;
+    Array<ElementFace> faces;
     // int hoplotn = 1 << vispar.subdivisions;
 
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
@@ -2820,7 +2820,7 @@ namespace netgen
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, pyramidcol);
 
     glLineWidth (1.0f);
-    NgArray<ElementFace> faces;
+    Array<ElementFace> faces;
 
     for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
       {

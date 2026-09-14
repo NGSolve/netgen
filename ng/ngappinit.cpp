@@ -29,7 +29,7 @@ DLL_HEADER extern bool nodisplay;
 using netgen::parameters;
 using netgen::ngdir;
 using netgen::verbose;
-using netgen::NgArray;
+using netgen::Array;
 using netgen::RegisterUserFormats;
 
 using std::string;
@@ -230,8 +230,8 @@ int main(int argc, char ** argv)
 
       /*
       // lookup user file formats and insert into format list:
-      NgArray<const char*> userformats;
-      NgArray<const char*> extensions;
+      Array<const char*> userformats;
+      Array<const char*> extensions;
       RegisterUserFormats (userformats, extensions);
 
       ostringstream fstr;

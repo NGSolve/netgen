@@ -40,8 +40,8 @@ namespace netgen
 
   extern MeshingParameters mparam;
 
-  void RegisterUserFormats (NgArray<const char*> & names,
-			    NgArray<const char*> & extensions)
+  void RegisterUserFormats (Array<const char*> & names,
+			    Array<const char*> & extensions)
 			    
 {
   for (const auto & entry : UserFormatRegister::getFormats())
@@ -314,7 +314,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
   int numBCs = 0;
 
-  NgArray<int> faceBCs;
+  Array<int> faceBCs;
   TABLE<int> faceBCMapping;
 
   faceBCs.SetSize(mesh.GetNFD());
@@ -327,7 +327,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
   {
 	  int bcNum = mesh.GetFaceDescriptor(faceNr).BCProperty();
 
-	  if(faceBCs.Pos(bcNum) < 0)
+	  if(!faceBCs.Contains(bcNum))
 	  {
         numBCs++;
 		  faceBCs[numBCs-1] = bcNum;
@@ -711,7 +711,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   int inverttets = mparam.inverttets;
   int invertsurf = mparam.inverttrigs;
-  NgArray<int> edges;
+  Array<int> edges;
 
   ofstream outfile (filename);
 

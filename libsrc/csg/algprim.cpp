@@ -117,7 +117,7 @@ namespace netgen
 
 
   void Plane :: GetPrimitiveData (const char *& classname, 
-                                  NgArray<double> & coeffs) const
+                                  Array<double> & coeffs) const
   {
     classname = "plane";
     coeffs.SetSize (6);
@@ -129,7 +129,7 @@ namespace netgen
     coeffs[5] = n(2);
   }
 
-  void Plane :: SetPrimitiveData (NgArray<double> & coeffs)
+  void Plane :: SetPrimitiveData (Array<double> & coeffs)
   {
     p(0) = coeffs[0];
     p(1) = coeffs[1];
@@ -368,7 +368,7 @@ namespace netgen
     c1 = (c(0) * c(0) + c(1) * c(1) + c(2) * c(2)) / (2 * r) - r / 2;
   }
 
-  void Sphere :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  void Sphere :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "sphere";
     coeffs.SetSize (4);
@@ -378,7 +378,7 @@ namespace netgen
     coeffs[3] = r;
   }
 
-  void Sphere :: SetPrimitiveData (NgArray<double> & coeffs)
+  void Sphere :: SetPrimitiveData (Array<double> & coeffs)
   {
     c(0) = coeffs[0];
     c(1) = coeffs[1];
@@ -643,7 +643,7 @@ namespace netgen
     cz = v(2);
   }
 
-  void Ellipsoid :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  void Ellipsoid :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "ellipsoid";
     coeffs.SetSize (12);
@@ -656,7 +656,7 @@ namespace netgen
       }
   }
 
-  void Ellipsoid :: SetPrimitiveData (NgArray<double> & coeffs)
+  void Ellipsoid :: SetPrimitiveData (Array<double> & coeffs)
   {
     for(auto i : Range(3))
       {
@@ -758,7 +758,7 @@ namespace netgen
 
 
 
-  Cylinder :: Cylinder (NgArray<double> & coeffs)
+  Cylinder :: Cylinder (Array<double> & coeffs)
   {
     SetPrimitiveData(coeffs);
   }
@@ -800,7 +800,7 @@ namespace netgen
 
 
 
-  void Cylinder :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  void Cylinder :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "cylinder";
     coeffs.SetSize (7);
@@ -813,7 +813,7 @@ namespace netgen
     coeffs[6] = r;
   }
 
-  void Cylinder :: SetPrimitiveData (NgArray<double> & coeffs)
+  void Cylinder :: SetPrimitiveData (Array<double> & coeffs)
   {
     a(0) = coeffs[0];
     a(1) = coeffs[1];
@@ -1156,14 +1156,14 @@ namespace netgen
     CalcData();
   }
 
-  EllipticCylinder :: EllipticCylinder (NgArray<double> & coeffs)
+  EllipticCylinder :: EllipticCylinder (Array<double> & coeffs)
   {
     SetPrimitiveData(coeffs);
   }
 
 
 
-  void EllipticCylinder :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  void EllipticCylinder :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "ellipticcylinder";
     coeffs.SetSize (9);
@@ -1178,7 +1178,7 @@ namespace netgen
     coeffs[8] = vs(2);
   }
 
-  void EllipticCylinder :: SetPrimitiveData (NgArray<double> & coeffs)
+  void EllipticCylinder :: SetPrimitiveData (Array<double> & coeffs)
   {
     a(0) = coeffs[0];
     a(1) = coeffs[1];
@@ -1341,7 +1341,7 @@ namespace netgen
 
 
 
-  void Cone :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  void Cone :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "cone";
     coeffs.SetSize (8);
@@ -1355,7 +1355,7 @@ namespace netgen
     coeffs[7] = rb;
   }
 
-  void Cone :: SetPrimitiveData (NgArray<double> & coeffs)
+  void Cone :: SetPrimitiveData (Array<double> & coeffs)
   {
     a(0) = coeffs[0];
     a(1) = coeffs[1];
@@ -1566,7 +1566,7 @@ Primitive * EllipticCone :: CreateDefault ()
   }
 
 
- void EllipticCone :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+ void EllipticCone :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "ellipticcone";
     coeffs.SetSize (11);
@@ -1585,7 +1585,7 @@ Primitive * EllipticCone :: CreateDefault ()
   }
 
 
-  void EllipticCone :: SetPrimitiveData (NgArray<double> & coeffs)
+  void EllipticCone :: SetPrimitiveData (Array<double> & coeffs)
   {
 
     a(0) = coeffs[0];
@@ -1756,7 +1756,7 @@ void EllipticCone :: GetTriangleApproximation
     r = ar;
   }
 
-  void Torus :: GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
+  void Torus :: GetPrimitiveData (const char *& classname, Array<double> & coeffs) const
   {
     classname = "torus";
     coeffs.SetSize (8);
@@ -1770,7 +1770,7 @@ void EllipticCone :: GetTriangleApproximation
     coeffs[7] = r;
   }
 
-  void Torus :: SetPrimitiveData (NgArray<double> & coeffs)
+  void Torus :: SetPrimitiveData (Array<double> & coeffs)
   {
     c(0) = coeffs[0];
     c(1) = coeffs[1];

@@ -53,7 +53,7 @@ namespace netgen
     string name;
     string placement;
     string valuetype;
-    NgArray<double> places;
+    Array<double> places;
   };
 
 
@@ -188,7 +188,7 @@ namespace netgen
             else if (token == "MATERIALS")
               {
 		*testout << "parse materials" << endl;
-                NgArray<double> young_modulus, poisson_ratio, mass_density;
+                Array<double> young_modulus, poisson_ratio, mass_density;
 
                 while (1)
                   {

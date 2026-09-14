@@ -769,7 +769,7 @@ namespace netgen
   Ng_BufferMS<int,4> Ngx_Mesh::GetFaceEdges (int fnr) const
   {
     const MeshTopology & topology = mesh->GetTopology();
-    NgArrayMem<int,4> ia;
+    ArrayMem<int,4> ia;
     topology.GetFaceEdges (fnr+1, ia);
     Ng_BufferMS<int,4> res(ia.Size());
     for (size_t i = 0; i < ia.Size(); i++)

@@ -55,7 +55,7 @@ namespace netgen
   }
 
 
-  RevolutionFace :: RevolutionFace(const NgArray<double> & raw_data)
+  RevolutionFace :: RevolutionFace(const Array<double> & raw_data)
   {
     deletable = true;
     
@@ -627,7 +627,7 @@ namespace netgen
 
   
 
-  void RevolutionFace :: GetRawData(NgArray<double> & data) const
+  void RevolutionFace :: GetRawData(Array<double> & data) const
   {
     data.DeleteAll();
     spline->GetRawData(data);
@@ -793,7 +793,7 @@ namespace netgen
     const double b = -randomx;
     const double c = -a*p2d(0)-b*p2d(1);
 
-    NgArray < Point<2> > points;
+    Array < Point<2> > points;
 
     //(*testout) << "face intersections at: " << endl;
     for(int i=0; i<faces.Size(); i++)
@@ -824,7 +824,7 @@ namespace netgen
   }
 
   void Revolution :: GetTangentialSurfaceIndices (const Point<3> & p, 
-                                                 NgArray<int> & surfind, double eps) const
+                                                 Array<int> & surfind, double eps) const
   {
     for (int j = 0; j < faces.Size(); j++)
       if (faces[j] -> PointInFace(p, eps))
@@ -954,7 +954,7 @@ namespace netgen
 
   void Revolution ::
   GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-                                   NgArray<int> & surfind, double eps) const
+                                   Array<int> & surfind, double eps) const
   {
     *testout << "tangentialvecsurfind2, p = " << p << endl;
     for (int i = 0; i < faces.Size(); i++)

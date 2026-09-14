@@ -428,7 +428,7 @@ namespace netgen
         double max, hr;
       
 
-        NgArray<int> p(n);   // pivot-permutation
+        Array<int> p(n);   // pivot-permutation
         Vector hv(n);
     
       
@@ -1155,7 +1155,7 @@ namespace netgen
   }
 
 
-  void DenseMatrix :: MultElementMatrix (const NgArray<int> & pnum, 
+  void DenseMatrix :: MultElementMatrix (const Array<int> & pnum, 
                                          const Vector & hx, Vector & hy)
   {
     int i, j;
@@ -1181,7 +1181,7 @@ namespace netgen
     
   }
   
-  void DenseMatrix :: MultTransElementMatrix (const NgArray<int> & pnum, 
+  void DenseMatrix :: MultTransElementMatrix (const Array<int> & pnum, 
                                               const Vector & hx, Vector & hy)
   {
     int i, j;

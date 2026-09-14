@@ -52,7 +52,7 @@ namespace netgen
   
     NGGUI_API void CalcTransformationMatrices();
     NGGUI_API void StandardRotation (const char * dir);
-    NGGUI_API void ArbitraryRotation (const NgArray<double> & alpha, const NgArray<Vec3d> & vec);
+    NGGUI_API void ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec);
     NGGUI_API void ArbitraryRotation (const double alpha, const Vec3d & vec);
 
     NGGUI_API virtual void MouseMove(int oldx, int oldy,
@@ -107,7 +107,7 @@ namespace netgen
     double scalex = 1., scaley = 1., shiftx = 0., shifty = 0.;
   public:
     shared_ptr<Array<Point<3>, LocalPointIndex>> locpointsptr;
-    shared_ptr<NgArray<IVec<2,LocalPointIndex>>> loclinesptr;
+    shared_ptr<Array<IVec<2,LocalPointIndex>>> loclinesptr;
     shared_ptr<Array<Point<2>, LocalPointIndex>> plainpointsptr;
     int oldnl;
     bool clearptr;
@@ -210,8 +210,8 @@ namespace netgen
     VisualSelect select;
 
 #ifdef PARALLELGL
-    NgArray<int> par_linelists;
-    NgArray<int> par_filledlists;
+    Array<int> par_linelists;
+    Array<int> par_filledlists;
 #endif
 
     MouseEventHandler * user_me_handler;

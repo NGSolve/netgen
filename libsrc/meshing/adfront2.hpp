@@ -187,7 +187,7 @@ public:
   ~AdFront2 ();
 
   ///
-  // void GetPoints (NgArray<Point<3> > & apoints) const;
+  // void GetPoints (Array<Point<3> > & apoints) const;
   ///
   void Print (ostream & ost) const;
 
@@ -213,9 +213,9 @@ public:
   int GetLocals (int baseline, 
 		 Array<Point<3>, LocalPointIndex> & locpoints,
 		 Array<MultiPointGeomInfo, LocalPointIndex> & pgeominfo,
-                 NgArray<IVec<2,LocalPointIndex>> & loclines,
+                 Array<IVec<2,LocalPointIndex>> & loclines,
                  Array<Front2PointIndex, LocalPointIndex> & pindex,   // local -> front
-                 NgArray<int> & lindex,
+                 Array<int> & lindex,
                  double xh);
 
   ///

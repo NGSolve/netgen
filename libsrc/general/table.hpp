@@ -29,7 +29,7 @@ protected:
   };
   
   ///
-  NgArray<linestruct> data;
+  Array<linestruct> data;
   char * oneblock;
 
 public:
@@ -42,7 +42,7 @@ public:
 
   DLL_HEADER BASE_TABLE (int size);
   ///
-  DLL_HEADER BASE_TABLE (const NgFlatArray<int> & entrysizes, int elemsize);
+  DLL_HEADER BASE_TABLE (const FlatArray<int> & entrysizes, int elemsize);
   ///
   DLL_HEADER ~BASE_TABLE ();
 
@@ -119,9 +119,8 @@ public:
   { }
   
   /// Creates fixed maximal element size table
-  inline TABLE (const NgFlatArray<int,BASE> & entrysizes)
-    : BASE_TABLE (NgFlatArray<int> (entrysizes.Size(), entrysizes.Size() ? const_cast<int*>(&entrysizes[BASE]) : nullptr), 
-		  sizeof(T))
+  inline TABLE (FlatArray<int> entrysizes)
+    : BASE_TABLE (entrysizes, sizeof(T))
   { ; }
 
   TABLE & operator= (TABLE && tab2)
@@ -242,14 +241,14 @@ public:
   }
 
   /// Access entry.
-  NgFlatArray<T> operator[] (int i) const
+  FlatArray<T> operator[] (int i) const
   { 
 #ifdef DEBUG
     if (i-BASE < 0 || i-BASE >= data.Size())
       cout << "table out of range, i = " << i << ", s = " << data.Size() << endl;
 #endif
 
-    return NgFlatArray<T> (data[i-BASE].size, (T*)data[i-BASE].col);
+    return FlatArray<T> (data[i-BASE].size, (T*)data[i-BASE].col);
   }
 
   void DoArchive (Archive & ar)
@@ -265,7 +264,7 @@ inline ostream & operator<< (ostream & ost, const TABLE<T,BASE> & table)
   for (int i = BASE; i < table.Size()+BASE; i++)
     {
       ost << i << ": ";
-      NgFlatArray<T> row = table[i];
+      FlatArray<T> row = table[i];
       ost << "(" << row.Size() << ") ";
       for (int j = 0; j < row.Size(); j++)
 	ost << row[j] << " ";

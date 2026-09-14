@@ -79,9 +79,9 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   Array<STLPointId> chartpoints;             //point in chart becomes chartnum
   Array<STLPointId> innerchartpoints;
   Array<Point<3>> innerchartpts;
-  NgArray<int> dirtycharttrigs;
+  Array<int> dirtycharttrigs;
 
-  NgArray<int> chartdistacttrigs (GetNT());   //outercharttrigs
+  Array<int> chartdistacttrigs (GetNT());   //outercharttrigs
   chartdistacttrigs = 0;
 
 
@@ -89,7 +89,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   //int chartboundarydivisions = 10;
   markedsegs.SetSize(0); //for testing!!!
 
-  NgArray<ChartId> chartpointchecked(GetNP()); //for dirty-chart-trigs
+  Array<ChartId> chartpointchecked(GetNP()); //for dirty-chart-trigs
 
   chartmark.SetSize(GetNT());
 
@@ -671,7 +671,7 @@ int STLGeometry :: AtlasMade() const
 
 /*
 //return 1 if not exists
-int AddIfNotExists(NgArray<int>& list, int x)
+int AddIfNotExists(Array<int>& list, int x)
 {
   int i;
   for (i = 1; i <= list.Size(); i++)
@@ -683,7 +683,7 @@ int AddIfNotExists(NgArray<int>& list, int x)
 }
 */
 
-void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum)
+void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum)
 {
   STLPointId np1, np2;
   
@@ -743,8 +743,8 @@ void STLGeometry :: GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum)
 
 void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
 				       const Array<ChartId,STLTrigId>& outercharttrigs,
-				       NgArray<ChartId>& chartpointchecked,
-				       NgArray<int>& dirtytrigs)
+				       Array<ChartId>& chartpointchecked,
+				       Array<int>& dirtytrigs)
 {
   dirtytrigs.SetSize(0);
 

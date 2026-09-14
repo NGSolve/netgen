@@ -535,8 +535,8 @@ namespace nglib
 
 
 
-   NgArray<STLReadTriangle> readtrias; //only before initstlgeometry
-   NgArray<Point<3> > readedges; //only before init stlgeometry
+   Array<STLReadTriangle> readtrias; //only before initstlgeometry
+   Array<Point<3> > readedges; //only before init stlgeometry
 
    // loads geometry from STL file
    NGLIB_API Ng_STL_Geometry * Ng_STL_LoadGeometry (const char * filename, int binary)

@@ -35,7 +35,7 @@ public:
   void CombineImprove ();
 
   void SplitImprove ();
-  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, NgArray<PointIndices<3>> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
+  double SplitImproveEdge (Table<ElementIndex,PointIndex> & elementsonnode, Array<PointIndices<3>> &locfaces, double badmax, PointIndex pi1, PointIndex pi2, PointIndex ptmp, bool check_only=false);
 
   void SplitImprove2 ();
   double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
@@ -44,7 +44,7 @@ public:
   double SwapImproveEdge (const TBitArray<ElementIndex> * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (const TBitArray<ElementIndex> * working_elements = NULL);
   void SwapImproveSurface (const TBitArray<ElementIndex> * working_elements = NULL,
-			   const NgArray< idmap_type* > * idmaps = NULL);
+			   const Array< idmap_type* > * idmaps = NULL);
   void SwapImprove2 (bool conform_segments = false);
   double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool conform_segments, bool check_only=false );
 
@@ -88,7 +88,7 @@ extern int WrongOrientation (const Mesh::T_POINTS & points, const Element & el);
 class MinFunctionSum : public MinFunction
 {
 protected:
-  NgArray<MinFunction*> functions;
+  Array<MinFunction*> functions;
  
 public:
   
@@ -108,12 +108,12 @@ public:
 class PointFunction1 : public MinFunction
 {
   Mesh::T_POINTS & points;
-  const NgArray<PointIndices<3>> & faces;
+  const Array<PointIndices<3>> & faces;
   const MeshingParameters & mp;
   double h;
 public:
   PointFunction1 (Mesh::T_POINTS & apoints, 
-		  const NgArray<PointIndices<3>> & afaces,
+		  const Array<PointIndices<3>> & afaces,
 		  const MeshingParameters & amp,
 		  double ah);
   

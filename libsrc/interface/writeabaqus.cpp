@@ -162,7 +162,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 
       cout << "masternode = " << masternode << " = "
 	   << mesh[masternode] << endl;
-      NgArray<PointIndex> minions(3);
+      Array<PointIndex> minions(3);
       minions = PointIndex(PointIndex::INVALID);
       for (int i = 1; i <= 3; i++)
 	{

@@ -25,7 +25,7 @@ class AnisotropicClusters
   int nv, ned, nfa, ne;
 
   // connected nodes, nodes = vertices, edges, faces, elements
-  NgArray<int> cluster_reps;
+  Array<int> cluster_reps;
 
 public:
   AnisotropicClusters (const Mesh & amesh);

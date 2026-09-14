@@ -479,7 +479,7 @@ namespace netgen
     mesh.SetGlobalH (mparam.maxh);
     mesh.SetMinimalH (mparam.minh);
 
-    NgArray<double> maxhdom;
+    Array<double> maxhdom;
     maxhdom.SetSize (geom.NrSolids());
     maxhdom = mparam.maxh;
     int maxlayer = 1;

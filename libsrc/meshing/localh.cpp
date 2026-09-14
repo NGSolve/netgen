@@ -492,8 +492,8 @@ namespace netgen
       (*testout) << "inner = " << root->flags.pinner << " =?= " 
 		 << testinner(Point3d(root->xmid[0], root->xmid[1], root->xmid[2])) << endl;
 
-    NgArray<int> faceinds(nf);
-    NgArray<Box3d> faceboxes(nf);
+    Array<int> faceinds(nf);
+    Array<Box3d> faceboxes(nf);
 
     for (int i = 1; i <= nf; i++)
       {
@@ -509,8 +509,8 @@ namespace netgen
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
 		      const AdFront3 & adfront, 
-		      NgArray<Box3d> & faceboxes,
-		      NgArray<int> & faceinds, int nfinbox)
+		      Array<Box3d> & faceboxes,
+		      Array<int> & faceinds, int nfinbox)
   {
     if (!box) return;
   
@@ -526,9 +526,9 @@ namespace netgen
 
     Box3d boxcfc(c,fc);
 
-    NgArrayMem<int, 100> faceused;
-    NgArrayMem<int, 100> faceused2;
-    NgArrayMem<int, 100> facenotused;
+    ArrayMem<int, 100> faceused;
+    ArrayMem<int, 100> faceused2;
+    ArrayMem<int, 100> facenotused;
 
     /*
     faceused.SetSize(0);
@@ -841,7 +841,7 @@ namespace netgen
       }
   }
 
-  void LocalH :: GetInnerPoints (NgArray<Point<3> > & points) const
+  void LocalH :: GetInnerPoints (Array<Point<3> > & points) const
   {
     static Timer t("GetInnerPoints"); RegionTimer reg(t);
     if (dimension == 2)
@@ -862,7 +862,7 @@ namespace netgen
           
   }
 
-  void LocalH :: GetInnerPointsRec (const GradingBox * box, NgArray<Point<3> > & points) const
+  void LocalH :: GetInnerPointsRec (const GradingBox * box, Array<Point<3> > & points) const
   {
     if (box -> flags.isinner && box -> HasChilds())
       points.Append ( box -> PMid() );
@@ -874,7 +874,7 @@ namespace netgen
   }
 
   
-  void LocalH :: GetOuterPoints (NgArray<Point<3> > & points)
+  void LocalH :: GetOuterPoints (Array<Point<3> > & points)
   {
     static Timer t("LocalH::GetOuterPoints"); RegionTimer rt(t);
     for (int i = 0; i < boxes.Size(); i++)

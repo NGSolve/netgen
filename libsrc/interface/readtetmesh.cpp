@@ -50,14 +50,14 @@ namespace netgen
     Array<int> eldom;
     int minId3D = -1, minId2D = -1;
     int maxId3D(-1), maxId2D(-1), maxId1D(-1), maxId0D(-1);
-    Array<NgArray<int> *> segmentdata;
+    Array<Array<int> *> segmentdata;
     Array<Element2d* > tris;
 
-    NgArray<int> userdata_int;  // just save data for 1:1 output
-    NgArray<double> userdata_double;
-    NgArray<int> point_pids;
+    Array<int> userdata_int;  // just save data for 1:1 output
+    Array<double> userdata_double;
+    Array<int> point_pids;
     Array<int> tetfacedata;
-    NgArray<int> uid_to_group_3D, uid_to_group_2D, uid_to_group_1D, uid_to_group_0D;
+    Array<int> uid_to_group_3D, uid_to_group_2D, uid_to_group_1D, uid_to_group_0D;
 
     while(!done)
       {
@@ -224,7 +224,7 @@ namespace netgen
             segmentdata.SetSize(nedges);
             for(int i=0; i<nedges; i++)
               {
-                segmentdata[i] = new NgArray<int>(7);
+                segmentdata[i] = new Array<int>(7);
                 *segmentdata[i] = -1;
                 in >> dummyint;
                 in >> (*segmentdata[i])[0] >> (*segmentdata[i])[1];
@@ -536,7 +536,7 @@ namespace netgen
           case 27:
             // Object2D GroupID, #Faces <immediately followed by> FaceID List
             {
-              NgArray<int> ports;
+              Array<int> ports;
               //int totnum = 0;
               uid_to_group_2D.SetSize(maxId2D+1);
               uid_to_group_2D = -1;

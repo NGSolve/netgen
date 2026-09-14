@@ -77,7 +77,7 @@ class NGGUI_API VisualSceneSolution : public VisualScene
   int fieldlineslist;
   int num_fieldlineslists;
   int fieldlines_startarea;
-  NgArray<double> fieldlines_startarea_parameter;
+  Array<double> fieldlines_startarea_parameter;
   int fieldlines_startface;
   string fieldlines_filename;
   double fieldlines_reltolerance;
@@ -107,11 +107,11 @@ class NGGUI_API VisualSceneSolution : public VisualScene
 
   VisualSelect select;
 #ifdef PARALLELGL
-  NgArray<int> par_linelists;
-  NgArray<int> par_surfellists;
+  Array<int> par_linelists;
+  Array<int> par_surfellists;
 #endif
 
-  NgArray<UserVisualizationObject*> user_vis;
+  Array<UserVisualizationObject*> user_vis;
 
 public:
 
@@ -163,7 +163,7 @@ public:
   
 
 
-  NgArray<SolData*> soldata;
+  Array<SolData*> soldata;
 
 
   int usetexture;    // 0..no, 1..1D texture (standard), 2..2D-texture (complex)
@@ -244,14 +244,14 @@ public:
   }
   void DeleteUserVisualizationObject (UserVisualizationObject * vis)
   {
-    int pos = user_vis.Pos(vis);
-    if (pos >= 0)
-      user_vis.Delete(pos);
+    auto pos = user_vis.Pos(vis);
+    if (pos != user_vis.ILLEGAL_POSITION)
+      user_vis.DeleteElement(pos);
   }
 
 private:
-  void GetClippingPlaneTrigs (SolData * sol, NgArray<ClipPlaneTrig> & trigs, NgArray<ClipPlanePoint> & pts);
-  void GetClippingPlaneGrid (NgArray<ClipPlanePoint> & pts);
+  void GetClippingPlaneTrigs (SolData * sol, Array<ClipPlaneTrig> & trigs, Array<ClipPlanePoint> & pts);
+  void GetClippingPlaneGrid (Array<ClipPlanePoint> & pts);
   void DrawCone (const Point<3> & p1, const Point<3> & p2, double r);
   void DrawCylinder (const Point<3> & p1, const Point<3> & p2, double r);
 
@@ -330,7 +330,7 @@ public:
   void Draw1DElements();
 
   void DrawSurfaceVectors ();
-  void DrawTrigSurfaceVectors(const NgArray< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
+  void DrawTrigSurfaceVectors(const Array< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
 			      const int sei, const SolData * vsol, bool swap_lam=false);
   void DrawIsoSurface(const SolData * sol, const SolData * grad, int comp);
   

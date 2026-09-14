@@ -45,10 +45,10 @@ namespace netgen
   class MarkedQuad;
 
   typedef Array<MarkedTet,ElementIndex> T_MTETS;
-  typedef NgArray<MarkedPrism> T_MPRISMS;
-  typedef NgArray<MarkedIdentification> T_MIDS;
-  typedef NgArray<MarkedTri> T_MTRIS;
-  typedef NgArray<MarkedQuad> T_MQUADS;
+  typedef Array<MarkedPrism> T_MPRISMS;
+  typedef Array<MarkedIdentification> T_MIDS;
+  typedef Array<MarkedTri> T_MTRIS;
+  typedef Array<MarkedQuad> T_MQUADS;
 
   struct BisectionInfo
   {
@@ -97,9 +97,9 @@ namespace netgen
     unique_ptr<INDEX_3_CLOSED_HASHTABLE<int>> illegal_trigs;
 
     /// faces of rest-solid
-    NgArray<Element2d> openelements;
+    Array<Element2d> openelements;
     /// open segments for surface meshing
-    NgArray<Segment> opensegments;
+    Array<Segment> opensegments;
     /// face descriptor index for each open segment (parallel to opensegments)
     Array<int> opensegment_faces;
 
@@ -116,7 +116,7 @@ namespace netgen
     ///
     double hmin;
     ///
-    NgArray<double> maxhdomain;
+    Array<double> maxhdomain;
   
     /**
        the face-index of the surface element maps into
@@ -185,13 +185,13 @@ namespace netgen
     /// mesh access semaphores.
     NgMutex majormutex;
 
-    SymbolTable< NgArray<int>* > userdata_int;
-    SymbolTable< NgArray<double>* > userdata_double;
+    SymbolTable< Array<int>* > userdata_int;
+    SymbolTable< Array<double>* > userdata_double;
 
 
-    mutable NgArray< netgen::Point<3> > pointcurves;
-    mutable NgArray<int> pointcurves_startpoint;
-    mutable NgArray<double> pointcurves_red,pointcurves_green,pointcurves_blue;
+    mutable Array< netgen::Point<3> > pointcurves;
+    mutable Array<int> pointcurves_startpoint;
+    mutable Array<double> pointcurves_red,pointcurves_green,pointcurves_blue;
 
 
     /// start element for point search (GetElementOfPoint)
@@ -228,14 +228,14 @@ namespace netgen
     BisectionInfo bisectioninfo;
 
     // store coarse mesh before hp-refinement
-    unique_ptr<NgArray<HPRefElement>> hpelements;
+    unique_ptr<Array<HPRefElement>> hpelements;
     unique_ptr<Mesh> coarsemesh;
   
   
     /// number of refinement levels
     // int mglevels;
     // number of vertices on each refinement level:
-    NgArray<size_t> level_nv;
+    Array<size_t> level_nv;
     /// refinement hierarchy
     Array<PointIndices<2>,PointIndex> mlbetweennodes;
     /// parent element of volume element
@@ -513,7 +513,7 @@ namespace netgen
     ///
 	DLL_HEADER double MaxHDomain (int dom) const;
     ///
-	DLL_HEADER void SetMaxHDomain (const NgArray<double> & mhd);
+	DLL_HEADER void SetMaxHDomain (const Array<double> & mhd);
     ///
     DLL_HEADER double GetH (const netgen::Point<3> & p, int layer=1) const;
     DLL_HEADER double GetH (PointIndex pi) const { return GetH(points[pi], points[pi].GetLayer()); }
@@ -630,9 +630,9 @@ namespace netgen
     ///
     void ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 				       const TBitArray<PointIndex> & usepoint, 
-				       const NgArray< Vec<3>* > & nv,
+				       const Array< Vec<3>* > & nv,
 				       OPTIMIZEGOAL goal = OPT_QUALITY,
-				       const NgArray< idmap_type* > * idmaps = NULL);
+				       const Array< idmap_type* > * idmaps = NULL);
     /**
        free nodes in environment of openelements 
        for optimiztion
@@ -899,9 +899,9 @@ namespace netgen
     //   }
 
     //   ///
-    //   void GetIdentificationMap (int identnr, NgArray<int> & identmap) const;
+    //   void GetIdentificationMap (int identnr, Array<int> & identmap) const;
     //   ///
-    //   void GetIdentificationPairs (int identnr, NgArray<INDEX_2> & identpairs) const;
+    //   void GetIdentificationPairs (int identnr, Array<INDEX_2> & identpairs) const;
     //   ///
     //   int GetMaxIdentificationNr () const
     //   { 
@@ -1021,13 +1021,13 @@ namespace netgen
     }
 
     ///
-    void SetUserData(const char * id, NgArray<int> & data);
+    void SetUserData(const char * id, Array<int> & data);
     ///
-    bool GetUserData(const char * id, NgArray<int> & data, int shift = 0) const;
+    bool GetUserData(const char * id, Array<int> & data, int shift = 0) const;
     ///
-    void SetUserData(const char * id, NgArray<double> & data);
+    void SetUserData(const char * id, Array<double> & data);
     ///
-    bool GetUserData(const char * id, NgArray<double> & data, int shift = 0) const;
+    bool GetUserData(const char * id, Array<double> & data, int shift = 0) const;
 
     ///
     friend void OptimizeRestart (Mesh & mesh3d);
@@ -1048,8 +1048,8 @@ namespace netgen
 
     /// distributes the master-mesh to local meshes
     DLL_HEADER void Distribute ();
-    DLL_HEADER void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
-                                NgArray<int> & segment_weights);
+    DLL_HEADER void Distribute (Array<int> & volume_weights, Array<int> & surface_weights,
+                                Array<int> & segment_weights);
 
 
     /// find connection to parallel meshes
@@ -1060,8 +1060,8 @@ namespace netgen
 
     /// use metis to decompose master mesh 
     DLL_HEADER void ParallelMetis (int nproc); 
-    DLL_HEADER void ParallelMetis (NgArray<int> & volume_weights, NgArray<int> & surface_weights,
-                                   NgArray<int> & segment_weights); 
+    DLL_HEADER void ParallelMetis (Array<int> & volume_weights, Array<int> & surface_weights,
+                                   Array<int> & segment_weights); 
 
     void PartHybridMesh (); 
     void PartDualHybridMesh (); 
@@ -1080,13 +1080,13 @@ namespace netgen
     void ParallelMetis (int /* nproc */) {}
     void Distribute () {}
     void SendRecvMesh () {}
-    void Distribute (NgArray<int> & volume_weights, NgArray<int> & surface_weights, 
-      NgArray<int> & segment_weights){ }
+    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
+      Array<int> & segment_weights){ }
 #endif
 
     Array<int, ElementIndex> vol_partition;
-    NgArray<int> surf_partition;
-    NgArray<int> seg_partition;
+    Array<int> surf_partition;
+    Array<int> seg_partition;
 
     shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
 

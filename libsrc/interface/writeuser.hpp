@@ -62,8 +62,8 @@ extern bool DLL_HEADER WriteUserFormat (const string & format,
                                         const Mesh & mesh,
                                         const filesystem::path & filename);
 
-extern void DLL_HEADER RegisterUserFormats (NgArray<const char*> & names,
-                                 NgArray<const char*> & extensions);
+extern void DLL_HEADER RegisterUserFormats (Array<const char*> & names,
+                                 Array<const char*> & extensions);
 
 }
 

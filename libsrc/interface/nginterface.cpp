@@ -192,9 +192,9 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
 	    bool endfile = false;
 	    int n, dummy;
 	      
-	    NgArray<int> segment_weights;
-	    NgArray<int> surface_weights;
-	    NgArray<int> volume_weights;
+	    Array<int> segment_weights;
+	    Array<int> surface_weights;
+	    Array<int> volume_weights;
 	      
 	    while (weightsfile.good() && !endfile)
 	      {
@@ -483,14 +483,14 @@ const char * Ng_GetDomainMaterial (int dom)
 
 int Ng_GetUserDataSize (char * id)
 {
-  NgArray<double> da;
+  Array<double> da;
   mesh->GetUserData (id, da);
   return da.Size();
 }
 
 void Ng_GetUserData (char * id, double * data)
 {
-  NgArray<double> da;
+  Array<double> da;
   mesh->GetUserData (id, da);
   for (int i = 0; i < da.Size(); i++)
     data[i] = da[i];
@@ -644,12 +644,12 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
 			   const int * const indices, const int numind)
   
 {
-  NgArray<int> * dummy(NULL);
+  Array<int> * dummy(NULL);
   int ind = -1;
 
   if(indices != NULL)
     {
-      dummy = new NgArray<int>(numind);
+      dummy = new Array<int>(numind);
       for(int i=0; i<numind; i++) (*dummy)[i] = indices[i];
     }
 
@@ -690,12 +690,12 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
 				  const int * const indices, const int numind)
   
 {
-  NgArray<int> * dummy(NULL);
+  Array<int> * dummy(NULL);
   int ind = -1;
 
   if(indices != NULL)
     {
-      dummy = new NgArray<int>(numind);
+      dummy = new Array<int>(numind);
       for(int i=0; i<numind; i++) (*dummy)[i] = indices[i];
     }
 
@@ -1559,7 +1559,7 @@ int Ng_GetSurfaceElement_Edges (int elnr, int * edges, int * orient)
   /*
     int i, ned;
     const MeshTopology & topology = mesh->GetTopology();
-    NgArray<int> ia;
+    Array<int> ia;
     topology.GetSurfaceElementEdges (elnr, ia);
     ned = ia.Size();
     for (i = 1; i <= ned; i++)
@@ -1591,7 +1591,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 int Ng_GetFace_Vertices (int fnr, int * vert)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  NgArrayMem<int,4> ia;
+  ArrayMem<int,4> ia;
   topology.GetFaceVertices (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     vert[i] = ia[i];
@@ -1603,7 +1603,7 @@ int Ng_GetFace_Vertices (int fnr, int * vert)
 int Ng_GetFace_Edges (int fnr, int * edge)
 {
   const MeshTopology & topology = mesh->GetTopology();
-  NgArrayMem<int,4> ia;
+  ArrayMem<int,4> ia;
   topology.GetFaceEdges (fnr, ia);
   for (int i = 0; i < ia.Size(); i++)
     edge[i] = ia[i];
@@ -2186,9 +2186,9 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
   
   mesh->LocalHFunction().SetGrading (mparam.grading);
 
-  NgArray<double> * qualityloss_arr = NULL;
+  Array<double> * qualityloss_arr = NULL;
   if(qualityloss != NULL)
-    qualityloss_arr = new NgArray<double>;
+    qualityloss_arr = new Array<double>;
 
   ref -> Bisect (*mesh, biopt, qualityloss_arr);
 

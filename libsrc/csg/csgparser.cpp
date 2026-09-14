@@ -928,7 +928,7 @@ namespace netgen
 		    
 		    ParseChar (scan, ';');
 
-		    NgArray<int> si;
+		    Array<int> si;
 		    geom->GetSolid(surfname)->GetSurfaceIndices(si);
 		    int tlonr = 
 		      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name),
@@ -974,7 +974,7 @@ namespace netgen
 		      ParseChar (scan, ';');
 		      
 		      
-		      NgArray<int> si1, si2;
+		      Array<int> si1, si2;
 		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
 		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
 
@@ -1010,7 +1010,7 @@ namespace netgen
 		      ParseChar (scan, ';');
 
 		      
-		      NgArray<int> si1, si2;
+		      Array<int> si1, si2;
 		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
 		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
 		      
@@ -1240,7 +1240,7 @@ namespace netgen
 
 		CSGeometry::BCModification bcm;
 		bcm.bcname = NULL;
-		NgArray<int> si;
+		Array<int> si;
 		
 		geom->GetSolid(name1)->GetSurfaceIndices(si);
 		if(si.Size() == 0)
@@ -1292,7 +1292,7 @@ namespace netgen
 		bcm.bcname = NULL;
 
 
-		NgArray<int> si;
+		Array<int> si;
 		
 		geom->GetSolid(name1)->GetSurfaceIndices(si);
 		if(si.Size() == 0)

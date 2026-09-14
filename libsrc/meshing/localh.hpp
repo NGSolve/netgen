@@ -141,11 +141,11 @@ namespace netgen
     void WidenRefinement ();
 
     /// get points in inner elements
-    void GetInnerPoints (NgArray<Point<3> > & points) const;
-    void GetInnerPointsRec (const GradingBox * box, NgArray<Point<3> > & points) const;
+    void GetInnerPoints (Array<Point<3> > & points) const;
+    void GetInnerPointsRec (const GradingBox * box, Array<Point<3> > & points) const;
 
     /// get points in outer closure
-    void GetOuterPoints (NgArray<Point<3> > & points);
+    void GetOuterPoints (Array<Point<3> > & points);
 
     ///
     void Convexify ();
@@ -170,8 +170,8 @@ namespace netgen
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
 			     const class AdFront3 & adfront,
-			     NgArray<Box3d> & faceboxes,
-			     NgArray<int> & finds, int nfinbox);
+			     Array<Box3d> & faceboxes,
+			     Array<int> & finds, int nfinbox);
 
 
 

@@ -70,8 +70,8 @@ int Meshing3 :: ApplyRules
  Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
  INDEX lfacesplit,	       // for local faces in outer radius
  INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
- NgArray<LocalElement> & elements,    // out: new elements
- NgArray<INDEX> & delfaces,      // out: face indices of faces to delete
+ Array<LocalElement> & elements,    // out: new elements
+ Array<INDEX> & delfaces,      // out: face indices of faces to delete
  int tolerance,                // quality class: 1 best 
  double sloppy,                // quality strength
  int rotind1,                  // how to rotate base element
@@ -95,22 +95,22 @@ int Meshing3 :: ApplyRules
 
 
   Array<int, LocalPointIndex> pused;         // point is already mapped, number of uses
-  NgArrayMem<char,100> fused;                       // face is already mapped
+  ArrayMem<char,100> fused;                       // face is already mapped
   ArrayMem<LocalPointIndex,100,RulePointIndex> pmap;   // map of reference point to local point
   ArrayMem<bool,100,RulePointIndex> pfixed;            // point mapped by face-map
-  NgArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
-  NgArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
+  ArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
+  ArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
   ArrayMem<Point3d,100> transfreezone;            // transformed free-zone
   INDEX_2_CLOSED_HASHTABLE<int> ledges(100); // edges in local environment
   
-  NgArrayMem<Point3d,100> tempnewpoints;
-  NgArray<MiniElement2d> tempnewfaces;
-  NgArrayMem<int,100> tempdelfaces;
-  NgArray<LocalElement> tempelements;
-  NgArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
+  ArrayMem<Point3d,100> tempnewpoints;
+  Array<MiniElement2d> tempnewfaces;
+  ArrayMem<int,100> tempdelfaces;
+  Array<LocalElement> tempelements;
+  ArrayMem<Box3d,100> triboxes;         // bounding boxes of local faces
 
   Array<int, LocalPointIndex> pnearness;
-  NgArray<int> fnearness;
+  Array<int> fnearness;
 
   static int cnt = 0;
   cnt++;
@@ -664,7 +664,7 @@ int Meshing3 :: ApplyRules
 
 		      if (loktestmode)
 			{
-			  const NgArray<Point3d> & fz = rule->GetTransFreeZone();
+			  const Array<Point3d> & fz = rule->GetTransFreeZone();
 			  (*testout) << "Freezone: " << endl;
 			  for (int i = 1; i <= fz.Size(); i++)
 			    (*testout) << fz[i-1] << endl;
@@ -699,7 +699,7 @@ int Meshing3 :: ApplyRules
 
 		      for (int i = 1; i <= lfaces.Size() && ok; i++)
 			{
-			  NgArrayMem<int, 10> lpi(4);
+			  ArrayMem<int, 10> lpi(4);
 
 			  if (!fused[i-1])
 			    { 

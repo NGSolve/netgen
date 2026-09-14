@@ -94,7 +94,7 @@ namespace netgen
       seg->GetCoeff (coeffs);
     }
 
-    virtual void GetPoints (int n, NgArray<Point<2> > & points) const
+    virtual void GetPoints (int n, Array<Point<2> > & points) const
     {
       seg->GetPoints (n, points);
     }
@@ -131,12 +131,12 @@ namespace netgen
   class DLL_HEADER SplineGeometry2d : public SplineGeometry<2>, public NetgenGeometry
   {
   protected:
-    NgArray<char*> materials;
-    NgArray<double> maxh;
-    NgArray<bool> quadmeshing;
+    Array<char*> materials;
+    Array<double> maxh;
+    Array<bool> quadmeshing;
     Array<bool> tensormeshing;
-    NgArray<int> layer;
-    NgArray<string*> bcnames;
+    Array<int> layer;
+    Array<string*> bcnames;
     double elto0 = 1.0;
 
 

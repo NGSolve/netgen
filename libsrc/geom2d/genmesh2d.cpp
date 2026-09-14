@@ -139,7 +139,7 @@ namespace netgen
     double lold = 0;
     oldmark = pold;
     edgelengthold = 0;
-    NgArray<PointIndex> locsearch;
+    Array<PointIndex> locsearch;
     
     for (int i = 1; i <= n; i++)
       {
@@ -523,7 +523,7 @@ namespace netgen
     for (int i = 1; i <= maxdomnr; i++)
       mesh->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
 
-    // set NgArray<string*> bcnames... 
+    // set Array<string*> bcnames... 
     // number of bcnames
     int maxsegmentindex = 0;
     for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)

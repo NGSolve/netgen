@@ -277,7 +277,7 @@ namespace netgen
       }
     
 
-    NgArray<int> num_segs_on_proc(ntasks);
+    Array<int> num_segs_on_proc(ntasks);
     num_segs_on_proc = 0;
     for (SegmentIndex ei = 0; ei < GetNSeg(); ei++)
       // num_segs_on_proc[(*this)[ei].GetPartition()]++;
@@ -376,7 +376,7 @@ namespace netgen
     tbuildvertex.Start();
     Array<int, PointIndex> vert_flag (GetNV());
     Array<int, PointIndex> num_procs_on_vert (GetNV());
-    NgArray<int> num_verts_on_proc (ntasks);
+    Array<int> num_verts_on_proc (ntasks);
     num_verts_on_proc = 0;
     num_procs_on_vert = 0;
     
@@ -393,7 +393,7 @@ namespace netgen
               f(pnum, dest);
 
           /*
-	  NgFlatArray<SegmentIndex> segs = segs_of_proc[dest];
+	  FlatArray<SegmentIndex> segs = segs_of_proc[dest];
 	  for (int hi = 0; hi < segs.Size(); hi++)
 	    {
 	      const Segment & el = (*this) [segs[hi]];
@@ -498,7 +498,7 @@ namespace netgen
     **/
     PrintMessage ( 3, "Sending Vertices - identifications");
     int maxidentnr = idents.GetMaxNr();
-    NgArray<int> ppd_sizes(ntasks);
+    Array<int> ppd_sizes(ntasks);
     ppd_sizes = 1 + 2*maxidentnr;
     for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
       {
@@ -783,7 +783,7 @@ namespace netgen
 	  }
 	}
     };
-    NgArray<int> per_seg_size(GetNSeg());
+    Array<int> per_seg_size(GetNSeg());
     per_seg_size = 0;
     iterate_segs1([&](SegmentIndex segi1, SegmentIndex segi2)
 		  { per_seg_size[segi1]++; });
@@ -792,7 +792,7 @@ namespace netgen
 		  { per_seg.Add(segi1, segi2); });
     // make per_seg transitive
     auto iterate_per_seg_trans = [&](auto f){
-      NgArray<SegmentIndex> allsegs;
+      Array<SegmentIndex> allsegs;
       for (SegmentIndex segi = 0; segi < GetNSeg(); segi++)
 	{
 	  allsegs.SetSize(0);
@@ -816,12 +816,12 @@ namespace netgen
 	  f(segi, allsegs);
 	}
     };
-    iterate_per_seg_trans([&](SegmentIndex segi, NgArray<SegmentIndex> & segs){
+    iterate_per_seg_trans([&](SegmentIndex segi, Array<SegmentIndex> & segs){
 	for (int j = 0; j < segs.Size(); j++)
 	  per_seg_size[segi] = segs.Size();
       });
     TABLE<SegmentIndex> per_seg_trans(per_seg_size);
-    iterate_per_seg_trans([&](SegmentIndex segi, NgArray<SegmentIndex> & segs){
+    iterate_per_seg_trans([&](SegmentIndex segi, Array<SegmentIndex> & segs){
 	for (int j = 0; j < segs.Size(); j++)
 	  per_seg_trans.Add(segi, segs[j]);
       });
@@ -981,8 +981,8 @@ namespace netgen
     self.segmentht = nullptr;
     self.surfelementht = nullptr;
     
-    self.openelements = NgArray<Element2d>(0);
-    self.opensegments = NgArray<Segment>(0);
+    self.openelements = Array<Element2d>(0);
+    self.opensegments = Array<Segment>(0);
     self.numvertices = 0;
     self.mlbetweennodes = Array<PointIndices<2>,PointIndex> (0);
     self.mlparentelement = Array<ElementIndex, ElementIndex>(0);
@@ -1619,7 +1619,7 @@ namespace netgen
 
   // distribute the mesh to the worker processors
   // call it only for the master !
-  void Mesh :: Distribute (NgArray<int> & volume_weights , NgArray<int>  & surface_weights, NgArray<int>  & segment_weights)
+  void Mesh :: Distribute (Array<int> & volume_weights , Array<int>  & surface_weights, Array<int>  & segment_weights)
   {
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -1647,7 +1647,7 @@ namespace netgen
   
 
 #ifdef METIS5
-  void Mesh :: ParallelMetis (NgArray<int> & volume_weights , NgArray<int> & surface_weights, NgArray<int> & segment_weights)  
+  void Mesh :: ParallelMetis (Array<int> & volume_weights , Array<int> & surface_weights, Array<int> & segment_weights)  
   {
     PrintMessage (3, "call metis 5 with weights ...");
     
@@ -2039,15 +2039,15 @@ namespace netgen
     int edgecut;
     idxtype * part;
 
-    NgArray<int, 0> facevolels1(nfaces), facevolels2(nfaces);
+    Array<int> facevolels1(nfaces), facevolels2(nfaces);
     facevolels1 = -1;
     facevolels2 = -1;
 
-    // NgArray<int, 0> elfaces;
+    // Array<int, 0> elfaces;
     xadj = new idxtype[ne+1];
     part = new idxtype[ne];
 
-    NgArray<int, 0> cnt(ne+1);
+    Array<int> cnt(ne+1);
     cnt = 0;
 
     for ( int el=1; el <= ne; el++ )

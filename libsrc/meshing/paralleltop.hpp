@@ -21,8 +21,8 @@ namespace netgen
     Array<int> glob_vert;
 
     // will get rid of them
-    NgArray<int> glob_edge, glob_face;
-    NgArray<int> glob_el, glob_surfel, glob_segm;
+    Array<int> glob_edge, glob_face;
+    Array<int> glob_el, glob_surfel, glob_segm;
 
     bool is_updated;
 
@@ -126,7 +126,7 @@ namespace netgen
     } 
 
     // [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                        
-    void GetDistantFaceNums (int locfacenum, NgArray<int> & distfacenums ) const
+    void GetDistantFaceNums (int locfacenum, Array<int> & distfacenums ) const
     {
       // distfacenums = loc2distface[locfacenum-1];
       auto loc = loc2distface[locfacenum-1];
@@ -143,7 +143,7 @@ namespace netgen
     } 
 
     // [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                                
-    void GetDistantEdgeNums (int locedgenum, NgArray<int> & distedgenums ) const
+    void GetDistantEdgeNums (int locedgenum, Array<int> & distedgenums ) const
     {
       // distedgenums = loc2distedge[locedgenum-1];
       auto loc = loc2distedge[locedgenum-1];

@@ -112,10 +112,10 @@ public:
   void GetSegmentEdge (int segnr, int & enr, int & orient) const;
 
   [[deprecated("use GetEdges (ElementIndex) -> FlatArray")]]                          
-  void GetElementEdges (int elnr, NgArray<int> & edges) const;
+  void GetElementEdges (int elnr, Array<int> & edges) const;
   [[deprecated("use GetFaces (ElementIndex) -> FlatArray")]]                            
-  void GetElementFaces (int elnr, NgArray<int> & faces) const;
-  void GetElementFaces (int elnr, NgArray<int> & faces, bool withorientation) const;  
+  void GetElementFaces (int elnr, Array<int> & faces) const;
+  void GetElementFaces (int elnr, Array<int> & faces, bool withorientation) const;  
 
   // definition in meshclass.hpp 
   inline FlatArray<EdgeIndex> GetEdges (ElementIndex elnr) const;
@@ -123,9 +123,9 @@ public:
 
   
   // [[deprecated("use GetElementEdge instead")]]                        
-  void GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
+  void GetElementEdgeOrientations (int elnr, Array<int> & eorient) const;
   // [[deprecated("use GetElementEdge instead")]]                        
-  void GetElementFaceOrientations (int elnr, NgArray<int> & forient) const;
+  void GetElementFaceOrientations (int elnr, Array<int> & forient) const;
 
   [[deprecated("use GetEdges (ElementIndex) -> FlatArray")]]                            
   int GetElementEdges (int elnr, int * edges, int * orient) const;
@@ -144,7 +144,7 @@ public:
   // [[deprecated("use GetElementEdge instead")]]                        
   int GetSegmentEdgeOrientation (int elnr) const; // old style
   
-  DLL_HEADER void GetFaceVertices (int fnr, NgArray<int> & vertices) const;
+  DLL_HEADER void GetFaceVertices (int fnr, Array<int> & vertices) const;
   DLL_HEADER void GetFaceVertices (int fnr, int * vertices) const;
   auto GetFaceVertices (int fnr) const
   { return FlatArray (face2vert[fnr][3].IsValid() ? 4 : 3, &face2vert[fnr][0]); }
@@ -155,7 +155,7 @@ public:
   auto GetEdgeVertices (int enr) const { return std::array{edge2vert[enr][0], edge2vert[enr][1]}; }
   auto GetEdgeVerticesPtr (int enr) const { return &edge2vert[enr][0]; }
   auto GetFaceVerticesPtr (int fnr) const { return &face2vert[fnr][0]; }
-  DLL_HEADER void GetFaceEdges (int fnr, NgArray<int> & edges, bool withorientation = false) const;
+  DLL_HEADER void GetFaceEdges (int fnr, Array<int> & edges, bool withorientation = false) const;
 
   // ELEMENT_TYPE GetFaceType (int fnr) const
   // { return (!face2vert[fnr-1][3].IsValid()) ? TRIG : QUAD; }    
@@ -163,16 +163,16 @@ public:
   { return (!face2vert[fnr][3].IsValid()) ? TRIG : QUAD; }    
 
   [[deprecated("use GetEdges (SurfaceElementIndex) -> FlatArray")]]  
-  void GetSurfaceElementEdges (int elnr, NgArray<int> & edges) const;
+  void GetSurfaceElementEdges (int elnr, Array<int> & edges) const;
   [[deprecated("use GetFace(SurfaceElementIndex")]]                            
   int GetSurfaceElementFace1 (int elnr) const { return surffaces[elnr-1]+1; }    
   [[deprecated("orientation is outdated")]]                          
-  void GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const;
+  void GetSurfaceElementEdgeOrientations (int elnr, Array<int> & eorient) const;
   // [[deprecated("orientation is outdated")]]                            
   int GetSurfaceElementFaceOrientation (int elnr) const;
 
   [[deprecated("use GetEdge -> FlatArray instead")]]                        
-  void GetEdges (SurfaceElementIndex elnr, NgArray<int> & edges) const;
+  void GetEdges (SurfaceElementIndex elnr, Array<int> & edges) const;
 
   inline FlatArray<EdgeIndex> GetEdges (SurfaceElementIndex elnr) const;
   // { return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]); }
@@ -229,8 +229,8 @@ public:
   { return vert2pointelement[vnr]; }
   
   DLL_HEADER int GetVerticesEdge ( PointIndex v1, PointIndex v2) const;
-  void GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & els ) const;
-  void GetSegmentSurfaceElements ( int segnr, NgArray<SurfaceElementIndex> & els ) const;
+  void GetSegmentVolumeElements ( int segnr, Array<ElementIndex> & els ) const;
+  void GetSegmentSurfaceElements ( int segnr, Array<SurfaceElementIndex> & els ) const;
 
   // Call this before Update() to discard old edges/faces (e.g. after Compress)
   void ClearEdges() { edge2vert.SetSize0(); }

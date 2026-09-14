@@ -616,10 +616,10 @@ namespace netgen
 		       NgBitArray & cornerpoint, NgBitArray & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
 			HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int & levels, int & act_ref); 
 
-  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
+  bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels);
   
   
-  void  InitHPElements(Mesh & mesh, NgArray<HPRefElement> & elements) 
+  void  InitHPElements(Mesh & mesh, Array<HPRefElement> & elements) 
   { 
     // for(ElementIndex i = 0; i < mesh.GetNE(); i++)
     for(ElementIndex i : mesh.VolumeElements().Range())
@@ -679,7 +679,7 @@ namespace netgen
  
  
   /* *******************************  DoRefinement *************************************** */
-  void DoRefinement (Mesh & mesh, NgArray<HPRefElement> & elements,
+  void DoRefinement (Mesh & mesh, Array<HPRefElement> & elements,
 		     Refinement * ref, double fac1) 
   {
     elements.SetAllocSize (5 * elements.Size());
@@ -940,7 +940,7 @@ namespace netgen
 
   /* ************************** DoRefineDummies ******************************** */
 
-  void DoRefineDummies (Mesh & mesh, NgArray<HPRefElement> & elements,
+  void DoRefineDummies (Mesh & mesh, Array<HPRefElement> & elements,
 			Refinement * ref)
   {
     int oldelsize = elements.Size();
@@ -1020,7 +1020,7 @@ namespace netgen
 
 
 
-  void SubdivideDegeneratedHexes (Mesh & mesh, NgArray<HPRefElement> & elements, double fac1)
+  void SubdivideDegeneratedHexes (Mesh & mesh, Array<HPRefElement> & elements, double fac1)
   {
     int oldne = elements.Size();
     for (int i = 0; i < oldne; i++)
@@ -1159,7 +1159,7 @@ namespace netgen
   }
 
 
-  void CalcStatistics (NgArray<HPRefElement> & elements)
+  void CalcStatistics (Array<HPRefElement> & elements)
   {
     return;
 #ifdef ABC    
@@ -1311,7 +1311,7 @@ namespace netgen
 
 
 
-  void ReorderPoints (Mesh & mesh, NgArray<HPRefElement> & hpelements)
+  void ReorderPoints (Mesh & mesh, Array<HPRefElement> & hpelements)
   {
     Array<PointIndex, PointIndex> map (mesh.GetNP());
     for (PointIndex pi : map.Range())
@@ -1389,9 +1389,9 @@ namespace netgen
 
 
     // delete mesh.hpelements;
-    mesh.hpelements = make_unique<NgArray<HPRefElement>>();
+    mesh.hpelements = make_unique<Array<HPRefElement>>();
         
-    NgArray<HPRefElement> & hpelements = *mesh.hpelements; 
+    Array<HPRefElement> & hpelements = *mesh.hpelements; 
         
     InitHPElements(mesh,hpelements); 
 
@@ -1881,7 +1881,7 @@ namespace netgen
 
 
 
-  bool ClassifyHPElements (Mesh & mesh, NgArray<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
+  bool ClassifyHPElements (Mesh & mesh, Array<HPRefElement> & elements, SplittingType split, int & act_ref, int & levels)
   {
     HT_EDGES edges(mesh.GetNSeg()+1);
     TBitArray<PointIndex> edgepoint(mesh.GetNP());

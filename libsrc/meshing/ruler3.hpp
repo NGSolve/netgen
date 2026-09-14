@@ -19,32 +19,32 @@ private:
   /// point coordinates in reference position
   Array<Point3d, RulePointIndex> points;
   /// old and new faces in reference numbering
-  NgArray<RuleElement2d> faces;
+  Array<RuleElement2d> faces;
   /// additional edges of rule
-  NgArray<twoint> edges;
+  Array<twoint> edges;
 
   /// points of freezone in reference coordinates
-  NgArray<Point3d> freezone;
+  Array<Point3d> freezone;
   /// points of freezone in reference coordinates if tolcalss to infty
-  NgArray<Point3d> freezonelimit;
+  Array<Point3d> freezonelimit;
   /// point index, if point equal to mappoint, otherwise 0
-  NgArray<int> freezonepi;
+  Array<int> freezonepi;
   /// faces of each convex part of freezone
-  NgArray<NgArray<threeint>*> freefaces;
+  Array<Array<threeint>*> freefaces;
   /// set of points of each convex part of freezone
-  NgArray<NgArray<int>*> freesets;
+  Array<Array<int>*> freesets;
   /// points of transformed freezone
-  NgArray<Point3d> transfreezone;
+  Array<Point3d> transfreezone;
   /// edges of each convex part of freezone
-  NgArray<NgArray<twoint>*> freeedges;
+  Array<Array<twoint>*> freeedges;
 
   /// face numbers to be deleted
-  NgArray<int> delfaces;
+  Array<int> delfaces;
   /// elements to be generated
-  NgArray<RuleElement> elements;
+  Array<RuleElement> elements;
   /// tolerances for points and faces (used ??)
   Array<double, RulePointIndex> tolerances;
-  NgArray<double> linetolerances;
+  Array<double> linetolerances;
   /// transformation matrix 
   DenseMatrix oldutonewu;
   /// transformation matrix: deviation old point to dev. freezone
@@ -60,20 +60,20 @@ private:
     a point is outside of convex part of freezone, 
     iff mat * (point, 1) >= 0 for each component (correct ?)
     */
-  NgArray<DenseMatrix*> freefaceinequ;
+  Array<DenseMatrix*> freefaceinequ;
   /// 
-  NgArray<fourpoints> orientations;
+  Array<fourpoints> orientations;
   /**
     flags specified in rule-description file:
     t .. test rule
     */
-  NgArray<char> flags;
+  Array<char> flags;
 
   /**
     topological distance of face to base element
     non-connected: > 100  (??) 
     */
-  NgArray<int> fnearness;
+  Array<int> fnearness;
   Array<int, RulePointIndex> pnearness;
   int maxpnearness;
 
@@ -149,19 +149,19 @@ public:
     -1 maybe 
    */
   int IsTriangleInFreeZone (const Point3d & p1, const Point3d & p2,
-                            const Point3d & p3, const NgArray<int> & pi, int newone);
+                            const Point3d & p3, const Array<int> & pi, int newone);
   ///
   int IsQuadInFreeZone (const Point3d & p1, const Point3d & p2,
 			const Point3d & p3, const Point3d & p4,
-			const NgArray<int> & pi, int newone);
+			const Array<int> & pi, int newone);
   ///
   int IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
-                           const Point3d & p3, int fs, const NgArray<int> & pi, int newone);
+                           const Point3d & p3, int fs, const Array<int> & pi, int newone);
 
   ///
   int IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
 		       const Point3d & p3, const Point3d & p4,
-		       int fs, const NgArray<int> & pi, int newone);
+		       int fs, const Array<int> & pi, int newone);
   
   ///
   int ConvexFreeZone () const;
@@ -199,7 +199,7 @@ public:
   void LoadRule (istream & ist);
 
   ///
-  const NgArray<Point3d> & GetTransFreeZone () { return transfreezone; }
+  const Array<Point3d> & GetTransFreeZone () { return transfreezone; }
   ///
   int TestOk () const;
 

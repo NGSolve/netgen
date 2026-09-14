@@ -1448,15 +1448,15 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetHpElnr(int _hp_elnr) { hp_elnr = _hp_elnr; }
 
     /// split into 4 node tets
-    void GetTets (NgArray<Element> & locels) const;
+    void GetTets (Array<Element> & locels) const;
     /// split into 4 node tets, local point nrs
-    void GetTetsLocal (NgArray<ElementTet> & locels) const;
+    void GetTetsLocal (Array<ElementTet> & locels) const;
     /// returns coordinates of nodes
-    // void GetNodesLocal (NgArray<Point<3> > & points) const;
-    void GetNodesLocalNew (NgArray<Point<3> > & points) const;
+    // void GetNodesLocal (Array<Point<3> > & points) const;
+    void GetNodesLocalNew (Array<Point<3> > & points) const;
 
     /// split surface into 3 node trigs
-    DLL_HEADER void GetSurfaceTriangles (NgArray<ElementFace> & surftrigs) const;
+    DLL_HEADER void GetSurfaceTriangles (Array<ElementFace> & surftrigs) const;
 
 
     /// get number of 'integration points'
@@ -1988,7 +1988,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       MeshSizePoint & operator= (const MeshSizePoint &) = default;
       MeshSizePoint & operator= (MeshSizePoint &&) = default;      
     };
-    NgArray<MeshSizePoint> meshsize_points;
+    Array<MeshSizePoint> meshsize_points;
     
     void (*render_function)(bool) = NULL;
     void Render(bool blocking = false) const
@@ -2104,7 +2104,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
 
 
-  // typedef NgArray<PointIndex,PointIndex::BASE> idmap_type;
+  // typedef Array<PointIndex,PointIndex::BASE> idmap_type;
   typedef Array<PointIndex,PointIndex> idmap_type;
   
 
@@ -2132,7 +2132,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// sorted by identification nr
     TABLE<PointIndices<2>> idpoints_table;
 
-    NgArray<ID_TYPE> type;
+    Array<ID_TYPE> type;
 
     /// number of identifications (or, actually used identifications ?)
     int maxidentnr;

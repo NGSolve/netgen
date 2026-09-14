@@ -65,7 +65,7 @@ namespace netgen
   }
 
   /*
-  void AdFront2 :: GetPoints (NgArray<Point<3> > & apoints) const
+  void AdFront2 :: GetPoints (Array<Point<3> > & apoints) const
   {
     apoints.Append (points);
     // for (int i = 0; i < points.Size(); i++)
@@ -277,9 +277,9 @@ namespace netgen
   int AdFront2 :: GetLocals (int baselineindex,
 			     Array<Point<3>, LocalPointIndex> & locpoints,
 			     Array<MultiPointGeomInfo, LocalPointIndex> & pgeominfo,
-			     NgArray<IVec<2,LocalPointIndex>> & loclines,
+			     Array<IVec<2,LocalPointIndex>> & loclines,
 			     Array<Front2PointIndex, LocalPointIndex> & pindex,   // local -> front
-			     NgArray<INDEX> & lindex,
+			     Array<INDEX> & lindex,
 			     double xh)
   {
     // static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);
@@ -287,7 +287,7 @@ namespace netgen
     Front2PointIndex pstind;
     Point<3>  midp, p0;
 
-    NgArrayMem<IVec<2,Front2PointIndex>,100> frontlines;   // the selected lines, front numbering
+    ArrayMem<IVec<2,Front2PointIndex>,100> frontlines;   // the selected lines, front numbering
 
     pstind = lines[baselineindex].L()[0];
     p0 = points[pstind].P();
@@ -296,7 +296,7 @@ namespace netgen
     lindex.Append(baselineindex);  
 
     ArrayMem<int, 1000> nearlines(0);
-    NgArrayMem<Front2PointIndex, 1000> nearpoints(0);
+    ArrayMem<Front2PointIndex, 1000> nearpoints(0);
 
     // dominating costs !!
     linesearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
@@ -318,7 +318,7 @@ namespace netgen
 	  }
       }
 
-    // static NgArray<int> invpindex;
+    // static Array<int> invpindex;
     invpindex.SetSize (points.Size()); 
     // invpindex = -1;
     for(auto n : nearpoints)

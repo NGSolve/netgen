@@ -70,9 +70,9 @@ namespace netgen
   class BSplineCurve2d : public ExplicitCurve2d
   {
     ///
-    NgArray<Point<2> > points;
+    Array<Point<2> > points;
     ///
-    NgArray<int> intervallused;
+    Array<int> intervallused;
     ///
     int redlevel;
   

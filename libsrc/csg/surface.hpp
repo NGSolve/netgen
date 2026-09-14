@@ -239,8 +239,8 @@ namespace netgen
   class Primitive
   {
   protected:
-    NgArray<int> surfaceids;
-    NgArray<int> surfaceactive;
+    Array<int> surfaceids;
+    Array<int> surfaceactive;
 
   public:
 
@@ -266,7 +266,7 @@ namespace netgen
 				       double eps) const = 0;
 
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      NgArray<int> & surfind, double eps) const;
+					      Array<int> & surfind, double eps) const;
 
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
 				     const Vec<3> & v,
@@ -293,18 +293,18 @@ namespace netgen
 
     // for a point p in the surface, into which (closed) surfaces does v point into ? 
     virtual void GetTangentialVecSurfaceIndices (const Point<3> & p, const Vec<3> & v,
-						 NgArray<int> & surfind, double eps) const;
+						 Array<int> & surfind, double eps) const;
 
     // a point p in the surface, and v a tangential vector
     // for arbitrary small, but positive t consider q := Project(p+t*v)
     // into which (closed) surfaces does v2 point into, when starting from q ?     
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  NgArray<int> & surfind, double eps) const;
+						  Array<int> & surfind, double eps) const;
 
 
-    virtual void CalcSpecialPoints (NgArray<Point<3> > & /* pts */) const { ; }
+    virtual void CalcSpecialPoints (Array<Point<3> > & /* pts */) const { ; }
     virtual void AnalyzeSpecialPoint (const Point<3> & /* pt */, 
-				      NgArray<Point<3> > & /* specpts */) const { ; }
+				      Array<Point<3> > & /* specpts */) const { ; }
     virtual Vec<3> SpecialPointTangentialVector (const Point<3> & /* p */, 
 						 int /* s1 */, int /* s2 */) const 
     { return Vec<3> (0,0,0); }
@@ -320,8 +320,8 @@ namespace netgen
     virtual int SurfaceInverted (int /* i */ = 0) const { return 0; }
 
     virtual void GetPrimitiveData (const char *& classname, 
-				   NgArray<double> & coeffs) const;
-    virtual void SetPrimitiveData (NgArray<double> & coeffs);
+				   Array<double> & coeffs) const;
+    virtual void SetPrimitiveData (Array<double> & coeffs);
     static Primitive * CreatePrimitive (const char * classname);
 
 

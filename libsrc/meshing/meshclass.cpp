@@ -183,7 +183,7 @@ namespace netgen
       return 0;
 
     vlam[2] = 1.-vlam[0] - vlam[1];
-    // NgArray<int> edges;
+    // Array<int> edges;
     auto & topology = mesh.GetTopology();
 
     /*
@@ -2961,13 +2961,13 @@ namespace netgen
     t_table.Stop();
 
 
-    NgArray<bool, 1> hasface(GetNFD());
+    Array<bool> hasface(GetNFD());
 
     for (int i = 1; i <= GetNFD(); i++)
       {
         int domin = GetFaceDescriptor(i).DomainIn();
         int domout = GetFaceDescriptor(i).DomainOut();
-        hasface[i] = 
+        hasface[i-1] = 
           ( dom == 0 && (domin != 0 || domout != 0) ) ||
           ( dom != 0 && (domin == dom || domout == dom) );
       }
@@ -2985,7 +2985,7 @@ namespace netgen
           (dom == 0 || dom == GetFaceDescriptor(ind).DomainOut())
           )
         */
-        if (hasface[ind])
+        if (hasface[ind-1])
           {
             /*
               Element2d hel = surfelements[i];
@@ -3015,7 +3015,7 @@ namespace netgen
           (dom == 0 || dom == GetFaceDescriptor(ind).DomainOut())
           )
         */
-        if (hasface[ind])
+        if (hasface[ind-1])
           {
             /*
               Element2d hel = surfelements[i];
@@ -3822,7 +3822,7 @@ namespace netgen
       return 1e10;
   }
 
-  void Mesh :: SetMaxHDomain (const NgArray<double> & mhd)
+  void Mesh :: SetMaxHDomain (const Array<double> & mhd)
   {
     maxhdomain.SetSize(mhd.Size());
     for (int i = 1; i <= mhd.Size(); i++)
@@ -4157,7 +4157,7 @@ namespace netgen
     int nseg = GetNSeg();
     int nse = GetNSE();
 
-    NgArray<Vec3d> normals(np);
+    Array<Vec3d> normals(np);
     NgBitArray linepoint(np);
 
     linepoint.Clear();
@@ -5799,7 +5799,7 @@ namespace netgen
     Vec3d rhs, sol;
     const double eps = 1e-6;
 
-    NgArray<Element2d> loctrigs;
+    Array<Element2d> loctrigs;
 
     
     //SZ 
@@ -6372,7 +6372,7 @@ namespace netgen
     Vec3d col1, col2, col3;
     Vec3d rhs, sol;
 
-    NgArray<Element> loctets;
+    Array<Element> loctets;
 
     VolumeElement(element).GetTets (loctets);
 
@@ -6403,8 +6403,8 @@ namespace netgen
         if (sol.X() >= -eps && sol.Y() >= -eps && sol.Z() >= -eps &&
             sol.X() + sol.Y() + sol.Z() <= 1+eps)
           {
-            NgArray<ElementTet> loctetsloc;
-            NgArray<netgen::Point<3> > pointsloc;
+            Array<ElementTet> loctetsloc;
+            Array<netgen::Point<3> > pointsloc;
 
             VolumeElement(element).GetTetsLocal (loctetsloc);
             VolumeElement(element).GetNodesLocalNew (pointsloc);
@@ -7228,7 +7228,7 @@ namespace netgen
   //   }
 
 
-  //   void Mesh :: GetIdentificationMap (int identnr, NgArray<int> & identmap) const
+  //   void Mesh :: GetIdentificationMap (int identnr, Array<int> & identmap) const
   //   {
   //     int i, j;
 
@@ -7251,7 +7251,7 @@ namespace netgen
   //   }
 
 
-  //   void Mesh :: GetIdentificationPairs (int identnr, NgArray<INDEX_2> & identpairs) const
+  //   void Mesh :: GetIdentificationPairs (int identnr, Array<INDEX_2> & identpairs) const
   //   {
   //     int i, j;
 
@@ -8117,16 +8117,16 @@ namespace netgen
   }
   
 
-  void Mesh :: SetUserData(const char * id, NgArray<int> & data)
+  void Mesh :: SetUserData(const char * id, Array<int> & data)
   {
     if(userdata_int.Used(id))
       delete userdata_int[id];
 
-    NgArray<int> * newdata = new NgArray<int>(data);
+    Array<int> * newdata = new Array<int>(data);
 
     userdata_int.Set(id,newdata);      
   }
-  bool Mesh :: GetUserData(const char * id, NgArray<int> & data, int shift) const
+  bool Mesh :: GetUserData(const char * id, Array<int> & data, int shift) const
   {
     if(userdata_int.Used(id))
       {
@@ -8142,16 +8142,16 @@ namespace netgen
         return false;
       }
   }
-  void Mesh :: SetUserData(const char * id, NgArray<double> & data)
+  void Mesh :: SetUserData(const char * id, Array<double> & data)
   {
     if(userdata_double.Used(id))
       delete userdata_double[id];
 
-    NgArray<double> * newdata = new NgArray<double>(data);
+    Array<double> * newdata = new Array<double>(data);
 
     userdata_double.Set(id,newdata);      
   }
-  bool Mesh :: GetUserData(const char * id, NgArray<double> & data, int shift) const
+  bool Mesh :: GetUserData(const char * id, Array<double> & data, int shift) const
   {
     if(userdata_double.Used(id))
       {

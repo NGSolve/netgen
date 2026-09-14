@@ -14,8 +14,8 @@ inline int FindInnerPoint2 (POINTArray & points,
   static Timer timer("FindInnerPoint2");
   RegionTimer reg (timer);
 
-  NgArray<Vec3d> a;
-  NgArray<double> c;
+  Array<Vec3d> a;
+  Array<double> c;
   Mat<3> m, inv;
   Vec<3> rs, x, pmin;
 

@@ -33,7 +33,7 @@ STLTopology :: ~STLTopology()
 STLGeometry *  STLTopology :: LoadBinary (istream & ist)
 {
   STLGeometry * geom = new STLGeometry();
-  NgArray<STLReadTriangle> readtrigs;
+  Array<STLReadTriangle> readtrigs;
 
   PrintMessage(1,"Read STL binary file");
   
@@ -193,7 +193,7 @@ STLGeometry *  STLTopology :: LoadNaomi (istream & ist)
 {
   int i;
   STLGeometry * geom = new STLGeometry();
-  NgArray<STLReadTriangle> readtrigs;
+  Array<STLReadTriangle> readtrigs;
 
   PrintFnStart("read NAOMI file format");
   
@@ -206,7 +206,7 @@ STLGeometry *  STLTopology :: LoadNaomi (istream & ist)
     
 
   int noface, novertex;
-  NgArray<Point<3> > readpoints;
+  Array<Point<3> > readpoints;
 
   ist >> buf;
   if (strcmp (buf, "NODES") == 0)
@@ -368,7 +368,7 @@ STLGeometry *  STLTopology ::Load (istream & ist, bool surface)
 
   STLGeometry * geom = new STLGeometry();
 
-  NgArray<STLReadTriangle> readtrigs;
+  Array<STLReadTriangle> readtrigs;
 
   char buf[100];
   Point<3> pts[3];
@@ -474,7 +474,7 @@ STLGeometry *  STLTopology ::Load (istream & ist, bool surface)
 
 
 
-void STLTopology :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrigs)
+void STLTopology :: InitSTLGeometry(const Array<STLReadTriangle> & readtrigs)
 {
   // const double geometry_tol_fact = 1E6; 
   // distances lower than max_box_size/tol are ignored
@@ -500,7 +500,7 @@ void STLTopology :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrigs)
 
   pointtree = new Point3dTree<> (bb.PMin(), bb.PMax());
 
-  NgArray<int> pintersect;
+  Array<int> pintersect;
 
   pointtol = boundingbox.Diam() * stldoctor.geom_tol_fact;
   PrintMessage(5,"point tolerance = ", pointtol);
@@ -564,7 +564,7 @@ int STLTopology :: GetPointNum (const Point<3> & p)
   Point<3> pmin = p - Vec<3> (pointtol, pointtol, pointtol);
   Point<3> pmax = p + Vec<3> (pointtol, pointtol, pointtol);
   
-  NgArray<int> pintersect;
+  Array<int> pintersect;
 
   pointtree->GetIntersecting (pmin, pmax, pintersect);
   if (pintersect.Size() == 1)
@@ -889,7 +889,7 @@ void STLTopology :: GetTrianglesInBox (/*
 					  const Point<3> & pmax,
 				       */
 				       const Box<3> & box,
-				       NgArray<int> & btrias) const
+				       Array<int> & btrias) const
 {
   if (searchtree)
 
@@ -1040,7 +1040,7 @@ void STLTopology :: OrientAfterTrig (int trig)
   if (starttrig >= 1 && starttrig <= GetNT())
     {
 
-      NgArray <int> oriented;
+      Array <int> oriented;
       oriented.SetSize(GetNT());
       int i;
       for (i = 1; i <= oriented.Size(); i++)
@@ -1052,9 +1052,9 @@ void STLTopology :: OrientAfterTrig (int trig)
   
       int k;
       
-      NgArray <int> list1;
+      Array <int> list1;
       list1.SetSize(0);
-      NgArray <int> list2;
+      Array <int> list2;
       list2.SetSize(0);
       list1.Append(starttrig);
 

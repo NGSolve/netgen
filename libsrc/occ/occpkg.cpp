@@ -19,7 +19,7 @@
 #include <IGESControl_Writer.hxx>
 
 // __declspec(dllimport) void AutoColourBcProps(Mesh & mesh, const char *bccolourfile);
-// __declspec(dllimport) void GetFaceColours(Mesh & mesh, NgArray<Vec3d> & face_colours);
+// __declspec(dllimport) void GetFaceColours(Mesh & mesh, Array<Vec3d> & face_colours);
 // __declspec(dllimport) bool ColourMatch(Vec3d col1, Vec3d col2, double eps = 2.5e-05);
 
 extern "C" int Ng_occ_Init (Tcl_Interp * interp);
@@ -690,7 +690,7 @@ namespace netgen
      if(strcmp(argv[1], "getcolours") == 0)
      {
         stringstream outVar;
-        NgArray<Vec<4>> face_colours;
+        Array<Vec<4>> face_colours;
         GetFaceColours(*mesh, face_colours);
 
         for(int i = 0; i < face_colours.Size();i++)
@@ -707,7 +707,7 @@ namespace netgen
 
      if(strcmp(argv[1], "showalso") == 0)
      {
-        NgArray<Vec<4>> face_colours;
+        Array<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -731,7 +731,7 @@ namespace netgen
 
      if(strcmp(argv[1], "hidealso") == 0)
      {
-       NgArray<Vec<4>> face_colours;
+       Array<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -755,7 +755,7 @@ namespace netgen
 
      if(strcmp(argv[1], "showonly") == 0)
      {
-        NgArray<Vec<4>> face_colours;
+        Array<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);
@@ -786,7 +786,7 @@ namespace netgen
 
      if(strcmp(argv[1], "hideonly") == 0)
      {
-       NgArray<Vec<4>> face_colours;
+       Array<Vec<4>> face_colours;
         GetFaceColours(*mesh,face_colours);
 
         int colourind = atoi (argv[2]);

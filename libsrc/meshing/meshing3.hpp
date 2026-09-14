@@ -52,8 +52,8 @@ public:
                   Array<int, LocalPointIndex> & allowpoint,
 		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
-		  NgArray<LocalElement> & elements,
-		  NgArray<INDEX> & delfaces, int tolerance, 
+		  Array<LocalElement> & elements,
+		  Array<INDEX> & delfaces, int tolerance, 
 		  double sloppy, int rotind1,
 		  float & retminerr);
   

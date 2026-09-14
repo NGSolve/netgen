@@ -7,8 +7,8 @@ namespace netgen
 {
 
 
-  void MeshOptimize2d :: ProjectBoundaryPoints(NgArray<int> & surfaceindex, 
-					       const NgArray<Point<3>* > & from, NgArray<Point<3>* > & dest)
+  void MeshOptimize2d :: ProjectBoundaryPoints(Array<int> & surfaceindex, 
+					       const Array<Point<3>* > & from, Array<Point<3>* > & dest)
   {
     for(int i=0; i<surfaceindex.Size(); i++)
       {

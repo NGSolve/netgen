@@ -97,8 +97,8 @@ namespace netgen
 #ifdef SOCKETS
   AutoPtr<ClientSocket> clientsocket;
   ServerSocketManager serversocketmanager;
-  //NgArray< AutoPtr < ServerInfo > > servers;
-  NgArray< ServerInfo* > servers;
+  //Array< AutoPtr < ServerInfo > > servers;
+  Array< ServerInfo* > servers;
   AutoPtr<ServerSocketUserNetgen> serversocketusernetgen;
 #endif
 
@@ -2085,7 +2085,7 @@ namespace netgen
     int w = Togl_PixelScale(togl)*Togl_Width (togl);
     int h = Togl_PixelScale(togl)*Togl_Height (togl);
 
-    NgArray<unsigned char> buffer(w*h*3);
+    Array<unsigned char> buffer(w*h*3);
     glPixelStorei(GL_UNPACK_ALIGNMENT,1);
     glPixelStorei(GL_PACK_ALIGNMENT,1);
     glReadPixels (0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, &buffer[0]);
@@ -2298,8 +2298,8 @@ namespace netgen
 			    int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
-    NgArray<double> alpha;
-    NgArray<Vec3d> vec;
+    Array<double> alpha;
+    Array<Vec3d> vec;
 
     for(int i=1; i<argc; i+=4)
       {

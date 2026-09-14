@@ -415,7 +415,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 
   // find critical:
 
-  NgArray<INDEX_2> critpairs;
+  Array<INDEX_2> critpairs;
   for (i = 1; i <= nt; i++)
     {
       const STLTriangle & trig = GetTriangle (i);
@@ -468,7 +468,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
   if (critpairs.Size())
     {
 
-      NgArray<int> friends;
+      Array<int> friends;
       double area1 = 0, area2 = 0;
 
       for (i = 1; i <= critpairs.Size(); i++)
@@ -705,7 +705,7 @@ twoint STLGeometry :: GetNearestSelectedDefinedEdge()
     //Point3d pestimate = GetTriangle(GetSelectTrig()).center;
 
   int i, j, en;
-  NgArray<int> vic;
+  Array<int> vic;
   GetVicinity(GetSelectTrig(),4,vic);
   
 
@@ -824,7 +824,7 @@ void STLGeometry :: ImportEdges()
   int ne;
   fin >> ne;
 
-  NgArray<Point<3> > eps;
+  Array<Point<3> > eps;
 
   int i;
   Point<3> p;
@@ -838,18 +838,18 @@ void STLGeometry :: ImportEdges()
   AddEdges(eps);
 }
 
-void STLGeometry :: AddEdges(const NgArray<Point<3> >& eps)
+void STLGeometry :: AddEdges(const Array<Point<3> >& eps)
 {
   int i;
   int ne = eps.Size()/2;
   
-  NgArray<int> epsi;
+  Array<int> epsi;
   Box<3> bb = GetBoundingBox();
   bb.Increase(1);
 
   Point3dTree ptree (bb.PMin(), 
 			 bb.PMax());
-  NgArray<int> pintersect;
+  Array<int> pintersect;
 
   double gtol = GetBoundingBox().Diam()/1.E10;
   Point<3> p;
@@ -917,9 +917,9 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
   filter[flen] = 0;
   char buf[20];
 
-  NgArray<Point3d> importpoints;
-  NgArray<int> importlines;
-  NgArray<int> importpnums;
+  Array<Point3d> importpoints;
+  Array<int> importlines;
+  Array<int> importpnums;
 
   while (inf.good())
     {
@@ -1005,7 +1005,7 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
     ebb.AddPoint (importpoints[i-1]);
   PrintMessage(7,"edgep - bb: ", ebb.PMin(), " - ", ebb.PMax());
 
-  NgArray<int> pintersect;
+  Array<int> pintersect;
 
   double gtol = GetBoundingBox().Diam()/1.E6;
 
@@ -1721,11 +1721,11 @@ void STLGeometry :: NeighbourAnglesOfSelectedTrig()
     }
 }
 
-void STLGeometry :: GetVicinity(int starttrig, int size, NgArray<int>& vic)
+void STLGeometry :: GetVicinity(int starttrig, int size, Array<int>& vic)
 {
   if (starttrig == 0 || starttrig > GetNT()) {return;} 
 
-  NgArray<int> vicarray;
+  Array<int> vicarray;
   vicarray.SetSize(GetNT());
 
   int i;
@@ -1738,9 +1738,9 @@ void STLGeometry :: GetVicinity(int starttrig, int size, NgArray<int>& vic)
   
   int j = 0,k;
 
-  NgArray <int> list1;
+  Array <int> list1;
   list1.SetSize(0);
-  NgArray <int> list2;
+  Array <int> list2;
   list2.SetSize(0);
   list1.Append(starttrig);
 
@@ -1792,9 +1792,9 @@ void STLGeometry :: CalcVicinity(int starttrig)
   
   int j = 0,k;
 
-  NgArray <int> list1;
+  Array <int> list1;
   list1.SetSize(0);
-  NgArray <int> list2;
+  Array <int> list2;
   list2.SetSize(0);
   list1.Append(starttrig);
 
@@ -2141,7 +2141,7 @@ double STLGeometry :: GetGeomAngle(int t1, int t2)
 }
 
 
-void STLGeometry :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrias)
+void STLGeometry :: InitSTLGeometry(const Array<STLReadTriangle> & readtrias)
 {
   PrintFnStart("Init STL Geometry");
   STLTopology::InitSTLGeometry(readtrias);
@@ -2153,7 +2153,7 @@ void STLGeometry :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrias)
   int np = GetNP();
   PrintMessage(5,"NO points= ", GetNP());
   normals.SetSize(GetNP());
-  NgArray<int> normal_cnt(GetNP()); // counts number of added normals in a point
+  Array<int> normal_cnt(GetNP()); // counts number of added normals in a point
 
   for (i = 1; i <= np; i++)
     {
@@ -2253,7 +2253,7 @@ int STLGeometry :: CheckGeometryOverlapping()
     
     ParallelFor( 1, GetNT()+1, [&] (int first, int next)
                  {
-                   NgArray<int> inters;
+                   Array<int> inters;
                    for (int i=first; i<next; i++) {
                      const STLTriangle & tri = GetTriangle(i);
 	
@@ -2316,14 +2316,14 @@ int STLGeometry :: CheckGeometryOverlapping()
   points.SetSize(0);
   normals.SetSize(0);
 
-  NgArray<int> normal_cnt; // counts number of added normals in a point
+  Array<int> normal_cnt; // counts number of added normals in a point
 
   Box3d bb (GetBoundingBox().PMin() + Vec3d (-1,-1,-1),
   GetBoundingBox().PMax() + Vec3d (1, 1, 1));
 
   Point3dTree pointtree (bb.PMin(), 
   bb.PMax());
-  NgArray<int> pintersect;
+  Array<int> pintersect;
 
   double gtol = GetBoundingBox().CalcDiam()/geometry_tol_fact;
 
@@ -2757,8 +2757,8 @@ void STLGeometry :: AddFaceEdges()
   //für Kugel eine STLLine hinzufügen (Vorteil: verfeinerbar, unabhängig von Auflösung der Geometrie!!!):
   //Grenze von 1. gefundener chart
 
-  NgArray<int> edgecnt;
-  NgArray<int> chartindex;
+  Array<int> edgecnt;
+  Array<int> chartindex;
   edgecnt.SetSize(GetNOFaces());
   chartindex.SetSize(GetNOFaces());
 
@@ -2838,7 +2838,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
   int rev(0); //indicates, that edge is inserted reverse
 
   //worked edges
-  NgArray<int> we(GetNE());
+  Array<int> we(GetNE());
 
   //setlineendpoints; wenn 180°, dann keine endpunkte
   //nur punkte mit 2 edges kommen in frage, da bei mehr oder weniger punkten ohnehin ein meshpoint hinkommt
@@ -3029,7 +3029,7 @@ int STLGeometry :: GetNOBodys()
   int i, k, nnt;
   int bodycnt = 0;
 
-  NgArray<int> bodynum(GetNT());
+  Array<int> bodynum(GetNT());
 
   for (i = 1; i <= GetNT(); i++)
     bodynum[i-1]=0;
@@ -3046,8 +3046,8 @@ int STLGeometry :: GetNOBodys()
 	    }
 	} 
       //add all triangles around starttriangle, which is reachable without going over an edge
-      NgArray<int> todolist;
-      NgArray<int> nextlist;
+      Array<int> todolist;
+      Array<int> nextlist;
       bodycnt++;
       markedtrigs1++;
       bodynum[starttrig-1] = bodycnt;
@@ -3108,8 +3108,8 @@ void STLGeometry :: CalcFaceNums()
 	    }
 	} 
       //add all triangles around starttriangle, which is reachable without going over an edge
-      NgArray<int> todolist;
-      NgArray<int> nextlist;
+      Array<int> todolist;
+      Array<int> nextlist;
       facecnt++;
       markedtrigs1++;
       GetTriangle(starttrig).SetFaceNum(facecnt);
@@ -3230,7 +3230,7 @@ bool STLGeometry :: IsSmoothEdge (int pi1, int pi2) const
 
 /*
 //function is not used now
-int IsInArray(int n, const NgArray<int>& ia)
+int IsInArray(int n, const Array<int>& ia)
 {
   int i;
   for (i = 1; i <= ia.Size(); i++)
@@ -3294,7 +3294,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
   int edgecnt = 0;
 
   Array<STLTrigId> trigsaroundp;
-  NgArray<int> chartpointchecked(GetNP()); //gets number of chart, if in this chart already checked
+  Array<int> chartpointchecked(GetNP()); //gets number of chart, if in this chart already checked
   chartpointchecked = 0;
 
 
@@ -3644,7 +3644,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
 
     QuickSort(trignums);
     STLGeometry geo;
-    NgArray<STLReadTriangle> readtrigs;
+    Array<STLReadTriangle> readtrigs;
     const auto & first_trig = GetTriangle(chart.GetChartTrig1(1));
     auto normal = first_trig.Normal();
     Box<3> box{Box<3>::EMPTY_BOX};
@@ -3664,7 +3664,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
     auto dist = box.PMax() - box.PMin();
     auto extra_point = GetPoint(first_trig[0]) - dist.Length()*normal;
 
-    NgArray<int> acttrigs(GetNT());
+    Array<int> acttrigs(GetNT());
     acttrigs = -1;
     for (int j = 1; j <= chart.GetNT(); j++)
       acttrigs[chart.GetTrig1(j)-IndexBASE<STLTrigId>()] = chartnumber;

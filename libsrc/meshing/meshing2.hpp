@@ -42,7 +42,7 @@ class Meshing2
   /// rules for mesh generation
   Array<unique_ptr<netrule>> rules;
   /// statistics
-  NgArray<int> ruleused, canuse, foundmap;
+  Array<int> ruleused, canuse, foundmap;
   /// 
   Box<3> boundingbox;
   ///
@@ -144,9 +144,9 @@ protected:
   /*
     get (projected) boundary of current chart
    */
-  virtual void GetChartBoundary (NgArray<Point<2>> & points, 
-				 NgArray<Point<3>> & points3d,
-				 NgArray<INDEX_2> & lines, double p) const;
+  virtual void GetChartBoundary (Array<Point<2>> & points, 
+				 Array<Point<3>> & points3d,
+				 Array<INDEX_2> & lines, double p) const;
 
   virtual double Area () const;
 
@@ -156,9 +156,9 @@ protected:
   int ApplyRules (Array<Point<2>, LocalPointIndex> & lpoints, 
 		  Array<int, LocalPointIndex> & legalpoints,
 		  int maxlegalpoint,
-		  NgArray<IVec<2,LocalPointIndex>> & llines,
+		  Array<IVec<2,LocalPointIndex>> & llines,
 		  int maxlegelline,
-		  NgArray<MiniElement2d> & elements, NgArray<INDEX> & dellines,
+		  Array<MiniElement2d> & elements, Array<INDEX> & dellines,
 		  int tolerance,
 		  const MeshingParameters & mp);
   

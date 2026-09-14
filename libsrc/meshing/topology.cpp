@@ -9,7 +9,7 @@ namespace netgen
 
   /*
   template <class T>
-  void QuickSortRec (NgFlatArray<T> data,
+  void QuickSortRec (FlatArray<T> data,
 		     int left, int right)
   {
     int i = left;
@@ -33,7 +33,7 @@ namespace netgen
   }
 
   template <class T>
-  void QuickSort (NgFlatArray<T> data)
+  void QuickSort (FlatArray<T> data)
   {
     if (data.Size() > 1)
       QuickSortRec (data, 0, data.Size()-1);
@@ -1795,7 +1795,7 @@ namespace netgen
 
 
 
-  void MeshTopology :: GetElementEdges (int elnr, NgArray<int> & eledges) const
+  void MeshTopology :: GetElementEdges (int elnr, Array<int> & eledges) const
   {
     int ned = GetNEdges (mesh->VolumeElement(elnr).GetType());
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
@@ -1805,7 +1805,7 @@ namespace netgen
       eledges[i] = edges[ei][i]+1;
   }
 
-  void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces) const
+  void MeshTopology :: GetElementFaces (int elnr, Array<int> & elfaces) const
   {
     int nfa = GetNFaces (mesh->VolumeElement(elnr).GetType());
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
@@ -1818,7 +1818,7 @@ namespace netgen
   }
 
   
-  void MeshTopology :: GetElementFaces (int elnr, NgArray<int> & elfaces, bool withorientation) const
+  void MeshTopology :: GetElementFaces (int elnr, Array<int> & elfaces, bool withorientation) const
   {
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
@@ -1848,7 +1848,7 @@ namespace netgen
     }
   }
 
-  void MeshTopology :: GetElementEdgeOrientations (int elnr, NgArray<int> & eorient) const
+  void MeshTopology :: GetElementEdgeOrientations (int elnr, Array<int> & eorient) const
   {
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
     int ned = GetNEdges (mesh->VolumeElement(ei).GetType());
@@ -1859,7 +1859,7 @@ namespace netgen
       eorient[i-1] = GetElementEdgeOrientation (elnr, i-1) ? -1 : 1;
   }
 
-  void MeshTopology :: GetElementFaceOrientations (int elnr, NgArray<int> & forient) const
+  void MeshTopology :: GetElementFaceOrientations (int elnr, Array<int> & forient) const
   {
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);    
     int nfa = GetNFaces (mesh->VolumeElement(ei).GetType());
@@ -1977,7 +1977,7 @@ namespace netgen
   }
 
   
-  void MeshTopology :: GetSurfaceElementEdges (int elnr, NgArray<int> & eledges) const
+  void MeshTopology :: GetSurfaceElementEdges (int elnr, Array<int> & eledges) const
   {
     int ned = GetNEdges (mesh->SurfaceElement(elnr).GetType());
     SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);    
@@ -1987,7 +1987,7 @@ namespace netgen
       eledges[i] = surfedges[sei][i]+1;
   }
 
-  void MeshTopology :: GetEdges (SurfaceElementIndex elnr, NgArray<int> & eledges) const
+  void MeshTopology :: GetEdges (SurfaceElementIndex elnr, Array<int> & eledges) const
   {
     int ned = GetNEdges ( (*mesh)[elnr].GetType());
     eledges.SetSize (ned);
@@ -2027,7 +2027,7 @@ namespace netgen
 
 
   void MeshTopology :: 
-  GetSurfaceElementEdgeOrientations (int elnr, NgArray<int> & eorient) const
+  GetSurfaceElementEdgeOrientations (int elnr, Array<int> & eorient) const
   {
     int ned = GetNEdges (mesh->SurfaceElement(elnr).GetType());
     eorient.SetSize (ned);
@@ -2258,7 +2258,7 @@ namespace netgen
 
 
   
-  void MeshTopology :: GetFaceVertices (int fnr, NgArray<int> & vertices) const
+  void MeshTopology :: GetFaceVertices (int fnr, Array<int> & vertices) const
   {
     vertices.SetSize(4);
     for (int i = 0; i < 4; i++)
@@ -2292,10 +2292,10 @@ namespace netgen
   }
 
 
-  void MeshTopology :: GetFaceEdges (int fnr, NgArray<int> & fedges, bool withorientation) const
+  void MeshTopology :: GetFaceEdges (int fnr, Array<int> & fedges, bool withorientation) const
   {
     // ArrayMem<int,4> pi(4);
-    // NgArrayMem<int,12> eledges;
+    // ArrayMem<int,12> eledges;
   
     fedges.SetSize (0);
     // GetFaceVertices(fnr, pi);
@@ -2469,7 +2469,7 @@ namespace netgen
 
 
   void MeshTopology :: 
-  GetSegmentVolumeElements ( int segnr, NgArray<ElementIndex> & volels ) const
+  GetSegmentVolumeElements ( int segnr, Array<ElementIndex> & volels ) const
   {
     /*
     int v1, v2;
@@ -2487,7 +2487,7 @@ namespace netgen
   }
 
   void MeshTopology :: 
-  GetSegmentSurfaceElements (int segnr, NgArray<SurfaceElementIndex> & els) const
+  GetSegmentSurfaceElements (int segnr, Array<SurfaceElementIndex> & els) const
   {
     // int v1, v2;
     // GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );

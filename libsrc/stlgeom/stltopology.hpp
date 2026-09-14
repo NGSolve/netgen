@@ -285,7 +285,7 @@ class STLTopology
 {
 protected:
   Array<STLTriangle, STLTrigId> trias;
-  NgArray<STLTopEdge> topedges;
+  Array<STLTopEdge> topedges;
   Array<Point<3>, STLPointId> points;
   bool surface = false;
 
@@ -336,7 +336,7 @@ public:
       FindNeighbourTrigs();
   }
   
-  virtual void InitSTLGeometry (const NgArray<STLReadTriangle> & readtrigs);
+  virtual void InitSTLGeometry (const Array<STLReadTriangle> & readtrigs);
 
   virtual void TopologyChanged() {}; //do some things, if topology changed!
 
@@ -345,7 +345,7 @@ public:
 
   
   void GetTrianglesInBox (const Box<3> & box,
-			  NgArray<int> & trias) const;
+			  Array<int> & trias) const;
 
 
   int GetNP() const { return points.Size(); }

@@ -26,23 +26,23 @@ namespace netgen
   {
     // protected:
   public:  
-    NgArray < GeomPoint<D> > geompoints;
-    NgArray < SplineSeg<D>* > splines;
+    Array < GeomPoint<D> > geompoints;
+    Array < SplineSeg<D>* > splines;
 
     SplineGeometry() : geompoints{}, splines{} { ; }
     virtual ~SplineGeometry();
 
-    int Load (const NgArray<double> & raw_data, const int startpos = 0);
+    int Load (const Array<double> & raw_data, const int startpos = 0);
 
     virtual void DoArchive(Archive& ar)
     {
       ar & geompoints & splines;
     }
 
-    void GetRawData (NgArray<double> & raw_data) const;
+    void GetRawData (Array<double> & raw_data) const;
 
 
-    const NgArray<SplineSeg<D>*> & GetSplines () const
+    const Array<SplineSeg<D>*> & GetSplines () const
     { return splines; }
 
     int GetNSplines (void) const { return splines.Size(); }

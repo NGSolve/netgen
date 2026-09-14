@@ -828,7 +828,7 @@ namespace netgen
     int surfnr;
   
     Vec3d n, ng;
-    NgArray<Vec3d> ngs(3);
+    Array<Vec3d> ngs(3);
 
     (*mycout) << "Check Surface Approximation" << endl;
     (*testout) << "Check Surface Approximation" << endl;

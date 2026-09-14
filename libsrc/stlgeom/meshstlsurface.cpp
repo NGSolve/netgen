@@ -26,8 +26,8 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
   
   PushStatusF("Mesh Lines");
 
-  NgArray<STLLine*> meshlines;
-  NgArray<Point3d> meshpoints;
+  Array<STLLine*> meshlines;
+  Array<Point3d> meshpoints;
 
   PrintMessage(3,"Mesh Lines");
 
@@ -469,8 +469,8 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	  
 	  
 
-	  NgArray<Point<3>> refpts;
-	  NgArray<double> refh;
+	  Array<Point<3>> refpts;
+	  Array<double> refh;
 
 	  // was commented:
 
@@ -630,7 +630,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   mesh.FindOpenSegments();
   
-  NgArray<int> spiralps(0);
+  Array<int> spiralps(0);
   spiralps.SetSize(0);
   for (int i = 1; i <= geom.GetNP(); i++)
     if (geom.GetSpiralPoint(i)) 
@@ -640,7 +640,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   //int spfound;
 
   /*
-  NgArray<int> meshsp(mesh.GetNP());
+  Array<int> meshsp(mesh.GetNP());
   meshsp = 0;
   for (int i = 1; i <= mesh.GetNP(); i++)
     for (int j = 1; j <= spiralps.Size(); j++)
@@ -672,10 +672,10 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   compress = 0;
   Array<PointIndex> icompress; 
 
-  NgArray<int, 1> opensegsperface(mesh.GetNFD());
+  Array<int> opensegsperface(mesh.GetNFD());
   opensegsperface = 0;
   for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
-    opensegsperface[mesh.GetOpenSegmentFace(i)]++;
+    opensegsperface[mesh.GetOpenSegmentFace(i)-1]++;
   
   TABLE<int, 1> opensegments(mesh.GetNFD());
   for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
@@ -689,7 +689,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
   for (int fnr = 1; fnr <= mesh.GetNFD(); fnr++)
     {
-      if (!opensegsperface[fnr]) continue;
+      if (!opensegsperface[fnr-1]) continue;
       if (multithread.terminate) return;
 
       timer1.Start();
@@ -1031,9 +1031,9 @@ IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
 }
 
 void MeshingSTLSurface :: 
-GetChartBoundary (NgArray<Point<2>> & points, 
-		  NgArray<Point<3>> & points3d,
-		  NgArray<INDEX_2> & lines, double h) const
+GetChartBoundary (Array<Point<2>> & points, 
+		  Array<Point<3>> & points3d,
+		  Array<INDEX_2> & lines, double h) const
 {
   points.SetSize (0);
   points3d.SetSize (0);

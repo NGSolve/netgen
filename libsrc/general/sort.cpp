@@ -16,8 +16,7 @@
 namespace netgen
 {
 
-  void Sort (const NgArray<double> & values,
-	     NgArray<int> & order)
+  void Sort (FlatArray<double> values, Array<int> & order)
   {
     int n = values.Size();
     int i, j;
@@ -35,8 +34,7 @@ namespace netgen
   }
 
 
-  void QuickSortRec (const NgArray<double> & values,
-		     NgArray<int> & order, 
+  void QuickSortRec (FlatArray<double> values, FlatArray<int> order,
 		     int left, int right)
   {
     int i, j;
@@ -62,8 +60,7 @@ namespace netgen
     if (i < right) QuickSortRec (values, order, i, right);
   }
 
-  void QuickSort (const NgArray<double> & values,
-		 NgArray<int> & order)
+  void QuickSort (FlatArray<double> values, Array<int> & order)
   {
     int i, n = values.Size();
     order.SetSize (n);

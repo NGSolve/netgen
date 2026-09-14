@@ -578,7 +578,7 @@ namespace netgen
         int bcprop;
         ifstream inpkt (pktfile);
         inpkt >> np;
-        NgArray<double> values(np);
+        Array<double> values(np);
         for (i = 1; i <= np; i++)
           {
             Point3d p(0,0,0);

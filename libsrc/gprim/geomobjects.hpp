@@ -9,7 +9,6 @@
 
 #include <core/array.hpp>
 
-#include <general/ngarray.hpp>
 
 namespace netgen
 {
@@ -361,21 +360,18 @@ namespace netgen
 	}
     }
 
-    template <typename T1, typename T2>
-    void Set (const NgIndirectArray<T1, T2> & points)
+    template <typename T1, typename T2, typename T3>
+    void Set (const IndirectArray<T1, T2, T3> & points)
     {
-      // Set (points[points.Begin()]);
-      Set (points[*points.Range().begin()]);
-      // for (int i = points.Begin()+1; i < points.End(); i++)
-      for (int i : points.Range().Modify(1,0))
+      Set (points[0]);
+      for (size_t i = 1; i < points.Size(); i++)
         Add (points[i]);
     }
 
-    template <typename T1, typename T2>
-    void Add (const NgIndirectArray<T1, T2> & points)
+    template <typename T1, typename T2, typename T3>
+    void Add (const IndirectArray<T1, T2, T3> & points)
     {
-      // for (int i = points.Begin(); i < points.End(); i++)
-      for (int i : points.Range())
+      for (size_t i = 0; i < points.Size(); i++)
         Add (points[i]);
     }
 

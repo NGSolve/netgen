@@ -5,7 +5,7 @@
 /**************************************************************************/
 
 /* 
-   Abstract data type NgArray
+   Abstract data type Array
 */
 
 

@@ -10,7 +10,7 @@ namespace netgen
 
   EdgeCalculation :: 
   EdgeCalculation (const CSGeometry & ageometry,
-		   NgArray<SpecialPoint> & aspecpoints,
+		   Array<SpecialPoint> & aspecpoints,
                    MeshingParameters & amparam)
     : geometry(ageometry), specpoints(aspecpoints), mparam(amparam)
   {
@@ -48,7 +48,7 @@ namespace netgen
     // add all special points before edge points (important for periodic identification)
     // JS, Jan 2007
     const double di=1e-7*geometry.MaxSize();
-    NgArray<PointIndex> locsearch;
+    Array<PointIndex> locsearch;
 
     for (int i = 0; i < specpoints.Size(); i++)
       if (specpoints[i].unconditional)
@@ -101,9 +101,9 @@ namespace netgen
 
   void EdgeCalculation :: CalcEdges1 (double h, Mesh & mesh)
   {
-    NgArray<int> hsp(specpoints.Size());
+    Array<int> hsp(specpoints.Size());
     Array<int> glob2hsp(specpoints.Size());
-    NgArray<int> startpoints, endpoints;
+    Array<int> startpoints, endpoints;
 
 
     int pos, ep;
@@ -112,11 +112,11 @@ namespace netgen
     Point<3> p, np; 
     int pi1, s1, s2, s1_orig, s2_orig;
 
-    NgArray<Point<3> > edgepoints;
-    NgArray<double> curvelength;
+    Array<Point<3> > edgepoints;
+    Array<double> curvelength;
     int copyedge = 0, copyfromedge = -1, copyedgeidentification = -1;
 
-    NgArray<int> locsurfind, locind;
+    Array<int> locsurfind, locind;
 
     int checkedcopy = 0;
 
@@ -392,7 +392,7 @@ namespace netgen
 		    int li = glob2hsp[locind[i]];
 		    glob2hsp[locind[i]] = -1;
 		    glob2hsp[hsp.Last()] = li;
-		    hsp.Delete (li);
+		    hsp.DeleteElement (li);
 		  }
 	      }
 
@@ -411,8 +411,8 @@ namespace netgen
 	  }
 
       
-	NgArray<RefEdge> refedges;
-	NgArray<bool> refedgesinv;
+	Array<RefEdge> refedges;
+	Array<bool> refedgesinv;
       
 
 	AnalyzeEdge (s1_orig, s2_orig, s1, s2, pos, layer,
@@ -591,8 +591,8 @@ namespace netgen
     //    int i, j;
     // PointIndex pi;
 
-    NgArray<int> osedges(cntedge);
-    NgArray<PointIndex> edgenewp(cntedge);    // new point inserted on edge
+    Array<int> osedges(cntedge);
+    Array<PointIndex> edgenewp(cntedge);    // new point inserted on edge
     INDEX_2_HASHTABLE<int> osedgesht (cntedge+1);
 
     osedges = 2;
@@ -728,17 +728,17 @@ namespace netgen
 
   void EdgeCalculation :: 
   FollowEdge (int pi1, int & ep, int & pos,
-	      const NgArray<int> & hsp,
+	      const Array<int> & hsp,
 	      double h, const Mesh & mesh,
-	      NgArray<Point<3> > & edgepoints,
-	      NgArray<double> & curvelength)
+	      Array<Point<3> > & edgepoints,
+	      Array<double> & curvelength)
   {
     int s1, s2, s1_rep, s2_rep;
     double len, steplen, cursteplen, loch;
     Point<3> p, np, pnp;
     Vec<3> a1, a2, t;
 
-    NgArray<int> locind;
+    Array<int> locind;
 
     double size = geometry.MaxSize();  
     double epspointdist2 = size * 1e-6;
@@ -954,12 +954,12 @@ namespace netgen
 
   void EdgeCalculation :: 
   AnalyzeEdge (int s1, int s2, int s1_rep, int s2_rep, int pos, int layer,
-	       const NgArray<Point<3> > & edgepoints,
-	       NgArray<RefEdge> & refedges,
-	       NgArray<bool> & refedgesinv)
+	       const Array<Point<3> > & edgepoints,
+	       Array<RefEdge> & refedges,
+	       Array<bool> & refedgesinv)
   {
     RefEdge re;
-    NgArray<int> locsurfind, locsurfind2;
+    Array<int> locsurfind, locsurfind2;
 
     Array<int> edges_priority;
 
@@ -1060,7 +1060,7 @@ namespace netgen
 	for (int j = locsurfind.Size()-1; j >= 0; j--)
 	  if (fabs (geometry.GetSurface(locsurfind[j])
 		    ->CalcFunctionValue (hp) ) > ideps*size)
-	    locsurfind.Delete(j);
+	    locsurfind.DeleteElement(j);
       
 	if (debug)
 	  (*testout) << locsurfind.Size() << " faces on hp" << endl;
@@ -1345,8 +1345,8 @@ namespace netgen
     for(int i=refedges.Size()-1; num>2 && i>=0; i--)
       if(todelete.Test(i))
 	{
-	  refedges.Delete(i);
-	  refedgesinv.Delete(i);
+	  refedges.DeleteElement(i);
+	  refedgesinv.DeleteElement(i);
 	  num--;
 	}
 
@@ -1360,10 +1360,10 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  StoreEdge (const NgArray<RefEdge> & refedges,
-	     const NgArray<bool> & refedgesinv,
-	     const NgArray<Point<3> > & edgepoints,
-	     const NgArray<double> & curvelength,
+  StoreEdge (const Array<RefEdge> & refedges,
+	     const Array<bool> & refedgesinv,
+	     const Array<Point<3> > & edgepoints,
+	     const Array<double> & curvelength,
 	     int layer,
 	     Mesh & mesh)
   {
@@ -1409,7 +1409,7 @@ namespace netgen
 
     const double di=1e-7*geometry.MaxSize();
 
-    NgArray<PointIndex> locsearch;
+    Array<PointIndex> locsearch;
     meshpoint_tree -> GetIntersecting (p-Vec<3> (di,di,di),
 				       p+Vec<3> (di,di,di), locsearch);
     if (locsearch.Size())
@@ -1528,10 +1528,10 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  StoreShortEdge (const NgArray<RefEdge> & refedges,
-		  const NgArray<bool> & refedgesinv,
-		  const NgArray<Point<3> > & edgepoints,
-		  const NgArray<double> & curvelength,
+  StoreShortEdge (const Array<RefEdge> & refedges,
+		  const Array<bool> & refedgesinv,
+		  const Array<Point<3> > & edgepoints,
+		  const Array<double> & curvelength,
 		  int layer,
 		  Mesh & mesh)
   {
@@ -1653,8 +1653,8 @@ namespace netgen
 
 
   void EdgeCalculation :: 
-  CopyEdge (const NgArray<RefEdge> & refedges,
-	    const NgArray<bool> & refedgesinv,
+  CopyEdge (const Array<RefEdge> & refedges,
+	    const Array<bool> & refedgesinv,
 	    int copyfromedge, 
 	    const Point<3> & fromstart, const Point<3> & fromend,
 	    const Point<3> & tostart, const Point<3> & toend,
@@ -1810,7 +1810,7 @@ namespace netgen
     int layer = 0;
 
     // Solid * tansol;
-    NgArray<int> tansurfind;
+    Array<int> tansurfind;
 
     double size = geometry.MaxSize();
     int nsol = geometry.GetNTopLevelObjects();

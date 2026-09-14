@@ -63,10 +63,10 @@ namespace netgen
   int Meshing2 ::ApplyRules (Array<Point<2>, LocalPointIndex> & lpoints, 
 			     Array<int, LocalPointIndex> & legalpoints,
 			     int maxlegalpoint,
-			     NgArray<IVec<2,LocalPointIndex>> & llines1,
+			     Array<IVec<2,LocalPointIndex>> & llines1,
 			     int maxlegalline,
-			     NgArray<MiniElement2d> & elements,
-			     NgArray<INDEX> & dellines, int tolerance,
+			     Array<MiniElement2d> & elements,
+			     Array<INDEX> & dellines, int tolerance,
 			     const MeshingParameters & mp)
   {
     // static Timer timer ("meshing2::ApplyRules"); RegionTimer reg (timer);
@@ -80,18 +80,18 @@ namespace netgen
 
 
     Array<int,LocalPointIndex> pused(maxlegalpoint);
-    NgArrayMem<int,100> lused(maxlegalline);
+    ArrayMem<int,100> lused(maxlegalline);
     Array<int,LocalPointIndex> pnearness(noldlp);
-    NgArrayMem<int,100> lnearness(llines1.Size());
+    ArrayMem<int,100> lnearness(llines1.Size());
 
     ArrayMem<LocalPointIndex, 20, RulePointIndex> pmap;   // rule point -> local point
     ArrayMem<bool, 20, RulePointIndex> pfixed;
-    NgArrayMem<int, 20> lmap;
+    ArrayMem<int, 20> lmap;
   
     ArrayMem<Point<2>,100> tempnewpoints;
-    NgArrayMem<IVec<2,LocalPointIndex>,100> tempnewlines;
-    NgArrayMem<int,100> tempdellines;
-    NgArrayMem<MiniElement2d,100> tempelements;
+    ArrayMem<IVec<2,LocalPointIndex>,100> tempnewlines;
+    ArrayMem<int,100> tempdellines;
+    ArrayMem<MiniElement2d,100> tempelements;
 
     // a least 2 * maximal number of old points in rules,
     // what is actually 4 now
@@ -155,8 +155,8 @@ namespace netgen
 
 
     // resort lines after lnearness
-    NgArray<IVec<2,LocalPointIndex>> llines(llines1.Size());
-    NgArray<int> sortlines(llines1.Size());
+    Array<IVec<2,LocalPointIndex>> llines(llines1.Size());
+    Array<int> sortlines(llines1.Size());
     int lnearness_class[MAX_NEARNESS];
 
     for (int j = 0; j < MAX_NEARNESS; j++)

@@ -146,10 +146,10 @@ public:
 class AdFront3
 {
   ///
-  // NgArray<FrontPoint3, PointIndex::BASE, PointIndex> points;
+  // Array<FrontPoint3, PointIndex::BASE, PointIndex> points;
   Array<FrontPoint3, Front3PointIndex> points;
   ///
-  NgArray<FrontFace> faces;
+  Array<FrontFace> faces;
   ///
   Array<Front3PointIndex> delpointl;
   
@@ -192,7 +192,7 @@ public:
   ///
   ~AdFront3 ();
   ///
-  void GetPoints (NgArray<Point<3> > & apoints) const;
+  void GetPoints (Array<Point<3> > & apoints) const;
   ///
   int GetNP() const 
   { return points.Size(); }
@@ -226,7 +226,7 @@ public:
 
   ///
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-			     NgArray<int> & ifaces) const;
+			     Array<int> & ifaces) const;
 
   bool PointInsideGroup(const Array<Front3PointIndex, LocalPointIndex> &grouppindex,
                         const Array<MiniElement2d>& groupfaces) const;
@@ -275,7 +275,7 @@ public:
   bool Inside (const Point<3> & p) const;
   /// both points on same side ?
   int SameSide (const Point<3> & lp1, const Point<3> & lp2, 
-		const NgArray<int> * testfaces = NULL) const;
+		const Array<int> * testfaces = NULL) const;
 
 
   ///

@@ -58,12 +58,12 @@ namespace netgen
     PointIndex p1, p2;
   };
 
-  static NgArray<POINT3D> points;
-  static NgArray<VOLELEMENT> volelements;
+  static Array<POINT3D> points;
+  static Array<VOLELEMENT> volelements;
   static Array<SURFELEMENT> surfelements;
 
-  static NgArray<FACE> faces;
-  static NgArray<EDGE> edges;
+  static Array<FACE> faces;
+  static Array<EDGE> edges;
 
 
   void ReadFile (char * filename)

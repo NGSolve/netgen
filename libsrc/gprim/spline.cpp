@@ -37,14 +37,14 @@ namespace netgen
 
   template <> 
   void CircleSeg<3> :: LineIntersections (const double a, const double b, const double c,
-					  NgArray < Point<3> > & points, const double eps) const
+					  Array < Point<3> > & points, const double eps) const
   {
     cerr << "CircleSeg<3>::LineIntersections not implemented" << endl;
   }
   
   template <> 
   void CircleSeg<2> :: LineIntersections (const double a, const double b, const double c,
-					  NgArray < Point<2> > & points, const double eps) const
+					  Array < Point<2> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -504,7 +504,7 @@ namespace netgen
 
   template<int D>
   void SplineSeg3<D> :: LineIntersections (const double a, const double b, const double c,
-					   NgArray < Point<D> > & points, const double eps) const
+					   Array < Point<D> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -551,7 +551,7 @@ namespace netgen
 
 
   template < int D >
-  void SplineSeg3<D> :: GetRawData (NgArray<double> & data) const
+  void SplineSeg3<D> :: GetRawData (Array<double> & data) const
   {
     data.Append(3);
     for(int i=0; i<D; i++)

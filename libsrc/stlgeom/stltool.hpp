@@ -17,7 +17,7 @@ extern int usechartnormal;
 extern int chartdebug;
 
 extern int geomsearchtreeon;
-extern int AddPointIfNotExists(NgArray<Point3d>& ap, const Point3d& p, double eps = 1e-8);
+extern int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps = 1e-8);
 //get distance from line lp1-lp2 to point p
 extern double GetDistFromLine(const Point<3>& lp1, const Point<3>& lp2, Point<3>& p);
 extern double GetDistFromInfiniteLine(const Point<3>& lp1, const Point<3>& lp2, const Point<3>& p);
@@ -34,7 +34,7 @@ extern void FIOReadStringE(istream& ios, char* str, int len);
 extern void FIOWriteString(ostream& ios, char* str, int len);
 
 
-typedef NgArray <int> * ArrayINTPTR;
+typedef Array <int> * ArrayINTPTR;
 
 class STLGeometry;
 class STLParameters;
@@ -73,8 +73,8 @@ private:
   Array<STLTrigId> outertrigs; // trigs which belong to other charts
   BoxTree<3,STLTrigId> * searchtree; // ADT containing outer trigs
 
-  NgArray<twoint> olimit; //outer limit of outer chart
-  NgArray<twoint> ilimit; //outer limit of inner chart
+  Array<twoint> olimit; //outer limit of outer chart
+  Array<twoint> ilimit; //outer limit of inner chart
   const STLParameters& stlparam;
 
 
@@ -102,7 +102,7 @@ public:
 
   void GetTrianglesInBox (const Point3d & pmin,
 			  const Point3d & pmax,
-			  NgArray<STLTrigId> & trias) const;
+			  Array<STLTrigId> & trias) const;
   void AddOLimit(twoint l) {olimit.Append(l);}
   void AddILimit(twoint l) {ilimit.Append(l);}
 
@@ -116,8 +116,8 @@ public:
   twoint GetILimit(int i) const {return ilimit[i-1];}
 
   //move triangles trigs (local chart-trig numbers) to outer chart
-  void MoveToOuterChart(const NgArray<int>& trigs);
-  void DelChartTrigs(const NgArray<int>& trigs);
+  void MoveToOuterChart(const Array<int>& trigs);
+  void DelChartTrigs(const Array<int>& trigs);
 
 
   // define local coordinate system, JS:
@@ -189,7 +189,7 @@ class STLBoundary
 private:
   STLGeometry * geometry;
   const STLChart * chart;
-  // NgArray<STLBoundarySeg> boundary;
+  // Array<STLBoundarySeg> boundary;
   NgClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;
   unique_ptr<BoxTree<2,INDEX_2>> searchtree;
 public:

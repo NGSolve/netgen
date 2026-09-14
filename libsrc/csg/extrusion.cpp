@@ -70,7 +70,7 @@ namespace netgen
     Init();
   }
 
-  ExtrusionFace :: ExtrusionFace(const NgArray<double> & raw_data)
+  ExtrusionFace :: ExtrusionFace(const Array<double> & raw_data)
   {
     deletable = true;
 
@@ -481,7 +481,7 @@ namespace netgen
     v2d(1) = v * loc_z_dir[seg];
     
     Vec<2> n(v2d(1),-v2d(0));
-    NgArray < Point<2> > ips;
+    Array < Point<2> > ips;
 
 
     profile->LineIntersections(v2d(1),
@@ -621,7 +621,7 @@ namespace netgen
   }
   
 
-  void ExtrusionFace :: GetRawData(NgArray<double> & data) const
+  void ExtrusionFace :: GetRawData(Array<double> & data) const
   {
     data.DeleteAll();
     profile->GetRawData(data);
@@ -738,7 +738,7 @@ namespace netgen
 
   INSOLID_TYPE Extrusion :: PointInSolid (const Point<3> & p,
 					  const double eps,
-					  NgArray<int> * const facenums) const
+					  Array<int> * const facenums) const
   {
     Vec<3> random_vec(-0.4561,0.7382,0.4970247);
 
@@ -781,7 +781,7 @@ namespace netgen
   }
 
   void Extrusion :: GetTangentialSurfaceIndices (const Point<3> & p, 
-                                                 NgArray<int> & surfind, double eps) const
+                                                 Array<int> & surfind, double eps) const
   {
     for (int j = 0; j < faces.Size(); j++)
       if (faces[j] -> PointInFace(p, eps))
@@ -794,7 +794,7 @@ namespace netgen
 					const Vec<3> & v,
 					double eps) const
   {
-    NgArray<int> facenums;
+    Array<int> facenums;
     INSOLID_TYPE pInSolid = PointInSolid(p,eps,&facenums);
 
     if(pInSolid != DOES_INTERSECT)

@@ -43,14 +43,14 @@ namespace netgen {
     DLL_HEADER extern void (*Ptr_Render)(bool);
     DLL_HEADER extern void (*Ptr_UpdateVisSurfaceMeshData)(int,
             shared_ptr<Array<Point<3>, LocalPointIndex>>,
-            shared_ptr<NgArray<IVec<2,LocalPointIndex>>>,
+            shared_ptr<Array<IVec<2,LocalPointIndex>>>,
             shared_ptr<Array<Point<2>, LocalPointIndex>>
             );
 
     inline void Render(bool blocking = false) { if(Ptr_Render) Ptr_Render(blocking); }
     inline void UpdateVisSurfaceMeshData(int oldnl,
             shared_ptr<Array<Point<3>, LocalPointIndex>> locpointsptr = nullptr,
-            shared_ptr<NgArray<IVec<2,LocalPointIndex>>> loclinesptr = nullptr,
+            shared_ptr<Array<IVec<2,LocalPointIndex>>> loclinesptr = nullptr,
             shared_ptr<Array<Point<2>, LocalPointIndex>> plainpointsptr = nullptr
             ) {
         if(Ptr_UpdateVisSurfaceMeshData) Ptr_UpdateVisSurfaceMeshData(oldnl, locpointsptr, loclinesptr, plainpointsptr);

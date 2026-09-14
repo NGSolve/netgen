@@ -79,9 +79,9 @@ namespace netgen
     ///
     const CSGeometry * geometry;
     ///
-    NgArray<MeshPoint> * points;
+    Array<MeshPoint> * points;
     ///
-    NgArray<long int> boxesinlevel;
+    Array<long int> boxesinlevel;
 
     ///
     double size;
@@ -102,11 +102,11 @@ namespace netgen
 
     ///
     void CalcSpecialPoints (const CSGeometry & ageometry, 
-			    NgArray<MeshPoint> & points);
+			    Array<MeshPoint> & points);
     ///
     void AnalyzeSpecialPoints (const CSGeometry & geometry, 
-			       NgArray<MeshPoint> & points, 
-			       NgArray<SpecialPoint> & specpoints);
+			       Array<MeshPoint> & points, 
+			       Array<SpecialPoint> & specpoints);
 
   protected:
     ///
@@ -161,30 +161,30 @@ namespace netgen
 
     void ComputeExtremalPoints (const Plane * plane, 
 				const QuadraticSurface * quadric, 
-				NgArray<Point<3> > & pts);
+				Array<Point<3> > & pts);
 
     void ComputeExtremalPoints (const Sphere * sphere1, 
 				const Sphere * sphere2, 
-				NgArray<Point<3> > & pts);
+				Array<Point<3> > & pts);
 
     bool ComputeExtremalPoints (const RevolutionFace * rev1, 
 				const RevolutionFace * rev2, 
-				NgArray<Point<3> > & pts);
+				Array<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
 			     const Plane * plane2, 
 			     const Plane * plane3, 
-			     NgArray<Point<3> > & pts);
+			     Array<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
 			     const Plane * plane2, 
 			     const QuadraticSurface * quadratic, 
-			     NgArray<Point<3> > & pts);
+			     Array<Point<3> > & pts);
 
     void ComputeCrossPoints (const Sphere * sphere1, 
 			     const Sphere * sphere2, 
 			     const Sphere * sphere3, 
-			     NgArray<Point<3> > & pts);
+			     Array<Point<3> > & pts);
   };
 
 }

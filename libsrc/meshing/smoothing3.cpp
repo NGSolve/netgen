@@ -91,7 +91,7 @@ namespace netgen
   }
 
   PointFunction1 :: PointFunction1 (Mesh::T_POINTS & apoints, 
-				    const NgArray<PointIndices<3>> & afaces,
+				    const Array<PointIndices<3>> & afaces,
 				    const MeshingParameters & amp,
 				    double ah)
     : points(apoints), faces(afaces), mp(amp)
@@ -179,12 +179,12 @@ namespace netgen
   class CheapPointFunction1 : public MinFunction
   {
     Mesh::T_POINTS & points;
-    const NgArray<INDEX_3> & faces;
+    const Array<INDEX_3> & faces;
     DenseMatrix m;
     double h;
   public:
     CheapPointFunction1 (Mesh::T_POINTS & apoints, 
-			 const NgArray<INDEX_3> & afaces,
+			 const Array<INDEX_3> & afaces,
 			 double ah);
   
     virtual double Func (const Vector & x) const;
@@ -192,7 +192,7 @@ namespace netgen
   };
 
   CheapPointFunction1 :: CheapPointFunction1 (Mesh::T_POINTS & apoints, 
-					      const NgArray<INDEX_3> & afaces,
+					      const Array<INDEX_3> & afaces,
 					      double ah)
     : points(apoints), faces(afaces)
   {
@@ -451,7 +451,7 @@ namespace netgen
   int PointFunction :: MovePointToInner ()
   {
     // try point movement 
-    NgArray<Element2d> faces;
+    Array<Element2d> faces;
   
     for (auto ei : elementsonpoint[actpind])
       {
@@ -979,13 +979,13 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 // {
 // public:
 //   Mesh::T_POINTS & points;
-//   const NgArray<Element> & elements;
+//   const Array<Element> & elements;
 //   TABLE<INDEX> elementsonpoint;
 //   PointIndex actpind;
   
 // public:
 //   JacobianPointFunction (Mesh::T_POINTS & apoints, 
-// 			 const NgArray<Element> & aelements);
+// 			 const Array<Element> & aelements);
   
 //   virtual void SetPointIndex (PointIndex aactpind);
 //   virtual double Func (const Vector & x) const;
@@ -1608,9 +1608,9 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 // Improve Condition number of Jacobian, any elements  
 void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 					   const TBitArray<PointIndex> & usepoint, 
-					   const NgArray< Vec<3>* > & nv,
+					   const Array< Vec<3>* > & nv,
 					   OPTIMIZEGOAL goal,
-					   const NgArray< idmap_type* > * idmaps)
+					   const Array< idmap_type* > * idmaps)
 {
   // int i, j;
   
@@ -1627,8 +1627,8 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   
   JacobianPointFunction pf(points, volelements);
 
-  NgArray< idmap_type* > locidmaps;
-  const NgArray< idmap_type* > * used_idmaps;
+  Array< idmap_type* > locidmaps;
+  const Array< idmap_type* > * used_idmaps;
 
   if(idmaps)
     used_idmaps = idmaps;

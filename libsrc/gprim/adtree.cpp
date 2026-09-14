@@ -206,7 +206,7 @@ namespace netgen
   }
 
 
-  void ADTree :: GetMatch (NgArray <int> & matches)
+  void ADTree :: GetMatch (Array <int> & matches)
   {
     int nodenr;
 
@@ -427,10 +427,10 @@ namespace netgen
 
   void ADTree3Div :: GetIntersecting (const float * bmin, 
 				      const float * bmax,
-				      NgArray<int> & pis) const
+				      Array<int> & pis) const
   {
-    static NgArray<ADTreeNode3Div*> stack(1000);
-    static NgArray<int> stackdir(1000);
+    static Array<ADTreeNode3Div*> stack(1000);
+    static Array<int> stackdir(1000);
     ADTreeNode3Div * node;
     int dir, i, stacks;
 
@@ -686,10 +686,10 @@ namespace netgen
 
   void ADTree3M :: GetIntersecting (const float * bmin, 
 				    const float * bmax,
-				    NgArray<int> & pis) const
+				    Array<int> & pis) const
   {
-    static NgArray<ADTreeNode3M*> stack(1000);
-    static NgArray<int> stackdir(1000);
+    static Array<ADTreeNode3M*> stack(1000);
+    static Array<int> stackdir(1000);
     ADTreeNode3M * node;
     int dir, i, stacks;
 
@@ -932,9 +932,9 @@ namespace netgen
 
   void ADTree3F :: GetIntersecting (const float * bmin, 
 				    const float * bmax,
-				    NgArray<int> & pis) const
+				    Array<int> & pis) const
   {
-    static NgArray<ADTreeNode3F*> stack(1000);
+    static Array<ADTreeNode3F*> stack(1000);
     ADTreeNode3F * node;
     int dir, i, stacks;
 
@@ -1196,9 +1196,9 @@ namespace netgen
 
   void ADTree3FM :: GetIntersecting (const float * bmin, 
 				     const float * bmax,
-				     NgArray<int> & pis) const
+				     Array<int> & pis) const
   {
-    static NgArray<ADTreeNode3FM*> stack(1000);
+    static Array<ADTreeNode3FM*> stack(1000);
     ADTreeNode3FM * node;
     int dir, i, stacks;
 
@@ -1469,11 +1469,11 @@ namespace netgen
 
   void ADTree6 :: GetIntersecting (const float * bmin, 
 				   const float * bmax,
-				   NgArray<int> & pis) const
+				   Array<int> & pis) const
   {
-    // static NgArray<inttn6> stack(10000);
+    // static Array<inttn6> stack(10000);
     // stack.SetSize (10000);
-    NgArrayMem<inttn6,10000> stack(10000);
+    ArrayMem<inttn6,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;
@@ -1698,11 +1698,11 @@ namespace netgen
 
   template <int dim, typename T>
   void T_ADTree<dim,T> :: GetIntersecting (Point<dim> bmin, Point<dim> bmax,
-                                           NgArray<T> & pis) const
+                                           Array<T> & pis) const
   {
-    // static NgArray<inttn6> stack(10000);
+    // static Array<inttn6> stack(10000);
     // stack.SetSize (10000);
-    NgArrayMem<inttn<dim,T>,10000> stack(10000);
+    ArrayMem<inttn<dim,T>,10000> stack(10000);
     pis.SetSize(0);
 
     stack[0].node = root;
@@ -1973,9 +1973,9 @@ namespace netgen
 
   void ADTree6F :: GetIntersecting (const float * bmin, 
 				    const float * bmax,
-				    NgArray<int> & pis) const
+				    Array<int> & pis) const
   {
-    static NgArray<ADTreeNode6F*> stack(1000);
+    static Array<ADTreeNode6F*> stack(1000);
     ADTreeNode6F * node;
     int dir, i, stacks;
 
@@ -2130,7 +2130,7 @@ namespace netgen
   /*
   template <int dim, typename T>
   void BoxTree<dim,T> ::GetIntersecting (const Point<dim> & pmin, const Point<dim> & pmax, 
-                                         NgArray<T> & pis) const
+                                         Array<T> & pis) const
   {
     Point<2*dim> tpmin, tpmax;
     double tol = Tolerance();

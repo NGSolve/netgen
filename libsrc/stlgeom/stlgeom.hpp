@@ -32,12 +32,12 @@
 namespace netgen
 {
   /*
-  inline int IsInArray(int n, const NgArray<int>& ia)
+  inline int IsInArray(int n, const Array<int>& ia)
   {
     return ia.Contains(n); 
   }
 
-  inline bool AddIfNotExists(NgArray<int>& list, int x)
+  inline bool AddIfNotExists(Array<int>& list, int x)
   {
     if (list.Contains(x)) return false;
     list.Append(x);
@@ -57,7 +57,7 @@ namespace netgen
 
   class STLEdgeDataList
   {
-    NgArray<int> storedstatus;
+    Array<int> storedstatus;
     STLTopology & geom;
   public:
   
@@ -89,8 +89,8 @@ namespace netgen
     void Write(ofstream& of) const;
     void Read(ifstream& ifs);
 
-    void BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& line);
-    void BuildClusterWithEdge(int ep1, int ep2, NgArray<twoint>& line);
+    void BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line);
+    void BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& line);
 
     int GetNEPPStat(int p, int status) const;
     int GetNConfCandEPP(int p) const;
@@ -104,20 +104,20 @@ namespace netgen
   class DLL_HEADER STLGeometry : public NetgenGeometry, public STLTopology
   {
     // edges to be meshed:
-    NgArray<STLEdge> edges;
+    Array<STLEdge> edges;
     //edges per point
     TABLE<int> edgesperpoint;
 
     // line: a connection of edges
-    NgArray<STLLine*> lines;
-    NgArray<int> lineendpoints; //per geometrypoint, 1 = is endpoint; 0 = no endpoint,
+    Array<STLLine*> lines;
+    Array<int> lineendpoints; //per geometrypoint, 1 = is endpoint; 0 = no endpoint,
 
-    NgArray<Vec3d> normals; //normals belong to points!
+    Array<Vec3d> normals; //normals belong to points!
 
-    NgArray<twoint> externaledges;
+    Array<twoint> externaledges;
 
     int undoexternaledges;
-    NgArray<twoint> storedexternaledges;
+    Array<twoint> storedexternaledges;
 
     unique_ptr<STLEdgeDataList> edgedata;
     //  STLEdgeDataList edgedata_store;
@@ -130,14 +130,14 @@ namespace netgen
     int facecnt; 
     //meshpoint is only set, if an edge is at this point!!!
 
-    NgArray<int> vicinity; //is one, if a triangle belongs to vicinity (eg. of selecttrig)
-    NgArray<int> markedtrigs; //is one, if a triangle belongs to marked triangles (calcdirtystrigs)
-    NgArray<Point3d> markedsegs; //every pointpair is a segment!!!  
-    NgArray<twoint> selectedmultiedge;
+    Array<int> vicinity; //is one, if a triangle belongs to vicinity (eg. of selecttrig)
+    Array<int> markedtrigs; //is one, if a triangle belongs to marked triangles (calcdirtystrigs)
+    Array<Point3d> markedsegs; //every pointpair is a segment!!!  
+    Array<twoint> selectedmultiedge;
 
 
     //spiralpoints:
-    NgArray<int> spiralpoints;
+    Array<int> spiralpoints;
     //
     Array<unique_ptr<STLChart>, ChartId> atlas;
     //marks all already charted trigs with chartnumber
@@ -147,10 +147,10 @@ namespace netgen
 
 
     //for meshing and project:
-    NgArray<int> meshcharttrigs; //per trig: 1=belong to chart, 0 not
+    Array<int> meshcharttrigs; //per trig: 1=belong to chart, 0 not
     mutable int meshchart;
 
-    NgArray<int> ha_points;  // help array, np long, filled with 0 
+    Array<int> ha_points;  // help array, np long, filled with 0 
 
 
     // sharp geometric edges not declared as edges
@@ -175,8 +175,8 @@ namespace netgen
     //int selecttrig, nodeofseltrig;
 
     //only for testing;
-    NgArray<STLLine*> meshlines;
-    NgArray<Point3d> meshpoints;
+    Array<STLLine*> meshlines;
+    Array<Point3d> meshpoints;
 
     double area;
   public:
@@ -228,14 +228,14 @@ namespace netgen
     //void ClearSelectedMultiEdge() {selectedmultiedge.SetSize(0);}
     //void AddSelectedMultiEdge(twoint ep) {selectedmultiedge.Append(ep);}
     //int SelectedMultiEdgeSize() {return selectedmultiedge.Size();}
-    const NgArray<twoint>& SelectedMultiEdge() {return selectedmultiedge;}
+    const Array<twoint>& SelectedMultiEdge() {return selectedmultiedge;}
     twoint GetNearestSelectedDefinedEdge();
     void BuildSelectedMultiEdge(twoint ep);
     void BuildSelectedEdge(twoint ep);
     void BuildSelectedCluster(twoint ep);
 
 	void ImportEdges();
-	void AddEdges(const NgArray<Point<3> >& eps);
+	void AddEdges(const Array<Point<3> >& eps);
 	void ExportEdges();
 	void LoadEdgeData(const filesystem::path & file);
 	void SaveEdgeData(const filesystem::path & file);
@@ -304,7 +304,7 @@ namespace netgen
     }
     int GetNMarkedSegs() {return markedsegs.Size()/2;}
 	void CalcVicinity(int starttrig);
-	void GetVicinity(int starttrig, int size, NgArray<int>& vic);
+	void GetVicinity(int starttrig, int size, Array<int>& vic);
 
 	int Vicinity(int trig) const;
 
@@ -347,7 +347,7 @@ namespace netgen
     ///
 
     ///ReadTriangle->STLTriangle, initialise some important variables, always after load!!!
-    virtual void InitSTLGeometry (const NgArray<STLReadTriangle> & readtrigs) override;
+    virtual void InitSTLGeometry (const Array<STLReadTriangle> & readtrigs) override;
     virtual void TopologyChanged() override; //do some things, if topology changed!
     int CheckGeometryOverlapping();
 
@@ -385,7 +385,7 @@ namespace netgen
     void AddFaceEdges(); //each face should have at least one starting edge (outherwise it won't be meshed)
 
     void GetDirtyChartTrigs(int chartnum, STLChart& chart, const Array<ChartId, STLTrigId>& outercharttrigs, 
-			    NgArray<ChartId>& chartpointchecked, NgArray<int>& dirtytrigs);
+			    Array<ChartId>& chartpointchecked, Array<int>& dirtytrigs);
 
     void ClearSpiralPoints();
     void SetSpiralPoint(int pn) {spiralpoints[pn-1] = 1;};
@@ -419,13 +419,13 @@ namespace netgen
     STLChart & GetChart(ChartId nr) { return *atlas[nr];};
     int AtlasMade() const;
   
-    void GetInnerChartLimes(NgArray<twoint>& limes, ChartId chartnum);
+    void GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum);
 
     //FOR MESHING
     int GetMeshChartNr () { return meshchart; }
-    void GetMeshChartBoundary (NgArray<Point<2>> & points,
-			       NgArray<Point<3>> & points3d,
-			       NgArray<INDEX_2> & lines, double h);
+    void GetMeshChartBoundary (Array<Point<2>> & points,
+			       Array<Point<3>> & points3d,
+			       Array<INDEX_2> & lines, double h);
 
 
     Point<3> PointBetween(const Point<3> & p1, int t1, const Point<3> & p2, int t2);
@@ -468,7 +468,7 @@ namespace netgen
 
     void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam, const MeshingParameters& mparam);
     void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
-    void RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& acttrigs, class Mesh & mesh, 
+    void RestrictHChartDistOneChart(ChartId chartnum, Array<int>& acttrigs, class Mesh & mesh, 
 				    double gh, double fact, double minh, const STLParameters& stlparam);
 
     friend class MeshingSTLSurface;

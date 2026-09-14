@@ -45,7 +45,7 @@ namespace netgen
 
     // new version with consistent ordering across sub-domains
 
-    NgArray<PointIndices<2>> parents;
+    Array<PointIndices<2>> parents;
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & el = mesh[si];
@@ -143,10 +143,10 @@ namespace netgen
 
     PrintMessage (5, "have points");
     
-    NgArray<int> par_nr(parents.Size());
+    Array<int> par_nr(parents.Size());
     for (int i = 0; i < par_nr.Size(); i++)
       par_nr[i] = i;
-    QuickSort (parents, par_nr);
+    QuickSortPair (parents, par_nr);
     mesh.mlbetweennodes.SetSize(mesh.GetNV()+parents.Size());
     for (int i = 0; i < parents.Size(); i++)
       {
@@ -227,8 +227,8 @@ namespace netgen
 	  case TRIG:
 	  case TRIG6:
 	    {
-	      NgArrayMem<PointIndex,6> pnums(6);
-	      NgArrayMem<PointGeomInfo,6> pgis(6);
+	      ArrayMem<PointIndex,6> pnums(6);
+	      ArrayMem<PointGeomInfo,6> pgis(6);
 
 	      static int betw[3][3] =
 		{ { 2, 3, 4 },
@@ -408,7 +408,7 @@ namespace netgen
 	  case TET:
 	  case TET10:
 	    {
-	     NgArrayMem<PointIndex,10> pnums(10);
+	     ArrayMem<PointIndex,10> pnums(10);
 	     static int betw[6][3] =
 	     { { 1, 2, 5 },
 	       { 1, 3, 6 },
@@ -498,7 +498,7 @@ namespace netgen
           }
           case HEX:
           {
-	     NgArrayMem<PointIndex,27> pnums(27);
+	     ArrayMem<PointIndex,27> pnums(27);
 	     static int betw[13][3] =
 	     { { 1, 2, 9 },
 	       { 3, 4, 10 },
@@ -614,7 +614,7 @@ namespace netgen
 	  }
 	  case PRISM:
           {
-	     NgArrayMem<PointIndex,18> pnums(18);
+	     ArrayMem<PointIndex,18> pnums(18);
 	     static int betw[9][3] =
 	     { { 3, 1, 7 },
 	       { 1, 2, 8 },

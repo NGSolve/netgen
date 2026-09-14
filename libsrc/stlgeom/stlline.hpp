@@ -81,7 +81,7 @@ class STLEdgeDataList
 {
 private:
   INDEX_2_HASHTABLE<int> hashtab;
-  NgArray<STLEdgeData> edgedata;
+  Array<STLEdgeData> edgedata;
   TABLE<int> edgesperpoint;
   
 public:
@@ -120,7 +120,7 @@ public:
   void Write(ofstream& of) const;
   void Read(ifstream& ifs);
 
-  void BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& line);
+  void BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line);
 
   int GetNEPPStat(int p, int status) const;
   int GetNConfCandEPP(int p) const;
@@ -147,10 +147,10 @@ class STLLine
 {
 private:
   const STLGeometry * geometry;
-  NgArray<int> pts;
-  NgArray<int> lefttrigs;
-  NgArray<int> righttrigs;
-  NgArray<double> dists;
+  Array<int> pts;
+  Array<int> lefttrigs;
+  Array<int> righttrigs;
+  Array<double> dists;
   int split;
 
 public:
@@ -180,7 +180,7 @@ public:
 
   //return a meshed polyline
   STLLine* Mesh(const Array<Point<3>,STLPointId>& ap, 
-		NgArray<Point3d>& mp, double ghi,
+		Array<Point3d>& mp, double ghi,
 		class Mesh& mesh) const;
 
   void DoSplit() {split = 1;}

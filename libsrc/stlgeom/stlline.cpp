@@ -197,7 +197,7 @@ int STLEdgeDataList :: GetNConfCandEPP(int p) const
 }
 
 
-void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& line)
+void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -424,7 +424,7 @@ int STLEdgeDataList :: GetNConfCandEPP(int p) const
 }
 
 
-void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& line)
+void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -473,7 +473,7 @@ void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, NgArray<twoint>& lin
   
 }
 
-int Exists(int p1, int p2, const NgArray<twoint>& line)
+int Exists(int p1, int p2, const Array<twoint>& line)
 {
   int i;
   for (i = 1; i <= line.Size(); i++)
@@ -485,7 +485,7 @@ int Exists(int p1, int p2, const NgArray<twoint>& line)
   return 0;
 }
 
-void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, NgArray<twoint>& line)
+void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -644,7 +644,7 @@ double GetH(const Point3d& p, double x)
 }
 */
 STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap, 
-			 NgArray<Point3d>& mp, double ghi,
+			 Array<Point3d>& mp, double ghi,
 			 class Mesh& mesh) const
 {
   static Timer timer1a("mesh stl-line 1a");
@@ -677,8 +677,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
   
   int nph = 10+int(maxseglen / minh); //anzahl der integralauswertungen pro segment
 
-  NgArray<double> inthi(GetNS()*nph);
-  NgArray<double> curvelen(GetNS()*nph);
+  Array<double> inthi(GetNS()*nph);
+  Array<double> curvelen(GetNS()*nph);
 
   timer1a.Stop();
   timer1b.Start();

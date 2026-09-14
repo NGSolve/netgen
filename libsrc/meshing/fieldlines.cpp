@@ -47,7 +47,7 @@ namespace netgen
       {
 	c.SetSize(2); c[0] = 0; c[1] = 0.5;
 	b.SetSize(2); b[0] = 0; b[1] = 1;
-	NgArray<int> size(2);
+	Array<int> size(2);
 	size[0] = 0; size[1] = 1;
 	a = new TABLE<double>(size);
 	a->Set(2,1,0.5);  // Set, Get: 1-based!
@@ -57,7 +57,7 @@ namespace netgen
       {
 	c.SetSize(3); c[0] = 0; c[1] = 1; c[2] = 0.5;
 	b.SetSize(3); b[0] = b[1] = 1./6.; b[2] = 2./3.;
-	NgArray<int> size(3);
+	Array<int> size(3);
 	size[0] = 0; size[1] = 1; size[2] = 2;
 	a = new TABLE<double>(size);
 	a->Set(2,1,1);
@@ -68,7 +68,7 @@ namespace netgen
       {
 	c.SetSize(4); c[0] = 0; c[1] = c[2] = 0.5; c[3] = 1;
 	b.SetSize(4); b[0] = b[3] = 1./6.; b[1] = b[2] = 1./3.;
-	NgArray<int> size(4);
+	Array<int> size(4);
 	size[0] = 0; size[1] = 1; size[2] = 2; size[3] = 3;
 	a = new TABLE<double>(size);
 	a->Set(2,1,0.5);

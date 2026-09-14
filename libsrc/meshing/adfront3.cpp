@@ -85,7 +85,7 @@ AdFront3 :: ~AdFront3 ()
   // delete connectedpairs;
 }
 
-void AdFront3 :: GetPoints (NgArray<Point<3> > & apoints) const
+void AdFront3 :: GetPoints (Array<Point<3> > & apoints) const
 {
   /*
   for (Front3PointIndex pi = points.Begin(); pi < points.End(); pi++)
@@ -277,7 +277,7 @@ void AdFront3 :: CreateTrees ()
 
 
 void AdFront3 :: GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-				       NgArray<int> & ifaces) const
+				       Array<int> & ifaces) const
 {
   facetree -> GetIntersecting (pmin, pmax, ifaces);
 }
@@ -517,11 +517,11 @@ int AdFront3 :: GetLocals (int fstind,
   Front3PointIndex pstind;
   Point3d midp, p0;
 
-  //  static NgArray<int, PointIndex::BASE> invpindex;
+  //  static Array<int, PointIndex::BASE> invpindex;
   
-  NgArray<FrontElement2d> locfaces2;          // all front faces in radius xh
-  NgArray<int> locfaces3;           // all faces in outer radius relh
-  NgArray<INDEX> findex2;
+  Array<FrontElement2d> locfaces2;          // all front faces in radius xh
+  Array<int> locfaces3;           // all faces in outer radius relh
+  Array<INDEX> findex2;
 
   locfaces2.SetSize(0);
   locfaces3.SetSize(0);
@@ -563,7 +563,7 @@ int AdFront3 :: GetLocals (int fstind,
 	}
     }
 
-  NgArray<FrontElement2d> frontfaces;         // the selected faces, front numbering
+  Array<FrontElement2d> frontfaces;         // the selected faces, front numbering
 
   //local faces for inner radius:
   for (i = 1; i <= locfaces2.Size(); i++)
@@ -682,7 +682,7 @@ void AdFront3 :: GetGroup (int fi,
 			   Array<Front3PointIndex, LocalPointIndex> & pindex,
 			   Array<INDEX> & findex) 
 {
-  // static NgArray<char> pingroup;
+  // static Array<char> pingroup;
   int changed;
 
   pingroup.SetSize(points.Size());
@@ -895,7 +895,7 @@ bool AdFront3 :: Inside (const Point<3> & p) const
 
 
 int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
-			  const NgArray<int> * testfaces) const
+			  const Array<int> * testfaces) const
 {
   const Point<3> *line[2];
   line[0] = &lp1;
@@ -907,7 +907,7 @@ int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
   pmin.SetToMin (lp2);
   pmax.SetToMax (lp2);
   
-  NgArrayMem<int, 100> aprif;
+  ArrayMem<int, 100> aprif;
   aprif.SetSize(0);
   
   if (!testfaces)

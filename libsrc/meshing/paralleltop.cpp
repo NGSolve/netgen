@@ -308,9 +308,9 @@ namespace netgen
 
     if ( id == 0 )
       {
-	Array<NgArray<int>*> sendarrays(ntasks);
+	Array<Array<int>*> sendarrays(ntasks);
 	for (int dest = 1; dest < ntasks; dest++)
-	  sendarrays[dest] = new NgArray<int>;
+	  sendarrays[dest] = new Array<int>;
 
 	Array<int> edges, faces;
 	for (int el = 1; el <= mesh.GetNE(); el++)

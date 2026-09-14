@@ -186,8 +186,8 @@ namespace netgen
     MeshPoint sp1; 
     PointGeomInfo gi1;
     Vec<3> normal, t1, t2;
-    NgArray<SurfaceElementIndex> locelements;
-    NgArray<int> locrots;
+    Array<SurfaceElementIndex> locelements;
+    Array<int> locrots;
     Array<double> lochs;
     Array<Point<3> > loc_pnts2, loc_pnts3;
   // static int locerr2;

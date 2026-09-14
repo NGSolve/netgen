@@ -1,8 +1,7 @@
 #ifndef NETGEN_MESHTOOL_HPP
 #define NETGEN_MESHTOOL_HPP
 
-// #include "../general/ngarray.hpp"
-// #include "../gprim/geom3d.hpp"
+//// #include "../gprim/geom3d.hpp"
 // #include "../gprim/geomobjects.hpp"
 
 #include "meshtype.hpp"
@@ -14,7 +13,7 @@ extern void MeshQuality2d (const Mesh & mesh);
 
 ///
 extern void MeshQuality3d (const Mesh & mesh,
-			   NgArray<int> * inclass = NULL);
+			   Array<int> * inclass = NULL);
 
 ///
 extern void SaveEdges (const Mesh & mesh, 
@@ -30,17 +29,17 @@ extern void SaveSurfaceMesh (const Mesh & mesh,
 ///
 extern void Save2DMesh (
          const Mesh & mesh2d,
-	 const NgArray<class SplineSegment*> * splines,
+	 const Array<class SplineSegment*> * splines,
          ostream & outfile);
 */
 
 class Surface;
 ///
 extern void SaveVolumeMesh (
-         const NgArray<Point3d> & points,
-         const NgArray<Element> & elements,
-         const NgArray<Element> & volelements,
-         const NgArray<Surface*> & surfaces,
+         const Array<Point3d> & points,
+         const Array<Element> & elements,
+         const Array<Element> & volelements,
+         const Array<Surface*> & surfaces,
          char * filename);
 
 ///
@@ -68,13 +67,13 @@ extern double CalcTetBadnessGrad (const Point3d & p1, const Point3d & p2,
 /** Calculates volume of an element.
   The volume of the tetrahedron el is computed
  */
-// extern double CalcVolume (const NgArray<Point3d> & points,
+// extern double CalcVolume (const Array<Point3d> & points,
 //        const Element & el);  
 
 /** The total volume of all elements is computed.
   This function calculates the volume of the mesh */
 extern double CalcVolume (FlatArray<Point3d, PointIndex> points, 
-	const NgArray<Element> & elements);
+	const Array<Element> & elements);
 
 ///
 extern int CheckSurfaceMesh (const Mesh & mesh);

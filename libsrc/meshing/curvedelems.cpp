@@ -15,7 +15,7 @@ namespace netgen
   using namespace std;
   
   //   bool rational = true;
-  static void ComputeGaussRule (int n, NgArray<double> & xi, NgArray<double> & wi)
+  static void ComputeGaussRule (int n, Array<double> & xi, Array<double> & wi)
   {
     xi.SetSize (n);
     wi.SetSize (n);
@@ -685,7 +685,7 @@ namespace netgen
 
     rational = arational;
 
-    NgArray<int> edgenrs;
+    Array<int> edgenrs;
     int nedges = top.GetNEdges();
     int nfaces = top.GetNFaces();
 
@@ -841,7 +841,7 @@ namespace netgen
 	return; 
       }
     
-    NgArray<double> xi, weight;
+    Array<double> xi, weight;
 
     ComputeGaussRule (aorder+4, xi, weight);  // on (0,1)
 
@@ -1369,7 +1369,7 @@ namespace netgen
 		// CalcMultiPointSurfaceTransformation (&xia, i, &xa, NULL);
 
 
-		NgArray<int> edgenrs;
+		Array<int> edgenrs;
 		top.GetFaceEdges (facenr+1, edgenrs);
 		for (int k = 0; k < edgenrs.Size(); k++) edgenrs[k]--;
                 
@@ -1768,7 +1768,7 @@ namespace netgen
 
 
     // TVector<T> shapes, dshapes;
-    //     NgArray<Vec<3> > coefs;
+    //     Array<Vec<3> > coefs;
 
     SegmentInfo info;
     info.elnr = elnr;
@@ -1810,8 +1810,8 @@ namespace netgen
 	info.ndof += edgeorder[info.edgenr]-1;
       }
 
-    NgArrayMem<Vec<3>,100> coefs(info.ndof);
-    NgArrayMem<T, 100> shapes_mem(info.ndof);
+    ArrayMem<Vec<3>,100> coefs(info.ndof);
+    ArrayMem<T, 100> shapes_mem(info.ndof);
     TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
     ArrayMem<T, 200> dshapes_mem(info.ndof);
     TFlatVector<T> dshapes(info.ndof, &dshapes_mem[0]);
@@ -1925,7 +1925,7 @@ namespace netgen
   }
 
   void CurvedElements :: 
-  GetCoefficients (SegmentInfo & info, NgArray<Vec<3> > & coefs) const
+  GetCoefficients (SegmentInfo & info, Array<Vec<3> > & coefs) const
   {
     const Segment & el = mesh[info.elnr];
 
@@ -2133,8 +2133,8 @@ namespace netgen
       }
 
     
-    NgArrayMem<Vec<3>,100> coefs(info.ndof);
-    NgArrayMem<double, 100> shapes_mem(info.ndof);
+    ArrayMem<Vec<3>,100> coefs(info.ndof);
+    ArrayMem<double, 100> shapes_mem(info.ndof);
     TFlatVector<double> shapes(info.ndof, &shapes_mem[0]);
     ArrayMem<double, 200> dshapes_mem(2*info.ndof);
     MatrixFixWidth<2> dshapes(info.ndof, &dshapes_mem[0]);
@@ -2790,7 +2790,7 @@ namespace netgen
 
   template <int DIM_SPACE>
   void CurvedElements :: 
-  GetCoefficients (SurfaceElementInfo & info, NgArray<Vec<DIM_SPACE> > & coefs) const
+  GetCoefficients (SurfaceElementInfo & info, Array<Vec<DIM_SPACE> > & coefs) const
   {
     const Element2d & el = mesh[info.elnr];
     coefs.SetSize (info.ndof);
@@ -2824,10 +2824,10 @@ namespace netgen
 
 
   template void CurvedElements :: 
-  GetCoefficients<2> (SurfaceElementInfo & info, NgArray<Vec<2> > & coefs) const;
+  GetCoefficients<2> (SurfaceElementInfo & info, Array<Vec<2> > & coefs) const;
 
   template void CurvedElements :: 
-  GetCoefficients<3> (SurfaceElementInfo & info, NgArray<Vec<3> > & coefs) const;
+  GetCoefficients<3> (SurfaceElementInfo & info, Array<Vec<3> > & coefs) const;
 
 
 
@@ -4626,9 +4626,9 @@ namespace netgen
 
   /*
   void CurvedElements :: 
-  CalcMultiPointSegmentTransformation (NgArray<double> * xi, SegmentIndex segnr,
-				       NgArray<Point<3> > * x,
-				       NgArray<Vec<3> > * dxdxi)
+  CalcMultiPointSegmentTransformation (Array<double> * xi, SegmentIndex segnr,
+				       Array<Point<3> > * x,
+				       Array<Vec<3> > * dxdxi)
   {
     ;
   }
@@ -4690,9 +4690,9 @@ namespace netgen
 
 
   void CurvedElements :: 
-  CalcMultiPointSurfaceTransformation (NgArray< Point<2> > * xi, SurfaceElementIndex elnr,
-				       NgArray< Point<3> > * x,
-				       NgArray< Mat<3,2> > * dxdxi)
+  CalcMultiPointSurfaceTransformation (Array< Point<2> > * xi, SurfaceElementIndex elnr,
+				       Array< Point<3> > * x,
+				       Array< Mat<3,2> > * dxdxi)
   {
     double * px = (x) ? &(*x)[0](0) : NULL;
     double * pdxdxi = (dxdxi) ? &(*dxdxi)[0](0) : NULL;
@@ -4879,10 +4879,10 @@ namespace netgen
     
 // THESE LAST LINES ARE COPIED FROM CurvedElements::CalcSurfaceTransformation
 
-    NgArrayMem<Vec<DIM_SPACE>,100> coefs(info.ndof);
+    ArrayMem<Vec<DIM_SPACE>,100> coefs(info.ndof);
     GetCoefficients (info, coefs);
     
-    NgArrayMem<T, 100> shapes_mem(info.ndof);
+    ArrayMem<T, 100> shapes_mem(info.ndof);
     TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
 
     ArrayMem<T, 100> dshapes_mem(info.ndof*2);
@@ -5006,9 +5006,9 @@ namespace netgen
 
 
   void CurvedElements :: 
-  CalcMultiPointElementTransformation (NgArray< Point<3> > * xi, ElementIndex elnr,
-				       NgArray< Point<3> > * x,
-				       NgArray< Mat<3,3> > * dxdxi)
+  CalcMultiPointElementTransformation (Array< Point<3> > * xi, ElementIndex elnr,
+				       Array< Point<3> > * x,
+				       Array< Mat<3,3> > * dxdxi)
   {
     double * px = (x) ? &(*x)[0](0) : NULL;
     double * pdxdxi = (dxdxi) ? &(*dxdxi)[0](0) : NULL;
@@ -5111,7 +5111,7 @@ namespace netgen
 	// info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
       }
 
-    NgArray<Vec<3> > coefs(info.ndof);
+    Array<Vec<3> > coefs(info.ndof);
     GetCoefficients (info, &coefs[0]);
     if (x)
       {
@@ -5303,8 +5303,8 @@ namespace netgen
       }
     if (ok) return;
 
-    NgArrayMem<Vec<3>,100> coefs(info.ndof);
-    NgArrayMem<T,500> shapes_mem(info.ndof);
+    ArrayMem<Vec<3>,100> coefs(info.ndof);
+    ArrayMem<T,500> shapes_mem(info.ndof);
     
     TFlatVector<T> shapes(info.ndof, &shapes_mem[0]);
 

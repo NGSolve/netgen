@@ -13,7 +13,7 @@ namespace netgen
 
 
 //add a point into a pointlist, return pointnumber
-int AddPointIfNotExists(NgArray<Point3d>& ap, const Point3d& p, double eps)
+int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps)
 {
   double eps2 = sqr(eps);
   for (int i = 1; i <= ap.Size(); i++)
@@ -609,10 +609,10 @@ STLTopEdge :: STLTopEdge (STLPointId p1, STLPointId p2, int trig1, int trig2)
 STLChart :: STLChart(STLGeometry * ageometry, const STLParameters& astlparam)
     : geometry(ageometry), stlparam(astlparam)
 {
-  // charttrigs = new NgArray<int> (0,0);
-  // outertrigs = new NgArray<int> (0,0);
-  // ilimit = new NgArray<twoint> (0,0);
-  // olimit = new NgArray<twoint> (0,0);
+  // charttrigs = new Array<int> (0,0);
+  // outertrigs = new Array<int> (0,0);
+  // ilimit = new Array<twoint> (0,0);
+  // olimit = new Array<twoint> (0,0);
 
   geometry = ageometry;
 
@@ -696,7 +696,7 @@ bool STLChart :: IsInWholeChart(int nr) const
 
 void STLChart :: GetTrianglesInBox (const Point3d & pmin,
 				    const Point3d & pmax,
-				    NgArray<STLTrigId> & trias) const
+				    Array<STLTrigId> & trias) const
 {
   if (geomsearchtreeon) {PrintMessage(5,"geomsearchtreeon is set!!!");}
 
@@ -725,7 +725,7 @@ void STLChart :: GetTrianglesInBox (const Point3d & pmin,
 }
 
 //trigs may contain the same triangle double
-void STLChart :: MoveToOuterChart(const NgArray<int>& trigs)
+void STLChart :: MoveToOuterChart(const Array<int>& trigs)
 {
   if (!trigs.Size()) return;
   for (int i = 1; i <= trigs.Size(); i++)
@@ -738,7 +738,7 @@ void STLChart :: MoveToOuterChart(const NgArray<int>& trigs)
 }
 
 //trigs may contain the same triangle double
-void STLChart :: DelChartTrigs(const NgArray<int>& trigs)
+void STLChart :: DelChartTrigs(const Array<int>& trigs)
 {
   if (!trigs.Size()) return;
 
@@ -912,7 +912,7 @@ public:
 
 /*
 STLBoundarySeg :: 
-STLBoundarySeg (int ai1, int ai2, const NgArray<Point<3> > & points,
+STLBoundarySeg (int ai1, int ai2, const Array<Point<3> > & points,
 		const STLChart * chart)
 {
   i1 = ai1;
@@ -1135,7 +1135,7 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
   // for statistics
   {
     int i;
-    static NgArray<int> cntclass;
+    static Array<int> cntclass;
     static int cnt = 0;
     static int cnti = 0, cnto = 0;
     static long int cntsegs = 0;

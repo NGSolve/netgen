@@ -533,7 +533,7 @@ class BASE_INDEX_CLOSED_HASHTABLE
 protected:
   ///
   // MoveableArray<INDEX> hash;
-  NgArray<INDEX> hash;
+  Array<INDEX> hash;
   ///
   int invalid;
 public:
@@ -609,7 +609,7 @@ class INDEX_CLOSED_HASHTABLE : public BASE_INDEX_CLOSED_HASHTABLE
 {
   ///
 // MoveableArray<T> cont;
-  NgArray<T> cont;
+  Array<T> cont;
 
 public:
   ///
@@ -706,7 +706,7 @@ class BASE_INDEX_2_CLOSED_HASHTABLE
 protected:
   ///
   // MoveableArray<INDEX_2> hash;
-  NgArray<INDEX_2> hash;
+  Array<INDEX_2> hash;
   ///
   int invalid;
   size_t mask;
@@ -771,7 +771,7 @@ protected:
 template <class T>
 class INDEX_2_CLOSED_HASHTABLE : public BASE_INDEX_2_CLOSED_HASHTABLE
 {
-  NgArray<T> cont;
+  Array<T> cont;
 public:
   INDEX_2_CLOSED_HASHTABLE (size_t size)
     : BASE_INDEX_2_CLOSED_HASHTABLE(size), cont(RoundUp2(size))
@@ -876,7 +876,7 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
 class BASE_INDEX_3_CLOSED_HASHTABLE
 {
 protected:
-  NgArray<INDEX_3> hash;
+  Array<INDEX_3> hash;
   int invalid;
   size_t mask;
 
@@ -987,7 +987,7 @@ template <class T>
 class INDEX_3_CLOSED_HASHTABLE : public BASE_INDEX_3_CLOSED_HASHTABLE
 {
   // MoveableArray<T,0> cont;
-  NgArray<T,0> cont;
+  Array<T> cont;
 
 public:
   INDEX_3_CLOSED_HASHTABLE (int size)
@@ -1448,9 +1448,9 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
     ///
     size_t used;
     ///
-    NgArray<T_HASH> hash;
+    Array<T_HASH> hash;
     ///
-    NgArray<T> cont;
+    Array<T> cont;
   public:
     ///
     NgClosedHashTable (size_t asize = 128)
@@ -1462,7 +1462,7 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
 
     NgClosedHashTable (NgClosedHashTable && ht2) = default;
 
-    NgClosedHashTable (NgFlatArray<T_HASH> _hash, NgFlatArray<T> _cont)
+    NgClosedHashTable (FlatArray<T_HASH> _hash, FlatArray<T> _cont)
       : size(_hash.Size()), used(0), hash(_hash.Size(), _hash.Addr(0)), cont(_cont.Size(), _cont.Addr(0))
     {
       for (auto & v : hash)

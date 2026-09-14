@@ -150,7 +150,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
     MoCombine cb1(&z1,&z2);
     model.Add(&cb1);
     
-    NgArray<MoTriangle> trigs;
+    Array<MoTriangle> trigs;
     model.GetTriangles(trigs);
     int i, k;
     glBegin (GL_TRIANGLES);
@@ -379,7 +379,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	    {
 	      //multiedge
 	      
-	      const NgArray<twoint>& me = stlgeometry->SelectedMultiEdge();
+	      const Array<twoint>& me = stlgeometry->SelectedMultiEdge();
 	      if (stlgeometry->GetSelectTrig() > 0 && 
 		  stlgeometry->GetSelectTrig() <= stlgeometry->GetNT() &&
 		  me.Size())
