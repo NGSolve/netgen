@@ -290,7 +290,7 @@ protected:
   bool surface = false;
 
   // mapping of sorted pair of points to topedge
-  INDEX_2_HASHTABLE<int> * ht_topedges;
+  unique_ptr<ClosedHashTable<IVec<2>, int>> ht_topedges;
   // mapping of node to trigs
   TABLE<int, IndexBASE<STLPointId>()> trigsperpoint; 
   // mapping of node to edges

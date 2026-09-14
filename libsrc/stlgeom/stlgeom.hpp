@@ -155,7 +155,7 @@ namespace netgen
 
     // sharp geometric edges not declared as edges
     // (not considered for spiral check)
-    INDEX_2_HASHTABLE<int> * smoothedges;
+    unique_ptr<ClosedHashTable<IVec<2>, int>> smoothedges;
 
 
     //transformation:

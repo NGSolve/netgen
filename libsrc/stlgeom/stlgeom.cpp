@@ -58,7 +58,7 @@ void STLMeshing (STLGeometry & geom,
 
   status = STL_GOOD;
   statustext = "Good Geometry";
-  smoothedges = NULL;
+  smoothedges = nullptr;
   area = -1;
 }
 
@@ -2981,7 +2981,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
   PrintMessage(5,"number of lines generated = ", GetNLines());
 
   //check, which lines must have at least one midpoint
-  INDEX_2_HASHTABLE<int> lineht(GetNLines()+1);
+  ClosedHashTable<IVec<2>, int> lineht(2*GetNLines()+8);
 
   for (i = 1; i <= GetNLines(); i++)
     {
@@ -2993,8 +2993,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
 
   for (i = 1; i <= GetNLines(); i++)
     {
-      INDEX_2 lineep (GetLine(i)->StartP(),GetLine(i)->EndP());
-      lineep.Sort();
+      IVec<2> lineep = IVec<2>(GetLine(i)->StartP(), GetLine(i)->EndP()).Sort();
 
       if (lineht.Used (lineep))
 	{
@@ -3163,9 +3162,7 @@ void STLGeometry :: ClearSpiralPoints()
 
 void STLGeometry :: BuildSmoothEdges ()
 {
-  if (smoothedges) delete smoothedges;
-
-  smoothedges = new INDEX_2_HASHTABLE<int> (GetNE()/10 + 1);
+  smoothedges = make_unique<ClosedHashTable<IVec<2>, int>> (GetNE()/5 + 8);
 
 
   // Jack: Ok ?
@@ -3203,9 +3200,7 @@ void STLGeometry :: BuildSmoothEdges ()
 	      if (ng1 * ng2 < 0)
 		{
 		  PrintMessage(7,"smoothedge found");
-		  INDEX_2 i2(pi1, pi2);
-		  i2.Sort();
-		  smoothedges->Set (i2, 1);
+		  smoothedges->Set (IVec<2>(pi1, pi2).Sort(), 1);
 		}
 	    }
 	}
@@ -3221,9 +3216,7 @@ bool STLGeometry :: IsSmoothEdge (int pi1, int pi2) const
 {
   if (!smoothedges)
     return false;
-  INDEX_2 i2(pi1, pi2);
-  i2.Sort();
-  return smoothedges->Used (i2);
+  return smoothedges->Used (IVec<2>(pi1, pi2).Sort());
 }
 
 

@@ -796,15 +796,15 @@ namespace ngcore
       return cont[pos];
     }
     
+    /// resize to (at least) asize and clear
     void SetSize (size_t asize)
     {
-      size = asize;
-      hash.Alloc(size);
-      cont.Alloc(size);
-
-      // for (size_t i = 0; i < size; i++)
-      // hash[i] = invalid;
-      hash = T_HASH(invalid);
+      size = RoundUp2(asize);
+      mask = size-1;
+      used = 0;
+      hash.SetSize0(); hash.SetSize(size);   // no copy of the old contents
+      cont.SetSize0(); cont.SetSize(size);
+      hash = CHT_trait<T_HASH>::Invalid();
     }
 
     void Delete (T_HASH key)

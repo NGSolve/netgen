@@ -3152,7 +3152,11 @@ namespace netgen
       ( [&](TaskInfo & ti)
       {
         auto myrange = points.Range().Split(ti.task_nr, ti.ntasks);
-        INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);        
+        // NOTE: keyed on NormalizeNumbering()ed (rotated, not sorted) triples.
+        // Kept on the legacy table on purpose: FindOpenElements iterates the
+        // slots, so a different hash function reorders openelements and changes
+        // the resulting mesh - and it measured 8-12% slower here.
+        INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);
         for (PointIndex pi : myrange)
           if (selsonpoint[pi].Size()+elsonpoint[pi].Size())
             {
@@ -3361,6 +3365,10 @@ namespace netgen
     // new version, general elements
     // hash index: pnum1-2, surfnr
     // hash data : surfel-nr (pos) or segment nr(neg)
+    // NOTE: kept on the legacy table on purpose - the loop below iterates the
+    // bags to build opensegments, so a different hash function reorders them.
+    // Converting it to ClosedHashTable<IVec<3>,int> changed the STL meshes
+    // (hinge.stl, part1.stl), CSG and 2D were unaffected.
     INDEX_3_HASHTABLE<int> faceht(4 * GetNSE()+GetNSeg()+1);   
 
     PrintMessage (5, "Test Opensegments");
@@ -4054,15 +4062,13 @@ namespace netgen
       }
 
 
-    INDEX_2_HASHTABLE<int> edges(3 * GetNP() + 2);
-    INDEX_2_HASHTABLE<int> bedges(GetNSeg() + 2);
+    ClosedHashTable<SortedPointIndices<2>, int> edges(4 * GetNP() + 2);
+    ClosedHashTable<SortedPointIndices<2>, int> bedges(2 * GetNSeg() + 2);
 
     for (int i = 1; i <= GetNSeg(); i++)
       {
         const Segment & seg = LineSegment(i);
-        PointIndices<2> i2(seg[0], seg[1]);
-        i2.Sort();
-        bedges.Set (i2, 1);
+        bedges.Set ({ seg[0], seg[1] }, 1);
       }
     for (int i = 1; i <= GetNSE(); i++)
       {
@@ -4071,8 +4077,7 @@ namespace netgen
           continue;
         for (int j = 1; j <= 3; j++)
           {
-            PointIndices<2> i2(sel.PNumMod(j), sel.PNumMod(j+1));
-            i2.Sort();
+            SortedPointIndices<2> i2(sel.PNumMod(j), sel.PNumMod(j+1));
             if (bedges.Used(i2)) continue;
 
             if (edges.Used(i2))
@@ -4667,8 +4672,7 @@ namespace netgen
   int Mesh :: CheckConsistentBoundary () const
   {
     int nf = GetNOpenElements();
-    INDEX_2_HASHTABLE<int> edges(nf+2);
-    PointIndices<2> i2;
+    ClosedHashTable<SortedPointIndices<2>, int> edges(4*nf+2);
     int err = 0;
 
     for (int i = 1; i <= nf; i++)
@@ -4677,27 +4681,22 @@ namespace netgen
 
         for (int j = 1; j <= sel.GetNP(); j++)
           {
-            i2 = { sel.PNumMod(j), sel.PNumMod(j+1) };
-
-            int sign = (i2[1] > i2[0]) ? 1 : -1;
-            i2.Sort();
+            PointIndices<2> e { sel.PNumMod(j), sel.PNumMod(j+1) };
+            int sign = (e[1] > e[0]) ? 1 : -1;
+            SortedPointIndices<2> i2 = e;
             if (!edges.Used (i2))
               edges.Set (i2, 0);
             edges.Set (i2, edges.Get(i2) + sign);
           }
       }
 
-    for (int i = 1; i <= edges.GetNBags(); i++)
-      for (int j = 1; j <= edges.GetBagSize(i); j++)
+    for (auto [i2, cnt] : edges)
         {
-          int cnt = 0;
-          edges.GetData (i, j, i2, cnt);
           if (cnt)
             {
               PrintError ("Edge ", i2[0].Nr1() , " - ", i2[1].Nr1(), " multiple times in surface mesh");
 
               (*testout) << "Edge " << i2 << " multiple times in surface mesh" << endl;
-              SortedPointIndices<2> i2s = i2;
               for (int k = 1; k <= nf; k++)
                 {
                   const Element2d & sel = OpenElement(k);
@@ -4705,7 +4704,7 @@ namespace netgen
                     {
                       SortedPointIndices<2> edge (sel.PNumMod(l), sel.PNumMod(l+1));
 
-                      if (edge == i2s) 
+                      if (edge == i2) 
                         (*testout) << "edge of element " << sel << endl;
                     }
                 }
@@ -4864,15 +4863,14 @@ namespace netgen
   int Mesh :: FindIllegalTrigs ()
   {
     // Temporary table to store the vertex numbers of all triangles
-    INDEX_3_CLOSED_HASHTABLE<int> temp_tab(3*GetNSE() + 1);
+    ClosedHashTable<SortedPointIndices<3>, int> temp_tab(3*GetNSE() + 1);
     size_t cnt = 0;
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
       {
         const Element2d & sel = surfelements[sei];
         if (sel.IsDeleted()) continue;
 
-        PointIndices<3> i3(sel[0], sel[1], sel[2]);
-        i3.Sort();
+        SortedPointIndices<3> i3(sel[0], sel[1], sel[2]);
         if(temp_tab.Used(i3))
           {
             temp_tab.Set (i3, -1);
@@ -5205,7 +5203,7 @@ namespace netgen
 
     BitArray used(nse+1);
     used.Clear();
-    INDEX_2_HASHTABLE<int> edges(nse+1);
+    ClosedHashTable<PointIndices<2>, int> edges(4*nse+1);
 
     bool haschanged = 0;
 

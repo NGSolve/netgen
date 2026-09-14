@@ -16,7 +16,7 @@ namespace netgen
 
 
   STLTopology :: STLTopology()
-  : trias(), topedges(), points(), ht_topedges(NULL), 
+  : trias(), topedges(), points(), 
     trigsperpoint(), neighbourtrigs()
 {
   ;
@@ -587,8 +587,8 @@ void STLTopology :: FindNeighbourTrigs()
 
   int nt = GetNT();
 
-  INDEX_2_HASHTABLE<int> * oldedges = ht_topedges;
-  ht_topedges = new INDEX_2_HASHTABLE<int> (GetNP()+1);
+  auto oldedges = std::move(ht_topedges);   // keep alive until rebuilt
+  ht_topedges = make_unique<ClosedHashTable<IVec<2>, int>> (2*GetNP()+1);
   topedges.SetSize(0);
   
   for (int i = 1; i <= nt; i++)
@@ -601,8 +601,7 @@ void STLTopology :: FindNeighbourTrigs()
 	  int pi1 = trig.PNumMod (j+1);
 	  int pi2 = trig.PNumMod (j+2);
 	  
-	  INDEX_2 i2(pi1, pi2);
-	  i2.Sort();
+	  IVec<2> i2 = IVec<2>(pi1, pi2).Sort();
 
 	  int enr;
 	  int othertn;
@@ -729,7 +728,6 @@ void STLTopology :: FindNeighbourTrigs()
 
   // transfer edge data:
   // .. to be done
-  delete oldedges;
 
 
 
@@ -992,8 +990,7 @@ int STLTopology :: GetTopEdgeNum (int pi1, int pi2) const
 {
   if (!ht_topedges) return 0;
 
-  INDEX_2 i2(pi1, pi2);
-  i2.Sort();
+  IVec<2> i2 = IVec<2>(pi1, pi2).Sort();
 
   if (!ht_topedges->Used(i2)) return 0;
   return ht_topedges->Get(i2);

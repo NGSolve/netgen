@@ -80,18 +80,18 @@ p1 = p1i; p2 = p2i;
 class STLEdgeDataList
 {
 private:
-  INDEX_2_HASHTABLE<int> hashtab;
+  ClosedHashTable<IVec<2>, int> hashtab;
   Array<STLEdgeData> edgedata;
   TABLE<int> edgesperpoint;
   
 public:
 
-  STLEdgeDataList():edgedata(),hashtab(1),edgesperpoint() {};
+  STLEdgeDataList():edgedata(),hashtab(8),edgesperpoint() {};
   const STLEdgeDataList& operator=(const STLEdgeDataList& edl); 
   void SetSize(int size) 
     {
       edgedata.SetSize(size);
-      hashtab.SetSize(size);
+      hashtab.SetSize(2*size+8);
       edgesperpoint.SetSize(size);
     }
   void Clear() {SetSize(0);}

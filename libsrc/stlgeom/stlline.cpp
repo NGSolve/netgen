@@ -101,8 +101,7 @@ void STLEdgeDataList :: ConfirmCandidates()
 
 int STLEdgeDataList :: GetEdgeNum(int np1, int np2) const
 {
-  INDEX_2 ed(np1,np2);
-  ed.Sort();
+  IVec<2> ed = IVec<2>(np1,np2).Sort();
   if (hashtab.Used(ed))
     {
       return hashtab.Get(ed);
@@ -134,9 +133,7 @@ const STLEdgeDataList& STLEdgeDataList :: operator=(const STLEdgeDataList& edl)
 
 void STLEdgeDataList :: Add(const STLEdgeData& ed, int i)
 {
-  INDEX_2 edge(ed.p1,ed.p2);
-  edge.Sort();
-  hashtab.Set(edge, i);
+  hashtab.Set(IVec<2>(ed.p1,ed.p2).Sort(), i);
   Elem(i) = ed;
   AddEdgePP(ed.p1,i);
   AddEdgePP(ed.p2,i);

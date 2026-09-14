@@ -363,7 +363,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      mesh.RemoveOneLayerSurfaceElements();
 
 	      // Open edge-segments will be refined !
-	      INDEX_2_HASHTABLE<int> openseght (nopen+1);
+	      ClosedHashTable<SortedPointIndices<2>, int> openseght (2*nopen+8);
 	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
 		{
 		  const Segment & seg = mesh.GetOpenSegment (i);
@@ -377,7 +377,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      mesh.RemoveOneLayerSurfaceElements();
 	      
 
-	      INDEX_2_HASHTABLE<PointIndex> newpht(100);
+	      ClosedHashTable<SortedPointIndices<2>, PointIndex> newpht(128);
 
 	      int nsegold = mesh.GetNSeg();
 	      for (int i = 1; i <= nsegold; i++)
@@ -511,7 +511,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 	  mesh.RemoveOneLayerSurfaceElements();
           // Open edge-segments will be refined !
-	      INDEX_2_HASHTABLE<int> openseght (nopen+1);
+	      ClosedHashTable<SortedPointIndices<2>, int> openseght (2*nopen+8);
 	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
 		{
 		  const Segment & seg = mesh.GetOpenSegment (i);
@@ -521,7 +521,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
           mesh.RemoveOneLayerSurfaceElements();
           mesh.FindOpenSegments ();
           int nsegold = mesh.GetNSeg();
-          INDEX_2_HASHTABLE<PointIndex> newpht(100);
+          ClosedHashTable<SortedPointIndices<2>, PointIndex> newpht(128);
           for (int i = 1; i <= nsegold; i++)
             {
               Segment seg = mesh.LineSegment(i);

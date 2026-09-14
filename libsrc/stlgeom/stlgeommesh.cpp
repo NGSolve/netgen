@@ -12,12 +12,12 @@
 
 namespace netgen
 {
-int EdgeUsed(int p1, int p2, Array<INDEX_2>& edges, INDEX_2_HASHTABLE<int>& hashtab)
+int EdgeUsed(int p1, int p2, Array<IVec<2>>& edges, ClosedHashTable<IVec<2>, int>& hashtab)
 {
   if (p1 > p2) {swap (p1,p2);}
 
-  if (hashtab.Used(INDEX_2(p1,p2))) 
-    {return hashtab.Get(INDEX_2(p1,p2));}
+  if (hashtab.Used(IVec<2>(p1,p2))) 
+    {return hashtab.Get(IVec<2>(p1,p2));}
 
   return 0;
 }
@@ -42,11 +42,11 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
   TABLE<int> edgepointoriginps;
 
   Array<int> edgetrigs;
-  Array<INDEX_2> edgepointnums;
+  Array<IVec<2>> edgepointnums;
   Array<int> edgetriglocinds;
 
   int size = 3*GetNT();
-  INDEX_2_HASHTABLE<int> hashtab(size);
+  ClosedHashTable<IVec<2>, int> hashtab(2*size+8);
 
   int divisions = 10;
 
@@ -82,7 +82,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 
       edgecnt++;
       edgetrigs[edgecnt-1] = t1;
-      edgepointnums[edgecnt-1] = INDEX_2(ptn1,ptn2);
+      edgepointnums[edgecnt-1] = IVec<2>(ptn1,ptn2);
       hashtab.Set(edgepointnums[edgecnt-1],edgecnt);
 
       edgetriglocinds[edgecnt-1] = i;
@@ -151,7 +151,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 			  edgenum = edgecnt;
 			  
 			  edgetrigs[edgenum-1] = tn;
-			  edgepointnums[edgenum-1] = INDEX_2(pnt1,pnt2);
+			  edgepointnums[edgenum-1] = IVec<2>(pnt1,pnt2);
 			  hashtab.Set(edgepointnums[edgenum-1],edgenum);
 			  edgetriglocinds[edgenum-1] = k;
 			}
