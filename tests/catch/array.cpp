@@ -114,3 +114,20 @@ TEST_CASE("Array constructors with index type")
   Array<double, netgen::PointIndex> h (5, lh);
   CHECK(h.Size() == 5);
 }
+
+TEST_CASE("Array brace-init from another array")
+{
+  // IVec has a converting ctor from any array-like. Unconstrained, it made
+  // Array<IVec<..>,..> x { other_array } deduce a one-element initializer_list
+  // instead of copying. Constrained on value_type, the copy ctor wins again.
+  using PI = netgen::PointIndex;
+  Array<IVec<2,PI>, PI> src(3);
+  auto b = IndexBASE<PI>();
+  for (int k = 0; k < 3; k++)
+    src[b+k] = IVec<2,PI>(b+k, b+k+1);
+
+  Array<IVec<2,PI>, PI> dst { src };
+  CHECK(dst.Size() == 3);          // was 1 with the unconstrained ctor
+  CHECK(dst[b][0] == b);
+  CHECK(dst[b+2][1] == b+3);
+}

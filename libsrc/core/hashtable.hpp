@@ -115,9 +115,12 @@ namespace ngcore
         }
     }
 
-    template <typename T2>
-    NETGEN_INLINE IVec (const BaseArrayObject<T2> & ao)
+    /// from the first N entries of an array-like, if its elements convert to T
+    template <typename TA,
+              typename = std::enable_if_t<std::is_convertible_v<typename TA::value_type, T>>>
+    NETGEN_INLINE IVec (const BaseArrayObject<TA> & ao)
     {
+      NETGEN_CHECK_RANGE(size_t(N-1), size_t(0), ao.Size());  // we read ao[0..N-1]
       for (int j = 0; j < N; j++)
         i[j] = ao.Spec()[j];
     }
