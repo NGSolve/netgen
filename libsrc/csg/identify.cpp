@@ -103,14 +103,8 @@ void Identification ::
 GetIdentifiedFaces (Array<INDEX_2> & idfaces) const
 {
   idfaces.SetSize(0);
-  for (int i = 1; i <= identfaces.GetNBags(); i++)
-    for (int j = 1; j <= identfaces.GetBagSize(i); j++)
-      {
-	INDEX_2 i2;
-	int val;
-	identfaces.GetData (i, j, i2, val);
-	idfaces.Append (i2);
-      }
+  for (auto [i2, val] : identfaces)
+    idfaces.Append (INDEX_2(i2[0], i2[1]));
 }
 
 
@@ -458,8 +452,7 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 	if (idok)
 	  {
 	    // (*testout) << "Identify faces " << i << " and " << j << endl;
-	    INDEX_2 fpair(i,j);
-	    fpair.Sort();
+	    IVec<2> fpair = IVec<2>(i,j).Sort();
 	    identfaces.Set (fpair, 1);
 	  }
       }
@@ -491,8 +484,7 @@ BuildSurfaceElements (Array<Segment> & segs,
       for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	{
 	  const Element2d & sel = mesh[sei];
-	  INDEX_2 fpair (facei, sel.GetIndex());
-	  fpair.Sort();
+	  IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
 	  if (identfaces.Used (fpair))
             {
 	      for (int k = 0; k < sel.GetNP(); k++)
@@ -509,8 +501,7 @@ BuildSurfaceElements (Array<Segment> & segs,
       for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	{
 	  const Element2d & sel = mesh[sei];
-	  INDEX_2 fpair (facei, sel.GetIndex());
-	  fpair.Sort();
+	  IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
 	  if (identfaces.Used (fpair))
 	    {
 	      found = 1;
@@ -1118,7 +1109,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 
   Array<int> segs_on_face1, segs_on_face2;
 
-  identfaces.DeleteData();
+  identfaces.SetSize(16);
 
   //(*testout) << "identify faces, nr = " << nr << endl;
   
@@ -1244,8 +1235,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 	  if (idok)
 	    {
 	      //(*testout) << "Identification " << nr << ", identify faces " << i << " and " << j << endl;
-	      INDEX_2 fpair(i,j);
-	      fpair.Sort();
+	      IVec<2> fpair = IVec<2>(i,j).Sort();
 	      identfaces.Set (fpair, 1);
 	    }
 	}
@@ -1384,15 +1374,9 @@ BuildSurfaceElements2 (Array<Segment> & segs,
 
   
   bool foundid = 0;
-  for (INDEX_2_HASHTABLE<int>::Iterator it = identfaces.Begin();
-       it != identfaces.End(); it++)
-    {
-      INDEX_2 i2;
-      int data;
-      identfaces.GetData (it, i2, data);
-      if (i2.I1() == facei || i2.I2() == facei)
-	foundid = 1;
-    }
+  for (auto [i2, data] : identfaces)
+    if (i2[0] == facei || i2[1] == facei)
+      foundid = 1;
 
   /*
   for (int i = 1; i <= identfaces.GetNBags(); i++)
@@ -1417,8 +1401,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
       for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
 	{
 	  const Element2d & sel = mesh[sei];
-	  INDEX_2 fpair (facei, sel.GetIndex());
-	  fpair.Sort();
+	  IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
 	  if (identfaces.Used (fpair))
 	    {
 	      found = 1;

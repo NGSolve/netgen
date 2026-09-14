@@ -24,7 +24,7 @@ namespace netgen
   protected:
     const CSGeometry & geom;
     // identified faces, index sorted
-    INDEX_2_HASHTABLE<int> identfaces;
+    ClosedHashTable<IVec<2>, int> identfaces;
     int nr;
 
   public:

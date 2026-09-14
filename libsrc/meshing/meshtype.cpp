@@ -2839,7 +2839,8 @@ namespace netgen
     identmap.SetSize (mesh.GetNP());
     identmap = PointIndex(PointIndex::INVALID);
 
-    if (identnr)
+    // idpoints_table only has a row for identifications that got points added
+    if (identnr && identnr < idpoints_table.Size())
       for (int i = 0; i < idpoints_table[identnr].Size(); i++)
         {
           PointIndices<2> pair = idpoints_table[identnr][i];
@@ -2850,8 +2851,6 @@ namespace netgen
 
     else
       {
-        cout << "getmap, identnr = " << identnr << endl;
-
         /*
         for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
           for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)

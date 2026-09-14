@@ -951,7 +951,7 @@ namespace netgen
   {
     int inv;
     int nsurf = GetNSurf();
-    identicsurfaces.DeleteData();
+    identicsurfaces.SetSize(128);
 
 
     isidenticto.SetSize(nsurf);
@@ -963,7 +963,7 @@ namespace netgen
 	{
 	  if (GetSurface(j) -> IsIdentic (*GetSurface(i), inv, eps))
 	    {
-	      INDEX_2 i2(i, j);
+	      IVec<2> i2(i, j);   // i < j, already sorted
 	      identicsurfaces.Set (i2, inv);
 	      isidenticto[j] = isidenticto[i];
 	    }
@@ -1041,7 +1041,7 @@ namespace netgen
 	bool indep = 1;
 	for (int j = 0; j < i; j++)
 	  {
-	    if (identicsurfaces.Used (INDEX_2::Sort (locsurf[i], locsurf[j])) !=
+	    if (identicsurfaces.Used (IVec<2>(locsurf[i], locsurf[j]).Sort()) !=
 		(isidenticto[locsurf[i]] == isidenticto[locsurf[j]]))
 	      {
 		cerr << "different result" << endl;
@@ -1309,8 +1309,7 @@ namespace netgen
 
 	for (int i = 0; i < lsurfi.Size(); i++)
 	  {
-	    INDEX_2 i2 (lsurfi[i], surfind);
-	    i2.Sort();
+	    IVec<2> i2 = IVec<2>(lsurfi[i], surfind).Sort();
 	  
 	    if (i != surfii && !identicsurfaces.Used(i2))
 	      otherind = lsurfi[i];

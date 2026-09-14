@@ -160,7 +160,7 @@ namespace netgen
     static Box<3> default_boundingbox;
 
     /// identic surfaces are stored by pair of indizes, val = inverse
-    INDEX_2_HASHTABLE<int> identicsurfaces;
+    ClosedHashTable<IVec<2>, int> identicsurfaces;
     Array<int> isidenticto;
     /// identification of boundaries (periodic, thin domains, ...)
 

@@ -136,7 +136,7 @@ namespace netgen
      
 
     cntedge = 0;
-    INDEX_2_HASHTABLE<int> identification_used(100);  // identification i already used for startpoint j
+    ClosedHashTable<IVec<2>, int> identification_used(128);  // identification i already used for startpoint j
 
     mesh.GetIdentifications().Delete();
     
@@ -209,8 +209,8 @@ namespace netgen
 		      //(*testout) << "   ? identifiable with " << specpoints[hsp[k]].p 
 		      //<< ", v = " << specpoints[hsp[k]].v
 		      //		 << endl;
-		      if (identification_used.Used (INDEX_2(i, startpoints[j])) ||
-			  identification_used.Used (INDEX_2(i, hsp[k])))
+		      if (identification_used.Used (IVec<2>(i, startpoints[j])) ||
+			  identification_used.Used (IVec<2>(i, hsp[k])))
 			{
 			  //(*testout) << "failed at pos0" << endl;
 			  continue;
@@ -243,8 +243,8 @@ namespace netgen
 		      copyfromedge = j+1;
 		      copyedgeidentification = i+1;
 		    
-		      identification_used.Set (INDEX_2(i, startpoints[j]), 1);
-		      identification_used.Set (INDEX_2(i, hsp[pi1-1]), 1);
+		      identification_used.Set (IVec<2>(i, startpoints[j]), 1);
+		      identification_used.Set (IVec<2>(i, hsp[pi1-1]), 1);
 		    }
 		}
 	    }
@@ -593,7 +593,7 @@ namespace netgen
 
     Array<int> osedges(cntedge);
     Array<PointIndex> edgenewp(cntedge);    // new point inserted on edge
-    INDEX_2_HASHTABLE<int> osedgesht (cntedge+1);
+    ClosedHashTable<SortedPointIndices<2>, int> osedgesht (4*cntedge+8);
 
     osedges = 2;
 
@@ -631,12 +631,10 @@ namespace netgen
     // one edge 1 segment, other 2 segments 
     // yes, it happens !
     point_on_edge_problem = 0;
-    for (int i = 1; i <= osedgesht.GetNBags(); i++)
-      for (int j = 1; j <= osedgesht.GetBagSize(i); j++)
+    for (size_t hi = 0; hi < osedgesht.Size(); hi++)
+      if (osedgesht.UsedPos (hi))
 	{
-	  PointIndices<2> i2; 
-	  int val;
-	  osedgesht.GetData (i, j, i2, val);
+	  auto [i2, val] = osedgesht.GetBoth (hi);
 
 	  auto [pi1, pi2] = i2;
 	  const Point<3> & p1 = mesh[pi1];
@@ -659,7 +657,7 @@ namespace netgen
 		      {
 			PrintWarning ("Point on edge !!!");
 			cout << "seg: " << i2 << ", p = " << pi << endl;
-			osedgesht.Set (i2, 2);		      
+			osedgesht.SetData (hi, 2);
 			point_on_edge_problem = 1;
 
 			(*testout) << "Point on edge" << endl
