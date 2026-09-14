@@ -34,7 +34,7 @@ public:
     if (!flags.Test(ind))
       {
 	set.Append (ind);
-	flags.Set (ind);
+	flags.SetBit (ind);
       }
   }
 
