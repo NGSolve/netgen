@@ -407,6 +407,22 @@ if (USE_OCC)
     endif()
     target_include_directories(occ_libs INTERFACE ${occ_include_dir})
     message(STATUS "OpenCasCade include dirs: ${occ_include_dir}")
+    # The OpenCascade libraries are not copied into the install tree, so the
+    # install rpath (@loader_path) alone cannot find them. Append where they
+    # really are as a fallback - @loader_path stays first, so a bundled
+    # OpenCascade still takes precedence.
+    if(OpenCASCADE_LIBRARY_DIR AND OpenCASCADE_BUILD_SHARED_LIBS)
+      # for targets created after this point
+      list(APPEND CMAKE_INSTALL_RPATH "${OpenCASCADE_LIBRARY_DIR}")
+      # nglib and nggui are created further up, so they already captured the
+      # old value of CMAKE_INSTALL_RPATH - extend their property directly
+      foreach(occ_target nglib nggui)
+        if(TARGET ${occ_target})
+          set_property(TARGET ${occ_target} APPEND PROPERTY INSTALL_RPATH "${OpenCASCADE_LIBRARY_DIR}")
+        endif()
+      endforeach()
+      message(STATUS "OpenCasCade library dir added to install rpath: ${OpenCASCADE_LIBRARY_DIR}")
+    endif()
     if(NOT OpenCASCADE_BUILD_SHARED_LIBS)
       if(OpenCASCADE_WITH_FREETYPE)
         find_library( FREETYPE NAMES freetype HINTS ${OpenCASCADE_LIBRARY_DIR})

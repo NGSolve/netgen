@@ -115,9 +115,13 @@ namespace ngcore
         }
     }
 
-    /// from the first N entries of an array-like, if its elements convert to T
+    /// from the first N entries of an array-like, if its elements convert to T.
+    /// Keyed on the indexing expression, not on a value_type typedef: array-likes
+    /// such as AOWrapper have no typedef, and arrays with a strong index type
+    /// (which this ctor cannot read anyway) drop out here instead of erroring.
     template <typename TA,
-              typename = std::enable_if_t<std::is_convertible_v<typename TA::value_type, T>>>
+              typename = std::enable_if_t<std::is_convertible_v<
+                  decltype(std::declval<const TA&>()[size_t(0)]), T>>>
     NETGEN_INLINE IVec (const BaseArrayObject<TA> & ao)
     {
       NETGEN_CHECK_RANGE(size_t(N-1), size_t(0), ao.Size());  // we read ao[0..N-1]

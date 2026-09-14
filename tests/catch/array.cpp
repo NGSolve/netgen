@@ -131,3 +131,19 @@ TEST_CASE("Array brace-init from another array")
   CHECK(dst[b][0] == b);
   CHECK(dst[b+2][1] == b+3);
 }
+
+TEST_CASE("IVec from array-like")
+{
+  // ngsolve builds IVec<3> from an AOWrapper, which has no value_type -
+  // the ctor constraint must key on indexing, not on that typedef
+  Array<int> verts { 10, 20, 30 };
+  IVec<3> fromwrapper (ArrayObject(verts));
+  CHECK(fromwrapper[0] == 10);
+  CHECK(fromwrapper[2] == 30);
+
+  IVec<3> fromarray (verts);
+  CHECK(fromarray[1] == 20);
+
+  IVec<2> shorter (verts);         // reading fewer than available is fine
+  CHECK(shorter[1] == 20);
+}
