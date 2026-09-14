@@ -81,11 +81,11 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
       Point3d pt2 = GetPoint(ptn2);
 
       edgecnt++;
-      edgetrigs.Elem(edgecnt) = t1;
-      edgepointnums.Elem(edgecnt) = INDEX_2(ptn1,ptn2);
-      hashtab.Set(edgepointnums.Get(edgecnt),edgecnt);
+      edgetrigs[edgecnt-1] = t1;
+      edgepointnums[edgecnt-1] = INDEX_2(ptn1,ptn2);
+      hashtab.Set(edgepointnums[edgecnt-1],edgecnt);
 
-      edgetriglocinds.Elem(edgecnt) = i;
+      edgetriglocinds[edgecnt-1] = i;
       edgelist1.Append(edgecnt);
 
       for (j = 1; j <= divisions; j++)
@@ -118,9 +118,9 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 
       for (i = 1; i <= edgelist1.Size(); i++)
 	{
-	  int en = edgelist1.Get(i);
-	  int trig = edgetrigs.Get(en);
-	  int edgenum = edgetriglocinds.Get(en);
+	  int en = edgelist1[i-1];
+	  int trig = edgetrigs[en-1];
+	  int edgenum = edgetriglocinds[en-1];
 	  int tn = NeighbourTrigSorted(trig,edgenum);
 
 	  if (tn != t2)
@@ -150,10 +150,10 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 			  edgecnt++; 
 			  edgenum = edgecnt;
 			  
-			  edgetrigs.Elem(edgenum) = tn;
-			  edgepointnums.Elem(edgenum) = INDEX_2(pnt1,pnt2);
-			  hashtab.Set(edgepointnums.Get(edgenum),edgenum);
-			  edgetriglocinds.Elem(edgenum) = k;
+			  edgetrigs[edgenum-1] = tn;
+			  edgepointnums[edgenum-1] = INDEX_2(pnt1,pnt2);
+			  hashtab.Set(edgepointnums[edgenum-1],edgenum);
+			  edgetriglocinds[edgenum-1] = k;
 			}
 		      
 		      if (edgenum > size || edgenum == 0) {PrintSysError("edgenum = ", edgenum);}
@@ -232,7 +232,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
       edgelist1.SetSize(0);
       for (i = 1; i <= edgelist2.Size(); i++)
 	{
-	  edgelist1.Append(edgelist2.Get(i));
+	  edgelist1.Append(edgelist2[i-1]);
 	}
     }
 
@@ -260,7 +260,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 
   for (i = 1; i <= plist.Size()-1; i++)
     {
-      AddMarkedSeg(plist.Get(i),plist.Get(i+1));
+      AddMarkedSeg(plist[i-1],plist[i]);
     }
 
   PrintMessage(5,"PointBetween: complexity=", maxsize);
@@ -272,14 +272,14 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
   
   for (i = 1; i <= plist.Size()-1; i++)
     {
-      dist += Dist(plist.Get(i),plist.Get(i+1));
+      dist += Dist(plist[i-1],plist[i]);
       if (dist > endpointmindist*0.5) 
 	{
-	  double segl = Dist(plist.Get(i), plist.Get(i+1));
+	  double segl = Dist(plist[i-1], plist[i]);
 	  double d = dist - endpointmindist * 0.5;
-	  pm = Point3d(d/segl*plist.Get(i).X() + (1.-d/segl)*plist.Get(i+1).X(),
-		       d/segl*plist.Get(i).Y() + (1.-d/segl)*plist.Get(i+1).Y(),
-		       d/segl*plist.Get(i).Z() + (1.-d/segl)*plist.Get(i+1).Z());
+	  pm = Point3d(d/segl*plist[i-1].X() + (1.-d/segl)*plist[i].X(),
+		       d/segl*plist[i-1].Y() + (1.-d/segl)*plist[i].Y(),
+		       d/segl*plist[i-1].Z() + (1.-d/segl)*plist[i].Z());
 	  found = 1;
 	  break;
 	}
@@ -319,7 +319,7 @@ void STLGeometry::GetMeshChartBoundary (NgArray<Point<2>> & apoints,
 	{
 	  int pi = (j == 1) ? seg.i1 : seg.i2;
 	  int lpi;
-	  if (ha_points.Get(pi) == 0)
+	  if (ha_points[pi-1] == 0)
 	    {
 	      const Point<3> & p3d = GetPoint (pi);
 	      Point<2> p2d;
@@ -329,10 +329,10 @@ void STLGeometry::GetMeshChartBoundary (NgArray<Point<2>> & apoints,
 	      apoints.Append (p2d);
 	      
 	      lpi = apoints.Size();
-	      ha_points.Elem(pi) = lpi;
+	      ha_points[pi-1] = lpi;
 	    }
 	  else
-	    lpi = ha_points.Get(pi);
+	    lpi = ha_points[pi-1];
 
 	  i2.I(j) = lpi;
 	}
@@ -358,8 +358,8 @@ void STLGeometry::GetMeshChartBoundary (NgArray<Point<2>> & apoints,
   for (int i = 1; i <= chart.GetNOLimit(); i++)
     {
       seg = chart.GetOLimit(i);
-      ha_points.Elem(seg.i1) = 0;
-      ha_points.Elem(seg.i2) = 0;
+      ha_points[seg.i1-1] = 0;
+      ha_points[seg.i2-1] = 0;
     }
 }
 
@@ -413,7 +413,7 @@ void STLGeometry :: SelectChartOfPoint (const Point<3> & p)
   //  for (i = 1; i <= GetNT(); i++)
   for (ii = 1; ii <= trigsinbox.Size(); ii++)
     {
-      i = trigsinbox.Get(ii);
+      i = trigsinbox[ii-1];
       Point<3> hp = p;
       if (GetTriangle(i).GetNearestPoint(points, hp) <= 1E-8)
 	{
@@ -479,7 +479,7 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
 	      GetTrianglesInBox (box, trigsinbox2);
 	      for (i = 1; i <= trigsinbox2.Size(); i++)
 		{
-		  if (TrigIsInOC(trigsinbox2.Get(i),meshchart)) {trigsinbox.Append(trigsinbox2.Get(i));}
+		  if (TrigIsInOC(trigsinbox2[i-1],meshchart)) {trigsinbox.Append(trigsinbox2[i-1]);}
 		}
 	      
 	    }
@@ -488,7 +488,7 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
 	  for (i = 1; i <= trigsinbox.Size(); i++)
 	    {
 	      Point<3> p = locpoint;
-	      if (GetTriangle(trigsinbox.Get(i)).GetNearestPoint(points, p) 
+	      if (GetTriangle(trigsinbox[i-1]).GetNearestPoint(points, p) 
 		  <= 1E-8)
 		{
 		  foundinchart = 1;
@@ -745,7 +745,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLPa
       minh.SetSize(GetNP());
       for (i = 1; i <= GetNP(); i++)
 	{
-	  minh.Elem(i) = gh;
+	  minh[i-1] = gh;
 	}
       
       for (i = 1; i <= GetNT(); i++)
@@ -796,8 +796,8 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLPa
 	      if (localh < minlocalh) {localh = minlocalh;}
 	      if (localh < gh)
 		{
-		  minh.Elem(ap1) = min2(minh.Elem(ap1),localh);
-		  minh.Elem(ap2) = min2(minh.Elem(ap2),localh);
+		  minh[ap1-1] = min2(minh[ap1-1],localh);
+		  minh[ap2-1] = min2(minh[ap2-1],localh);
 		}
 	      
 	      mesh.RestrictLocalHLine(p1p, p2p, localh);
@@ -849,7 +849,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
       minh.SetSize(GetNP());
       for (i = 1; i <= GetNP(); i++)
 	{
-	  minh.Elem(i) = gh;
+	  minh[i-1] = gh;
 	}
 
       for (i = 1; i <= GetNT(); i++)
@@ -900,8 +900,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 	      if (localh > maxcalch) {maxcalch = localh;}
 	      if (localh < gh) 
 		{
-		  minh.Elem(ap1) = min2(minh.Elem(ap1),localh);
-		  minh.Elem(ap2) = min2(minh.Elem(ap2),localh);
+		  minh[ap1-1] = min2(minh[ap1-1],localh);
+		  minh[ap2-1] = min2(minh[ap2-1],localh);
 		}
 	      
 	      //if (localh < 0.2) {localh = 0.2;}
@@ -958,8 +958,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 	  box.Increase(maxhline);
 
 	  lsearchtree->Insert (box.PMin(), box.PMax(), i);
-	  pmins.Elem(i) = box.PMin();
-	  pmaxs.Elem(i) = box.PMax();
+	  pmins[i-1] = box.PMin();
+	  pmaxs[i-1] = box.PMax();
 	}
 
       NgArray<int> linenums;
@@ -972,7 +972,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 	    {PopStatus(); return;}
 
 	  linenums.SetSize(0);
-	  lsearchtree->GetIntersecting(pmins.Get(i),pmaxs.Get(i),linenums);
+	  lsearchtree->GetIntersecting(pmins[i-1],pmaxs[i-1],linenums);
 	      
 	  STLLine* l1 = GetLine(i);
 	  for (j = 1; j <= l1->NP(); j++)
@@ -982,7 +982,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 	      
 	      for (k2 = 1; k2 <= linenums.Size(); k2++)
 		{
-		  k = linenums.Get(k2);
+		  k = linenums[k2-1];
 		  if (k <= i) {continue;} 
 		  /*  
 		   //old, without searchtrees
@@ -1217,7 +1217,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 
   timer2.Start();
   for (int j = 1; j <= chart.GetNT(); j++)
-    acttrigs.Elem(chart.GetTrig1(j)) = chartnum;
+    acttrigs[chart.GetTrig1(j)-IndexBASE<STLTrigId>()] = chartnum;
 
   for (int j = 1; j <= chart.GetNOuterT(); j++)
     {
@@ -1226,7 +1226,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
       for (int k = 1; k <= 3; k++)
 	{
 	  int nt = NeighbourTrig(t,k);
-	  if (acttrigs.Get(nt) != chartnum)
+	  if (acttrigs[nt-1] != chartnum)
 	    {
 	      tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
 		      
@@ -1275,12 +1275,12 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
     {
       timer3a.Start();
       Box3d bbox;
-      bbox.SetPoint (plimes2.Get(1));
+      bbox.SetPoint (plimes2[0]);
       for (int j = 2; j <= plimes2.Size(); j++)
-	bbox.AddPoint (plimes2.Get(j));
+	bbox.AddPoint (plimes2[j-1]);
       Point3dTree stree(bbox.PMin(), bbox.PMax());
       for (int j = 1; j <= plimes2.Size(); j++)
-	stree.Insert (plimes2.Get(j), j);
+	stree.Insert (plimes2[j-1], j);
       NgArray<int> foundpts;
 	  
       timer3a.Stop();
@@ -1290,8 +1290,8 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 	{
 	  double mindist = 1E50;
 
-	  const Point3d & ap1 = plimes1.Get(j);
-	  double boxs = mesh.GetH (plimes1.Get(j)) * limessafety;
+	  const Point3d & ap1 = plimes1[j-1];
+	  double boxs = mesh.GetH (plimes1[j-1]) * limessafety;
 
 	  Point3d pmin = ap1 - Vec3d (boxs, boxs, boxs);
 	  Point3d pmax = ap1 + Vec3d (boxs, boxs, boxs);
@@ -1301,8 +1301,8 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 
 	  for (int kk = 1; kk <= foundpts.Size(); kk++)
 	    {
-	      int k = foundpts.Get(kk);
-	      double dist = Dist2(plimes1.Get(j),plimes2.Get(k));
+	      int k = foundpts[kk-1];
+	      double dist = Dist2(plimes1[j-1],plimes2[k-1]);
 	      if (dist < mindist) mindist = dist;
 	    }
 
@@ -1338,7 +1338,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, NgArray<int>& a
 	  if (localh < minh && localh != 0) {localh = minh;} //minh is generally 0! (except make atlas)
 	  if (localh < gh && localh > 0)
 	    {
-	      mesh.RestrictLocalH(plimes1.Get(j), localh);
+	      mesh.RestrictLocalH(plimes1[j-1], localh);
 	      //	      if (mindist < mincalch) {mincalch = mindist;}
 	      //	      if (mindist > maxcalch) {maxcalch = mindist;}
 	      if (mindist < chartmindist) {chartmindist = mindist;}

@@ -720,10 +720,10 @@ void referencetransform :: ToPlain (const NgArray<Point3d> & p,
   pp.SetSize (p.Size());
   for (i = 1; i <= p.Size(); i++)
     {
-      v = p.Get(i) - rp;
-      pp.Elem(i).X() = (ex_h * v);
-      pp.Elem(i).Y() = (ey_h * v);
-      pp.Elem(i).Z() = (ez_h * v);
+      v = p[i-1] - rp;
+      pp[i-1].X() = (ex_h * v);
+      pp[i-1].Y() = (ey_h * v);
+      pp[i-1].Z() = (ez_h * v);
     }
 }
 

@@ -244,7 +244,7 @@ namespace netgen
 		      copyedgeidentification = i+1;
 		    
 		      identification_used.Set (INDEX_2(i, startpoints[j]), 1);
-		      identification_used.Set (INDEX_2(i, hsp.Get(pi1)), 1);
+		      identification_used.Set (INDEX_2(i, hsp[pi1-1]), 1);
 		    }
 		}
 	    }
@@ -257,7 +257,7 @@ namespace netgen
 	// unconditional special point available ?
 	if (!pi1)
 	  for (int i = 1; i <= hsp.Size(); i++)
-	    if (specpoints[hsp.Get(i)].unconditional == 1)
+	    if (specpoints[hsp[i-1]].unconditional == 1)
 	      {
 		pi1 = i;
 		break;
@@ -270,24 +270,24 @@ namespace netgen
 	    pi1 = 1;	     
 	  }
 
-	layer = specpoints[hsp.Get(pi1)].GetLayer();
+	layer = specpoints[hsp[pi1-1]].GetLayer();
       
 
-	if (!specpoints[hsp.Get(pi1)].unconditional)
+	if (!specpoints[hsp[pi1-1]].unconditional)
 	  {
-	    specpoints[hsp.Elem(pi1)].unconditional = 1;
+	    specpoints[hsp[pi1-1]].unconditional = 1;
 	    for (int i = 1; i <= hsp.Size(); i++)
 	      if (i != pi1 && 
-		  Dist (specpoints[hsp.Get(pi1)].p, specpoints[hsp.Get(i)].p) < 1e-8*geometry.MaxSize() &&
-		  (specpoints[hsp.Get(pi1)].v + specpoints[hsp.Get(i)].v).Length() < 1e-4)
+		  Dist (specpoints[hsp[pi1-1]].p, specpoints[hsp[i-1]].p) < 1e-8*geometry.MaxSize() &&
+		  (specpoints[hsp[pi1-1]].v + specpoints[hsp[i-1]].v).Length() < 1e-4)
 		{
 		  // opposite direction
-		  specpoints[hsp.Elem(i)].unconditional = 1;
+		  specpoints[hsp[i-1]].unconditional = 1;
 		}
 	  }
 
 	cntedge++;
-	startpoints.Append (hsp.Get(pi1));
+	startpoints.Append (hsp[pi1-1]);
 
 #ifdef DEVELOP
 	(*testout) << "start followedge: p1 = " << specpoints[hsp.Get(pi1)].p 
@@ -304,39 +304,39 @@ namespace netgen
 	if (!ep)
 	  {
 	    // ignore starting point
-	    hsp.DeleteElement (pi1);
+	    hsp.DeleteElement(pi1-1);
 	    cout << "yes, this happens" << endl;
 	    continue;
 	  }
 
 
 
-	endpoints.Append (hsp.Get(ep));
+	endpoints.Append (hsp[ep-1]);
 
 
 	double elen = 0;
 	for (int i = 1; i <= edgepoints.Size()-1; i++)
-	  elen += Dist (edgepoints.Get(i), edgepoints.Get(i+1));
+	  elen += Dist (edgepoints[i-1], edgepoints[i]);
 
 
 	int shortedge = 0;
 	for (int i = 1; i <= geometry.identifications.Size(); i++)
-	  if (geometry.identifications.Get(i)->ShortEdge(specpoints[hsp.Get(pi1)], specpoints[hsp.Get(ep)]))
+	  if (geometry.identifications[i-1]->ShortEdge(specpoints[hsp[pi1-1]], specpoints[hsp[ep-1]]))
 	    shortedge = 1;
 	// (*testout) << "shortedge = " << shortedge << endl;
 
 
 	if (!shortedge)
 	  {
-	    mesh.RestrictLocalHLine (specpoints[hsp.Get(pi1)].p, 
-				     specpoints[hsp.Get(ep)].p, 
+	    mesh.RestrictLocalHLine (specpoints[hsp[pi1-1]].p, 
+				     specpoints[hsp[ep-1]].p, 
 				     elen / mparam.segmentsperedge);
 	  }
       
-	s1 = specpoints[hsp.Get(pi1)].s1;
-	s2 = specpoints[hsp.Get(pi1)].s2;
-	s1_orig = specpoints[hsp.Get(pi1)].s1_orig;
-	s2_orig = specpoints[hsp.Get(pi1)].s2_orig;
+	s1 = specpoints[hsp[pi1-1]].s1;
+	s2 = specpoints[hsp[pi1-1]].s2;
+	s1_orig = specpoints[hsp[pi1-1]].s1_orig;
+	s2_orig = specpoints[hsp[pi1-1]].s2_orig;
 
 
 	// delete initial, terminal and conditional points
@@ -346,35 +346,35 @@ namespace netgen
 		   << ", v = " << specpoints[hsp.Get(ep)].v << endl;      
 #endif
 
-	searchtree -> DeleteElement (hsp.Get(ep));
-	searchtree -> DeleteElement (hsp.Get(pi1));
+	searchtree -> DeleteElement (hsp[ep-1]);
+	searchtree -> DeleteElement (hsp[pi1-1]);
 
 	if (ep > pi1)
 	  {
 	    glob2hsp[hsp[ep-1]] = -1;
 	    glob2hsp[hsp.Last()] = ep-1;
-	    hsp.DeleteElement (ep);
+	    hsp.DeleteElement(ep-1);
 
 	    glob2hsp[hsp[pi1-1]] = -1;
 	    glob2hsp[hsp.Last()] = pi1-1;
-	    hsp.DeleteElement (pi1);
+	    hsp.DeleteElement(pi1-1);
 	  }
 	else
 	  {
 	    glob2hsp[hsp[pi1-1]] = -1;
 	    glob2hsp[hsp.Last()] = pi1-1;
-	    hsp.DeleteElement (pi1);
+	    hsp.DeleteElement(pi1-1);
 
 	    glob2hsp[hsp[ep-1]] = -1;
 	    glob2hsp[hsp.Last()] = ep-1;
-	    hsp.DeleteElement (ep);
+	    hsp.DeleteElement(ep-1);
 	  }
 
 
 	for (int j = 1; j <= edgepoints.Size()-1; j++)
 	  {
-	    p = edgepoints.Get(j);
-	    np = Center (p, edgepoints.Get(j+1));
+	    p = edgepoints[j-1];
+	    np = Center (p, edgepoints[j]);
 	    double hd = Dist (p, np);
  
 
@@ -501,9 +501,9 @@ namespace netgen
 	  {
 	    CopyEdge (refedges, refedgesinv,
 		      copyfromedge, 
-		      specpoints[startpoints.Get(copyfromedge)].p,
-		      specpoints[endpoints.Get(copyfromedge)].p,
-		      edgepoints.Get(1), edgepoints.Last(),
+		      specpoints[startpoints[copyfromedge-1]].p,
+		      specpoints[endpoints[copyfromedge-1]].p,
+		      edgepoints[0], edgepoints.Last(),
 		      copyedgeidentification, 
 		      layer,
 		      mesh);
@@ -536,7 +536,7 @@ namespace netgen
 	    auto splinesurface = dynamic_cast<const SplineSurface*>(geometry.GetSurface(refedges[i].surfnr1));
 	    if(splinesurface)
 	      {
-		auto name = splinesurface->GetBCNameOf(specpoints[startpoints.Get(refedges[i].edgenr)].p,specpoints[endpoints.Get(refedges[i].edgenr)].p);
+		auto name = splinesurface->GetBCNameOf(specpoints[startpoints[refedges[i].edgenr-1]].p,specpoints[endpoints[refedges[i].edgenr-1]].p);
 		mesh.SetCD2Name(refedges[i].edgenr,name);
 	      }
 	    else
@@ -544,7 +544,7 @@ namespace netgen
 		auto splinesurface2 = dynamic_cast<const SplineSurface*>(geometry.GetSurface(refedges[i].surfnr2));
 	    if(splinesurface2)
 	      {
-		auto name = splinesurface2->GetBCNameOf(specpoints[startpoints.Get(refedges[i].edgenr)].p,specpoints[endpoints.Get(refedges[i].edgenr)].p);
+		auto name = splinesurface2->GetBCNameOf(specpoints[startpoints[refedges[i].edgenr-1]].p,specpoints[endpoints[refedges[i].edgenr-1]].p);
 		mesh.SetCD2Name(refedges[i].edgenr,name);
 	      }
 		
@@ -603,7 +603,7 @@ namespace netgen
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
 	if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
-	  osedges.Elem(seg_ednr)--;
+	  osedges[seg_ednr-1]--;
       }
 
     // flag one segment edges
@@ -616,7 +616,7 @@ namespace netgen
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
 	if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
-	    if (osedges.Get(seg_ednr))
+	    if (osedges[seg_ednr-1])
 	      {
 		SortedPointIndices<2> i2(seg[0], seg[1]);
 		if (osedgesht.Used (i2))
@@ -687,7 +687,7 @@ namespace netgen
 	    SortedPointIndices<2> i2(seg[0], seg[1]);
 	    if (osedgesht.Used (i2) &&
 		osedgesht.Get (i2) == 2 &&
-		!edgenewp.Elem(seg_ednr).IsValid())
+		!edgenewp[seg_ednr-1].IsValid())
 	      {
 		Point<3> newp = Center (mesh[seg[0]], mesh[seg[1]]);
 
@@ -696,9 +696,9 @@ namespace netgen
 			       geometry.GetSurface(ed.SurfNr(1)), 
 			       newp);
 
-		edgenewp.Elem(seg_ednr) = 
+		edgenewp[seg_ednr-1] = 
 		  mesh.AddPoint (newp, mesh[seg[0]].GetLayer(), EDGEPOINT);
-		meshpoint_tree -> Insert (newp, edgenewp.Elem(seg_ednr));
+		meshpoint_tree -> Insert (newp, edgenewp[seg_ednr-1]);
 	      }
 	  }
       }
@@ -711,11 +711,11 @@ namespace netgen
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
 	if (seg_ednr >= 1 && seg_ednr <= cntedge)
 	  {
-	    if (edgenewp.Get(seg_ednr).IsValid())
+	    if (edgenewp[seg_ednr-1].IsValid())
 	      {
 		Segment newseg = seg;
-		newseg[0] = edgenewp.Get(seg_ednr);
-		seg[1] = edgenewp.Get(seg_ednr);
+		newseg[0] = edgenewp[seg_ednr-1];
+		seg[1] = edgenewp[seg_ednr-1];
 		mesh.AddSegment (newseg);
 		seg_seginfo.Append(seg_seginfo[si]);
 	      }
@@ -746,12 +746,12 @@ namespace netgen
     int uselocalh = mparam.uselocalh;
 
 
-    s1_rep = specpoints[hsp.Get(pi1)].s1;
-    s2_rep = specpoints[hsp.Get(pi1)].s2;
-    s1 = specpoints[hsp.Get(pi1)].s1_orig;
-    s2 = specpoints[hsp.Get(pi1)].s2_orig;
+    s1_rep = specpoints[hsp[pi1-1]].s1;
+    s2_rep = specpoints[hsp[pi1-1]].s2;
+    s1 = specpoints[hsp[pi1-1]].s1_orig;
+    s2 = specpoints[hsp[pi1-1]].s2_orig;
   
-    p = specpoints[hsp.Get(pi1)].p;
+    p = specpoints[hsp[pi1-1]].p;
     //ProjectToEdge (geometry.GetSurface(s1), 
     //               geometry.GetSurface(s2), p);
     geometry.GetSurface(s1) -> CalcGradient (p, a1);
@@ -760,7 +760,7 @@ namespace netgen
     t = Cross (a1, a2);
     t.Normalize();
 
-    pos = (specpoints[hsp.Get(pi1)].v * t) > 0;
+    pos = (specpoints[hsp[pi1-1]].v * t) > 0;
     if (!pos) t *= -1;
 
   
@@ -1203,9 +1203,9 @@ namespace netgen
 		    int hi = 0;
 		    for (int l = 1; !hi && l <= refedges.Size(); l++)
 		      {
-			   if (refedges.Get(l).si == rlsi &&     // JS sept 2006
+			   if (refedges[l-1].si == rlsi &&     // JS sept 2006
 			       // if (refedges.Get(l).si == lsi &&
-			       refedgesinv.Get(l) == edgeinv)
+			       refedgesinv[l-1] == edgeinv)
 			     {
 			       hi = l;
 			     }
@@ -1241,13 +1241,13 @@ namespace netgen
                         if(flip)
                           inside = !inside;
                         if (inside)
-			  refedges.Elem(hi).domin = i;
+			  refedges[hi-1].domin = i;
 			else 
-			  refedges.Elem(hi).domout = i;
+			  refedges[hi-1].domout = i;
 		      }
 		    else
 		      {
-		      refedges.Elem(hi).tlosurf = i;
+		      refedges[hi-1].tlosurf = i;
 		      for(int kk = 0; kk < geometry.GetNTopLevelObjects(); kk++)
 			{
 			  auto othersolid = geometry.GetTopLevelObject(kk)->GetSolid();
@@ -1257,8 +1257,8 @@ namespace netgen
 			      if(othersolid->IsIn(edgepoints[0])  &&
 				 othersolid->IsIn(edgepoints[edgepoints.Size()-1]))
 				{
-				  refedges.Elem(hi).domin = kk;
-				  refedges.Elem(hi).domout = kk;
+				  refedges[hi-1].domin = kk;
+				  refedges[hi-1].domout = kk;
 				}
 			    }
 			}
@@ -1270,12 +1270,12 @@ namespace netgen
 
 		    if (debug)
 		      (*testout) << "add ref seg:" 
-				 << "si = " << refedges.Get(hi).si
-				 << ", domin = " << refedges.Get(hi).domin
-				 << ", domout = " << refedges.Get(hi).domout
-				 << ", surfnr1/2 = " << refedges.Get(hi).surfnr1
-				 << ", " << refedges.Get(hi).surfnr2
-				 << ", inv = " << refedgesinv.Get(hi) 
+				 << "si = " << refedges[hi-1].si
+				 << ", domin = " << refedges[hi-1].domin
+				 << ", domout = " << refedges[hi-1].domout
+				 << ", surfnr1/2 = " << refedges[hi-1].surfnr1
+				 << ", " << refedges[hi-1].surfnr2
+				 << ", inv = " << refedgesinv[hi-1] 
 				 << ", refedgenr = " << hi
 				 << ", priority = " << edges_priority[hi-1]
 				 << ", hi = " << hi 
@@ -1378,23 +1378,23 @@ namespace netgen
     Point<3> p, np;
     Segment seg;
 
-    const Surface * surf1 = geometry.GetSurface (refedges.Get(1).surfnr1);
-    const Surface * surf2 = geometry.GetSurface (refedges.Get(1).surfnr2);
+    const Surface * surf1 = geometry.GetSurface (refedges[0].surfnr1);
+    const Surface * surf2 = geometry.GetSurface (refedges[0].surfnr2);
 
-    (*testout) << "s1 " << refedges.Get(1).surfnr1 << " s2 " << refedges.Get(1).surfnr2
-	       << " rs1 " << geometry.GetSurfaceClassRepresentant(refedges.Get(1).surfnr1)
-	       << " rs2 " << geometry.GetSurfaceClassRepresentant(refedges.Get(1).surfnr2) << endl;
+    (*testout) << "s1 " << refedges[0].surfnr1 << " s2 " << refedges[0].surfnr2
+	       << " rs1 " << geometry.GetSurfaceClassRepresentant(refedges[0].surfnr1)
+	       << " rs2 " << geometry.GetSurfaceClassRepresentant(refedges[0].surfnr2) << endl;
 
     len = curvelength.Last();
     ne = int (len + 0.5);
     if (ne == 0) ne = 1;
-    if (Dist (edgepoints.Get(1), edgepoints.Last()) < 1e-8*geometry.MaxSize() && 
+    if (Dist (edgepoints[0], edgepoints.Last()) < 1e-8*geometry.MaxSize() && 
 	ne <= 6) 
       ne = 6;
     corr = len / ne;
 
     // generate initial point
-    p = edgepoints.Get(1);
+    p = edgepoints[0];
     lastpi = PointIndex::INVALID;
 
     /*
@@ -1427,15 +1427,15 @@ namespace netgen
     j = 1;
     for (int i = 1; i <= ne; i++)
       {
-	while (curvelength.Get(j) < i * corr && j < curvelength.Size()) j++;
+	while (curvelength[j-1] < i * corr && j < curvelength.Size()) j++;
 
 
-	lam = (i * corr - curvelength.Get(j-1)) / 
-	  (curvelength.Get(j) - curvelength.Get(j-1));
+	lam = (i * corr - curvelength[j-2]) / 
+	  (curvelength[j-1] - curvelength[j-2]);
 
-	np(0) = (1-lam) * edgepoints.Get(j-1)(0) + lam * edgepoints.Get(j)(0);
-	np(1) = (1-lam) * edgepoints.Get(j-1)(1) + lam * edgepoints.Get(j)(1);
-	np(2) = (1-lam) * edgepoints.Get(j-1)(2) + lam * edgepoints.Get(j)(2);
+	np(0) = (1-lam) * edgepoints[j-2](0) + lam * edgepoints[j-1](0);
+	np(1) = (1-lam) * edgepoints[j-2](1) + lam * edgepoints[j-1](1);
+	np(2) = (1-lam) * edgepoints[j-2](2) + lam * edgepoints[j-1](2);
       
         thispi = PointIndex::INVALID;
 	if (i == ne)
@@ -1464,7 +1464,7 @@ namespace netgen
 
 	for (int k = 1; k <= refedges.Size(); k++)
 	  {
-	    if (refedgesinv.Get(k))
+	    if (refedgesinv[k-1])
 	      {
 		seg[0] = lastpi;
 		seg[1] = thispi;
@@ -1474,9 +1474,9 @@ namespace netgen
 		seg[0] = thispi;
 		seg[1] = lastpi;
 	      }
-	    seg.SetIndex(refedges.Get(k).GetIndex());
+	    seg.SetIndex(refedges[k-1].GetIndex());
 	    char si_val = 0;
-	    if (k == 1) si_val = (refedgesinv.Get(k)) ? 2 : 1;
+	    if (k == 1) si_val = (refedgesinv[k-1]) ? 2 : 1;
 	    mesh.AddSegment (seg);
 	    seg_seginfo.Append(si_val);
 	    //(*testout) << "add seg " << mesh[seg.p1] << "-" << mesh[seg.p2] << endl;
@@ -1626,7 +1626,7 @@ namespace netgen
   
     for (int k = 1; k <= refedges.Size(); k++)
       {
-	if (refedgesinv.Get(k))
+	if (refedgesinv[k-1])
 	  {
 	    seg[0] = pi1;
 	    seg[1] = pi2;
@@ -1637,9 +1637,9 @@ namespace netgen
 	    seg[1] = pi1;
 	  }
 
-	seg.SetIndex(refedges.Get(k).GetIndex());
+	seg.SetIndex(refedges[k-1].GetIndex());
 	char si_val = 0;
-	if (k == 1) si_val = (refedgesinv.Get(k)) ? 2 : 1;
+	if (k == 1) si_val = (refedgesinv[k-1]) ? 2 : 1;
 	mesh.AddSegment (seg);
 	seg_seginfo.Append(si_val);
 	//	  (*testout) << "add seg " << seg[0] << "-" << seg[1] << endl;
@@ -1701,7 +1701,7 @@ namespace netgen
 	  }
 
 	const Identification & csi = 
-	  (*geometry.identifications.Get(copyedgeidentification));
+	  (*geometry.identifications[copyedgeidentification-1]);
 
 
 	if (csi.Identifiable (mesh[frompi], mesh[topi]))
@@ -1742,9 +1742,9 @@ namespace netgen
 	PointIndex pi1 = oldseg[0];
 	PointIndex pi2 = oldseg[1];
 
-	PointIndex npi1 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi1 = geometry.identifications[copyedgeidentification-1]
 	  -> GetIdentifiedPoint (mesh, pi1);
-	PointIndex npi2 = geometry.identifications.Get(copyedgeidentification)
+	PointIndex npi2 = geometry.identifications[copyedgeidentification-1]
 	  -> GetIdentifiedPoint (mesh, pi2);
 
 	//(*testout) << "copy edge, pts = " << npi1 << " - " << npi2 << endl;
@@ -1753,7 +1753,7 @@ namespace netgen
 
 	for (int k = 1; k <= refedges.Size(); k++)
 	  {
-	    bool inv = refedgesinv.Get(k);
+	    bool inv = refedgesinv[k-1];
 
 	    // other edge is inverse
 	    if (seg_seginfo[i-1] == 1)
@@ -1771,9 +1771,9 @@ namespace netgen
 		seg[0] = npi2;
 		seg[1] = npi1;
 	      }
-	    seg.SetIndex(refedges.Get(k).GetIndex());
+	    seg.SetIndex(refedges[k-1].GetIndex());
 	    char si_val = 0;
-	    if (k == 1) si_val = refedgesinv.Get(k) ? 2 : 1;
+	    if (k == 1) si_val = refedgesinv[k-1] ? 2 : 1;
 	    mesh.AddSegment (seg);
 	    seg_seginfo.Append(si_val);
 	    //	  (*testout) << "copy seg " << seg[0] << "-" << seg[1] << endl;
@@ -1870,7 +1870,7 @@ namespace netgen
 		  {
 		    tansol -> GetSurfaceIndices (tansurfind);
 		
-		    if (tansurfind.Size() == 1 && tansurfind.Get(1) == i)
+		    if (tansurfind.Size() == 1 && tansurfind[0] == i)
 		      {
 			hloc = min2 (hloc, geometry.GetTopLevelObject(j)->GetMaxH());
 

@@ -87,18 +87,18 @@ public:
   ///
   int GetQuality () const { return quality; }
   ///
-  int GetLNearness (int li) const { return lnearness.Get(li); }
+  int GetLNearness (int li) const { return lnearness[li-1]; }
 
   ///
   const Point<2>& GetPoint (RulePointIndex i) const { return points[i]; }
   ///
-  const IVec<2,RulePointIndex> & GetLine (int i) const { return lines.Get(i); }
+  const IVec<2,RulePointIndex> & GetLine (int i) const { return lines[i-1]; }
   ///
-  const RuleElement2d & GetElement (int i) const { return elements.Get(i); }
+  const RuleElement2d & GetElement (int i) const { return elements[i-1]; }
   ///
-  const threeint & GetOrientation (int i) const { return orientations.Get(i); }
+  const threeint & GetOrientation (int i) const { return orientations[i-1]; }
   ///
-  int GetDelLine (int i) const { return dellines.Get(i); }
+  int GetDelLine (int i) const { return dellines[i-1]; }
   ///
   const NgArray<int> & GetDelLines() const { return dellines; }
   ///
@@ -151,7 +151,7 @@ public:
   const NgArray<Point<2>> & GetTransFreeZone () { return transfreezone; }
 
   ///
-  RulePointIndex GetPointNr (int ln, int endp) const { return lines.Get(ln)[endp-1]; }
+  RulePointIndex GetPointNr (int ln, int endp) const { return lines[ln-1][endp-1]; }
 
   ///
   const DenseMatrix & GetOldUToNewU () const { return oldutonewu; }

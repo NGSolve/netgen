@@ -237,14 +237,14 @@ namespace netgen
 
 	      for (int j = 1; j <= 3; j++)
 		{
-		  pnums.Elem(j) = el.PNum(j);
-		  pgis.Elem(j) = el.GeomInfoPi(j);
+		  pnums[j-1] = el.PNum(j);
+		  pgis[j-1] = el.GeomInfoPi(j);
 		}
 
 	      for (int j = 0; j < 3; j++)
 		{
-		  PointIndex pi1 = pnums.Elem(betw[j][0]);
-		  PointIndex pi2 = pnums.Elem(betw[j][1]);
+		  PointIndex pi1 = pnums[betw[j][0]-1];
+		  PointIndex pi2 = pnums[betw[j][1]-1];
 
 		  PointIndices<2> i2 (pi1, pi2);
 		  i2.Sort();
@@ -259,9 +259,9 @@ namespace netgen
                                    pb, pgi);
 
 
-		  pgis.Elem(4+j) = pgi;
+		  pgis[j+3] = pgi;
                   PointIndex pinew = between.Get(i2); 
-                  pnums.Elem(4+j) = pinew;
+                  pnums[j+3] = pinew;
                   if (!pointset[pinew])
                     {
                       pointset[pinew] = true;
@@ -276,9 +276,9 @@ namespace netgen
 		      between.Set (i2, pnums.Get(4+j));
 		    }
                   */
-		  if (surfgi.Size() < pnums.Elem(4+j).Nr1())
-		    surfgi.SetSize (pnums.Elem(4+j).Nr1());
-		  surfgi[pnums.Elem(4+j)] = pgis.Elem(4+j);
+		  if (surfgi.Size() < pnums[j+3].Nr1())
+		    surfgi.SetSize (pnums[j+3].Nr1());
+		  surfgi[pnums[j+3]] = pgis[j+3];
 		}
 
 
@@ -294,8 +294,8 @@ namespace netgen
 		  Element2d nel(TRIG);
 		  for (int k = 1; k <= 3; k++)
 		    {
-		      nel.PNum(k) = pnums.Get(reftab[j][k-1]);
-		      nel.GeomInfoPi(k) = pgis.Get(reftab[j][k-1]);
+		      nel.PNum(k) = pnums[reftab[j][k-1]-1];
+		      nel.GeomInfoPi(k) = pgis[reftab[j][k-1]-1];
 		    }
 		  nel.SetIndex(ind);
 
@@ -420,14 +420,14 @@ namespace netgen
 	     int elrev = el.Flags().reverse;
 
 	     for (int j = 1; j <= 4; j++)
-               pnums.Elem(j) = el.PNum(j);
+               pnums[j-1] = el.PNum(j);
 	     if (elrev)
-	     swap (pnums.Elem(3), pnums.Elem(4));
+	     swap (pnums[2], pnums[3]);
 
 	     for (int j = 0; j < 6; j++)
                {
-                 PointIndex pi1 = pnums.Get(betw[j][0]);
-                 PointIndex pi2 = pnums.Get(betw[j][1]);
+                 PointIndex pi1 = pnums[betw[j][0]-1];
+                 PointIndex pi2 = pnums[betw[j][1]-1];
                  PointIndices<2> i2 (pi1, pi2);
                  i2.Sort();
 
@@ -442,7 +442,7 @@ namespace netgen
 	       }
 	       */
 	       PointIndex pinew = between.Get(i2);
-	       pnums.Elem(j+5) = pinew;
+	       pnums[j+4] = pinew;
 	       if (!pointset[pinew])
 		 {
 		   pointset[pinew] = true;
@@ -480,7 +480,7 @@ namespace netgen
 	   {
              Element nel(TET);
 	      for (int k = 1; k <= 4; k++)
-	        nel.PNum(k) = pnums.Get(reftab[j][k-1]);
+	        nel.PNum(k) = pnums[reftab[j][k-1]-1];
 	      nel.SetIndex(ind);
 	      nel.Flags().reverse = reverse[j];
 	      if (elrev)
@@ -551,38 +551,38 @@ namespace netgen
 	     pnums = PointIndex(-1);
 
 	     for (int j = 1; j <= 8; j++)
-               pnums.Elem(j) = el.PNum(j);
+               pnums[j-1] = el.PNum(j);
 
 
 	     for (int j = 0; j < 13; j++)
 	     {
-	       SortedPointIndices<2> i2 (pnums.Get(betw[j][0]), pnums.Get(betw[j][1]));
+	       SortedPointIndices<2> i2 (pnums[betw[j][0]-1], pnums[betw[j][1]-1]);
 
 	       if (between.Used(i2))
-	          pnums.Elem(9+j) = between.Get(i2);
+	          pnums[j+8] = between.Get(i2);
 	       else
 	       {
                   auto [pi1, pi2] = i2;
-		  pnums.Elem(9+j) = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
-		  between.Set (i2, pnums.Elem(9+j));
+		  pnums[j+8] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+		  between.Set (i2, pnums[j+8]);
 	       }
 	    }
 
 	    for (int j = 0; j < 6; j++)
 	    {
-	       SortedPointIndices<2> i2a (pnums.Get(fbetw[2*j][0]), pnums.Get(fbetw[2*j][1]));
-	       SortedPointIndices<2> i2b (pnums.Get(fbetw[2*j+1][0]), pnums.Get(fbetw[2*j+1][1]));
+	       SortedPointIndices<2> i2a (pnums[fbetw[2*j][0]-1], pnums[fbetw[2*j][1]-1]);
+	       SortedPointIndices<2> i2b (pnums[fbetw[2*j+1][0]-1], pnums[fbetw[2*j+1][1]-1]);
 
 	       if (between.Used(i2a))
-		 pnums.Elem(22+j) = between.Get(i2a);
+		 pnums[j+21] = between.Get(i2a);
 	       else if (between.Used(i2b))
-		 pnums.Elem(22+j) = between.Get(i2b);
+		 pnums[j+21] = between.Get(i2b);
 	       else
 		 {
                    auto [pi1, pi2] = i2a;
-		   pnums.Elem(22+j) = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+		   pnums[j+21] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
 
-		   between.Set (i2a, pnums.Elem(22+j));
+		   between.Set (i2a, pnums[j+21]);
 		 }
 	    }
 
@@ -602,7 +602,7 @@ namespace netgen
 	   {
 	      Element nel(HEX);
 	      for (int k = 1; k <= 8; k++)
-	        nel.PNum(k) = pnums.Get(reftab[j][k-1]);
+	        nel.PNum(k) = pnums[reftab[j][k-1]-1];
 	      nel.SetIndex(ind);
 
               if (j == 0)
@@ -651,39 +651,39 @@ namespace netgen
            pnums = PointIndex(-1);
            
            for (int j = 1; j <= 6; j++)
-	     pnums.Elem(j) = el.PNum(j);
+	     pnums[j-1] = el.PNum(j);
 	    // if (elrev)
 	    // swap (pnums.Elem(3), pnums.Elem(4));
 
 	   for (int j = 0; j < 9; j++)
            {
-	       SortedPointIndices<2> i2 (pnums.Get(betw[j][0]), pnums.Get(betw[j][1]));
+	       SortedPointIndices<2> i2 (pnums[betw[j][0]-1], pnums[betw[j][1]-1]);
 
 	       if (between.Used(i2))
-	          pnums.Elem(7+j) = between.Get(i2);
+	          pnums[j+6] = between.Get(i2);
 	       else
 	       {
                   auto [pi1, pi2] = i2;
-		  pnums.Elem(7+j) = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
-		  between.Set (i2, pnums.Elem(7+j));
+		  pnums[j+6] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+		  between.Set (i2, pnums[j+6]);
 	       }
            }
 
            for (int j = 0; j < 3; j++)
 	   {
-	       SortedPointIndices<2> i2a (pnums.Get(fbetw[2*j][0]), pnums.Get(fbetw[2*j][1]));
-	       SortedPointIndices<2> i2b (pnums.Get(fbetw[2*j+1][0]), pnums.Get(fbetw[2*j+1][1]));
+	       SortedPointIndices<2> i2a (pnums[fbetw[2*j][0]-1], pnums[fbetw[2*j][1]-1]);
+	       SortedPointIndices<2> i2b (pnums[fbetw[2*j+1][0]-1], pnums[fbetw[2*j+1][1]-1]);
 
 	       if (between.Used(i2a))
-		 pnums.Elem(16+j) = between.Get(i2a);
+		 pnums[j+15] = between.Get(i2a);
 	       else if (between.Used(i2b))
-		 pnums.Elem(16+j) = between.Get(i2b);
+		 pnums[j+15] = between.Get(i2b);
 	       else
 		 {
                    auto [pi1, pi2] = i2a;
-		   pnums.Elem(16+j) = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+		   pnums[j+15] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
 
-		   between.Set (i2a, pnums.Elem(16+j));
+		   between.Set (i2a, pnums[j+15]);
 		 }
 	    }
 
@@ -704,7 +704,7 @@ namespace netgen
 	   {
 	      Element nel(PRISM);
 	      for (int k = 1; k <= 6; k++)
-	        nel.PNum(k) = pnums.Get(reftab[j][k-1]);
+	        nel.PNum(k) = pnums[reftab[j][k-1]-1];
 	      nel.SetIndex(ind);
 
 

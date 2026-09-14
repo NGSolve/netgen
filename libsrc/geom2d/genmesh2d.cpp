@@ -371,7 +371,7 @@ namespace netgen
       {
 	if (mappoints[i].IsValid())
 	  {
-	    Point<2> newp = splines.Get(to)->GetPoint (param[i]);
+	    Point<2> newp = splines[to-1]->GetPoint (param[i]);
 	    Point<3> newp3 (newp(0), newp(1), 0);
 	  
 	    PointIndex npi = PointIndex::INVALID;

@@ -592,9 +592,9 @@ namespace netgen
 
     for (int j = 1; j <= ld.locelements.Size(); j++)
       {
-	lpi = ld.locrots.Get(j);
+	lpi = ld.locrots[j-1];
 	const Element2d & bel = 
-	  mesh[ld.locelements.Get(j)];
+	  mesh[ld.locelements[j-1]];
       
 	gpi = bel.PNum(lpi);
 
@@ -662,9 +662,9 @@ namespace netgen
 
     for (j = 1; j <= ld.locelements.Size(); j++)
       {
-	lpi = ld.locrots.Get(j);
+	lpi = ld.locrots[j-1];
 	const Element2d & bel = 
-	  mesh[ld.locelements.Get(j)];
+	  mesh[ld.locelements[j-1]];
       
 	gpi = bel.PNum(lpi);
 

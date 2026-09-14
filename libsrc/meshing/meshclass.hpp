@@ -463,7 +463,7 @@ namespace netgen
 
 
     int GetNOpenSegments () { return opensegments.Size(); }
-    const Segment & GetOpenSegment (int nr) { return opensegments.Get(nr); }
+    const Segment & GetOpenSegment (int nr) { return opensegments[nr-1]; }
     /// face descriptor index for open segment nr (1-based)
     int GetOpenSegmentFace (int nr) { return opensegment_faces[nr-1]; }
   
@@ -548,7 +548,7 @@ namespace netgen
     { return openelements.Size(); }
     ///
     const Element2d & OpenElement(int i) const
-    { return openelements.Get(i); }
+    { return openelements[i-1]; }
 
     auto & OpenElements() const { return openelements; }
 

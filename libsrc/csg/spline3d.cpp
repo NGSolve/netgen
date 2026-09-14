@@ -112,7 +112,7 @@ void spline3d :: Evaluate (double t, Point<3> & p) const
   while (t >= GetNumSegments()) t -= GetNumSegments();
   nr = 1 + int (t);
   loct = t - nr + 1;
-  segments.Get(nr)->Evaluate (loct, p);
+  segments[nr-1]->Evaluate (loct, p);
 }
   
 void spline3d :: EvaluateTangent (double t, Vec<3> & tang) const
@@ -124,7 +124,7 @@ void spline3d :: EvaluateTangent (double t, Vec<3> & tang) const
   while (t >= GetNumSegments()) t -= GetNumSegments();
   nr = 1 + int (t);
   loct = t - nr + 1;
-  segments.Get(nr)->EvaluateTangent (loct, tang);
+  segments[nr-1]->EvaluateTangent (loct, tang);
 }
 
 

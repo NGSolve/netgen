@@ -53,9 +53,9 @@ namespace netgen
   void IndexSet :: Del (int ind)
   {
     for (int i = 1; i <= set.Size(); i++)
-      if (set.Get(i) == ind)
+      if (set[i-1] == ind)
 	{
-	  set.DeleteElement (ind);
+	  set.DeleteElement(ind-1);
 	  break;
 	}
     flags.Clear (ind);
@@ -64,7 +64,7 @@ namespace netgen
   void IndexSet :: Clear ()
   {
     for (int i = 1; i <= set.Size(); i++)
-      flags.Clear (set.Get(i));
+      flags.Clear (set[i-1]);
     set.SetSize (0);
   }
 }

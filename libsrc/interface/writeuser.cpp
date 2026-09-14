@@ -330,7 +330,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
 	  if(faceBCs.Pos(bcNum) < 0)
 	  {
         numBCs++;
-		  faceBCs.Set(numBCs,bcNum);
+		  faceBCs[numBCs-1] = bcNum;
         faceBCMapping.Add1(numBCs,faceNr);        
 	  }
      else
@@ -345,7 +345,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
   // Now actually write the data to file
   for(int bcInd = 1; bcInd <= faceBCs.Size(); bcInd++)
   {
-      *outfile << "solid Boundary_" << faceBCs.Elem(bcInd) << "\n";
+      *outfile << "solid Boundary_" << faceBCs[bcInd-1] << "\n";
 
       for(int faceNr = 1;faceNr <= faceBCMapping.EntrySize(bcInd); faceNr++)
       {
@@ -376,7 +376,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
         	  *outfile << "endfacet\n";
           }
       }
-      *outfile << "endsolid Boundary_" << faceBCs.Elem(bcInd) << "\n";
+      *outfile << "endsolid Boundary_" << faceBCs[bcInd-1] << "\n";
   }
 }
 

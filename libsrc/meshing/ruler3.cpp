@@ -315,8 +315,8 @@ int Meshing3 :: ApplyRules
 	      // not all faces mapped
 
 	      ok = 0;
-	      int locfi = fmapi.Get(nfok);
-	      int locfr = fmapr.Get(nfok);
+	      int locfi = fmapi[nfok-1];
+	      int locfr = fmapr[nfok-1];
 
 	      int actfnp = rule->GetNP(nfok);
 
@@ -331,8 +331,8 @@ int Meshing3 :: ApplyRules
 		    }
 		  
 		  
-		  if (fnearness.Get(locfi) > rule->GetFNearness (nfok) ||
-		      fused.Get(locfi) ||
+		  if (fnearness[locfi-1] > rule->GetFNearness (nfok) ||
+		      fused[locfi-1] ||
 		      actfnp != lfaces[locfi-1].GetNP() )
 		    {
 		      // face not feasible in any rotation
@@ -387,9 +387,9 @@ int Meshing3 :: ApplyRules
 		{
 		  // map face nfok
 
-		  fmapi.Set (nfok, locfi);
-		  fmapr.Set (nfok, locfr);
-		  fused.Set (locfi, 1);
+		  fmapi[nfok-1] = locfi;
+		  fmapr[nfok-1] = locfr;
+		  fused[locfi-1] = 1;
 		  
 		  for (int j = 1; j <= rule->GetNP (nfok); j++)
 		    {
@@ -408,11 +408,11 @@ int Meshing3 :: ApplyRules
 	      else
 		{
 		  // backtrack one face
-		  fmapi.Set (nfok, 0);
-		  fmapr.Set (nfok, rule->GetNP(nfok));
+		  fmapi[nfok-1] = 0;
+		  fmapr[nfok-1] = rule->GetNP(nfok);
 		  nfok--;
 		  
-		  fused.Set (fmapi.Get(nfok), 0);
+		  fused[fmapi[nfok-1]-1] = 0;
 		  for (int j = 1; j <= rule->GetNP (nfok); j++)
 		    {
 		      RulePointIndex refpi = rule->GetPointNr (nfok, j);
@@ -605,7 +605,7 @@ int Meshing3 :: ApplyRules
 
 		      
 		      for (int i = rule->GetNOldF() + 1; i <= rule->GetNF(); i++)
-			fmapi.Set(i, 0);
+			fmapi[i-1] = 0;
 		      
 
 		      if (ok)
@@ -667,7 +667,7 @@ int Meshing3 :: ApplyRules
 			  const NgArray<Point3d> & fz = rule->GetTransFreeZone();
 			  (*testout) << "Freezone: " << endl;
 			  for (int i = 1; i <= fz.Size(); i++)
-			    (*testout) << fz.Get(i) << endl;
+			    (*testout) << fz[i-1] << endl;
 			}
 		      
 
@@ -701,12 +701,12 @@ int Meshing3 :: ApplyRules
 			{
 			  NgArrayMem<int, 10> lpi(4);
 
-			  if (!fused.Get(i))
+			  if (!fused[i-1])
 			    { 
 			      int triin;
 			      const MiniElement2d & lfacei = lfaces[i-1];
 
-			      if (!triboxes.Elem(i).Intersect (rule->fzbox))
+			      if (!triboxes[i-1].Intersect (rule->fzbox))
 				triin = 0;
 			      else
 				{
@@ -717,7 +717,7 @@ int Meshing3 :: ApplyRules
 				      for (auto pj : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
 					if (pmap[pj] == pi)
 					  lpii = pj.Nr1();
-				      lpi.Elem(li) = lpii;
+				      lpi[li-1] = lpii;
 				    }
 
 
@@ -784,8 +784,8 @@ int Meshing3 :: ApplyRules
 						     << lpoints[lfacei.PNum(2)] << " - "
 						     << lpoints[lfacei.PNum(3)] 
 						     << endl;
-					  (*testout) << "lpi = " << lpi.Get(1) << ", " 
-						     << lpi.Get(2) << ", " << lpi.Get(3) << endl;
+					  (*testout) << "lpi = " << lpi[0] << ", " 
+						     << lpi[1] << ", " << lpi[2] << endl;
 					}
 				      else
 					  (*testout) << "Quad in freezone: "
@@ -817,7 +817,7 @@ int Meshing3 :: ApplyRules
 						lfaces[i-1].PNumMod(j+1) == pmap[rule->GetPointNr(k, 3)] &&
 						lfaces[i-1].PNumMod(j+2) == pmap[rule->GetPointNr(k, 2)])
 					      {
-						fmapi.Elem(k) = i;
+						fmapi[k-1] = i;
 						hc = 1;
 
 						
@@ -901,7 +901,7 @@ int Meshing3 :: ApplyRules
 			  // Set new Faces:
 			  
 			  for (int i = rule->GetNOldF() + 1; i <= rule->GetNF(); i++)
-			    if (!fmapi.Get(i))
+			    if (!fmapi[i-1])
 			      {
 				MiniElement2d nface(rule->GetNP(i));
 				for (int j = 1; j <= nface.GetNP(); j++)
@@ -913,12 +913,12 @@ int Meshing3 :: ApplyRules
 			  // Delete old Faces:
 
 			  for (int i = 1; i <= rule->GetNDelF(); i++)
-			    delfaces.Append (fmapi.Get(rule->GetDelFace(i)));
+			    delfaces.Append (fmapi[(rule->GetDelFace(i))-1]);
 			  for (int i = rule->GetNOldF()+1; i <= rule->GetNF(); i++)
-			    if (fmapi.Get(i))
+			    if (fmapi[i-1])
 			      {
-				delfaces.Append (fmapi.Get(i));
-				fmapi.Elem(i) = 0;
+				delfaces.Append (fmapi[i-1]);
+				fmapi[i-1] = 0;
 			      }
 			  
 

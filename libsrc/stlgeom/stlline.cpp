@@ -268,7 +268,7 @@ void STLEdgeDataList :: Store ()
   storedstatus.SetSize(ne);
   for (i = 1; i <= ne; i++)
     {
-      storedstatus.Elem(i) = Get(i).GetStatus();
+      storedstatus[i-1] = Get(i).GetStatus();
     }
 }
 
@@ -277,7 +277,7 @@ void STLEdgeDataList :: Restore ()
   int i, ne = geom.GetNTE();
   if (storedstatus.Size() == ne)
     for (i = 1; i <= ne; i++)
-      geom.GetTopEdge(i).SetStatus (storedstatus.Elem(i));
+      geom.GetTopEdge(i).SetStatus (storedstatus[i-1]);
 }
 
 
@@ -478,8 +478,8 @@ int Exists(int p1, int p2, const NgArray<twoint>& line)
   int i;
   for (i = 1; i <= line.Size(); i++)
     {
-      if ( (line.Get(i).i1 == p1 && line.Get(i).i2 == p2) ||
-	   (line.Get(i).i1 == p2 && line.Get(i).i2 == p1) )
+      if ( (line[i-1].i1 == p1 && line[i-1].i2 == p2) ||
+	   (line[i-1].i1 == p2 && line[i-1].i2 == p1) )
 	{return 1;}
     }
   return 0;
@@ -506,9 +506,9 @@ void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, NgArray<twoint>& 
 	  newend = line.Size();
 	  for (k = oldend; k <= line.Size(); k++)
 	    {
-	      if (j == 1) p = line.Get(k).i1;
-	      if (j == 2) p = line.Get(k).i2;
-	      en = GetEdgeNum(line.Get(k).i1, line.Get(k).i2);
+	      if (j == 1) p = line[k-1].i1;
+	      if (j == 2) p = line[k-1].i2;
+	      en = GetEdgeNum(line[k-1].i1, line[k-1].i2);
 
 	      for (i = 1; i <= GetNEPP(p); i++)
 		{		
@@ -566,20 +566,20 @@ int STLLine :: GetNS() const
 }
 void STLLine :: GetSeg(int nr, int& p1, int& p2) const
 {
-  p1 = pts.Get(nr);
-  p2 = pts.Get(nr+1);
+  p1 = pts[nr-1];
+  p2 = pts[nr];
 }
 
 int STLLine :: GetLeftTrig(int nr) const 
 {
   if (nr > lefttrigs.Size()) {PrintSysError("In STLLine::GetLeftTrig!!!"); return 0;}
-  return lefttrigs.Get(nr);
+  return lefttrigs[nr-1];
 };
 
 int STLLine :: GetRightTrig(int nr) const 
 {
   if (nr > righttrigs.Size()) {PrintSysError("In STLLine::GetRightTrig!!!"); return 0;}
-  return righttrigs.Get(nr);
+  return righttrigs[nr-1];
 };
 
 double STLLine :: GetSegLen(const Array<Point<3>,STLPointId>& ap, int nr) const
@@ -591,7 +591,7 @@ double STLLine :: GetLength(const Array<Point<3>,STLPointId>& ap) const
 {
   double len = 0;
   for (int i = 2; i <= pts.Size(); i++)
-    len += (ap[pts.Get(i)] - ap[pts.Get(i-1)]).Length();
+    len += (ap[pts[i-1]] - ap[pts[i-2]]).Length();
   return len;
 }
 
@@ -617,15 +617,15 @@ GetPointInDist(const Array<Point<3>,STLPointId>& ap, double dist, int& index) co
   int i;
   for (i = 1; i < pts.Size(); i++)
     {
-      double seglen = Dist (ap[pts.Get(i)],
-			    ap[pts.Get(i+1)]);
+      double seglen = Dist (ap[pts[i-1]],
+			    ap[pts[i]]);
 
       if (len + seglen > dist)
 	{
 	  index = i;
 	  double relval = (dist - len) / (seglen + 1e-16);
-	  Vec3d v (ap[pts.Get(i)], ap[pts.Get(i+1)]);
-	  return ap[pts.Get(i)] + relval * v;
+	  Vec3d v (ap[pts[i-1]], ap[pts[i]]);
+	  return ap[pts[i-1]] + relval * v;
 	}
 
       len += seglen;
@@ -697,8 +697,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
 	  dist += GetSegLen(ap,i)/(double)nph;
 	  
 	  inthl += GetSegLen(ap,i)/nph/(h);
-	  inthi.Elem((i-1)*nph+j) = GetSegLen(ap,i)/nph/h;
-	  curvelen.Elem((i-1)*nph+j) = GetSegLen(ap,i)/nph;
+	  inthi[(i-1)*nph+j-1] = GetSegLen(ap,i)/nph/h;
+	  curvelen[(i-1)*nph+j-1] = GetSegLen(ap,i)/nph;
 	}
     }
 
@@ -736,16 +736,16 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
     {
       while (inthl < 1.000000001 && j <= inthi.Size())
 	{
-	  inthl += inthi.Get(j)/fact;
-	  dist += curvelen.Get(j);
+	  inthl += inthi[j-1]/fact;
+	  dist += curvelen[j-1];
 	  j++;
 	}
 
       //went too far:
       j--;
-      double tofar = (inthl - 1)/inthi.Get(j);
-      inthl -= tofar*inthi.Get(j);
-      dist -= tofar*curvelen.Get(j)*fact;
+      double tofar = (inthl - 1)/inthi[j-1];
+      inthl -= tofar*inthi[j-1];
+      dist -= tofar*curvelen[j-1]*fact;
 
       if (i == inthlint && fabs(dist - len) >= 1E-8) 
 	{
@@ -763,8 +763,8 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
 	  line->AddDist(dist);
 	}
 
-      inthl = tofar*inthi.Get(j);
-      dist += tofar*curvelen.Get(j)*fact;
+      inthl = tofar*inthi[j-1];
+      dist += tofar*curvelen[j-1]*fact;
       j++;
     }
 

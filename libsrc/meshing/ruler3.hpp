@@ -111,7 +111,7 @@ public:
   ///
   int GetQuality () const { return quality; }
   ///
-  int GetFNearness (int fi) const { return fnearness.Get(fi); }
+  int GetFNearness (int fi) const { return fnearness[fi-1]; }
   ///
   int GetPNearness (RulePointIndex pi) const { return pnearness[pi]; }
   ///
@@ -121,13 +121,13 @@ public:
   ///
   const Point3d & GetPoint (RulePointIndex i) const { return points[i]; }
   ///
-  const RuleElement2d & GetFace (int i) const { return faces.Get(i); }
+  const RuleElement2d & GetFace (int i) const { return faces[i-1]; }
   ///
-  const RuleElement & GetElement (int i) const { return elements.Get(i); }
+  const RuleElement & GetElement (int i) const { return elements[i-1]; }
   ///
-  const twoint & GetEdge (int i) const { return edges.Get(i); }
+  const twoint & GetEdge (int i) const { return edges[i-1]; }
   ///
-  int GetDelFace (int i) const { return delfaces.Get(i); }
+  int GetDelFace (int i) const { return delfaces[i-1]; }
   ///
   int IsDelFace (int fn) const;
   
@@ -169,19 +169,19 @@ public:
   /// if t1 and t2 are neighbourtriangles, NTP returns the opposite Point of t1 in t2
   int NeighbourTrianglePoint (const threeint & t1, const threeint & t2) const;
   ///
-  const Point3d & GetTransFreeZone (int i) { return transfreezone.Get(i); }
+  const Point3d & GetTransFreeZone (int i) { return transfreezone[i-1]; }
 
   ///
   int GetNP (int fn) const
-  { return faces.Get(fn).GetNP(); }
+  { return faces[fn-1].GetNP(); }
   ///
   RulePointIndex GetPointNr (int fn, int endp) const
-  { return faces.Get(fn).PNum(endp); }
+  { return faces[fn-1].PNum(endp); }
   ///
   RulePointIndex GetPointNrMod (int fn, int endp) const
-  { return faces.Get(fn).PNumMod(endp); }
+  { return faces[fn-1].PNumMod(endp); }
   ///
-  const fourpoints & GetOrientation (int i) { return orientations.Get(i); }
+  const fourpoints & GetOrientation (int i) { return orientations[i-1]; }
 
   ///
   int TestFlag (char flag) const;

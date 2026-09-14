@@ -480,7 +480,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   int found = 0;
   int fother = -1;
 
-  int facei = seg_fdi(segs.Get(1));
+  int facei = seg_fdi(segs[0]);
   int surfnr = mesh.GetFaceDescriptor(facei).SurfNr();
 
   if (geom.GetSurface(surfnr) == s1 ||
@@ -1340,7 +1340,7 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   if (found)
     {
       PrintMessage(3, "insert quad layer of ", cntquads,
-		   " elements at face ", seg_fdi(segs.Get(1)));
+		   " elements at face ", seg_fdi(segs[0]));
       //Array<Segment> aux;
       //for(int i=0; i<segs.Size();i++)
       //	if(!foundseg[i])
@@ -1689,8 +1689,8 @@ BuildSurfaceElements (NgArray<Segment> & segs,
   for (int i1 = 1; i1 <= segs.Size(); i1++)
     for (int i2 = 1; i2 < i1; i2++)
       {
-	const Segment & s1 = segs.Get(i1);
-	const Segment & s2 = segs.Get(i2);
+	const Segment & s1 = segs[i1-1];
+	const Segment & s2 = segs[i2-1];
 	if (mesh.GetIdentifications().Used (s1[0], s2[1]) &&
 	    mesh.GetIdentifications().Used (s1[1], s2[0]))
 	  {

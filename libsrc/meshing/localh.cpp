@@ -497,8 +497,8 @@ namespace netgen
 
     for (int i = 1; i <= nf; i++)
       {
-	faceinds.Elem(i) = i;
-	adfront.GetFaceBoundingBox(i, faceboxes.Elem(i));
+	faceinds[i-1] = i;
+	adfront.GetFaceBoundingBox(i, faceboxes[i-1]);
       }
   
     for (int i = 0; i < 8; i++)
@@ -539,21 +539,21 @@ namespace netgen
     for (int j = 1; j <= nfinbox; j++)
       {
 	//      adfront->GetFaceBoundingBox (faceinds.Get(j), facebox);
-	const Box3d & facebox = faceboxes.Get(faceinds.Get(j));
+	const Box3d & facebox = faceboxes[faceinds[j-1]-1];
   
 	if (boxc.Intersect (facebox))
-	  faceused.Append(faceinds.Get(j));
+	  faceused.Append(faceinds[j-1]);
 	else
-	  facenotused.Append(faceinds.Get(j));
+	  facenotused.Append(faceinds[j-1]);
 
 	if (boxcfc.Intersect (facebox))
-	  faceused2.Append (faceinds.Get(j));
+	  faceused2.Append (faceinds[j-1]);
       }
   
     for (int j = 1; j <= faceused.Size(); j++)
-      faceinds.Elem(j) = faceused.Get(j);
+      faceinds[j-1] = faceused[j-1];
     for (int j = 1; j <= facenotused.Size(); j++)
-      faceinds.Elem(j+faceused.Size()) = facenotused.Get(j);
+      faceinds[j+faceused.Size()-1] = facenotused[j-1];
 
   
     if (!father->flags.cutboundary)

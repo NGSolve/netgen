@@ -469,9 +469,9 @@ namespace netgen
 	    for (int i = 1; i <= top.GetNFaces(); i++)
 	      {
 		top.GetFaceVertices (i, v);
-		const Point3d & p1 = mesh->Point(v.Elem(1));
-		const Point3d & p2 = mesh->Point(v.Elem(2));
-		const Point3d & p3 = mesh->Point(v.Elem(3));
+		const Point3d & p1 = mesh->Point(v[0]);
+		const Point3d & p2 = mesh->Point(v[1]);
+		const Point3d & p3 = mesh->Point(v[2]);
 		Point3d p;
 		if (v.Size() == 3)
                   {
@@ -479,7 +479,7 @@ namespace netgen
                   }
 		else
                   {
-		    const Point3d & p4 = mesh->Point(v.Elem(4));
+		    const Point3d & p4 = mesh->Point(v[3]);
 		    Point3d hp1 = Center (p1, p2);
 		    Point3d hp2 = Center (p3, p4);
 		    p = Center (hp1, hp2);
@@ -595,7 +595,7 @@ namespace netgen
 
 		    for (int j = 1; j <= faces.Size(); j++)
 		      {
-			ElementFace & face = faces.Elem(j);
+			ElementFace & face = faces[j-1];
 			const Point3d & lp1 = mesh->Point (el.PNum(face.PNum(1)));
 			const Point3d & lp2 = mesh->Point (el.PNum(face.PNum(2)));
 			const Point3d & lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -2432,7 +2432,7 @@ namespace netgen
 		glBegin (GL_TRIANGLES);
 		for (j = 1; j <= faces.Size(); j++)
 		  {
-		    ElementFace & face = faces.Elem(j);
+		    ElementFace & face = faces[j-1];
 		    Point3d lp1 = mesh->Point (el.PNum(face.PNum(1)));
 		    Point3d lp2 = mesh->Point (el.PNum(face.PNum(2)));
 		    Point3d lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -2641,7 +2641,7 @@ namespace netgen
 		el.GetSurfaceTriangles (faces);
 		for (int j = 1; j <= faces.Size(); j++)
 		  {
-		    ElementFace & face = faces.Elem(j);
+		    ElementFace & face = faces[j-1];
 		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
 		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
 		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -2754,7 +2754,7 @@ namespace netgen
 		el.GetSurfaceTriangles (faces);
 		for (int j = 1; j <= faces.Size(); j++)
 		  {
-		    ElementFace & face = faces.Elem(j);
+		    ElementFace & face = faces[j-1];
 		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
 		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
 		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
@@ -3115,7 +3115,7 @@ namespace netgen
 
 		    for (int j = 1; j <= faces.Size(); j++)
 		      {
-			ElementFace & face = faces.Elem(j);
+			ElementFace & face = faces[j-1];
 			Point3d lp1 = mesh->Point (el.PNum(face.PNum(1)));
 			Point3d lp2 = mesh->Point (el.PNum(face.PNum(2)));
 			Point3d lp3 = mesh->Point (el.PNum(face.PNum(3)));

@@ -64,13 +64,13 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	  int nbi=BIname.Size();
 	  int found=0;
 	  for (int j = 1; j <= nbi; j++)
-	    if(BI == BIname.Get(j)) found = 1;
+	    if(BI == BIname[j-1]) found = 1;
 	  if( ! found ) BIname.Append(BI);	    	     
 	}
       
       outfile << "  " << BIname.Size() <<  " Boundary indicators:  ";
       for (int i =1 ; i <= BIname.Size(); i++)
-	outfile << BIname.Get(i) << " ";
+	outfile << BIname[i-1] << " ";
       outfile << "\n\n\n";
       
       outfile << "  Nodal coordinates and nodal boundary indicators,\n"
@@ -123,7 +123,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 			  int nbcsp=BCsinpoint.Size();
 			  int found = 0;
 			  for (int l = 1; l <= nbcsp; l++)
-			    if(BC == BCsinpoint.Get(l)) found = 1;
+			    if(BC == BCsinpoint[l-1]) found = 1;
 			  if( ! found ) BCsinpoint.Append(BC); 	    	     
 			}
 		    }
@@ -131,7 +131,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	      int nbcsp = BCsinpoint.Size();
 	      outfile << "[" << nbcsp << "] ";
 	      for (int j = 1; j <= nbcsp; j++)
-		outfile << BCsinpoint.Get(j) << " ";
+		outfile << BCsinpoint[j-1] << " ";
 	      outfile << "\n";
             }
           else outfile << "[0]\n";
@@ -228,13 +228,13 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	  int nbi=BIname.Size();
 	  int found=0;
 	  for (j = 1; j <= nbi; j++)
-	    if(BI == BIname.Get(j)) found = 1;
+	    if(BI == BIname[j-1]) found = 1;
 	  if( ! found ) BIname.Append(BI);	    	     
 	}
       
       outfile << "  " << BIname.Size() <<  " Boundary indicators:  ";
       for (i =1 ; i <= BIname.Size(); i++)
-	outfile << BIname.Get(i) << " ";
+	outfile << BIname[i-1] << " ";
       outfile << "\n\n\n";
       
       outfile << "  Nodal coordinates and nodal boundary indicators,\n"
@@ -270,7 +270,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 			  int nbcsp=BCsinpoint.Size();
 			  int found = 0;
 			  for (l = 1; l <= nbcsp; l++)
-			    if(BC == BCsinpoint.Get(l)) found = 1;
+			    if(BC == BCsinpoint[l-1]) found = 1;
 			  if( ! found ) BCsinpoint.Append(BC); 	    	     
 			}
 		    }
@@ -278,7 +278,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	      int nbcsp = BCsinpoint.Size();
 	      outfile << "[" << nbcsp << "] ";
 	      for (j = 1; j <= nbcsp; j++)
-		outfile << BCsinpoint.Get(j) << " ";
+		outfile << BCsinpoint[j-1] << " ";
 	      outfile << "\n";
             }
           else outfile << "[0]\n";

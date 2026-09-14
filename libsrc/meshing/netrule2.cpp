@@ -149,8 +149,8 @@ int netrule :: IsLineInFreeZone2 (const Point<2> & p1, const Point<2> & p2) cons
 
       for (int i = 1; i <= transfreezone.Size(); i++)
 	{
-	  bool left  = transfreezone.Get(i)[0] * nx + transfreezone.Get(i)[1] * ny + c <  1e-7;
-          bool right = transfreezone.Get(i)[0] * nx + transfreezone.Get(i)[1] * ny + c > -1e-7;
+	  bool left  = transfreezone[i-1][0] * nx + transfreezone[i-1][1] * ny + c <  1e-7;
+          bool right = transfreezone[i-1][0] * nx + transfreezone[i-1][1] * ny + c > -1e-7;
 	  if (!left) allleft = false;
 	  if (!right) allright = false;
 	}
@@ -165,9 +165,9 @@ int netrule :: ConvexFreeZone () const
   int n = transfreezone.Size();
   for (int i = 1; i <= n; i++)
     {
-      const bool counterclockwise = CCW (transfreezone.Get(i), 
-					 transfreezone.Get(i % n + 1),
-					 transfreezone.Get( (i+1) % n + 1 ),
+      const bool counterclockwise = CCW (transfreezone[i-1], 
+					 transfreezone[i % n],
+					 transfreezone[(i+1) % n],
 					 1e-7);
       //(*testout) << "ccw " << counterclockwise << endl << " p1 " << transfreezone.Get(i) << " p2 " << transfreezone.Get(i % n + 1)
       //		 << " p3 " << transfreezone.Get( (i+1) % n + 1 ) << endl;
@@ -191,10 +191,10 @@ float netrule :: CalcPointDist (int pi, const Point2d & p) const
 
 float netrule :: CalcLineError (int li, const Vec<2> & v) const
 {
-  float dx = v[0] - linevecs.Get(li)[0];
-  float dy = v[1] - linevecs.Get(li)[1];
+  float dx = v[0] - linevecs[li-1][0];
+  float dy = v[1] - linevecs[li-1][1];
 
-  const threefloat * ltf = &linetolerances.Get(li);
+  const threefloat * ltf = &linetolerances[li-1];
   return ltf->f1 * dx * dx + ltf->f2 * dx * dy + ltf->f3 * dy * dy;
 }
 } // namespace netgen

@@ -585,8 +585,8 @@ void STLGeometry :: STLDoctorConfirmEdge()
 	  int i;
 	  for (i = 1; i <= selectedmultiedge.Size(); i++)
 	    {
-	      int ap1 = selectedmultiedge.Get(i).i1;
-	      int ap2 = selectedmultiedge.Get(i).i2;
+	      int ap1 = selectedmultiedge[i-1].i1;
+	      int ap2 = selectedmultiedge[i-1].i2;
 	      edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus (ED_CONFIRMED);
 	    }
 	}
@@ -609,8 +609,8 @@ void STLGeometry :: STLDoctorCandidateEdge()
 	  int i;
 	  for (i = 1; i <= selectedmultiedge.Size(); i++)
 	    {
-	      int ap1 = selectedmultiedge.Get(i).i1;
-	      int ap2 = selectedmultiedge.Get(i).i2;
+	      int ap1 = selectedmultiedge[i-1].i1;
+	      int ap2 = selectedmultiedge[i-1].i2;
 	      edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus (ED_CANDIDATE);
 	    }
 	}
@@ -633,8 +633,8 @@ void STLGeometry :: STLDoctorExcludeEdge()
 	  int i;
 	  for (i = 1; i <= selectedmultiedge.Size(); i++)
 	    {
-	      int ap1 = selectedmultiedge.Get(i).i1;
-	      int ap2 = selectedmultiedge.Get(i).i2;
+	      int ap1 = selectedmultiedge[i-1].i1;
+	      int ap2 = selectedmultiedge[i-1].i2;
 	      edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus(ED_EXCLUDED);
 	    }
 	}
@@ -657,8 +657,8 @@ void STLGeometry :: STLDoctorUndefinedEdge()
 	  int i;
 	  for (i = 1; i <= selectedmultiedge.Size(); i++)
 	    {
-	      int ap1 = selectedmultiedge.Get(i).i1;
-	      int ap2 = selectedmultiedge.Get(i).i2;
+	      int ap1 = selectedmultiedge[i-1].i1;
+	      int ap2 = selectedmultiedge[i-1].i2;
 	      edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus(ED_UNDEFINED);
 	    }
 	}
@@ -718,7 +718,7 @@ twoint STLGeometry :: GetNearestSelectedDefinedEdge()
 
   for (i = 1; i <= vic.Size(); i++)
   {
-    const STLTriangle& t = GetTriangle(vic.Get(i));
+    const STLTriangle& t = GetTriangle(vic[i-1]);
     for (j = 1; j <= 3; j++)
       {
 	en = edgedata->GetEdgeNum(t.PNum(j),t.PNumMod(j+1));
@@ -863,7 +863,7 @@ void STLGeometry :: AddEdges(const NgArray<Point<3> >& eps)
   int error = 0;
   for (i = 1; i <= 2*ne; i++)
     {
-      p = eps.Get(i);
+      p = eps[i-1];
       Point3d pmin = p - Vec3d (gtol, gtol, gtol);
       Point3d pmax = p + Vec3d (gtol, gtol, gtol);
 	  
@@ -877,11 +877,11 @@ void STLGeometry :: AddEdges(const NgArray<Point<3> >& eps)
 	{
 	  error = 1;
 	  PrintError("edgepoint does not exist!");
-	  PrintMessage(5,"p=",Point3d(eps.Get(i)));
+	  PrintMessage(5,"p=",Point3d(eps[i-1]));
 	}
       else
 	{
-	  epsi.Append(pintersect.Get(1));
+	  epsi.Append(pintersect[0]);
 	}
     }
 
@@ -890,10 +890,10 @@ void STLGeometry :: AddEdges(const NgArray<Point<3> >& eps)
   int en;
   for (i = 1; i <= ne; i++)
     {
-      if (epsi.Get(2*i-1) == epsi.Get(2*i)) {PrintError("Edge with zero length!");}
+      if (epsi[2*i-2] == epsi[2*i-1]) {PrintError("Edge with zero length!");}
       else 
 	{
-	  en = edgedata->GetEdgeNum(epsi.Get(2*i-1),epsi.Get(2*i));
+	  en = edgedata->GetEdgeNum(epsi[2*i-2],epsi[2*i-1]);
 	  edgedata->Elem(en).SetStatus (ED_CONFIRMED);
 	}
     }
@@ -949,7 +949,7 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 	  for (i = 1; i <= units; i++)
 	    {
 	      inf >> nodenr;
-	      importlines.Elem(i) = nodenr;
+	      importlines[i-1] = nodenr;
 	      //	      (*testout) << nodenr << endl;
 	    }
 	}
@@ -971,7 +971,7 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 		inf.get (buf[j]);
 	      buf[12] = 0;
 
-	      importpoints.Elem(i).X(coord) = 1000 * atof (buf);
+	      importpoints[i-1].X(coord) = 1000 * atof (buf);
 	    }
 	}
     }
@@ -1000,9 +1000,9 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
   PrintMessage(7,"stl - bb: ",bb.PMin(), " - ", bb.PMax());
   
   Box3d ebb;
-  ebb.SetPoint (importpoints.Get(1));
+  ebb.SetPoint (importpoints[0]);
   for (i = 1; i <= importpoints.Size(); i++)
-    ebb.AddPoint (importpoints.Get(i));
+    ebb.AddPoint (importpoints[i-1]);
   PrintMessage(7,"edgep - bb: ", ebb.PMin(), " - ", ebb.PMax());
 
   NgArray<int> pintersect;
@@ -1019,24 +1019,24 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 
   for (i = 1; i <= importpoints.Size(); i++)
     {
-      Point3d p = importpoints.Get(i);
+      Point3d p = importpoints[i-1];
       Point3d pmin = p - Vec3d (gtol, gtol, gtol);
       Point3d pmax = p + Vec3d (gtol, gtol, gtol);
 	  
       ptree.GetIntersecting (pmin, pmax, pintersect);
       if (pintersect.Size() > 1)
 	{
-	  importpnums.Elem(i) = 0;
+	  importpnums[i-1] = 0;
 	  PrintError("Found too many points in epsilon-dist");
 	}
       else if (pintersect.Size() == 0)
 	{
-	  importpnums.Elem(i) = 0;
+	  importpnums[i-1] = 0;
 	  PrintError("Edgepoint does not exist!");
 	}
       else
 	{
-	  importpnums.Elem(i) = pintersect.Get(1);
+	  importpnums[i-1] = pintersect[0];
 	}
     }
 
@@ -1051,14 +1051,14 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 
       for (i = 1; i <= importlines.Size(); i++)
 	{
-	  int newp = importlines.Get(i);
-	  if (!importpnums.Get(abs(newp)))
+	  int newp = importlines[i-1];
+	  if (!importpnums[abs(newp)-1])
 	    newp = 0;
 
 	  if (oldp && newp)
 	    {
-	      int en = edgedata->GetEdgeNum(importpnums.Get(oldp), 
-					   importpnums.Get(abs(newp)));
+	      int en = edgedata->GetEdgeNum(importpnums[oldp-1], 
+					   importpnums[abs(newp)-1]);
 	      edgedata->Elem(en).SetStatus (ED_CONFIRMED);
 	    }
 	  
@@ -1150,7 +1150,7 @@ void STLGeometry :: StoreExternalEdges()
   int i;
   for (i = 1; i <= externaledges.Size(); i++)
     {
-      storedexternaledges.Append(externaledges.Get(i));      
+      storedexternaledges.Append(externaledges[i-1]);      
     }
 
 }
@@ -1172,7 +1172,7 @@ void STLGeometry :: RestoreExternalEdges()
   int i;
   for (i = 1; i <= storedexternaledges.Size(); i++)
     {
-      externaledges.Append(storedexternaledges.Get(i));      
+      externaledges.Append(storedexternaledges[i-1]);      
     }
 
 }
@@ -1377,7 +1377,7 @@ void STLGeometry :: DeleteExternalEdgeInVicinity()
   
   for (i = 1; i <= GetNT(); i++)
     {
-      if (vicinity.Elem(i))
+      if (vicinity[i-1])
 	{
 	  for (j = 1; j <= 3; j++)
 	    {
@@ -1427,7 +1427,7 @@ void STLGeometry :: DeleteExternalEdge(int ap1, int ap2)
 	  (GetExternalEdge(i).i1 == ap2 && GetExternalEdge(i).i2 == ap1)) {found = 1;};
       if (found && i < NOExternalEdges())
 	{
-	  externaledges.Elem(i) = externaledges.Get(i+1);
+	  externaledges[i-1] = externaledges[i];
 	}
     }
   if (!found) {PrintWarning("edge not found");}
@@ -1731,10 +1731,10 @@ void STLGeometry :: GetVicinity(int starttrig, int size, NgArray<int>& vic)
   int i;
   for (i = 1; i <= vicarray.Size(); i++)
     {
-      vicarray.Elem(i) = 0;
+      vicarray[i-1] = 0;
     }
  
-  vicarray.Elem(starttrig) = 1;
+  vicarray[starttrig-1] = 1;
   
   int j = 0,k;
 
@@ -1751,18 +1751,18 @@ void STLGeometry :: GetVicinity(int starttrig, int size, NgArray<int>& vic)
 	{
 	  for (k = 1; k <= NONeighbourTrigs(i); k++)
 	    {
-	      int nbtrig = NeighbourTrig(list1.Get(i),k);
-	      if (nbtrig && vicarray.Get(nbtrig) == 0)
+	      int nbtrig = NeighbourTrig(list1[i-1],k);
+	      if (nbtrig && vicarray[nbtrig-1] == 0)
 		{
 		  list2.Append(nbtrig);
-		  vicarray.Elem(nbtrig) = 1;
+		  vicarray[nbtrig-1] = 1;
 		}
 	    }
 	}
       list1.SetSize(0);
       for (i = 1; i <= list2.Size(); i++)
 	{
-	  list1.Append(list2.Get(i));
+	  list1.Append(list2[i-1]);
 	}
       list2.SetSize(0);
     }
@@ -1770,7 +1770,7 @@ void STLGeometry :: GetVicinity(int starttrig, int size, NgArray<int>& vic)
   vic.SetSize(0);
   for (i = 1; i <= vicarray.Size(); i++)
     {
-      if (vicarray.Get(i)) {vic.Append(i);}
+      if (vicarray[i-1]) {vic.Append(i);}
     }
 }
 
@@ -1785,10 +1785,10 @@ void STLGeometry :: CalcVicinity(int starttrig)
   int i;
   for (i = 1; i <= vicinity.Size(); i++)
     {
-      vicinity.Elem(i) = 0;
+      vicinity[i-1] = 0;
     }
  
-  vicinity.Elem(starttrig) = 1;
+  vicinity[starttrig-1] = 1;
   
   int j = 0,k;
 
@@ -1806,11 +1806,11 @@ void STLGeometry :: CalcVicinity(int starttrig)
 	{
 	  for (k = 1; k <= NONeighbourTrigs(i); k++)
 	    {
-	      int nbtrig = NeighbourTrig(list1.Get(i),k);
-	      if (nbtrig && vicinity.Get(nbtrig) == 0)
+	      int nbtrig = NeighbourTrig(list1[i-1],k);
+	      if (nbtrig && vicinity[nbtrig-1] == 0)
 		{
 		  list2.Append(nbtrig);
-		  vicinity.Elem(nbtrig) = 1;
+		  vicinity[nbtrig-1] = 1;
 		  //cnt++;
 		}
 	    }
@@ -1818,7 +1818,7 @@ void STLGeometry :: CalcVicinity(int starttrig)
       list1.SetSize(0);
       for (i = 1; i <= list2.Size(); i++)
 	{
-	  list1.Append(list2.Get(i));
+	  list1.Append(list2[i-1]);
 	}
       list2.SetSize(0);
     }
@@ -1829,7 +1829,7 @@ int STLGeometry :: Vicinity(int trig) const
 {
   if (trig <= vicinity.Size() && trig >=1)
     {
-      return vicinity.Get(trig);
+      return vicinity[trig-1];
     }
   else {PrintSysError("In STLGeometry::Vicinity");}
   return 0;
@@ -2077,7 +2077,7 @@ int STLGeometry :: IsMarkedTrig(int trig) const
 {
   if (trig <= markedtrigs.Size() && trig >=1)
     {
-      return markedtrigs.Get(trig);
+      return markedtrigs[trig-1];
     }
   else {PrintSysError("In STLGeometry::IsMarkedTrig");}
 
@@ -2088,7 +2088,7 @@ void STLGeometry :: SetMarkedTrig(int trig, int num)
 {
   if (trig <= markedtrigs.Size() && trig >=1)
     {
-      markedtrigs.Elem(trig) = num;
+      markedtrigs[trig-1] = num;
     }
   else {PrintSysError("In STLGeometry::SetMarkedTrig");}
 }
@@ -2157,8 +2157,8 @@ void STLGeometry :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrias)
 
   for (i = 1; i <= np; i++)
     {
-      normal_cnt.Elem(i) = 0;
-      normals.Elem(i) = Vec3d (0,0,0);
+      normal_cnt[i-1] = 0;
+      normals[i-1] = Vec3d (0,0,0);
     }
 
   for(i = 1; i <= GetNT(); i++)
@@ -2172,7 +2172,7 @@ void STLGeometry :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrias)
 	{
 	  int pi = GetTriangle(i).PNum(k);
 	  
-	  normal_cnt.Elem(pi)++;
+	  normal_cnt[pi-1]++;
 	  SetNormal(pi, GetNormal(pi) + n);
 	}
     } 
@@ -2180,7 +2180,7 @@ void STLGeometry :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrias)
   //normalize the normals
   for (i = 1; i <= GetNP(); i++)
     {
-      SetNormal(i,1./(double)normal_cnt.Get(i)*GetNormal(i));
+      SetNormal(i,1./(double)normal_cnt[i-1]*GetNormal(i));
     }
 
   trigsconverted = 1;
@@ -2189,13 +2189,13 @@ void STLGeometry :: InitSTLGeometry(const NgArray<STLReadTriangle> & readtrias)
   markedtrigs.SetSize(GetNT());
   for (i = 1; i <= GetNT(); i++)
     {
-      markedtrigs.Elem(i) = 0;
-      vicinity.Elem(i) = 1;
+      markedtrigs[i-1] = 0;
+      vicinity[i-1] = 1;
     }
 
   ha_points.SetSize(GetNP());
   for (i = 1; i <= GetNP(); i++)
-    ha_points.Elem(i) = 0;
+    ha_points[i-1] = 0;
 
   calcedgedataanglesnew = 0;
   edgedatastored = 0;
@@ -2264,7 +2264,7 @@ int STLGeometry :: CheckGeometryOverlapping()
 	
                      for (int j = 1; j <= inters.Size(); j++)
                        {
-                         const STLTriangle & tri2 = GetTriangle(inters.Get(j));
+                         const STLTriangle & tri2 = GetTriangle(inters[j-1]);
 	    
                          const Point<3> *trip1[3], *trip2[3];	
                          Point<3> hptri1[3], hptri2[3];
@@ -2289,9 +2289,9 @@ int STLGeometry :: CheckGeometryOverlapping()
                              lock_guard<mutex> guard(inters_mutex);
                              {
                                oltrigs++;
-                               PrintMessage(5,"Intersecting Triangles: trig ",i," with ",inters.Get(j),"!");
+                               PrintMessage(5,"Intersecting Triangles: trig ",i," with ",inters[j-1],"!");
                                SetMarkedTrig(i, 1);
-                               SetMarkedTrig(inters.Get(j), 1);
+                               SetMarkedTrig(inters[j-1], 1);
                              }
                            }
                        }
@@ -2420,7 +2420,7 @@ int STLGeometry :: CheckGeometryOverlapping()
 void STLGeometry :: SetLineEndPoint(int pn) 
 {
   if (pn <1 || pn > lineendpoints.Size()) {PrintSysError("Illegal pnum in SetLineEndPoint!!!"); return; }
-  lineendpoints.Elem(pn) = 1;
+  lineendpoints[pn-1] = 1;
 }
 
 int STLGeometry :: IsLineEndPoint(int pn) 
@@ -2428,7 +2428,7 @@ int STLGeometry :: IsLineEndPoint(int pn)
   //  return 0;
   if (pn <1 || pn > lineendpoints.Size()) 
     {PrintSysError("Illegal pnum in IsLineEndPoint!!!"); return 0;}
-  return lineendpoints.Get(pn);
+  return lineendpoints[pn-1];
 }
 
 void STLGeometry :: ClearLineEndPoints()
@@ -2437,7 +2437,7 @@ void STLGeometry :: ClearLineEndPoints()
   int i;
   for (i = 1; i <= GetNP(); i++)
     {
-      lineendpoints.Elem(i) = 0;
+      lineendpoints[i-1] = 0;
     }
 }
 
@@ -2764,32 +2764,32 @@ void STLGeometry :: AddFaceEdges()
 
   for (int i = 1; i <= GetNOFaces(); i++)
     {
-      edgecnt.Elem(i) = 0;
-      chartindex.Elem(i) = 0;
+      edgecnt[i-1] = 0;
+      chartindex[i-1] = 0;
     }
 
   for (int i = 1; i <= GetNT(); i++)
     {
       int fn = GetTriangle(i).GetFaceNum();
-      if (!chartindex.Get(fn)) {chartindex.Elem(fn) = GetChartNr(i);}
+      if (!chartindex[fn-1]) {chartindex[fn-1] = GetChartNr(i);}
       for (int j = 1; j <= 3; j++)
 	{
-	  edgecnt.Elem(fn) += GetNEPP(GetTriangle(i).PNum(j));
+	  edgecnt[fn-1] += GetNEPP(GetTriangle(i).PNum(j));
 	}
     }
 
   for (int i = 1; i <= GetNOFaces(); i++)
     {
-      if (!edgecnt.Get(i)) {PrintMessage(5,"Face", i, " has no edge!");}
+      if (!edgecnt[i-1]) {PrintMessage(5,"Face", i, " has no edge!");}
     }
   
   int changed = 0;
   STLPointId ap1, ap2;
   for (int i = 1; i <= GetNOFaces(); i++)
     {
-      if (!edgecnt.Get(i))
+      if (!edgecnt[i-1])
       {
-	const STLChart& c = GetChart(chartindex.Get(i));
+	const STLChart& c = GetChart(chartindex[i-1]);
         // bool foundone = false;
         int longest_ap1 = -1, longest_ap2 = -1;
         double maxlen = -1;
@@ -2799,7 +2799,7 @@ void STLGeometry :: AddFaceEdges()
 	    for (int k = 1; k <= 3; k++)
 	      {
 		int nt = NeighbourTrig(c.GetChartTrig1(j),k);
-		if (GetChartNr(nt) != chartindex.Get(i))
+		if (GetChartNr(nt) != chartindex[i-1])
 		  {
 		    t1.GetNeighbourPoints(GetTriangle(nt),ap1,ap2);
                     // AddEdge(ap1,ap2);
@@ -2879,7 +2879,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
   PrintMessage(5, "added ", ecnt, " mesh_points due to edge corner angle (", 
 	       stlparam.edgecornerangle, " degree)");
 
-  for (i = 1; i <= GetNE(); i++) {we.Elem(i) = 0;}
+  for (i = 1; i <= GetNE(); i++) {we[i-1] = 0;}
 
   while(edgecnt < GetNE())
     {
@@ -2896,7 +2896,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
       //find a starting edge at point with 1 or more than 2 edges or at lineendpoint
       while (!found && j<=GetNE())
 	{
-	  if (!we.Get(j))
+	  if (!we[j-1])
 	    {
 	      if (GetNEPP(GetEdge(j).PNum(1)) != 2 || IsLineEndPoint(GetEdge(j).PNum(1)))
 		{
@@ -2936,7 +2936,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
 	  line->AddLeftTrig(GetEdge(starte).RightTrig());
 	  line->AddRightTrig(GetEdge(starte).LeftTrig());
 	}
-      edgecnt++; we.Elem(starte) = 1;
+      edgecnt++; we[starte-1] = 1;
 
       //add segments to line as long as segments other than starting edge are found or lineendpoint is reached 
       found = 1;
@@ -2954,7 +2954,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
 	      starte = GetEdgePP(fp,1+other);
 
 	      //falls ring -> aufhoeren !!!!!!!!!!!
-	      if (!we.Elem(starte))
+	      if (!we[starte-1])
 		{
 		  found = 1;
 		  rev = 0;
@@ -2972,7 +2972,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
 		      line->AddLeftTrig(GetEdge(starte).RightTrig());
 		      line->AddRightTrig(GetEdge(starte).LeftTrig());
 		    }
-		  edgecnt++; we.Elem(starte) = 1;
+		  edgecnt++; we[starte-1] = 1;
 		}
 	    }     
 	}
@@ -3032,14 +3032,14 @@ int STLGeometry :: GetNOBodys()
   NgArray<int> bodynum(GetNT());
 
   for (i = 1; i <= GetNT(); i++)
-    bodynum.Elem(i)=0;
+    bodynum[i-1]=0;
 
 
   while (markedtrigs1 < GetNT())
     {
       for (i = starttrig; i <= GetNT(); i++)
 	{
-	  if (!bodynum.Get(i))
+	  if (!bodynum[i-1])
 	    {
 	      starttrig = i;
 	      break;
@@ -3050,7 +3050,7 @@ int STLGeometry :: GetNOBodys()
       NgArray<int> nextlist;
       bodycnt++;
       markedtrigs1++;
-      bodynum.Elem(starttrig) = bodycnt;
+      bodynum[starttrig-1] = bodycnt;
       todolist.Append(starttrig);
 
       while(todolist.Size())
@@ -3058,13 +3058,13 @@ int STLGeometry :: GetNOBodys()
 	  for (i = 1; i <= todolist.Size(); i++)
 	    {
 	      //const STLTriangle& tt = GetTriangle(todolist.Get(i));
-	      for (k = 1; k <= NONeighbourTrigs(todolist.Get(i)); k++)
+	      for (k = 1; k <= NONeighbourTrigs(todolist[i-1]); k++)
 		{
-		  nnt = NeighbourTrig(todolist.Get(i),k);
-		  if (!bodynum.Get(nnt))
+		  nnt = NeighbourTrig(todolist[i-1],k);
+		  if (!bodynum[nnt-1])
 		    {
 		      nextlist.Append(nnt);
-		      bodynum.Elem(nnt) = bodycnt;
+		      bodynum[nnt-1] = bodycnt;
 		      markedtrigs1++;
 		    }
 		}
@@ -3073,7 +3073,7 @@ int STLGeometry :: GetNOBodys()
 	  todolist.SetSize(0);
 	  for (i = 1; i <= nextlist.Size(); i++)
 	    {
-	      todolist.Append(nextlist.Get(i));
+	      todolist.Append(nextlist[i-1]);
 	    }
 	  nextlist.SetSize(0);	  
 	}
@@ -3120,10 +3120,10 @@ void STLGeometry :: CalcFaceNums()
 	{
 	  for (i = 1; i <= todolist.Size(); i++)
 	    {
-	      const STLTriangle& tt = GetTriangle(todolist.Get(i));
-	      for (k = 1; k <= NONeighbourTrigs(todolist.Get(i)); k++)
+	      const STLTriangle& tt = GetTriangle(todolist[i-1]);
+	      for (k = 1; k <= NONeighbourTrigs(todolist[i-1]); k++)
 		{
-		  nnt = NeighbourTrig(todolist.Get(i),k);
+		  nnt = NeighbourTrig(todolist[i-1],k);
 		  STLTriangle& nt = GetTriangle(nnt);
 		  if (!nt.GetFaceNum())
 		    {
@@ -3141,7 +3141,7 @@ void STLGeometry :: CalcFaceNums()
 	  todolist.SetSize(0);
 	  for (i = 1; i <= nextlist.Size(); i++)
 	    {
-	      todolist.Append(nextlist.Get(i));
+	      todolist.Append(nextlist[i-1]);
 	    }
 	  nextlist.SetSize(0);	  
 	}
@@ -3156,7 +3156,7 @@ void STLGeometry :: ClearSpiralPoints()
   int i;
   for (i = 1; i <= spiralpoints.Size(); i++)
     {
-      spiralpoints.Elem(i) = 0;
+      spiralpoints[i-1] = 0;
     }
 }
 
@@ -3323,7 +3323,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 	  for (int k = 1; k <= 3; k++)
 	    {
 	      pn = tt.PNum(k);
-	      if (chartpointchecked.Get(pn) == i)
+	      if (chartpointchecked[pn-1] == i)
 		{continue;}
 	      
 	      int checkpoint = 0;
@@ -3335,7 +3335,7 @@ void STLGeometry :: AddConeAndSpiralEdges(const STLParameters& stlparam)
 		}
 	      if (checkpoint)
 		{
-		  chartpointchecked.Elem(pn) = i;
+		  chartpointchecked[pn-1] = i;
 
 		  int worked = 0;
 		  int spworked = 0;
@@ -3667,7 +3667,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
     NgArray<int> acttrigs(GetNT());
     acttrigs = -1;
     for (int j = 1; j <= chart.GetNT(); j++)
-      acttrigs.Elem(chart.GetTrig1(j)) = chartnumber;
+      acttrigs[chart.GetTrig1(j)-IndexBASE<STLTrigId>()] = chartnumber;
 
     for (int j = 1; j <= chart.GetNT(); j++)
     {
@@ -3676,7 +3676,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
       for (int k = 1; k <= 3; k++)
       {
         int nt = NeighbourTrig(t,k);
-        if (acttrigs.Get(nt) != chartnumber)
+        if (acttrigs[nt-1] != chartnumber)
         {
           STLPointId np1, np2;
           tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);

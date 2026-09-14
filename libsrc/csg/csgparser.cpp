@@ -932,7 +932,7 @@ namespace netgen
 		    geom->GetSolid(surfname)->GetSurfaceIndices(si);
 		    int tlonr = 
 		      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name),
-					       (Surface*)geom->GetSurface(si.Get(1)));
+					       (Surface*)geom->GetSurface(si[0]));
 		    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
 		    if (flags.NumListFlagDefined ("col"))
 		      {
@@ -1018,8 +1018,8 @@ namespace netgen
 			(new PeriodicIdentification 
 			 (geom->GetNIdentifications()+1,
 			  *geom,
-			  geom->GetSurface (si1.Get(1)),
-			  geom->GetSurface (si2.Get(1))));
+			  geom->GetSurface (si1[0]),
+			  geom->GetSurface (si2[0])));
 		      break;
 		    }
 

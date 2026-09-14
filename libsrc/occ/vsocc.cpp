@@ -95,13 +95,13 @@ namespace netgen
       glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcoledge);
       glLineWidth (1.0f);
 
-      if (vispar.occshowedges) glCallList (linelists.Get(1));
-      if (vispar.occshowsurfaces) glCallList (trilists.Get(1));
+      if (vispar.occshowedges) glCallList (linelists[0]);
+      if (vispar.occshowsurfaces) glCallList (trilists[0]);
 
       glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcolhiedge);
       glLineWidth (5.0f);
 
-      if (vispar.occshowedges) glCallList (linelists.Get(2));
+      if (vispar.occshowedges) glCallList (linelists[1]);
 
       for (int i = 1; i <= occgeometry->vmap.Extent(); i++)
       if (occgeometry->vvispar[i-1].IsHighlighted())
@@ -419,11 +419,11 @@ namespace netgen
       // Clear lists
 
       for (int i = 1; i <= linelists.Size(); i++)
-      glDeleteLists (linelists.Elem(i), 1);
+      glDeleteLists (linelists[i-1], 1);
       linelists.SetSize(0);
 
       for (int i = 1; i <= trilists.Size(); i++)
-      glDeleteLists (trilists.Elem(i), 1);
+      glDeleteLists (trilists[i-1], 1);
       trilists.SetSize(0);
 
       // Total wireframe
@@ -701,7 +701,7 @@ namespace netgen
          glEnd ();
       }
 
-      glCallList (trilists.Get(1));
+      glCallList (trilists[0]);
 
       glDisable (GL_POLYGON_OFFSET_FILL);
 

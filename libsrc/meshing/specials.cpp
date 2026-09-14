@@ -27,10 +27,10 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   for (i = 1; i <= nse; i++)
     {
       const Element2d & sel = othermesh.SurfaceElement(i);
-      sel.GetBox(othermesh.Points(), otherbounds.Elem(i));
+      sel.GetBox(othermesh.Points(), otherbounds[i-1]);
 
       double loch = othermesh.GetH (othermesh.Point (sel.PNum(1)));
-      otherbounds.Elem(i).Increase(loch);
+      otherbounds[i-1].Increase(loch);
       if (loch > maxh) maxh = loch;
     }
 
@@ -53,7 +53,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
       if (box.Intersect(otherbox))
 	{
 	  for (j = 1; j <= nse && !remove; j++)
-	    if (box.Intersect(otherbounds.Get(j)))
+	    if (box.Intersect(otherbounds[j-1]))
 	      remove = 1;
 	}
 

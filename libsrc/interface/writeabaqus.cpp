@@ -169,17 +169,17 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	  mesh.GetIdentifications().GetPairs (i, pairs);
 	  for (auto [master_pi, minion_pi] : pairs)
 	    if (master_pi == masternode)
-	      minions.Elem(i) = minion_pi;
-	  cout << "minion(" << i << ") = " << minions.Get(i)
-	       << " = " << mesh[minions.Get(i)] << endl;
+	      minions[i-1] = minion_pi;
+	  cout << "minion(" << i << ") = " << minions[i-1]
+	       << " = " << mesh[minions[i-1]] << endl;
 	}
 	  
 	  
       outfile << "**\n"
 	      << "*NSET,NSET=CTENODS\n"
-	      << minions.Get(1) << ", " 
-	      << minions.Get(2) << ", " 
-	      << minions.Get(3) << endl;
+	      << minions[0] << ", " 
+	      << minions[1] << ", " 
+	      << minions[2] << endl;
 
 	  
       outfile << "**\n"
@@ -193,7 +193,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	      << "*BOUNDARY, OP=NEW\n";
       for (int j = 1; j <= 3; j++)
 	{
-	  Vec3d v(mesh[masternode], mesh[minions.Get(j)]);
+	  Vec3d v(mesh[masternode], mesh[minions[j-1]]);
 	  double vlen = v.Length();
 	  int dir = 0;
 	  if (fabs (v.X()) > 0.9 * vlen) dir = 2;
@@ -201,7 +201,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	  if (fabs (v.Z()) > 0.9 * vlen) dir = 1;
 	  if (!dir)
 	    cout << "ERROR: Problem with rigid body constraints" << endl;
-	  outfile << minions.Get(j) << ", " << dir << ",,    0.\n";
+	  outfile << minions[j-1] << ", " << dir << ",,    0.\n";
 	}
 
       outfile << "**\n"
@@ -226,7 +226,7 @@ void WriteAbaqusFormat (const Mesh & mesh,
 		    mpc << "4" << "\n";
 		    mpc << minion_pi << "," << k << ", -1.0, ";
 		    mpc << master_pi << "," << k << ", 1.0, ";
-		    mpc << minions.Get(i) << "," << k << ", 1.0, ";
+		    mpc << minions[i-1] << "," << k << ", 1.0, ";
 		    mpc << masternode << "," << k << ", -1.0 \n";
 		  }
 	      }

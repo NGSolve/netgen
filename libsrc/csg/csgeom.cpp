@@ -805,7 +805,7 @@ namespace netgen
 	    toplevelobjects[i]->GetSurface() == surf)
 	  {
 	    delete toplevelobjects[i];
-	    toplevelobjects.DeleteElement (i+1);
+	    toplevelobjects.DeleteElement(i);
 	    changeval++;
 	    break;
 	  }

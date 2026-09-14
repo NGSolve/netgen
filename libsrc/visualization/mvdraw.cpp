@@ -995,8 +995,8 @@ namespace netgen
 	else
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
 
-	LocalPointIndex pi1 = loclines.Get(i)[0];
-	LocalPointIndex pi2 = loclines.Get(i)[1];
+	LocalPointIndex pi1 = loclines[i-1][0];
+	LocalPointIndex pi2 = loclines[i-1][1];
 
 	if (pi1.IsValid() && pi2.IsValid())
 	  {
@@ -1044,8 +1044,8 @@ namespace netgen
 	if (i == 1)
 	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
 
-	LocalPointIndex pi1 = loclines.Get(i)[0];
-	LocalPointIndex pi2 = loclines.Get(i)[1];
+	LocalPointIndex pi1 = loclines[i-1][0];
+	LocalPointIndex pi2 = loclines[i-1][1];
 
 	if (pi1.IsValid() && pi2.IsValid())
 	  {

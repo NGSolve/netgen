@@ -148,9 +148,9 @@ void netrule :: LoadRule (istream & ist)
 	      linevecs.Append (points[lin[1]] - points[lin[0]]);
 	      noldl++;
 	      linetolerances.SetSize (noldl);
-	      linetolerances.Elem(noldl).f1 = 0;
-	      linetolerances.Elem(noldl).f2 = 0;
-	      linetolerances.Elem(noldl).f3 = 0;
+	      linetolerances[noldl-1].f1 = 0;
+	      linetolerances[noldl-1].f2 = 0;
+	      linetolerances[noldl-1].f3 = 0;
 
 	      //(*testout) << "mapl1" << endl; 
 	      ist >> ch;
@@ -159,11 +159,11 @@ void netrule :: LoadRule (istream & ist)
 		  //(*testout) << "working on character \""<<ch<<"\""<< endl;
 		  if (ch == '{')
 		    {
-		      ist >> linetolerances.Elem(noldl).f1;
+		      ist >> linetolerances[noldl-1].f1;
 		      ist >> ch;  // ','
-		      ist >> linetolerances.Elem(noldl).f2;
+		      ist >> linetolerances[noldl-1].f2;
 		      ist >> ch;  // ','
-		      ist >> linetolerances.Elem(noldl).f3;
+		      ist >> linetolerances[noldl-1].f3;
 		      ist >> ch;  // '}'
 		    }
 		  else if (ch == 'd')
@@ -303,7 +303,7 @@ void netrule :: LoadRule (istream & ist)
 	      ist >> p[1];
 	      ist >> ch;    // ')'
 
-	      freezonelimit.Elem(freepi) = p;
+	      freezonelimit[freepi-1] = p;
 	  
 	      ist >> ch;
 	      while (ch != ';')
@@ -464,9 +464,9 @@ void netrule :: LoadRule (istream & ist)
 
     for (i = 1; i <= noldl; i++)
       {
-	lnearness.Elem(i) = 0;
+	lnearness[i-1] = 0;
 	for (j = 1; j <= 2; j++)
-	  lnearness.Elem(i) += pnearness[GetPointNr (i, j)];
+	  lnearness[i-1] += pnearness[GetPointNr (i, j)];
       }
   }
 

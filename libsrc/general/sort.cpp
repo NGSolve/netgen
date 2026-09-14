@@ -25,12 +25,12 @@ namespace netgen
     order.SetSize (n);
 
     for (i = 1; i <= n; i++)
-      order.Elem(i) = i;
+      order[i-1] = i;
     for (i = 1; i <= n-1; i++)
       for (j = 1; j <= n-1; j++)
-	if (values.Get(order.Elem(j)) > values.Get(order.Elem(j+1)))
+	if (values[order[j-1]-1] > values[order[j]-1])
 	  {
-	    Swap (order.Elem(j), order.Elem(j+1));
+	    Swap (order[j-1], order[j]);
 	  }
   }
 
@@ -44,16 +44,16 @@ namespace netgen
 
     i = left;
     j = right;
-    midval = values.Get(order.Get((i+j)/2));
+    midval = values[order[(i+j)/2-1]-1];
   
     do
       {
-	while (values.Get(order.Get(i)) < midval) i++;
-	while (midval < values.Get(order.Get(j))) j--;
+	while (values[order[i-1]-1] < midval) i++;
+	while (midval < values[order[j-1]-1]) j--;
       
 	if (i <= j)
 	  {
-	    Swap (order.Elem(i), order.Elem(j));
+	    Swap (order[i-1], order[j-1]);
 	    i++; j--;
 	  }
       }
@@ -68,7 +68,7 @@ namespace netgen
     int i, n = values.Size();
     order.SetSize (n);
     for (i = 1; i <= n; i++)
-      order.Elem(i) = i;
+      order[i-1] = i;
 
     QuickSortRec (values, order, 1, order.Size());
   }

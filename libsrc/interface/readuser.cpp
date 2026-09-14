@@ -583,7 +583,7 @@ namespace netgen
           {
             Point3d p(0,0,0);
             inpkt >> p.X() >> p.Y() >> p.Z()
-                  >> bcprop >> values.Elem(i);
+                  >> bcprop >> values[i-1];
             mesh.AddPoint (p);
           }      
 
@@ -624,7 +624,7 @@ namespace netgen
 
             if (bcprop == 1)
               {
-                if (values.Get(p1) < -69999)
+                if (values[p1-1] < -69999)
                   el.SetIndex(1);
                 else
                   el.SetIndex(2);

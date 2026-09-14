@@ -700,9 +700,9 @@ namespace netgen
 	  if (in1 && in2)
 	    {
 	      for (i = 1; i <= bounds1.Size(); i++)
-		bounds.Append (bounds1.Get(i));
+		bounds.Append (bounds1[i-1]);
 	      for (i = 1; i <= bounds2.Size(); i++)
-		bounds.Append (bounds2.Get(i));
+		bounds.Append (bounds2[i-1]);
 	    }
 	  in = (in1 && in2);
 	  strin = (strin1 && strin2);
@@ -719,9 +719,9 @@ namespace netgen
 	  if (!strin1 && !strin2)
 	    {
 	      for (i = 1; i <= bounds1.Size(); i++)
-		bounds.Append (bounds1.Get(i));
+		bounds.Append (bounds1[i-1]);
 	      for (i = 1; i <= bounds2.Size(); i++)
-		bounds.Append (bounds2.Get(i));
+		bounds.Append (bounds2[i-1]);
 	    }
 	  in = (in1 || in2);
 	  strin = (strin1 || strin2);

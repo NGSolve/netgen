@@ -156,21 +156,21 @@ private:
 public:
   STLLine(const STLGeometry * ageometry);
   void AddPoint(int i) {pts.Append(i);}
-  int PNum(int i) const {return pts.Get(i);}
+  int PNum(int i) const {return pts[i-1];}
   int NP() const {return pts.Size();}
   int GetNS() const;
   void GetSeg(int nr, int& p1, int& p2) const;
   double GetSegLen(const Array<Point<3>,STLPointId>& ap, int nr) const;
   int GetLeftTrig(int nr) const;
   int GetRightTrig(int nr) const;
-  double GetDist(int nr) const { return dists.Get(nr);};
+  double GetDist(int nr) const { return dists[nr-1];};
   void GetBoundingBox (const Array<Point<3>,STLPointId> & ap, Box<3> & box) const;
 
   void AddLeftTrig(int nr) {lefttrigs.Append(nr);}
   void AddRightTrig(int nr) {righttrigs.Append(nr);}
   void AddDist (double dist) {dists.Append(dist); }
-  int StartP() const {return pts.Get(1);}
-  int EndP() const {return pts.Get(pts.Size());}
+  int StartP() const {return pts[0];}
+  int EndP() const {return pts[pts.Size()-1];}
     
   double GetLength(const Array<Point<3>,STLPointId>& ap) const;
 

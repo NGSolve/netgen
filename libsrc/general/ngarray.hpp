@@ -124,28 +124,6 @@ namespace netgen
 
 
 
-    /// Access array, one-based  (old fashioned)
-    T & Elem (int i)
-    {
-      NETGEN_CHECK_RANGE(i,1,size+1);
-      return ((T*)data)[i-1]; 
-    }
-  
-    /// Access array, one-based  (old fashioned)
-    // [[deprecated("Use operator[] instead")]]    
-    const T & Get (int i) const 
-    {
-      NETGEN_CHECK_RANGE(i,1,size+1);
-      return ((const T*)data)[i-1]; 
-    }
-
-    /// Access array, one-based  (old fashioned)
-    void Set (int i, const T & el)
-    { 
-      NETGEN_CHECK_RANGE(i,1,size+1);
-      ((T*)data)[i-1] = el; 
-    }
-
     /// access first element
     T & First () const
     {
@@ -335,11 +313,11 @@ namespace netgen
     }
 
 
-    /// Delete element i (1-based). Move last element to position i.
+    /// Delete element i. Move last element to position i.
     void DeleteElement (TIND i)
     {
-      NETGEN_CHECK_RANGE(i,1,size+1);
-      data[i-1] = std::move(data[size-1]);
+      NETGEN_CHECK_RANGE(i,0,size);
+      data[i] = std::move(data[size-1]);
       size--;
     }
 

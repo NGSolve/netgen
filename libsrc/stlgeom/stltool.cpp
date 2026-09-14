@@ -17,7 +17,7 @@ int AddPointIfNotExists(NgArray<Point3d>& ap, const Point3d& p, double eps)
 {
   double eps2 = sqr(eps);
   for (int i = 1; i <= ap.Size(); i++)
-    if (Dist2(ap.Get(i),p) <= eps2 ) 
+    if (Dist2(ap[i-1],p) <= eps2 ) 
       return i;
   ap.Append(p);
   return ap.Size();
@@ -730,9 +730,9 @@ void STLChart :: MoveToOuterChart(const NgArray<int>& trigs)
   if (!trigs.Size()) return;
   for (int i = 1; i <= trigs.Size(); i++)
     {
-      if (charttrigs[trigs.Get(i)-1] != -1) 
-	AddOuterTrig(charttrigs[trigs.Get(i)-1]);
-      charttrigs[trigs.Get(i)-1] = -1;
+      if (charttrigs[trigs[i-1]-1] != -1) 
+	AddOuterTrig(charttrigs[trigs[i-1]-1]);
+      charttrigs[trigs[i-1]-1] = -1;
     }
   DelChartTrigs(trigs);
 }
@@ -743,7 +743,7 @@ void STLChart :: DelChartTrigs(const NgArray<int>& trigs)
   if (!trigs.Size()) return;
 
   for (int i = 1; i <= trigs.Size(); i++)
-    charttrigs[trigs.Get(i)-1] = -1;
+    charttrigs[trigs[i-1]-1] = -1;
 
   int cnt = 0;
   for (int i = 1; i <= charttrigs.Size(); i++)

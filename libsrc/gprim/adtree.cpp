@@ -157,8 +157,8 @@ namespace netgen
 
   void ADTree :: Reset ()
   {
-    stack.Elem(1) = root;
-    stackdir.Elem(1) = 0;
+    stack[0] = root;
+    stackdir[0] = 0;
     stackindex = 1;
   }
 
@@ -173,8 +173,8 @@ namespace netgen
 
     do 
       {
-	node = stack.Get(stackindex);
-	dir = stackdir.Get(stackindex);
+	node = stack[stackindex-1];
+	dir = stackdir[stackindex-1];
 	stackindex --;
 
 	if (criterion -> Eval(node))
@@ -186,14 +186,14 @@ namespace netgen
 	    if (node -> left && criterion -> Eval (node->left))
 	      {
 		stackindex ++;
-		stack.Elem(stackindex) = node -> left;
-		stackdir.Elem(stackindex) = ndir;
+		stack[stackindex-1] = node -> left;
+		stackdir[stackindex-1] = ndir;
 	      }
 	    if (node->right && criterion -> Eval (node -> right))
 	      {
 		stackindex++;
-		stack.Elem(stackindex) = node->right;
-		stackdir.Elem(stackindex) = ndir;
+		stack[stackindex-1] = node->right;
+		stackdir[stackindex-1] = ndir;
 	      }
 	  
 	    if (node -> pi != -1)

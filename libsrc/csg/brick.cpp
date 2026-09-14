@@ -348,40 +348,40 @@ GetPrimitiveData (const char *& classname, NgArray<double> & coeffs) const
 {
   classname = "brick";
   coeffs.SetSize(12);
-  coeffs.Elem(1) = p1(0);
-  coeffs.Elem(2) = p1(1);
-  coeffs.Elem(3) = p1(2);
+  coeffs[0] = p1(0);
+  coeffs[1] = p1(1);
+  coeffs[2] = p1(2);
 
-  coeffs.Elem(4) = p2(0);
-  coeffs.Elem(5) = p2(1);
-  coeffs.Elem(6) = p2(2);
+  coeffs[3] = p2(0);
+  coeffs[4] = p2(1);
+  coeffs[5] = p2(2);
 
-  coeffs.Elem(7) = p3(0);
-  coeffs.Elem(8) = p3(1);
-  coeffs.Elem(9) = p3(2);
+  coeffs[6] = p3(0);
+  coeffs[7] = p3(1);
+  coeffs[8] = p3(2);
 
-  coeffs.Elem(10) = p4(0);
-  coeffs.Elem(11) = p4(1);
-  coeffs.Elem(12) = p4(2);
+  coeffs[9] = p4(0);
+  coeffs[10] = p4(1);
+  coeffs[11] = p4(2);
 }
 
 void Brick :: SetPrimitiveData (NgArray<double> & coeffs)
 {
-  p1(0) = coeffs.Elem(1);
-  p1(1) = coeffs.Elem(2);
-  p1(2) = coeffs.Elem(3);
+  p1(0) = coeffs[0];
+  p1(1) = coeffs[1];
+  p1(2) = coeffs[2];
 
-  p2(0) = coeffs.Elem(4);
-  p2(1) = coeffs.Elem(5);
-  p2(2) = coeffs.Elem(6);
+  p2(0) = coeffs[3];
+  p2(1) = coeffs[4];
+  p2(2) = coeffs[5];
 
-  p3(0) = coeffs.Elem(7);
-  p3(1) = coeffs.Elem(8);
-  p3(2) = coeffs.Elem(9);
+  p3(0) = coeffs[6];
+  p3(1) = coeffs[7];
+  p3(2) = coeffs[8];
 
-  p4(0) = coeffs.Elem(10);
-  p4(1) = coeffs.Elem(11);
-  p4(2) = coeffs.Elem(12);
+  p4(0) = coeffs[9];
+  p4(1) = coeffs[10];
+  p4(2) = coeffs[11];
 
   CalcData();
 }
@@ -509,19 +509,19 @@ INSOLID_TYPE OrthoBrick :: BoxInSolid (const BoxSphere<3> & box) const
 
 void OrthoBrick :: Reduce (const BoxSphere<3> & box)
 {
-  surfaceactive.Elem(1) =
+  surfaceactive[0] =
     (box.PMin()(2) < pmin(2)) && (pmin(2) < box.PMax()(2));
-  surfaceactive.Elem(2) =
+  surfaceactive[1] =
     (box.PMin()(2) < pmax(2)) && (pmax(2) < box.PMax()(2));
 
-  surfaceactive.Elem(3) =
+  surfaceactive[2] =
     (box.PMin()(1) < pmin(1)) && (pmin(1) < box.PMax()(1));
-  surfaceactive.Elem(4) =
+  surfaceactive[3] =
     (box.PMin()(1) < pmax(1)) && (pmax(1) < box.PMax()(1));
 
-  surfaceactive.Elem(5) =
+  surfaceactive[4] =
     (box.PMin()(0) < pmin(0)) && (pmin(0) < box.PMax()(0));
-  surfaceactive.Elem(6) =
+  surfaceactive[5] =
     (box.PMin()(0) < pmax(0)) && (pmax(0) < box.PMax()(0));
 }
 

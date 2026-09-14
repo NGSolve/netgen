@@ -49,13 +49,13 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
   geom.meshlines.SetSize(0);  //testing
   for (int i = 1; i <= meshpoints.Size(); i++)
     {
-      geom.meshpoints.Append(meshpoints.Get(i)); //testing
-      mesh.AddPoint(meshpoints.Get(i));
+      geom.meshpoints.Append(meshpoints[i-1]); //testing
+      mesh.AddPoint(meshpoints[i-1]);
     }
   //(++++++++++++++testing
   for (int i = 1; i <= geom.GetNLines(); i++)
     {
-      geom.meshlines.Append(meshlines.Get(i));
+      geom.meshlines.Append(meshlines[i-1]);
     }
   //++++++++++++++testing)
 
@@ -63,7 +63,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 
   for (int i = 1; i <= meshlines.Size(); i++)
     {
-      STLLine* line = meshlines.Get(i);
+      STLLine* line = meshlines[i-1];
       (*testout) << "store line " << i << endl;
 
       // Create EdgeDescriptor for this edge
@@ -507,7 +507,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	  // end comments
 
 	  for (int i = 1; i <= refpts.Size(); i++)
-	    mesh.RestrictLocalH (refpts.Get(i), refh.Get(i));
+	    mesh.RestrictLocalH (refpts[i-1], refh[i-1]);
 
 	  mesh.RemoveOneLayerSurfaceElements();
           // Open edge-segments will be refined !
@@ -655,10 +655,10 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   for (PointIndex pi : mesh.Points().Range())
     {
       for (int j = 1; j <= spiralps.Size(); j++)
-	if (Dist2(geom.GetPoint(spiralps.Get(j)), mesh[pi]) < 1e-20) 
+	if (Dist2(geom.GetPoint(spiralps[j-1]), mesh[pi]) < 1e-20) 
 	  {
 	    imeshsp.Append(pi);
-	    ispiral_point.Append(spiralps.Get(j));
+	    ispiral_point.Append(spiralps[j-1]);
 	    break;
 	  }
     }

@@ -205,9 +205,9 @@ namespace netgen
   
     for (int i = 1; i <= nf; i++)
       {
-	const Point3d & p1 = points[PointIndex(faces.Get(i).I1())];
-	const Point3d & p2 = points[PointIndex(faces.Get(i).I2())];
-	const Point3d & p3 = points[PointIndex(faces.Get(i).I3())];
+	const Point3d & p1 = points[PointIndex(faces[i-1].I1())];
+	const Point3d & p2 = points[PointIndex(faces[i-1].I2())];
+	const Point3d & p3 = points[PointIndex(faces[i-1].I3())];
 	Vec3d v1 (p1, p2);
 	Vec3d v2 (p1, p3);
 	Vec3d n;

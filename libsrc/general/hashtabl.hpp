@@ -541,7 +541,7 @@ public:
   BASE_INDEX_CLOSED_HASHTABLE (int size);
 
   int Size() const { return hash.Size(); }
-  int UsedPos (int pos) const { return ! (hash.Get(pos) == invalid); }
+  int UsedPos (int pos) const { return ! (hash[pos-1] == invalid); }
   int UsedElements () const;
 
   ///
@@ -556,8 +556,8 @@ public:
     int i = HashValue(ind);
     while (1)
       {
-	if (hash.Get(i) == ind) return i;
-	if (hash.Get(i) == invalid) return 0;
+	if (hash[i-1] == ind) return i;
+	if (hash[i-1] == invalid) return 0;
 	i++;
 	if (i > hash.Size()) i = 1;
       }
@@ -569,8 +569,8 @@ public:
     int costs = 1;
     while (1)
       {
-	if (hash.Get(i) == ind) return costs;
-	if (hash.Get(i) == invalid) return costs;
+	if (hash[i-1] == ind) return costs;
+	if (hash[i-1] == invalid) return costs;
 	i++;
 	if (i > hash.Size()) i = 1;
 	costs++;
@@ -583,14 +583,14 @@ public:
   int PositionCreate (const INDEX & ind, int & apos)
   {
     int i = HashValue (ind);
-    if (hash.Get(i) == ind) 
+    if (hash[i-1] == ind) 
       {
 	apos = i;
 	return 0;
       }
-    if (hash.Get(i) == invalid)
+    if (hash[i-1] == invalid)
       {
-	hash.Elem(i) = ind; 
+	hash[i-1] = ind; 
 	apos = i;
 	return 1;
       }
@@ -624,7 +624,7 @@ public:
   {
     int pos;
     PositionCreate (ahash, pos);
-    hash.Elem(pos) = ahash;
+    hash[pos-1] = ahash;
     cont.Elem(pos) = acont;
   }
 
@@ -645,14 +645,14 @@ public:
   ///
   inline void SetData (int pos, const INDEX & ahash, const T & acont)
   {
-    hash.Elem(pos) = ahash;
+    hash[pos-1] = ahash;
     cont.Elem(pos) = acont;
   }
 
   ///
   void GetData (int pos, INDEX & ahash, T & acont) const
   {
-    ahash = hash.Get(pos);
+    ahash = hash[pos-1];
     acont = cont.Get(pos);
   }
   

@@ -114,7 +114,7 @@ namespace netgen
              nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
 
              for (int j = 0; j < nnums.Size(); j++)
-               cluster_reps.Elem(nnums[j]) = nnums[j];
+               cluster_reps[nnums[j]-1] = nnums[j];
            }
        }, ngcore::TasksPerThread(4));
     
@@ -173,7 +173,7 @@ namespace netgen
              nnums[elnv+elned] = fanum;             
              
              for (int j = 0; j < nnums.Size(); j++)
-               cluster_reps.Elem(nnums[j]) = nnums[j];
+               cluster_reps[nnums[j]-1] = nnums[j];
            }
        }, ngcore::TasksPerThread(4));
 
@@ -253,23 +253,23 @@ namespace netgen
 		break;
 	      case TET:
 	      case TET10:
-		if (cluster_reps.Get(el.PNum(1)+1-PI0) == 
-		    cluster_reps.Get(el.PNum(2)+1-PI0))
+		if (cluster_reps[el.PNum(1)-PI0] == 
+		    cluster_reps[el.PNum(2)-PI0])
 		  clustertab = tet_cluster12;
-		else if (cluster_reps.Get(el.PNum(1)+1-PI0) == 
-			 cluster_reps.Get(el.PNum(3)+1-PI0))
+		else if (cluster_reps[el.PNum(1)-PI0] == 
+			 cluster_reps[el.PNum(3)-PI0])
 		  clustertab = tet_cluster13;
-		else if (cluster_reps.Get(el.PNum(1)+1-PI0) == 
-			 cluster_reps.Get(el.PNum(4)+1-PI0))
+		else if (cluster_reps[el.PNum(1)-PI0] == 
+			 cluster_reps[el.PNum(4)-PI0])
 		  clustertab = tet_cluster14;
-		else if (cluster_reps.Get(el.PNum(2)+1-PI0) == 
-			 cluster_reps.Get(el.PNum(3)+1-PI0))
+		else if (cluster_reps[el.PNum(2)-PI0] == 
+			 cluster_reps[el.PNum(3)-PI0])
 		  clustertab = tet_cluster23;
-		else if (cluster_reps.Get(el.PNum(2)+1-PI0) == 
-			 cluster_reps.Get(el.PNum(4)+1-PI0))
+		else if (cluster_reps[el.PNum(2)-PI0] == 
+			 cluster_reps[el.PNum(4)-PI0])
 		  clustertab = tet_cluster24;
-		else if (cluster_reps.Get(el.PNum(3)+1-PI0) == 
-			 cluster_reps.Get(el.PNum(4)+1-PI0))
+		else if (cluster_reps[el.PNum(3)-PI0] == 
+			 cluster_reps[el.PNum(4)-PI0])
 		  clustertab = tet_cluster34;
 
 		else
@@ -307,26 +307,26 @@ namespace netgen
 		      int jj = nnums[j];
 		      int kk = nnums[k];
 
-		      if (cluster_reps.Get(kk) < cluster_reps.Get(jj))
+		      if (cluster_reps[kk-1] < cluster_reps[jj-1])
 			swap (jj,kk);
 
-		      if (cluster_reps.Get(jj) < cluster_reps.Get(kk))
+		      if (cluster_reps[jj-1] < cluster_reps[kk-1])
 			{
 			  /*
 			  cluster_reps.Elem(kk) = cluster_reps.Get(jj);
 			  changed = 1;
 			  */
 			  
-			  int rep  = cluster_reps.Get(jj);
-			  int next = cluster_reps.Get(kk);
+			  int rep  = cluster_reps[jj-1];
+			  int next = cluster_reps[kk-1];
 			  do
 			    {
 			      int cur = next;
-			      next = llist.Elem(next);
+			      next = llist[next-1];
 				
-			      cluster_reps.Elem(cur) = rep;
-			      llist.Elem(cur) = llist.Elem(rep);
-			      llist.Elem(rep) = cur;
+			      cluster_reps[cur-1] = rep;
+			      llist[cur-1] = llist[rep-1];
+			      llist[rep-1] = cur;
 			    }
 			  while (next);
 			  changed = 1;

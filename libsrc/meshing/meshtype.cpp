@@ -599,8 +599,8 @@ namespace netgen
     DenseMatrix * dshapep = NULL;
     switch (typ)
       {
-      case TRIG: dshapep = &ipdtrig.Get(ip)->dshape; break;
-      case QUAD: dshapep = &ipdquad.Get(ip)->dshape; break;
+      case TRIG: dshapep = &ipdtrig[ip-1]->dshape; break;
+      case QUAD: dshapep = &ipdquad[ip-1]->dshape; break;
       default:
         PrintSysError ("Element2d::GetTransformation, illegal type ", int(typ));
       }
@@ -1409,9 +1409,9 @@ namespace netgen
     locels.SetSize (loctets.Size());
     for (int i = 1; i <= loctets.Size(); i++)
       {
-        locels.Elem(i) = Element(4);
+        locels[i-1] = Element(4);
         for (int j = 1; j <= 4; j++)
-          locels.Elem(i).PNum(j) = PNum ( loctets.Get(i).PNum(j) );
+          locels[i-1].PNum(j) = PNum ( loctets[i-1].PNum(j) );
       }
   }
 
@@ -1864,9 +1864,9 @@ namespace netgen
     surftrigs.SetSize (nf);
     for (j = 0; j < nf; j++)
       {
-        surftrigs.Elem(j+1) = ElementFace(3);
+        surftrigs[j] = ElementFace(3);
         for (int k = 0; k < 3; k++)
-          surftrigs.Elem(j+1).PNum(k+1) = ElementVertexIndex::FromNr1(fp[j][k]);
+          surftrigs[j].PNum(k+1) = ElementVertexIndex::FromNr1(fp[j][k]);
       }
   }
 
@@ -1968,8 +1968,8 @@ namespace netgen
     DenseMatrix * dshapep = 0;
     switch (GetType())
       {
-      case TET: dshapep = &ipdtet.Get(ip)->dshape; break;
-      case TET10: dshapep = &ipdtet10.Get(ip)->dshape; break;
+      case TET: dshapep = &ipdtet[ip-1]->dshape; break;
+      case TET10: dshapep = &ipdtet10[ip-1]->dshape; break;
       default:
         PrintSysError ("Element::GetTransformation, illegal type ", int(typ));
       }
@@ -2596,8 +2596,8 @@ namespace netgen
 
         switch (GetType())
           {
-          case TET: ipdtet.Elem(i).reset(ipd); break;
-          case TET10: ipdtet10.Elem(i).reset(ipd); break;
+          case TET: ipdtet[i-1].reset(ipd); break;
+          case TET10: ipdtet10[i-1].reset(ipd); break;
           default:
             PrintSysError ("Element::ComputeIntegrationPoint(2), illegal type ", int(typ));
           }

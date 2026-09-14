@@ -444,7 +444,7 @@ namespace netgen
         // Algorithm of Stoer, Einf. i. d. Num. Math, S 145
       
         for (j = 1; j <= n; j++)
-          p.Set(j, j);
+          p[j-1] = j;
       
         for (j = 1; j <= n; j++)
           {
@@ -478,9 +478,9 @@ namespace netgen
                     m2.Elem(j, k) = m2.Get(r, k);
                     m2.Elem(r, k) = hr;
                   }
-                hi = p.Get(j);
-                p.Elem(j) = p.Get(r);
-                p.Elem(r) = hi;
+                hi = p[j-1];
+                p[j-1] = p[r-1];
+                p[r-1] = hi;
               }
 	  
 	  
@@ -506,7 +506,7 @@ namespace netgen
         for (i = 1; i <= n; i++)
           {
             for (k = 1; k <= n; k++)
-              hv(p.Get(k)-1) = m2.Get(i, k);
+              hv(p[k-1]-1) = m2.Get(i, k);
             for (k = 1; k <= n; k++)
               m2.Elem(i, k) = hv(k-1);
           }

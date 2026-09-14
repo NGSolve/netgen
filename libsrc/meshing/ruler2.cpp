@@ -270,18 +270,18 @@ namespace netgen
 		int maxline = (rule->GetLNearness(nlok) < MAX_NEARNESS) ? lnearness_class[rule->GetLNearness(nlok)] : maxlegalline;
 		// int maxline = maxlegalline;
 
-		while (!ok && lmap.Get(nlok) < maxline)
+		while (!ok && lmap[nlok-1] < maxline)
 		  {
-		    lmap.Elem(nlok)++;
-		    int locli = lmap.Get(nlok);
+		    lmap[nlok-1]++;
+		    int locli = lmap[nlok-1];
 
-		    if (lnearness.Get(locli) > rule->GetLNearness (nlok) ) continue;
-		    if (lused.Get(locli)) continue;
+		    if (lnearness[locli-1] > rule->GetLNearness (nlok) ) continue;
+		    if (lused[locli-1]) continue;
 
 
 		    ok = 1;
 
-		    IVec<2,LocalPointIndex> loclin = llines.Get(locli);
+		    IVec<2,LocalPointIndex> loclin = llines[locli-1];
 		    auto linevec = lpoints[loclin[1]] - lpoints[loclin[0]];
 
 		    if (rule->CalcLineError (nlok, linevec) > maxerr)
@@ -337,10 +337,10 @@ namespace netgen
 
 		if (ok)
 		  {
-		    int locli = lmap.Get(nlok);
-		    IVec<2,LocalPointIndex> loclin = llines.Get(locli);
+		    int locli = lmap[nlok-1];
+		    IVec<2,LocalPointIndex> loclin = llines[locli-1];
 
-		    lused.Elem (locli) = 1;
+		    lused[locli-1] = 1;
 		    for (int j = 0; j < 2; j++)
 		      {
 			pmap[rule->GetLine (nlok)[j]] = loclin[j];
@@ -351,14 +351,14 @@ namespace netgen
 		  }
 		else
 		  {
-		    lmap.Elem(nlok) = 0;
+		    lmap[nlok-1] = 0;
 		    nlok--;
 
-		    lused.Elem (lmap.Get(nlok)) = 0;
+		    lused[lmap[nlok-1]-1] = 0;
 		    for (int j = 0; j < 2; j++)
 		      {
-			pused[llines.Get(lmap.Get(nlok))[j]] --;
-			if (! pused[llines.Get (lmap.Get (nlok))[j]])
+			pused[llines[lmap[nlok-1]-1][j]] --;
+			if (! pused[llines[lmap[nlok-1]-1][j]])
 			  pmap[rule->GetLine (nlok)[j]].Invalidate();
 		      }
 		  }
@@ -448,7 +448,7 @@ namespace netgen
 			incnpok = 0;
 
 			if (ok)
-			  foundmap.Elem(ri)++; 
+			  foundmap[ri-1]++; 
 
 #ifdef LOCDEBUG
 			if (loctestmode)
@@ -548,9 +548,9 @@ namespace netgen
 			if (!ok) continue;
 			for (int i = 1; i <= maxlegalline; i++)
 			  {
-			    if (!lused.Get(i) && 
-				rule->IsLineInFreeZone (lpoints[llines.Get(i)[0]],
-							lpoints[llines.Get(i)[1]]))
+			    if (!lused[i-1] && 
+				rule->IsLineInFreeZone (lpoints[llines[i-1][0]],
+							lpoints[llines[i-1][1]]))
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -566,8 +566,8 @@ namespace netgen
 
 			for (int i = maxlegalline+1; i <= llines.Size(); i++)
 			  {
-			    if (rule->IsLineInFreeZone (lpoints[llines.Get(i)[0]],
-							lpoints[llines.Get(i)[1]]))
+			    if (rule->IsLineInFreeZone (lpoints[llines[i-1][0]],
+							lpoints[llines[i-1][1]]))
 			      {
 				ok = 0;
 #ifdef LOCDEBUG
@@ -634,7 +634,7 @@ namespace netgen
 
 			// delete old lines:
 			for (int i = 1; i <= rule->GetNDelL(); i++)
-			  dellines.Append (sortlines.Elem (lmap.Get(rule->GetDelLine(i))));
+			  dellines.Append (sortlines[lmap[(rule->GetDelLine(i))-1]-1]);
 			// dellines.Append (lmap.Get(rule->GetDelLine(i))));
 
 			// dellines.Append (lmap.Elem(rule->GetDelLines()));
@@ -658,9 +658,9 @@ namespace netgen
 			  {
 			    double hf;
 			    if (!mp.quad)
-			      hf = CalcElementBadness (lpoints, elements.Get(i));
+			      hf = CalcElementBadness (lpoints, elements[i-1]);
 			    else
-			      hf = CalcJacobianBadness (elements.Get(i), lpoints) * 5;
+			      hf = CalcJacobianBadness (elements[i-1], lpoints) * 5;
 #ifdef LOCDEBUG
 			    if (loctestmode)
 			      (*testout) << "r " << rule->Name() << "bad = " << hf << endl;
@@ -673,7 +673,7 @@ namespace netgen
 			  (*testout) << "error = " << elerr;
 #endif
 
-			canuse.Elem(ri) ++;
+			canuse[ri-1] ++;
 
 			if (elerr < 0.99*minelerr)
 			  {
@@ -714,7 +714,7 @@ namespace netgen
 
 		nlok = rule->GetNOldL();
 
-		lused.Set (lmap.Get(nlok), 0);
+		lused[lmap[nlok-1]-1] = 0;
 
 		for (int j = 1; j <= 2; j++)
 		  {

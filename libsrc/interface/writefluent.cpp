@@ -157,10 +157,10 @@ void WriteFluentFormat (const Mesh & mesh,
 
   for (i = 1; i <= surfaceelp.Size(); i++)
     {
-      outfile << hex << PointIndex(surfaceelp.Get(i).I1()) << " "
-	      << hex << PointIndex(surfaceelp.Get(i).I2()) << " "
-	      << hex << PointIndex(surfaceelp.Get(i).I3()) << " "
-	      << hex << surfaceeli.Get(i) << " " << 0 << "\n";
+      outfile << hex << PointIndex(surfaceelp[i-1].I1()) << " "
+	      << hex << PointIndex(surfaceelp[i-1].I2()) << " "
+	      << hex << PointIndex(surfaceelp[i-1].I3()) << " "
+	      << hex << surfaceeli[i-1] << " " << 0 << "\n";
     }
 
   outfile << "))" << endl << endl;

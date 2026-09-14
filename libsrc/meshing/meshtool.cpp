@@ -135,7 +135,7 @@ namespace netgen
 					   mesh[mesh[sei][2]]);
 
 	int cl = int ( (ncl-1e-3) * qual ) + 1;
-	incl.Elem(cl)++;
+	incl[cl-1]++;
       }
 
     (*testout) << endl << endl;
@@ -151,7 +151,7 @@ namespace netgen
       {
 	(*testout) << setw(4) << double (i-1)/ncl << " - "
 		   << setw(4) << double (i) / ncl << ": "
-		   << incl.Get(i) << endl;
+		   << incl[i-1] << endl;
       }
   }
 
@@ -574,7 +574,7 @@ namespace netgen
     int nontet  = 0;
 
     for (INDEX i = 1; i <= incl.Size(); i++)
-      incl.Elem(i) = 0;
+      incl[i-1] = 0;
 
     for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
       {
@@ -595,7 +595,7 @@ namespace netgen
 	if (cl < 1) cl = 1; 
 	if (cl > ncl) cl = ncl;
 
-	incl.Elem(cl)++;
+	incl[cl-1]++;
 	if (inclass) (*inclass)[ei] = cl;
 	sum += 1/qual;
       }
@@ -613,7 +613,7 @@ namespace netgen
       {
 	(*testout) << setw(4) << double (i-1)/ncl << " - "
 		   << setw(4) << double (i) / ncl << ": "
-		   << incl.Get(i) << endl;
+		   << incl[i-1] << endl;
       }
     (*testout) << "total error: " << sum << endl;
   }

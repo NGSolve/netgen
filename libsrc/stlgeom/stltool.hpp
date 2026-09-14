@@ -112,8 +112,8 @@ public:
   size_t GetNOLimit() const {return olimit.Size();}
   size_t GetNILimit() const {return ilimit.Size();}
 
-  twoint GetOLimit(int i) const {return olimit.Get(i);}
-  twoint GetILimit(int i) const {return ilimit.Get(i);}
+  twoint GetOLimit(int i) const {return olimit[i-1];}
+  twoint GetILimit(int i) const {return ilimit[i-1];}
 
   //move triangles trigs (local chart-trig numbers) to outer chart
   void MoveToOuterChart(const NgArray<int>& trigs);

@@ -42,7 +42,7 @@ double BSplineCurve2d :: ProjectParam (const Point<2> & p) const
   mindist = 1e10;
   dt = 0.2;
   for (n1 = 1; n1 <= points.Size(); n1++)
-    if (intervallused.Get(n1) == 0)
+    if (intervallused[n1-1] == 0)
       for (t = n1; t <= n1+1; t += dt)
         if (Dist (Eval(t), p) < mindist)
           {
@@ -108,10 +108,10 @@ Point<2> BSplineCurve2d :: Eval (double t) const
   //      << " n1 = " << n1 << endl;
 
   
-  hp(0) = b1 * points.Get(n1)(0) + b2 * points.Get(n2)(0) +
-    b3 * points.Get(n3)(0) + b4 * points.Get(n4)(0);
-  hp(1) = b1 * points.Get(n1)(1) + b2 * points.Get(n2)(1) +
-    b3 * points.Get(n3)(1) + b4 * points.Get(n4)(1);
+  hp(0) = b1 * points[n1-1](0) + b2 * points[n2-1](0) +
+    b3 * points[n3-1](0) + b4 * points[n4-1](0);
+  hp(1) = b1 * points[n1-1](1) + b2 * points[n2-1](1) +
+    b3 * points[n3-1](1) + b4 * points[n4-1](1);
   return hp;
 }
   
@@ -137,10 +137,10 @@ Vec<2> BSplineCurve2d :: EvalPrime (double t) const
   n4 = n3+1;
   if (n4 > points.Size()) n4 = 1;
   
-  hv(0) = db1 * points.Get(n1)(0) + db2 * points.Get(n2)(0) +
-    db3 * points.Get(n3)(0) + db4 * points.Get(n4)(0);
-  hv(1) = db1 * points.Get(n1)(1) + db2 * points.Get(n2)(1) +
-    db3 * points.Get(n3)(1) + db4 * points.Get(n4)(1);
+  hv(0) = db1 * points[n1-1](0) + db2 * points[n2-1](0) +
+    db3 * points[n3-1](0) + db4 * points[n4-1](0);
+  hv(1) = db1 * points[n1-1](1) + db2 * points[n2-1](1) +
+    db3 * points[n3-1](1) + db4 * points[n4-1](1);
   return hv;
 }
 
@@ -166,10 +166,10 @@ Vec<2> BSplineCurve2d :: EvalPrimePrime (double t) const
   n4 = n3+1;
   if (n4 > points.Size()) n4 = 1;
   
-  hv(0) = ddb1 * points.Get(n1)(0) + ddb2 * points.Get(n2)(0) +
-    ddb3 * points.Get(n3)(0) + ddb4 * points.Get(n4)(0);
-  hv(1) = ddb1 * points.Get(n1)(1) + ddb2 * points.Get(n2)(1) +
-    ddb3 * points.Get(n3)(1) + ddb4 * points.Get(n4)(1);
+  hv(0) = ddb1 * points[n1-1](0) + ddb2 * points[n2-1](0) +
+    ddb3 * points[n3-1](0) + ddb4 * points[n4-1](0);
+  hv(1) = ddb1 * points[n1-1](1) + ddb2 * points[n2-1](1) +
+    ddb3 * points[n3-1](1) + ddb4 * points[n4-1](1);
   return hv;
 }
   
@@ -178,7 +178,7 @@ int BSplineCurve2d :: SectionUsed (double t) const
 {
   int n1 = int(t);   
   n1 = (n1 + 10 * points.Size() - 1) % points.Size() + 1;
-  return (intervallused.Get(n1) == 0);
+  return (intervallused[n1-1] == 0);
 }
 
 void BSplineCurve2d :: Reduce (const Point<2> & p, double rad)
@@ -193,32 +193,32 @@ void BSplineCurve2d :: Reduce (const Point<2> & p, double rad)
   
   for (n1 = 1; n1 <= points.Size(); n1++)
     {
-      if (intervallused.Get(n1) != 0) continue;
+      if (intervallused[n1-1] != 0) continue;
     
-      minx = maxx = points.Get(n1)(0);
-      miny = maxy = points.Get(n1)(1);
+      minx = maxx = points[n1-1](0);
+      miny = maxy = points[n1-1](1);
     
       n = n1;
       for (j = 1; j <= 3; j++)
 	{
 	  n++;
 	  if (n > points.Size()) n = 1;
-	  if (points.Get(n)(0) < minx) minx = points.Get(n)(0);
-	  if (points.Get(n)(1) < miny) miny = points.Get(n)(1);
-	  if (points.Get(n)(0) > maxx) maxx = points.Get(n)(0);
-	  if (points.Get(n)(1) > maxy) maxy = points.Get(n)(1);
+	  if (points[n-1](0) < minx) minx = points[n-1](0);
+	  if (points[n-1](1) < miny) miny = points[n-1](1);
+	  if (points[n-1](0) > maxx) maxx = points[n-1](0);
+	  if (points[n-1](1) > maxy) maxy = points[n-1](1);
 	}
       
       if (minx > p(0) + rad || maxx < p(0) - rad ||
 	  miny > p(1) + rad || maxy < p(1) - rad)
 	{
-	  intervallused.Elem(n1) = redlevel;
+	  intervallused[n1-1] = redlevel;
 	  //      (*testout) << 0;
 	}
       else
 	{
 	  //      (*testout) << 1;
-	  intervallused.Elem(n1) = 0;
+	  intervallused[n1-1] = 0;
 	}
     }
   //  (*testout) << endl;
@@ -228,8 +228,8 @@ void BSplineCurve2d :: UnReduce ()
 {
   int i;
   for (i = 1; i <= intervallused.Size(); i++)
-    if (intervallused.Get(i) == redlevel)
-      intervallused.Set (i, 0);
+    if (intervallused[i-1] == redlevel)
+      intervallused[i-1] = 0;
   redlevel--;
 }
   
@@ -237,6 +237,6 @@ void BSplineCurve2d :: Print (ostream & ost) const
 {
   ost << "SplineCurve: " << points.Size() << " points." << endl;
   for (int i = 1; i <= points.Size(); i++)
-    ost << "P" << i << " = " << points.Get(i) << endl;
+    ost << "P" << i << " = " << points[i-1] << endl;
 }
 }

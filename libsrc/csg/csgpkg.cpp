@@ -227,7 +227,7 @@ namespace netgen
 
     ostringstream vst;
     for (int i = 1; i <= coeffs.Size(); i++)
-      vst << coeffs.Get(i) << " ";
+      vst << coeffs[i-1] << " ";
 
     cout << "GetPrimitiveData, name = " << name
 	 << ", classnamevar = " << classnamevar
@@ -512,7 +512,7 @@ namespace netgen
 
     // double globh = mparam.maxh;
     for (int i = 1; i <= geometry->singedges.Size(); i++)
-      geometry->singedges.Get(i)->SetMeshSize (*mesh, 1e99 /* globh*/);
+      geometry->singedges[i-1]->SetMeshSize (*mesh, 1e99 /* globh*/);
     return TCL_OK;
   }
 
@@ -530,7 +530,7 @@ namespace netgen
 
     // double globh = mparam.maxh;
     for (int i = 1; i <= geometry->singpoints.Size(); i++)
-      geometry->singpoints.Get(i)->SetMeshSize (*mesh, 1e99 /* globh */ );
+      geometry->singpoints[i-1]->SetMeshSize (*mesh, 1e99 /* globh */ );
     return TCL_OK;
   }
 

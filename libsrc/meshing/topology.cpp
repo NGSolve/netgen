@@ -1856,7 +1856,7 @@ namespace netgen
     for (int i = 1; i <= ned; i++)
       // eorient.Elem(i) = (edges.Get(elnr)[i-1] > 0) ? 1 : -1;
       // eorient.Elem(i) = (edges.Get(elnr)[i-1].orient) ? -1 : 1;
-      eorient.Elem(i) = GetElementEdgeOrientation (elnr, i-1) ? -1 : 1;
+      eorient[i-1] = GetElementEdgeOrientation (elnr, i-1) ? -1 : 1;
   }
 
   void MeshTopology :: GetElementFaceOrientations (int elnr, NgArray<int> & forient) const
@@ -1867,7 +1867,7 @@ namespace netgen
     for (int i = 1; i <= nfa; i++)
       // forient.Elem(i) = faces.Get(elnr)[i-1].forient;
       // forient.Elem(i) = (faces.Get(elnr)[i-1]-1) % 8;
-      forient.Elem(i) = GetElementFaceOrientation(elnr, i-1);
+      forient[i-1] = GetElementFaceOrientation(elnr, i-1);
   }
 
 

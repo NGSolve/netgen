@@ -17,10 +17,10 @@ namespace netgen
 	//if(geom.singedges.Get(i)->maxhinit > 0)
 	//  continue; //!!!!
 
-	const SingularEdge & se = *geom.singedges.Get(i);
+	const SingularEdge & se = *geom.singedges[i-1];
 	for (int j = 1; j <= se.segms.Size(); j++)
 	  {
-	    PointIndices<2> i2 = se.segms.Get(j);
+	    PointIndices<2> i2 = se.segms[j-1];
 	    singedges.Set (i2, 1);
 	  }
       }
@@ -272,7 +272,7 @@ namespace netgen
             
 	      const CloseSurfaceIdentification * csid = 
 		dynamic_cast<const CloseSurfaceIdentification*> 
-		(geom->identifications.Get(idnr));
+		(geom->identifications[idnr-1]);
 	      if (csid)
 		{
 		  if (!csid->GetSlices().Size())
@@ -382,7 +382,7 @@ namespace netgen
 
 		const CloseSurfaceIdentification * csid = 
 		  dynamic_cast<const CloseSurfaceIdentification*> 
-		  (geom->identifications.Get(idnr));
+		  (geom->identifications[idnr-1]);
 
 	      
 		SortedPointIndices<2> edge(pi1, pi2);

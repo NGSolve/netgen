@@ -54,7 +54,7 @@ namespace netgen
   void GetFaceColours(Mesh & mesh, NgArray<Vec<4>> & face_colours)
    {
       face_colours.SetSize(1);
-      face_colours.Elem(1) = mesh.GetFaceDescriptor(1).SurfColour();
+      face_colours[0] = mesh.GetFaceDescriptor(1).SurfColour();
       
       for(int i = 1; i <= mesh.GetNFD(); i++)
       {
@@ -63,7 +63,7 @@ namespace netgen
          
          for(int j = 1; j <= face_colours.Size(); j++)
          {
-            if(ColourMatch(face_colours.Elem(j),face_colour))
+            if(ColourMatch(face_colours[j-1],face_colour))
             {
                col_found = true;
                break;
@@ -78,7 +78,7 @@ namespace netgen
          cout << endl << "-------- Face Colours --------" << endl;
          for( int i = 1; i <= face_colours.Size(); i++)
          {
-            cout << face_colours.Elem(i) << endl;
+            cout << face_colours[i-1] << endl;
          }
          cout << "------------------------------" << endl;
       }
@@ -160,11 +160,11 @@ namespace netgen
          // are permitted
          if(bcnum < (DEFAULT_BCNUM + 1)) bcnum = DEFAULT_BCNUM+1;
 
-         bc_num.Elem(i) = bcnum;
-         bc_used.Elem(i) = false;
-         ocf >> bc_colours.Elem(i)[0]
-             >> bc_colours.Elem(i)[1]
-             >> bc_colours.Elem(i)[2];
+         bc_num[i-1] = bcnum;
+         bc_used[i-1] = false;
+         ocf >> bc_colours[i-1][0]
+             >> bc_colours[i-1][1]
+             >> bc_colours[i-1][2];
 
          if(!ocf.good())
          {
@@ -176,7 +176,7 @@ namespace netgen
          // Bound checking of the values
          // The RGB values should be between 0.0 and 1.0
          for(auto i : Range(3))
-           bc_colours.Elem(bcnum)[i] = max2(min2(bc_colours.Elem(bcnum)[i], 1.), 0.);
+           bc_colours[bcnum-1][i] = max2(min2(bc_colours[bcnum-1][i], 1.), 0.);
       }
 
       PrintMessage(3, "Successfully loaded Boundary Colour Profile file....");
@@ -189,7 +189,7 @@ namespace netgen
       int max_bcnum = DEFAULT_BCNUM;
       for(int i = 1; i <= bc_num.Size();i++)
       {
-         if(bc_num.Elem(i) > max_bcnum) max_bcnum = bc_num.Elem(i);
+         if(bc_num[i-1] > max_bcnum) max_bcnum = bc_num[i-1];
       }
 
       PrintMessage(3, "Highest boundary number in list = ",max_bcnum);
@@ -221,10 +221,10 @@ namespace netgen
 
             for(int col_index = 1; col_index <= bc_colours.Size(); col_index++)
             {
-               if((ColourMatch(face_colour,bc_colours.Elem(col_index))) && (!bc_assigned))
+               if((ColourMatch(face_colour,bc_colours[col_index-1])) && (!bc_assigned))
                {
-                  mesh.GetFaceDescriptor(face_index).SetBCProperty(bc_num.Elem(col_index));
-                  bc_used.Elem(col_index) = true;
+                  mesh.GetFaceDescriptor(face_index).SetBCProperty(bc_num[col_index-1]);
+                  bc_used[col_index-1] = true;
                   bc_assigned = true;
                   break;
                }
@@ -254,16 +254,16 @@ namespace netgen
       PrintMessage(3,"Colour based Boundary Condition Property details:");
       for(int bc_index = 0; bc_index <= bc_num.Size(); bc_index++)
       {
-         if(bc_index > 0) ref_colour = bc_colours.Elem(bc_index);
+         if(bc_index > 0) ref_colour = bc_colours[bc_index-1];
 
          if(bc_index == 0) 
          {
             PrintMessage(3, "BC Property: ",DEFAULT_BCNUM);
             PrintMessage(3, "   RGB Face Colour = ",Vec3d{ref_colour[0], ref_colour[1], ref_colour[2]},"","\n");
          }
-         else if(bc_used.Elem(bc_index))
+         else if(bc_used[bc_index-1])
          {
-            PrintMessage(3, "BC Property: ",bc_num.Elem(bc_index));
+            PrintMessage(3, "BC Property: ",bc_num[bc_index-1]);
             PrintMessage(3, "   RGB Face Colour = ",Vec3d{ref_colour[0], ref_colour[1], ref_colour[2]},"","\n");
          }
       }
@@ -294,9 +294,9 @@ namespace netgen
       // for automatically
       for(int i = 1; i <= all_colours.Size(); i++)
       {
-        if(ColourMatch(all_colours.Elem(i),Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B,1.0)))
+        if(ColourMatch(all_colours[i-1],Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B,1.0)))
          {
-            all_colours.DeleteElement(i);
+            all_colours.DeleteElement(i-1);
             break;
          }
       }
@@ -344,7 +344,7 @@ namespace netgen
          {
             for(int i = 1; i <= all_colours.Size(); i++)
             {
-               if(ColourMatch(face_colour, all_colours.Elem(i)))
+               if(ColourMatch(face_colour, all_colours[i-1]))
                {
                   faces_sorted[i] = faces_sorted[i] + se_face.Size();
                }
@@ -375,7 +375,7 @@ namespace netgen
             for(int i = 0; i < colours_sorted.Size(); i++)
             {
                Vec<4> ref_colour;
-               if(i != no_colour_index) ref_colour = all_colours.Elem(colours_sorted[i]);
+               if(i != no_colour_index) ref_colour = all_colours[colours_sorted[i]-1];
 
                if(ColourMatch(face_colour, ref_colour))
                {
@@ -396,7 +396,7 @@ namespace netgen
       PrintMessage(3,"Colour based Boundary Condition Property details:");
       for(int i = 0; i < faces_sorted.Size(); i++)
       {
-         if(colours_sorted[i] > 0) ref_colour = all_colours.Elem(colours_sorted[i]);
+         if(colours_sorted[i] > 0) ref_colour = all_colours[colours_sorted[i]-1];
 
          PrintMessage(3, "BC Property: ",i + DEFAULT_BCNUM);
          PrintMessage(3, "   Nr. of Surface Elements = ", faces_sorted[i]);

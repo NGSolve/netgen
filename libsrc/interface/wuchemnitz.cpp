@@ -167,7 +167,7 @@ namespace netgen
 
     for (int i = 1; i <= volelements.Size(); i++)
       {
-        const auto & vel = volelements.Get(i);
+        const auto & vel = volelements[i-1];
         PointIndex vp[4] = { vel.p1, vel.p2, vel.p3, vel.p4 };
 
         for (int j = 0; j < 4; j++)
@@ -188,7 +188,7 @@ namespace netgen
                 faceindex.Set (i3, facei);
               }
 
-            volelements.Elem(i).faces[j] = facei;
+            volelements[i-1].faces[j] = facei;
           }
       }
 
@@ -197,7 +197,7 @@ namespace netgen
 
     for (int i = 1; i <= faces.Size(); i++)
       {
-        PointIndex fp[3] = { faces.Get(i).p1, faces.Get(i).p2, faces.Get(i).p3 };
+        PointIndex fp[3] = { faces[i-1].p1, faces[i-1].p2, faces[i-1].p3 };
 
         for (int j = 0; j < 3; j++)
           {
@@ -215,7 +215,7 @@ namespace netgen
                 edgeindex.Set (i2, edgei);
               }
 
-            faces.Elem(i).edges[j] = edgei;
+            faces[i-1].edges[j] = edgei;
           }
       }
   }
@@ -240,30 +240,30 @@ namespace netgen
   
     outfile << "#VERTEX:   " << points.Size() << endl;
     for (int i = 1; i <= points.Size(); i++)
-      outfile << "  " << i << "  " << points.Get(i).x << "  " << points.Get(i).y 
-              << "  " << points.Get(i).z << endl;
+      outfile << "  " << i << "  " << points[i-1].x << "  " << points[i-1].y 
+              << "  " << points[i-1].z << endl;
     	
     outfile << "#EDGE:  " << edges.Size() << endl;
     for (int i = 1; i <= edges.Size(); i++)
       outfile << "  " << i << "  1  " 
-              << edges.Get(i).p1 << "  " 
-              << edges.Get(i).p2 
+              << edges[i-1].p1 << "  " 
+              << edges[i-1].p2 
               << "  0" << endl;
     
     outfile << "#FACE:  " << faces.Size() << endl;  
     for (int i = 1; i <= faces.Size(); i++)
       outfile << "  " << i << "  1  3  " 
-              << faces.Get(i).edges[0] << "  " 
-              << faces.Get(i).edges[1] << "  " 
-              << faces.Get(i).edges[2] << endl;
+              << faces[i-1].edges[0] << "  " 
+              << faces[i-1].edges[1] << "  " 
+              << faces[i-1].edges[2] << endl;
     	
     outfile << "#SOLID:  " << volelements.Size() << endl;
     for (int i = 1; i <= volelements.Size(); i++)
       outfile << "  " << i << "  1  4  " 
-              << volelements.Get(i).faces[0] << "  "
-              << volelements.Get(i).faces[1] << "  "
-              << volelements.Get(i).faces[2] << "  "
-              << volelements.Get(i).faces[3] << endl;
+              << volelements[i-1].faces[0] << "  "
+              << volelements[i-1].faces[1] << "  "
+              << volelements[i-1].faces[2] << "  "
+              << volelements[i-1].faces[3] << endl;
     	
     outfile << "#END_OF_DATA" << endl;
   }

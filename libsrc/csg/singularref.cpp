@@ -215,6 +215,6 @@ void SingularPoint :: SetMeshSize (class Mesh & mesh, double globalh)
 {
   double hloc = pow (globalh, 1/beta);
   for (int i = 1; i <= points.Size(); i++)
-    mesh.RestrictLocalH (points.Get(i), hloc);  
+    mesh.RestrictLocalH (points[i-1], hloc);  
 }
 }

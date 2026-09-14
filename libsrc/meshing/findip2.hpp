@@ -56,20 +56,20 @@ inline int FindInnerPoint2 (POINTArray & points,
       for (int i3 = i2+1; i3 <= nf; i3++)
         for (int i4 = i3+1; i4 <= nf; i4++)
           {
-	    m(0, 0) = a.Get(i1).X() - a.Get(i2).X();
-	    m(0, 1) = a.Get(i1).Y() - a.Get(i2).Y();
-	    m(0, 2) = a.Get(i1).Z() - a.Get(i2).Z();
-	    rs(0) = c.Get(i2) - c.Get(i1);
+	    m(0, 0) = a[i1-1].X() - a[i2-1].X();
+	    m(0, 1) = a[i1-1].Y() - a[i2-1].Y();
+	    m(0, 2) = a[i1-1].Z() - a[i2-1].Z();
+	    rs(0) = c[i2-1] - c[i1-1];
 
-	    m(1, 0) = a.Get(i1).X() - a.Get(i3).X();
-	    m(1, 1) = a.Get(i1).Y() - a.Get(i3).Y();
-	    m(1, 2) = a.Get(i1).Z() - a.Get(i3).Z();
-	    rs(1) = c.Get(i3) - c.Get(i1);
+	    m(1, 0) = a[i1-1].X() - a[i3-1].X();
+	    m(1, 1) = a[i1-1].Y() - a[i3-1].Y();
+	    m(1, 2) = a[i1-1].Z() - a[i3-1].Z();
+	    rs(1) = c[i3-1] - c[i1-1];
 
-	    m(2, 0) = a.Get(i1).X() - a.Get(i4).X();
-	    m(2, 1) = a.Get(i1).Y() - a.Get(i4).Y();
-	    m(2, 2) = a.Get(i1).Z() - a.Get(i4).Z();
-	    rs(2) = c.Get(i4) - c.Get(i1);
+	    m(2, 0) = a[i1-1].X() - a[i4-1].X();
+	    m(2, 1) = a[i1-1].Y() - a[i4-1].Y();
+	    m(2, 2) = a[i1-1].Z() - a[i4-1].Z();
+	    rs(2) = c[i4-1] - c[i1-1];
 
 
 	    if (fabs (Det (m)) > 1e-10)

@@ -469,14 +469,14 @@ namespace netgen
 	      {
 		int nc, deg;
 		nc = CrossPointNewtonConvergence 
-		  (geometry->GetSurface(locsurf.Get(k1)), 
-		   geometry->GetSurface(locsurf.Get(k2)), 
-		   geometry->GetSurface(locsurf.Get(k3)), box );
+		  (geometry->GetSurface(locsurf[k1-1]), 
+		   geometry->GetSurface(locsurf[k2-1]), 
+		   geometry->GetSurface(locsurf[k3-1]), box );
 	      
 		deg = CrossPointDegenerated 
-		  (geometry->GetSurface(locsurf.Get(k1)), 
-		   geometry->GetSurface(locsurf.Get(k2)), 
-		   geometry->GetSurface(locsurf.Get(k3)), box );
+		  (geometry->GetSurface(locsurf[k1-1]), 
+		   geometry->GetSurface(locsurf[k2-1]), 
+		   geometry->GetSurface(locsurf[k3-1]), box );
 	      
 #ifdef DEVELOP
 		(*testout) << "k1,2,3 = " << k1 << "," << k2 << "," << k3 << ", nc = " << nc << ", deg = " << deg << endl;
@@ -497,16 +497,16 @@ namespace netgen
 		for (int k3 = k2 + 1; k3 <= locsurf.Size(); k3++)
 		  {
 		    if (CrossPointNewtonConvergence 
-			(geometry->GetSurface(locsurf.Get(k1)), 
-			 geometry->GetSurface(locsurf.Get(k2)), 
-			 geometry->GetSurface(locsurf.Get(k3)), box ) )
+			(geometry->GetSurface(locsurf[k1-1]), 
+			 geometry->GetSurface(locsurf[k2-1]), 
+			 geometry->GetSurface(locsurf[k3-1]), box ) )
 		      {
                         
 			Point<3> pp = p;
 			CrossPointNewton 
-			  (geometry->GetSurface(locsurf.Get(k1)), 
-			   geometry->GetSurface(locsurf.Get(k2)), 
-			   geometry->GetSurface(locsurf.Get(k3)), pp);
+			  (geometry->GetSurface(locsurf[k1-1]), 
+			   geometry->GetSurface(locsurf[k2-1]), 
+			   geometry->GetSurface(locsurf[k3-1]), pp);
               
 			BoxSphere<3> hbox (pp, pp);
 			hbox.Increase (1e-8*size);
@@ -519,9 +519,9 @@ namespace netgen
 			    pp(2) < box.PMax()(2) + 1e-5*size &&
 			    sol -> IsIn (pp, 1e-6*size) && !sol->IsStrictIn (pp, 1e-6*size) &&
 			    !CrossPointDegenerated
-			    (geometry->GetSurface(locsurf.Get(k1)), 
-			     geometry->GetSurface(locsurf.Get(k2)), 
-			     geometry->GetSurface(locsurf.Get(k3)), hbox ))
+			    (geometry->GetSurface(locsurf[k1-1]), 
+			     geometry->GetSurface(locsurf[k2-1]), 
+			     geometry->GetSurface(locsurf[k3-1]), hbox ))
 
 			  { 
 			    //                AddCrossPoint (locsurf, sol, p);
@@ -535,9 +535,9 @@ namespace netgen
 			    bool found1 = false, found2 = false, found3 = false;
 			    for (int i = 0; i < locsurf2.Size(); i++)
 			      {
-				if (locsurf2[i] == locsurf.Get(k1)) found1 = true;
-				if (locsurf2[i] == locsurf.Get(k2)) found2 = true;
-				if (locsurf2[i] == locsurf.Get(k3)) found3 = true;
+				if (locsurf2[i] == locsurf[k1-1]) found1 = true;
+				if (locsurf2[i] == locsurf[k2-1]) found2 = true;
+				if (locsurf2[i] == locsurf[k3-1]) found3 = true;
 			      }
 
 			    if (found1 && found2 && found3)
@@ -546,9 +546,9 @@ namespace netgen
 				  (*testout) << "Crosspoint found: " << pp 
 					     << " diam = " << box.Diam()
 					     << ",  surfs: " 
-					     << locsurf.Get(k1) << "," 
-					     << locsurf.Get(k2) << "," 
-					     << locsurf.Get(k3) << endl;
+					     << locsurf[k1-1] << "," 
+					     << locsurf[k2-1] << "," 
+					     << locsurf[k3-1] << endl;
 				}
 			  }
 		      }

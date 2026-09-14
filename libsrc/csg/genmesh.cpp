@@ -263,7 +263,7 @@ namespace netgen
     // find master faces from identified
     NgArray<int> masterface(mesh.GetNFD());
     for (int i = 1; i <= mesh.GetNFD(); i++)
-      masterface.Elem(i) = i;
+      masterface[i-1] = i;
   
     NgArray<INDEX_2> fpairs;
     bool changed;
@@ -276,19 +276,19 @@ namespace netgen
 
 	    for (int j = 0; j < fpairs.Size(); j++)
 	      {
-		if (masterface.Get(fpairs[j].I1()) <
-		    masterface.Get(fpairs[j].I2()))
+		if (masterface[fpairs[j].I1()-1] <
+		    masterface[fpairs[j].I2()-1])
 		  {
 		    changed = 1;
-		    masterface.Elem(fpairs[j].I2()) =
-		      masterface.Elem(fpairs[j].I1());
+		    masterface[fpairs[j].I2()-1] =
+		      masterface[fpairs[j].I1()-1];
 		  }
-		if (masterface.Get(fpairs[j].I2()) <
-		    masterface.Get(fpairs[j].I1()))
+		if (masterface[fpairs[j].I2()-1] <
+		    masterface[fpairs[j].I1()-1])
 		  {
 		    changed = 1;
-		    masterface.Elem(fpairs[j].I1()) =
-		      masterface.Elem(fpairs[j].I2());
+		    masterface[fpairs[j].I1()-1] =
+		      masterface[fpairs[j].I2()-1];
 		  }
 	      }
 	  }
@@ -428,7 +428,7 @@ namespace netgen
       {
 	multithread.percent = 100.0 * k / (mesh.GetNFD()+1e-10);
 
-	if (masterface.Get(k) != k)
+	if (masterface[k-1] != k)
 	  continue;
 
 	FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
@@ -473,7 +473,7 @@ namespace netgen
 
 	for (int i = 1; i <= geom.identifications.Size(); i++)
 	  {
-	    geom.identifications.Get(i)->
+	    geom.identifications[i-1]->
 	      BuildSurfaceElements(segments, mesh, surf);
 	  }
 
@@ -607,7 +607,7 @@ namespace netgen
 	  {
 	    multithread.percent = 100.0 * k / (mesh.GetNFD()+1e-10);
 	  
-	    if (masterface.Get(k) == k)
+	    if (masterface[k-1] == k)
 	      continue;
 
 	    FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
@@ -645,16 +645,16 @@ namespace netgen
 
 	    for (int i = 1; i <= geom.identifications.Size(); i++)
 	      {
-		geom.identifications.Elem(i)->GetIdentifiedFaces (fpairs);
+		geom.identifications[i-1]->GetIdentifiedFaces (fpairs);
 		int found = 0;
 		for (int j = 1; j <= fpairs.Size(); j++)
-		  if (fpairs.Get(j).I1() == k || fpairs.Get(j).I2() == k)
+		  if (fpairs[j-1].I1() == k || fpairs[j-1].I2() == k)
 		    found = 1;
 
 		if (!found)
 		  continue;
 
-		geom.identifications.Get(i)->
+		geom.identifications[i-1]->
 		  BuildSurfaceElements(segments, mesh, surf);
 		if (!segments.Size())
 		  break;
@@ -669,7 +669,7 @@ namespace netgen
 
 	    if (!segments.Size())
 	      {
-		masterface.Elem(k) = k;
+		masterface[k-1] = k;
 		changed = 1; 
 	      }
 

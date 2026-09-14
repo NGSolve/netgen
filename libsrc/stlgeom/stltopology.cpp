@@ -244,9 +244,9 @@ STLGeometry *  STLTopology :: LoadNaomi (istream & ist)
 	  ist >> p3;
 	  ist >> dummy; //0
 
-	  pts[0] = readpoints.Get(p1);
-	  pts[1] = readpoints.Get(p2);
-	  pts[2] = readpoints.Get(p3);
+	  pts[0] = readpoints[p1-1];
+	  pts[1] = readpoints[p2-1];
+	  pts[2] = readpoints[p3-1];
 	  
 	  normal = Cross (pts[1]-pts[0], pts[2]-pts[0]) . Normalize();
 
@@ -610,9 +610,9 @@ void STLTopology :: FindNeighbourTrigs()
 	  if (ht_topedges->Used(i2))
 	    {
 	      enr = ht_topedges->Get(i2);
-	      topedges.Elem(enr).TrigNum(2) = i;
+	      topedges[enr-1].TrigNum(2) = i;
 
-	      othertn = topedges.Get(enr).TrigNum(1);
+	      othertn = topedges[enr-1].TrigNum(1);
 	      STLTriangle & othertrig = GetTriangle(othertn);
 
 	      trig.NBTrigNum(j) = othertn;
@@ -1045,10 +1045,10 @@ void STLTopology :: OrientAfterTrig (int trig)
       int i;
       for (i = 1; i <= oriented.Size(); i++)
 	{
-	  oriented.Elem(i) = 0;
+	  oriented[i-1] = 0;
 	}
  
-      oriented.Elem(starttrig) = 1;
+      oriented[starttrig-1] = 1;
   
       int k;
       
@@ -1066,17 +1066,17 @@ void STLTopology :: OrientAfterTrig (int trig)
 	  end = 1;
 	  for (i = 1; i <= list1.Size(); i++)
 	    {
-	      const STLTriangle& tt = GetTriangle(list1.Get(i));
+	      const STLTriangle& tt = GetTriangle(list1[i-1]);
 	      for (k = 1; k <= 3; k++)
 		{
 		  nt = tt.NBTrigNum (k); // NeighbourTrig(list1.Get(i),k);
-		  if (oriented.Get(nt) == 0)
+		  if (oriented[nt-1] == 0)
 		    {
 		      if (tt.IsWrongNeighbourFrom(GetTriangle(nt)))
 			{
 			  GetTriangle(nt).ChangeOrientation();
 			}
-		      oriented.Elem(nt) = 1;
+		      oriented[nt-1] = 1;
 		      list2.Append(nt);
 		      cnt++;
 		      end = 0;
@@ -1086,7 +1086,7 @@ void STLTopology :: OrientAfterTrig (int trig)
 	  list1.SetSize(0);
 	  for (i = 1; i <= list2.Size(); i++)
 	    {
-	      list1.Append(list2.Get(i));
+	      list1.Append(list2[i-1]);
 	    }
 	  list2.SetSize(0);
 	}

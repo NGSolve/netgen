@@ -385,7 +385,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  me.Size())
 		{
 
-		  int en = stlgeometry->EdgeDataList().GetEdgeNum(me.Get(1).i1,me.Get(1).i2);
+		  int en = stlgeometry->EdgeDataList().GetEdgeNum(me[0].i1,me[0].i2);
 		  int status = stlgeometry->EdgeDataList().Get(en).GetStatus();
 		  
 		  switch (status)
@@ -407,8 +407,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  glBegin (GL_LINES);
 		  for (j = 1; j <= me.Size(); j++)
 		    { 
-		      Point3d p1 = stlgeometry->GetPoint(me.Get(j).i1);
-		      Point3d p2 = stlgeometry->GetPoint(me.Get(j).i2);
+		      Point3d p1 = stlgeometry->GetPoint(me[j-1].i1);
+		      Point3d p2 = stlgeometry->GetPoint(me[j-1].i2);
 		      
 		      glVertex3f(p1.X(), p1.Y(), p1.Z());
 		      glVertex3f(p2.X(), p2.Y(), p2.Z());
@@ -741,15 +741,15 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
 	      for (j = 1; j <= stlgeometry->meshlines.Size(); j++)
 		{
-		  STLLine* line = stlgeometry->meshlines.Get(j);
+		  STLLine* line = stlgeometry->meshlines[j-1];
 		  int pn1, pn2;
 		  for (int k = 1; k <= line->NP()-1; k++)
 		    {
 		      pn1 = line->PNum(k);
 		      pn2 = line->PNum(k+1);
 
-		      Point3d p1 = stlgeometry->meshpoints.Get(pn1);
-		      Point3d p2 = stlgeometry->meshpoints.Get(pn2);
+		      Point3d p1 = stlgeometry->meshpoints[pn1-1];
+		      Point3d p2 = stlgeometry->meshpoints[pn2-1];
 		  		  
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
 		      glVertex3f(p1.X(), p1.Y(), p1.Z());
@@ -1124,7 +1124,7 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
     glPolygonOffset (1, 1);
     glEnable (GL_POLYGON_OFFSET_FILL);
 
-    glCallList (trilists.Get(1));
+    glCallList (trilists[0]);
 
     glDisable (GL_POLYGON_OFFSET_FILL);
 
@@ -1137,7 +1137,7 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_coll);
 	glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
       
-	glCallList (trilists.Get(1));
+	glCallList (trilists[0]);
       }
 
     /*
@@ -1179,7 +1179,7 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
     CalcTransformationMatrices();
 
     for (int i = 1; i <= trilists.Size(); i++)
-      glDeleteLists (trilists.Elem(i), 1);
+      glDeleteLists (trilists[i-1], 1);
     trilists.SetSize(0);
 
 

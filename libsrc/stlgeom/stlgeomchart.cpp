@@ -519,7 +519,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 	    }
 	  for (int k = 1; k <= dirtycharttrigs.Size(); k++)
 	    {
-	      STLTrigId tn = chart.GetChartTrig1(dirtycharttrigs.Get(k));
+	      STLTrigId tn = chart.GetChartTrig1(dirtycharttrigs[k-1]);
 	      outermark[tn] = 0; //not necessary, for later use
 	      SetMarker(tn, 0); 
 	      markedtrigcnt--;
@@ -797,7 +797,7 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
 	    }
 	  if (checkpoint)
 	    {
-	      chartpointchecked.Elem(pn) = chartnum;
+	      chartpointchecked[pn-1] = chartnum;
 
 	      GetSortedTrianglesAroundPoint(pn,t,trigsaroundp);
 	      trigsaroundp.Append(t); //ring

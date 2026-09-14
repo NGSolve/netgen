@@ -143,7 +143,7 @@ namespace netgen
 
     invalid = -1;
     for (int i = 1; i <= size; i++)
-      hash.Elem(i) = invalid;
+      hash[i-1] = invalid;
   }
 
   void BASE_INDEX_CLOSED_HASHTABLE ::
@@ -151,7 +151,7 @@ namespace netgen
   {
     hash.SetSize(size);
     for (int i = 1; i <= size; i++)
-      hash.Elem(i) = invalid;
+      hash[i-1] = invalid;
   }
 
   int BASE_INDEX_CLOSED_HASHTABLE ::
@@ -162,8 +162,8 @@ namespace netgen
       {
 	i++;
 	if (i > hash.Size()) i = 1;
-	if (hash.Get(i) == ind) return i;
-	if (hash.Get(i) == invalid) return 0;
+	if (hash[i-1] == ind) return i;
+	if (hash[i-1] == invalid) return 0;
       }
   }
 
@@ -176,14 +176,14 @@ namespace netgen
       {
 	i++;
 	if (i > hash.Size()) i = 1;
-	if (hash.Get(i) == ind) 
+	if (hash[i-1] == ind) 
 	  {
 	    apos = i;
 	    return 0;
 	  }
-	if (hash.Get(i) == invalid) 
+	if (hash[i-1] == invalid) 
 	  {
-	    hash.Elem(i) = ind;
+	    hash[i-1] = ind;
 	    apos = i;
 	    return 1;
 	  }
@@ -197,7 +197,7 @@ namespace netgen
     int n = hash.Size();
     int cnt = 0;
     for (int i = 1; i <= n; i++)
-      if (hash.Get(i) != invalid)
+      if (hash[i-1] != invalid)
 	cnt++;
     return cnt;
   }
@@ -245,8 +245,8 @@ namespace netgen
       {
 	i++;
 	if (i > hash.Size()) i = 1;
-	if (hash.Get(i) == ind) return i;
-	if (hash.Get(i).I1() == invalid) return 0;
+	if (hash[i-1] == ind) return i;
+	if (hash[i-1].I1() == invalid) return 0;
       }
   }
 
@@ -283,7 +283,7 @@ namespace netgen
     int n = hash.Size();
     int cnt = 0;
     for (int i = 1; i <= n; i++)
-      if (hash.Get(i).I1() != invalid)
+      if (hash[i-1].I1() != invalid)
 	cnt++;
     return cnt;
   }

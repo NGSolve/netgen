@@ -55,12 +55,12 @@ int vnetrule :: NeighbourTrianglePoint (const threeint & t1, const threeint & t2
 {
   NgArray<int> tr1(3);
   NgArray<int> tr2(3);
-  tr1.Elem(1)=t1.i1;
-  tr1.Elem(2)=t1.i2;
-  tr1.Elem(3)=t1.i3;
-  tr2.Elem(1)=t2.i1;
-  tr2.Elem(2)=t2.i2;
-  tr2.Elem(3)=t2.i3;
+  tr1[0]=t1.i1;
+  tr1[1]=t1.i2;
+  tr1[2]=t1.i3;
+  tr2[0]=t2.i1;
+  tr2[1]=t2.i2;
+  tr2[2]=t2.i3;
 
 
   int ret=0;
@@ -69,9 +69,9 @@ int vnetrule :: NeighbourTrianglePoint (const threeint & t1, const threeint & t2
     {
       for (int j=1; j<=3; j++)
 	{
-	  if ((tr1.Get(i)==tr2.Get(j) && tr1.Get((i%3)+1)==tr2.Get((j%3)+1)) ||
-              (tr1.Get(i)==tr2.Get((j%3)+1) && tr1.Get((i%3)+1)==tr2.Get(j)))
-	    {ret = tr2.Get((j+1)%3+1);}
+	  if ((tr1[i-1]==tr2[j-1] && tr1[(i%3)]==tr2[(j%3)]) ||
+              (tr1[i-1]==tr2[(j%3)] && tr1[(i%3)]==tr2[j-1]))
+	    {ret = tr2[(j+1)%3];}
 	}      
     }
 
@@ -441,7 +441,7 @@ void vnetrule :: LoadRule (istream & ist)
 		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
 		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
 		}
-	      freezonelimit.Elem(nfp) = p;
+	      freezonelimit[nfp-1] = p;
 	    
 	      hm2 = 0;
 	      for (i = 1; i <= 3 * noldp; i++)
@@ -669,38 +669,38 @@ void vnetrule :: LoadRule (istream & ist)
 
   freezonepi.SetSize (freezone.Size());
   for (i = 1; i <= freezonepi.Size(); i++)
-    freezonepi.Elem(i) = 0;
+    freezonepi[i-1] = 0;
   for (i = 1; i <= freezone.Size(); i++)
     for (auto pj : points.Range().Modify(0, noldp-points.Size()))
-      if (Dist (freezone.Get(i), points[pj]) < 1e-8)
-	freezonepi.Elem(i) = pj.Nr1();
+      if (Dist (freezone[i-1], points[pj]) < 1e-8)
+	freezonepi[i-1] = pj.Nr1();
 
 
 
   
   for (i = 1; i <= elements.Size(); i++)
     {
-      if (elements.Elem(i).GetNP() == 4)
+      if (elements[i-1].GetNP() == 4)
 	{
 	  orientations.Append (fourpoints());
-	  orientations.Last().i1 = elements.Get(i).PNum(1);
-	  orientations.Last().i2 = elements.Get(i).PNum(2);
-	  orientations.Last().i3 = elements.Get(i).PNum(3);
-	  orientations.Last().i4 = elements.Get(i).PNum(4);
+	  orientations.Last().i1 = elements[i-1].PNum(1);
+	  orientations.Last().i2 = elements[i-1].PNum(2);
+	  orientations.Last().i3 = elements[i-1].PNum(3);
+	  orientations.Last().i4 = elements[i-1].PNum(4);
 	}
-      if (elements.Elem(i).GetNP() == 5)
+      if (elements[i-1].GetNP() == 5)
 	{
 	  orientations.Append (fourpoints());
-	  orientations.Last().i1 = elements.Get(i).PNum(1);
-	  orientations.Last().i2 = elements.Get(i).PNum(2);
-	  orientations.Last().i3 = elements.Get(i).PNum(3);
-	  orientations.Last().i4 = elements.Get(i).PNum(5);
+	  orientations.Last().i1 = elements[i-1].PNum(1);
+	  orientations.Last().i2 = elements[i-1].PNum(2);
+	  orientations.Last().i3 = elements[i-1].PNum(3);
+	  orientations.Last().i4 = elements[i-1].PNum(5);
 
 	  orientations.Append (fourpoints());
-	  orientations.Last().i1 = elements.Get(i).PNum(1);
-	  orientations.Last().i2 = elements.Get(i).PNum(3);
-	  orientations.Last().i3 = elements.Get(i).PNum(4);
-	  orientations.Last().i4 = elements.Get(i).PNum(5);
+	  orientations.Last().i1 = elements[i-1].PNum(1);
+	  orientations.Last().i2 = elements[i-1].PNum(3);
+	  orientations.Last().i3 = elements[i-1].PNum(4);
+	  orientations.Last().i4 = elements[i-1].PNum(5);
 	}
     }
 
@@ -710,7 +710,7 @@ void vnetrule :: LoadRule (istream & ist)
     {
       freesets.Append (new NgArray<int>);
       for (i = 1; i <= freezone.Size(); i++)
-	freesets.Elem(1)->Append(i);
+	freesets[0]->Append(i);
     }
 
 
@@ -729,7 +729,7 @@ void vnetrule :: LoadRule (istream & ist)
 	    vp(pj.Nr0()) = points[pj].X(i);
 	  oldutofreezone->Mult(vp, vfp);
 	  for (int j = 1; j <= freezone.Size(); j++)
-	    freezone.Elem(j).X(i) = vfp(j-1);
+	    freezone[j-1].X(i) = vfp(j-1);
 	}
       //      for (i = 1; i <= freezone.Size(); i++)
       //	(*testout) << "freepoint: " << freezone.Get(i) << endl;
@@ -740,7 +740,7 @@ void vnetrule :: LoadRule (istream & ist)
     {
       freefaces.Append (new NgArray<threeint>);
 
-      NgArray<int> & freeset = *freesets.Elem(fs);
+      NgArray<int> & freeset = *freesets[fs-1];
       NgArray<threeint> & freesetfaces = *freefaces.Last();
 
       for (ii1 = 1; ii1 <= freeset.Size(); ii1++)
@@ -748,14 +748,14 @@ void vnetrule :: LoadRule (istream & ist)
 	  for (ii3 = 1; ii3 <= freeset.Size(); ii3++)
 	    if (ii1 < ii2 && ii1 < ii3 && ii2 != ii3)
 	      {
-		i1 = freeset.Get(ii1);
-		i2 = freeset.Get(ii2);
-		i3 = freeset.Get(ii3);
+		i1 = freeset[ii1-1];
+		i2 = freeset[ii2-1];
+		i3 = freeset[ii3-1];
 
 		Vec3d v1, v2, n;
 
-		v1 = freezone.Get(i3) - freezone.Get(i1);
-		v2 = freezone.Get(i2) - freezone.Get(i1);
+		v1 = freezone[i3-1] - freezone[i1-1];
+		v2 = freezone[i2-1] - freezone[i1-1];
 		n = Cross (v1, v2);
 		n /= n.Length();
 		//		(*testout) << "i1,2,3 = " << i1 << ", " << i2 << ", " << i3 << endl;
@@ -763,10 +763,10 @@ void vnetrule :: LoadRule (istream & ist)
 		ok = 1;
 		for (ii = 1; ii <= freeset.Size(); ii++)
 		  {
-		    i = freeset.Get(ii);
+		    i = freeset[ii-1];
 		    //		    (*testout) << "i = " << i << endl;
 		    if (i != i1 && i != i2 && i != i3)
-		      if ( (freezone.Get(i) - freezone.Get(i1)) * n < 0 ) ok = 0;
+		      if ( (freezone[i-1] - freezone[i1-1]) * n < 0 ) ok = 0;
 		  }
 
 		if (ok)
@@ -781,7 +781,7 @@ void vnetrule :: LoadRule (istream & ist)
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      freefaceinequ.Append (new DenseMatrix (freefaces.Get(fs)->Size(), 4));
+      freefaceinequ.Append (new DenseMatrix (freefaces[fs-1]->Size(), 4));
     }
 
 
@@ -815,8 +815,8 @@ void vnetrule :: LoadRule (istream & ist)
 
 	for (i = 1; i <= edges.Size(); i++)
 	  {
-	    RulePointIndex pi1 = RuleP(edges.Get(i).i1);
-	    RulePointIndex pi2 = RuleP(edges.Get(i).i2);
+	    RulePointIndex pi1 = RuleP(edges[i-1].i1);
+	    RulePointIndex pi2 = RuleP(edges[i-1].i2);
 
 	    if (pnearness[pi1] > pnearness[pi2]+1)
 	      {
@@ -832,12 +832,12 @@ void vnetrule :: LoadRule (istream & ist)
 	
 
 	for (i = 1; i <= elements.Size(); i++)
-	  if (elements.Get(i).GetNP() == 6)  // prism rule
+	  if (elements[i-1].GetNP() == 6)  // prism rule
 	    {
 	      for (j = 1; j <= 3; j++)
 		{
-		  RulePointIndex pi1 = elements.Get(i).PNum(j);
-		  RulePointIndex pi2 = elements.Get(i).PNum(j+3);
+		  RulePointIndex pi1 = elements[i-1].PNum(j);
+		  RulePointIndex pi2 = elements[i-1].PNum(j+3);
 
 		  if (pnearness[pi1] > pnearness[pi2]+1)
 		    {
@@ -863,9 +863,9 @@ void vnetrule :: LoadRule (istream & ist)
 
     for (i = 1; i <= noldf; i++)
       {
-	fnearness.Elem(i) = 0;
+	fnearness[i-1] = 0;
 	for (j = 1; j <= GetNP(i); j++)
-	  fnearness.Elem(i) += pnearness[GetPointNr (i, j)];
+	  fnearness[i-1] += pnearness[GetPointNr (i, j)];
       }
 
     // (*testout) << "rule " << name << ", pnear = " << pnearness << endl;
@@ -879,7 +879,7 @@ void vnetrule :: LoadRule (istream & ist)
       
       //      NgArray<int> & freeset = *freesets.Get(fs);
       NgArray<twoint> & freesetedges = *freeedges.Last();
-      NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
+      NgArray<threeint> & freesetfaces = *freefaces[fs-1];
       // int k,l;
       // INDEX ind;
       
@@ -889,15 +889,15 @@ void vnetrule :: LoadRule (istream & ist)
 
 	  for (int l = k+1; l <= freesetfaces.Size(); l++)
 	    {
-	      INDEX ind = NeighbourTrianglePoint(freesetfaces.Get(k), freesetfaces.Get(l));
+	      INDEX ind = NeighbourTrianglePoint(freesetfaces[k-1], freesetfaces[l-1]);
 	      if (!ind) continue;
 
-	      INDEX_3 f1(freesetfaces.Get(k).i1, 
-			 freesetfaces.Get(k).i2, 
-			 freesetfaces.Get(k).i3);
-	      INDEX_3 f2(freesetfaces.Get(l).i1, 
-			 freesetfaces.Get(l).i2, 
-			 freesetfaces.Get(l).i3);
+	      INDEX_3 f1(freesetfaces[k-1].i1, 
+			 freesetfaces[k-1].i2, 
+			 freesetfaces[k-1].i3);
+	      INDEX_3 f2(freesetfaces[l-1].i1, 
+			 freesetfaces[l-1].i2, 
+			 freesetfaces[l-1].i3);
 	      IVec<2,RulePointIndex> ed(RulePointIndex::INVALID, RulePointIndex::INVALID);
 	      for (int f11 = 1; f11 <= 3; f11++)
 		for (int f12 = 1; f12 <= 3; f12++)

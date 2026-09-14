@@ -74,14 +74,14 @@ namespace netgen
 	  minext=Point3d(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
 	  maxext=Point3d(MINDOUBLE, MINDOUBLE, MINDOUBLE);
 	*/
-	ElemMaxExt(minext, maxext, faces->Get(1).Face());
+	ElemMaxExt(minext, maxext, faces->operator[](0).Face());
 	Point3d maxp, minp;
 	Vec3d midext(0,0,0);
       
 	//get max Extension of Frontfaces
 	for (i = 1; i <= faces->Size(); i++)
 	  {
-	    ElemMaxExt(minp, maxp, faces->Get(i).Face());
+	    ElemMaxExt(minp, maxp, faces->operator[](i-1).Face());
 	    MinCoords(minp, minext);
 	    MaxCoords(maxp, maxext);
 	    midext+=maxp-minp;
@@ -99,7 +99,7 @@ namespace netgen
 	  {
 	    for (i = 1; i <= size.i1*size.i2*size.i3; i++)
 	      {
-		delete hashtable.Get(i);
+		delete hashtable[i-1];
 	      }
 	  } 
       
@@ -127,7 +127,7 @@ namespace netgen
 		for (k = 1; k <= size.i3; k++)
 		  {
 		    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
-		    hashtable.Elem(ind) = new NgArray <int> ();
+		    hashtable[ind-1] = new NgArray <int> ();
 		  }
 	      }
 	  }
@@ -142,7 +142,7 @@ namespace netgen
 		for (k = 1; k <= size.i3; k++)
 		  {
 		    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
-		    hashtable.Elem(ind)->SetSize(0);
+		    hashtable[ind-1]->SetSize(0);
 		  }
 	      }
 	  }	  
@@ -151,7 +151,7 @@ namespace netgen
     //Faces in Hashtable einfuegen:
     for (i = 1; i <= faces->Size(); i++)
       {
-	AddElem(faces->Get(i).Face(),i);
+	AddElem(faces->operator[](i-1).Face(),i);
       }
   
   }
@@ -178,7 +178,7 @@ namespace netgen
                 cerr << "Position: " << ix << "," << iy << "," << iz << endl;
 		    throw NgException ("Illegal position in Geomsearch");
               }
-            hashtable.Elem(ind)->Append(elemnum);		      
+            hashtable[ind-1]->Append(elemnum);		      
           }
   }
 
@@ -196,7 +196,7 @@ namespace netgen
     MinCoords(maxextreal,maxp);
 
 
-    Front3PointIndex cluster = faces->Get(fstind).Cluster();
+    Front3PointIndex cluster = faces->operator[](fstind-1).Cluster();
   
     int sx = int((minp.X()-minext.X())/elemsize.X()+1.);
     int ex = int((maxp.X()-minext.X())/elemsize.X()+1.);
@@ -219,18 +219,18 @@ namespace netgen
 		INDEX ind=ix+(iy-1)*size.i1+(iz-1)*size.i2*size.i1;
 	      
 		//go through all elements in one hash area
-		const NgArray <int> & area = *hashtable.Elem(ind);
+		const NgArray <int> & area = *hashtable[ind-1];
 		for (k = 1; k <= area.Size(); k++)
 		  {
 		    cnt2++;
-		    i = area.Get(k);
-		    if (faces->Get(i).Cluster() == cluster && 
-			faces->Get(i).Valid() &&
-			faces->Get(i).HashValue() != hashcount && 
+		    i = area[k-1];
+		    if (faces->operator[](i-1).Cluster() == cluster && 
+			faces->operator[](i-1).Valid() &&
+			faces->operator[](i-1).HashValue() != hashcount && 
 			i != fstind)
 		      {
 			cnt1++;
-			const FrontElement2d & face = faces->Get(i).Face();
+			const FrontElement2d & face = faces->operator[](i-1).Face();
 		      
 			const Point3d & p1 = (*points)[face.PNum(1)].P();
 			const Point3d & p2 = (*points)[face.PNum(2)].P();
@@ -245,9 +245,9 @@ namespace netgen
                            (Dist2 (midp, p0) <= xh*xh) )  // by Jochen Wild
 			  {
 			    cnt3++;
-			    locfaces.Append(faces->Get(i).Face());
+			    locfaces.Append(faces->operator[](i-1).Face());
 			    findex.Append(i);
-			    faces->Elem(i).SetHashValue(hashcount);
+			    faces->operator[](i-1).SetHashValue(hashcount);
 			  }
 		      }
 		  }

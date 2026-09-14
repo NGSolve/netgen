@@ -29,7 +29,7 @@ namespace netgen
       return;  // not from the geometry, e.g. in front of a boundary layer
 
     // copied from PointBetween, but should work easier
-    auto spline = GetSplines().Get(edgenr);
+    auto spline = GetSplines()[edgenr-1];
     const SplineSeg3<2> * ss3;
     const LineSeg<2> * ls;
     auto ext = dynamic_cast<const SplineSegExt *>(spline);
@@ -70,7 +70,7 @@ namespace netgen
 
     Point<2> p2d;
     double newdist;
-    auto spline = GetSplines().Get(edgenr);
+    auto spline = GetSplines()[edgenr-1];
     if( (ap1.dist == 0.0) && (ap2.dist == 0.0) )
       {
         // used for manually generated meshes
@@ -125,7 +125,7 @@ namespace netgen
   {
     if(edgenr < 1 || edgenr > GetSplines().Size())
       return NetgenGeometry::GetTangent(p, surfi1, surfi2, ap1, edgenr);
-    Vec<2> t2d = GetSplines().Get(edgenr) -> GetTangent(ap1.dist);
+    Vec<2> t2d = GetSplines()[edgenr-1] -> GetTangent(ap1.dist);
     return Vec<3> (t2d(0), t2d(1), 0);
   }
 

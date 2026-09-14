@@ -3321,7 +3321,7 @@ namespace netgen
 
     for (int i = 1; i <= openelements.Size(); i++)
       {
-        const Element2d & sel = openelements.Get(i);
+        const Element2d & sel = openelements[i-1];
 
         if (boundaryedges)
           for (int j = 1; j <= sel.GetNP(); j++)
@@ -3817,7 +3817,7 @@ namespace netgen
   double Mesh :: MaxHDomain (int dom) const
   {
     if (dom >= 0 && dom < maxhdomain.Size())
-      return maxhdomain.Get(dom);
+      return maxhdomain[dom-1];
     else
       return 1e10;
   }
@@ -3826,7 +3826,7 @@ namespace netgen
   {
     maxhdomain.SetSize(mhd.Size());
     for (int i = 1; i <= mhd.Size(); i++)
-      maxhdomain.Elem(i) = mhd.Get(i);
+      maxhdomain[i-1] = mhd[i-1];
   }
 
 
@@ -4621,7 +4621,7 @@ namespace netgen
 
     for (int i = 1; i <= openelements.Size(); i++)
       {
-        Element2d & el = openelements.Elem(i);
+        Element2d & el = openelements[i-1];
         for (int j = 0; j < el.GetNP(); j++)
           el[j] = op2np[el[j]];
       }  
@@ -6153,13 +6153,13 @@ namespace netgen
       {
         //	  SurfaceElement(element).GetTets (loctets);
         loctrigs.SetSize(1);
-        loctrigs.Elem(1) = surfelements[ei];
+        loctrigs[0] = surfelements[ei];
 
 
 
         for (int j = 1; j <= loctrigs.Size(); j++)
           {
-            const Element2d & el = loctrigs.Get(j);
+            const Element2d & el = loctrigs[j-1];
 
 
             const auto & p1 = Point(el.PNum(1));
@@ -6378,7 +6378,7 @@ namespace netgen
 
     for (int j = 1; j <= loctets.Size(); j++)
       {
-        const Element & el = loctets.Get(j);
+        const Element & el = loctets[j-1];
 
         const auto & p1 = Point(el.PNum(1));
         const auto & p2 = Point(el.PNum(2));
@@ -6409,11 +6409,11 @@ namespace netgen
             VolumeElement(element).GetTetsLocal (loctetsloc);
             VolumeElement(element).GetNodesLocalNew (pointsloc);
 
-            const ElementTet & le = loctetsloc.Get(j);
+            const ElementTet & le = loctetsloc[j-1];
 
 
             auto locp = [&](int j) -> const netgen::Point<3> &
-              { return pointsloc.Get(le.PNum(j).Nr1()); };
+              { return pointsloc[le.PNum(j).Nr1()-1]; };
             const auto & lp1 = locp(1);
             netgen::Point<3> pp =
               lp1

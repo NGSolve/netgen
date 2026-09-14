@@ -121,22 +121,22 @@ namespace netgen
   {
     classname = "plane";
     coeffs.SetSize (6);
-    coeffs.Elem(1) = p(0);
-    coeffs.Elem(2) = p(1);
-    coeffs.Elem(3) = p(2);
-    coeffs.Elem(4) = n(0);
-    coeffs.Elem(5) = n(1);
-    coeffs.Elem(6) = n(2);
+    coeffs[0] = p(0);
+    coeffs[1] = p(1);
+    coeffs[2] = p(2);
+    coeffs[3] = n(0);
+    coeffs[4] = n(1);
+    coeffs[5] = n(2);
   }
 
   void Plane :: SetPrimitiveData (NgArray<double> & coeffs)
   {
-    p(0) = coeffs.Elem(1);
-    p(1) = coeffs.Elem(2);
-    p(2) = coeffs.Elem(3);
-    n(0) = coeffs.Elem(4);
-    n(1) = coeffs.Elem(5);
-    n(2) = coeffs.Elem(6);
+    p(0) = coeffs[0];
+    p(1) = coeffs[1];
+    p(2) = coeffs[2];
+    n(0) = coeffs[3];
+    n(1) = coeffs[4];
+    n(2) = coeffs[5];
 
     CalcData();
   }
@@ -372,18 +372,18 @@ namespace netgen
   {
     classname = "sphere";
     coeffs.SetSize (4);
-    coeffs.Elem(1) = c(0);
-    coeffs.Elem(2) = c(1);
-    coeffs.Elem(3) = c(2);
-    coeffs.Elem(4) = r;
+    coeffs[0] = c(0);
+    coeffs[1] = c(1);
+    coeffs[2] = c(2);
+    coeffs[3] = r;
   }
 
   void Sphere :: SetPrimitiveData (NgArray<double> & coeffs)
   {
-    c(0) = coeffs.Elem(1);
-    c(1) = coeffs.Elem(2);
-    c(2) = coeffs.Elem(3);
-    r = coeffs.Elem(4);
+    c(0) = coeffs[0];
+    c(1) = coeffs[1];
+    c(2) = coeffs[2];
+    r = coeffs[3];
 
     invr = 1.0/r;
     cxx = cyy = czz = 0.5 / r;
@@ -804,24 +804,24 @@ namespace netgen
   {
     classname = "cylinder";
     coeffs.SetSize (7);
-    coeffs.Elem(1) = a(0);
-    coeffs.Elem(2) = a(1);
-    coeffs.Elem(3) = a(2);
-    coeffs.Elem(4) = b(0);
-    coeffs.Elem(5) = b(1);
-    coeffs.Elem(6) = b(2);
-    coeffs.Elem(7) = r;
+    coeffs[0] = a(0);
+    coeffs[1] = a(1);
+    coeffs[2] = a(2);
+    coeffs[3] = b(0);
+    coeffs[4] = b(1);
+    coeffs[5] = b(2);
+    coeffs[6] = r;
   }
 
   void Cylinder :: SetPrimitiveData (NgArray<double> & coeffs)
   {
-    a(0) = coeffs.Elem(1);
-    a(1) = coeffs.Elem(2);
-    a(2) = coeffs.Elem(3);
-    b(0) = coeffs.Elem(4);
-    b(1) = coeffs.Elem(5);
-    b(2) = coeffs.Elem(6);
-    r = coeffs.Elem(7);
+    a(0) = coeffs[0];
+    a(1) = coeffs[1];
+    a(2) = coeffs[2];
+    b(0) = coeffs[3];
+    b(1) = coeffs[4];
+    b(2) = coeffs[5];
+    r = coeffs[6];
 
 
     vab = (b - a);
@@ -1345,26 +1345,26 @@ namespace netgen
   {
     classname = "cone";
     coeffs.SetSize (8);
-    coeffs.Elem(1) = a(0);
-    coeffs.Elem(2) = a(1);
-    coeffs.Elem(3) = a(2);
-    coeffs.Elem(4) = b(0);
-    coeffs.Elem(5) = b(1);
-    coeffs.Elem(6) = b(2);
-    coeffs.Elem(7) = ra;
-    coeffs.Elem(8) = rb;
+    coeffs[0] = a(0);
+    coeffs[1] = a(1);
+    coeffs[2] = a(2);
+    coeffs[3] = b(0);
+    coeffs[4] = b(1);
+    coeffs[5] = b(2);
+    coeffs[6] = ra;
+    coeffs[7] = rb;
   }
 
   void Cone :: SetPrimitiveData (NgArray<double> & coeffs)
   {
-    a(0) = coeffs.Elem(1);
-    a(1) = coeffs.Elem(2);
-    a(2) = coeffs.Elem(3);
-    b(0) = coeffs.Elem(4);
-    b(1) = coeffs.Elem(5);
-    b(2) = coeffs.Elem(6);
-    ra = coeffs.Elem(7);
-    rb = coeffs.Elem(8);
+    a(0) = coeffs[0];
+    a(1) = coeffs[1];
+    a(2) = coeffs[2];
+    b(0) = coeffs[3];
+    b(1) = coeffs[4];
+    b(2) = coeffs[5];
+    ra = coeffs[6];
+    rb = coeffs[7];
 
     CalcData();
   }
@@ -1570,17 +1570,17 @@ Primitive * EllipticCone :: CreateDefault ()
   {
     classname = "ellipticcone";
     coeffs.SetSize (11);
-    coeffs.Elem(1) = a(0);
-    coeffs.Elem(2) = a(1);
-    coeffs.Elem(3) = a(2);
-    coeffs.Elem(4) = vl(0);
-    coeffs.Elem(5) = vl(1);
-    coeffs.Elem(6) = vl(2);
-    coeffs.Elem(7) = vs(0);
-    coeffs.Elem(8) = vs(1);
-    coeffs.Elem(9) = vs(2);
-    coeffs.Elem(10) = h;
-    coeffs.Elem(11) = vlr;
+    coeffs[0] = a(0);
+    coeffs[1] = a(1);
+    coeffs[2] = a(2);
+    coeffs[3] = vl(0);
+    coeffs[4] = vl(1);
+    coeffs[5] = vl(2);
+    coeffs[6] = vs(0);
+    coeffs[7] = vs(1);
+    coeffs[8] = vs(2);
+    coeffs[9] = h;
+    coeffs[10] = vlr;
 
   }
 
@@ -1588,17 +1588,17 @@ Primitive * EllipticCone :: CreateDefault ()
   void EllipticCone :: SetPrimitiveData (NgArray<double> & coeffs)
   {
 
-    a(0) = coeffs.Elem(1);
-    a(1) = coeffs.Elem(2);
-    a(2) = coeffs.Elem(3);
-    vl(0) = coeffs.Elem(4);
-    vl(1) = coeffs.Elem(5);
-    vl(2) = coeffs.Elem(6);
-    vs(0) = coeffs.Elem(7);
-    vs(1) = coeffs.Elem(8);
-    vs(2) = coeffs.Elem(9);
-    h = coeffs.Elem(10);
-    vlr = coeffs.Elem(11);
+    a(0) = coeffs[0];
+    a(1) = coeffs[1];
+    a(2) = coeffs[2];
+    vl(0) = coeffs[3];
+    vl(1) = coeffs[4];
+    vl(2) = coeffs[5];
+    vs(0) = coeffs[6];
+    vs(1) = coeffs[7];
+    vs(2) = coeffs[8];
+    h = coeffs[9];
+    vlr = coeffs[10];
     CalcData();
   }
 
@@ -1760,26 +1760,26 @@ void EllipticCone :: GetTriangleApproximation
   {
     classname = "torus";
     coeffs.SetSize (8);
-    coeffs.Elem(1) = c(0);
-    coeffs.Elem(2) = c(1);
-    coeffs.Elem(3) = c(2);
-    coeffs.Elem(4) = n(0);
-    coeffs.Elem(5) = n(1);
-    coeffs.Elem(6) = n(2);
-    coeffs.Elem(7) = R;
-    coeffs.Elem(8) = r;
+    coeffs[0] = c(0);
+    coeffs[1] = c(1);
+    coeffs[2] = c(2);
+    coeffs[3] = n(0);
+    coeffs[4] = n(1);
+    coeffs[5] = n(2);
+    coeffs[6] = R;
+    coeffs[7] = r;
   }
 
   void Torus :: SetPrimitiveData (NgArray<double> & coeffs)
   {
-    c(0) = coeffs.Elem(1);
-    c(1) = coeffs.Elem(2);
-    c(2) = coeffs.Elem(3);
-    n(0) = coeffs.Elem(4);
-    n(1) = coeffs.Elem(5);
-    n(2) = coeffs.Elem(6);
-    R = coeffs.Elem(7);
-    r = coeffs.Elem(8);
+    c(0) = coeffs[0];
+    c(1) = coeffs[1];
+    c(2) = coeffs[2];
+    n(0) = coeffs[3];
+    n(1) = coeffs[4];
+    n(2) = coeffs[5];
+    R = coeffs[6];
+    r = coeffs[7];
   }
 
   Primitive * Torus :: CreateDefault ()

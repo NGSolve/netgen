@@ -440,7 +440,7 @@ namespace netgen
 
 	NgArray<int> eclasses(cntedges);
 	for (int i = 1; i <= cntedges; i++)
-	  eclasses.Elem(i) = i;
+	  eclasses[i-1] = i;
 
 	// identify edges in element stack
 	do
@@ -497,18 +497,18 @@ namespace netgen
 
 		    //		  (*testout) << "identify edges " << eclass1 << "-" << eclass2 << endl;
 
-		    if (eclasses.Get(eclass1) >
-			eclasses.Get(eclass2))
+		    if (eclasses[eclass1-1] >
+			eclasses[eclass2-1])
 		      {
-			eclasses.Elem(eclass1) = 
-			  eclasses.Get(eclass2);
+			eclasses[eclass1-1] = 
+			  eclasses[eclass2-1];
 			go_on = true;
 		      }
-		    else if (eclasses.Get(eclass2) >
-			     eclasses.Get(eclass1))
+		    else if (eclasses[eclass2-1] >
+			     eclasses[eclass1-1])
 		      {
-			eclasses.Elem(eclass2) = 
-			  eclasses.Get(eclass1);
+			eclasses[eclass2-1] = 
+			  eclasses[eclass1-1];
 			go_on = true;
 		      }
 		  }
@@ -539,20 +539,20 @@ namespace netgen
 			int eclass1 = edgenumber.Get (e1);
 			int eclass2 = edgenumber.Get (e2);
 			
-			if (eclasses.Get(eclass1) >
-			    eclasses.Get(eclass2))
+			if (eclasses[eclass1-1] >
+			    eclasses[eclass2-1])
 			  {
-			    eclasses.Elem(eclass1) = 
-			      eclasses.Get(eclass2);
+			    eclasses[eclass1-1] = 
+			      eclasses[eclass2-1];
 
 
 			    go_on = true;
 			  }
-			else if (eclasses.Get(eclass2) >
-				 eclasses.Get(eclass1))
+			else if (eclasses[eclass2-1] >
+				 eclasses[eclass1-1])
 			  {
-			    eclasses.Elem(eclass2) = 
-			      eclasses.Get(eclass1);
+			    eclasses[eclass2-1] = 
+			      eclasses[eclass1-1];
 			    go_on = true;
 			  }
 		      }		      
@@ -642,18 +642,18 @@ namespace netgen
       
 	for (int i = 1; i <= cntedges; i++)
 	  {
-	    if (eclasses.Get(i) != i)
+	    if (eclasses[i-1] != i)
 	      {
-		if (edgelength.Get(i) < edgelength.Get(eclasses.Get(i)))
-		  edgelength.Elem(eclasses.Get(i)) = edgelength.Get(i);
-		edgelength.Elem(i) = 1e20;
+		if (edgelength[i-1] < edgelength[eclasses[i-1]-1])
+		  edgelength[eclasses[i-1]-1] = edgelength[i-1];
+		edgelength[i-1] = 1e20;
 	      }
 	  }
 
 
 	TABLE<int> eclasstab(cntedges);
 	for (int i = 1; i <= cntedges; i++)
-	  eclasstab.Add1 (eclasses.Get(i), i-1);
+	  eclasstab.Add1 (eclasses[i-1], i-1);
 
 
 	// sort edges:
@@ -664,7 +664,7 @@ namespace netgen
 	int cnt = 0;
 	for (int i = 1; i <= cntedges; i++)
 	  {
-	    int ii = sorted.Get(i);
+	    int ii = sorted[i-1];
 	    for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
               edgenumber.Set (edges[eclasstab.Get(ii, j)], ++cnt);
             
@@ -1150,8 +1150,8 @@ namespace netgen
 	    for (int j = 0; j < 2; j++)
 	      for (int k = j+1; k < 3; k++)
 		{
-		  const Point<3> & p1 = mesh.Point (mprisms.Get(i).pnums[j]);
-		  const Point<3> & p2 = mesh.Point (mprisms.Get(i).pnums[k]);
+		  const Point<3> & p1 = mesh.Point (mprisms[i-1].pnums[j]);
+		  const Point<3> & p2 = mesh.Point (mprisms[i-1].pnums[k]);
 		  double hh = Dist2 (p1, p2);
 		  if (hh > h) h = hh;
 		}
@@ -1160,7 +1160,7 @@ namespace netgen
 	    double hshould = 1e10;
 	    for (int j = 0; j < 6; j++)
 	      {
-		double hi = hv (mprisms.Get(i).pnums[j]-IndexBASE<PointIndex>());
+		double hi = hv (mprisms[i-1].pnums[j]-IndexBASE<PointIndex>());
 		if (hi < hshould)
 		  hshould = hi;
 	      }
@@ -1175,11 +1175,11 @@ namespace netgen
 	      {
 		if (h > hshould * hfac)
 		  {
-		    mprisms.Elem(i).marked = 1;
+		    mprisms[i-1].marked = 1;
 		    marked = 1;
 		  }
 		else
-		  mprisms.Elem(i).marked = 0;
+		  mprisms[i-1].marked = 0;
 	      }
 	  
 	  }
@@ -1588,26 +1588,26 @@ namespace netgen
     int hanging = 0;
     for (int i = 1; i <= mids.Size(); i++)
       {
-	if (mids.Elem(i).marked)
+	if (mids[i-1].marked)
 	  {
 	    hanging = 1;
 	    continue;
 	  }
 
-	const int np = mids.Get(i).np;
+	const int np = mids[i-1].np;
 	for(int j = 0; j < np; j++)
 	  {
-	    PointIndices<2> edge1(mids.Get(i).pnums[j],
-                                  mids.Get(i).pnums[(j+1) % np]);
-	    PointIndices<2> edge2(mids.Get(i).pnums[j+np],
-                                  mids.Get(i).pnums[((j+1) % np) + np]);
+	    PointIndices<2> edge1(mids[i-1].pnums[j],
+                                  mids[i-1].pnums[(j+1) % np]);
+	    PointIndices<2> edge2(mids[i-1].pnums[j+np],
+                                  mids[i-1].pnums[((j+1) % np) + np]);
 
 	    edge1.Sort();
 	    edge2.Sort();
 	    if (cutedges.Used (edge1) ||
 		cutedges.Used (edge2))
 	      {
-		mids.Elem(i).marked = 1;
+		mids[i-1].marked = 1;
 		hanging = 1;
 	      }
 	  }
@@ -1729,7 +1729,7 @@ namespace netgen
     int hanging = 0;
     for (int i = 1; i <= mprisms.Size(); i++)
       {
-	if (mprisms.Elem(i).marked)
+	if (mprisms[i-1].marked)
 	  {
 	    hanging = 1;
 	    continue;
@@ -1738,16 +1738,16 @@ namespace netgen
 	for (int j = 0; j < 2; j++)
 	  for (int k = j+1; k < 3; k++)
 	    {
-	      PointIndices<2> edge1(mprisms.Get(i).pnums[j],
-                                    mprisms.Get(i).pnums[k]);
-	      PointIndices<2> edge2(mprisms.Get(i).pnums[j+3],
-                                    mprisms.Get(i).pnums[k+3]);
+	      PointIndices<2> edge1(mprisms[i-1].pnums[j],
+                                    mprisms[i-1].pnums[k]);
+	      PointIndices<2> edge2(mprisms[i-1].pnums[j+3],
+                                    mprisms[i-1].pnums[k+3]);
 	      edge1.Sort();
 	      edge2.Sort();
 	      if (cutedges.Used (edge1) ||
 		  cutedges.Used (edge2))
 		{
-		  mprisms.Elem(i).marked = 1;
+		  mprisms[i-1].marked = 1;
 		  hanging = 1;
 		}
 	    }
@@ -1805,40 +1805,40 @@ namespace netgen
     int hanging = 0;
     for (int i = 1; i <= mquads.Size(); i++)
       {
-	if (mquads.Elem(i).marked)
+	if (mquads[i-1].marked)
 	  {
 	    hanging = 1;
 	    continue;
 	  }
 
-	PointIndices<2> edge1(mquads.Get(i).pnums[0],
-                              mquads.Get(i).pnums[1]);
-	PointIndices<2> edge2(mquads.Get(i).pnums[2],
-                              mquads.Get(i).pnums[3]);
+	PointIndices<2> edge1(mquads[i-1].pnums[0],
+                              mquads[i-1].pnums[1]);
+	PointIndices<2> edge2(mquads[i-1].pnums[2],
+                              mquads[i-1].pnums[3]);
 	edge1.Sort();
 	edge2.Sort();
 	if (cutedges.Used (edge1) ||
 	    cutedges.Used (edge2))
 	  {
-	    mquads.Elem(i).marked = 1;
-            mquads.Elem(i).markededge = 0;
+	    mquads[i-1].marked = 1;
+            mquads[i-1].markededge = 0;
 	    hanging = 1;
             continue;
 	  }
           
         // he/sz: second case: split horizontally
-        PointIndices<2> edge3(mquads.Get(i).pnums[1],
-                              mquads.Get(i).pnums[3]);
-        PointIndices<2> edge4(mquads.Get(i).pnums[2],
-                              mquads.Get(i).pnums[0]);
+        PointIndices<2> edge3(mquads[i-1].pnums[1],
+                              mquads[i-1].pnums[3]);
+        PointIndices<2> edge4(mquads[i-1].pnums[2],
+                              mquads[i-1].pnums[0]);
 
         edge3.Sort();
         edge4.Sort();
         if (cutedges.Used (edge3) ||
             cutedges.Used (edge4))
         {
-          mquads.Elem(i).marked = 1;
-          mquads.Elem(i).markededge = 1;
+          mquads[i-1].marked = 1;
+          mquads[i-1].markededge = 1;
           hanging = 1; 
           continue; 
         }
@@ -1856,9 +1856,9 @@ namespace netgen
     for (int i = 1; i <= conto.EntrySize(node); i++)
       {
 	int n2 = conto.Get(node, i);
-	if (!connecttonode.Get(n2))
+	if (!connecttonode[n2-1])
 	  {
-	    connecttonode.Elem(n2) = tonode;
+	    connecttonode[n2-1] = tonode;
 	    ConnectToNodeRec (n2, tonode, conto, connecttonode);
 	  }
       }
@@ -2944,13 +2944,13 @@ namespace netgen
 		for(auto ei : mtets.Range())
 		  mtets[ei].marked = 0;
 		for(int i=1; i<=mprisms.Size(); i++)
-		  mprisms.Elem(i).marked = 0;
+		  mprisms[i-1].marked = 0;
 		for(int i=1; i<=mtris.Size(); i++)
-		  mtris.Elem(i).marked = 0;
+		  mtris[i-1].marked = 0;
 		for(int i=1; i<=mquads.Size(); i++)
-		  mquads.Elem(i).marked = 0;
+		  mquads[i-1].marked = 0;
 		for(int i=1; i<=mprisms.Size(); i++)
-		  mids.Elem(i).marked = 0;
+		  mids[i-1].marked = 0;
 
 		inf >> st;
 		while(inf)
@@ -3109,9 +3109,9 @@ namespace netgen
 		    else
 		      {
 			cntprism++;
-			mprisms.Elem(cntprism).marked =
+			mprisms[cntprism-1].marked =
 			  2 * mesh.VolumeElement(ei).TestRefinementFlag();
-			if (mprisms.Elem(cntprism).marked)
+			if (mprisms[cntprism-1].marked)
 			  cntm++;
 		      }
 
@@ -3152,20 +3152,20 @@ namespace netgen
 		    mesh[sei].GetType() == TRIG6)
 		  {
 		    cnttrig++;
-		    mtris.Elem(cnttrig).marked =
+		    mtris[cnttrig-1].marked =
 		      mesh[sei].TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
 		    // mtris.Elem(cnttrig).marked = 0;
-		    if (mtris.Elem(cnttrig).marked)
+		    if (mtris[cnttrig-1].marked)
 		      cntm++;
 		  }
 		else
 		  {
 		    cntquad++;
                     // 2d: marked=2, 3d prisms: marked=1
-		    mquads.Elem(cntquad).marked =
+		    mquads[cntquad-1].marked =
                         mesh[sei].TestRefinementFlag() ? 4-mesh.GetDimension() : 0 ;
 		    // mquads.Elem(cntquad).marked = 0;
-		    if (mquads.Elem(cntquad).marked)
+		    if (mquads[cntquad-1].marked)
 		      cntm++;
 		  }
 	      }
@@ -3230,20 +3230,20 @@ namespace netgen
 
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
-	      mprisms.Elem(i).incorder = mprisms.Elem(i).marked ? 1 : 0;
+	      mprisms[i-1].incorder = mprisms[i-1].marked ? 1 : 0;
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
-	      if (mprisms.Elem(i).incorder)
-		mprisms.Elem(i).marked = 0;
+	      if (mprisms[i-1].incorder)
+		mprisms[i-1].marked = 0;
 
 
 	    for (int i = 1; i <= mtris.Size(); i++)
-	      mtris.Elem(i).incorder = mtris.Elem(i).marked ? 1 : 0;
+	      mtris[i-1].incorder = mtris[i-1].marked ? 1 : 0;
 
 	    for (int i = 1; i <= mtris.Size(); i++)
 	      {
-		if (mtris.Elem(i).incorder)
-		  mtris.Elem(i).marked = 0;
+		if (mtris[i-1].incorder)
+		  mtris[i-1].marked = 0;
 	      }
 	  }
 
@@ -3311,34 +3311,34 @@ namespace netgen
 
 
 	    for (int i = 1; i <= mprisms.Size(); i++)
-	      mprisms.Elem(i).incorder = 1;
+	      mprisms[i-1].incorder = 1;
 	    for (int i = 1; i <= mprisms.Size(); i++)
 	      {
-		if (!mprisms.Elem(i).marked)
-		  mprisms.Elem(i).incorder = 0;
+		if (!mprisms[i-1].marked)
+		  mprisms[i-1].incorder = 0;
 		for (int j = 0; j < 6; j++)
-		  if (singv.Test (mprisms.Elem(i).pnums[j]))
-		    mprisms.Elem(i).incorder = 0;
+		  if (singv.Test (mprisms[i-1].pnums[j]))
+		    mprisms[i-1].incorder = 0;
 	      }
 	    for (int i = 1; i <= mprisms.Size(); i++)
-	      if (mprisms.Elem(i).incorder)
-		mprisms.Elem(i).marked = 0;
+	      if (mprisms[i-1].incorder)
+		mprisms[i-1].marked = 0;
 
 
 	    for (int i = 1; i <= mtris.Size(); i++)
-	      mtris.Elem(i).incorder = 1;
+	      mtris[i-1].incorder = 1;
 	    for (int i = 1; i <= mtris.Size(); i++)
 	      {
-		if (!mtris.Elem(i).marked)
-		  mtris.Elem(i).incorder = 0;
+		if (!mtris[i-1].marked)
+		  mtris[i-1].incorder = 0;
 		for (int j = 0; j < 3; j++)
-		  if (singv.Test (mtris.Elem(i).pnums[j]))
-		    mtris.Elem(i).incorder = 0;
+		  if (singv.Test (mtris[i-1].pnums[j]))
+		    mtris[i-1].incorder = 0;
 	      }
 	    for (int i = 1; i <= mtris.Size(); i++)
 	      {
-		if (mtris.Elem(i).incorder)
-		  mtris.Elem(i).marked = 0;
+		if (mtris[i-1].incorder)
+		  mtris[i-1].marked = 0;
 	      }
 	  }
 
@@ -3390,13 +3390,13 @@ namespace netgen
             (*opt.tracer)("bisecttet", true);            
 	    int npr = mprisms.Size();
 	    for (int i = 1; i <= npr; i++)
-	      if (mprisms.Elem(i).marked)
+	      if (mprisms[i-1].marked)
 		{
 		  MarkedPrism oldprism;
 		  MarkedPrism newprism1, newprism2;
 		  PointIndex newp1, newp2;
 
-		  oldprism = mprisms.Get(i);
+		  oldprism = mprisms[i-1];
 		  int pi1 = 0;
 		  if (pi1 == oldprism.markededge)
 		    pi1++;
@@ -3428,18 +3428,18 @@ namespace netgen
 		  BTBisectPrism (oldprism, newp1, newp2, newprism1, newprism2);
 		  //if(yn == "y")
 		  //  (*testout) << "bisected prism " << oldprism << "and got " << newprism1 << "and " << newprism2 << endl;
-		  mprisms.Elem(i) = newprism1;
+		  mprisms[i-1] = newprism1;
 		  mprisms.Append (newprism2);
 		}
 
 	    int nid = mids.Size();
 	    for (int i = 1; i <= nid; i++)
-	      if (mids.Elem(i).marked)
+	      if (mids[i-1].marked)
 		{
 		  MarkedIdentification oldid,newid1,newid2;
 		  Array<PointIndex> newp;
 
-		  oldid = mids.Get(i);
+		  oldid = mids[i-1];
 		  
 		  NgArray<PointIndices<2>> edges;
 		  edges.Append( {
@@ -3474,7 +3474,7 @@ namespace netgen
 		    }
 		  
 		  BTBisectIdentification(oldid,newp,newid1,newid2);
-		  mids.Elem(i) = newid1;
+		  mids[i-1] = newid1;
 		  mids.Append(newid2);		  
 		}
 
@@ -3539,13 +3539,13 @@ namespace netgen
             
 	    int nquad = mquads.Size();
 	    for (int i = 1; i <= nquad; i++)
-	      if (mquads.Elem(i).marked)
+	      if (mquads[i-1].marked)
 		{
 		  MarkedQuad oldquad;
 		  MarkedQuad newquad1, newquad2;
 		  PointIndex newp1, newp2;
 		
-		  oldquad = mquads.Get(i);
+		  oldquad = mquads[i-1];
                   /*
 		  INDEX_2 edge1(oldquad.pnums[0],
 				oldquad.pnums[1]);
@@ -3613,7 +3613,7 @@ namespace netgen
 		  BTBisectQuad (oldquad, newp1, npgi1, newp2, npgi2,
 				newquad1, newquad2);
                   
-		  mquads.Elem(i) = newquad1;
+		  mquads[i-1] = newquad1;
 		  mquads.Append (newquad2);
 		}
 
@@ -3718,9 +3718,9 @@ namespace netgen
 	else
 	  {
 	    for (int i = 1; i <= mtris.Size(); i++)
-	      if (mtris.Elem(i).incorder)
+	      if (mtris[i-1].incorder)
 		{
-		  mtris.Elem(i).order++;
+		  mtris[i-1].order++;
 		}
 
 	    for (int i = 0; i < mtris.Size(); i++)
@@ -3782,10 +3782,10 @@ namespace netgen
     for (int i = 1; i <= mprisms.Size(); i++)
       {
 	Element el(PRISM);
-	el.SetIndex (mprisms.Get(i).matindex);
+	el.SetIndex (mprisms[i-1].matindex);
 	for (int j = 1; j <= 6; j++)
-	  el.PNum(j) = mprisms.Get(i).pnums[j-1];
-	el.SetOrder (mprisms.Get(i).order);
+	  el.PNum(j) = mprisms[i-1].pnums[j-1];
+	el.SetOrder (mprisms[i-1].order);
 
 	// degenerated prism ?
 	static const int map1[] = { 3, 2, 5, 6, 1 };
@@ -3805,7 +3805,7 @@ namespace netgen
 	  case 1:
 	    {
 	      for (int j = 1; j <= 5; j++)
-		el.PNum(j) = mprisms.Get(i).pnums[map[j-1]-1];
+		el.PNum(j) = mprisms[i-1].pnums[map[j-1]-1];
 	    
 	      el.SetType (PYRAMID);
 	      break;
@@ -3819,7 +3819,7 @@ namespace netgen
 	      if (!deg2) map = tetmap2;
 	      if (!deg3) map = tetmap3; 
 	      for (int j = 1; j <= 4; j++)
-		el.PNum(j) = mprisms.Get(i).pnums[map[j-1]-1];
+		el.PNum(j) = mprisms[i-1].pnums[map[j-1]-1];
 	      /*
 		if (!deg1) el.PNum(4) = el.PNum(4);
 		if (!deg2) el.PNum(4) = el.PNum(5);
@@ -3878,9 +3878,9 @@ namespace netgen
     for (int i = 1; i <= mquads.Size(); i++)
       {
 	Element2d el(QUAD);
-	el.SetIndex (mquads.Get(i).surfid);
+	el.SetIndex (mquads[i-1].surfid);
 	for (int j = 1; j <= 4; j++)
-	  el.PNum(j) = mquads.Get(i).pnums[j-1];
+	  el.PNum(j) = mquads[i-1].pnums[j-1];
 	Swap (el.PNum(3), el.PNum(4));
 	mesh.AddSurfaceElement (el);
       }

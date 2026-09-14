@@ -56,7 +56,7 @@ namespace netgen
 
     for (int i = 1; i <= geometry2d->GetSplines().Size(); i++)
       {
-	geometry2d->GetSplines().Get(i)->GetPoints (200, points);
+	geometry2d->GetSplines()[i-1]->GetPoints (200, points);
       
 	glBegin (GL_LINE_STRIP);
 	for (int j = 0; j < points.Size(); j++)
@@ -71,8 +71,8 @@ namespace netgen
 	int other = geometry2d->GetSpline(i-1).copyfrom;
 	if (other != -1)
 	  {
-	    geometry2d->GetSplines().Get(i)->GetPoints (6, points);
-	    geometry2d->GetSplines().Get(other)->GetPoints (6, otherpoints);
+	    geometry2d->GetSplines()[i-1]->GetPoints (6, points);
+	    geometry2d->GetSplines()[other-1]->GetPoints (6, otherpoints);
 	    glBegin (GL_LINES);
 	    for (int j = 1; j < 5; j++)
 	      {

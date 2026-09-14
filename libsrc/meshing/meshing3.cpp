@@ -537,11 +537,11 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	    {
 	      for (int i = 1; i <= locelements.Size(); i++)
 		{
-		  Point3d pmin = locpoints[locelements.Get(i).PNum(1)];
+		  Point3d pmin = locpoints[locelements[i-1].PNum(1)];
 		  Point3d pmax = pmin;
 		  for (int j = 2; j <= 4; j++)
 		    {
-		      const Point3d & hp = locpoints[locelements.Get(i).PNum(j)];
+		      const Point3d & hp = locpoints[locelements[i-1].PNum(j)];
 		      pmin.SetToMin (hp);
 		      pmax.SetToMax (hp);
 		    }
@@ -555,7 +555,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	      for (int i = 1; i <= locelements.Size(); i++)
 		for (int j = 1; j <= 4; j++)
 		  {
-		    const Point3d & hp = locpoints[locelements.Get(i).PNum(j)];
+		    const Point3d & hp = locpoints[locelements[i-1].PNum(j)];
 		    if (Dist (hp, pmid) > hinner)
 		      found = 0;
 		  }
@@ -652,13 +652,13 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	    */
 
 	  for(int i = 1; i <= tempnewpoints.Size(); i++)
-	    locpoints.Append (tempnewpoints.Get(i));
+	    locpoints.Append (tempnewpoints[i-1]);
 	  for(int i = 1; i <= tempnewfaces.Size(); i++)
-	    locfaces.Append (tempnewfaces.Get(i));
+	    locfaces.Append (tempnewfaces[i-1]);
 	  for(int i = 1; i <= tempdelfaces.Size(); i++)
-	    delfaces.Append (tempdelfaces.Get(i));
+	    delfaces.Append (tempdelfaces[i-1]);
 	  for(int i = 1; i <= templocelements.Size(); i++)
-	    locelements.Append (templocelements.Get(i));
+	    locelements.Append (templocelements[i-1]);
 
 
 	  if (loktestmode)
@@ -689,14 +689,14 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	  for (int i = 1; i <= locelements.Size(); i++)
 	    {
 	      Point3d * hp1, * hp2, * hp3, * hp4;
-	      hp1 = &locpoints[locelements.Get(i).PNum(1)];
-	      hp2 = &locpoints[locelements.Get(i).PNum(2)];
-	      hp3 = &locpoints[locelements.Get(i).PNum(3)];
-	      hp4 = &locpoints[locelements.Get(i).PNum(4)];
+	      hp1 = &locpoints[locelements[i-1].PNum(1)];
+	      hp2 = &locpoints[locelements[i-1].PNum(2)];
+	      hp3 = &locpoints[locelements[i-1].PNum(3)];
+	      hp4 = &locpoints[locelements[i-1].PNum(4)];
 	      
 	      tetvol += (1.0 / 6.0) * ( Cross ( *hp2 - *hp1, *hp3 - *hp1) * (*hp4 - *hp1) );
 
-	      const LocalElement & locel = locelements.Get(i);
+	      const LocalElement & locel = locelements[i-1];
 	      Element el(locel.GetNP());
 	      el.SetType (locel.GetType());
 	      for (int j = 1; j <= locel.GetNP(); j++)
@@ -715,7 +715,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 	    }
 	  
 	  for(int i = 1; i <= delfaces.Size(); i++)
-	    adfront->DeleteFace (findex[delfaces.Get(i)-1]);
+	    adfront->DeleteFace (findex[delfaces[i-1]-1]);
 	}
       else
 	{
@@ -812,7 +812,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
   // initialize inner to 1
 
   for(int i = 1; i <= n; i++)
-    inner.Elem(i) = BLOCKUNDEF;
+    inner[i-1] = BLOCKUNDEF;
 
 
   // set blocks cutting surfaces to 0
@@ -856,7 +856,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       for (int i1 = min1; i1 <= max1; i1++)
 	for (int i2 = min2; i2 <= max2; i2++)
 	  for (int i3 = min3; i3 <= max3; i3++)
-	    inner.Elem(i3 + (i2-1) * n3 + (i1-1) * n2 * n3) = BLOCKBOUND;      
+	    inner[i3 + (i2-1) * n3 + (i1-1) * n2 * n3-1] = BLOCKBOUND;      
     }
 
   
@@ -872,7 +872,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 	  for (int i3 = 1; i3 <= n3 && !undefi; i3++)
 	    {
 	      i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
-	      if (inner.Elem(i) == BLOCKUNDEF)
+	      if (inner[i-1] == BLOCKUNDEF)
 		{
 		  undefi = i;
 		  undefp.X() = xmin + (i1-0.5) * gh;
@@ -889,12 +889,12 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       if (adfront -> Inside (undefp))
 	{
 	  //	  (*mycout) << "inner" << endl;
-	  inner.Elem(undefi) = BLOCKINNER;
+	  inner[undefi-1] = BLOCKINNER;
 	}
       else
 	{
 	  //	  (*mycout) << "outer" << endl;
-	  inner.Elem(undefi) = BLOCKOUTER;
+	  inner[undefi-1] = BLOCKOUTER;
 	}
 
       do
@@ -918,25 +918,25 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 		  
 		      if (j > n1 * n2 * n3) continue;
 
-		      if (inner.Elem(i) == BLOCKOUTER && inner.Elem(j) == BLOCKUNDEF)
+		      if (inner[i-1] == BLOCKOUTER && inner[j-1] == BLOCKUNDEF)
 			{
 			  changed = 1;
-			  inner.Elem(j) = BLOCKOUTER;
+			  inner[j-1] = BLOCKOUTER;
 			}
-		      if (inner.Elem(j) == BLOCKOUTER && inner.Elem(i) == BLOCKUNDEF)
+		      if (inner[j-1] == BLOCKOUTER && inner[i-1] == BLOCKUNDEF)
 			{
 			  changed = 1;
-			  inner.Elem(i) = BLOCKOUTER;
+			  inner[i-1] = BLOCKOUTER;
 			}
-		      if (inner.Elem(i) == BLOCKINNER && inner.Elem(j) == BLOCKUNDEF)
+		      if (inner[i-1] == BLOCKINNER && inner[j-1] == BLOCKUNDEF)
 			{
 			  changed = 1;
-			  inner.Elem(j) = BLOCKINNER;
+			  inner[j-1] = BLOCKINNER;
 			}
-		      if (inner.Elem(j) == BLOCKINNER && inner.Elem(i) == BLOCKUNDEF)
+		      if (inner[j-1] == BLOCKINNER && inner[i-1] == BLOCKUNDEF)
 			{
 			  changed = 1;
-			  inner.Elem(i) = BLOCKINNER;
+			  inner[i-1] = BLOCKINNER;
 			}
 		    }
 		}
@@ -949,7 +949,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
   filled = 0;
   for(int i = 1; i <= n; i++)
-    if (inner.Elem(i) == BLOCKINNER)
+    if (inner[i-1] == BLOCKINNER)
       {
 	filled++;
       }
@@ -957,8 +957,8 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 
   for(int i = 1; i <= n; i++)
     {
-      pointnr.Elem(i) = PointIndex::INVALID;
-      frontpointnr.Elem(i) = Front3PointIndex::INVALID;
+      pointnr[i-1] = PointIndex::INVALID;
+      frontpointnr[i-1] = Front3PointIndex::INVALID;
     }
   
   for (int i1 = 1; i1 <= n1-1; i1++)
@@ -966,21 +966,21 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       for (int i3 = 1; i3 <= n3-1; i3++)
 	{
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
-	  if (inner.Elem(i) == BLOCKINNER)
+	  if (inner[i-1] == BLOCKINNER)
 	    {
 	      for (int j1 = i1; j1 <= i1+1; j1++)
 		for (int j2 = i2; j2 <= i2+1; j2++)
 		  for (int j3 = i3; j3 <= i3+1; j3++)
 		    {
 		      int j = j3 + (j2-1) * n3 + (j1-1) * n2 * n3;
-		      if (!pointnr.Get(j).IsValid())
+		      if (!pointnr[j-1].IsValid())
 			{
 			  Point3d hp(xmin + (j1-1) * gh, 
 				     ymin + (j2-1) * gh, 
 				     zmin + (j3-1) * gh);
-			  pointnr.Elem(j) = mesh.AddPoint (hp);
-			  frontpointnr.Elem(j) =
-			    AddPoint (hp, pointnr.Elem(j));
+			  pointnr[j-1] = mesh.AddPoint (hp);
+			  frontpointnr[j-1] =
+			    AddPoint (hp, pointnr[j-1]);
 
 			}
 		    }
@@ -993,17 +993,17 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       for (int i3 = 2; i3 <= n3-1; i3++)
 	{
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
-	  if (inner.Elem(i) == BLOCKINNER)
+	  if (inner[i-1] == BLOCKINNER)
 	    {
 	      PointIndex pn[9];
-	      pn[1] = pointnr.Get(i);
-	      pn[2] = pointnr.Get(i+1);
-	      pn[3] = pointnr.Get(i+n3);
-	      pn[4] = pointnr.Get(i+n3+1);
-	      pn[5] = pointnr.Get(i+n2*n3);
-	      pn[6] = pointnr.Get(i+n2*n3+1);
-	      pn[7] = pointnr.Get(i+n2*n3+n3);
-	      pn[8] = pointnr.Get(i+n2*n3+n3+1);
+	      pn[1] = pointnr[i-1];
+	      pn[2] = pointnr[i];
+	      pn[3] = pointnr[i+n3-1];
+	      pn[4] = pointnr[i+n3];
+	      pn[5] = pointnr[i+n2*n3-1];
+	      pn[6] = pointnr[i+n2*n3];
+	      pn[7] = pointnr[i+n2*n3+n3-1];
+	      pn[8] = pointnr[i+n2*n3+n3];
 	      static int elind[][4] =
 	      {
 		{ 1, 8, 2, 4 },
@@ -1031,18 +1031,18 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
       for (int i3 = 2; i3 <= n3-1; i3++)
 	{
 	  i = i3 + (i2-1) * n3 + (i1-1) * n2 * n3;
-	  if (inner.Elem(i) == BLOCKINNER)
+	  if (inner[i-1] == BLOCKINNER)
 	    {    
 	      Front3PointIndex pi1, pi2, pi3, pi4;
 
-	      Front3PointIndex pn1 = frontpointnr.Get(i);
-	      Front3PointIndex pn2 = frontpointnr.Get(i+1);
-	      Front3PointIndex pn3 = frontpointnr.Get(i+n3);
-	      Front3PointIndex pn4 = frontpointnr.Get(i+n3+1);
-	      Front3PointIndex pn5 = frontpointnr.Get(i+n2*n3);
-	      Front3PointIndex pn6 = frontpointnr.Get(i+n2*n3+1);
-	      Front3PointIndex pn7 = frontpointnr.Get(i+n2*n3+n3);
-	      Front3PointIndex pn8 = frontpointnr.Get(i+n2*n3+n3+1);
+	      Front3PointIndex pn1 = frontpointnr[i-1];
+	      Front3PointIndex pn2 = frontpointnr[i];
+	      Front3PointIndex pn3 = frontpointnr[i+n3-1];
+	      Front3PointIndex pn4 = frontpointnr[i+n3];
+	      Front3PointIndex pn5 = frontpointnr[i+n2*n3-1];
+	      Front3PointIndex pn6 = frontpointnr[i+n2*n3];
+	      Front3PointIndex pn7 = frontpointnr[i+n2*n3+n3-1];
+	      Front3PointIndex pn8 = frontpointnr[i+n2*n3+n3];
 
 	      for (int k = 1; k <= 6; k++)
 		{
@@ -1093,7 +1093,7 @@ void Meshing3 :: BlockFill (Mesh & mesh, double gh)
 		      break;
 		    }
 
-		  if (inner.Get(j) == BLOCKBOUND)
+		  if (inner[j-1] == BLOCKBOUND)
 		    {
 		      FrontElement2d face;
 		      face.PNum(1) = pi4;
@@ -1213,9 +1213,9 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
       changed = false;
       for (int i = 1; i <= npoints.Size(); i++)
 	{
-	  if (loch.GetH(npoints.Get(i)) > 1.5 * maxh)
+	  if (loch.GetH(npoints[i-1]) > 1.5 * maxh)
 	    {
-	      loch.SetH (npoints.Get(i), maxh);
+	      loch.SetH (npoints[i-1], maxh);
 	      changed = true;
 	    }
 	}
@@ -1227,15 +1227,15 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
     (*testout) << "Blockfill with points: " << endl;
   for (int i = 1; i <= npoints.Size(); i++)
     {
-      if (meshbox.IsIn (npoints.Get(i)))
+      if (meshbox.IsIn (npoints[i-1]))
 	{
-	  PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
-	  adfront->AddPoint (npoints.Get(i), gpnum);
+	  PointIndex gpnum = mesh.AddPoint (npoints[i-1]);
+	  adfront->AddPoint (npoints[i-1], gpnum);
 
 	  if (debugparam.slowchecks)
 	    {
-	      (*testout) << npoints.Get(i) << endl;
-	      if (!adfront->Inside(npoints.Get(i)))
+	      (*testout) << npoints[i-1] << endl;
+	      if (!adfront->Inside(npoints[i-1]))
 		{
 		  cout << "add outside point" << endl;
 		  (*testout) << "outside" << endl;
@@ -1298,10 +1298,10 @@ void Meshing3 :: BlockFillLocalH (Mesh & mesh,
   
   for (int i = 1; i <= npoints.Size(); i++)
     {
-      if (meshbox.IsIn (npoints.Get(i)))
+      if (meshbox.IsIn (npoints[i-1]))
 	{
-	  PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
-	  adfront->AddPoint (npoints.Get(i), gpnum);
+	  PointIndex gpnum = mesh.AddPoint (npoints[i-1]);
+	  adfront->AddPoint (npoints[i-1], gpnum);
 	}
     }  
 }

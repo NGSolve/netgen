@@ -277,7 +277,7 @@ namespace netgen
     void DeleteExternalEdge(int p1, int p2);
     int IsExternalEdge(int p1, int p2);
     int NOExternalEdges() const {return externaledges.Size();}
-    twoint GetExternalEdge(int i) const {return externaledges.Get(i);}
+    twoint GetExternalEdge(int i) const {return externaledges[i-1];}
 
 	void DestroyDirtyTrigs();
 	void CalcNormalsFromGeometry();
@@ -299,8 +299,8 @@ namespace netgen
 
     void GetMarkedSeg(int i, Point<3> & ap1, Point<3> & ap2) 
     {
-      ap1=markedsegs.Get(i*2-1); 
-      ap2=markedsegs.Get(i*2);
+      ap1=markedsegs[i*2-2]; 
+      ap2=markedsegs[i*2-1];
     }
     int GetNMarkedSegs() {return markedsegs.Size()/2;}
 	void CalcVicinity(int starttrig);
@@ -326,13 +326,13 @@ namespace netgen
 
 
     int AddNormal(const Vec3d& n) { normals.Append(n); return normals.Size(); }
-    const Vec3d & GetNormal(int nr) const {return normals.Get(nr);}
-    void SetNormal(int nr, const Vec3d& n) {normals.Elem(nr) = n;}
+    const Vec3d & GetNormal(int nr) const {return normals[nr-1];}
+    void SetNormal(int nr, const Vec3d& n) {normals[nr-1] = n;}
 
     int AddEdge(const STLEdge& v) { edges.Append(v); return edges.Size(); }
     int AddEdge(int p1, int p2);
 
-    STLEdge GetEdge(int nr) {return edges.Get(nr);}
+    STLEdge GetEdge(int nr) {return edges[nr-1];}
     int GetNE() {return edges.Size();}
 
     double Area();
@@ -388,8 +388,8 @@ namespace netgen
 			    NgArray<ChartId>& chartpointchecked, NgArray<int>& dirtytrigs);
 
     void ClearSpiralPoints();
-    void SetSpiralPoint(int pn) {spiralpoints.Elem(pn) = 1;};
-    int GetSpiralPoint(int pn) const {return spiralpoints.Get(pn);};
+    void SetSpiralPoint(int pn) {spiralpoints[pn-1] = 1;};
+    int GetSpiralPoint(int pn) const {return spiralpoints[pn-1];};
 
     void GetSortedTrianglesAroundPoint(STLPointId p, STLTrigId starttrig, Array<STLTrigId>& trigs);
 
@@ -457,9 +457,9 @@ namespace netgen
 
     int GetNLines() const {return lines.Size();}
     int AddLine(STLLine* line) { lines.Append(line); return lines.Size(); }
-    STLLine* GetLine(int nr) const {return lines.Get(nr);}
-    int GetLineP(int lnr, int pnr) const {return lines.Get(lnr)->PNum(pnr);}
-    int GetLineNP(int nr) const {return lines.Get(nr)->NP();}
+    STLLine* GetLine(int nr) const {return lines[nr-1];}
+    int GetLineP(int lnr, int pnr) const {return lines[lnr-1]->PNum(pnr);}
+    int GetLineNP(int nr) const {return lines[nr-1]->NP();}
 
     void SetLineEndPoint(int pn);
     int IsLineEndPoint(int pn);

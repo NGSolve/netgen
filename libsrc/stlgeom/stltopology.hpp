@@ -371,8 +371,8 @@ public:
 
 
   int GetNTE() const { return topedges.Size(); }
-  const STLTopEdge & GetTopEdge (int nr) const { return topedges.Get(nr); }
-  STLTopEdge & GetTopEdge (int nr)  { return topedges.Elem(nr); }
+  const STLTopEdge & GetTopEdge (int nr) const { return topedges[nr-1]; }
+  STLTopEdge & GetTopEdge (int nr)  { return topedges[nr-1]; }
   DLL_HEADER int GetTopEdgeNum (int pi1, int pi2) const;
 
 

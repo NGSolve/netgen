@@ -19,13 +19,13 @@ vnetrule :: ~vnetrule ()
   // if (strlen(name)) 
   delete [] name;
   for (int i = 1; i <= freefaces.Size(); i++)
-    delete freefaces.Elem(i);
+    delete freefaces[i-1];
   for (int i = 1; i <= freesets.Size(); i++)
-    delete freesets.Elem(i);
+    delete freesets[i-1];
   for (int i = 1; i <= freeedges.Size(); i++)
-    delete freeedges.Elem(i);
+    delete freeedges[i-1];
   for (int i = 1; i <= freefaceinequ.Size(); i++)
-    delete freefaceinequ.Elem(i);
+    delete freefaceinequ[i-1];
   delete oldutofreezone;
   delete oldutofreezonelimit;
 }
@@ -33,7 +33,7 @@ vnetrule :: ~vnetrule ()
 int vnetrule :: TestFlag (char flag) const
 {
   for (int i = 1; i <= flags.Size(); i++)
-    if (flags.Get(i) == flag) return 1;
+    if (flags[i-1] == flag) return 1;
   return 0;
 }
 
@@ -68,15 +68,15 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
       vfp1.Add (lam2, vfp2);
 
       for (j = 1; j <= nfp; j++)
-	transfreezone.Elem(j).X(i) = vfp1(j-1);
+	transfreezone[j-1].X(i) = vfp1(j-1);
     }
 
   // MARK(setfz2);
 
 
-  fzbox.SetPoint (transfreezone.Elem(1));
+  fzbox.SetPoint (transfreezone[0]);
   for (i = 2; i <= freezone.Size(); i++)
-    fzbox.AddPoint (transfreezone.Elem(i));
+    fzbox.AddPoint (transfreezone[i-1]);
   fzbox.IncreaseRel(1e-8);
   
   
@@ -85,15 +85,15 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
-      DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
+      NgArray<threeint> & freesetfaces = *freefaces[fs-1];
+      DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
       
       for (i = 1; i <= freesetfaces.Size(); i++)
 	{
-	  ti = &freesetfaces.Get(i);
-	  const Point3d & p1 = transfreezone.Get(ti->i1);
-	  const Point3d & p2 = transfreezone.Get(ti->i2);
-	  const Point3d & p3 = transfreezone.Get(ti->i3);
+	  ti = &freesetfaces[i-1];
+	  const Point3d & p1 = transfreezone[(ti->i1)-1];
+	  const Point3d & p2 = transfreezone[(ti->i2)-1];
+	  const Point3d & p3 = transfreezone[(ti->i3)-1];
 
 	  Vec3d v1(p1, p2);   
 	  Vec3d v2(p1, p3);   
@@ -141,20 +141,20 @@ int vnetrule :: ConvexFreeZone () const
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      const DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
+      const DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
 
       // const Array<int> & freeset = *freesets.Get(fs);
-      const NgArray<twoint> & freesetedges = *freeedges.Get(fs);
+      const NgArray<twoint> & freesetedges = *freeedges[fs-1];
       // const NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
       
       for (i = 1; i <= freesetedges.Size(); i++)
 	{
-	  j = freesetedges.Get(i).i1;    //triangle j with opposite point k
-	  k = freesetedges.Get(i).i2;
+	  j = freesetedges[i-1].i1;    //triangle j with opposite point k
+	  k = freesetedges[i-1].i2;
 	  
-	  if ( freesetinequ.Get(j, 1) * transfreezone.Get(k).X() +
-	       freesetinequ.Get(j, 2) * transfreezone.Get(k).Y() +
-	       freesetinequ.Get(j, 3) * transfreezone.Get(k).Z() +
+	  if ( freesetinequ.Get(j, 1) * transfreezone[k-1].X() +
+	       freesetinequ.Get(j, 2) * transfreezone[k-1].Y() +
+	       freesetinequ.Get(j, 3) * transfreezone[k-1].Z() +
 	       freesetinequ.Get(j, 4) > 0 )
 	    {
 	      ret1=0;
@@ -176,8 +176,8 @@ int vnetrule :: IsInFreeZone (const Point3d & p) const
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
       inthis = 1;
-      NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
-      DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
+      NgArray<threeint> & freesetfaces = *freefaces[fs-1];
+      DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
       
       for (i = 1; i <= freesetfaces.Size() && inthis; i++)
 	{
@@ -208,24 +208,24 @@ int vnetrule :: IsTriangleInFreeZone (const Point3d & p1,
   int i, j;
   for (i = 1; i <= 3; i++)
     {
-      pfi.Elem(i) = 0;
-      if (pi.Get(i))
+      pfi[i-1] = 0;
+      if (pi[i-1])
 	{
 	  for (j = 1; j <= freezonepi.Size(); j++)
-	    if (freezonepi.Get(j) == pi.Get(i))
-	      pfi.Elem(i) = j;
+	    if (freezonepi[j-1] == pi[i-1])
+	      pfi[i-1] = j;
 	}
     }
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      const NgArray<int> & freeseti = *freesets.Get(fs);
+      const NgArray<int> & freeseti = *freesets[fs-1];
       for (i = 1; i <= 3; i++)
 	{
-	  pfi2.Elem(i) = 0;
+	  pfi2[i-1] = 0;
 	  for (j = 1; j <= freeseti.Size(); j++)
-	    if (pfi.Get(i) == freeseti.Get(j))
-	      pfi2.Elem(i) = pfi.Get(i);
+	    if (pfi[i-1] == freeseti[j-1])
+	      pfi2[i-1] = pfi[i-1];
 	}
 
       infreeset = IsTriangleInFreeSet(p1, p2, p3, fs, pfi2, newone);
@@ -258,13 +258,13 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
   // MARK(triinfz);
   
-  NgArray<threeint> & freesetfaces = *freefaces.Get(fs);
-  DenseMatrix & freesetinequ = *freefaceinequ.Get(fs);
+  NgArray<threeint> & freesetfaces = *freefaces[fs-1];
+  DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
   
 
   int cnt = 0;
   for (i = 1; i <= 3; i++)
-    if (pi.Get(i)) cnt++;
+    if (pi[i-1]) cnt++;
 
   /*
   (*testout) << "trig in free set : " << p1 << " - " << p2 << " - " << p3 << endl;
@@ -279,10 +279,10 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
       int upi = 0, lpiu = 0;
       for (i = 1; i <= 3; i++)
-	if (pi.Get(i))
+	if (pi[i-1])
 	  {
 	    upi = i;
-	    lpiu = pi.Get(i);
+	    lpiu = pi[i-1];
 	  }
 
       Vec3d v1, v2;
@@ -316,9 +316,9 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
       //      (*testout) << "Test new: " << endl;
       for (i = 1; i <= freesetfaces.Size(); i++)
 	{
-	  if ( (freesetfaces.Get(i).i1 == lpiu) || 
-	       (freesetfaces.Get(i).i2 == lpiu) ||
-	       (freesetfaces.Get(i).i3 == lpiu) )
+	  if ( (freesetfaces[i-1].i1 == lpiu) || 
+	       (freesetfaces[i-1].i2 == lpiu) ||
+	       (freesetfaces[i-1].i3 == lpiu) )
 	    {
 	      // freeface has point
 
@@ -446,9 +446,9 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
       
       for (i = 1; i <= freesetfaces.Size(); i++)
 	{
-	  if ( (freesetfaces.Get(i).i1 == lpiu) || 
-	       (freesetfaces.Get(i).i2 == lpiu) ||
-	       (freesetfaces.Get(i).i3 == lpiu) )
+	  if ( (freesetfaces[i-1].i1 == lpiu) || 
+	       (freesetfaces[i-1].i2 == lpiu) ||
+	       (freesetfaces[i-1].i3 == lpiu) )
 	    {
 	      /*
 	      (*testout) << "v1, v2, now = " << v1 << ", " << v2 << endl;
@@ -561,10 +561,10 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
       Vec3d a1, a2;  // outer normals
       Vec3d trivec;  // vector from common edge to third point of triangle
       for (i = 1; i <= 3; i++)
-	if (pi.Get(i))
+	if (pi[i-1])
 	  {
 	    pi2 = pi1;
-	    pi1 = pi.Get(i);
+	    pi1 = pi[i-1];
 	  }
 	else
 	  pi3 = i;
@@ -578,16 +578,16 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
       NgArray<int> lpi(freezonepi.Size());
       for (i = 1; i <= lpi.Size(); i++)
-	lpi.Elem(i) = 0;
-      lpi.Elem(pi1) = 1;
-      lpi.Elem(pi2) = 1;
+	lpi[i-1] = 0;
+      lpi[pi1-1] = 1;
+      lpi[pi2-1] = 1;
       
       int ff1 = 0, ff2 = 0;
       for (i = 1; i <= freesetfaces.Size(); i++)
 	{
-	  if (lpi.Get(freesetfaces.Get(i).i1) + 
-	      lpi.Get(freesetfaces.Get(i).i2) + 
-	      lpi.Get(freesetfaces.Get(i).i3) == 2)
+	  if (lpi[freesetfaces[i-1].i1-1] + 
+	      lpi[freesetfaces[i-1].i2-1] + 
+	      lpi[freesetfaces[i-1].i3-1] == 2)
 	    {
 	      ff2 = ff1;
 	      ff1 = i;
@@ -617,16 +617,16 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
       NgArray<int> lpi(freezonepi.Size());
       for (i = 1; i <= lpi.Size(); i++)
-	lpi.Elem(i) = 0;
+	lpi[i-1] = 0;
 
       for (i = 1; i <= 3; i++)
-	lpi.Elem(pi.Get(i)) = 1;
+	lpi[pi[i-1]-1] = 1;
       
       for (i = 1; i <= freesetfaces.Size(); i++)
 	{
-	  if (lpi.Get(freesetfaces.Get(i).i1) + 
-	      lpi.Get(freesetfaces.Get(i).i2) + 
-	      lpi.Get(freesetfaces.Get(i).i3) == 3)
+	  if (lpi[freesetfaces[i-1].i1-1] + 
+	      lpi[freesetfaces[i-1].i2-1] + 
+	      lpi[freesetfaces[i-1].i3-1] == 3)
 	    {
 	      return 0;
 	    }
@@ -686,7 +686,7 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
   allleft = allright = 1;
   for (i = 1; i <= transfreezone.Size() && (allleft || allright); i++)
     {
-      const Point3d & p = transfreezone.Get(i);
+      const Point3d & p = transfreezone[i-1];
       float scal = (p.X() - p1.X()) * n.X() +
 	(p.Y() - p1.Y()) * n.Y() +
 	(p.Z() - p1.Z()) * n.Z();
@@ -739,7 +739,7 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
       for (i = 1; i <= activefaces.Size(); i++)
 	{
-	  ii = activefaces.Get(i);
+	  ii = activefaces[i-1];
 
 	  hf = freesetinequ.Get(ii, 1) * hpx +
 	    freesetinequ.Get(ii, 2) * hpy +
@@ -875,24 +875,24 @@ int vnetrule :: IsQuadInFreeZone (const Point3d & p1,
   int i, j;
   for (i = 1; i <= 4; i++)
     {
-      pfi.Elem(i) = 0;
-      if (pi.Get(i))
+      pfi[i-1] = 0;
+      if (pi[i-1])
 	{
 	  for (j = 1; j <= freezonepi.Size(); j++)
-	    if (freezonepi.Get(j) == pi.Get(i))
-	      pfi.Elem(i) = j;
+	    if (freezonepi[j-1] == pi[i-1])
+	      pfi[i-1] = j;
 	}
     }
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      const NgArray<int> & freeseti = *freesets.Get(fs);
+      const NgArray<int> & freeseti = *freesets[fs-1];
       for (i = 1; i <= 4; i++)
 	{
-	  pfi2.Elem(i) = 0;
+	  pfi2[i-1] = 0;
 	  for (j = 1; j <= freeseti.Size(); j++)
-	    if (pfi.Get(i) == freeseti.Get(j))
-	      pfi2.Elem(i) = pfi.Get(i);
+	    if (pfi[i-1] == freeseti[j-1])
+	      pfi2[i-1] = pfi[i-1];
 	}
 
       infreeset = IsQuadInFreeSet(p1, p2, p3, p4, fs, pfi2, newone);
@@ -912,7 +912,7 @@ int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
   
   int cnt = 0;
   for (i = 1; i <= 4; i++)
-    if (pi.Get(i)) cnt++;
+    if (pi[i-1]) cnt++;
   
   /*
   (*testout) << "test quad in freeset: " << p1 << " - " << p2 << " - " << p3 << " - " << p4 << endl;
@@ -935,28 +935,28 @@ int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
   NgArrayMem<int,3> pi3(3);
   int res;
 
-  pi3.Elem(1) = pi.Get(1);
-  pi3.Elem(2) = pi.Get(2);
-  pi3.Elem(3) = pi.Get(3);
+  pi3[0] = pi[0];
+  pi3[1] = pi[1];
+  pi3[2] = pi[2];
   res = IsTriangleInFreeSet (p1, p2, p3, fs, pi3, newone);
   if (res) return res;
 
 
-  pi3.Elem(1) = pi.Get(2);
-  pi3.Elem(2) = pi.Get(3);
-  pi3.Elem(3) = pi.Get(4);
+  pi3[0] = pi[1];
+  pi3[1] = pi[2];
+  pi3[2] = pi[3];
   res = IsTriangleInFreeSet (p2, p3, p4, fs, pi3, newone);
   if (res) return res;
 
-  pi3.Elem(1) = pi.Get(3);
-  pi3.Elem(2) = pi.Get(4);
-  pi3.Elem(3) = pi.Get(1);
+  pi3[0] = pi[2];
+  pi3[1] = pi[3];
+  pi3[2] = pi[0];
   res = IsTriangleInFreeSet (p3, p4, p1, fs, pi3, newone);
   if (res) return res;
 
-  pi3.Elem(1) = pi.Get(4);
-  pi3.Elem(2) = pi.Get(1);
-  pi3.Elem(3) = pi.Get(2);
+  pi3[0] = pi[3];
+  pi3[1] = pi[0];
+  pi3[2] = pi[1];
   res = IsTriangleInFreeSet (p4, p1, p2, fs, pi3, newone);
   return res;
 }
@@ -993,15 +993,15 @@ int vnetrule :: TestOk () const
 
   cntpused = 0;
   for (i = 1; i <= faces.Size(); i++)
-    delf.Elem(i) = 0;
+    delf[i-1] = 0;
   for (i = 1; i <= delfaces.Size(); i++)
-    delf.Elem(delfaces.Get(i)) = 1;
+    delf[delfaces[i-1]-1] = 1;
 
 
   for (i = 1; i <= faces.Size(); i++)
-    if (delf.Get(i) || i > noldf)
-      for (j = 1; j <= faces.Get(i).GetNP(); j++)
-        cntpused[faces.Get(i).PNum(j)]++;
+    if (delf[i-1] || i > noldf)
+      for (j = 1; j <= faces[i-1].GetNP(); j++)
+        cntpused[faces[i-1].PNum(j)]++;
 
   for (auto pi : cntpused.Range())
     if (cntpused[pi] > 0 && cntpused[pi] < 2)
@@ -1014,29 +1014,29 @@ int vnetrule :: TestOk () const
   for (i = 1; i <= faces.Size(); i++)
     {
       //      (*testout) << "face " << i << endl;
-      for (j = 1; j <= faces.Get(i).GetNP(); j++)
+      for (j = 1; j <= faces[i-1].GetNP(); j++)
 	{
 	  pi1.Invalidate(); pi2.Invalidate();
-	  if (delf.Get(i))
+	  if (delf[i-1])
 	    {
-	      pi1 = faces.Get(i).PNumMod(j);
-	      pi2 = faces.Get(i).PNumMod(j+1);
+	      pi1 = faces[i-1].PNumMod(j);
+	      pi2 = faces[i-1].PNumMod(j+1);
 	    }
 	  if (i > noldf)
 	    {
-	      pi1 = faces.Get(i).PNumMod(j+1);
-	      pi2 = faces.Get(i).PNumMod(j);
+	      pi1 = faces[i-1].PNumMod(j+1);
+	      pi2 = faces[i-1].PNumMod(j);
 	    }
 
 	  found = 0;
 	  if (pi1.IsValid())
 	    {
 	      for (k = 1; k <= edge1.Size(); k++)
-		if (edge1.Get(k) == pi1 && edge2.Get(k) == pi2)
+		if (edge1[k-1] == pi1 && edge2[k-1] == pi2)
 		  {
 		    found = 1;
-		    edge1.DeleteElement(k);
-		    edge2.DeleteElement(k);
+		    edge1.DeleteElement(k-1);
+		    edge2.DeleteElement(k-1);
 		    k--;
 		    //		    (*testout) << "Del edge " << pi1 << "-" << pi2 << endl;
 		  }
