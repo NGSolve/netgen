@@ -93,8 +93,8 @@ namespace netgen
         point_ids[pi] = point_ids_ud[pi.Nr0()];
 
 
-    INDEX_2_CLOSED_HASHTABLE<int> edgenumbers(6*mesh.GetNE()+3*mesh.GetNSE());;
-    INDEX_3_CLOSED_HASHTABLE<int> facenumbers(4*mesh.GetNE()+mesh.GetNSE());
+    ClosedHashTable<PointIndices<2>, int> edgenumbers(2*(6*mesh.GetNE()+3*mesh.GetNSE())+8);
+    ClosedHashTable<PointIndices<3>, int> facenumbers(2*(4*mesh.GetNE()+mesh.GetNSE())+8);
 
     Array<PointIndices<2>> edge2node;
     Array<INDEX_3> face2edge;

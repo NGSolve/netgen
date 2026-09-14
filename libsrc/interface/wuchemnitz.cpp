@@ -159,8 +159,8 @@ namespace netgen
 
   void Convert ()
   {
-    INDEX_3_HASHTABLE<int> faceindex(volelements.Size()/5 + 1);
-    INDEX_2_HASHTABLE<int> edgeindex(volelements.Size()/5 + 1);
+    ClosedHashTable<SortedPointIndices<3>, int> faceindex(volelements.Size()/2 + 8);
+    ClosedHashTable<SortedPointIndices<2>, int> edgeindex(volelements.Size()/2 + 8);
 
     // face j of a tet is the one opposite to its point j
     static const int facepoints[4][3] = { {1,2,3}, {0,2,3}, {0,1,3}, {0,1,2} };

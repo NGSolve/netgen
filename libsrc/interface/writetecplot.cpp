@@ -37,7 +37,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
   // fill hashtable
 
-  INDEX_3_HASHTABLE<int> face2volelement(ne);
+  ClosedHashTable<SortedPointIndices<3>, int> face2volelement(2*ne+8);
 
   for (i = 1; i <= ne; i++)
     {

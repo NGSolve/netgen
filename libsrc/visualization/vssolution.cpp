@@ -3994,7 +3994,7 @@ namespace netgen
       }
     // NgProfiler::StopTimer (timer_vals);
 
-    INDEX_2_CLOSED_HASHTABLE<int> edges(8*n3);  // point nr of edge
+    ClosedHashTable<IVec<2>, int> edges(8*n3);  // point nr of edge
     
 
     for (ElementIndex ei = 0; ei < ne; ei++)
@@ -4170,7 +4170,7 @@ namespace netgen
             // if (!has_pos || !has_neg) continue;
             if (!has_pos || all_pos) continue;
             
-            edges.DeleteData();
+            edges.SetSize(8*n3);
             
             for (int ix = 0; ix < n; ix++)
               for (int iy = 0; iy < n; iy++)
@@ -4254,8 +4254,7 @@ namespace netgen
                                         int pi2 = edgei[ednr][1];
                                         int pnr = -1;
                                         
-                                        INDEX_2 pair (teti[pi1], teti[pi2]);
-                                        pair.Sort();
+                                        IVec<2> pair = IVec<2>(teti[pi1], teti[pi2]).Sort();
                                         if (edges.Used(pair))
                                           pnr = edges.Get(pair);
                                         else

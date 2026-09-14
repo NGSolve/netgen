@@ -128,7 +128,7 @@ void WriteElmerFormat (const Mesh &mesh,
   // fill hashtable
 
   // use lowest three point numbers of lowest-order face to index faces
-  INDEX_3_HASHTABLE<int> face2volelement(ne);
+  ClosedHashTable<SortedPointIndices<3>, int> face2volelement(2*ne+8);
 
   for (int i = 1; i <= ne; i++)
     {
