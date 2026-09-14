@@ -27,17 +27,6 @@ namespace netgen
 
 
 
-  void INDEX_4Q :: Sort ()
-  {
-    if (min2 (i[1], i[2]) < min2 (i[0], i[3]))
-      { Swap (i[0], i[1]); Swap (i[2], i[3]);}
-    if (i[3] < i[0])
-      { Swap (i[0], i[3]); Swap (i[1], i[2]);}
-    if (i[3] < i[1])
-      { Swap (i[1], i[3]); }
-  }
-
-
   ostream & operator<<(ostream  & s, const INDEX_2 & i2)
   {
     return s << i2.I1() << ", " << i2.I2();
@@ -49,11 +38,6 @@ namespace netgen
   }
 
   ostream & operator<<(ostream  & s, const INDEX_4 & i4)
-  {
-    return s << i4.I1() << ", " << i4.I2() << ", " << i4.I3() << ", " << i4.I4();
-  }
-
-  ostream & operator<<(ostream  & s, const INDEX_4Q & i4)
   {
     return s << i4.I1() << ", " << i4.I2() << ", " << i4.I3() << ", " << i4.I4();
   }
@@ -135,72 +119,6 @@ namespace netgen
 
 
 
-  BASE_INDEX_CLOSED_HASHTABLE ::
-  BASE_INDEX_CLOSED_HASHTABLE (int size)
-    : hash(size)
-  {
-    // hash.SetName ("index-hashtable, hash");
-
-    invalid = -1;
-    for (int i = 1; i <= size; i++)
-      hash[i-1] = invalid;
-  }
-
-  void BASE_INDEX_CLOSED_HASHTABLE ::
-  BaseSetSize (int size)
-  {
-    hash.SetSize(size);
-    for (int i = 1; i <= size; i++)
-      hash[i-1] = invalid;
-  }
-
-  int BASE_INDEX_CLOSED_HASHTABLE ::
-  Position2 (const INDEX & ind) const
-  {
-    int i = HashValue(ind);
-    while (1)
-      {
-	i++;
-	if (i > hash.Size()) i = 1;
-	if (hash[i-1] == ind) return i;
-	if (hash[i-1] == invalid) return 0;
-      }
-  }
-
-  int BASE_INDEX_CLOSED_HASHTABLE ::
-  PositionCreate2 (const INDEX & ind, int & apos) 
-  {
-    int i = HashValue(ind);
-    int startpos = i;
-    while (1)
-      {
-	i++;
-	if (i > hash.Size()) i = 1;
-	if (hash[i-1] == ind) 
-	  {
-	    apos = i;
-	    return 0;
-	  }
-	if (hash[i-1] == invalid) 
-	  {
-	    hash[i-1] = ind;
-	    apos = i;
-	    return 1;
-	  }
-	if (i == startpos)
-	  throw NgException ("Try to set new element in full closed hashtable");
-      }
-  }
-
-  int BASE_INDEX_CLOSED_HASHTABLE :: UsedElements () const
-  {
-    int n = hash.Size();
-    int cnt = 0;
-    for (int i = 1; i <= n; i++)
-      if (hash[i-1] != invalid)
-	cnt++;
-    return cnt;
-  }
 
 
 

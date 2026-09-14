@@ -333,56 +333,6 @@ public:
 
 
 
-/// The sort preserves quads !!!
-class INDEX_4Q
-{
-  ///
-  INDEX i[4];
-
-public:
-  ///
-  INDEX_4Q () { }
-  ///
-  INDEX_4Q (INDEX ai1, INDEX ai2, INDEX ai3, INDEX ai4)
-    { i[0] = ai1; i[1] = ai2; i[2] = ai3; i[3] = ai4; }
-
-  ///
-  INDEX_4Q (const INDEX_4Q & in2)
-    { i[0] = in2.i[0]; i[1] = in2.i[1]; i[2] = in2.i[2]; i[3] = in2.i[3]; }
-
-  ///
-  void Sort ();
-
-  ///
-  int operator== (const INDEX_4Q & in2) const
-    { return 
-	i[0] == in2.i[0] && i[1] == in2.i[1] && 
-	i[2] == in2.i[2] && i[3] == in2.i[3]; }
-
-  ///
-  INDEX & I1 () { return i[0]; }
-  ///
-  INDEX & I2 () { return i[1]; }
-  ///
-  INDEX & I3 () { return i[2]; }
-  ///
-  INDEX & I4 () { return i[3]; }
-  ///
-  INDEX & I (int j) { return i[j-1]; }
-  ///
-  const INDEX & I1 () const { return i[0]; }
-  ///
-  const INDEX & I2 () const { return i[1]; }
-  ///
-  const INDEX & I3 () const { return i[2]; }
-  ///
-  const INDEX & I4 () const { return i[3]; }
-  ///
-  const INDEX & I (int j) const { return i[j-1]; }
-  ///
-  friend ostream & operator<<(ostream  & s, const INDEX_4Q & i4);
-};
-
 
 inline bool operator< (const INDEX_4 & a, const INDEX_4 & b)
 {
