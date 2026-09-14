@@ -1096,8 +1096,8 @@ namespace netgen
 
     int np = mesh.GetNP();
     Vector hv(np);
-    for (int i = 0; i < np; i++)
-      hv(i) = mesh.GetH (mesh.Point(i+1));
+    for (PointIndex pi : mesh.Points().Range())
+      hv(pi.Nr0()) = mesh.GetH (mesh[pi]);
 
     double hfac = 1;
   

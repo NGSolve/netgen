@@ -298,7 +298,7 @@ namespace netgen
       center = mesh->Point (selpoint);
     else if (marker && zoomall==2)
       center = *marker;
-    else if (vispar.centerpoint-IndexBASE<PointIndex>() >= 0 && zoomall==2)
+    else if (vispar.centerpoint.IsValid() && zoomall==2)
       center = mesh->Point (vispar.centerpoint);
     else
       center = Center (pmin, pmax);
@@ -469,23 +469,18 @@ namespace netgen
 	    for (int i = 1; i <= top.GetNFaces(); i++)
 	      {
 		top.GetFaceVertices (i, v);
-		const Point3d & p1 = mesh->Point(v[0]);
-		const Point3d & p2 = mesh->Point(v[1]);
-		const Point3d & p3 = mesh->Point(v[2]);
-		Point3d p;
+		auto P = [&] (int j) -> const Point<3> & { return mesh->Point(PointIndex::FromNr1(v[j])); };
+		Point<3> p;
 		if (v.Size() == 3)
                   {
-		    p = Center (p1, p2, p3);
+		    p = Center (P(0), P(1), P(2));
                   }
 		else
                   {
-		    const Point3d & p4 = mesh->Point(v[3]);
-		    Point3d hp1 = Center (p1, p2);
-		    Point3d hp2 = Center (p3, p4);
-		    p = Center (hp1, hp2);
+		    p = Center (Center (P(0), P(1)), Center (P(2), P(3)));
                   }
 
-		glRasterPos3d (p.X(), p.Y(), p.Z());
+		glRasterPos3d (p(0), p(1), p(2));
 		snprintf (buf, size(buf),  "%d", i);
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
 		MyOpenGLText (buf);

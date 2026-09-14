@@ -153,14 +153,14 @@ void WriteElmerFormat (const Mesh &mesh,
   
   std::map<ELEMENT_TYPE, size_t> elcount;
   
-  for (i = 1; i <= np; i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
-      const Point3d & p = mesh.Point(i);
-      
-      outfile_n << i << " -1 ";
-      outfile_n << p.X() << " ";
-      outfile_n << p.Y() << " ";
-      outfile_n << p.Z() << "\n";
+      const Point<3> & p = mesh[pi];
+
+      outfile_n << pi.Nr1() << " -1 ";
+      outfile_n << p(0) << " ";
+      outfile_n << p(1) << " ";
+      outfile_n << p(2) << "\n";
     }
 
   for (i = 1; i <= ne; i++)

@@ -47,14 +47,14 @@ void WriteFluentFormat (const Mesh & mesh,
   //nodes of zone 1:
   snprintf (str, size(str), "(10 (7 1 %x 1)(",np); //hexadecimal!!!
   outfile << str << endl;
-  for (i = 1; i <= np; i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
-      const Point3d & p = mesh.Point(i);
+      const Point<3> & p = mesh[pi];
 
       //outfile.width(10);
-      outfile << p.X() << " ";
-      outfile << p.Y() << " ";
-      outfile << p.Z() << "\n";
+      outfile << p(0) << " ";
+      outfile << p(1) << " ";
+      outfile << p(2) << "\n";
     }
   outfile << "))" << endl << endl;
 
@@ -64,7 +64,7 @@ void WriteFluentFormat (const Mesh & mesh,
 
   Element2d face, face2;
   int /* i2, */ j2;
-  Array<INDEX_3> surfaceelp;
+  Array<PointIndices<3>> surfaceelp;
   Array<int> surfaceeli;
   Array<ElementIndex> locels;
 
@@ -157,9 +157,9 @@ void WriteFluentFormat (const Mesh & mesh,
 
   for (i = 1; i <= surfaceelp.Size(); i++)
     {
-      outfile << hex << PointIndex(surfaceelp[i-1].I1()) << " "
-	      << hex << PointIndex(surfaceelp[i-1].I2()) << " "
-	      << hex << PointIndex(surfaceelp[i-1].I3()) << " "
+      outfile << hex << surfaceelp[i-1][0].Nr1() << " "
+	      << hex << surfaceelp[i-1][1].Nr1() << " "
+	      << hex << surfaceelp[i-1][2].Nr1() << " "
 	      << hex << surfaceeli[i-1] << " " << 0 << "\n";
     }
 

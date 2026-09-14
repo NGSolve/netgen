@@ -86,13 +86,13 @@ namespace netgen
          outfile << "$Nodes\n";
          outfile << np << "\n";
 
-         for (int i = 1; i <= np; i++)
+         for (PointIndex pi : mesh.Points().Range())
          {
-            const Point3d & p = mesh.Point(i);
-            outfile << i << " "; /// node number
-            outfile << p.X() << " ";
-            outfile << p.Y() << " ";
-            outfile << p.Z() << "\n";
+            const Point<3> & p = mesh[pi];
+            outfile << pi.Nr1() << " "; /// node number
+            outfile << p(0) << " ";
+            outfile << p(1) << " ";
+            outfile << p(2) << "\n";
          }
 
          outfile << "$EndNodes\n";
@@ -193,13 +193,13 @@ namespace netgen
          outfile << "$Nodes\n";
          outfile << np << "\n";
 
-         for (int i = 1; i <= np; i++)
+         for (PointIndex pi : mesh.Points().Range())
          {
-            const Point3d & p = mesh.Point(i);
-            outfile << i << " "; /// node number
-            outfile << p.X() << " ";
-            outfile << p.Y() << " ";
-            outfile << p.Z() << "\n";
+            const Point<3> & p = mesh[pi];
+            outfile << pi.Nr1() << " "; /// node number
+            outfile << p(0) << " ";
+            outfile << p(1) << " ";
+            outfile << p(2) << "\n";
          }
          outfile << "$EndNodes\n";
 

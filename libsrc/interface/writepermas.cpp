@@ -172,12 +172,12 @@ namespace netgen
         outfile.setf (ios::fixed, ios::floatfield);
         outfile.setf (ios::showpoint);
         
-        for (i = 1; i <= np; i++)
+        for (PointIndex pi : mesh.Points().Range())
         {
-            outfile << i << " ";
-            outfile << mesh.Point(i)(0) << " ";
-            outfile << mesh.Point(i)(1) << " ";
-            outfile << mesh.Point(i)(2) << "\n";
+            outfile << pi.Nr1() << " ";
+            outfile << mesh[pi](0) << " ";
+            outfile << mesh[pi](1) << " ";
+            outfile << mesh[pi](2) << "\n";
         }
     }
     ////////////////////////////////////////////////////////////////////////////////// 

@@ -1305,7 +1305,7 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
 size_t Ngx_Mesh :: GetGlobalVertexNum (int locnum) const
 {
 #ifdef PARALLEL  
-  return mesh->GetParallelTopology().GetGlobalPNum (locnum+1)-1;
+  return mesh->GetParallelTopology().GetGlobalPNum (PointIndex::FromNr0(locnum))-1;
 #else
   return locnum;
 #endif
@@ -1322,7 +1322,7 @@ FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
       {
       case 0:
         // return mesh->GetParallelTopology().GetDistantPNums(locnum);
-        return mesh->GetParallelTopology().GetDistantProcs(locnum+PointIndex::BASE);
+        return mesh->GetParallelTopology().GetDistantProcs(PointIndex::FromNr0(locnum));
       case 1:
         // return mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
         return mesh->GetParallelTopology().GetDistantEdgeProcs(locnum);

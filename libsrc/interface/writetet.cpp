@@ -588,8 +588,8 @@ namespace netgen
     
       
     Array< Array<int>*, PointIndex > vertex_to_edge(mesh.GetNP());
-    for(int i=0; i<=mesh.GetNP(); i++)
-      vertex_to_edge[i] = new Array<int>;
+    for(PointIndex pi : vertex_to_edge.Range())
+      vertex_to_edge[pi] = new Array<int>;
 
     Array< Array<int>* > idmaps_edge(idmaps.Size());   // 1-based edge numbers
     for(int i=0; i<idmaps_edge.Size(); i++)
@@ -628,8 +628,8 @@ namespace netgen
       }
 
 
-    for(int i=0; i<vertex_to_edge.Size(); i++)
-      delete vertex_to_edge[i];
+    for(PointIndex pi : vertex_to_edge.Range())
+      delete vertex_to_edge[pi];
 
 
     id_groups.SetSize(0);
@@ -810,7 +810,7 @@ namespace netgen
     for(int i=0; i<idmaps.Size(); i++)
       {
 	idmaps[i]->SetSize(numfaces);
-	(*idmaps[i]) = 0;
+	(*idmaps[i]) = PointIndex::INVALID;
       }
 
     
@@ -829,8 +829,8 @@ namespace netgen
 		Intersection(*edge_to_face[e1id],*edge_to_face[e2id],*edge_to_face[e3id],possible);
 		if(possible.Size() == 1)
 		  {
-		    (*idmaps[j])[possible[0]] = i+1;
-		    (*idmaps[j])[i+1] = possible[0];
+		    (*idmaps[j])[PointIndex::FromNr1(possible[0])] = PointIndex::FromNr1(i+1);
+		    (*idmaps[j])[PointIndex::FromNr1(i+1)] = PointIndex::FromNr1(possible[0]);
 		  }
 		else if(possible.Size() > 0)
 		  cerr << "ERROR: too many possible face identifications" << endl;

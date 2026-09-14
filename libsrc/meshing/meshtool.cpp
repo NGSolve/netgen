@@ -628,10 +628,10 @@ namespace netgen
     of << h << endl;
 
     of << mesh.GetNP() << endl;
-    for (int i = 1; i <= mesh.GetNP(); i++)
-      of << mesh.Point(i)(0) << " "
-	 << mesh.Point(i)(1) << " "
-	 << mesh.Point(i)(2) << "\n";
+    for (PointIndex pi : mesh.Points().Range())
+      of << mesh[pi](0) << " "
+	 << mesh[pi](1) << " "
+	 << mesh[pi](2) << "\n";
     
     of << 2 * mesh.GetNSeg() << endl;
     for (int i = 1; i <= mesh.GetNSeg(); i++)
@@ -656,10 +656,10 @@ namespace netgen
     outfile << h << endl;
 
     outfile << mesh.GetNP() << endl;
-    for (INDEX i = 1; i <= mesh.GetNP(); i++)
-      outfile << mesh.Point(i)(0) << " "
-	      << mesh.Point(i)(1) << " "
-	      << mesh.Point(i)(2) << endl;
+    for (PointIndex pi : mesh.Points().Range())
+      outfile << mesh[pi](0) << " "
+	      << mesh[pi](1) << " "
+	      << mesh[pi](2) << endl;
 
   
 
@@ -759,10 +759,10 @@ namespace netgen
 	      << mesh[ei][2] << " " << mesh[ei][3] << endl;
 
     outfile << mesh.GetNP() << endl;
-    for (INDEX i = 1; i <= mesh.GetNP(); i++)
-      outfile << mesh.Point(i)(0) << " "
-	      << mesh.Point(i)(1) << " "
-	      << mesh.Point(i)(2) << endl;
+    for (PointIndex pi : mesh.Points().Range())
+      outfile << mesh[pi](0) << " "
+	      << mesh[pi](1) << " "
+	      << mesh[pi](2) << endl;
 
 #ifdef SOLIDGEOM
     outfile << geometry.GetNSurf() << endl;

@@ -153,10 +153,10 @@ void WriteJCMFormat (const Mesh & mesh,
 
   outfile << "# Points\n";
   cout << " Please note: The unit of length in the .geo file is assumed to be 'microns'."<<endl; 
-  for (i = 1; i <= np; i++)
+  for (PointIndex pi : mesh.Points().Range())
   {
-    const Point<3> & p = mesh.Point(i);
-    outfile << i << "\n";
+    const Point<3> & p = mesh[pi];
+    outfile << pi.Nr1() << "\n";
     outfile << p(0) << "e-6\n";
     outfile << p(1) << "e-6\n";
     outfile << p(2) << "e-6\n\n";

@@ -512,15 +512,15 @@ namespace netgen
       // Coordinate list starts here
       *outfile << "(\n";
 
-      for(int i = 1; i <= np; i++)
+      for (PointIndex pi : mesh.Points().Range())
       {
-         const Point3d & p = mesh.Point(i);
+         const Point<3> & p = mesh[pi];
 
          // Write coordinates to file
          *outfile << "(";
-         *outfile << p.X() << " ";
-         *outfile << p.Y() << " ";
-         *outfile << p.Z();
+         *outfile << p(0) << " ";
+         *outfile << p(1) << " ";
+         *outfile << p(2);
          *outfile << ")\n";
       }
       *outfile << ")\n\n";

@@ -62,8 +62,8 @@ namespace netgen
               {
                 in >> el.PNum(j);
                 // el.PNum(j)++;
-                if (el.PNum(j) < PointIndex(1) || 
-                    el.PNum(j) > PointIndex(np))
+                if (el.PNum(j) < IndexBASE<PointIndex>() ||
+                    el.PNum(j) > PointIndex::FromNr1(np))
                   {
                     cerr << "Point Number " << el.PNum(j) << " out of range 1..."
                          << np << endl;
@@ -199,7 +199,7 @@ namespace netgen
                           Segment el;
                           el[0] = PointIndex::FromNr1(nodes[0]);
                           el[1] = PointIndex::FromNr1(nodes[1]);
-                          el[2] = -1;
+                          el[2] = PointIndex::INVALID;
 
                           if(dim == 3){
                             auto nr = tmp_segments.Size();
@@ -617,7 +617,7 @@ namespace netgen
               }
 
             if (i > 110354) Swap (p2, p3);
-            if (mesh.Point(p1)(0) < 0.25)
+            if (mesh.Point(PointIndex::FromNr1(p1))(0) < 0.25)
               Swap (p2,p3);
 
             Element2d el(TRIG);
@@ -700,7 +700,7 @@ namespace netgen
         {
           Element2d el(TRIG);
           for (auto i : IntRange(3))
-            el[i] = int((*geom)[STLTrigId(ti+IndexBASE<netgen::STLTrigId>())][i]);
+            el[i] = PointIndex::FromNr1(int((*geom)[STLTrigId(ti+IndexBASE<netgen::STLTrigId>())][i]));
 
           el.SetIndex(1);
 

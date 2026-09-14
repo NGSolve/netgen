@@ -1898,10 +1898,10 @@ namespace netgen
         
         // merge points
         Array<PointIndex, PointIndex> globnum(points.Size());
-        PointIndex maxglob = -1;
+        PointIndex maxglob = PointIndex::INVALID;
         for (auto pi : Range(points))
           {
-            globnum[pi] = partop.GetGlobalPNum(pi);
+            globnum[pi] = PointIndex::FromNr1(partop.GetGlobalPNum(pi));
             // globnum[pi] = global_pnums[pi];
             maxglob = max(globnum[pi], maxglob);
           }
@@ -3254,8 +3254,8 @@ namespace netgen
                                           (*testout) << "hel = " << hel << endl;
                                           (*testout) << "face = " << i3 << endl;
                                           (*testout) << "points = " << endl;
-                                          for (int jj = 1; jj <= 3; jj++)
-                                            (*testout) << "p = " << (*this)[PointIndex(i3.I(jj))] << endl;
+                                          for (int jj = 0; jj < 3; jj++)
+                                            (*testout) << "p = " << (*this)[i3[jj]] << endl;
                                         }
                                     }
                                 }
@@ -3280,14 +3280,14 @@ namespace netgen
               for (int i = 0; i < faceht.Size(); i++)
                 if (faceht.UsedPos (i))
                   {
-                    INDEX_3 i3;
+                    PointIndices<3> i3;
                     tval i2;
                     faceht.GetData (i, i3, i2);
                     if (i2.index != PointIndex::BASE-1)
                       {
                         Element2d tri ( (!i2.p4.IsValid()) ? TRIG : QUAD);
                         for (int l = 0; l < 3; l++)
-                          tri[l] = i3.I(l+1);
+                          tri[l] = i3[l];
                         tri.PNum(4) = i2.p4;
                         tri.SetIndex (i2.index);
                         thread_openelements[ti.task_nr].Append (tri);
@@ -3391,7 +3391,7 @@ namespace netgen
 
         if (surfnr == 0 || seg_fdi(seg) == surfnr)
           {
-            PointIndices<3> key (seg[0], seg[1], seg_fdi(seg));
+            INDEX_3 key (seg[0].Nr1(), seg[1].Nr1(), seg_fdi(seg));
             int data = -i;
 
             if (faceht.Used (key))
@@ -3437,10 +3437,10 @@ namespace netgen
           {
             for (int j = 1; j <= el.GetNP(); j++)
               {
-                PointIndices<3> seg (el.PNumMod(j), el.PNumMod(j+1), el.GetIndex());
+                INDEX_3 seg (el.PNumMod(j).Nr1(), el.PNumMod(j+1).Nr1(), el.GetIndex());
                 // int data;
 
-                if (!seg.I1().IsValid() || !seg.I2().IsValid())
+                if (seg.I1() == 0 || seg.I2() == 0)
                   cerr << "seg = " << seg << endl;
 
                 if (faceht.Used(seg))
@@ -3511,8 +3511,8 @@ namespace netgen
           if (data)  // surfnr
             {
               Segment seg;
-              seg[0] = PointIndex(i2.I1());
-              seg[1] = PointIndex(i2.I2());
+              seg[0] = PointIndex::FromNr1(i2.I1());
+              seg[1] = PointIndex::FromNr1(i2.I2());
               int face = i2.I3();
 
               // find geomdata:
@@ -4233,7 +4233,7 @@ namespace netgen
         }
       case RESTRICTH_POINT:
         {
-          RestrictLocalH (Point (nr), loch);
+          RestrictLocalH (Point (PointIndex::FromNr1(nr)), loch);
           break;
         }
 

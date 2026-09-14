@@ -772,7 +772,7 @@ namespace netgen
 
         const auto & getDofs = [&] (int i)
           {
-            return elementsonpoint[i+PointIndex::BASE];
+            return elementsonpoint[PointIndex::FromNr0(i)];
           };
 
         colors.SetSize(mesh.GetNP());
@@ -783,7 +783,7 @@ namespace netgen
             ParallelForRange( Range(colors), [&](auto myrange)
                     {
                     for(auto i : myrange)
-                    creator.Add(colors[i], PointIndex(i+PointIndex::BASE));
+                    creator.Add(colors[i], PointIndex::FromNr0(i));
                     });
 
         color_table = creator.MoveTable();

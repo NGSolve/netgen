@@ -19,7 +19,7 @@ namespace netgen
     np = 8; 
     for (int i = 0; i < 8; i++)
       {
-	pnums[i] = -1;
+	pnums[i] = PointIndex::INVALID;
 	param[i][0] = param[i][1] = param[i][2] = 0;
       }
     domin=-1; domout=-1; // he:
@@ -118,7 +118,7 @@ namespace netgen
 
     for(int k = 0; k < 8;k++)
       {
-	pnums[k]=0;
+	pnums[k] = PointIndex::INVALID;
 	for(int l = 0; l < 3; l++) 
           param[k][l]=0.;
       }

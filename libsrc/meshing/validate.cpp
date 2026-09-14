@@ -223,8 +223,8 @@ namespace netgen
     
 
     int auxnum=0;
-    for(int i=1; i<=np; i++)
-      if(working_points.Test(i))
+    for(PointIndex pi : mesh.Points().Range())
+      if(working_points.Test(pi))
 	auxnum++;
     
     ostrstr.str("");
@@ -498,8 +498,8 @@ namespace netgen
 	      else
 		isworkingboundary.Clear(pi);
 	    auxnum=0;
-	    for(int i=1; i<=np; i++)
-	      if(working_points.Test(i))
+	    for(PointIndex pi : mesh.Points().Range())
+	      if(working_points.Test(pi))
 		auxnum++;
 
 	    

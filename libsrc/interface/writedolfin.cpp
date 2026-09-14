@@ -45,9 +45,9 @@ namespace netgen
       outfile << "<dolfin xmlns:dolfin=\"http://www.phi.chalmers.se/dolfin/\">"<<endl;
       outfile << "  <mesh celltype=\"tetrahedron\" dim=\"3\">" <<endl; 
       outfile << "      <vertices size=\""<<np<<"\">"<<endl; 
-      for (int i = 1; i <= np; i++) { 
-        const Point3d & p = mesh.Point(i);
-        outfile << "      <vertex index=\""<<i-1<<"\" x=\""<<p.X()<<"\" y=\""<<p.Y()<<"\" z=\""<<p.Z()<<"\"/>"<<endl; 
+      for (PointIndex pi : mesh.Points().Range()) {
+        const Point<3> & p = mesh[pi];
+        outfile << "      <vertex index=\""<<pi.Nr0()<<"\" x=\""<<p(0)<<"\" y=\""<<p(1)<<"\" z=\""<<p(2)<<"\"/>"<<endl; 
       }
       outfile << "      </vertices>"<<endl; 
 

@@ -277,7 +277,7 @@ namespace netgen
                         int pe2ng [] = { 0, 1, 2, 3, 4, 7, 5, 6,  8, 9 };
                         Element el(pnums.Size());
                         for (int j = 0; j < pnums.Size(); j++)
-                          el[pe2ng[j]] = pnums[j];
+                          el[pe2ng[j]] = PointIndex::FromNr1(pnums[j]);
                         el.SetIndex (matid);
                         mesh.AddVolumeElement (el);
                       }

@@ -283,21 +283,7 @@ namespace netgen
 
     auto GetNP () const { return points.Size(); }
 
-    // [[deprecated("Use Point(PointIndex) instead of int !")]]        
-    MeshPoint & Point(int i) // 1-based
-    {
-      // return points.Elem(i);
-      // return Point (PointIndex(i+PointIndex::BASE-1));
-      return Point (PointIndex::FromNr1(i)); 
-    } 
     MeshPoint & Point(PointIndex pi) { return points[pi]; }
-    // [[deprecated("Use Point(PointIndex) instead of int !")]]            
-    const MeshPoint & Point(int i) const
-    {
-      // return points.Get(i);
-      // return Point (PointIndex(i+PointIndex::BASE-1));
-      return Point (PointIndex::FromNr1(i));       
-    }
     const MeshPoint & Point(PointIndex pi) const { return points[pi]; }
 
     const MeshPoint & operator[] (PointIndex pi) const { return points[pi]; }

@@ -258,6 +258,8 @@ namespace netgen
   
   class PointIndex : public Index<int,PointIndex,1>
   {
+    friend class Index<int,PointIndex,1>;
+    constexpr PointIndex (int ai) : Index(ai) { }   // use IndexBASE<PointIndex>()+nr
   public:
     using Index::Index;
     operator int () const = delete;    // a PointIndex stays a PointIndex

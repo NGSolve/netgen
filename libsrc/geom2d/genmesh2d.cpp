@@ -358,10 +358,10 @@ namespace netgen
       {
 	if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
 	  {
-	    mappoints[seg[0]] = 1;
+	    mappoints[seg[0]] = seg[0];   // mark as to be mapped
 	    param[seg[0]] = seg.EPGeomInfo(0).dist;
 
-	    mappoints[seg[1]] = 1;
+	    mappoints[seg[1]] = seg[1];
 	    param[seg[1]] = seg.EPGeomInfo(1).dist;
 	  }
       }

@@ -94,18 +94,18 @@ void WriteNeutralFormat (const Mesh & mesh,
 
   outfile << np << "\n";
 
-  for (int i = 1; i <= np; i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
-      const Point3d & p = mesh.Point(i);
+      const Point<3> & p = mesh[pi];
 
       outfile.width(10);
-      outfile << p.X() << " ";
+      outfile << p(0) << " ";
       outfile.width(9);
-      outfile << p.Y() << " ";
+      outfile << p(1) << " ";
       if (mesh.GetDimension() == 3)
 	{
 	  outfile.width(9);
-	  outfile << p.Z();
+	  outfile << p(2);
 	  }
       outfile << "\n";
     }
@@ -210,12 +210,12 @@ void WriteSurfaceFormat (const Mesh & mesh,
   outfile << "surfacemesh" << endl;
 
   outfile << mesh.GetNP() << endl;
-  for (i = 1; i <= mesh.GetNP(); i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
       for (j = 0; j < 3; j++)
 	{
 	  outfile.width(10);
-	  outfile << mesh.Point(i)(j) << " ";
+	  outfile << mesh[pi](j) << " ";
 	}
       outfile << endl;
     }
@@ -422,13 +422,13 @@ void WriteVRMLFormat (const Mesh & mesh,
                  "coord Coordinate { point [ \n";
 
 
-      for (i = 1; i <= np; i++)
+      for (PointIndex pi : mesh.Points().Range())
         {
-          const Point3d & p = mesh.Point(i);
+          const Point<3> & p = mesh[pi];
           outfile.width(10);
-          outfile << p.X() << " ";
-          outfile << p.Y() << " ";
-          outfile << p.Z() << " \n";
+          outfile << p(0) << " ";
+          outfile << p(1) << " ";
+          outfile << p(2) << " \n";
 	}
 
       outfile << "  ] } \n"
@@ -498,13 +498,13 @@ void WriteVRMLFormat (const Mesh & mesh,
                  "coord Coordinate { point [ \n";
 
 
-      for (i = 1; i <= np; i++)
+      for (PointIndex pi : mesh.Points().Range())
         {
-          const Point3d & p = mesh.Point(i);
+          const Point<3> & p = mesh[pi];
           outfile.width(10);
-          outfile << p.X() << " ";
-          outfile << p.Y() << " ";
-          outfile << p.Z() << " \n";
+          outfile << p(0) << " ";
+          outfile << p(1) << " ";
+          outfile << p(2) << " \n";
 	}
 
       outfile << "  ] } \n"
@@ -630,16 +630,16 @@ void WriteFEPPFormat (const Mesh & mesh,
 	}
 
       outfile << np << "\n";
-      for (i = 1; i <= np; i++)
+      for (PointIndex pi : mesh.Points().Range())
 	{
-	  const Point3d & p = mesh.Point(i);
+	  const Point<3> & p = mesh[pi];
 
 	  outfile.width(10);
-	  outfile << p.X() << " ";
+	  outfile << p(0) << " ";
 	  outfile.width(9);
-	  outfile << p.Y() << " ";
+	  outfile << p(1) << " ";
 	  outfile.width(9);
-	  outfile << p.Z() << "\n";
+	  outfile << p(2) << "\n";
 	}
 
       /*
@@ -722,16 +722,16 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   // vertices with coordinates
   outfile << npoints << "\n";
-  for (int i = 1; i <= npoints; i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
-      const Point3d & p = mesh.Point(i);
+      const Point<3> & p = mesh[pi];
 
       outfile.width(10);
-      outfile << p.X() << " ";
+      outfile << p(0) << " ";
       outfile.width(9);
-      outfile << p.Y() << " ";
+      outfile << p(1) << " ";
       outfile.width(9);
-      outfile << p.Z() << "\n";
+      outfile << p(2) << "\n";
     }
 
   // element - edge - list

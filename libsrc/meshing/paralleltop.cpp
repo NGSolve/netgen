@@ -67,8 +67,7 @@ namespace netgen
       nv = 0;
 
     // IntRange newvr(oldnv, nv); // new vertex range
-    auto new_pir = Range(PointIndex(oldnv+PointIndex::BASE),
-                         PointIndex(nv+PointIndex::BASE));
+    auto new_pir = Range(PointIndex::FromNr0(oldnv), PointIndex::FromNr0(nv));
     
     glob_vert.SetSize (nv);
     for (auto pi : new_pir)
@@ -165,7 +164,7 @@ namespace netgen
       {
         Array<PointIndex, PointIndex> inv_index(index0.Size());
         for (int i = 0; i < index0.Size(); i++)
-          inv_index[index0[i]+PointIndex::BASE] = i+PointIndex::BASE;
+          inv_index[PointIndex::FromNr0(index0[i])] = PointIndex::FromNr0(i);
         
         for (auto & el : mesh.VolumeElements())
           for (PointIndex & pi : el.PNums())

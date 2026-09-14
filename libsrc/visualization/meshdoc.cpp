@@ -29,8 +29,8 @@ VisualSceneMeshDoctor :: VisualSceneMeshDoctor ()
   edgelist = 0;
   selelement = 0;
   locpi = 1;
-  selpoint = 0;
-  selpoint2 = 0;
+  selpoint = PointIndex::INVALID;
+  selpoint2 = PointIndex::INVALID;
   markedgedist = 1;
 
   UpdateTables ();

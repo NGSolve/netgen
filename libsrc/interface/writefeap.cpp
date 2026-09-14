@@ -54,17 +54,17 @@ void WriteFEAPFormat (const Mesh & mesh,
   outfile.setf (ios::fixed, ios::floatfield);
   outfile.setf (ios::showpoint);
 
-  for (i = 1; i <= mesh.GetNP(); i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
       outfile.width(5);
-      outfile << i;
+      outfile << pi.Nr1();
       outfile << ",,";
       outfile.width(10);
-      outfile << mesh.Point(i)(0)/scale << "  ";
+      outfile << mesh[pi](0)/scale << "  ";
       outfile.width(10);
-      outfile << mesh.Point(i)(1)/scale << "  ";
+      outfile << mesh[pi](1)/scale << "  ";
       outfile.width(10);
-      outfile << mesh.Point(i)(2)/scale << "\n";
+      outfile << mesh[pi](2)/scale << "\n";
     }   
       
   outfile << "\n" << "\n";

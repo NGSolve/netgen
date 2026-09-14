@@ -958,7 +958,7 @@ int NgPar_GetGlobalNodeNum (int nodetype, int locnum)
   locnum++;
   switch (nodetype)
     {
-    case 0: return mesh->GetParallelTopology().GetGlobalPNum (locnum)-1;
+    case 0: return mesh->GetParallelTopology().GetGlobalPNum (PointIdx(locnum))-1;
     case 1: return mesh->GetParallelTopology().GetGlobalEdgeNum (locnum)-1;
     case 2: return mesh->GetParallelTopology().GetGlobalFaceNum (locnum)-1;
     case 3: return mesh->GetParallelTopology().GetGlobalElNum (locnum)-1;
@@ -1626,11 +1626,11 @@ int Ng_GetNVertexElements (int vnr)
   switch (mesh->GetDimension())
     {
     case 3:
-      return mesh->GetTopology().GetVertexElements(vnr).Size();
+      return mesh->GetTopology().GetVertexElements(PointIdx(vnr)).Size();
     case 2:
-      return mesh->GetTopology().GetVertexSurfaceElements(vnr).Size();
+      return mesh->GetTopology().GetVertexSurfaceElements(PointIdx(vnr)).Size();
     case 1:
-      return mesh->GetTopology().GetVertexSegments(vnr).Size();
+      return mesh->GetTopology().GetVertexSegments(PointIdx(vnr)).Size();
       /*
       {
         int cnt = 0;
@@ -1652,19 +1652,19 @@ void Ng_GetVertexElements (int vnr, int * els)
     {
     case 3:
       {
-        auto ia = mesh->GetTopology().GetVertexElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexElements(PointIdx(vnr));
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 2:
       {
-        auto ia = mesh->GetTopology().GetVertexSurfaceElements(vnr);
+        auto ia = mesh->GetTopology().GetVertexSurfaceElements(PointIdx(vnr));
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
       }
     case 1:
       {
-        auto ia = mesh->GetTopology().GetVertexSegments(vnr);
+        auto ia = mesh->GetTopology().GetVertexSegments(PointIdx(vnr));
         for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
         break;
         /*
@@ -1951,7 +1951,7 @@ int Ng_GetVertex_Elements( int vnr, int* elems )
   const MeshTopology& topology = mesh->GetTopology();
   // ArrayMem<ElementIndex,4> indexArray;
   // topology.GetVertexElements( vnr, indexArray );
-  auto indexArray = topology.GetVertexElements( vnr );
+  auto indexArray = topology.GetVertexElements( PointIdx(vnr) );
   
   for( int i=0; i<indexArray.Size(); i++ )
     elems[i] = indexArray[i]+1;
@@ -2007,7 +2007,7 @@ int Ng_GetVertex_NElements( int vnr )
   topology.GetVertexElements( vnr, indexArray );
   return indexArray.Size();
   */
-  return topology.GetVertexElements(vnr).Size();
+  return topology.GetVertexElements(PointIdx(vnr)).Size();
 }
 
 ///// Added by Roman Stainko ....

@@ -142,10 +142,10 @@ namespace netgen
     n = mesh.GetNP();   // number of points 
     cout << n << " Points" << endl;
   
-    for (int i = 1; i <= n; i++)
+    for (PointIndex pi : mesh.Points().Range())
       {
         POINT3D p;
-        const auto & mp = mesh.Point(i);
+        const auto & mp = mesh[pi];
         p.x = mp(0);
         p.y = mp(1);
         p.z = mp(2);

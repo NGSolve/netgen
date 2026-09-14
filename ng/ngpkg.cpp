@@ -1281,8 +1281,8 @@ namespace netgen
     debugparam.haltsegment = atoi (Tcl_GetVar (interp, "::debug.haltsegment", 0));
     debugparam.haltnode = atoi (Tcl_GetVar (interp, "::debug.haltnode", 0));
     debugparam.haltface = atoi (Tcl_GetVar (interp, "::debug.haltface", 0));
-    debugparam.haltsegmentp1 = atoi (Tcl_GetVar (interp, "::debug.haltsegmentp1", 0));
-    debugparam.haltsegmentp2 = atoi (Tcl_GetVar (interp, "::debug.haltsegmentp2", 0));
+    debugparam.haltsegmentp1 = PointIndex::FromNr1 (atoi (Tcl_GetVar (interp, "::debug.haltsegmentp1", 0)));
+    debugparam.haltsegmentp2 = PointIndex::FromNr1 (atoi (Tcl_GetVar (interp, "::debug.haltsegmentp2", 0)));
     debugparam.haltfacenr = atoi (Tcl_GetVar (interp, "::debug.haltfacenr", 0));
     return TCL_OK;
   }
@@ -2540,7 +2540,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 	  if (firsttime)
 	    mesh->AddPoint (p);
 	  else
-	    mesh->Point(i) = Point<3> (p);
+	    mesh->Point(PointIndex::FromNr1(i)) = Point<3> (p);
 	}
 
       //firsttime = 0;
@@ -2676,8 +2676,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     vispar.drawcurveprojedge =
       atoi (Tcl_GetVar (interp, "::viewoptions.drawcurveprojedge", TCL_GLOBAL_ONLY));
 
-    vispar.centerpoint =
-      atoi (Tcl_GetVar (interp, "::viewoptions.centerpoint", TCL_GLOBAL_ONLY));
+    vispar.centerpoint = PointIndex::FromNr1
+      (atoi (Tcl_GetVar (interp, "::viewoptions.centerpoint", TCL_GLOBAL_ONLY)));
     vispar.use_center_coords =
       atoi (Tcl_GetVar (interp, "::viewoptions.usecentercoords", TCL_GLOBAL_ONLY)) > 0;
     vispar.centerx =

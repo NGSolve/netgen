@@ -139,7 +139,7 @@ namespace ngcore
   public:
     netgen::PointIndex pnum;
     int index;
-    PointElPackage () { pnum = -1; index = -1; }
+    PointElPackage () { pnum = netgen::PointIndex::INVALID; index = -1; }
     PointElPackage (const netgen::Element0d & el)
     { pnum = el.pnum; index = el.index; }
   }; // class PointElPackage
@@ -329,7 +329,7 @@ namespace netgen
       per_verts.Add(p1, p2);
       per_verts.Add(p2, p1);
     }
-    for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++) {
+    for (PointIndex k : Range(PointIndex::FromNr0(0), PointIndex::FromNr0(GetNV()))) {
       BubbleSort(per_verts[k]);
     }
 
@@ -368,7 +368,7 @@ namespace netgen
 	for (int j = 0; j<allvs.Size(); j++)
 	  per_verts_trans.Add(k, allvs[j]);
       });
-    for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++) {
+    for (PointIndex k : Range(PointIndex::FromNr0(0), PointIndex::FromNr0(GetNV()))) {
       BubbleSort(per_verts_trans[k]);
     }
 

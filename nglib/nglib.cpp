@@ -257,10 +257,10 @@ namespace nglib
    //  Return point coordinates of a given point index in the mesh
    NGLIB_API void Ng_GetPoint (Ng_Mesh * mesh, int num, double * x)
    {
-      const Point3d & p = ((Mesh*)mesh)->Point(num);
-      x[0] = p.X();
-      x[1] = p.Y();
-      x[2] = p.Z();
+      const Point<3> & p = ((Mesh*)mesh)->Point(PointIndex::FromNr1(num));
+      x[0] = p(0);
+      x[1] = p(1);
+      x[2] = p(2);
    }
 
 
@@ -389,8 +389,8 @@ namespace nglib
       Mesh * m = (Mesh*)mesh;
 
       Segment seg;
-      seg[0] = pi1;
-      seg[1] = pi2;
+      seg[0] = PointIndex::FromNr1(pi1);
+      seg[1] = PointIndex::FromNr1(pi2);
       m->AddSegment (seg);
    }
 
@@ -428,7 +428,7 @@ namespace nglib
    {
       Mesh * m = (Mesh*)mesh;
 
-      Point<3> & p = m->Point(num);
+      Point<3> & p = m->Point(PointIndex::FromNr1(num));
       x[0] = p(0);
       x[1] = p(1);
    }

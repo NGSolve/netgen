@@ -836,7 +836,7 @@ namespace netgen
       }
     for(const auto& vert : GetFaceVertices(face))
       {
-        PointIndex pi = vert->nr + 1;
+        PointIndex pi = PointIndex::FromNr0(vert->nr);
         if(glob2loc[pi] == 0)
           {
             auto gi = face.Project(mesh[pi]);

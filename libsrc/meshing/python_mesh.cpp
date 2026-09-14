@@ -273,7 +273,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   
   py::class_<PointIndex>(m, "PointId")
-    .def(py::init<int>(), py::arg("nr"), "from raw index (base-dependent), prefer nr0= / nr1=")
+    .def(py::init([](int nr) { return PointIndex::FromNr0(nr-PointIndex::BASE); }), py::arg("nr"), "from raw index (base-dependent), prefer nr0= / nr1=")
     .def(py::init([](int nr0) { return PointIndex(PointIndex::FromNr0(nr0)); }), py::kw_only(), py::arg("nr0"), "from 0-based point number")
     .def(py::init([](int nr1) { return PointIndex::FromNr1(nr1); }), py::kw_only(), py::arg("nr1"), "from 1-based point number")
     .def("__repr__", &ToString<PointIndex>)
@@ -1164,10 +1164,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         return py::array
           (
            py::memoryview::from_buffer
-           (&self.Points()[PointIndex::BASE](0), sizeof(double),
+           (&self.Points()[IndexBASE<PointIndex>()](0), sizeof(double),
             py::format_descriptor<double>::value,
             { self.Points().Size(), size_t(self.GetDimension())  }, 
-            { sizeof(self.Points()[PointIndex::BASE]), sizeof(double) } )
+            { sizeof(self.Points()[IndexBASE<PointIndex>()]), sizeof(double) } )
            );
       })
     .def_property_readonly("parentelements", py::cpp_function([](Mesh & self) {
@@ -1349,7 +1349,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     Segment el;
                     for (int j = 0; j < np; j++)
-                      el[j] = ptr[j]+PointIndex::BASE-base;
+                      el[j] = PointIndex::FromNr0(ptr[j]-base);
                     el.SetIndex(index);
 
                     if(project_geometry)
@@ -1385,7 +1385,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     Element2d el(type);
                     for (int j = 0; j < np; j++)
-                      el[j] = ptr[j]+PointIndex::BASE-base;
+                      el[j] = PointIndex::FromNr0(ptr[j]-base);
                     el.SetIndex(index);
                     if(project_geometry)
                       {
@@ -1426,7 +1426,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     Element el(type);
                     for (int j = 0; j < np;j ++)
-                      el[j] = ptr[j]+PointIndex::BASE-base;
+                      el[j] = PointIndex::FromNr0(ptr[j]-base);
                     el.SetIndex(index);
                     self.AddVolumeElement (el);
                     ptr += info.strides[0]/sizeof(int);
@@ -1816,7 +1816,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & points = self.Points();
                 for(auto i : myrange)
                 {
-                    auto p = points[PointIndex::BASE+i];
+                    auto p = points[PointIndex::FromNr0(i)];
                     auto * v = &verts[3*i];
                     for(auto k : Range(3))
                         v[k] = p[k];

@@ -34,9 +34,9 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
       if (loch > maxh) maxh = loch;
     }
 
-  otherbox.SetPoint (othermesh.Point(1));
-  for (i = 1; i <= othermesh.GetNP(); i++)
-    otherbox.AddPoint (othermesh.Point(i));
+  otherbox.SetPoint (othermesh[IndexBASE<PointIndex>()]);
+  for (PointIndex pi : othermesh.Points().Range())
+    otherbox.AddPoint (othermesh[pi]);
   otherbox.Increase (maxh);
 
   for (i = 1; i <= ne; i++)
@@ -177,9 +177,9 @@ void HelmholtzMesh (Mesh & mesh)
   double det = ri * ra * rinf - ri * ri * rinf;
   double a = (ri - rinf) / det;
   double b = (ri*ri - ra * rinf) / det;
-  for (i = 1; i <= mesh.GetNP(); i++)
+  for (PointIndex pi : mesh.Points().Range())
     {
-      Point<3> & p = mesh.Point(i);
+      Point<3> & p = mesh[pi];
       double rold = sqrt (sqr(p(0)) + sqr(p(1)) + sqr(p(2)));
       if (rold < ri) continue;
 

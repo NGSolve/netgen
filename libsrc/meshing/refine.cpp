@@ -52,7 +52,7 @@ namespace netgen
 	PointIndices<2> i2 = PointIndices<2>::Sort(el[0], el[1]);
         if (!between.Used(i2))
           {
-            between.Set (i2, 0);          
+            between.Set (i2, PointIndex::INVALID);          
             parents.Append(i2);
           }
       }
@@ -73,7 +73,7 @@ namespace netgen
                   auto i2 = PointIndices<2>::Sort(el[betw[j][0]],el[betw[j][1]]);
                   if (!between.Used(i2))
                     {
-                      between.Set (i2, 0);          
+                      between.Set (i2, PointIndex::INVALID);          
                       parents.Append(i2);
                     }
                 }
@@ -98,7 +98,7 @@ namespace netgen
                     }
                   if (!between.Used(i2))
                     {
-                      between.Set (i2, 0);
+                      between.Set (i2, PointIndex::INVALID);
                       parents.Append(i2);
                     }
                 }
@@ -130,7 +130,7 @@ namespace netgen
                   PointIndices<2> i2 = PointIndices<2>::Sort(el.PNum(betw[j][0]),el.PNum(betw[j][1]));
                   if (!between.Used(i2))
                     {
-                      between.Set (i2, 0);          
+                      between.Set (i2, PointIndex::INVALID);          
                       parents.Append(i2);
                     }
                 }
@@ -150,8 +150,9 @@ namespace netgen
     mesh.mlbetweennodes.SetSize(mesh.GetNV()+parents.Size());
     for (int i = 0; i < parents.Size(); i++)
       {
-        between.Set (parents[i], mesh.GetNV()+i+PointIndex::BASE);
-        mesh.mlbetweennodes[mesh.GetNV()+i+PointIndex::BASE] = parents[i];
+        PointIndex pinew = PointIndex::FromNr0(mesh.GetNV()+i);
+        between.Set (parents[i], pinew);
+        mesh.mlbetweennodes[pinew] = parents[i];
       }
 
     mesh.SetNP(mesh.GetNV() + parents.Size());
@@ -212,9 +213,8 @@ namespace netgen
     
     // refine surface elements
     Array<PointGeomInfo,PointIndex> surfgi (8*mesh.GetNP());
-    for (int i = PointIndex::BASE;
-	 i < surfgi.Size()+PointIndex::BASE; i++)
-      surfgi[i].trignum = -1;
+    for (PointIndex pi : surfgi.Range())
+      surfgi[pi].trignum = -1;
 
 
     int oldnf = mesh.GetNSE();
@@ -548,7 +548,7 @@ namespace netgen
                  { 17, 20, 27 },
                };
 
-	     pnums = PointIndex(-1);
+	     pnums = PointIndex::INVALID;
 
 	     for (int j = 1; j <= 8; j++)
                pnums[j-1] = el.PNum(j);
@@ -648,7 +648,7 @@ namespace netgen
            };
 
 	     //int elrev = el.flags.reverse;
-           pnums = PointIndex(-1);
+           pnums = PointIndex::INVALID;
            
            for (int j = 1; j <= 6; j++)
 	     pnums[j-1] = el.PNum(j);
@@ -862,9 +862,9 @@ namespace netgen
 		  }
 
 		(*testout) << "smooth points: " << endl;
-		for (int i = 1; i <= free.Size(); i++)
-		  if (free.Test(i))
-		    (*testout) << "p " << i << endl;
+		for (PointIndex pi : mesh.Points().Range())
+		  if (free.Test(pi))
+		    (*testout) << "p " << pi << endl;
 
 		(*testout) << "surf points: " << endl;
 		for (auto & sel : mesh.SurfaceElements())

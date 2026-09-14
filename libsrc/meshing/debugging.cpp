@@ -125,7 +125,7 @@ namespace netgen
       Array<std::tuple<PointIndex, PointIndex>> edges;
       auto elementsonnode = mesh.CreatePoint2ElementTable();
       BuildEdgeList(mesh, elementsonnode, edges);
-      mesh.BoundaryEdge(1, 2); // trigger build of boundary edges
+      mesh.BoundaryEdge(IndexBASE<PointIndex>(), IndexBASE<PointIndex>()+1); // trigger build of boundary edges
 
       ArrayMem<ElementIndex, 20> hasbothpoints;
       for (auto [pi0, pi1] : edges)

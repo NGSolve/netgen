@@ -494,10 +494,10 @@ namespace netgen
 
 
 	int max_edge_on_vertex = 0;
-	for (int i = PointIndex::BASE; i < nv+PointIndex::BASE; i++)
+	for (PointIndex pi : Range(PointIndex::FromNr0(0), PointIndex::FromNr0(nv)))
 	  {
-	    int onv = vert2edge[i].Size() + vert2vertcoarse[i].Size() +
-              4*(vert2element)[i].Size() + 2*(vert2surfelement)[i].Size() + (vert2segment)[i].Size();
+	    int onv = vert2edge[pi].Size() + vert2vertcoarse[pi].Size() +
+              4*(vert2element)[pi].Size() + 2*(vert2surfelement)[pi].Size() + (vert2segment)[pi].Size();
 	    max_edge_on_vertex = max (onv, max_edge_on_vertex);
 	  }
 
@@ -1056,7 +1056,7 @@ namespace netgen
               NgClosedHashTable<PointIndices<3>, int> vert2face(2*max_face_on_vertex+10);
               // for (PointIndex v = begin+PointIndex::BASE;
               // v < end+PointIndex::BASE; v++)
-              for (PointIndex v : r+PointIndex::BASE)                
+              for (PointIndex v : Range(PointIndex::FromNr0(r.First()), PointIndex::FromNr0(r.Next())))                
                 {
                   vert2face.DeleteData();
                   
@@ -1123,7 +1123,7 @@ namespace netgen
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
               */
-              for (PointIndex v : r+PointIndex::BASE)
+              for (PointIndex v : Range(PointIndex::FromNr0(r.First()), PointIndex::FromNr0(r.Next())))
                 {
                   int first_fa = cnt[v];
                   int nfa = first_fa;
@@ -1156,7 +1156,7 @@ namespace netgen
                       size_t pos;
                       if (vert2face.PositionCreate(face, pos))
                         {
-                          face2vert[nfa] = { face[0], face[1], face[2], PointIndex::BASE-1 }; // i4;
+                          face2vert[nfa] = { face[0], face[1], face[2], PointIndex::INVALID }; // i4;
                           vert2face.SetData (pos, face, nfa);
                           nfa++;
                         }
@@ -2127,7 +2127,7 @@ namespace netgen
     if (elfaces[j][3] < 0)
       { // triangle
         PointIndices<4> face(el[elfaces[j][0]], el[elfaces[j][1]], 
-                     el[elfaces[j][2]], PointIndex::BASE-1 );
+                     el[elfaces[j][2]], PointIndex::INVALID );
         
         int facedir = 0;
         if (face.I1() > face.I2())
@@ -2410,14 +2410,14 @@ namespace netgen
   void MeshTopology :: GetVertexElements (int vnr, Array<ElementIndex> & elements) const
   {
     if (vert2element.Size())
-      elements = vert2element[vnr];
+      elements = vert2element[PointIndex::FromNr1(vnr)];
   }
 
   void MeshTopology :: GetVertexSurfaceElements( int vnr, 
 						 Array<SurfaceElementIndex> & elements ) const
   {
     if (vert2surfelement.Size())
-      elements = vert2surfelement[vnr];
+      elements = vert2surfelement[PointIndex::FromNr1(vnr)];
   }
 
 

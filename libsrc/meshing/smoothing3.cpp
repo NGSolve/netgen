@@ -107,11 +107,11 @@ namespace netgen
 
     for (int j = 0; j < faces.Size(); j++)
       {
-	const INDEX_3 & el = faces[j];
+	const PointIndices<3> & el = faces[j];
 
-	double bad = CalcTetBadness (points[PointIndex (el.I1())], 
-				     points[PointIndex (el.I3())], 
-				     points[PointIndex (el.I2())], 
+	double bad = CalcTetBadness (points[el[0]],
+				     points[el[2]],
+				     points[el[1]], 
 				     pp, 0, mp);
 	badness += bad;
       }
@@ -179,12 +179,12 @@ namespace netgen
   class CheapPointFunction1 : public MinFunction
   {
     Mesh::T_POINTS & points;
-    const Array<INDEX_3> & faces;
+    const Array<PointIndices<3>> & faces;
     DenseMatrix m;
     double h;
   public:
     CheapPointFunction1 (Mesh::T_POINTS & apoints, 
-			 const Array<INDEX_3> & afaces,
+			 const Array<PointIndices<3>> & afaces,
 			 double ah);
   
     virtual double Func (const Vector & x) const;
@@ -192,7 +192,7 @@ namespace netgen
   };
 
   CheapPointFunction1 :: CheapPointFunction1 (Mesh::T_POINTS & apoints, 
-					      const Array<INDEX_3> & afaces,
+					      const Array<PointIndices<3>> & afaces,
 					      double ah)
     : points(apoints), faces(afaces)
   {
@@ -205,9 +205,9 @@ namespace netgen
   
     for (int i = 1; i <= nf; i++)
       {
-	const Point3d & p1 = points[PointIndex(faces[i-1].I1())];
-	const Point3d & p2 = points[PointIndex(faces[i-1].I2())];
-	const Point3d & p3 = points[PointIndex(faces[i-1].I3())];
+	const Point3d & p1 = points[faces[i-1][0]];
+	const Point3d & p2 = points[faces[i-1][1]];
+	const Point3d & p3 = points[faces[i-1][2]];
 	Vec3d v1 (p1, p2);
 	Vec3d v2 (p1, p3);
 	Vec3d n;
@@ -529,9 +529,9 @@ namespace netgen
 
     for (int i = 0; i < ne; i++)
       {
-	pi1 = 0;
-	pi2 = 0;
-	pi3 = 0;
+	pi1 = PointIndex::INVALID;
+	pi2 = PointIndex::INVALID;
+	pi3 = PointIndex::INVALID;
 
 	const Element & el = elements[elementsonpoint[actpind][i]];
 	for (int j = 1; j <= 4; j++)
@@ -1360,7 +1360,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
 
   const auto & getDofs = [&] (int i)
   {
-      return elementsonpoint[i += PointIndex::BASE];
+      return elementsonpoint[PointIndex::FromNr0(i)];
   };
 
   Array<int> colors(points.Size());
@@ -1370,7 +1370,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   auto color_table = CreateTable<PointIndex, int>( points.Size(),
          [&] ( auto & table, int i )
           {
-            PointIndex pi = i+static_cast<int>(PointIndex::BASE);
+            PointIndex pi = PointIndex::FromNr0(i);
             table.Add(colors[i], pi);
           }, ncolors);
 
