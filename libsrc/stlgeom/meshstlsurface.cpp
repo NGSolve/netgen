@@ -27,7 +27,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
   PushStatusF("Mesh Lines");
 
   Array<STLLine*> meshlines;
-  Array<Point3d> meshpoints;
+  Array<Point<3>> meshpoints;
 
   PrintMessage(3,"Mesh Lines");
 
@@ -492,11 +492,11 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
               if (el.IsDeleted()) continue;
 	      if (!el.PNum(1).IsValid()) continue;
 
-	      Vec3d n = Cross (Vec3d (mesh.Point(el.PNum(1)), 
+	      Vec<3> n = Cross (Vec<3> (mesh.Point(el.PNum(1)), 
 				      mesh.Point(el.PNum(2))),
-			       Vec3d (mesh.Point(el.PNum(1)), 
+			       Vec<3> (mesh.Point(el.PNum(1)), 
 				      mesh.Point(el.PNum(3))));
-	      Vec3d ng = geom.GetTriangle(el.GeomInfoPi(1).trignum).Normal();
+	      Vec<3> ng = geom.GetTriangle(el.GeomInfoPi(1).trignum).Normal();
 	      if (n * ng < 0)
 		{
 		  refpts.Append (mesh.Point (mesh[sei].PNum(1)));
@@ -949,12 +949,12 @@ void MeshingSTLSurface :: TransformToPlain (const Point<3> & locpoint, const Mul
 }
 
 /*
-int MeshingSTLSurface :: ComputeLineGeoInfo (const Point3d & p1, const Point3d & p2,
+int MeshingSTLSurface :: ComputeLineGeoInfo (const Point<3> & p1, const Point<3> & p2,
 					      int & geoinfosize, void *& geoinfo)
 {
   static int geomtrig[2] = { 0, 0 };
 
-  Point3d hp;
+  Point<3> hp;
   hp = p1;
   geomtrig[0] = geom.Project (hp);
 
@@ -973,7 +973,7 @@ int MeshingSTLSurface :: ComputeLineGeoInfo (const Point3d & p1, const Point3d &
 */
 
 
-int MeshingSTLSurface :: ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi)
+int MeshingSTLSurface :: ComputePointGeomInfo (const Point<3> & p, PointGeomInfo & gi)
 {
   // compute triangle of point,
   // if non-unique: 0
@@ -1019,14 +1019,14 @@ ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi,
 
 
 int MeshingSTLSurface :: 
-IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
+IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
 		     int endpoint, const PointGeomInfo & gi)
 {
   int lineendtrig = gi.trignum;
   return geom.TrigIsInOC (lineendtrig, geom.meshchart);
 
-  // Vec3d baselinenormal = geom.meshtrignv;
-  //  Vec3d linenormal = geom.GetTriangleNormal (lineendtrig);
+  // Vec<3> baselinenormal = geom.meshtrignv;
+  //  Vec<3> linenormal = geom.GetTriangleNormal (lineendtrig);
   //  return ( (baselinenormal * linenormal) > cos (30 * (M_PI/180)) );
 }
 
@@ -1059,7 +1059,7 @@ int MeshingSTLSurface :: TransformFromPlain (const Point<2> & plainpoint,
 
 
 int MeshingSTLSurface :: 
-BelongsToActiveChart (const Point3d & p, 
+BelongsToActiveChart (const Point<3> & p, 
 		      const PointGeomInfo & gi)
 {
   return (geom.TrigIsInOC(gi.trignum, geom.meshchart) != 0);

@@ -146,7 +146,7 @@ namespace netgen
     // find intersecting segments
     PrintMessage (3, "Check intersecting edges");
     
-    Point3d pmin, pmax;
+    Point<3> pmin, pmax;
     mesh.GetBox (pmin, pmax);
     BoxTree<3> segtree (pmin, pmax);
     

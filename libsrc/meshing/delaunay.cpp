@@ -217,7 +217,7 @@ namespace netgen
 
 
 
-  void AddDelaunayPoint (PointIndex newpi, const Point3d & newp, 
+  void AddDelaunayPoint (PointIndex newpi, const Point<3> & newp, 
 			 Array<DelaunayTet> & tempels, 
 			 Mesh & mesh,
 			 DTREE & tettree,
@@ -241,7 +241,7 @@ namespace netgen
 
     const Point<3> * pp[4];
     Point<3> pc;
-    Point3d tpmin, tpmax;
+    Point<3> tpmin, tpmax;
 
 
 
@@ -423,7 +423,7 @@ namespace netgen
 	      Vec<3> n = Cross (v1, v2);
 
               n.Normalize();
-	      if (n * Vec3d(mesh.Point (face[0]), 
+	      if (n * Vec<3>(mesh.Point (face[0]), 
 			    mesh.Point (tempels.Get(celind)[k]))
 		  > 0)
 		n *= -1;
@@ -546,8 +546,8 @@ namespace netgen
 	tpmax = tpmin = *pp[0];
 	for (int k = 1; k <= 3; k++)
 	  {
-	    tpmin.SetToMin (*pp[k]);
-	    tpmax.SetToMax (*pp[k]);
+	    SetToMin (tpmin, *pp[k]);
+	    SetToMax (tpmax, *pp[k]);
 	  }
 	tpmax = tpmax + 0.01 * (tpmax - tpmin);
         tinsert.Start();
@@ -564,7 +564,7 @@ namespace netgen
 
   void Delaunay1 (Mesh & mesh, int domainnr, const MeshingParameters & mp, const AdFront3 & adfront,
 		  Array<DelaunayTet> & tempels,
-		  int oldnp, DelaunayTet & startel, Point3d & pmin, Point3d & pmax)
+		  int oldnp, DelaunayTet & startel, Point<3> & pmin, Point<3> & pmax)
   {
     static Timer t("Meshing3::Delaunay1"); RegionTimer reg(t);
     
@@ -590,8 +590,8 @@ namespace netgen
     vdiag = Vec<3> (r1, r1, r1);
     //double r2;
 
-    Point<3> pmin2 = pmin - 8 * vdiag;
-    Point<3> pmax2 = pmax + 8 * vdiag;
+    Point<3> pmin2 = pmin - 8.0 * vdiag;
+    Point<3> pmax2 = pmax + 8.0 * vdiag;
 
     Point<3> cp1(pmin2), cp2(pmax2), cp3(pmax2), cp4(pmax2);
     cp2(0) = pmin2(0);
@@ -762,14 +762,14 @@ namespace netgen
 	for (int j = 0; j < 4; j++)
 	  el[j] = tempels[i-1][j];
 	//      Element & el = tempels.Elem(i);
-	const Point3d & lp1 = points[el[0]];
-	const Point3d & lp2 = points[el[1]];
-	const Point3d & lp3 = points[el[2]];
-	const Point3d & lp4 = points[el[3]];
-	Vec3d v1(lp1, lp2);
-	Vec3d v2(lp1, lp3);
-	Vec3d v3(lp1, lp4);
-	Vec3d n = Cross (v1, v2);
+	const Point<3> & lp1 = points[el[0]];
+	const Point<3> & lp2 = points[el[1]];
+	const Point<3> & lp3 = points[el[2]];
+	const Point<3> & lp4 = points[el[3]];
+	Vec<3> v1(lp1, lp2);
+	Vec<3> v2(lp1, lp3);
+	Vec<3> v3(lp1, lp4);
+	Vec<3> n = Cross (v1, v2);
 	double vol = n * v3;
 
 	double h = v1.Length() + v2.Length() + v3.Length();
@@ -939,14 +939,14 @@ namespace netgen
 
                         if(el[0]==pi3 || el[1]==pi3 || el[2]==pi3 || el[3]==pi3)
                         {
-                            const Point3d & p1 = mesh[pi0];
-                            const Point3d & p2 = mesh[pi1];
-                            const Point3d & p3 = mesh[pi2];
-                            const Point3d & p4 = mesh[pi3];
-                            Vec3d v1(p1, p2);
-                            Vec3d v2(p1, p3);
-                            Vec3d v3(p1, p4);
-                            Vec3d n = Cross (v1, v2);
+                            const Point<3> & p1 = mesh[pi0];
+                            const Point<3> & p2 = mesh[pi1];
+                            const Point<3> & p3 = mesh[pi2];
+                            const Point<3> & p4 = mesh[pi3];
+                            Vec<3> v1(p1, p2);
+                            Vec<3> v2(p1, p3);
+                            Vec<3> v3(p1, p4);
+                            Vec<3> n = Cross (v1, v2);
                             double vol = n * v3;
 
                             double h = v1.Length() + v2.Length() + v3.Length();
@@ -974,7 +974,7 @@ namespace netgen
       }
   }
 
-  void DelaunayRemoveIntersecting( const Mesh & mesh, Array<DelaunayTet> & tempels, Array<int> & openels, Point3d pmin, Point3d pmax )
+  void DelaunayRemoveIntersecting( const Mesh & mesh, Array<DelaunayTet> & tempels, Array<int> & openels, Point<3> pmin, Point<3> pmax )
   {
     static Timer trem_intersect("Delaunay - remove intersecting"); RegionTimer rt(trem_intersect);
 
@@ -997,13 +997,13 @@ namespace netgen
 	      {
 		const Element2d & tri = mesh.OpenElement(fnr);
 	      
-		Point3d ltpmin (mesh.Point(tri[0]));
-		Point3d ltpmax (ltpmin);
+		Point<3> ltpmin (mesh.Point(tri[0]));
+		Point<3> ltpmax (ltpmin);
 	      
 		for (int k = 2; k <= 3; k++)
 		  {
-		    ltpmin.SetToMin (mesh.Point (tri.PNum(k)));
-		    ltpmax.SetToMax (mesh.Point (tri.PNum(k)));
+		    SetToMin (ltpmin, mesh.Point (tri.PNum(k)));
+		    SetToMax (ltpmax, mesh.Point (tri.PNum(k)));
 		  }
 		setree.Insert (ltpmin, ltpmax, fnr);
 	      }
@@ -1024,12 +1024,12 @@ namespace netgen
 		tetpi[j] = el[j].Nr1();
 	      }
 	  
-	    Point3d tetpmin(*pp[0]);
-	    Point3d tetpmax(tetpmin);
+	    Point<3> tetpmin(*pp[0]);
+	    Point<3> tetpmax(tetpmin);
 	    for (int j = 1; j < 4; j++)
 	      {
-		tetpmin.SetToMin (*pp[j]);
-		tetpmax.SetToMax (*pp[j]);
+		SetToMin (tetpmin, *pp[j]);
+		SetToMax (tetpmax, *pp[j]);
 	      }
 	    tetpmin = tetpmin + 0.01 * (tetpmin - tetpmax);
 	    tetpmax = tetpmax + 0.01 * (tetpmax - tetpmin);
@@ -1339,12 +1339,12 @@ namespace netgen
 	if (done) break;
       
 	const DelaunayTet & el = tempels[i-1];
-	const Point3d & p1 = mesh.Point (el[0]);
-	const Point3d & p2 = mesh.Point (el[1]);
-	const Point3d & p3 = mesh.Point (el[2]);
-	const Point3d & p4 = mesh.Point (el[3]);
+	const Point<3> & p1 = mesh.Point (el[0]);
+	const Point<3> & p2 = mesh.Point (el[1]);
+	const Point<3> & p3 = mesh.Point (el[2]);
+	const Point<3> & p4 = mesh.Point (el[3]);
       
-	Point3d ci = Center (p1, p2, p3, p4);
+	Point<3> ci = Center (p1, p2, p3, p4);
 
 	inside = adfront.Inside (ci);
 
@@ -1418,12 +1418,12 @@ namespace netgen
 	for (int i = 1; i <= ne; i++)
 	  {
 	    const DelaunayTet & el = tempels[i-1];
-	    const Point3d & p1 = mesh.Point (el[0]);
-	    const Point3d & p2 = mesh.Point (el[1]);
-	    const Point3d & p3 = mesh.Point (el[2]);
-	    const Point3d & p4 = mesh.Point (el[3]);
+	    const Point<3> & p1 = mesh.Point (el[0]);
+	    const Point<3> & p2 = mesh.Point (el[1]);
+	    const Point<3> & p3 = mesh.Point (el[2]);
+	    const Point<3> & p4 = mesh.Point (el[3]);
 	  
-	    Point3d ci = Center (p1, p2, p3, p4);
+	    Point<3> ci = Center (p1, p2, p3, p4);
 	  
 	    //       if (adfront->Inside (ci) != adfront->Inside (Center (ci, p1)))
 	    // 	cout << "ERROR: outer test unclear !!!" << endl;	
@@ -1436,14 +1436,14 @@ namespace netgen
 		  << "outer = " << int(outer.Test(i))
 		  << endl;
 	      
-		  cout << "Vol = " << Determinant(Vec3d(p1, p2),
-		  Vec3d(p1, p3),
-		  Vec3d(p1, p4)) << endl;
+		  cout << "Vol = " << Determinant(Vec<3>(p1, p2),
+		  Vec<3>(p1, p3),
+		  Vec<3>(p1, p4)) << endl;
 	      
 		*/	      
 		for (int j = 1; j <= 4; j++)
 		  {
-		    Point3d hp;
+		    Point<3> hp;
 		    switch (j)
 		      {
 		      case 1: hp = Center (ci, p1); break;
@@ -1505,8 +1505,8 @@ namespace netgen
     const Element & el = tempmesh.VolumeElement(i);
     const Element2d & sel = tempmesh.SurfaceElement(j);
 
-    const Point3d *tripp[3];
-    const Point3d *pp[4];
+    const Point<3> *tripp[3];
+    const Point<3> *pp[4];
     int tetpi[4], tripi[3];
 
     for (k = 1; k <= 4; k++)
@@ -1572,7 +1572,7 @@ namespace netgen
 
 
     Array<DelaunayTet> tempels;
-    Point3d pmin, pmax;
+    Point<3> pmin, pmax;
 
     DelaunayTet startel;
 

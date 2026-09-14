@@ -323,14 +323,14 @@ namespace netgen
 
 	    if (levels > 0)
 	      {
-		const Point3d & p1 = mesh[pi1];
-		const Point3d & p2 = mesh[pi2];
+		const Point<3> & p1 = mesh[pi1];
+		const Point<3> & p2 = mesh[pi2];
 		PointIndex npi = PointIndex::INVALID;
 	      
 		SortedPointIndices<2> edge(pi1, pi2);
 		if (!refedges.Used(edge))
 		  {
-		    Point3d np = Center (p1, p2);
+		    Point<3> np = Center (p1, p2);
 		    npi = mesh.AddPoint (np);
 		    refedges.Set (edge, npi);
 		    found = 1;
@@ -348,14 +348,14 @@ namespace netgen
 
 	    if (levels > 0)
 	      {
-		const Point3d & p1 = mesh[pi1];
-		const Point3d & p2 = mesh[pi2];
+		const Point<3> & p1 = mesh[pi1];
+		const Point<3> & p2 = mesh[pi2];
 		PointIndex npi;
 	      
 		SortedPointIndices<2> edge(pi1, pi2);
 		if (!refedges.Used(edge))
 		  {
-		    Point3d np = Center (p1, p2);
+		    Point<3> np = Center (p1, p2);
 		    npi = mesh.AddPoint (np);
 		    refedges.Set (edge, npi);
 		    found = 1;
@@ -376,8 +376,8 @@ namespace netgen
 
 	    if (slicenr > 0)
 	      {
-		const Point3d & p1 = mesh[pi1];
-		const Point3d & p2 = mesh[pi2];
+		const Point<3> & p1 = mesh[pi1];
+		const Point<3> & p2 = mesh[pi2];
 		PointIndex npi;
 
 		const CloseSurfaceIdentification * csid = 
@@ -395,7 +395,7 @@ namespace netgen
 		    double slicefaclast = 
 		      (slicenr == slices.Size()) ? 1 : slices[slicenr];
 		    
-		    Point3d np = p1 + (slicefac / slicefaclast) * (p2-p1);
+		    Point<3> np = p1 + (slicefac / slicefaclast) * (p2-p1);
 		    //(*testout) << "slicenr " << slicenr << " slicefac " << slicefac << " quot " << (slicefac / slicefaclast) << " np " << np << endl;
 		    npi = mesh.AddPoint (np);
 		    refedges.Set (edge, npi);
@@ -422,8 +422,8 @@ namespace netgen
 	      {
 		PointIndex pi1 = el.PNum(j);
 		PointIndex pi2 = el.PNum(j+3);
-		const Point3d & p1 = mesh[pi1];
-		const Point3d & p2 = mesh[pi2];
+		const Point<3> & p1 = mesh[pi1];
+		const Point<3> & p2 = mesh[pi2];
 
 		bool ref = 0;
 
@@ -446,7 +446,7 @@ namespace netgen
 		    SortedPointIndices<2> edge(pi1, pi2);
 		    if (!refedges.Used(edge))
 		      {
-			Point3d np = Center (p1, p2);
+			Point<3> np = Center (p1, p2);
 			PointIndex npi = mesh.AddPoint (np);
 			refedges.Set (edge, npi);
 			found = 1;
@@ -492,13 +492,13 @@ namespace netgen
 		      {
 			PointIndex pi1 = el.PNum(j);
 			PointIndex pi2 = el.PNum(j+3);
-			const Point3d & p1 = mesh[pi1];
-			const Point3d & p2 = mesh[pi2];
+			const Point<3> & p1 = mesh[pi1];
+			const Point<3> & p2 = mesh[pi2];
 		      
 			SortedPointIndices<2> edge(pi1, pi2);
 			if (!refedges.Used(edge))
 			  {
-			    Point3d np = Center (p1, p2);
+			    Point<3> np = Center (p1, p2);
 			    PointIndex npi = mesh.AddPoint (np);
 			    refedges.Set (edge, npi);
 			  }
@@ -532,7 +532,7 @@ namespace netgen
 	      {
 		continue;
 
-		// 	      Point3d pb;
+		// 	      Point<3> pb;
 
 		// 	      /*
 		// 	      geom->PointBetween (mesh.Point (el[0]),

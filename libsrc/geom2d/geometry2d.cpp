@@ -113,7 +113,7 @@ namespace netgen
     //  (*testout) << "refine 2d line, ap1.dist, ap2.dist = " << ap1.dist << ", " << ap2.dist << endl;
     //  (*testout) << "p1, p2 = " << p1 << p2 << ", newp = " << p2d << endl;
 
-    newp = Point3d (p2d(0), p2d(1), 0);
+    newp = Point<3> (p2d(0), p2d(1), 0);
     newgi.dist = newdist;
   };
 

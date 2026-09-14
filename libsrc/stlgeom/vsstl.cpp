@@ -140,13 +140,13 @@ void VisualSceneSTLMeshing :: DrawScene ()
     //test modeller
     Modeller model;
     
-    //MoZylinder z1(Point3d(0,0,0),Vec3d(100,0,0),20,0.01);
+    //MoZylinder z1(Point<3>(0,0,0),Vec<3>(100,0,0),20,0.01);
     //model.Add(&z1);
-    //MoZylinder z2(Point3d(50,50,0),Vec3d(0,-100,0),20,0.01);
+    //MoZylinder z2(Point<3>(50,50,0),Vec<3>(0,-100,0),20,0.01);
     //model.Add(&z2);
     
-    MoZylinder z1(Point3d(0,0,0),Vec3d(100,0,0),20,0.01);
-    MoZylinder z2(Point3d(50,50,0),Vec3d(0,-100,0),20,0.01);
+    MoZylinder z1(Point<3>(0,0,0),Vec<3>(100,0,0),20,0.01);
+    MoZylinder z2(Point<3>(50,50,0),Vec<3>(0,-100,0),20,0.01);
     MoCombine cb1(&z1,&z2);
     model.Add(&cb1);
     
@@ -189,8 +189,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 			  GL_AMBIENT_AND_DIFFUSE, mat_colred);
 	  */
 
-	  const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	  glNormal3f (n.X(), n.Y(), n.Z());
+	  const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	  glNormal3f (n(0), n(1), n(2));
 	  /*
 	  const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
 	  glNormal3f (tria.normal.X(),
@@ -201,8 +201,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	  
 	  for (k = 1; k <= 3; k++)
 	    {
-	      const Point3d & tp = stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
-	      glVertex3f (tp.X(), tp.Y(), tp.Z());
+	      const Point<3> & tp = stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
+	      glVertex3f (tp(0), tp(1), tp(2));
 
 	    }
 	  /*
@@ -228,8 +228,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	  glBegin (GL_TRIANGLES);
 	  for (j = 1; j <= stlgeometry -> GetNT(); j++)
 	    {
-	      const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n.X(), n.Y(), n.Z());
+	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	      glNormal3f (n(0), n(1), n(2));
 	      /*
 	      const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
 	      glNormal3f (tria.normal.X(),
@@ -239,9 +239,9 @@ void VisualSceneSTLMeshing :: DrawScene ()
 
 	      for (k = 1; k <= 3; k++)
 		{
-		  const Point3d & tp = 
+		  const Point<3> & tp = 
 		    stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
-		  glVertex3f (tp.X(), tp.Y(), tp.Z());
+		  glVertex3f (tp(0), tp(1), tp(2));
 		  
 		}
 	      
@@ -303,8 +303,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      
 	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n.X(), n.Y(), n.Z());
+	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	      glNormal3f (n(0), n(1), n(2));
 	  
 	      /*
 	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
@@ -314,13 +314,13 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      */
 	      for (k = 0; k < 3; k++)
 		{
-		  const Point3d & p = stlgeometry->GetPoint(st[k]);
+		  const Point<3> & p = stlgeometry->GetPoint(st[k]);
 		  if (colormeshsize)
 		    {
 		      SetOpenGlColor (mesh->GetH (p), hmin, hmax, 1);
 		    }
 
-		  glVertex3f (p.X(), p.Y(), p.Z());
+		  glVertex3f (p(0), p(1), p(2));
 		}
 	    } 
    
@@ -348,27 +348,27 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	    {
 	      //point
 	      const STLTriangle& st = stlgeometry -> GetTriangle(foundseltrig);
-	      const Point3d & p1 = stlgeometry->GetPoint(st[0]);
-	      const Point3d & p2 = stlgeometry->GetPoint(st[1]);
-	      const Point3d & p3 = stlgeometry->GetPoint(st[2]);
+	      const Point<3> & p1 = stlgeometry->GetPoint(st[0]);
+	      const Point<3> & p2 = stlgeometry->GetPoint(st[1]);
+	      const Point<3> & p3 = stlgeometry->GetPoint(st[2]);
 
 	      double cs = (Dist(p1,p2)+Dist(p2,p3)+Dist(p3,p1))/100.;
 
-	      const Point3d & p = stlgeometry->GetPoint(st[nodeofseltrig-1]);
+	      const Point<3> & p = stlgeometry->GetPoint(st[nodeofseltrig-1]);
 	      
 	      glLineWidth (4);
 	      glBegin (GL_LINES);
-	      glVertex3f(p.X()+cs, p.Y()+cs, p.Z()+cs);
-	      glVertex3f(p.X()-cs, p.Y()-cs, p.Z()-cs);
+	      glVertex3f(p(0)+cs, p(1)+cs, p(2)+cs);
+	      glVertex3f(p(0)-cs, p(1)-cs, p(2)-cs);
 	      
-	      glVertex3f(p.X()-cs, p.Y()+cs, p.Z()+cs);
-	      glVertex3f(p.X()+cs, p.Y()-cs, p.Z()-cs);
+	      glVertex3f(p(0)-cs, p(1)+cs, p(2)+cs);
+	      glVertex3f(p(0)+cs, p(1)-cs, p(2)-cs);
 
-	      glVertex3f(p.X()-cs, p.Y()+cs, p.Z()+cs);
-	      glVertex3f(p.X()+cs, p.Y()-cs, p.Z()-cs);
+	      glVertex3f(p(0)-cs, p(1)+cs, p(2)+cs);
+	      glVertex3f(p(0)+cs, p(1)-cs, p(2)-cs);
 	      
-	      glVertex3f(p.X()+cs, p.Y()-cs, p.Z()+cs);
-	      glVertex3f(p.X()-cs, p.Y()+cs, p.Z()-cs);
+	      glVertex3f(p(0)+cs, p(1)-cs, p(2)+cs);
+	      glVertex3f(p(0)-cs, p(1)+cs, p(2)-cs);
 	      
 	      glEnd ();	  
 	      glLineWidth (1);
@@ -407,11 +407,11 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  glBegin (GL_LINES);
 		  for (j = 1; j <= me.Size(); j++)
 		    { 
-		      Point3d p1 = stlgeometry->GetPoint(me[j-1].i1);
-		      Point3d p2 = stlgeometry->GetPoint(me[j-1].i2);
+		      Point<3> p1 = stlgeometry->GetPoint(me[j-1].i1);
+		      Point<3> p2 = stlgeometry->GetPoint(me[j-1].i2);
 		      
-		      glVertex3f(p1.X(), p1.Y(), p1.Z());
-		      glVertex3f(p2.X(), p2.Y(), p2.Z());
+		      glVertex3f(p1(0), p1(1), p1(2));
+		      glVertex3f(p2(0), p2(1), p2(2));
 		    }
 		  glEnd ();
 		  glLineWidth (1);
@@ -442,8 +442,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      
 	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n.X(), n.Y(), n.Z());
+	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	      glNormal3f (n(0), n(1), n(2));
 	      /*
 	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
 	      glNormal3f (tria.normal.X(),
@@ -452,8 +452,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      */
 	      for (k = 0; k < 3; k++)
 		{
-		  const Point3d & p = stlgeometry->GetPoint(st[k]);
-		  glVertex3f (p.X(), p.Y(), p.Z());
+		  const Point<3> & p = stlgeometry->GetPoint(st[k]);
+		  glVertex3f (p(0), p(1), p(2));
 		}
 	    }    
 	  glEnd ();
@@ -504,8 +504,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      
 	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n.X(), n.Y(), n.Z());
+	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	      glNormal3f (n(0), n(1), n(2));
 	      /*
 	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
 	      glNormal3f (tria.normal.X(),
@@ -514,8 +514,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      */
 	      for (k = 0; k < 3; k++)
 		{
-		  Point3d p = stlgeometry->GetPoint(st[k]);
-		  glVertex3f (p.X(), p.Y(), p.Z());
+		  Point<3> p = stlgeometry->GetPoint(st[k]);
+		  glVertex3f (p(0), p(1), p(2));
 		}
 	    }    
 	  glEnd ();
@@ -544,8 +544,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig1(j));
 
 		  
-		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetChartTrig1(j)).Normal();
-		  glNormal3f (n.X(), n.Y(), n.Z());
+		  const Vec<3> & n = stlgeometry->GetTriangle(chart.GetChartTrig1(j)).Normal();
+		  glNormal3f (n(0), n(1), n(2));
 		  /*
 		  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetChartTrig(j));
 		  glNormal3f (tria.normal.X(),
@@ -566,8 +566,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		  
 		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig1(j));
 
-		  const Vec3d & n = stlgeometry->GetTriangle(chart.GetOuterTrig1(j)).Normal();
-		  glNormal3f (n.X(), n.Y(), n.Z());
+		  const Vec<3> & n = stlgeometry->GetTriangle(chart.GetOuterTrig1(j)).Normal();
+		  glNormal3f (n(0), n(1), n(2));
 
 
 		  /*
@@ -605,8 +605,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 
 	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n.X(), n.Y(), n.Z());
+	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	      glNormal3f (n(0), n(1), n(2));
 	      /*
 	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
 	      glNormal3f (tria.normal.X(),
@@ -645,11 +645,11 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      for (j = 1; j <= stlgeometry -> NOExternalEdges(); j++)
 		{
 		  twoint v = stlgeometry->GetExternalEdge(j);
-		  Point3d p1 = stlgeometry->GetPoint(v.i1);
-		  Point3d p2 = stlgeometry->GetPoint(v.i2);
+		  Point<3> p1 = stlgeometry->GetPoint(v.i1);
+		  Point<3> p2 = stlgeometry->GetPoint(v.i2);
 		  
-		  Vec3d n1 = stlgeometry->GetNormal(v.i1);
-		  Vec3d n2 = stlgeometry->GetNormal(v.i2);
+		  Vec<3> n1 = stlgeometry->GetNormal(v.i1);
+		  Vec<3> n2 = stlgeometry->GetNormal(v.i2);
 		  
 		  glNormal3f(n1.X(), n1.Y(), n1.Z());
 		  glVertex3f(p1.X(), p1.Y(), p1.Z());
@@ -666,11 +666,11 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	      for (j = 1; j <= stlgeometry -> GetNE(); j++)
 		{
 		  STLEdge v = stlgeometry->GetEdge(j);
-		  Point3d p1 = stlgeometry->GetPoint(v.pts[0]);
-		  Point3d p2 = stlgeometry->GetPoint(v.pts[1]);
+		  Point<3> p1 = stlgeometry->GetPoint(v.pts[0]);
+		  Point<3> p2 = stlgeometry->GetPoint(v.pts[1]);
 		  
-		  Vec3d n1 = stlgeometry->GetNormal(v.pts[0]);
-		  Vec3d n2 = stlgeometry->GetNormal(v.pts[1]);
+		  Vec<3> n1 = stlgeometry->GetNormal(v.pts[0]);
+		  Vec<3> n2 = stlgeometry->GetNormal(v.pts[1]);
 		  
 		  glNormal3f(n1.X(), n1.Y(), n1.Z());
 		  glVertex3f(p1.X(), p1.Y(), p1.Z());
@@ -700,10 +700,10 @@ void VisualSceneSTLMeshing :: DrawScene ()
 
 		      if (ed.Get(i).GetStatus() == ED_EXCLUDED && !stldoctor.showexcluded) continue;
 
-		      Point3d p1 = stlgeometry->GetPoint(ed.Get(i).PNum(1));
-		      Point3d p2 = stlgeometry->GetPoint(ed.Get(i).PNum(2));
-		      glVertex3f(p1.X(), p1.Y(), p1.Z());
-		      glVertex3f(p2.X(), p2.Y(), p2.Z());		   
+		      Point<3> p1 = stlgeometry->GetPoint(ed.Get(i).PNum(1));
+		      Point<3> p2 = stlgeometry->GetPoint(ed.Get(i).PNum(2));
+		      glVertex3f(p1(0), p1(1), p1(2));
+		      glVertex3f(p2(0), p2(1), p2(2));		   
 		    }
 		}
 	    }
@@ -721,11 +721,11 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		      pn1 = line->PNum(k);
 		      pn2 = line->PNum(k+1);
 
-		      Point3d p1 = stlgeometry->GetPoint(pn1);
-		      Point3d p2 = stlgeometry->GetPoint(pn2);
+		      Point<3> p1 = stlgeometry->GetPoint(pn1);
+		      Point<3> p2 = stlgeometry->GetPoint(pn2);
 		  
-		      Vec3d n1 = stlgeometry->GetNormal(pn1);
-		      Vec3d n2 = stlgeometry->GetNormal(pn2);
+		      Vec<3> n1 = stlgeometry->GetNormal(pn1);
+		      Vec<3> n2 = stlgeometry->GetNormal(pn2);
 		  
 		      glNormal3f(n1.X(), n1.Y(), n1.Z());
 		      glVertex3f(p1.X(), p1.Y(), p1.Z());
@@ -748,25 +748,25 @@ void VisualSceneSTLMeshing :: DrawScene ()
 		      pn1 = line->PNum(k);
 		      pn2 = line->PNum(k+1);
 
-		      Point3d p1 = stlgeometry->meshpoints[pn1-1];
-		      Point3d p2 = stlgeometry->meshpoints[pn2-1];
+		      Point<3> p1 = stlgeometry->meshpoints[pn1-1];
+		      Point<3> p2 = stlgeometry->meshpoints[pn2-1];
 		  		  
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
-		      glVertex3f(p1.X(), p1.Y(), p1.Z());
-		      glVertex3f(p2.X(), p2.Y(), p2.Z());
+		      glVertex3f(p1(0), p1(1), p1(2));
+		      glVertex3f(p2(0), p2(1), p2(2));
 
 		      
 		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
 		      double cs = 0.02*Dist(p1,p2);
-		      glVertex3f(p1.X()+cs, p1.Y()+cs, p1.Z()+cs);
-		      glVertex3f(p1.X()-cs, p1.Y()-cs, p1.Z()-cs);
-		      glVertex3f(p2.X()+cs, p2.Y()+cs, p2.Z()+cs);
-		      glVertex3f(p2.X()-cs, p2.Y()-cs, p2.Z()-cs);
+		      glVertex3f(p1(0)+cs, p1(1)+cs, p1(2)+cs);
+		      glVertex3f(p1(0)-cs, p1(1)-cs, p1(2)-cs);
+		      glVertex3f(p2(0)+cs, p2(1)+cs, p2(2)+cs);
+		      glVertex3f(p2(0)-cs, p2(1)-cs, p2(2)-cs);
 
-		      glVertex3f(p1.X()-cs, p1.Y()+cs, p1.Z()+cs);
-		      glVertex3f(p1.X()+cs, p1.Y()-cs, p1.Z()-cs);
-		      glVertex3f(p2.X()-cs, p2.Y()+cs, p2.Z()+cs);
-		      glVertex3f(p2.X()+cs, p2.Y()-cs, p2.Z()-cs);
+		      glVertex3f(p1(0)-cs, p1(1)+cs, p1(2)+cs);
+		      glVertex3f(p1(0)+cs, p1(1)-cs, p1(2)-cs);
+		      glVertex3f(p2(0)-cs, p2(1)+cs, p2(2)+cs);
+		      glVertex3f(p2(0)+cs, p2(1)-cs, p2(2)-cs);
 		      
 		    }
 		}
@@ -785,8 +785,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 	    {
 	      if (stlgeometry->IsLineEndPoint(i))
 		{
-		  const Point3d p = stlgeometry->GetPoint(i);
-		  glVertex3f (p.X(), p.Y(), p.Z());
+		  const Point<3> p = stlgeometry->GetPoint(i);
+		  glVertex3f (p(0), p(1), p(2));
 		}
 	    }
 	  glEnd();
@@ -885,15 +885,15 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 	  glBegin (GL_TRIANGLES);
 	  for (k = 0; k < 3; k++)
 	    {
-	      Point3d p = stlgeometry->GetPoint(st[k]);
-	      glVertex3f (p.X(), p.Y(), p.Z());
+	      Point<3> p = stlgeometry->GetPoint(st[k]);
+	      glVertex3f (p(0), p(1), p(2));
 	    }
 	  glEnd ();
 	} 
       else if (stldoctor.selectmode == 1 || stldoctor.selectmode == 3
 	        || stldoctor.selectmode == 4)
 	{
-	  Point3d pm = Center(stlgeometry->GetPoint(st[0]),
+	  Point<3> pm = Center(stlgeometry->GetPoint(st[0]),
 			      stlgeometry->GetPoint(st[1]),
 			      stlgeometry->GetPoint(st[2]));
 
@@ -902,54 +902,54 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 	      glLoadName (j*3+k-2);
 	      glBegin (GL_TRIANGLES);
 
-	      Point3d p1 = stlgeometry->GetPoint(st[k]);
-	      Point3d p2 = stlgeometry->GetPoint(st[(k+1)%3]);
-	      glVertex3f (p1.X(), p1.Y(), p1.Z());
-	      glVertex3f (p2.X(), p2.Y(), p2.Z());
-	      glVertex3f (pm.X(), pm.Y(), pm.Z());
+	      Point<3> p1 = stlgeometry->GetPoint(st[k]);
+	      Point<3> p2 = stlgeometry->GetPoint(st[(k+1)%3]);
+	      glVertex3f (p1(0), p1(1), p1(2));
+	      glVertex3f (p2(0), p2(1), p2(2));
+	      glVertex3f (pm(0), pm(1), pm(2));
 
 	      glEnd ();
 	    }
 	}
       else
 	{
-	  Point3d pm1 = Center(stlgeometry->GetPoint(st[0]),
+	  Point<3> pm1 = Center(stlgeometry->GetPoint(st[0]),
 			       stlgeometry->GetPoint(st[1]));
-	  Point3d pm2 = Center(stlgeometry->GetPoint(st[1]),
+	  Point<3> pm2 = Center(stlgeometry->GetPoint(st[1]),
 			       stlgeometry->GetPoint(st[2]));
-	  Point3d pm3 = Center(stlgeometry->GetPoint(st[2]),
+	  Point<3> pm3 = Center(stlgeometry->GetPoint(st[2]),
 			       stlgeometry->GetPoint(st[0]));
 
-	  Point3d p1 = stlgeometry->GetPoint(st[0]);
-	  Point3d p2 = stlgeometry->GetPoint(st[1]);
-	  Point3d p3 = stlgeometry->GetPoint(st[2]);
+	  Point<3> p1 = stlgeometry->GetPoint(st[0]);
+	  Point<3> p2 = stlgeometry->GetPoint(st[1]);
+	  Point<3> p3 = stlgeometry->GetPoint(st[2]);
 
 	  glLoadName (j*4-3);
 	  glBegin (GL_TRIANGLES);
-	  glVertex3f (p1.X(), p1.Y(), p1.Z());
-	  glVertex3f (pm1.X(), pm1.Y(), pm1.Z());
-	  glVertex3f (pm3.X(), pm3.Y(), pm3.Z());
+	  glVertex3f (p1(0), p1(1), p1(2));
+	  glVertex3f (pm1(0), pm1(1), pm1(2));
+	  glVertex3f (pm3(0), pm3(1), pm3(2));
 	  glEnd ();
 
 	  glLoadName (j*4-2);
 	  glBegin (GL_TRIANGLES);
-	  glVertex3f (p2.X(), p2.Y(), p2.Z());
-	  glVertex3f (pm2.X(), pm2.Y(), pm2.Z());
-	  glVertex3f (pm1.X(), pm1.Y(), pm1.Z());
+	  glVertex3f (p2(0), p2(1), p2(2));
+	  glVertex3f (pm2(0), pm2(1), pm2(2));
+	  glVertex3f (pm1(0), pm1(1), pm1(2));
 	  glEnd ();
 
 	  glLoadName (j*4-1);
 	  glBegin (GL_TRIANGLES);
-	  glVertex3f (p3.X(), p3.Y(), p3.Z());
-	  glVertex3f (pm3.X(), pm3.Y(), pm3.Z());
-	  glVertex3f (pm2.X(), pm2.Y(), pm2.Z());
+	  glVertex3f (p3(0), p3(1), p3(2));
+	  glVertex3f (pm3(0), pm3(1), pm3(2));
+	  glVertex3f (pm2(0), pm2(1), pm2(2));
 	  glEnd ();
 
 	  glLoadName (j*4);
 	  glBegin (GL_TRIANGLES);
-	  glVertex3f (pm1.X(), pm1.Y(), pm1.Z());
-	  glVertex3f (pm2.X(), pm2.Y(), pm2.Z());
-	  glVertex3f (pm3.X(), pm3.Y(), pm3.Z());
+	  glVertex3f (pm1(0), pm1(1), pm1(2));
+	  glVertex3f (pm2(0), pm2(1), pm2(2));
+	  glVertex3f (pm3(0), pm3(1), pm3(2));
 	  glEnd ();
 	}
     }    
@@ -1191,14 +1191,14 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
     glBegin (GL_TRIANGLES);
     for (int j = 1; j <= stlgeometry -> GetNT(); j++)
       {
-	const Vec3d & n = stlgeometry->GetTriangle(j).Normal();
-	glNormal3f (n.X(), n.Y(), n.Z());
+	const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+	glNormal3f (n(0), n(1), n(2));
       
 	for (int k = 1; k <= 3; k++)
 	  {
-	    const Point3d & p = 
+	    const Point<3> & p = 
 	      stlgeometry->GetPoint (stlgeometry -> GetTriangle(j).PNum(k));
-	    glVertex3f (p.X(),p.Y(), p.Z());
+	    glVertex3f (p(0),p(1), p(2));
 	  }
       }    
     glEnd ();

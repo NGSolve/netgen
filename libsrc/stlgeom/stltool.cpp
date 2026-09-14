@@ -13,7 +13,7 @@ namespace netgen
 
 
 //add a point into a pointlist, return pointnumber
-int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps)
+int AddPointIfNotExists(Array<Point<3>>& ap, const Point<3>& p, double eps)
 {
   double eps2 = sqr(eps);
   for (int i = 1; i <= ap.Size(); i++)
@@ -28,11 +28,11 @@ int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps)
 double GetDistFromLine(const Point<3> & lp1, const Point<3> & lp2, 
 		       Point<3> & p)
 {
-  Vec3d vn = lp2 - lp1;
-  Vec3d v1 = p - lp1;
-  Vec3d v2 = lp2 - p;
+  Vec<3> vn = lp2 - lp1;
+  Vec<3> v1 = p - lp1;
+  Vec<3> v2 = lp2 - p;
 
-  Point3d pold = p;
+  Point<3> pold = p;
 
   if (v2 * vn <= 0) {p = lp2; return (pold - p).Length();}
   if (v1 * vn <= 0) {p = lp1; return (pold - p).Length();}
@@ -47,8 +47,8 @@ double GetDistFromLine(const Point<3> & lp1, const Point<3> & lp2,
 
 double GetDistFromInfiniteLine(const Point<3>& lp1, const Point<3>& lp2, const Point<3>& p)
 {
-  Vec3d vn(lp1, lp2);
-  Vec3d v1(lp1, p);
+  Vec<3> vn(lp1, lp2);
+  Vec<3> v1(lp1, p);
 
   double vnl = vn.Length();
 
@@ -622,8 +622,8 @@ STLChart :: STLChart(STLGeometry * ageometry, const STLParameters& astlparam)
       box.Increase (0.2*box.Diam()+1e-12);
       searchtree = new BoxTree<3,STLTrigId> (box);
       /*
-      searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
-                                   geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+      searchtree = new BoxTree<3> (geometry->GetBoundingBox().PMin() - Vec<3>(1,1,1),
+                                   geometry->GetBoundingBox().PMax() + Vec<3>(1,1,1));
       */
     }
   else
@@ -648,11 +648,11 @@ void STLChart :: AddChartTrig(STLTrigId i)
   const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
 
   /*
-  Point3d pmin(p1), pmax(p1);
-  pmin.SetToMin (p2);
-  pmin.SetToMin (p3);
-  pmax.SetToMax (p2);
-  pmax.SetToMax (p3);
+  Point<3> pmin(p1), pmax(p1);
+  SetToMin (pmin, p2);
+  SetToMin (pmin, p3);
+  SetToMax (pmax, p2);
+  SetToMax (pmax, p3);
   */
   /*
   Box<3> box(p1);
@@ -675,15 +675,15 @@ void STLChart :: AddOuterTrig(STLTrigId i)
   outertrigs.Append(i);
 
   const STLTriangle & trig = geometry->GetTriangle(i);
-  const Point3d & p1 = geometry->GetPoint (trig.PNum(1));
-  const Point3d & p2 = geometry->GetPoint (trig.PNum(2));
-  const Point3d & p3 = geometry->GetPoint (trig.PNum(3));
+  const Point<3> & p1 = geometry->GetPoint (trig.PNum(1));
+  const Point<3> & p2 = geometry->GetPoint (trig.PNum(2));
+  const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
 
-  Point3d pmin(p1), pmax(p1);
-  pmin.SetToMin (p2);
-  pmin.SetToMin (p3);
-  pmax.SetToMax (p2);
-  pmax.SetToMax (p3);
+  Point<3> pmin(p1), pmax(p1);
+  SetToMin (pmin, p2);
+  SetToMin (pmin, p3);
+  SetToMax (pmax, p2);
+  SetToMax (pmax, p3);
   
   if (!geomsearchtreeon && (stlparam.usesearchtree==1))
     {searchtree->Insert (pmin, pmax, i);}
@@ -694,8 +694,8 @@ bool STLChart :: IsInWholeChart(int nr) const
   return charttrigs.Contains(nr) || outertrigs.Contains(nr);
 }
 
-void STLChart :: GetTrianglesInBox (const Point3d & pmin,
-				    const Point3d & pmax,
+void STLChart :: GetTrianglesInBox (const Point<3> & pmin,
+				    const Point<3> & pmax,
 				    Array<STLTrigId> & trias) const
 {
   if (geomsearchtreeon) {PrintMessage(5,"geomsearchtreeon is set!!!");}
@@ -761,21 +761,21 @@ void STLChart :: DelChartTrigs(const Array<int>& trigs)
     {
       PrintMessage(7, "Warning: unsecure routine due to first use of searchtrees!!!");
       //bould new searchtree!!!
-      searchtree = new BoxTree<3,STLTrigId> (geometry->GetBoundingBox().PMin() - Vec3d(1,1,1),
-                                             geometry->GetBoundingBox().PMax() + Vec3d(1,1,1));
+      searchtree = new BoxTree<3,STLTrigId> (geometry->GetBoundingBox().PMin() - Vec<3>(1,1,1),
+                                             geometry->GetBoundingBox().PMax() + Vec<3>(1,1,1));
 
       for (int i = 1; i <= charttrigs.Size(); i++)
 	{
 	  const STLTriangle & trig = geometry->GetTriangle(i);
-	  const Point3d & p1 = geometry->GetPoint (trig.PNum(1));
-	  const Point3d & p2 = geometry->GetPoint (trig.PNum(2));
-	  const Point3d & p3 = geometry->GetPoint (trig.PNum(3));
+	  const Point<3> & p1 = geometry->GetPoint (trig.PNum(1));
+	  const Point<3> & p2 = geometry->GetPoint (trig.PNum(2));
+	  const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
 	  
-	  Point3d pmin(p1), pmax(p1);
-	  pmin.SetToMin (p2);
-	  pmin.SetToMin (p3);
-	  pmax.SetToMax (p2);
-	  pmax.SetToMax (p3);
+	  Point<3> pmin(p1), pmax(p1);
+	  SetToMin (pmin, p2);
+	  SetToMin (pmin, p3);
+	  SetToMax (pmax, p2);
+	  SetToMax (pmax, p3);
 	  
 	  searchtree->Insert (pmin, pmax, i);
 	}
@@ -904,7 +904,7 @@ Point<2> STLChart :: Project2d (const Point<3> & p3d) const
 
 
 /*
-  Point3d p1, p2, center;
+  Point<3> p1, p2, center;
   double rad;
   int i1, i2;
 public:
@@ -1222,7 +1222,7 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
       double maxdiff = max2 (maxsl - minl, maxl - minsl);
       
       /*
-      Point3d sc = Center (sp1, sp2);
+      Point<3> sc = Center (sp1, sp2);
       double mindist = Dist(c, sc) - dist1 - GetSegment(j).Radius();
       if (maxdiff < sinchartangle * mindist)
 	{
@@ -1253,9 +1253,9 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 	  slp.Square (lp);
 	  
       
-	  Vec3d v (p1, sp1);
-	  Vec3d vl (p1, p2);
-	  Vec3d vsl (sp1, sp2);
+	  Vec<3> v (p1, sp1);
+	  Vec<3> vl (p1, p2);
+	  Vec<3> vsl (sp1, sp2);
       
 	  QuadraticPolynomial2V qp (v.Length2(),
 				    -2 * (v * vl),
@@ -1283,7 +1283,7 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 	  {
 	    
 	    lambda1 = (double)i/(double)divisions;
-	    seg1p = Point3d(p1(0)*lambda1+p2(0)*(1.-lambda1),
+	    seg1p = Point<3>(p1(0)*lambda1+p2(0)*(1.-lambda1),
 			    p1(1)*lambda1+p2(1)*(1.-lambda1),
 			    p1(2)*lambda1+p2(2)*(1.-lambda1));
 	    
@@ -1292,7 +1292,7 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
 	    for (k = 0; k <= divisions; k++)
 	      {
 		lambda2 = (double)k/(double)divisions;
-		vptpl = Vec3d(sp1(0)*lambda2+sp2(0)*(1.-lambda2)-seg1p(0),
+		vptpl = Vec<3>(sp1(0)*lambda2+sp2(0)*(1.-lambda2)-seg1p(0),
 			      sp1(1)*lambda2+sp2(1)*(1.-lambda2)-seg1p(1),
 			      sp1(2)*lambda2+sp2(2)*(1.-lambda2)-seg1p(2));
 		
@@ -1338,8 +1338,8 @@ void STLBoundary :: DeleteSearchTree()
 
 
 // checks, whether 2d projection intersects
-bool STLBoundary :: TestSegChartNV(const Point3d & p1, const Point3d& p2, 
-				  const Vec3d& sn)
+bool STLBoundary :: TestSegChartNV(const Point<3> & p1, const Point<3>& p2, 
+				  const Vec<3>& sn)
 {
   //  static int timerquick = NgProfiler::CreateTimer ("TestSegChartNV-searchtree");
   // static Timer timer("TestSegChartNV");  RegionTimer reg(timer);      

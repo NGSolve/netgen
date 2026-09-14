@@ -279,7 +279,7 @@ namespace netgen
   void VisualSceneMesh :: SelectCenter (int zoomall)
   {
     shared_ptr<Mesh> mesh = GetMesh();
-    Point3d pmin, pmax;
+    Point<3> pmin, pmax;
     mesh->GetBox (pmin, pmax, -1);
 
     // works in NGSolve, mesh view
@@ -290,9 +290,9 @@ namespace netgen
 
     if (vispar.use_center_coords && zoomall==2)
     {
-      center.X() = vispar.centerx;
-      center.Y() = vispar.centery;
-      center.Z() = vispar.centerz;
+      center(0) = vispar.centerx;
+      center(1) = vispar.centery;
+      center(2) = vispar.centerz;
     }
     else if (selpoint-IndexBASE<PointIndex>() >= 1 && zoomall==2)
       center = mesh->Point (selpoint);
@@ -406,8 +406,8 @@ namespace netgen
 	if (vispar.drawpointnumbers)
 	  for (PointIndex pi : mesh->Points().Range())
             {
-	      const Point3d & p = mesh->Point(pi);
-	      glRasterPos3d (p.X(), p.Y(), p.Z());
+	      const Point<3> & p = mesh->Point(pi);
+	      glRasterPos3d (p(0), p(1), p(2));
 
 	      snprintf (buf, size(buf),  "%d", pi.Nr1());
 
@@ -422,9 +422,9 @@ namespace netgen
 	      {
 	      const Segment & seg = (*mesh)[i];
 
-	      const Point3d & p1 = mesh->Point(seg[0]);
-	      const Point3d & p2 = mesh->Point(seg[1]);
-	      const Point3d p = Center (p1, p2);
+	      const Point<3> & p1 = mesh->Point(seg[0]);
+	      const Point<3> & p2 = mesh->Point(seg[1]);
+	      const Point<3> p = Center (p1, p2);
 	      glRasterPos3d (p.X(), p.Y(), p.Z());
 
 	      snprintf (buf, size(buf),  "%d", seg.edgenr);
@@ -438,10 +438,10 @@ namespace netgen
 		// int v1, v2;
 		// top.GetEdgeVertices (i, v1, v2);
                 auto [v1,v2] = top.GetEdgeVertices(i-1);
-		const Point3d & p1 = mesh->Point(v1);
-		const Point3d & p2 = mesh->Point(v2);
-		const Point3d p = Center (p1, p2);
-		glRasterPos3d (p.X(), p.Y(), p.Z());
+		const Point<3> & p1 = mesh->Point(v1);
+		const Point<3> & p2 = mesh->Point(v2);
+		const Point<3> p = Center (p1, p2);
+		glRasterPos3d (p(0), p(1), p(2));
 
 		snprintf (buf, size(buf),  "%d", i);
 		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
@@ -591,15 +591,15 @@ namespace netgen
 		    for (int j = 1; j <= faces.Size(); j++)
 		      {
 			ElementFace & face = faces[j-1];
-			const Point3d & lp1 = mesh->Point (el.PNum(face.PNum(1)));
-			const Point3d & lp2 = mesh->Point (el.PNum(face.PNum(2)));
-			const Point3d & lp3 = mesh->Point (el.PNum(face.PNum(3)));
-			Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+			const Point<3> & lp1 = mesh->Point (el.PNum(face.PNum(1)));
+			const Point<3> & lp2 = mesh->Point (el.PNum(face.PNum(2)));
+			const Point<3> & lp3 = mesh->Point (el.PNum(face.PNum(3)));
+			Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 			n /= (n.Length()+1e-12);
-			glNormal3d (n.X(), n.Y(), n.Z());
-			glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-			glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-			glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+			glNormal3d (n(0), n(1), n(2));
+			glVertex3d (lp1(0), lp1(1), lp1(2));
+			glVertex3d (lp2(0), lp2(1), lp2(2));
+			glVertex3d (lp3(0), lp3(1), lp3(2));
 		      }
 
 		    glEnd();
@@ -619,8 +619,8 @@ namespace netgen
 		  {
 		    glBegin (GL_LINES);
 		    glVertex3d (0,0,0);
-		    const Point3d & p = mesh->Point(el.PNum(1));
-		    glVertex3d (p.X(), p.Y(), p.Z());
+		    const Point<3> & p = mesh->Point(el.PNum(1));
+		    glVertex3d (p(0), p(1), p(2));
 		    glEnd();
 		  }
 	      }
@@ -655,10 +655,10 @@ namespace netgen
 		    for (int j = 0; j < 6; j++)
 		      {
 			glBegin (GL_LINES);
-			const Point3d & p1 = mesh->Point (el.PNum(et[j][0]));
-			const Point3d & p2 = mesh->Point (el.PNum(et[j][1]));
-			glVertex3d (p1.X(), p1.Y(), p1.Z());
-			glVertex3d (p2.X(), p2.Y(), p2.Z());
+			const Point<3> & p1 = mesh->Point (el.PNum(et[j][0]));
+			const Point<3> & p2 = mesh->Point (el.PNum(et[j][1]));
+			glVertex3d (p1(0), p1(1), p1(2));
+			glVertex3d (p2(0), p2(1), p2(2));
 			glEnd ();
 		      }
 		  }
@@ -683,10 +683,10 @@ namespace netgen
 		    for (int j = 0; j < 12; j++)
 		      {
 			glBegin (GL_LINES);
-			const Point3d & p1 = mesh->Point (el.PNum(et[j][0]));
-			const Point3d & p2 = mesh->Point (el.PNum(et[j][1]));
-			glVertex3d (p1.X(), p1.Y(), p1.Z());
-			glVertex3d (p2.X(), p2.Y(), p2.Z());
+			const Point<3> & p1 = mesh->Point (el.PNum(et[j][0]));
+			const Point<3> & p2 = mesh->Point (el.PNum(et[j][1]));
+			glVertex3d (p1(0), p1(1), p1(2));
+			glVertex3d (p2(0), p2(1), p2(2));
 			glEnd ();
 		      }
 		  }
@@ -716,15 +716,15 @@ namespace netgen
 		{
                   glBegin (GL_TRIANGLES);
 
-                  Point3d lp1 = mesh->Point (el.PNum(1));
-                  Point3d lp2 = mesh->Point (el.PNum(2));
-                  Point3d lp3 = mesh->Point (el.PNum(3));
-                  Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+                  Point<3> lp1 = mesh->Point (el.PNum(1));
+                  Point<3> lp2 = mesh->Point (el.PNum(2));
+                  Point<3> lp3 = mesh->Point (el.PNum(3));
+                  Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
                   n /= (n.Length() + 1e-12);
-                  glNormal3dv (&n.X());
-                  glVertex3dv (&lp1.X());
-                  glVertex3dv (&lp2.X());
-                  glVertex3dv (&lp3.X());
+                  glNormal3dv (&n(0));
+                  glVertex3dv (&lp1(0));
+                  glVertex3dv (&lp2(0));
+                  glVertex3dv (&lp3(0));
                   glEnd();
                   break;
 		}
@@ -732,18 +732,18 @@ namespace netgen
 		{
                   glBegin (GL_QUADS);
 
-                  const Point3d & lp1 = mesh->Point (el.PNum(1));
-                  const Point3d & lp2 = mesh->Point (el.PNum(2));
-                  const Point3d & lp3 = mesh->Point (el.PNum(4));
-                  const Point3d & lp4 = mesh->Point (el.PNum(3));
-                  Vec3d n = Cross (Vec3d (lp1, lp2),
-				   Vec3d (lp1, Center (lp3, lp4)));
+                  const Point<3> & lp1 = mesh->Point (el.PNum(1));
+                  const Point<3> & lp2 = mesh->Point (el.PNum(2));
+                  const Point<3> & lp3 = mesh->Point (el.PNum(4));
+                  const Point<3> & lp4 = mesh->Point (el.PNum(3));
+                  Vec<3> n = Cross (Vec<3> (lp1, lp2),
+				   Vec<3> (lp1, Center (lp3, lp4)));
                   n /= (n.Length() + 1e-12);
-                  glNormal3d (n.X(), n.Y(), n.Z());
-                  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-                  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-                  glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
-                  glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+                  glNormal3d (n(0), n(1), n(2));
+                  glVertex3d (lp1(0), lp1(1), lp1(2));
+                  glVertex3d (lp2(0), lp2(1), lp2(2));
+                  glVertex3d (lp4(0), lp4(1), lp4(2));
+                  glVertex3d (lp3(0), lp3(1), lp3(2));
                   glEnd();
                   break;
 		}
@@ -775,11 +775,11 @@ namespace netgen
 
 		  for (int j = 0; j < 6; j++)
 		    {
-		      const Point3d & lp1 = mesh->Point (el.PNum(lines[j][0]));
-		      const Point3d & lp2 = mesh->Point (el.PNum(lines[j][1]));
+		      const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+		      const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
 
-		      glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		      glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
+		      glVertex3d (lp1(0), lp1(1), lp1(2));
+		      glVertex3d (lp2(0), lp2(1), lp2(2));
 		    }
 		  glEnd ();
 		  break;
@@ -1072,7 +1072,7 @@ namespace netgen
 		      const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
 		      const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
 		      const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
-		      // Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+		      // Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 		      Vec<3> n = Cross (lp2-lp1, lp3-lp1);
 		      glNormal3dv (n);
 
@@ -1093,17 +1093,17 @@ namespace netgen
 
 		  for (int j = 0; j < 2; j++)
 		    {
-		      Point3d lp1 = mesh->Point (el.PNum(quads[j][0]));
-		      Point3d lp2 = mesh->Point (el.PNum(quads[j][1]));
-		      Point3d lp3 = mesh->Point (el.PNum(quads[j][2]));
-		      Point3d lp4 = mesh->Point (el.PNum(quads[j][3]));
-		      Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+		      Point<3> lp1 = mesh->Point (el.PNum(quads[j][0]));
+		      Point<3> lp2 = mesh->Point (el.PNum(quads[j][1]));
+		      Point<3> lp3 = mesh->Point (el.PNum(quads[j][2]));
+		      Point<3> lp4 = mesh->Point (el.PNum(quads[j][3]));
+		      Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 		      n /= (n.Length() + 1e-12);
-		      glNormal3dv (&n.X());
-		      glVertex3dv (&lp1.X());
-		      glVertex3dv (&lp2.X());
-		      glVertex3dv (&lp3.X());
-		      glVertex3dv (&lp4.X());
+		      glNormal3dv (&n(0));
+		      glVertex3dv (&lp1(0));
+		      glVertex3dv (&lp2(0));
+		      glVertex3dv (&lp3(0));
+		      glVertex3dv (&lp4(0));
 		    }
 		  glEnd();
 		  break;
@@ -1115,33 +1115,33 @@ namespace netgen
                   static int boundary[] =
 		    { 1, 5, 2, 8, 3, 6, 4, 7, 1 };
 
-                  Point3d c(0,0,0);
+                  Point<3> c(0,0,0);
                   for (int j = 0; j < 4; j++)
 		    {
-		      const Point3d & hp = mesh->Point (el[j]);
-		      c.X() -= 0.25 * hp.X();
-		      c.Y() -= 0.25 * hp.Y();
-		      c.Z() -= 0.25 * hp.Z();
+		      const Point<3> & hp = mesh->Point (el[j]);
+		      c(0) -= 0.25 * hp(0);
+		      c(1) -= 0.25 * hp(1);
+		      c(2) -= 0.25 * hp(2);
 		    }
                   for (int j = 4; j < 8; j++)
 		    {
-		      const Point3d & hp = mesh->Point (el[j]);
-		      c.X() += 0.5 * hp.X();
-		      c.Y() += 0.5 * hp.Y();
-		      c.Z() += 0.5 * hp.Z();
+		      const Point<3> & hp = mesh->Point (el[j]);
+		      c(0) += 0.5 * hp(0);
+		      c(1) += 0.5 * hp(1);
+		      c(2) += 0.5 * hp(2);
 		    }
 
                   for (int j = 0; j < 8; j++)
 		    {
-		      Point3d lp1 = mesh->Point (el.PNum(boundary[j]));
-		      Point3d lp2 = mesh->Point (el.PNum(boundary[j+1]));
+		      Point<3> lp1 = mesh->Point (el.PNum(boundary[j]));
+		      Point<3> lp2 = mesh->Point (el.PNum(boundary[j+1]));
 
-		      Vec3d n = Cross (Vec3d (c, lp1), Vec3d (c, lp2));
+		      Vec<3> n = Cross (Vec<3> (c, lp1), Vec<3> (c, lp2));
 		      n /= (n.Length() + 1e-12);
-		      glNormal3dv (&n.X());
-		      glVertex3dv (&lp1.X());
-		      glVertex3dv (&lp2.X());
-		      glVertex3dv (&c.X());
+		      glNormal3dv (&n(0));
+		      glVertex3dv (&lp1(0));
+		      glVertex3dv (&lp2(0));
+		      glVertex3dv (&c(0));
 		    }
                   glEnd();
                   break;
@@ -1506,17 +1506,17 @@ namespace netgen
 
 		glBegin (GL_QUADS);
 
-		const Point3d & lp1 = mesh->Point (el.PNum(1));
-		const Point3d & lp2 = mesh->Point (el.PNum(2));
-		const Point3d & lp3 = mesh->Point (el.PNum(4));
-		const Point3d & lp4 = mesh->Point (el.PNum(3));
-		Vec3d n = Cross (Vec3d (lp1, lp2),
-				 Vec3d (lp1, Center (lp3, lp4)));
-		glNormal3d (n.X(), n.Y(), n.Z());
-		glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-		glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
-		glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+		const Point<3> & lp1 = mesh->Point (el.PNum(1));
+		const Point<3> & lp2 = mesh->Point (el.PNum(2));
+		const Point<3> & lp3 = mesh->Point (el.PNum(4));
+		const Point<3> & lp4 = mesh->Point (el.PNum(3));
+		Vec<3> n = Cross (Vec<3> (lp1, lp2),
+				 Vec<3> (lp1, Center (lp3, lp4)));
+		glNormal3d (n(0), n(1), n(2));
+		glVertex3d (lp1(0), lp1(1), lp1(2));
+		glVertex3d (lp2(0), lp2(1), lp2(2));
+		glVertex3d (lp4(0), lp4(1), lp4(2));
+		glVertex3d (lp3(0), lp3(1), lp3(2));
 		glEnd();
 
 	      }
@@ -1535,11 +1535,11 @@ namespace netgen
 	      glBegin (GL_LINES);
 	      for (int j = 0; j < 6; j++)
 		{
-		  const Point3d & lp1 = mesh->Point (el.PNum(lines[j][0]));
-		  const Point3d & lp2 = mesh->Point (el.PNum(lines[j][1]));
+		  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+		  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
 
-		  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
+		  glVertex3d (lp1(0), lp1(1), lp1(2));
+		  glVertex3d (lp2(0), lp2(1), lp2(2));
 		}
 
 	      glEnd();
@@ -1557,11 +1557,11 @@ namespace netgen
 
 	      for (int j = 0; j < 6; j++)
 		{
-		  const Point3d & lp1 = mesh->Point (el.PNum(lines[j][0]));
-		  const Point3d & lp2 = mesh->Point (el.PNum(lines[j][1]));
+		  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+		  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
 
-		  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
+		  glVertex3d (lp1(0), lp1(1), lp1(2));
+		  glVertex3d (lp2(0), lp2(1), lp2(2));
 		}
 	      glEnd ();
 	      break;
@@ -1578,11 +1578,11 @@ namespace netgen
 
 	      for (int j = 0; j < 8; j++)
 		{
-                  const Point3d & lp1 = mesh->Point (el.PNum(lines[j][0]));
-                  const Point3d & lp2 = mesh->Point (el.PNum(lines[j][1]));
+                  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+                  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
 
-                  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-                  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
+                  glVertex3d (lp1(0), lp1(1), lp1(2));
+                  glVertex3d (lp2(0), lp2(1), lp2(2));
 		}
 	      glEnd ();
 	      break;
@@ -1653,8 +1653,8 @@ namespace netgen
 #endif
         */
         
-	const Point3d & p1 = (*mesh)[seg[0]];
-	const Point3d & p2 = (*mesh)[seg[1]];
+	const Point<3> & p1 = (*mesh)[seg[0]];
+	const Point<3> & p2 = (*mesh)[seg[1]];
 
 	auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
 	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
@@ -1902,7 +1902,7 @@ namespace netgen
             if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
 	      {
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (TET);
-		const Point3d * vertices = MeshTopology :: GetVertices (TET);
+		const Point<3> * vertices = MeshTopology :: GetVertices (TET);
 
 		/*
 		  Point<3> grid[11][11];
@@ -2169,7 +2169,7 @@ namespace netgen
             if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
 	      {
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PRISM);
-		const Point3d * vertices = MeshTopology :: GetVertices (PRISM);
+		const Point<3> * vertices = MeshTopology :: GetVertices (PRISM);
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
@@ -2275,7 +2275,7 @@ namespace netgen
 		  int hoplotn = 1 << subdivisions;
 		  // int hoplotn = curv.GetNVisualSubsecs();
 
-		  const Point3d * facepoint = MeshTopology :: GetVertices (TRIG);
+		  const Point<3> * facepoint = MeshTopology :: GetVertices (TRIG);
 		  const ELEMENT_FACE * elface = MeshTopology :: GetFaces(TRIG);
 
 		  glBegin (GL_TRIANGLES);
@@ -2339,7 +2339,7 @@ namespace netgen
 
 		  for (int quad = 0; quad<3; quad++)
 		  {
-		  const Point3d * facepoint = MeshTopology :: GetVertices (PRISM);
+		  const Point<3> * facepoint = MeshTopology :: GetVertices (PRISM);
 
 		  Vec<3> x0,x1;
 		  int xyz;
@@ -2411,15 +2411,15 @@ namespace netgen
 	      }
             else
 	      {
-		Point3d c(0,0,0);
+		Point<3> c(0,0,0);
 		if (vispar.shrink < 1)
 		  {
 		    for (j = 1; j <= 6; j++)
 		      {
-			Point3d p = mesh->Point(el.PNum(j));
-			c.X() += p.X() / 6;
-			c.Y() += p.Y() / 6;
-			c.Z() += p.Z() / 6;
+			Point<3> p = mesh->Point(el.PNum(j));
+			c(0) += p(0) / 6;
+			c(1) += p(1) / 6;
+			c(2) += p(2) / 6;
 		      }
 		  }
 
@@ -2428,21 +2428,21 @@ namespace netgen
 		for (j = 1; j <= faces.Size(); j++)
 		  {
 		    ElementFace & face = faces[j-1];
-		    Point3d lp1 = mesh->Point (el.PNum(face.PNum(1)));
-		    Point3d lp2 = mesh->Point (el.PNum(face.PNum(2)));
-		    Point3d lp3 = mesh->Point (el.PNum(face.PNum(3)));
-		    Vec3d n = Cross (Vec3d (lp1, lp3), Vec3d (lp1, lp2));
+		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+		    Vec<3> n = Cross (Vec<3> (lp1, lp3), Vec<3> (lp1, lp2));
 		    n /= (n.Length()+1e-12);
-		    glNormal3d (n.X(), n.Y(), n.Z());
+		    glNormal3d (n(0), n(1), n(2));
 		    if (vispar.shrink < 1)
 		      {
 			lp1 = c + vispar.shrink * (lp1 - c);
 			lp2 = c + vispar.shrink * (lp2 - c);
 			lp3 = c + vispar.shrink * (lp3 - c);
 		      }
-		    glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		    glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-		    glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+		    glVertex3d (lp1(0), lp1(1), lp1(2));
+		    glVertex3d (lp2(0), lp2(1), lp2(2));
+		    glVertex3d (lp3(0), lp3(1), lp3(2));
 		  }
 
 		glEnd();
@@ -2502,7 +2502,7 @@ namespace netgen
 		   glBegin (GL_QUADS);
 
 		   const ELEMENT_FACE * faces = MeshTopology :: GetFaces (HEX);
-		   const Point3d * vertices = MeshTopology :: GetVertices (HEX);
+		   const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
 		   Point<3> grid[33][33];
 		   Vec<3> gridn[33][33];
@@ -2562,7 +2562,7 @@ namespace netgen
 		*/
 
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
-		const Point3d * vertices = MeshTopology :: GetVertices (HEX);
+		const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
@@ -2616,19 +2616,19 @@ namespace netgen
 	      }
             else
 	      {
-		Point3d c(0,0,0);
+		Point<3> c(0,0,0);
 		if (vispar.shrink < 1)
 		  {
 		    for (int j = 1; j <= 8; j++)
 		      {
-			Point3d p = mesh->Point(el.PNum(j));
-			c.X() += p.X();
-			c.Y() += p.Y();
-			c.Z() += p.Z();
+			Point<3> p = mesh->Point(el.PNum(j));
+			c(0) += p(0);
+			c(1) += p(1);
+			c(2) += p(2);
 		      }
-		    c.X() /= 8;
-		    c.Y() /= 8;
-		    c.Z() /= 8;
+		    c(0) /= 8;
+		    c(1) /= 8;
+		    c(2) /= 8;
 		  }
 
 		glBegin (GL_TRIANGLES);
@@ -2674,7 +2674,7 @@ namespace netgen
             if (curv.IsHighOrder()) 
 	      {
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
-		const Point3d * vertices = MeshTopology :: GetVertices (HEX);
+		const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
@@ -2729,19 +2729,19 @@ namespace netgen
             else
             */
 	      {
-		Point3d c(0,0,0);
+		Point<3> c(0,0,0);
 		if (vispar.shrink < 1)
 		  {
 		    for (int j = 1; j <= 7; j++)
 		      {
-			Point3d p = mesh->Point(el.PNum(j));
-			c.X() += p.X();
-			c.Y() += p.Y();
-			c.Z() += p.Z();
+			Point<3> p = mesh->Point(el.PNum(j));
+			c(0) += p(0);
+			c(1) += p(1);
+			c(2) += p(2);
 		      }
-		    c.X() /= 7;
-		    c.Y() /= 7;
-		    c.Z() /= 7;
+		    c(0) /= 7;
+		    c(1) /= 7;
+		    c(2) /= 7;
 		  }
 
 		glBegin (GL_TRIANGLES);
@@ -2835,7 +2835,7 @@ namespace netgen
 	      {
 
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PYRAMID);
-		const Point3d * vertices = MeshTopology :: GetVertices (PYRAMID);
+		const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
 
 		Point<3> grid[11][11];
 		Point<3> fpts[4];
@@ -2942,7 +2942,7 @@ namespace netgen
 		  int hoplotn = 1 << vispar.subdivisions;
 
 		  const ELEMENT_FACE * faces = MeshTopology :: GetFaces (PYRAMID);
-		  const Point3d * vertices = MeshTopology :: GetVertices (PYRAMID);
+		  const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
 
 		  Point<3> grid[33][33];
 		  Vec<3> gridn[33][33];
@@ -3089,15 +3089,15 @@ namespace netgen
 
 
 
-		Point3d c(0,0,0);
+		Point<3> c(0,0,0);
 		if (vispar.shrink < 1)
 		  {
 		    for (int j = 1; j <= 5; j++)
 		      {
-			Point3d p = mesh->Point(el.PNum(j));
-			c.X() += p.X() / 5;
-			c.Y() += p.Y() / 5;
-			c.Z() += p.Z() / 5;
+			Point<3> p = mesh->Point(el.PNum(j));
+			c(0) += p(0) / 5;
+			c(1) += p(1) / 5;
+			c(2) += p(2) / 5;
 		      }
 		  }
 
@@ -3111,13 +3111,13 @@ namespace netgen
 		    for (int j = 1; j <= faces.Size(); j++)
 		      {
 			ElementFace & face = faces[j-1];
-			Point3d lp1 = mesh->Point (el.PNum(face.PNum(1)));
-			Point3d lp2 = mesh->Point (el.PNum(face.PNum(2)));
-			Point3d lp3 = mesh->Point (el.PNum(face.PNum(3)));
-			Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+			Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+			Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+			Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+			Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 			n /= (n.Length()+1e-12);
 			n *= -1;
-			glNormal3d (n.X(), n.Y(), n.Z());
+			glNormal3d (n(0), n(1), n(2));
 
 			if (vispar.shrink < 1)
 			  {
@@ -3126,9 +3126,9 @@ namespace netgen
 			    lp3 = c + vispar.shrink * (lp3 - c);
 			  }
 
-			glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-			glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-			glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+			glVertex3d (lp1(0), lp1(1), lp1(2));
+			glVertex3d (lp2(0), lp2(1), lp2(2));
+			glVertex3d (lp3(0), lp3(1), lp3(2));
 		      }
 
 		    glEnd();
@@ -3200,18 +3200,18 @@ namespace netgen
 	  {
             glBegin (GL_TRIANGLES);
 
-            const Point3d & lp1 = mesh->Point (el.PNum(1));
-            const Point3d & lp2 = mesh->Point (el.PNum(2));
-            const Point3d & lp3 = mesh->Point (el.PNum(3));
-            Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+            const Point<3> & lp1 = mesh->Point (el.PNum(1));
+            const Point<3> & lp2 = mesh->Point (el.PNum(2));
+            const Point<3> & lp3 = mesh->Point (el.PNum(3));
+            Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
             n /= ( fac * (n.Length()+1e-12));
-            glNormal3d (n.X(), n.Y(), n.Z());
+            glNormal3d (n(0), n(1), n(2));
 
             if (!vispar.colormeshsize)
 	      {
-		glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-		glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+		glVertex3d (lp1(0), lp1(1), lp1(2));
+		glVertex3d (lp2(0), lp2(1), lp2(2));
+		glVertex3d (lp3(0), lp3(1), lp3(2));
 	      }
             glEnd();
 	  }
@@ -3219,18 +3219,18 @@ namespace netgen
 	  {
             glBegin (GL_QUADS);
 
-            const Point3d & lp1 = mesh->Point (el.PNum(1));
-            const Point3d & lp2 = mesh->Point (el.PNum(2));
-            const Point3d & lp3 = mesh->Point (el.PNum(4));
-            const Point3d & lp4 = mesh->Point (el.PNum(3));
-            Vec3d n = Cross (Vec3d (lp1, lp2),
-			     Vec3d (lp1, Center (lp3, lp4)));
+            const Point<3> & lp1 = mesh->Point (el.PNum(1));
+            const Point<3> & lp2 = mesh->Point (el.PNum(2));
+            const Point<3> & lp3 = mesh->Point (el.PNum(4));
+            const Point<3> & lp4 = mesh->Point (el.PNum(3));
+            Vec<3> n = Cross (Vec<3> (lp1, lp2),
+			     Vec<3> (lp1, Center (lp3, lp4)));
             n /= (fac * (n.Length()+1e-12));
-            glNormal3d (n.X(), n.Y(), n.Z());
-            glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-            glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-            glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
-            glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+            glNormal3d (n(0), n(1), n(2));
+            glVertex3d (lp1(0), lp1(1), lp1(2));
+            glVertex3d (lp2(0), lp2(1), lp2(2));
+            glVertex3d (lp4(0), lp4(1), lp4(2));
+            glVertex3d (lp3(0), lp3(1), lp3(2));
             glEnd();
 	  }
 	else if (el.GetNP() == 6)
@@ -3244,15 +3244,15 @@ namespace netgen
 
 	    for (j = 0; j < 4; j++)
 	      {
-		const Point3d & lp1 = mesh->Point (el.PNum(trigs[j][0]));
-		const Point3d & lp2 = mesh->Point (el.PNum(trigs[j][1]));
-		const Point3d & lp3 = mesh->Point (el.PNum(trigs[j][2]));
-		Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+		const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
+		const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
+		const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
+		Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 		n /= (fac * (n.Length() + 1e-12));
-		glNormal3d (n.X(), n.Y(), n.Z());
-		glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-		glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-		glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+		glNormal3d (n(0), n(1), n(2));
+		glVertex3d (lp1(0), lp1(1), lp1(2));
+		glVertex3d (lp2(0), lp2(1), lp2(2));
+		glVertex3d (lp3(0), lp3(1), lp3(2));
 	      }
 	    glEnd();
 	  }
@@ -3329,7 +3329,7 @@ namespace netgen
         double mu = -clipplane[3] / (len*len);
         Point<3> p (mu * n);
         n /= len;
-        Vec<3> t1 = n.GetNormal ();
+        Vec<3> t1 = GetNormal (n);
         Vec<3> t2 = Cross (n, t1);
 
         double xi1mid = (center - p) * t1;

@@ -1629,7 +1629,7 @@ void EllipticCone :: CalcData ()
   cxz = 2*(nvl(0)*nvl(2) + ellipt2*nvs(0)*nvs(2) - t1vec(0)*t1vec(2));
   cyz = 2*(nvl(1)*nvl(2) + ellipt2*nvs(1)*nvs(2) - t1vec(1)*t1vec(2));
 
-  Vec<3> v = -2*((va*nvl)*nvl + ellipt2*(va*nvs)*nvs + t1*t1vec);
+  Vec<3> v = -2.0*((va*nvl)*nvl + ellipt2*(va*nvs)*nvs + t1*t1vec);
   cx = v(0);
   cy = v(1);
   cz = v(2);
@@ -1866,7 +1866,7 @@ void EllipticCone :: GetTriangleApproximation
     double rho = sqrt (abs2 - tau*tau);
     // double func = sqr (R - rho) + tau*tau - r*r;
 
-    Vec<3> gradabs2 = 2 * v1;
+    Vec<3> gradabs2 = 2.0 * v1;
     Vec<3> gradtau = n;
     Vec<3> gradrho = 0.5 / rho * (gradabs2 - 2 * tau * gradtau);
     grad = -2 * (R - rho) * gradrho  + 2 * tau * gradtau;

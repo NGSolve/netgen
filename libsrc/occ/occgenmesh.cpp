@@ -209,20 +209,20 @@ namespace netgen
     else
       {
         gp_Pnt pnt;
-        Point3d p3d;
+        Point<3> p3d;
 
         prop->SetParameters (parmid.X(), parmid.Y());
         pnt = prop->Value();
-        p3d = Point3d(pnt.X(), pnt.Y(), pnt.Z());
+        p3d = Point<3>(pnt.X(), pnt.Y(), pnt.Z());
         mesh.RestrictLocalH (p3d, h, layer);
 
-        p3d = Point3d(pnt0.X(), pnt0.Y(), pnt0.Z());
+        p3d = Point<3>(pnt0.X(), pnt0.Y(), pnt0.Z());
         mesh.RestrictLocalH (p3d, h, layer);
 
-        p3d = Point3d(pnt1.X(), pnt1.Y(), pnt1.Z());
+        p3d = Point<3>(pnt1.X(), pnt1.Y(), pnt1.Z());
         mesh.RestrictLocalH (p3d, h, layer);
 
-        p3d = Point3d(pnt2.X(), pnt2.Y(), pnt2.Z());
+        p3d = Point<3>(pnt2.X(), pnt2.Y(), pnt2.Z());
         mesh.RestrictLocalH (p3d, h, layer);
 
         //(*testout) << "p = " << p3d << ", h = " << h << ", maxside = " << maxside << endl;
@@ -579,7 +579,7 @@ namespace netgen
             for (int j = 0; j <= maxj; j++)
               {
                 gp_Pnt pnt = c->Value (s0+double(j)/maxj*(s1-s0));
-                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), localh, props.layer);
+                mesh.RestrictLocalH (Point<3>(pnt.X(), pnt.Y(), pnt.Z()), localh, props.layer);
               }
           }
 
@@ -615,7 +615,7 @@ namespace netgen
 
                 gp_Pnt pnt = c->Value (s);
 
-                mesh.RestrictLocalH (Point3d(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature), mparam), layer);
+                mesh.RestrictLocalH (Point<3>(pnt.X(), pnt.Y(), pnt.Z()), ComputeH (fabs(curvature), mparam), layer);
               }
           }
 
@@ -729,8 +729,8 @@ namespace netgen
                         lines[nlines].layer = layer;
 
                         Box3d box;
-                        box.SetPoint (Point3d(lines[nlines].p0));
-                        box.AddPoint (Point3d(lines[nlines].p1));
+                        box.SetPoint (Point<3>(lines[nlines].p0));
+                        box.AddPoint (Point<3>(lines[nlines].p1));
 
                         searchtree.Insert (box.PMin(), box.PMax(), nlines+1);
                         nlines++;
@@ -766,8 +766,8 @@ namespace netgen
                 Line & line = lines[i];
 
                 Box3d box;
-                box.SetPoint (Point3d(line.p0));
-                box.AddPoint (Point3d(line.p1));
+                box.SetPoint (Point<3>(line.p0));
+                box.AddPoint (Point<3>(line.p1));
                 double maxhline = max (mesh.GetH(box.PMin(), line.layer),
                                        mesh.GetH(box.PMax(), line.layer));
                 box.Increase(maxhline);

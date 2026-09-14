@@ -22,7 +22,7 @@
 
 namespace netgen
 {
-  NGGUI_API Point3d VisualScene :: center;
+  NGGUI_API Point<3> VisualScene :: center;
   NGGUI_API double VisualScene :: rad;
   NGGUI_API GLdouble VisualScene :: backcolor;
   NGGUI_API VisualScene visual_scene_cross;
@@ -134,7 +134,7 @@ namespace netgen
 
   void VisualScene :: BuildScene (int zoomall)
   {
-    center = Point3d (0,0,0);
+    center = Point<3> (0,0,0);
     rad = 1;
 
     if(zoomall)
@@ -196,7 +196,7 @@ namespace netgen
     glGetDoublev (GL_MODELVIEW_MATRIX, rotmat);
 
     glScaled (1/rad, 1/rad, 1/rad);
-    glTranslated (-center.X(), -center.Y(), -center.Z());
+    glTranslated (-center(0), -center(1), -center(2));
     glGetDoublev (GL_MODELVIEW_MATRIX, centermat);
 
     glLoadIdentity();
@@ -210,7 +210,7 @@ namespace netgen
   }
 
 
-  void VisualScene :: ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec)
+  void VisualScene :: ArbitraryRotation (const Array<double> & alpha, const Array<Vec<3>> & vec)
   {
     glPushMatrix();
 
@@ -218,7 +218,7 @@ namespace netgen
 
     for(int i=0; i<alpha.Size() && i<vec.Size(); i++)
       {
-	glRotatef(alpha[i], vec[i].X(), vec[i].Y(), vec[i].Z());
+	glRotatef(alpha[i], vec[i](0), vec[i](1), vec[i](2));
       }
 
     glGetDoublev (GL_MODELVIEW_MATRIX, rotmat);
@@ -235,10 +235,10 @@ namespace netgen
 
 
 
-  void VisualScene :: ArbitraryRotation (const double alpha, const Vec3d & vec)
+  void VisualScene :: ArbitraryRotation (const double alpha, const Vec<3> & vec)
   {
     Array<double> a(1); a[0] = alpha;
-    Array<Vec3d> v(1); v[0] = vec;
+    Array<Vec<3>> v(1); v[0] = vec;
 
     ArbitraryRotation(a,v);
   } 
@@ -387,18 +387,18 @@ namespace netgen
   {
     if (vispar.clipping.enable)
       {
-	Vec3d n = vispar.clipping.normal;
+	Vec<3> n = vispar.clipping.normal;
 	n /= (n.Length()+1e-10);
-	clipplane[0] = n.X();
-	clipplane[1] = n.Y();
-	clipplane[2] = n.Z();
-	clipplane[3] = -(Vec3d(center) * n) + rad * vispar.clipping.dist;
+	clipplane[0] = n(0);
+	clipplane[1] = n(1);
+	clipplane[2] = n(2);
+	clipplane[3] = -(Vec<3>(center) * n) + rad * vispar.clipping.dist;
 
 	double clipplane2[4];
-	clipplane2[0] = n.X();
-	clipplane2[1] = n.Y();
-	clipplane2[2] = n.Z();
-	clipplane2[3] = -(Vec3d(center) * n) + 
+	clipplane2[0] = n(0);
+	clipplane2[1] = n(1);
+	clipplane2[2] = n(2);
+	clipplane2[3] = -(Vec<3>(center) * n) + 
 	  rad * (vispar.clipping.dist + vispar.clipping.dist2);
 
 	glClipPlane(GL_CLIP_PLANE0, clipplane2);
@@ -1000,12 +1000,12 @@ namespace netgen
 
 	if (pi1.IsValid() && pi2.IsValid())
 	  {
-	    Point3d p1 = locpoints[pi1];
-	    Point3d p2 = locpoints[pi2];
+	    Point<3> p1 = locpoints[pi1];
+	    Point<3> p2 = locpoints[pi2];
 
 	    glBegin (GL_LINES);
-	    glVertex3f (p1.X(), p1.Y(), p1.Z());
-	    glVertex3f (p2.X(), p2.Y(), p2.Z());
+	    glVertex3f (p1(0), p1(1), p1(2));
+	    glVertex3f (p2(0), p2(1), p2(2));
 	    glEnd();
 	  }
 
@@ -1022,8 +1022,8 @@ namespace netgen
     glBegin (GL_POINTS);
     for (auto i : locpoints.Range())
       {
-	Point3d p = locpoints[i];
-	glVertex3f (p.X(), p.Y(), p.Z());
+	Point<3> p = locpoints[i];
+	glVertex3f (p(0), p(1), p(2));
       }
     glEnd();
 

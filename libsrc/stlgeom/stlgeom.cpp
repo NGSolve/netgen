@@ -51,8 +51,8 @@ void STLMeshing (STLGeometry & geom,
   meshchart = 0; // initialize all ?? JS
 
   if (geomsearchtreeon)
-    searchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec3d(1,1,1),
-                                 GetBoundingBox().PMax() + Vec3d(1,1,1));
+    searchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec<3>(1,1,1),
+                                 GetBoundingBox().PMax() + Vec<3>(1,1,1));
   else
     searchtree = NULL;
 
@@ -396,7 +396,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 	}
 
       m.Solve (rhs, sol);
-      Vec3d newn(sol(0), sol(1), sol(2));
+      Vec<3> newn(sol(0), sol(1), sol(2));
       newn /= (newn.Length() + 1e-24);      
 
       GetTriangle(i).SetNormal(newn);
@@ -420,7 +420,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
     {
       const STLTriangle & trig = GetTriangle (i);
       
-      Vec3d ngeom = GetTriangleNormal (i); // trig.Normal(points);
+      Vec<3> ngeom = GetTriangleNormal (i); // trig.Normal(points);
       ngeom /= (ngeom.Length() + 1e-24);
 
       for (j = 1; j <= 3; j++)
@@ -444,7 +444,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 	      cerr << "ERROR: stlgeom::Smoothnormals, nbt = 0" << endl;
 	    }
 
-	  Vec3d nnb = GetTriangleNormal(nbt);   // neighbour normal
+	  Vec<3> nnb = GetTriangleNormal(nbt);   // neighbour normal
 	  nnb /= (nnb.Length() + 1e-24);
 
 	  if (!IsEdge(pi1,pi2)) 
@@ -495,13 +495,13 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 		  for (k = 1; k <= fsize; k++)
 		    {
 		      int testtnr = friends.Get(k);
-		      Vec3d ntt = GetTriangleNormal(testtnr);
+		      Vec<3> ntt = GetTriangleNormal(testtnr);
 		      ntt /= (ntt.Length() + 1e-24);
 		      
 		      for (l = 1; l <= NONeighbourTrigs(testtnr); l++)
 			{
 			  int testnbnr = NeighbourTrig(testtnr, l);
-			  Vec3d nbt = GetTriangleNormal(testnbnr);
+			  Vec<3> nbt = GetTriangleNormal(testnbnr);
 			  nbt /= (nbt.Length() + 1e-24);
 
 			  if (Angle (nbt, ntt) < 15 * M_PI/180)
@@ -540,13 +540,13 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 	  (*testout) << "area1 = " << area1 << " area2 = " << area2 << endl;
 	  if (area1 < 0.1 * area2)
 	    {
-	      Vec3d n = GetTriangleNormal (tnr1);
+	      Vec<3> n = GetTriangleNormal (tnr1);
 	      n *= -1;
 	      SetTriangleNormal(tnr1, n);
 	    }
 	  if (area2 < 0.1 * area1)
 	    {
-	      Vec3d n = GetTriangleNormal (tnr2);
+	      Vec<3> n = GetTriangleNormal (tnr2);
 	      n *= -1;
 	      SetTriangleNormal(tnr2, n);
 	    }
@@ -702,7 +702,7 @@ twoint STLGeometry :: GetNearestSelectedDefinedEdge()
 {
   Point<3> pestimate = Center(GetTriangle(GetSelectTrig()).center,
   			     GetPoint(GetTriangle(GetSelectTrig()).PNum(GetNodeOfSelTrig())));
-    //Point3d pestimate = GetTriangle(GetSelectTrig()).center;
+    //Point<3> pestimate = GetTriangle(GetSelectTrig()).center;
 
   int i, j, en;
   Array<int> vic;
@@ -864,8 +864,8 @@ void STLGeometry :: AddEdges(const Array<Point<3> >& eps)
   for (i = 1; i <= 2*ne; i++)
     {
       p = eps[i-1];
-      Point3d pmin = p - Vec3d (gtol, gtol, gtol);
-      Point3d pmax = p + Vec3d (gtol, gtol, gtol);
+      Point<3> pmin = p - Vec<3> (gtol, gtol, gtol);
+      Point<3> pmax = p + Vec<3> (gtol, gtol, gtol);
 	  
       ptree.GetIntersecting (pmin, pmax, pintersect);
       if (pintersect.Size() > 1)
@@ -877,7 +877,7 @@ void STLGeometry :: AddEdges(const Array<Point<3> >& eps)
 	{
 	  error = 1;
 	  PrintError("edgepoint does not exist!");
-	  PrintMessage(5,"p=",Point3d(eps[i-1]));
+	  PrintMessage(5,"p=",Point<3>(eps[i-1]));
 	}
       else
 	{
@@ -917,7 +917,7 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
   filter[flen] = 0;
   char buf[20];
 
-  Array<Point3d> importpoints;
+  Array<Point<3>> importpoints;
   Array<int> importlines;
   Array<int> importpnums;
 
@@ -971,7 +971,7 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 		inf.get (buf[j]);
 	      buf[12] = 0;
 
-	      importpoints[i-1].X(coord) = 1000 * atof (buf);
+	      importpoints[i-1](coord-1) = 1000 * atof (buf);
 	    }
 	}
     }
@@ -990,8 +990,8 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
   importpnums.SetSize (importpoints.Size());
   
 
-  Box3d bb (GetBoundingBox().PMin() + Vec3d (-1,-1,-1),
-	    GetBoundingBox().PMax() + Vec3d (1, 1, 1));
+  Box3d bb (GetBoundingBox().PMin() + Vec<3> (-1,-1,-1),
+	    GetBoundingBox().PMax() + Vec<3> (1, 1, 1));
 
   Point3dTree ptree (bb.PMin(), 
 			 bb.PMax());
@@ -1011,7 +1011,7 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 
   for (i = 1; i <= GetNP(); i++)
     {
-      Point3d p = GetPoint(i);
+      Point<3> p = GetPoint(i);
       //      (*testout) << "stlpt: " << p << endl;
       ptree.Insert (p, i);
     }
@@ -1019,9 +1019,9 @@ void STLGeometry :: ImportExternalEdges(const char * filename)
 
   for (i = 1; i <= importpoints.Size(); i++)
     {
-      Point3d p = importpoints[i-1];
-      Point3d pmin = p - Vec3d (gtol, gtol, gtol);
-      Point3d pmax = p + Vec3d (gtol, gtol, gtol);
+      Point<3> p = importpoints[i-1];
+      Point<3> pmin = p - Vec<3> (gtol, gtol, gtol);
+      Point<3> pmax = p + Vec<3> (gtol, gtol, gtol);
 	  
       ptree.GetIntersecting (pmin, pmax, pintersect);
       if (pintersect.Size() > 1)
@@ -1516,11 +1516,11 @@ void STLGeometry :: CalcNormalsFromGeometry()
   for (i = 1; i <= GetNT(); i++)
     {
       const STLTriangle & tr = GetTriangle(i);
-      const Point3d& ap1 = GetPoint(tr.PNum(1));
-      const Point3d& ap2 = GetPoint(tr.PNum(2));
-      const Point3d& ap3 = GetPoint(tr.PNum(3));
+      const Point<3>& ap1 = GetPoint(tr.PNum(1));
+      const Point<3>& ap2 = GetPoint(tr.PNum(2));
+      const Point<3>& ap3 = GetPoint(tr.PNum(3));
 
-      Vec3d normal = Cross (ap2-ap1, ap3-ap1);
+      Vec<3> normal = Cross (ap2-ap1, ap3-ap1);
       
       if (normal.Length() != 0)
 	{
@@ -1560,7 +1560,7 @@ void STLGeometry :: MoveSelectedPointToMiddle()
       int p = GetTriangle(GetSelectTrig()).PNum(GetNodeOfSelTrig());
       Point<3> pm(0.,0.,0.); //Middlevector;
       Point<3> p0(0.,0.,0.);
-      PrintMessage(5,"original point=", Point3d(GetPoint(p)));
+      PrintMessage(5,"original point=", Point<3>(GetPoint(p)));
 
       int i;
       int cnt = 0;
@@ -1585,9 +1585,9 @@ void STLGeometry :: MoveSelectedPointToMiddle()
 
       SetPoint(p, p0 + fact*(1./(double)cnt)*(pm-p0)+(1.-fact)*(origp-p0));
 
-      PrintMessage(5,"middle point=", Point3d (GetPoint(p)));
+      PrintMessage(5,"middle point=", Point<3> (GetPoint(p)));
       
-      PrintMessage(5,"moved point ", Point3d (p));
+      PrintMessage(5,"moved point ", Point<3> (p));
 
     }
 }
@@ -1612,7 +1612,7 @@ void STLGeometry :: PrintSelectInfo()
 				 GetPoint(GetTriangle(trig).PNum(2))),
 			  GetPoint(GetTriangle(trig).PNum(3))),trig);
       */
-      //PointBetween(Point3d(5.7818, 7.52768, 4.14879),260,Point3d(6.80292, 6.55392, 4.70184),233);
+      //PointBetween(Point<3>(5.7818, 7.52768, 4.14879),260,Point<3>(6.80292, 6.55392, 4.70184),233);
     }
 }
 
@@ -1638,11 +1638,11 @@ void STLGeometry :: ShowSelectedTrigCoords()
     {
       PrintMessage(1, "coordinates of selected trig ", st, ":");
       PrintMessage(1, "   p1 = ", int(GetTriangle(st).PNum(1)), " = ", 
-		   Point3d (GetPoint(GetTriangle(st).PNum(1))));
+		   Point<3> (GetPoint(GetTriangle(st).PNum(1))));
       PrintMessage(1, "   p2 = ", int(GetTriangle(st).PNum(2)), " = ", 
-		   Point3d (GetPoint(GetTriangle(st).PNum(2))));
+		   Point<3> (GetPoint(GetTriangle(st).PNum(2))));
       PrintMessage(1, "   p3 = ", int(GetTriangle(st).PNum(3)), " = ", 
-		   Point3d (GetPoint(GetTriangle(st).PNum(3))));
+		   Point<3> (GetPoint(GetTriangle(st).PNum(3))));
     }
 }
 
@@ -1958,8 +1958,8 @@ void STLGeometry :: GeomSmoothRevertedTrigs(const STLParameters& stlparam)
 			}
 		    }
 		}
-	      Point3d origp = GetPoint(p);
-	      Point3d newp = p0 + fact*(1./(double)cnt)*(pm-p0)+(1.-fact)*(origp-p0);
+	      Point<3> origp = GetPoint(p);
+	      Point<3> newp = p0 + fact*(1./(double)cnt)*(pm-p0)+(1.-fact)*(origp-p0);
 
 	      SetPoint(p, newp);
 
@@ -2135,8 +2135,8 @@ double STLGeometry :: GetAngle(int t1, int t2)
 
 double STLGeometry :: GetGeomAngle(int t1, int t2)
 {
-  Vec3d n1 = GetTriangle(t1).GeomNormal(points);
-  Vec3d n2 = GetTriangle(t2).GeomNormal(points);
+  Vec<3> n1 = GetTriangle(t1).GeomNormal(points);
+  Vec<3> n2 = GetTriangle(t2).GeomNormal(points);
   return Angle(n1,n2);
 }
 
@@ -2158,7 +2158,7 @@ void STLGeometry :: InitSTLGeometry(const Array<STLReadTriangle> & readtrias)
   for (i = 1; i <= np; i++)
     {
       normal_cnt[i-1] = 0;
-      normals[i-1] = Vec3d (0,0,0);
+      normals[i-1] = Vec<3> (0,0,0);
     }
 
   for(i = 1; i <= GetNT(); i++)
@@ -2318,8 +2318,8 @@ int STLGeometry :: CheckGeometryOverlapping()
 
   Array<int> normal_cnt; // counts number of added normals in a point
 
-  Box3d bb (GetBoundingBox().PMin() + Vec3d (-1,-1,-1),
-  GetBoundingBox().PMax() + Vec3d (1, 1, 1));
+  Box3d bb (GetBoundingBox().PMin() + Vec<3> (-1,-1,-1),
+  GetBoundingBox().PMax() + Vec<3> (1, 1, 1));
 
   Point3dTree pointtree (bb.PMin(), 
   bb.PMax());
@@ -2333,14 +2333,14 @@ int STLGeometry :: CheckGeometryOverlapping()
 
   STLReadTriangle t = GetReadTriangle(i);
   STLTriangle st;
-  Vec3d n = t.normal;
+  Vec<3> n = t.normal;
 
   for (k = 0; k < 3; k++)
   {
-  Point3d p = t.pts[k];
+  Point<3> p = t.pts[k];
 
-  Point3d pmin = p - Vec3d (gtol, gtol, gtol);
-  Point3d pmax = p + Vec3d (gtol, gtol, gtol);
+  Point<3> pmin = p - Vec<3> (gtol, gtol, gtol);
+  Point<3> pmax = p + Vec<3> (gtol, gtol, gtol);
 	  
   pointtree.GetIntersecting (pmin, pmax, pintersect);
 	  
@@ -2843,7 +2843,7 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
   //setlineendpoints; wenn 180°, dann keine endpunkte
   //nur punkte mit 2 edges kommen in frage, da bei mehr oder weniger punkten ohnehin ein meshpoint hinkommt
 
-  Vec3d v1,v2;
+  Vec<3> v1,v2;
   double cos_eca = cos(stlparam.edgecornerangle/180.*M_PI);
   int ecnt = 0;
   int lp1, lp2;
@@ -2863,9 +2863,9 @@ void STLGeometry :: LinkEdges(const STLParameters& stlparam)
 		  lp1 = 2; lp2 = 1;
 		}
 
-	      v1 = Vec3d(GetPoint(GetEdge(GetEdgePP(i,1)).PNum(1)),
+	      v1 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,1)).PNum(1)),
 			 GetPoint(GetEdge(GetEdgePP(i,1)).PNum(2)));
-	      v2 = Vec3d(GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp1)),
+	      v2 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp1)),
 			 GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp2)));
 	      if ((v1*v2)/sqrt(v1.Length2()*v2.Length2()) < cos_eca) 
 		{
@@ -3174,7 +3174,7 @@ void STLGeometry :: BuildSmoothEdges ()
   PushStatusF("Build Smooth Edges");
 
   int nt = GetNT();
-  Vec3d ng1, ng2;
+  Vec<3> ng1, ng2;
 
   for (int i = 1; i <= nt; i++)
     {
@@ -3592,7 +3592,7 @@ void STLGeometry :: SmoothGeometry ()
 	    maxerr0 = err;
 	}
 
-      Point3d pi = GetPoint (i);
+      Point<3> pi = GetPoint (i);
       if (maxerr0 < 1.1) continue;    // about 60 degree
 
       maxerr0 /= 2;  // should be at least halfen
@@ -3600,11 +3600,11 @@ void STLGeometry :: SmoothGeometry ()
       for (k = 1; k <= NOTrigsPerPoint(i); k++)
 	{
 	  const STLTriangle & trig = GetTriangle (TrigPerPoint (i, k));
-	  Point3d c = Center(GetPoint (trig.PNum(1)),
+	  Point<3> c = Center(GetPoint (trig.PNum(1)),
 			     GetPoint (trig.PNum(2)),
 			     GetPoint (trig.PNum(3)));
 
-	  Point3d np = pi + 0.1 * (c - pi);
+	  Point<3> np = pi + 0.1 * (c - pi);
 	  SetPoint (i, np);
 	  
 	  maxerr = 0;
@@ -3658,7 +3658,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
         pts[k] = GetPoint(trig[k]);
         box.Add(pts[k]);
       }
-      // Vec3d normal = Cross( pts[1]-pts[0], pts[2]-pts[0] );
+      // Vec<3> normal = Cross( pts[1]-pts[0], pts[2]-pts[0] );
       readtrigs.Append(STLReadTriangle(pts, trig.Normal()));
     }
     auto dist = box.PMax() - box.PMin();
@@ -3685,7 +3685,7 @@ void STLGeometry :: WriteChartToFile( ChartId chartnumber, filesystem::path file
           pts[0] = GetPoint(np2);
           pts[1] = GetPoint(np1);
           pts[2] = extra_point;
-          Vec3d normal = -Cross( pts[2]-pts[0], pts[1]-pts[0] );
+          Vec<3> normal = -Cross( pts[2]-pts[0], pts[1]-pts[0] );
           readtrigs.Append(STLReadTriangle(pts, normal));
         }
       }

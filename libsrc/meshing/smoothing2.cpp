@@ -128,7 +128,7 @@ namespace netgen
     Vec<3> varea = Cross(e12, e13);
     double area = 0.5 * varea.Length();
 
-    Vec<3> dcir_2 = (-2) * (e12+e13);
+    Vec<3> dcir_2 = (-2.0) * (e12+e13);
     Vec<3> darea = (0.25/area) * Cross (p2-p3, varea);
 
     if (area <= 1e-24 * cir_2)
@@ -601,7 +601,7 @@ namespace netgen
 	for (int k = 1; k <= bel.GetNP(); k++)
 	  {
 	    PointIndex pi = bel.PNum(k);
-	    pts2d[pi] = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
+	    pts2d[pi] = Point<2> (ld.t1 * (mesh.Point(pi) - ld.sp1), 
 				      ld.t2 * (mesh.Point(pi) - ld.sp1)); 
 	  }				    
 	pts2d[gpi] = { x(0), x(1) };
@@ -671,10 +671,10 @@ namespace netgen
 	for (k = 1; k <= bel.GetNP(); k++)
 	  {
 	    PointIndex pi = bel.PNum(k);
-	    pts2d[pi] = Point2d (ld.t1 * (mesh.Point(pi) - ld.sp1), 
+	    pts2d[pi] = Point<2> (ld.t1 * (mesh.Point(pi) - ld.sp1), 
 				      ld.t2 * (mesh.Point(pi) - ld.sp1)); 
 	  }				    
-	pts2d[gpi] = Point2d (x(0), x(1));
+	pts2d[gpi] = Point<2> (x(0), x(1));
       
 
 	vdir = { dir(0), dir(1) };
@@ -832,7 +832,7 @@ namespace netgen
 
       if (uselocalh)
       {
-      Point3d pmid = Center (mesh.Point(bel->PNum(1)),
+      Point<3> pmid = Center (mesh.Point(bel->PNum(1)),
       mesh.Point(bel->PNum(2)),
       mesh.Point(bel->PNum(3)));
       lochs.Append (mesh.GetH(pmid));
@@ -841,7 +841,7 @@ namespace netgen
 	  
       if (surfi2 && !surfi3)
       {
-      Vec3d n1, n2;
+      Vec<3> n1, n2;
       GetNormalVector (surfi, sp1, n1);
       GetNormalVector (surfi2, sp1, n2);
       t1 = Cross (n1, n2);
@@ -937,7 +937,7 @@ namespace netgen
 		
 		if (ld.uselocalh)
 		  {
-		    Point3d pmid = Center (mesh[bel[0]], mesh[bel[1]], mesh[bel[2]]);
+		    Point<3> pmid = Center (mesh[bel[0]], mesh[bel[1]], mesh[bel[2]]);
 		    ld.lochs.Append (mesh.GetH(pmid, mesh[pi].GetLayer()));
 		  }
 	      }
@@ -1009,10 +1009,10 @@ namespace netgen
 	      mesh[pi].Z() = origp.Z() + (x.Get(1) * t1.Z() + x.Get(2) * t2.Z())*fact;
               */
               Vec<3> hv = x(0) * ld.t1 + x(1) * ld.t2;
-              Point3d hnp = origp + Vec3d (hv);
-              mesh[pi](0) = hnp.X();
-              mesh[pi](1) = hnp.Y();
-              mesh[pi](2) = hnp.Z();
+              Point<3> hnp = origp + Vec<3> (hv);
+              mesh[pi](0) = hnp(0);
+              mesh[pi](1) = hnp(1);
+              mesh[pi](2) = hnp(2);
 
 	      fact = fact/2.;
 

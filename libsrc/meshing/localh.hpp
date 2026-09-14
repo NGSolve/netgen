@@ -115,7 +115,7 @@ namespace netgen
     DLL_HEADER double GetMinH (Point<3> pmin, Point<3> pmax) const;
 
     /// mark boxes intersecting with boundary-box
-    // void CutBoundary (const Point3d & pmin, const Point3d & pmax)
+    // void CutBoundary (const Point<3> & pmin, const Point<3> & pmax)
     // { CutBoundaryRec (pmin, pmax, root); }
 
     void CutBoundary (const Box<3> & box)
@@ -125,7 +125,7 @@ namespace netgen
   
     /// find inner boxes
     void FindInnerBoxes (const class AdFront3 & adfront,
-			 int (*testinner)(const Point3d & p1));
+			 int (*testinner)(const Point<3> & p1));
 
     void FindInnerBoxes (const class AdFront2 & adfront,
 			 int (*testinner)(const Point<2> & p1));
@@ -157,14 +157,14 @@ namespace netgen
     void PrintMemInfo (ostream & ost) const;
   private:
     /// 
-    double GetMinHRec (const Point3d & pmin, const Point3d & pmax,
+    double GetMinHRec (const Point<3> & pmin, const Point<3> & pmax,
 		       const GradingBox * box) const;
     ///
-    void CutBoundaryRec (const Point3d & pmin, const Point3d & pmax,
+    void CutBoundaryRec (const Point<3> & pmin, const Point<3> & pmax,
 			 GradingBox * box);
 
     ///
-    void FindInnerBoxesRec ( int (*inner)(const Point3d & p),
+    void FindInnerBoxesRec ( int (*inner)(const Point<3> & p),
 			     GradingBox * box);
 
     ///

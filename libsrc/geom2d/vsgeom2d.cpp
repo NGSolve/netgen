@@ -102,7 +102,7 @@ namespace netgen
   
     Point<2> c = Center (bbox.PMin(), bbox.PMax());
 
-    center = Point3d (c(0), c(1), 0);
+    center = Point<3> (c(0), c(1), 0);
     rad = Dist (bbox.PMin(), bbox.PMax()) / 2;
 
     CalcTransformationMatrices();

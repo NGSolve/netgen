@@ -6,17 +6,17 @@
 
 namespace netgen
 {
-ostream & operator<<(ostream  & s, const Point3d & p)
+ostream & operator<<(ostream  & s, const Point<3> & p)
   {
-  return s << "(" << p.x[0] << ", " << p.x[1] << ", " << p.x[2] << ")";
+  return s << "(" << p(0) << ", " << p(1) << ", " << p(2) << ")";
   }
 
-ostream & operator<<(ostream  & s, const Vec3d & v)
+ostream & operator<<(ostream  & s, const Vec<3> & v)
   {
-  return s << "(" << v.x[0] << ", " << v.x[1] << ", " << v.x[2] << ")";
+  return s << "(" << v(0) << ", " << v(1) << ", " << v(2) << ")";
   }
 
-double Angle (const Vec3d & v1, const Vec3d & v2)
+double Angle (const Vec<3> & v1, const Vec<3> & v2)
 {
   double co = (v1 * v2) / (v1.Length() * v2.Length());
   if (co > 1) co = 1;
@@ -25,25 +25,25 @@ double Angle (const Vec3d & v1, const Vec3d & v2)
 }
 
 
-void Vec3d :: GetNormal (Vec3d & n) const
+void GetNormal (const Vec<3> & v, Vec<3> & n)
   {
-  if (fabs (X()) > fabs (Z()))
+  if (fabs (v(0)) > fabs (v(2)))
     {
-    n.X() = -Y();
-    n.Y() = X();
-    n.Z() = 0;
+    n(0) = -v(1);
+    n(1) = v(0);
+    n(2) = 0;
     }
   else
     {
-    n.X() = 0;
-    n.Y() = Z();
-    n.Z() = -Y();
+    n(0) = 0;
+    n(1) = v(2);
+    n(2) = -v(1);
     }
   double len = n.Length();
   if (len == 0)
     {
-    n.X() = 1;
-    n.Y() = n.Z() = 0;
+    n(0) = 1;
+    n(1) = n(2) = 0;
     }
   else
     n /= len;
@@ -59,50 +59,50 @@ ostream & operator<<(ostream  & s, const ROTDenseMatrix3D & r)
 */
 
 /*
-Vec3d operator- (const Point3d & p1, const Point3d & p2)
+Vec<3> operator- (const Point<3> & p1, const Point<3> & p2)
   {
-  return Vec3d (p1.X() - p2.X(), p1.Y() - p2.Y(),p1.Z() - p2.Z());
+  return Vec<3> (p1.X() - p2.X(), p1.Y() - p2.Y(),p1.Z() - p2.Z());
   }
 
-Point3d operator- (const Point3d & p1, const Vec3d & v)
+Point<3> operator- (const Point<3> & p1, const Vec<3> & v)
   {
-  return Point3d (p1.X() - v.X(), p1.Y() - v.Y(),p1.Z() - v.Z());
+  return Point<3> (p1.X() - v.X(), p1.Y() - v.Y(),p1.Z() - v.Z());
   }
 
-Point3d operator+ (const Point3d & p1, const Vec3d & v)
+Point<3> operator+ (const Point<3> & p1, const Vec<3> & v)
   {
-  return Point3d (p1.X() + v.X(), p1.Y() + v.Y(),p1.Z() + v.Z());
+  return Point<3> (p1.X() + v.X(), p1.Y() + v.Y(),p1.Z() + v.Z());
   }
 
-Vec3d operator- (const Vec3d & v1, const Vec3d & v2)
+Vec<3> operator- (const Vec<3> & v1, const Vec<3> & v2)
   {
-  return Vec3d (v1.X() - v2.X(), v1.Y() - v2.Y(),v1.Z() - v2.Z());
+  return Vec<3> (v1.X() - v2.X(), v1.Y() - v2.Y(),v1.Z() - v2.Z());
   }
 
-Vec3d operator+ (const Vec3d & v1, const Vec3d & v2)
+Vec<3> operator+ (const Vec<3> & v1, const Vec<3> & v2)
   {
-  return Vec3d (v1.X() + v2.X(), v1.Y() + v2.Y(),v1.Z() + v2.Z());
+  return Vec<3> (v1.X() + v2.X(), v1.Y() + v2.Y(),v1.Z() + v2.Z());
   }
 
-Vec3d operator* (double scal, const Vec3d & v)
+Vec<3> operator* (double scal, const Vec<3> & v)
   {
-  return Vec3d (scal * v.X(), scal * v.Y(), scal * v.Z());
+  return Vec<3> (scal * v.X(), scal * v.Y(), scal * v.Z());
   }
 */
 /*
-double operator* (const Vec3d & v1, const Vec3d & v2)
+double operator* (const Vec<3> & v1, const Vec<3> & v2)
   {
   return v1.X() * v2.X() + v1.Y() * v2.Y() + v1.Z() * v2.Z();
   }
 
-double Cross (const Vec3d & v1, const Vec3d & v2)
+double Cross (const Vec<3> & v1, const Vec<3> & v2)
   {
   return v1.X() * v2.Y() - v1.Y() * v2.X();
   }
 */
 
 /*
-void ROTDenseMatrix3D :: CalcRotMat(double ag, double bg, double lg, double size2, Vec3d r)
+void ROTDenseMatrix3D :: CalcRotMat(double ag, double bg, double lg, double size2, Vec<3> r)
   {
   size = size2;
   txx=size * ( cos(bg) * cos(lg) );
@@ -119,12 +119,12 @@ void ROTDenseMatrix3D :: CalcRotMat(double ag, double bg, double lg, double size
 
   deltaR=r;
   }
-ROTDenseMatrix3D :: ROTDenseMatrix3D(double ag, double bg, double lg, double size2, Vec3d r)
+ROTDenseMatrix3D :: ROTDenseMatrix3D(double ag, double bg, double lg, double size2, Vec<3> r)
   {CalcRotMat(ag, bg, lg, size2, r); }
 
-ROTDenseMatrix3D :: ROTDenseMatrix3D(Vec3d rot2)
+ROTDenseMatrix3D :: ROTDenseMatrix3D(Vec<3> rot2)
   {
-  Vec3d r2(0,0,0);
+  Vec<3> r2(0,0,0);
   CalcRotMat(rot2.X(), rot2.Y(), rot2.Z(), 1, r2);
   }
 
@@ -137,16 +137,16 @@ ROTDenseMatrix3D ROTDenseMatrix3D :: INV()
   return rinv;
   }
 
-Vec3d operator* (const ROTDenseMatrix3D & r, const Vec3d & v)
+Vec<3> operator* (const ROTDenseMatrix3D & r, const Vec<3> & v)
   {
-  return Vec3d (r.XX() * v.X() + r.XY() * v.Y() + r.XZ() * v.Z(),
+  return Vec<3> (r.XX() * v.X() + r.XY() * v.Y() + r.XZ() * v.Z(),
                 r.YX() * v.X() + r.YY() * v.Y() + r.YZ() * v.Z(),
                 r.ZX() * v.X() + r.ZY() * v.Y() + r.ZZ() * v.Z() );
   }
 
-Point3d operator* (const ROTDenseMatrix3D & r, const Point3d & p)
+Point<3> operator* (const ROTDenseMatrix3D & r, const Point<3> & p)
   {
-  return Point3d (r.XX() * p.X() + r.XY() * p.Y() + r.XZ() * p.Z(),
+  return Point<3> (r.XX() * p.X() + r.XY() * p.Y() + r.XZ() * p.Z(),
                   r.YX() * p.X() + r.YY() * p.Y() + r.YZ() * p.Z(),
                   r.ZX() * p.X() + r.ZY() * p.Y() + r.ZZ() * p.Z() );
   }
@@ -198,14 +198,14 @@ int Box3d :: Intersect (const Box3d & box2) const
 */
 
 /*
-void Box3d :: SetPoint (const Point3d & p)
+void Box3d :: SetPoint (const Point<3> & p)
 {
   minx[0] = maxx[0] = p.X();
   minx[1] = maxx[1] = p.Y();
   minx[2] = maxx[2] = p.Z();
 }
 
-void Box3d :: AddPoint (const Point3d & p)
+void Box3d :: AddPoint (const Point<3> & p)
 {
   if (p.X() < minx[0]) minx[0] = p.X();
   if (p.X() > maxx[0]) maxx[0] = p.X();
@@ -216,12 +216,12 @@ void Box3d :: AddPoint (const Point3d & p)
 }
 */
 
-void Box3d :: GetPointNr (int i, Point3d & point) const
+void Box3d :: GetPointNr (int i, Point<3> & point) const
 {
   i--;
-  point.X() = (i & 1) ? maxx[0] : minx[0];
-  point.Y() = (i & 2) ? maxx[1] : minx[1];
-  point.Z() = (i & 4) ? maxx[2] : minx[2];
+  point(0) = (i & 1) ? maxx[0] : minx[0];
+  point(1) = (i & 2) ? maxx[1] : minx[1];
+  point(2) = (i & 4) ? maxx[2] : minx[2];
 }
 
 
@@ -245,14 +245,14 @@ void Box3d :: IncreaseRel (double /* rel */)
 }
 
 
-Box3d :: Box3d (const Point3d& p1, const Point3d& p2)
+Box3d :: Box3d (const Point<3>& p1, const Point<3>& p2)
 {
-  minx[0] = min2 (p1.X(), p2.X());
-  minx[1] = min2 (p1.Y(), p2.Y());
-  minx[2] = min2 (p1.Z(), p2.Z());
-  maxx[0] = max2 (p1.X(), p2.X());
-  maxx[1] = max2 (p1.Y(), p2.Y());
-  maxx[2] = max2 (p1.Z(), p2.Z());
+  minx[0] = min2 (p1(0), p2(0));
+  minx[1] = min2 (p1(1), p2(1));
+  minx[2] = min2 (p1(2), p2(2));
+  maxx[0] = max2 (p1(0), p2(0));
+  maxx[1] = max2 (p1(1), p2(1));
+  maxx[2] = max2 (p1(2), p2(2));
 }
 
 const Box3d& Box3d :: operator+=(const Box3d& b)
@@ -267,14 +267,14 @@ const Box3d& Box3d :: operator+=(const Box3d& b)
   return *this;
 }
 
-Point3d Box3d :: MaxCoords() const
+Point<3> Box3d :: MaxCoords() const
 {
-  return Point3d(maxx[0], maxx[1], maxx[2]);
+  return Point<3>(maxx[0], maxx[1], maxx[2]);
 }
 
-Point3d Box3d :: MinCoords() const
+Point<3> Box3d :: MinCoords() const
 {
-  return Point3d(minx[0], minx[1], minx[2]);
+  return Point<3>(minx[0], minx[1], minx[2]);
 }
 
 /*
@@ -326,9 +326,9 @@ void Box3dSphere :: CalcDiamCenter ()
 	       sqr (maxx[1] - minx[1]) + 
 	       sqr (maxx[2] - minx[2]));
   
-  c.X() = 0.5 * (minx[0] + maxx[0]);
-  c.Y() = 0.5 * (minx[1] + maxx[1]);
-  c.Z() = 0.5 * (minx[2] + maxx[2]);
+  c(0) = 0.5 * (minx[0] + maxx[0]);
+  c(1) = 0.5 * (minx[1] + maxx[1]);
+  c(2) = 0.5 * (minx[2] + maxx[2]);
   
   inner = min2 ( min2 (maxx[0] - minx[0], maxx[1] - minx[1]), maxx[2] - minx[2]) / 2;
 }
@@ -339,40 +339,40 @@ void Box3dSphere :: GetSubBox (int i, Box3dSphere & sbox) const
   i--;
   if (i & 1)
     {
-      sbox.minx[0] = c.X();
+      sbox.minx[0] = c(0);
       sbox.maxx[0] = maxx[0];
     }
   else
     {
       sbox.minx[0] = minx[0];
-      sbox.maxx[0] = c.X();
+      sbox.maxx[0] = c(0);
     }
   if (i & 2)
     {
-      sbox.minx[1] = c.Y();
+      sbox.minx[1] = c(1);
       sbox.maxx[1] = maxx[1];
     }
   else
     {
       sbox.minx[1] = minx[1];
-      sbox.maxx[1] = c.Y();
+      sbox.maxx[1] = c(1);
     }
   if (i & 4)
     {
-      sbox.minx[2] = c.Z();
+      sbox.minx[2] = c(2);
       sbox.maxx[2] = maxx[2];
     }
   else
     {
       sbox.minx[2] = minx[2];
-      sbox.maxx[2] = c.Z();
+      sbox.maxx[2] = c(2);
     }
   
   //  sbox.CalcDiamCenter ();
 
-  sbox.c.X() = 0.5 * (sbox.minx[0] + sbox.maxx[0]);
-  sbox.c.Y() = 0.5 * (sbox.minx[1] + sbox.maxx[1]);
-  sbox.c.Z() = 0.5 * (sbox.minx[2] + sbox.maxx[2]);
+  sbox.c(0) = 0.5 * (sbox.minx[0] + sbox.maxx[0]);
+  sbox.c(1) = 0.5 * (sbox.minx[1] + sbox.maxx[1]);
+  sbox.c(2) = 0.5 * (sbox.minx[2] + sbox.maxx[2]);
   sbox.diam = 0.5 * diam;
   sbox.inner = 0.5 * inner;
 }
@@ -381,22 +381,22 @@ void Box3dSphere :: GetSubBox (int i, Box3dSphere & sbox) const
 
 
 /*
-double Determinant (const Vec3d & col1,
-		    const Vec3d & col2,
-		    const Vec3d & col3)
+double Determinant (const Vec<3> & col1,
+		    const Vec<3> & col2,
+		    const Vec<3> & col3)
 {
   return
-    col1.x[0] * ( col2.x[1] * col3.x[2] - col2.x[2] * col3.x[1]) +
-    col1.x[1] * ( col2.x[2] * col3.x[0] - col2.x[0] * col3.x[2]) +
-    col1.x[2] * ( col2.x[0] * col3.x[1] - col2.x[1] * col3.x[0]);
+    col1(0) * ( col2(1) * col3(2) - col2(2) * col3(1)) +
+    col1(1) * ( col2(2) * col3(0) - col2(0) * col3(2)) +
+    col1(2) * ( col2(0) * col3(1) - col2(1) * col3(0));
 }
 */
 
-void Transpose (Vec3d & v1, Vec3d & v2, Vec3d & v3)
+void Transpose (Vec<3> & v1, Vec<3> & v2, Vec<3> & v3)
 {
-  Swap (v1.Y(), v2.X());
-  Swap (v1.Z(), v3.X());
-  Swap (v2.Z(), v3.Y());
+  Swap (v1(1), v2(0));
+  Swap (v1(2), v3(0));
+  Swap (v2(2), v3(1));
 }
 
 
@@ -408,9 +408,9 @@ void Transpose (Vec3d & v1, Vec3d & v2, Vec3d & v3)
 #pragma GCC diagnostic ignored "-Warray-bounds"
 #endif
 
-int SolveLinearSystem (const Vec3d & col1, const Vec3d & col2,
-		       const Vec3d & col3, const Vec3d & rhs,
-		       Vec3d & sol)
+int SolveLinearSystem (const Vec<3> & col1, const Vec<3> & col2,
+		       const Vec<3> & col3, const Vec<3> & rhs,
+		       Vec<3> & sol)
 {
   // changed by MW
   double matrix[3][3];
@@ -419,10 +419,10 @@ int SolveLinearSystem (const Vec3d & col1, const Vec3d & col2,
 
   for(int i=0; i<3; i++)
     {
-      matrix[i][0] = col1.X(i+1);
-      matrix[i][1] = col2.X(i+1);
-      matrix[i][2] = col3.X(i+1);
-      locrhs[i] = rhs.X(i+1);
+      matrix[i][0] = col1(i);
+      matrix[i][1] = col2(i);
+      matrix[i][2] = col3(i);
+      locrhs[i] = rhs(i);
     }
 
   for(int i=0; i<2; i++)
@@ -469,9 +469,9 @@ int SolveLinearSystem (const Vec3d & col1, const Vec3d & col2,
     {
       double sum = locrhs[i];
       for(int j=2; j>i; j--)
-	sum -= matrix[i][j]*sol.X(j+1);
+	sum -= matrix[i][j]*sol(j);
 
-      sol.X(i+1) = sum/matrix[i][i];
+      sol(i) = sum/matrix[i][i];
     }
 
   return 0;
@@ -492,7 +492,7 @@ int SolveLinearSystem (const Vec3d & col1, const Vec3d & col2,
   return 0;
   */
   /*
-  Vec3d cr;
+  Vec<3> cr;
   Cross (col1, col2, cr);
   double det = cr * col3;
 
@@ -533,10 +533,10 @@ int SolveLinearSystem (const Vec3d & col1, const Vec3d & col2,
 
 
 
-int SolveLinearSystemLS (const Vec3d & col1,
-			 const Vec3d & col2,
-			 const Vec2d & rhs,
-			 Vec3d & sol)
+int SolveLinearSystemLS (const Vec<3> & col1,
+			 const Vec<3> & col2,
+			 const Vec<2> & rhs,
+			 Vec<3> & sol)
 {
   double a11 = col1 * col1;
   double a12 = col1 * col2;
@@ -546,22 +546,22 @@ int SolveLinearSystemLS (const Vec3d & col1,
 
   if (det*det <= 1e-24 * a11 * a22)
     {
-      sol = Vec3d (0, 0, 0);
+      sol = Vec<3> (0, 0, 0);
       return 1;
     }
   
-  Vec2d invrhs;
-  invrhs.X() = ( a22 * rhs.X() - a12 * rhs.Y()) / det;
-  invrhs.Y() = (-a12 * rhs.X() + a11 * rhs.Y()) / det;
+  Vec<2> invrhs;
+  invrhs(0) = ( a22 * rhs(0) - a12 * rhs(1)) / det;
+  invrhs(1) = (-a12 * rhs(0) + a11 * rhs(1)) / det;
 
-  sol.X() = invrhs.X() * col1.X() + invrhs.Y() * col2.X();
-  sol.Y() = invrhs.X() * col1.Y() + invrhs.Y() * col2.Y();
-  sol.Z() = invrhs.X() * col1.Z() + invrhs.Y() * col2.Z();
+  sol(0) = invrhs(0) * col1(0) + invrhs(1) * col2(0);
+  sol(1) = invrhs(0) * col1(1) + invrhs(1) * col2(1);
+  sol(2) = invrhs(0) * col1(2) + invrhs(1) * col2(2);
 
   return 0;
 
   /*
-  Vec3d inv1, inv2;
+  Vec<3> inv1, inv2;
   int err = 
     PseudoInverse (col1, col2, inv1, inv2);
 
@@ -570,10 +570,10 @@ int SolveLinearSystemLS (const Vec3d & col1,
   */
 }
 
-int SolveLinearSystemLS2 (const Vec3d & col1,
-			 const Vec3d & col2,
-			 const Vec2d & rhs,
-			 Vec3d & sol, double & x, double & y)
+int SolveLinearSystemLS2 (const Vec<3> & col1,
+			 const Vec<3> & col2,
+			 const Vec<2> & rhs,
+			 Vec<3> & sol, double & x, double & y)
 {
   double a11 = col1 * col1;
   double a12 = col1 * col2;
@@ -584,26 +584,26 @@ int SolveLinearSystemLS2 (const Vec3d & col1,
   if (fabs (det) <= 1e-12 * col1.Length() * col2.Length() || 
       col1.Length2() == 0 || col2.Length2() == 0)
     {
-      sol = Vec3d (0, 0, 0);
+      sol = Vec<3> (0, 0, 0);
       x = 0; y = 0;
       return 1;
     }
   
-  Vec2d invrhs;
-  invrhs.X() = ( a22 * rhs.X() - a12 * rhs.Y()) / det;
-  invrhs.Y() = (-a12 * rhs.X() + a11 * rhs.Y()) / det;
+  Vec<2> invrhs;
+  invrhs(0) = ( a22 * rhs(0) - a12 * rhs(1)) / det;
+  invrhs(1) = (-a12 * rhs(0) + a11 * rhs(1)) / det;
 
-  sol.X() = invrhs.X() * col1.X() + invrhs.Y() * col2.X();
-  sol.Y() = invrhs.X() * col1.Y() + invrhs.Y() * col2.Y();
-  sol.Z() = invrhs.X() * col1.Z() + invrhs.Y() * col2.Z();
+  sol(0) = invrhs(0) * col1(0) + invrhs(1) * col2(0);
+  sol(1) = invrhs(0) * col1(1) + invrhs(1) * col2(1);
+  sol(2) = invrhs(0) * col1(2) + invrhs(1) * col2(2);
 
-  x = invrhs.X();
-  y = invrhs.Y();
+  x = invrhs(0);
+  y = invrhs(1);
 
   return 0;
 
   /*
-  Vec3d inv1, inv2;
+  Vec<3> inv1, inv2;
   int err = 
     PseudoInverse (col1, col2, inv1, inv2);
 
@@ -612,10 +612,10 @@ int SolveLinearSystemLS2 (const Vec3d & col1,
   */
 }
 
-int PseudoInverse (const Vec3d & col1,
-		   const Vec3d & col2,
-		   Vec3d & inv1,
-		   Vec3d & inv2)
+int PseudoInverse (const Vec<3> & col1,
+		   const Vec<3> & col2,
+		   Vec<3> & inv1,
+		   Vec<3> & inv2)
 {
   double a11 = col1 * col1;
   double a12 = col1 * col2;
@@ -625,8 +625,8 @@ int PseudoInverse (const Vec3d & col1,
 
   if (fabs (det) < 1e-12 * col1.Length() * col2.Length())
     {
-      inv1 = Vec3d (0, 0, 0);
-      inv2 = Vec3d (0, 0, 0);
+      inv1 = Vec<3> (0, 0, 0);
+      inv2 = Vec<3> (0, 0, 0);
       return 1;
     }
 
@@ -644,28 +644,28 @@ int PseudoInverse (const Vec3d & col1,
 
 
 QuadraticFunction3d :: 
-QuadraticFunction3d (const Point3d & p, const Vec3d & v)
+QuadraticFunction3d (const Point<3> & p, const Vec<3> & v)
 {
-  Vec3d hv(v);
+  Vec<3> hv(v);
   hv /= (hv.Length() + 1e-12);
-  Vec3d t1, t2;
-  hv.GetNormal (t1);
+  Vec<3> t1, t2;
+  GetNormal (hv, t1);
   Cross (hv, t1, t2);
   
-  double t1p = t1.X() * p.X() + t1.Y() * p.Y() + t1.Z() * p.Z();
-  double t2p = t2.X() * p.X() + t2.Y() * p.Y() + t2.Z() * p.Z();
+  double t1p = t1(0) * p(0) + t1(1) * p(1) + t1(2) * p(2);
+  double t2p = t2(0) * p(0) + t2(1) * p(1) + t2(2) * p(2);
   c0 = sqr (t1p) + sqr (t2p);
-  cx = -2 * (t1p * t1.X() + t2p * t2.X());
-  cy = -2 * (t1p * t1.Y() + t2p * t2.Y());
-  cz = -2 * (t1p * t1.Z() + t2p * t2.Z());
+  cx = -2 * (t1p * t1(0) + t2p * t2(0));
+  cy = -2 * (t1p * t1(1) + t2p * t2(1));
+  cz = -2 * (t1p * t1(2) + t2p * t2(2));
 
-  cxx = t1.X() * t1.X() + t2.X() * t2.X();
-  cyy = t1.Y() * t1.Y() + t2.Y() * t2.Y();
-  czz = t1.Z() * t1.Z() + t2.Z() * t2.Z();
+  cxx = t1(0) * t1(0) + t2(0) * t2(0);
+  cyy = t1(1) * t1(1) + t2(1) * t2(1);
+  czz = t1(2) * t1(2) + t2(2) * t2(2);
 
-  cxy = 2 * t1.X() * t1.Y() + 2 * t2.X() * t2.Y();
-  cxz = 2 * t1.X() * t1.Z() + 2 * t2.X() * t2.Z();
-  cyz = 2 * t1.Y() * t1.Z() + 2 * t2.Y() * t2.Z();
+  cxy = 2 * t1(0) * t1(1) + 2 * t2(0) * t2(1);
+  cxz = 2 * t1(0) * t1(2) + 2 * t2(0) * t2(2);
+  cyz = 2 * t1(1) * t1(2) + 2 * t2(1) * t2(2);
 
   /*
   (*testout) << "c0 = " << c0
@@ -675,14 +675,14 @@ QuadraticFunction3d (const Point3d & p, const Vec3d & v)
   */
 }
 
-// QuadraticFunction3d gqf (Point3d (0,0,0), Vec3d (1, 0, 0));
+// QuadraticFunction3d gqf (Point<3> (0,0,0), Vec<3> (1, 0, 0));
 
 
 
 
 
-void referencetransform :: Set (const Point3d & p1, const Point3d & p2,
-                                const Point3d & p3, double ah)
+void referencetransform :: Set (const Point<3> & p1, const Point<3> & p2,
+                                const Point<3> & p3, double ah)
 {
   ex = p2 - p1;
   ex /= ex.Length();
@@ -702,42 +702,42 @@ void referencetransform :: Set (const Point3d & p1, const Point3d & p2,
   ez_h = ah * ez;
 }
 
-void referencetransform :: ToPlain (const Point3d & p, Point3d & pp) const
+void referencetransform :: ToPlain (const Point<3> & p, Point<3> & pp) const
 {
-  Vec3d v;
+  Vec<3> v;
   v = p - rp;
-  pp.X() = (ex_h * v);
-  pp.Y() = (ey_h * v);
-  pp.Z() = (ez_h * v);
+  pp(0) = (ex_h * v);
+  pp(1) = (ey_h * v);
+  pp(2) = (ez_h * v);
 }
 
-void referencetransform :: ToPlain (const Array<Point3d> & p,
-                                    Array<Point3d> & pp) const
+void referencetransform :: ToPlain (const Array<Point<3>> & p,
+                                    Array<Point<3>> & pp) const
 {
-  Vec3d v;
+  Vec<3> v;
   int i;
 
   pp.SetSize (p.Size());
   for (i = 1; i <= p.Size(); i++)
     {
       v = p[i-1] - rp;
-      pp[i-1].X() = (ex_h * v);
-      pp[i-1].Y() = (ey_h * v);
-      pp[i-1].Z() = (ez_h * v);
+      pp[i-1](0) = (ex_h * v);
+      pp[i-1](1) = (ey_h * v);
+      pp[i-1](2) = (ez_h * v);
     }
 }
 
-void referencetransform :: FromPlain (const Point3d & pp, Point3d & p) const
+void referencetransform :: FromPlain (const Point<3> & pp, Point<3> & p) const
 {
-  Vec3d v;
+  Vec<3> v;
   //  v = (h * pp.X()) * ex + (h * pp.Y()) * ey + (h * pp.Z()) * ez;
   //  p = rp + v;
-  v.X() = pp.X() * exh.X() + pp.Y() * eyh.X() + pp.Z() * ezh.X();
-  v.Y() = pp.X() * exh.Y() + pp.Y() * eyh.Y() + pp.Z() * ezh.Y();
-  v.Z() = pp.X() * exh.Z() + pp.Y() * eyh.Z() + pp.Z() * ezh.Z();
-  p.X() = rp.X() + v.X();
-  p.Y() = rp.Y() + v.Y();
-  p.Z() = rp.Z() + v.Z();
+  v(0) = pp(0) * exh(0) + pp(1) * eyh(0) + pp(2) * ezh(0);
+  v(1) = pp(0) * exh(1) + pp(1) * eyh(1) + pp(2) * ezh(1);
+  v(2) = pp(0) * exh(2) + pp(1) * eyh(2) + pp(2) * ezh(2);
+  p(0) = rp(0) + v(0);
+  p(1) = rp(1) + v(1);
+  p(2) = rp(2) + v(2);
 }
 
 

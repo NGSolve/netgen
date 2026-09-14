@@ -17,7 +17,7 @@ extern int usechartnormal;
 extern int chartdebug;
 
 extern int geomsearchtreeon;
-extern int AddPointIfNotExists(Array<Point3d>& ap, const Point3d& p, double eps = 1e-8);
+extern int AddPointIfNotExists(Array<Point<3>>& ap, const Point<3>& p, double eps = 1e-8);
 //get distance from line lp1-lp2 to point p
 extern double GetDistFromLine(const Point<3>& lp1, const Point<3>& lp2, Point<3>& p);
 extern double GetDistFromInfiniteLine(const Point<3>& lp1, const Point<3>& lp2, const Point<3>& p);
@@ -100,8 +100,8 @@ public:
   size_t GetNOuterT() const {return outertrigs.Size();}
   size_t GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
 
-  void GetTrianglesInBox (const Point3d & pmin,
-			  const Point3d & pmax,
+  void GetTrianglesInBox (const Point<3> & pmin,
+			  const Point<3> & pmax,
 			  Array<STLTrigId> & trias) const;
   void AddOLimit(twoint l) {olimit.Append(l);}
   void AddILimit(twoint l) {ilimit.Append(l);}
@@ -213,7 +213,7 @@ public:
                double sinchartangle, int divisions, Array<Point<3>,STLPointId>& points,
                double eps);
   
-  bool TestSegChartNV(const Point3d& p1, const Point3d& p2, const Vec3d& sn);
+  bool TestSegChartNV(const Point<3>& p1, const Point<3>& p2, const Vec<3>& sn);
 };
 
 

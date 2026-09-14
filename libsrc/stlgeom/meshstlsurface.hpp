@@ -39,17 +39,17 @@ protected:
                           PointGeomInfo & gi,
                           double h) override;
   ///
-  int BelongsToActiveChart (const Point3d & p, 
+  int BelongsToActiveChart (const Point<3> & p, 
                             const PointGeomInfo & gi) override;
 
   ///
-  int ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi) override;
+  int ComputePointGeomInfo (const Point<3> & p, PointGeomInfo & gi) override;
   ///
   int ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi, 
                                 PointGeomInfo & pgi) override;
 
   ///
-  int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
+  int IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
                            int endpoint, const PointGeomInfo & gi) override;
 
   void GetChartBoundary (Array<Point<2>> & points, 

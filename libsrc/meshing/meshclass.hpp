@@ -523,11 +523,9 @@ namespace netgen
 
     /// Find bounding box
     DLL_HEADER void GetBox (netgen::Point<3> & pmin, netgen::Point<3> & pmax, int dom = -1) const;
-    DLL_HEADER void GetBox (Point3d & pmin, Point3d & pmax, int dom = -1) const;
 
     /// Find bounding box of points of typ ptyp or less
     DLL_HEADER void GetBox (netgen::Point<3> & pmin, netgen::Point<3> & pmax, POINTTYPE ptyp ) const;
-    DLL_HEADER void GetBox (Point3d & pmin, Point3d & pmax, POINTTYPE ptyp ) const;
 
     ///
     int GetNOpenElements() const
@@ -961,8 +959,8 @@ namespace netgen
 	  area += Cross ( mesh[sel[1]]-mesh[sel[0]],
 			  mesh[sel[2]]-mesh[sel[0]] ).Length() / 2;
 	else
-	  area += Cross (Vec3d (mesh[sel.PNum(1)], mesh[sel.PNum(3)]),
-			 Vec3d (mesh[sel.PNum(1)], mesh[sel.PNum(4)])).Length() / 2;;
+	  area += Cross (Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(3)]),
+			 Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(4)])).Length() / 2;;
       }
       void ReCalc ()
       {

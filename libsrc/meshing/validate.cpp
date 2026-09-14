@@ -526,11 +526,11 @@ namespace netgen
     /*
     if(cnttrials < 100)
       {
-	nv = Vec3d(0,0,0);
+	nv = Vec<3>(0,0,0);
 	for (int i = 1; i <= mesh.GetNSE(); i++)
 	  {
 	    const Element2d & sel = mesh.SurfaceElement(i);
-	    Vec3d auxvec = Cross(mesh.Point(sel.PNum(2))-mesh.Point(sel.PNum(1)),
+	    Vec<3> auxvec = Cross(mesh.Point(sel.PNum(2))-mesh.Point(sel.PNum(1)),
 				 mesh.Point(sel.PNum(3))-mesh.Point(sel.PNum(1)));
 	    auxvec.Normalize();
 	    for (int j = 1; j <= sel.GetNP(); j++)

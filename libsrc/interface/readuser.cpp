@@ -43,8 +43,8 @@ namespace netgen
         in >> np;
         for (int i = 1; i <= np; i++)
           {
-            Point3d p;
-            in >> p.X() >> p.Y() >> p.Z();
+            Point<3> p;
+            in >> p(0) >> p(1) >> p(2);
             mesh.AddPoint (p);
           }
 
@@ -158,11 +158,11 @@ namespace netgen
 		    mesh.AddPoint(p);
                   }
 		cout << IM(3) << "read " << mesh.GetNP() << " points" << endl;
-                Point3d pmin, pmax;
+                Point<3> pmin, pmax;
 		cout << IM(5) << "Get Box" << endl;
                 mesh.GetBox (pmin, pmax);
 		cout << IM(5)  << "Pmin: " << pmin << " Pmax: " << pmax << endl;
-                if(fabs(pmin.Z() - pmax.Z()) < 1e-10 * Dist(pmin, pmax))
+                if(fabs(pmin(2) - pmax(2)) < 1e-10 * Dist(pmin, pmax))
                 {
                        cout << IM(5)  << "Set Dimension to 2." << endl;
                        mesh.SetDimension(2);
@@ -431,7 +431,7 @@ namespace netgen
 		mesh.ReconstructEdgeDescriptors();
 
 	cout << IM(5)  << "Finalize mesh" << endl;
-        Point3d pmin, pmax;
+        Point<3> pmin, pmax;
 	cout << IM(5)  << "ComputeNVertices" << endl;
         mesh.ComputeNVertices();
 	cout << IM(5)  << "RebuildSurfaceElementLists" << endl;
@@ -487,8 +487,8 @@ namespace netgen
         in >> np;
         for (i = 1; i <= np; i++)
           {
-            Point3d p(0,0,0);
-            in >> p.X() >> p.Y();
+            Point<3> p(0,0,0);
+            in >> p(0) >> p(1);
             mesh.AddPoint (p);
           }
       }
@@ -510,8 +510,8 @@ namespace netgen
 
             for (i = 1; i <= np; i++)
               {
-                Point3d p(0,0,0);
-                in >> p.X() >> p.Y() >> p.Z();
+                Point<3> p(0,0,0);
+                in >> p(0) >> p(1) >> p(2);
                 mesh.AddPoint (p);
               }
 	  
@@ -581,8 +581,8 @@ namespace netgen
         Array<double> values(np);
         for (i = 1; i <= np; i++)
           {
-            Point3d p(0,0,0);
-            inpkt >> p.X() >> p.Y() >> p.Z()
+            Point<3> p(0,0,0);
+            inpkt >> p(0) >> p(1) >> p(2)
                   >> bcprop >> values[i-1];
             mesh.AddPoint (p);
           }      
@@ -646,8 +646,8 @@ namespace netgen
         cout << IM(3) << "npcyl = " << npcyl << endl;
         for (i = 1; i <= npcyl; i++)
           {
-            Point3d p(0,0,0);
-            incyl >> p.X() >> p.Y() >> p.Z();
+            Point<3> p(0,0,0);
+            incyl >> p(0) >> p(1) >> p(2);
             mesh.AddPoint (p);
           }
         incyl >> nsecyl;

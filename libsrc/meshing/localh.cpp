@@ -356,14 +356,14 @@ namespace netgen
   }
 
 
-  double LocalH :: GetMinHRec (const Point3d & pmin, const Point3d & pmax,
+  double LocalH :: GetMinHRec (const Point<3> & pmin, const Point<3> & pmax,
 			       const GradingBox * box) const
   {
     if (dimension == 2)
       {
         double h2 = box->h2;
-        if (pmax.X() < box->xmid[0]-h2 || pmin.X() > box->xmid[0]+h2 ||
-            pmax.Y() < box->xmid[1]-h2 || pmin.Y() > box->xmid[1]+h2)
+        if (pmax(0) < box->xmid[0]-h2 || pmin(0) > box->xmid[0]+h2 ||
+            pmax(1) < box->xmid[1]-h2 || pmin(1) > box->xmid[1]+h2)
           return 1e8;
         
         double hmin = 2 * box->h2; // box->x2[0] - box->x1[0];
@@ -377,9 +377,9 @@ namespace netgen
     else
       {
         double h2 = box->h2;
-        if (pmax.X() < box->xmid[0]-h2 || pmin.X() > box->xmid[0]+h2 ||
-            pmax.Y() < box->xmid[1]-h2 || pmin.Y() > box->xmid[1]+h2 ||
-            pmax.Z() < box->xmid[2]-h2 || pmin.Z() > box->xmid[2]+h2)
+        if (pmax(0) < box->xmid[0]-h2 || pmin(0) > box->xmid[0]+h2 ||
+            pmax(1) < box->xmid[1]-h2 || pmin(1) > box->xmid[1]+h2 ||
+            pmax(2) < box->xmid[2]-h2 || pmin(2) > box->xmid[2]+h2)
           return 1e8;
         
         double hmin = 2 * box->h2; // box->x2[0] - box->x1[0];
@@ -400,21 +400,21 @@ namespace netgen
 
 
 
-  void LocalH :: CutBoundaryRec (const Point3d & pmin, const Point3d & pmax,
+  void LocalH :: CutBoundaryRec (const Point<3> & pmin, const Point<3> & pmax,
 				 GradingBox * box)
   {
     double h2 = box->h2;
     if (dimension == 2)
       {
-        if (pmax.X() < box->xmid[0]-h2 || pmin.X() > box->xmid[0]+h2 ||
-            pmax.Y() < box->xmid[1]-h2 || pmin.Y() > box->xmid[1]+h2)
+        if (pmax(0) < box->xmid[0]-h2 || pmin(0) > box->xmid[0]+h2 ||
+            pmax(1) < box->xmid[1]-h2 || pmin(1) > box->xmid[1]+h2)
           return;
       }
     else
       {
-        if (pmax.X() < box->xmid[0]-h2 || pmin.X() > box->xmid[0]+h2 ||
-            pmax.Y() < box->xmid[1]-h2 || pmin.Y() > box->xmid[1]+h2 ||
-            pmax.Z() < box->xmid[2]-h2 || pmin.Z() > box->xmid[2]+h2)
+        if (pmax(0) < box->xmid[0]-h2 || pmin(0) > box->xmid[0]+h2 ||
+            pmax(1) < box->xmid[1]-h2 || pmin(1) > box->xmid[1]+h2 ||
+            pmax(2) < box->xmid[2]-h2 || pmin(2) > box->xmid[2]+h2)
           return;
       }
 
@@ -467,7 +467,7 @@ namespace netgen
 
 
   void LocalH :: FindInnerBoxes (const AdFront3 & adfront,
-				 int (*testinner)(const Point3d & p1))
+				 int (*testinner)(const Point<3> & p1))
   {
     static Timer timer("LocalH::FindInnerBoxes");
     RegionTimer reg (timer);
@@ -480,17 +480,17 @@ namespace netgen
 
     root->flags.isinner = 0;
 
-    Point3d rpmid(root->xmid[0], root->xmid[1], root->xmid[2]);
-    Vec3d rv(root->h2, root->h2, root->h2);
-    Point3d rx2 = rpmid + rv;
-    // Point3d rx1 = rpmid - rv;
+    Point<3> rpmid(root->xmid[0], root->xmid[1], root->xmid[2]);
+    Vec<3> rv(root->h2, root->h2, root->h2);
+    Point<3> rx2 = rpmid + rv;
+    // Point<3> rx1 = rpmid - rv;
 
 
     root->flags.pinner = !adfront.SameSide (rpmid, rx2);
     
     if (testinner)
       (*testout) << "inner = " << root->flags.pinner << " =?= " 
-		 << testinner(Point3d(root->xmid[0], root->xmid[1], root->xmid[2])) << endl;
+		 << testinner(Point<3>(root->xmid[0], root->xmid[1], root->xmid[2])) << endl;
 
     Array<int> faceinds(nf);
     Array<Box3d> faceboxes(nf);
@@ -516,12 +516,12 @@ namespace netgen
   
     GradingBox * father = box -> father;
   
-    Point3d c(box->xmid[0], box->xmid[1], box->xmid[2]);
-    Vec3d v(box->h2, box->h2, box->h2);
+    Point<3> c(box->xmid[0], box->xmid[1], box->xmid[2]);
+    Vec<3> v(box->h2, box->h2, box->h2);
     Box3d boxc(c-v, c+v);
 
-    Point3d fc(father->xmid[0], father->xmid[1], father->xmid[2]);
-    Vec3d fv(father->h2, father->h2, father->h2);
+    Point<3> fc(father->xmid[0], father->xmid[1], father->xmid[2]);
+    Vec<3> fv(father->h2, father->h2, father->h2);
     Box3d fboxc(fc-fv, fc+fv);
 
     Box3d boxcfc(c,fc);
@@ -563,7 +563,7 @@ namespace netgen
       }
     else
       {
-	Point3d cf(father->xmid[0], father->xmid[1], father->xmid[2]);
+	Point<3> cf(father->xmid[0], father->xmid[1], father->xmid[2]);
       
 	if (father->flags.isinner)
 	  box->flags.pinner = 1;
@@ -590,7 +590,7 @@ namespace netgen
 
 
 
-  void LocalH :: FindInnerBoxesRec ( int (*inner)(const Point3d & p),
+  void LocalH :: FindInnerBoxesRec ( int (*inner)(const Point<3> & p),
 				     GradingBox * box)
   {
     if (box->flags.cutboundary)
@@ -830,14 +830,14 @@ namespace netgen
     for (int i = 0; i < boxes.Size(); i++)
       {
 	double h = boxes[i]->hopt;
-	Point3d c = boxes[i]->PMid();
+	Point<3> c = boxes[i]->PMid();
       
 	for (int i1 = -1; i1 <= 1; i1++)
 	  for (int i2 = -1; i2 <= 1; i2++)
 	    for (int i3 = -1; i3 <= 1; i3++)
-	      SetH (Point3d (c.X() + i1 * h, 
-			     c.Y() + i2 * h,
-			     c.Z() + i3 * h), 1.001 * h);     
+	      SetH (Point<3> (c(0) + i1 * h, 
+			     c(1) + i2 * h,
+			     c(2) + i3 * h), 1.001 * h);     
       }
   }
 

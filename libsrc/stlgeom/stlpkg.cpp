@@ -535,8 +535,8 @@ namespace netgen
     STLGeometry * stlgeometry = dynamic_cast<STLGeometry*> (ng_geometry.get());
     if (mesh && stlgeometry)
       {
-	mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-			   stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+	mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec<3>(10, 10, 10),
+			   stlgeometry->GetBoundingBox().PMax() + Vec<3>(10, 10, 10),
 			   mparam.grading);
 	stlgeometry -> RestrictLocalH(*mesh, mparam.maxh, stlparam, mparam);
 

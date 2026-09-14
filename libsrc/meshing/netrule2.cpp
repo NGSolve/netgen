@@ -107,7 +107,7 @@ void netrule :: SetFreeZoneTransformation (const Vector & devp, int tolclass)
 
 
 /*
-int netrule :: IsInFreeZone2 (const Point2d & p) const
+int netrule :: IsInFreeZone2 (const Point<2> & p) const
 {
   for (int i = 0; i < transfreezone.Size(); i++)
     {
@@ -179,7 +179,7 @@ int netrule :: ConvexFreeZone () const
 
 
 /*
-float netrule :: CalcPointDist (int pi, const Point2d & p) const
+float netrule :: CalcPointDist (int pi, const Point<2> & p) const
 {
   float dx = p.X() - points.Get(pi).X();
   float dy = p.Y() - points.Get(pi).Y();

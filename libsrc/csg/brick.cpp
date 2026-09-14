@@ -403,7 +403,7 @@ void Brick :: CalcData()
     for (i2 = 0; i2 <= 1; i2++)
       for (i1 = 0; i1 <= 1; i1++)
 	{
-	  pi[i] = p1 + i1 * v12 + i2 * v13 + i3 * v14;
+	  pi[i] = p1 + double(i1) * v12 + double(i2) * v13 + double(i3) * v14;
 	  i++;
 	}
 

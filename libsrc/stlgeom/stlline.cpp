@@ -343,14 +343,14 @@ void STLEdgeDataList :: Write(ofstream& of) const
       //if (edge.GetStatus() == ED_CONFIRMED)
       of << edge.GetStatus() << " ";
 
-      const Point3d & p1 = geom.GetPoint (edge.PNum(1));
-      const Point3d & p2 = geom.GetPoint (edge.PNum(2));
-      of << p1.X() << " "
-	 << p1.Y() << " "
-	 << p1.Z() << " "
-	 << p2.X() << " "
-	 << p2.Y() << " "
-	 << p2.Z() << endl;
+      const Point<3> & p1 = geom.GetPoint (edge.PNum(1));
+      const Point<3> & p2 = geom.GetPoint (edge.PNum(2));
+      of << p1(0) << " "
+	 << p1(1) << " "
+	 << p1(2) << " "
+	 << p2(0) << " "
+	 << p2(1) << " "
+	 << p2(2) << endl;
     }
   
 }
@@ -358,7 +358,7 @@ void STLEdgeDataList :: Write(ofstream& of) const
 void STLEdgeDataList :: Read(ifstream& ifs)
 {
   int i, nce;
-  Point3d p1, p2;
+  Point<3> p1, p2;
   int pi1, pi2;
   int status, ednum;
 
@@ -366,8 +366,8 @@ void STLEdgeDataList :: Read(ifstream& ifs)
   for (i = 1; i <= nce; i++)
     {
       ifs >> status;
-      ifs >> p1.X() >> p1.Y() >> p1.Z();
-      ifs >> p2.X() >> p2.Y() >> p2.Z();
+      ifs >> p1(0) >> p1(1) >> p1(2);
+      ifs >> p2(0) >> p2(1) >> p2(2);
 
       pi1 = geom.GetPointNum (p1);
       pi2 = geom.GetPointNum (p2);
@@ -624,7 +624,7 @@ GetPointInDist(const Array<Point<3>,STLPointId>& ap, double dist, int& index) co
 	{
 	  index = i;
 	  double relval = (dist - len) / (seglen + 1e-16);
-	  Vec3d v (ap[pts[i-1]], ap[pts[i]]);
+	  Vec<3> v (ap[pts[i-1]], ap[pts[i]]);
 	  return ap[pts[i-1]] + relval * v;
 	}
 
@@ -638,13 +638,13 @@ GetPointInDist(const Array<Point<3>,STLPointId>& ap, double dist, int& index) co
 
 /*
 double stlgh;
-double GetH(const Point3d& p, double x) 
+double GetH(const Point<3>& p, double x) 
 {
   return stlgh;//+0.5)*(x+0.5);
 }
 */
 STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap, 
-			 Array<Point3d>& mp, double ghi,
+			 Array<Point<3>>& mp, double ghi,
 			 class Mesh& mesh) const
 {
   static Timer timer1a("mesh stl-line 1a");
@@ -663,7 +663,7 @@ STLLine* STLLine :: Mesh(const Array<Point<3>,STLPointId>& ap,
   double dist = 0;
   double h;
   int ind;
-  Point3d p;
+  Point<3> p;
 
   Box<3> bbox;
   GetBoundingBox (ap, bbox);

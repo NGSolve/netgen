@@ -112,7 +112,7 @@ namespace netgen
     Array<STLLine*> lines;
     Array<int> lineendpoints; //per geometrypoint, 1 = is endpoint; 0 = no endpoint,
 
-    Array<Vec3d> normals; //normals belong to points!
+    Array<Vec<3>> normals; //normals belong to points!
 
     Array<twoint> externaledges;
 
@@ -132,7 +132,7 @@ namespace netgen
 
     Array<int> vicinity; //is one, if a triangle belongs to vicinity (eg. of selecttrig)
     Array<int> markedtrigs; //is one, if a triangle belongs to marked triangles (calcdirtystrigs)
-    Array<Point3d> markedsegs; //every pointpair is a segment!!!  
+    Array<Point<3>> markedsegs; //every pointpair is a segment!!!  
     Array<twoint> selectedmultiedge;
 
 
@@ -176,7 +176,7 @@ namespace netgen
 
     //only for testing;
     Array<STLLine*> meshlines;
-    Array<Point3d> meshpoints;
+    Array<Point<3>> meshpoints;
 
     double area;
   public:
@@ -325,9 +325,9 @@ namespace netgen
 	int GetNodeOfSelTrig() const;
 
 
-    int AddNormal(const Vec3d& n) { normals.Append(n); return normals.Size(); }
-    const Vec3d & GetNormal(int nr) const {return normals[nr-1];}
-    void SetNormal(int nr, const Vec3d& n) {normals[nr-1] = n;}
+    int AddNormal(const Vec<3>& n) { normals.Append(n); return normals.Size(); }
+    const Vec<3> & GetNormal(int nr) const {return normals[nr-1];}
+    void SetNormal(int nr, const Vec<3>& n) {normals[nr-1] = n;}
 
     int AddEdge(const STLEdge& v) { edges.Append(v); return edges.Size(); }
     int AddEdge(int p1, int p2);

@@ -560,10 +560,10 @@ namespace netgen
 
     pm(0) = mp(0); pm(1) = mp(1);
     radius  = Dist(pm,StartPI());
-    Vec2d auxv;
-    auxv.X() = p1(0)-pm(0); auxv.Y() = p1(1)-pm(1);
+    Vec<2> auxv;
+    auxv(0) = p1(0)-pm(0); auxv(1) = p1(1)-pm(1);
     w1      = Angle(auxv);
-    auxv.X() = p3(0)-pm(0); auxv.Y() = p3(1)-pm(1);
+    auxv(0) = p3(0)-pm(0); auxv(1) = p3(1)-pm(1);
     w3      = Angle(auxv);
     if ( fabs(w3-w1) > M_PI )
       {  

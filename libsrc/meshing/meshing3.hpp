@@ -48,7 +48,7 @@ public:
   MESHING3_RESULT GenerateMesh (Mesh & mesh, const MeshingParameters & mp);
   
   ///
-  int ApplyRules (Array<Point3d, LocalPointIndex> & lpoints,
+  int ApplyRules (Array<Point<3>, LocalPointIndex> & lpoints,
                   Array<int, LocalPointIndex> & allowpoint,
 		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
 		  INDEX_2_HASHTABLE<int> & connectedpairs,
@@ -58,7 +58,7 @@ public:
 		  float & retminerr);
   
   ///
-  Front3PointIndex AddPoint (const Point3d & p, PointIndex globind);
+  Front3PointIndex AddPoint (const Point<3> & p, PointIndex globind);
   /// elem is given in mesh point numbers
   void AddBoundaryElement (const Element2d & elem);
   ///
@@ -114,7 +114,7 @@ public:
 template <typename POINTArray, typename FACEArray>
 extern int FindInnerPoint (POINTArray & grouppoints,
 			   FACEArray & groupfaces,
-			   Point3d & p);
+			   Point<3> & p);
 
 */
 

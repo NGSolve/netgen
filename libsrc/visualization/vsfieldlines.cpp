@@ -27,15 +27,15 @@ namespace netgen
        fieldlines_startarea_parameter[1] > fieldlines_startarea_parameter[4] ||
        fieldlines_startarea_parameter[2] > fieldlines_startarea_parameter[5])
       {
-	Point3d pmin, pmax;
+	Point<3> pmin, pmax;
 	mesh->GetBox (pmin, pmax);
 	
-	fieldlines_startarea_parameter[0] = pmin.X();	
-	fieldlines_startarea_parameter[1] = pmin.Y();
-	fieldlines_startarea_parameter[2] = pmin.Z();
-	fieldlines_startarea_parameter[3] = pmax.X();	
-	fieldlines_startarea_parameter[4] = pmax.Y();
-	fieldlines_startarea_parameter[5] = pmax.Z();
+	fieldlines_startarea_parameter[0] = pmin(0);	
+	fieldlines_startarea_parameter[1] = pmin(1);
+	fieldlines_startarea_parameter[2] = pmin(2);
+	fieldlines_startarea_parameter[3] = pmax(0);	
+	fieldlines_startarea_parameter[4] = pmax(1);
+	fieldlines_startarea_parameter[5] = pmax(2);
       }
     
     for (int i = 1; i <= startpoints.Size(); i++)
@@ -165,7 +165,7 @@ namespace netgen
 	cerr << "No Elements on selected face (?)" << endl;
 	return;
       }
-    Vec3d v1,v2,cross;
+    Vec<3> v1,v2,cross;
     
     double area = 0;
 
@@ -270,7 +270,7 @@ namespace netgen
         else
             drawelem = GetSurfValues (vsol, elnr, -1, lami[0], lami[1], values);
 
-        Vec3d v;
+        Vec<3> v;
         RealVec3d (values, v, vsol->iscomplex, phaser, phasei);
         vec = v;
         return drawelem;

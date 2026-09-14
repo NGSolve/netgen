@@ -68,7 +68,7 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
       vfp1.Add (lam2, vfp2);
 
       for (j = 1; j <= nfp; j++)
-	transfreezone[j-1].X(i) = vfp1(j-1);
+	transfreezone[j-1](i-1) = vfp1(j-1);
     }
 
   // MARK(setfz2);
@@ -91,13 +91,13 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
       for (i = 1; i <= freesetfaces.Size(); i++)
 	{
 	  ti = &freesetfaces[i-1];
-	  const Point3d & p1 = transfreezone[(ti->i1)-1];
-	  const Point3d & p2 = transfreezone[(ti->i2)-1];
-	  const Point3d & p3 = transfreezone[(ti->i3)-1];
+	  const Point<3> & p1 = transfreezone[(ti->i1)-1];
+	  const Point<3> & p2 = transfreezone[(ti->i2)-1];
+	  const Point<3> & p3 = transfreezone[(ti->i3)-1];
 
-	  Vec3d v1(p1, p2);   
-	  Vec3d v2(p1, p3);   
-	  Vec3d n;
+	  Vec<3> v1(p1, p2);   
+	  Vec<3> v2(p1, p3);   
+	  Vec<3> n;
 	  Cross (v1, v2, n);
 
 	  nl = n.Length();
@@ -113,11 +113,11 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
 	    {
 	      //	      n /= nl;
 	      
-	      freesetinequ.Set(i, 1, n.X()/nl);
-	      freesetinequ.Set(i, 2, n.Y()/nl);
-	      freesetinequ.Set(i, 3, n.Z()/nl);
+	      freesetinequ.Set(i, 1, n(0)/nl);
+	      freesetinequ.Set(i, 2, n(1)/nl);
+	      freesetinequ.Set(i, 3, n(2)/nl);
 	      freesetinequ.Set(i, 4,
-			       -(p1.X() * n.X() + p1.Y() * n.Y() + p1.Z() * n.Z()) / nl);
+			       -(p1(0) * n(0) + p1(1) * n(1) + p1(2) * n(2)) / nl);
 	    }
 	}
     }
@@ -152,9 +152,9 @@ int vnetrule :: ConvexFreeZone () const
 	  j = freesetedges[i-1].i1;    //triangle j with opposite point k
 	  k = freesetedges[i-1].i2;
 	  
-	  if ( freesetinequ.Get(j, 1) * transfreezone[k-1].X() +
-	       freesetinequ.Get(j, 2) * transfreezone[k-1].Y() +
-	       freesetinequ.Get(j, 3) * transfreezone[k-1].Z() +
+	  if ( freesetinequ.Get(j, 1) * transfreezone[k-1](0) +
+	       freesetinequ.Get(j, 2) * transfreezone[k-1](1) +
+	       freesetinequ.Get(j, 3) * transfreezone[k-1](2) +
 	       freesetinequ.Get(j, 4) > 0 )
 	    {
 	      ret1=0;
@@ -167,7 +167,7 @@ int vnetrule :: ConvexFreeZone () const
 }
 
 
-int vnetrule :: IsInFreeZone (const Point3d & p) const
+int vnetrule :: IsInFreeZone (const Point<3> & p) const
 {
   int i, fs;
   char inthis;
@@ -181,8 +181,8 @@ int vnetrule :: IsInFreeZone (const Point3d & p) const
       
       for (i = 1; i <= freesetfaces.Size() && inthis; i++)
 	{
-	  if (freesetinequ.Get(i, 1) * p.X() + freesetinequ.Get(i, 2) * p.Y() +
-	      freesetinequ.Get(i, 3) * p.Z() + freesetinequ.Get(i, 4) > 0)
+	  if (freesetinequ.Get(i, 1) * p(0) + freesetinequ.Get(i, 2) * p(1) +
+	      freesetinequ.Get(i, 3) * p(2) + freesetinequ.Get(i, 4) > 0)
 	    inthis = 0;
 	}
       
@@ -193,9 +193,9 @@ int vnetrule :: IsInFreeZone (const Point3d & p) const
 }
 
 
-int vnetrule :: IsTriangleInFreeZone (const Point3d & p1, 
-				      const Point3d & p2,
-				      const Point3d & p3, 
+int vnetrule :: IsTriangleInFreeZone (const Point<3> & p1, 
+				      const Point<3> & p2,
+				      const Point<3> & p3, 
 				      const Array<int> & pi, int newone)
 {
   int fs;
@@ -238,12 +238,12 @@ int vnetrule :: IsTriangleInFreeZone (const Point3d & p1,
 
 
 
-int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
-                                     const Point3d & p3, int fs,
+int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
+                                     const Point<3> & p3, int fs,
 				     const Array<int> & pi, int newone)
 {
   int i, ii;
-  Vec3d n;
+  Vec<3> n;
   int allleft, allright;
   int hos1, hos2, hos3, os1, os2, os3;
   double hf, lam1, lam2, f, c1, c2, alpha;
@@ -285,7 +285,7 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 	    lpiu = pi[i-1];
 	  }
 
-      Vec3d v1, v2;
+      Vec<3> v1, v2;
       switch (upi)
 	{
 	case 1:
@@ -323,14 +323,14 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 	      // freeface has point
 
 
-	      Vec3d a (freesetinequ.Get(i, 1),
+	      Vec<3> a (freesetinequ.Get(i, 1),
 		       freesetinequ.Get(i, 2),
 		       freesetinequ.Get(i, 3));
 	      
 	      //	      if (1 - fabs (a * n) < 1e-8 ) 
 	      //		continue;
 
-	      Vec3d an;
+	      Vec<3> an;
 	      Cross (a, n, an);
 	      double lan = an.Length();
 	      if (lan < 1e-10)
@@ -460,13 +460,13 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 			 << freesetfaces.Get(i).i3 << " ";
 	      */
 
-	      Vec3d a (freesetinequ.Get(i, 1),
+	      Vec<3> a (freesetinequ.Get(i, 1),
 		       freesetinequ.Get(i, 2),
 		       freesetinequ.Get(i, 3));
 	      //	      (*testout) << "a = " <<  a << endl;
 
 
-	      Vec3d an;
+	      Vec<3> an;
 	      Cross (a, n, an);
 	      double lan = an.Length();
 	      
@@ -558,8 +558,8 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
       // MARK(triinfz2);
 
       int pi1 = 0, pi2 = 0, pi3 = 0;
-      Vec3d a1, a2;  // outer normals
-      Vec3d trivec;  // vector from common edge to third point of triangle
+      Vec<3> a1, a2;  // outer normals
+      Vec<3> trivec;  // vector from common edge to third point of triangle
       for (i = 1; i <= 3; i++)
 	if (pi[i-1])
 	  {
@@ -597,10 +597,10 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
       if (ff2 == 0)
 	return 1;
 
-      a1 = Vec3d (freesetinequ.Get(ff1, 1),
+      a1 = Vec<3> (freesetinequ.Get(ff1, 1),
 		  freesetinequ.Get(ff1, 2),
 		  freesetinequ.Get(ff1, 3));
-      a2 = Vec3d (freesetinequ.Get(ff2, 1),
+      a2 = Vec<3> (freesetinequ.Get(ff2, 1),
 		  freesetinequ.Get(ff2, 2),
 		  freesetinequ.Get(ff2, 3));
 
@@ -644,19 +644,19 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
   for (i = 1; i <= freesetfaces.Size(); i++)
     {
-      hos1 = freesetinequ.Get(i, 1) * p1.X() +
-	freesetinequ.Get(i, 2) * p1.Y() +
-	freesetinequ.Get(i, 3) * p1.Z() +
+      hos1 = freesetinequ.Get(i, 1) * p1(0) +
+	freesetinequ.Get(i, 2) * p1(1) +
+	freesetinequ.Get(i, 3) * p1(2) +
 	freesetinequ.Get(i, 4) > -1E-5;
       
-      hos2 = freesetinequ.Get(i, 1) * p2.X() +
-	freesetinequ.Get(i, 2) * p2.Y() +
-	freesetinequ.Get(i, 3) * p2.Z() +
+      hos2 = freesetinequ.Get(i, 1) * p2(0) +
+	freesetinequ.Get(i, 2) * p2(1) +
+	freesetinequ.Get(i, 3) * p2(2) +
 	freesetinequ.Get(i, 4) > -1E-5;
       
-      hos3 = freesetinequ.Get(i, 1) * p3.X() +
-	freesetinequ.Get(i, 2) * p3.Y() +
-	freesetinequ.Get(i, 3) * p3.Z() +
+      hos3 = freesetinequ.Get(i, 1) * p3(0) +
+	freesetinequ.Get(i, 2) * p3(1) +
+	freesetinequ.Get(i, 3) * p3(2) +
 	freesetinequ.Get(i, 4) > -1E-5;
       
       if (hos1 && hos2 && hos3) return 0;
@@ -670,26 +670,26 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
   
   if (!os1 || !os2 || !os3) return 1;
 
-  v1x = p2.X() - p1.X();
-  v1y = p2.Y() - p1.Y();
-  v1z = p2.Z() - p1.Z();
+  v1x = p2(0) - p1(0);
+  v1y = p2(1) - p1(1);
+  v1z = p2(2) - p1(2);
 
-  v2x = p3.X() - p1.X();
-  v2y = p3.Y() - p1.Y();
-  v2z = p3.Z() - p1.Z();
+  v2x = p3(0) - p1(0);
+  v2y = p3(1) - p1(1);
+  v2z = p3(2) - p1(2);
 
-  n.X() = v1y * v2z - v1z * v2y;
-  n.Y() = v1z * v2x - v1x * v2z;
-  n.Z() = v1x * v2y - v1y * v2x;
+  n(0) = v1y * v2z - v1z * v2y;
+  n(1) = v1z * v2x - v1x * v2z;
+  n(2) = v1x * v2y - v1y * v2x;
   n /= n.Length();
 
   allleft = allright = 1;
   for (i = 1; i <= transfreezone.Size() && (allleft || allright); i++)
     {
-      const Point3d & p = transfreezone[i-1];
-      float scal = (p.X() - p1.X()) * n.X() +
-	(p.Y() - p1.Y()) * n.Y() +
-	(p.Z() - p1.Z()) * n.Z();
+      const Point<3> & p = transfreezone[i-1];
+      float scal = (p(0) - p1(0)) * n(0) +
+	(p(1) - p1(1)) * n(1) +
+	(p(2) - p1(2)) * n(2);
 
       if ( scal >  1E-8 ) allleft = 0;
       if ( scal < -1E-8 ) allright = 0;
@@ -726,9 +726,9 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 	  (*testout) << "lam1/2 = " << lam1 << "  " << lam2 << endl;
 	}
 
-      hpx = p1.X() + lam1 * v1x + lam2 * v2x;
-      hpy = p1.Y() + lam1 * v1y + lam2 * v2y;
-      hpz = p1.Z() + lam1 * v1z + lam2 * v2z;
+      hpx = p1(0) + lam1 * v1x + lam2 * v2x;
+      hpy = p1(1) + lam1 * v1y + lam2 * v2y;
+      hpz = p1(2) + lam1 * v1z + lam2 * v2z;
 
       f = 0;
 
@@ -859,10 +859,10 @@ int vnetrule :: IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
 
 
 
-int vnetrule :: IsQuadInFreeZone (const Point3d & p1, 
-				  const Point3d & p2,
-				  const Point3d & p3, 
-				  const Point3d & p4, 
+int vnetrule :: IsQuadInFreeZone (const Point<3> & p1, 
+				  const Point<3> & p2,
+				  const Point<3> & p3, 
+				  const Point<3> & p4, 
 				  const Array<int> & pi, int newone)
 {
   int fs;
@@ -904,8 +904,8 @@ int vnetrule :: IsQuadInFreeZone (const Point3d & p1,
 }
 
 
-int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
-				 const Point3d & p3, const Point3d & p4, 
+int vnetrule :: IsQuadInFreeSet (const Point<3> & p1, const Point<3> & p2,
+				 const Point<3> & p3, const Point<3> & p4, 
 				 int fs, const Array<int> & pi, int newone)
 {
   int i;
@@ -972,11 +972,11 @@ int vnetrule :: IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
 
 
 
-float vnetrule :: CalcPointDist (RulePointIndex pi, const Point3d & p) const
+float vnetrule :: CalcPointDist (RulePointIndex pi, const Point<3> & p) const
 {
-  float dx = p.X() - points[pi].X();
-  float dy = p.Y() - points[pi].Y();
-  float dz = p.Z() - points[pi].Z();
+  float dx = p(0) - points[pi](0);
+  float dy = p(1) - points[pi](1);
+  float dz = p(2) - points[pi](2);
   
   return tolerances[pi] * (dx * dx + dy * dy + dz * dz);
 }

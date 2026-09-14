@@ -315,11 +315,11 @@ void Ng_GetPoint (int pi, double * p)
       return;
     }
 
-  const Point3d & hp = mesh->Point (PointIdx(pi));
-  p[0] = hp.X();
-  p[1] = hp.Y();
+  const Point<3> & hp = mesh->Point (PointIdx(pi));
+  p[0] = hp(0);
+  p[1] = hp(1);
   if (mesh->GetDimension() == 3)
-    p[2] = hp.Z();
+    p[2] = hp(2);
 }
 
 
@@ -655,14 +655,14 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
 
   if (mesh->GetDimension() == 3)
     {
-      Point3d p3d(p[0], p[1], p[2]);
+      Point<3> p3d(p[0], p[1], p[2]);
       ind = 
 	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
     }
   else
     {
       double lam3[3];
-      Point3d p2d(p[0], p[1], 0);
+      Point<3> p2d(p[0], p[1], 0);
       ind = 
 	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0) + 1;
 
@@ -701,7 +701,7 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
 
   if (mesh->GetDimension() == 3)
     {
-      Point3d p3d(p[0], p[1], p[2]);
+      Point<3> p3d(p[0], p[1], p[2]);
       ind = 
 	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
     }
@@ -2114,10 +2114,10 @@ void Ng_InitPointCurve(double red, double green, double blue)
 
 void Ng_AddPointCurvePoint(const double * point)
 {
-  Point3d pt;
-  pt.X() = point[0];
-  pt.Y() = point[1];
-  pt.Z() = point[2];
+  Point<3> pt;
+  pt(0) = point[0];
+  pt(1) = point[1];
+  pt(2) = point[2];
   mesh->AddPointCurvePoint(pt);
 }
 

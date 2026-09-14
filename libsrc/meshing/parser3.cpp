@@ -83,7 +83,7 @@ void vnetrule :: LoadRule (istream & ist)
 {
   char buf[256];
   char ch, ok;
-  Point3d p;
+  Point<3> p;
   RuleElement2d face(3);
   int i, j, i1, i2, i3, fs, ii, ii1, ii2, ii3;
   twoint edge;
@@ -138,11 +138,11 @@ void vnetrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> p.X();
+	      ist >> p(0);
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p(1);
 	      ist >> ch;    // ','
-	      ist >> p.Z();
+	      ist >> p(2);
 	      ist >> ch;    // ')'
 
 	      points.Append (p);
@@ -243,11 +243,11 @@ void vnetrule :: LoadRule (istream & ist)
 
 	  while (ch == '(')
 	    {
-	      ist >> p.X();
+	      ist >> p(0);
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p(1);
 	      ist >> ch;    // ','
-	      ist >> p.Z();
+	      ist >> p(2);
 	      ist >> ch;    // ')'
 
 	      points.Append (p);
@@ -317,11 +317,11 @@ void vnetrule :: LoadRule (istream & ist)
 	
 	  while (ch == '(')
 	    {
-	      ist >> p.X();
+	      ist >> p(0);
 	      ist >> ch;    // ','
-	      ist >> p.Y();
+	      ist >> p(1);
 	      ist >> ch;    // ','
-	      ist >> p.Z();
+	      ist >> p(2);
 	      ist >> ch;    // ')'
 	    
 	      freezone.Append (p);
@@ -371,13 +371,13 @@ void vnetrule :: LoadRule (istream & ist)
 		tfz.Elem(nfp, i) = hm1.Get(1, 3*i-2);
 
 
-	      p.X() = p.Y() = p.Z() = 0;
+	      p(0) = p(1) = p(2) = 0;
 	      for (auto pi : points.Range())
 		{
 		  int i = pi.Nr1();
-		  p.X() += hm1.Get(1, 3*i-2) * points[pi].X();
-		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
-		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
+		  p(0) += hm1.Get(1, 3*i-2) * points[pi](0);
+		  p(1) += hm1.Get(1, 3*i-2) * points[pi](1);
+		  p(2) += hm1.Get(1, 3*i-2) * points[pi](2);
 		}
 	      freezone.Append (p);
 	      freezonelimit.Append (p);
@@ -433,13 +433,13 @@ void vnetrule :: LoadRule (istream & ist)
 		tfzl.Elem(nfp, i) = hm1.Get(1, 3*i-2);
 
 
-	      p.X() = p.Y() = p.Z() = 0;
+	      p(0) = p(1) = p(2) = 0;
 	      for (auto pi : points.Range())
 		{
 		  int i = pi.Nr1();
-		  p.X() += hm1.Get(1, 3*i-2) * points[pi].X();
-		  p.Y() += hm1.Get(1, 3*i-2) * points[pi].Y();
-		  p.Z() += hm1.Get(1, 3*i-2) * points[pi].Z();
+		  p(0) += hm1.Get(1, 3*i-2) * points[pi](0);
+		  p(1) += hm1.Get(1, 3*i-2) * points[pi](1);
+		  p(2) += hm1.Get(1, 3*i-2) * points[pi](2);
 		}
 	      freezonelimit[nfp-1] = p;
 	    
@@ -726,10 +726,10 @@ void vnetrule :: LoadRule (istream & ist)
       for (int i = 1; i <= 3; i++)
 	{
 	  for (auto pj : points.Range())
-	    vp(pj.Nr0()) = points[pj].X(i);
+	    vp(pj.Nr0()) = points[pj](i-1);
 	  oldutofreezone->Mult(vp, vfp);
 	  for (int j = 1; j <= freezone.Size(); j++)
-	    freezone[j-1].X(i) = vfp(j-1);
+	    freezone[j-1](i-1) = vfp(j-1);
 	}
       //      for (i = 1; i <= freezone.Size(); i++)
       //	(*testout) << "freepoint: " << freezone.Get(i) << endl;
@@ -752,7 +752,7 @@ void vnetrule :: LoadRule (istream & ist)
 		i2 = freeset[ii2-1];
 		i3 = freeset[ii3-1];
 
-		Vec3d v1, v2, n;
+		Vec<3> v1, v2, n;
 
 		v1 = freezone[i3-1] - freezone[i1-1];
 		v2 = freezone[i2-1] - freezone[i1-1];

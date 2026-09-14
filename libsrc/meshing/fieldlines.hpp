@@ -67,7 +67,7 @@ private:
 
   int direction;
 
-  Point3d pmin, pmax;
+  Point<3> pmin, pmax;
   double rad;
 
   double critical_value;

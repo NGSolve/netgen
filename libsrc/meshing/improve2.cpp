@@ -462,9 +462,9 @@ namespace netgen
                     nv, metricweight, loch);
         bad2 += err;
 
-        Vec<3> hnv = Cross (Vec3d (mesh[el[0]],
+        Vec<3> hnv = Cross (Vec<3> (mesh[el[0]],
                     mesh[el[1]]),
-                Vec3d (mesh[el[0]],
+                Vec<3> (mesh[el[0]],
                     mesh[el[2]]));
         if (hnv * nv < 0)
             bad2 += 1e10;
@@ -827,8 +827,8 @@ namespace netgen
     int ne = mesh.GetNSE();
     int surfnr;
   
-    Vec3d n, ng;
-    Array<Vec3d> ngs(3);
+    Vec<3> n, ng;
+    Array<Vec<3>> ngs(3);
 
     (*mycout) << "Check Surface Approximation" << endl;
     (*testout) << "Check Surface Approximation" << endl;
@@ -837,7 +837,7 @@ namespace netgen
     {
     const Element2d & el = mesh.SurfaceElement(i);
     surfnr = mesh.GetFaceDescriptor (el.GetIndex()).SurfNr();
-    Vec3d n = Cross (mesh.Point (el.PNum(1)) - mesh.Point (el.PNum(2)),
+    Vec<3> n = Cross (mesh.Point (el.PNum(1)) - mesh.Point (el.PNum(2)),
     mesh.Point (el.PNum(1)) - mesh.Point (el.PNum(3)));
     n /= n.Length();
 

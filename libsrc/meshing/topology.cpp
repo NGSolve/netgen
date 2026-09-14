@@ -1700,58 +1700,58 @@ namespace netgen
 
 
 
-  const Point3d * MeshTopology :: GetVertices (ELEMENT_TYPE et)
+  const Point<3> * MeshTopology :: GetVertices (ELEMENT_TYPE et)
   {
-    static Point3d segm_points [] = 
-      { Point3d (1, 0, 0),
-	Point3d (0, 0, 0) };
+    static Point<3> segm_points [] = 
+      { Point<3> (1, 0, 0),
+	Point<3> (0, 0, 0) };
   
-    static Point3d trig_points [] = 
-      { Point3d ( 1, 0, 0 ),
-	Point3d ( 0, 1, 0 ),
-	Point3d ( 0, 0, 0 ) };
+    static Point<3> trig_points [] = 
+      { Point<3> ( 1, 0, 0 ),
+	Point<3> ( 0, 1, 0 ),
+	Point<3> ( 0, 0, 0 ) };
 
-    static Point3d quad_points [] = 
-      { Point3d ( 0, 0, 0 ),
-	Point3d ( 1, 0, 0 ),
-	Point3d ( 1, 1, 0 ),
-	Point3d ( 0, 1, 0 ) };
+    static Point<3> quad_points [] = 
+      { Point<3> ( 0, 0, 0 ),
+	Point<3> ( 1, 0, 0 ),
+	Point<3> ( 1, 1, 0 ),
+	Point<3> ( 0, 1, 0 ) };
 
-    static Point3d tet_points [] = 
-      { Point3d ( 1, 0, 0 ),
-	Point3d ( 0, 1, 0 ),
-	Point3d ( 0, 0, 1 ),
-	Point3d ( 0, 0, 0 ) };
+    static Point<3> tet_points [] = 
+      { Point<3> ( 1, 0, 0 ),
+	Point<3> ( 0, 1, 0 ),
+	Point<3> ( 0, 0, 1 ),
+	Point<3> ( 0, 0, 0 ) };
 
-    static Point3d pyramid_points [] =
+    static Point<3> pyramid_points [] =
       {
-	Point3d ( 0, 0, 0 ),
-	Point3d ( 1, 0, 0 ),
-	Point3d ( 1, 1, 0 ),
-	Point3d ( 0, 1, 0 ),
-	Point3d ( 0, 0, 1-1e-7 ),
+	Point<3> ( 0, 0, 0 ),
+	Point<3> ( 1, 0, 0 ),
+	Point<3> ( 1, 1, 0 ),
+	Point<3> ( 0, 1, 0 ),
+	Point<3> ( 0, 0, 1-1e-7 ),
       };    
   
-    static Point3d prism_points[] = 
+    static Point<3> prism_points[] = 
       {
-	Point3d ( 1, 0, 0 ),
-	Point3d ( 0, 1, 0 ),
-	Point3d ( 0, 0, 0 ),
-	Point3d ( 1, 0, 1 ),
-	Point3d ( 0, 1, 1 ),
-	Point3d ( 0, 0, 1 )
+	Point<3> ( 1, 0, 0 ),
+	Point<3> ( 0, 1, 0 ),
+	Point<3> ( 0, 0, 0 ),
+	Point<3> ( 1, 0, 1 ),
+	Point<3> ( 0, 1, 1 ),
+	Point<3> ( 0, 0, 1 )
       };
 
 
-    static Point3d hex_points [] = 
-      { Point3d ( 0, 0, 0 ),
-	Point3d ( 1, 0, 0 ),
-	Point3d ( 1, 1, 0 ),
-	Point3d ( 0, 1, 0 ),
-	Point3d ( 0, 0, 1 ),
-	Point3d ( 1, 0, 1 ),
-	Point3d ( 1, 1, 1 ),
-	Point3d ( 0, 1, 1 ) };
+    static Point<3> hex_points [] = 
+      { Point<3> ( 0, 0, 0 ),
+	Point<3> ( 1, 0, 0 ),
+	Point<3> ( 1, 1, 0 ),
+	Point<3> ( 0, 1, 0 ),
+	Point<3> ( 0, 0, 1 ),
+	Point<3> ( 1, 0, 1 ),
+	Point<3> ( 1, 1, 1 ),
+	Point<3> ( 0, 1, 1 ) };
 
 
     switch (et)

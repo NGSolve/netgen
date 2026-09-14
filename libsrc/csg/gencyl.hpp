@@ -29,7 +29,7 @@ namespace netgen
     Vec<3> planee1, planee2, planee3;
   
     ///  Vec<3> ex, ey, ez;
-    Vec2d e2x, e2y;
+    Vec<2> e2x, e2y;
     ///
     Point<3> cp;
   

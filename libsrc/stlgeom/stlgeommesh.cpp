@@ -36,7 +36,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
   SetMarkedTrig(t1,1);
   SetMarkedTrig(t2,1);
 
-  TABLE<Point3d> edgepoints;
+  TABLE<Point<3>> edgepoints;
   TABLE<double> edgepointdists;
   TABLE<int> edgepointorigines;
   TABLE<int> edgepointoriginps;
@@ -77,8 +77,8 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 
       if (ptn1 > ptn2) {swap(ptn1,ptn2);}
 
-      Point3d pt1 = GetPoint(ptn1);
-      Point3d pt2 = GetPoint(ptn2);
+      Point<3> pt1 = GetPoint(ptn1);
+      Point<3> pt2 = GetPoint(ptn2);
 
       edgecnt++;
       edgetrigs[edgecnt-1] = t1;
@@ -91,9 +91,9 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
       for (j = 1; j <= divisions; j++)
 	{
 	  double lfact = (double)j/(double)divisions;
-	  Point3d pbtw(lfact*pt1.X()+(1.-lfact)*pt2.X(),
-		       lfact*pt1.Y()+(1.-lfact)*pt2.Y(),
-		       lfact*pt1.Z()+(1.-lfact)*pt2.Z());
+	  Point<3> pbtw(lfact*pt1(0)+(1.-lfact)*pt2(0),
+		       lfact*pt1(1)+(1.-lfact)*pt2(1),
+		       lfact*pt1(2)+(1.-lfact)*pt2(2));
 
 	  //AddMarkedSeg(ap1,pbtw);
 	
@@ -132,8 +132,8 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 		      
 		  if (pnt1 > pnt2) {swap(pnt1,pnt2);}
 
-		  Point3d pt1 = GetPoint(pnt1);
-		  Point3d pt2 = GetPoint(pnt2);
+		  Point<3> pt1 = GetPoint(pnt1);
+		  Point<3> pt2 = GetPoint(pnt2);
 		      
 		  //AddMarkedSeg(pt1,pt2);
 		  
@@ -164,16 +164,16 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 		      for (l = 1; l <= divisions; l++)
 			{
 			  double lfact = (double)l/(double)divisions;
-			  Point3d pbtw(lfact*pt1.X()+(1.-lfact)*pt2.X(),
-				       lfact*pt1.Y()+(1.-lfact)*pt2.Y(),
-				       lfact*pt1.Z()+(1.-lfact)*pt2.Z());
+			  Point<3> pbtw(lfact*pt1(0)+(1.-lfact)*pt2(0),
+				       lfact*pt1(1)+(1.-lfact)*pt2(1),
+				       lfact*pt1(2)+(1.-lfact)*pt2(2));
 			  
 			  double mindist = 1E50;
 			  int index=0;
 			  
 			  for (m = 1; m <= divisions; m++)
 			    {
-			      const Point3d& p = edgepoints.Get(en,m);
+			      const Point<3>& p = edgepoints.Get(en,m);
 			      if (Dist(pbtw,p) + edgepointdists.Get(en,m) < mindist)
 				{mindist = Dist(pbtw,p) + edgepointdists.Get(en,m); index = m;}
 			    }
@@ -217,7 +217,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 	      int index(0);
 	      for (m = 1; m <= divisions; m++)
 		{
-		  const Point3d& p = edgepoints.Get(en,m);
+		  const Point<3>& p = edgepoints.Get(en,m);
 		  if (Dist(ap2,p) + edgepointdists.Get(en,m) < mindist)
 		    {mindist = Dist(ap2,p) + edgepointdists.Get(en,m); index = m;}
 		}
@@ -238,7 +238,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 
   if (!endpointorigine) {PrintSysError("No connection found!");}
 
-  Array<Point3d> plist;
+  Array<Point<3>> plist;
 
   plist.Append(ap2);
   int laste = endpointorigine;
@@ -266,7 +266,7 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
   PrintMessage(5,"PointBetween: complexity=", maxsize);
 
 
-  Point3d pm;
+  Point<3> pm;
   double dist = 0;
   int found = 0;
   
@@ -277,16 +277,16 @@ Point<3> STLGeometry :: PointBetween(const Point<3> & ap1, int t1,
 	{
 	  double segl = Dist(plist[i-1], plist[i]);
 	  double d = dist - endpointmindist * 0.5;
-	  pm = Point3d(d/segl*plist[i-1].X() + (1.-d/segl)*plist[i].X(),
-		       d/segl*plist[i-1].Y() + (1.-d/segl)*plist[i].Y(),
-		       d/segl*plist[i-1].Z() + (1.-d/segl)*plist[i].Z());
+	  pm = Point<3>(d/segl*plist[i-1](0) + (1.-d/segl)*plist[i](0),
+		       d/segl*plist[i-1](1) + (1.-d/segl)*plist[i](1),
+		       d/segl*plist[i-1](2) + (1.-d/segl)*plist[i](2));
 	  found = 1;
 	  break;
 	}
     }
   if (!found) {PrintWarning("Problem in PointBetween"); pm = Center(ap1,ap2);}
 
-  AddMarkedSeg(pm, Point3d(0.,0.,0.));
+  AddMarkedSeg(pm, Point<3>(0.,0.,0.));
   
   return pm;
   
@@ -437,7 +437,7 @@ void STLGeometry :: ToPlane (const Point<3> & locpoint, int * trigs,
       zone = 0;
       
       
-      //  Point3d p;
+      //  Point<3> p;
       int i = 1;
       const STLChart& chart = GetChart(meshchart);
       int foundinchart = 0;
@@ -556,9 +556,9 @@ int STLGeometry :: Project(Point<3> & p3d) const
    QuadraticFunction3d quadfun(p3d, meshtrignv);
  
    /*
-     Vec3d hv = meshtrignv;
+     Vec<3> hv = meshtrignv;
      hv /= hv.Length();
-     Vec3d t1, t2;
+     Vec<3> t1, t2;
      hv.GetNormal (t1);
      Cross (hv, t1, t2);
    */
@@ -727,7 +727,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLPa
   double minlocalh = stlparam.atlasminh;
 
   Box<3> bb = GetBoundingBox();
-  //  mesh.SetLocalH(bb.PMin() - Vec3d(10, 10, 10),bb.PMax() + Vec3d(10, 10, 10),
+  //  mesh.SetLocalH(bb.PMin() - Vec<3>(10, 10, 10),bb.PMax() + Vec<3>(10, 10, 10),
   //		 mparam.grading);
 
   //  mesh.SetGlobalH(gh);
@@ -822,15 +822,15 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
   int i,j;
 
   STLPointId ap1,ap2,p3,p4;
-  Point3d p1p, p2p, p3p, p4p;
-  Vec3d n, ntn;
+  Point<3> p1p, p2p, p3p, p4p;
+  Vec<3> n, ntn;
   double rzyl, localh;
 
   //  double localhfact = 0.5;
   // double geometryignorelength = 1E-4;
 
   Box<3> bb = GetBoundingBox();
-  //mesh.SetLocalH(bb.PMin() - Vec3d(10, 10, 10),bb.PMax() + Vec3d(10, 10, 10),
+  //mesh.SetLocalH(bb.PMin() - Vec<3>(10, 10, 10),bb.PMax() + Vec<3>(10, 10, 10),
   //		 mparam.grading);
 
   //mesh.SetGlobalH(gh);
@@ -930,29 +930,29 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
       int k,l;
       double h1, h2, dist;
       int rc = 0;
-      Point3d p3p1;
+      Point<3> p3p1;
       double mindist = 1E50;
       
       PrintMessage(7,"build search tree...");
-      BoxTree<3> * lsearchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec3d(1,1,1),
-                                                 GetBoundingBox().PMax() + Vec3d(1,1,1));
+      BoxTree<3> * lsearchtree = new BoxTree<3> (GetBoundingBox().PMin() - Vec<3>(1,1,1),
+                                                 GetBoundingBox().PMax() + Vec<3>(1,1,1));
       
-      Array<Point3d> pmins(GetNLines());
-      Array<Point3d> pmaxs(GetNLines());
+      Array<Point<3>> pmins(GetNLines());
+      Array<Point<3>> pmaxs(GetNLines());
 
       double maxhline;
       for (i = 1; i <= GetNLines(); i++)
 	{
 	  maxhline = 0;
 	  STLLine* l1 = GetLine(i);
-	  Point3d pmin(GetPoint(l1->StartP())), pmax(GetPoint(l1->StartP())), px;
+	  Point<3> pmin(GetPoint(l1->StartP())), pmax(GetPoint(l1->StartP())), px;
 
 	  for (j = 2; j <= l1->NP(); j++)
 	    {
 	      px = GetPoint(l1->PNum(j));
 	      maxhline = max2(maxhline,mesh.GetH(px));
-	      pmin.SetToMin (px);
-	      pmax.SetToMax (px);
+	      SetToMin (pmin, px);
+	      SetToMax (pmax, px);
 	    }
 	  Box3d box(pmin,pmax);
 	  box.Increase(maxhline);
@@ -992,7 +992,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 		  STLLine* l2 = GetLine(k);
 		  for (l = 1; l <= l2->NP(); l++)
 		    {
-		      const Point3d& p3p2 = GetPoint(l2->PNum(l));
+		      const Point<3>& p3p2 = GetPoint(l2->PNum(l));
 		      h2 = sqr(mesh.GetH(p3p2));
 		      dist = Dist2(p3p1,p3p2)*disttohfact;		  
 		      if (dist > 1E-12)
@@ -1023,7 +1023,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
       PushStatusF("Restrict h due to close edges");
 
       int lp1, lp2;
-      Vec3d v1,v2;
+      Vec<3> v1,v2;
       mincalch = 1E50;
       maxcalch = -1E50;
 
@@ -1045,9 +1045,9 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 		  lp1 = 2; lp2 = 1;
 		}
 
-	      v1 = Vec3d(GetPoint(GetEdge(GetEdgePP(i,1)).PNum(1)),
+	      v1 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,1)).PNum(1)),
 			 GetPoint(GetEdge(GetEdgePP(i,1)).PNum(2)));
-	      v2 = Vec3d(GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp1)),
+	      v2 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp1)),
 			 GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp2)));
 
 	      rzyl = ComputeCylinderRadius(v1, v2, v1.Length(), v2.Length());
@@ -1104,8 +1104,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 	  
 	  l = GetLine(i)->GetLength(points);
 	  
-	  const Point3d& pp1 = GetPoint(GetLine(i)->StartP());
-	  const Point3d& pp2 = GetPoint(GetLine(i)->EndP());
+	  const Point<3>& pp1 = GetPoint(GetLine(i)->StartP());
+	  const Point<3>& pp2 = GetPoint(GetLine(i)->EndP());
 	  
 	  if (l != 0)
 	    {
@@ -1139,8 +1139,8 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
   Array<int> limes1;
   Array<int> limes2;
 	  
-  Array<Point3d> plimes1;
-  Array<Point3d> plimes2;
+  Array<Point<3>> plimes1;
+  Array<Point<3>> plimes2;
 	  
   Array<int> plimes1trigs; //check from which trig the points come
   Array<int> plimes2trigs;
@@ -1150,7 +1150,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
   int divisions = 10;
 	  
   STLPointId np1, np2;
-  // Point3d p3p1, p3p2;
+  // Point<3> p3p1, p3p2;
   STLTriangle tt;
       
   limes1.SetSize(0);
@@ -1177,8 +1177,8 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 	      tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
 	      if (!IsEdge(np1,np2) && !GetSpiralPoint(np1) && !GetSpiralPoint(np2))
 		{
-		  Point3d p3p1 = GetPoint(np1);
-		  Point3d p3p2 = GetPoint(np2);
+		  Point<3> p3p1 = GetPoint(np1);
+		  Point<3> p3p2 = GetPoint(np2);
 		  // if (AddIfNotExists(limes1,np1))
                   if (!limes1.Contains(np1))
 		    {
@@ -1202,9 +1202,9 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 		      double f1 = (double)di/(double)(divisions+1.);
 		      double f2 = (divisions+1.-(double)di)/(double)(divisions+1.);
 			      
-		      plimes1.Append(Point3d(p3p1.X()*f1+p3p2.X()*f2,
-					     p3p1.Y()*f1+p3p2.Y()*f2,
-					     p3p1.Z()*f1+p3p2.Z()*f2));
+		      plimes1.Append(Point<3>(p3p1(0)*f1+p3p2(0)*f2,
+					     p3p1(1)*f1+p3p2(1)*f2,
+					     p3p1(2)*f1+p3p2(2)*f2));
 		      plimes1trigs.Append(t);
 		      plimes1origin.Append(0); 			      
 		    }
@@ -1232,8 +1232,8 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 		      
 	      if (!IsEdge(np1,np2))
 		{
-		  Point3d p3p1 = GetPoint(np1);
-		  Point3d p3p2 = GetPoint(np2);
+		  Point<3> p3p1 = GetPoint(np1);
+		  Point<3> p3p2 = GetPoint(np2);
 			  
 		  // if (AddIfNotExists(limes2,np1)) {plimes2.Append(p3p1); plimes2trigs.Append(t);}
 		  // if (AddIfNotExists(limes2,np2)) {plimes2.Append(p3p2); plimes2trigs.Append(t);}
@@ -1256,9 +1256,9 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 		      double f1 = (double)di/(double)(divisions+1.);
 		      double f2 = (divisions+1.-(double)di)/(double)(divisions+1.);
 			      
-		      plimes2.Append(Point3d(p3p1.X()*f1+p3p2.X()*f2,
-					     p3p1.Y()*f1+p3p2.Y()*f2,
-					     p3p1.Z()*f1+p3p2.Z()*f2));
+		      plimes2.Append(Point<3>(p3p1(0)*f1+p3p2(0)*f2,
+					     p3p1(1)*f1+p3p2(1)*f2,
+					     p3p1(2)*f1+p3p2(2)*f2));
 		      plimes2trigs.Append(t);
 		    }
 		}
@@ -1290,11 +1290,11 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 	{
 	  double mindist = 1E50;
 
-	  const Point3d & ap1 = plimes1[j-1];
+	  const Point<3> & ap1 = plimes1[j-1];
 	  double boxs = mesh.GetH (plimes1[j-1]) * limessafety;
 
-	  Point3d pmin = ap1 - Vec3d (boxs, boxs, boxs);
-	  Point3d pmax = ap1 + Vec3d (boxs, boxs, boxs);
+	  Point<3> pmin = ap1 - Vec<3> (boxs, boxs, boxs);
+	  Point<3> pmax = ap1 + Vec<3> (boxs, boxs, boxs);
 
 	  stree.GetIntersecting (pmin, pmax, foundpts);
 
@@ -1307,7 +1307,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 	    }
 
 	  /*
-	    const Point3d & ap1 = plimes1.Get(j);
+	    const Point<3> & ap1 = plimes1.Get(j);
 	    double his = mesh.GetH (plimes1.Get(j));
 
 	    double xmin = ap1.X() - his * limessafety;
@@ -1319,7 +1319,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
 
 	    for (k = 1; k <= plimes2.Size(); k++)
 	    {
-	    const Point3d & ap2 = plimes2.Get(k);
+	    const Point<3> & ap2 = plimes2.Get(k);
 	    if (ap2.X() >= xmin && ap2.X() <= xmax &&
 	    ap2.Y() >= ymin && ap2.Y() <= ymax &&
 	    ap2.Z() >= zmin && ap2.Z() <= zmax)
@@ -1369,8 +1369,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const Me
       mesh->geomtype = Mesh::GEOM_STL;
 
       mesh -> SetGlobalH (mparam.maxh);
-      mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-			 stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+      mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec<3>(10, 10, 10),
+			 stlgeometry->GetBoundingBox().PMax() + Vec<3>(10, 10, 10),
 			 mparam.grading);
       mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
 
@@ -1475,8 +1475,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const Me
 	  
 	  if (stlparam.recalc_h_opt)
 	    {
-	      mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-				 stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+	      mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec<3>(10, 10, 10),
+				 stlgeometry->GetBoundingBox().PMax() + Vec<3>(10, 10, 10),
 				 mparam.grading);
 	      mesh -> LoadLocalMeshSize (mparam.meshsizefilename);	      
 	      mesh -> CalcLocalHFromSurfaceCurvature (mparam.grading, 
@@ -1530,8 +1530,8 @@ int STLMeshingDummy (STLGeometry* stlgeometry, shared_ptr<Mesh> & mesh, const Me
 
 	  if (stlparam.recalc_h_opt)
 	    {
-	      mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-				 stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+	      mesh -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec<3>(10, 10, 10),
+				 stlgeometry->GetBoundingBox().PMax() + Vec<3>(10, 10, 10),
 				 mparam.grading);	  
 	      mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
 	      mesh -> CalcLocalH (mparam.grading);

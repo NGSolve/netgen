@@ -1523,7 +1523,7 @@ namespace netgen
 
 
 #ifdef OLD
-  void Element :: GetNodesLocal (Array<Point3d> & points) const
+  void Element :: GetNodesLocal (Array<Point<3>> & points) const
   {
     const static double tetpoints[4][3] =
       { { 0, 0, 0 },
@@ -1614,7 +1614,7 @@ namespace netgen
   
     points.SetSize(0);
     for (i = 0; i < np; i++)
-      points.Append (Point3d (pp[i][0], pp[i][1], pp[i][2]));
+      points.Append (Point<3> (pp[i][0], pp[i][1], pp[i][2]));
   }
 #endif
 

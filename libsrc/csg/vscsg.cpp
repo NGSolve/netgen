@@ -154,7 +154,7 @@ namespace netgen
       }
     else
       {
-	center = Point3d(0,0,0);
+	center = Point<3>(0,0,0);
 	rad = 1;
       }
 
@@ -268,10 +268,10 @@ namespace netgen
 	glBegin (GL_LINES);
 	for (const auto & sp : specpoints)
 	  {
-	    const Point3d p1 = sp.p;
-	    const Point3d p2 = sp.p + len * sp.v;
-	    glVertex3d (p1.X(), p1.Y(), p1.Z());
-	    glVertex3d (p2.X(), p2.Y(), p2.Z());
+	    const Point<3> p1 = sp.p;
+	    const Point<3> p2 = sp.p + len * sp.v;
+	    glVertex3d (p1(0), p1(1), p1(2));
+	    glVertex3d (p2(0), p2(1), p2(2));
 	  }
 	glEnd();
       }
@@ -337,11 +337,11 @@ namespace netgen
 	for (int i = 1; i <= mesh->GetNSeg(); i++)
 	  {
 	    const Segment & seg = mesh -> LineSegment (i);
-	    const Point3d p1 = mesh -> Point (seg[0]);
-	    const Point3d p2 = mesh -> Point (seg[1]);
+	    const Point<3> p1 = mesh -> Point (seg[0]);
+	    const Point<3> p2 = mesh -> Point (seg[1]);
 
-	    const Point3d p = Center (p1, p2);
-	    glRasterPos3d (p.X(), p.Y(), p.Z());
+	    const Point<3> p = Center (p1, p2);
+	    glRasterPos3d (p(0), p(1), p(2));
 	  
 	    snprintf (buf, sizeof(buf), "%d", mesh->GetEdgeDescriptor(seg.GetIndex()).EdgeNr());
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
@@ -368,7 +368,7 @@ namespace netgen
 	glBegin( GL_POINTS );
 	for (int i = 1; i <= mesh -> GetNP(); i++)
 	  {
-	    const Point3d & p = mesh -> Point(i);
+	    const Point<3> & p = mesh -> Point(i);
 	    if (i % 2)
 	      glVertex3f( p.X(), p.Y(), p.Z());
 	  }
@@ -388,7 +388,7 @@ namespace netgen
         /*
 	for (int i = 1; i <= mesh -> GetNP(); i++)
 	  {
-	    const Point3d & p = mesh -> Point(i);
+	    const Point<3> & p = mesh -> Point(i);
 	    glRasterPos3d (p.X(), p.Y(), p.Z());
 	    glBitmap (7, 7, 3, 3, 0, 0, &knoedel[0]);
 	  }
@@ -415,8 +415,8 @@ namespace netgen
 	// for (int i = 1; i <= mesh->GetNP(); i++)
         for (auto i : mesh->Points().Range())
 	  {
-	    const Point3d & p = mesh->Point(i);
-	    glRasterPos3d (p.X(), p.Y(), p.Z());
+	    const Point<3> & p = mesh->Point(i);
+	    glRasterPos3d (p(0), p(1), p(2));
 	  
 	    snprintf (buf, sizeof(buf), "%d", i.Nr1());
 	    // glCallLists (GLsizei(strlen (buf)), GL_UNSIGNED_BYTE, buf);
@@ -469,7 +469,7 @@ namespace netgen
       }
     else
       {
-	box = Box3d (Point3d (0,0,0), Point3d (1,1,1));
+	box = Box3d (Point<3> (0,0,0), Point<3> (1,1,1));
       }
   
     if (zoomall == 2 && ((vispar.centerpoint-IndexBASE<PointIndex>() >= 0 &&
@@ -478,7 +478,7 @@ namespace netgen
       {
 	if (vispar.use_center_coords)
 	  {
-	    center.X() = vispar.centerx; center.Y() = vispar.centery; center.Z() = vispar.centerz; 
+	    center(0) = vispar.centerx; center(1) = vispar.centery; center(2) = vispar.centerz; 
 	  }
 	else
 	  center = mesh->Point (vispar.centerpoint);

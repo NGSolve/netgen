@@ -188,7 +188,7 @@ namespace nglib
    NGLIB_API void Ng_AddPoint (Ng_Mesh * mesh, double * x)
    {
       Mesh * m = (Mesh*)mesh;
-      m->AddPoint (Point3d (x[0], x[1], x[2]));
+      m->AddPoint (Point<3> (x[0], x[1], x[2]));
    }
 
 
@@ -332,7 +332,7 @@ namespace nglib
    // Set a local limit on the maximum mesh size allowed around the given point
    NGLIB_API void Ng_RestrictMeshSizePoint (Ng_Mesh * mesh, double * p, double h)
    {
-      ((Mesh*)mesh) -> RestrictLocalH (Point3d (p[0], p[1], p[2]), h);
+      ((Mesh*)mesh) -> RestrictLocalH (Point<3> (p[0], p[1], p[2]), h);
    }
 
 
@@ -344,7 +344,7 @@ namespace nglib
       for (double x = pmin[0]; x < pmax[0]; x += h)
          for (double y = pmin[1]; y < pmax[1]; y += h)
             for (double z = pmin[2]; z < pmax[2]; z += h)
-               ((Mesh*)mesh) -> RestrictLocalH (Point3d (x, y, z), h);
+               ((Mesh*)mesh) -> RestrictLocalH (Point<3> (x, y, z), h);
    }
 
 
@@ -378,7 +378,7 @@ namespace nglib
    {
       Mesh * m = (Mesh*)mesh;
 
-      m->AddPoint (Point3d (x[0], x[1], 0));
+      m->AddPoint (Point<3> (x[0], x[1], 0));
    }
 
 
@@ -558,8 +558,8 @@ namespace nglib
       readtrias.SetSize(0);
       readedges.SetSize(0);
 
-      Point3d p;
-      Vec3d normal;
+      Point<3> p;
+      Vec<3> normal;
       double p1[3];
       double p2[3];
       double p3[3];
@@ -571,13 +571,13 @@ namespace nglib
       {
          const STLTriangle& t = geo->GetTriangle(i);
          p = geo->GetPoint(t.PNum(1));
-         p1[0] = p.X(); p1[1] = p.Y(); p1[2] = p.Z(); 
+         p1[0] = p(0); p1[1] = p(1); p1[2] = p(2); 
          p = geo->GetPoint(t.PNum(2));
-         p2[0] = p.X(); p2[1] = p.Y(); p2[2] = p.Z(); 
+         p2[0] = p(0); p2[1] = p(1); p2[2] = p(2); 
          p = geo->GetPoint(t.PNum(3));
-         p3[0] = p.X(); p3[1] = p.Y(); p3[2] = p.Z();
+         p3[0] = p(0); p3[1] = p(1); p3[2] = p(2);
          normal = t.Normal();
-         n[0] = normal.X(); n[1] = normal.Y(); n[2] = normal.Z();
+         n[0] = normal(0); n[1] = normal(1); n[2] = normal(2);
 
          Ng_STL_AddTriangle(geo2, p1, p2, p3, n);
       }
@@ -638,8 +638,8 @@ namespace nglib
       mp->Transfer_Parameters();
 
       me -> SetGlobalH (mparam.maxh);
-      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-                       stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec<3>(10, 10, 10),
+                       stlgeometry->GetBoundingBox().PMax() + Vec<3>(10, 10, 10),
                        0.3);
 
       // cout << "meshsize = " << mp->meshsize_filename << endl;
@@ -686,8 +686,8 @@ namespace nglib
 
       /*
       me -> SetGlobalH (mparam.maxh);
-      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec3d(10, 10, 10),
-      stlgeometry->GetBoundingBox().PMax() + Vec3d(10, 10, 10),
+      me -> SetLocalH (stlgeometry->GetBoundingBox().PMin() - Vec<3>(10, 10, 10),
+      stlgeometry->GetBoundingBox().PMax() + Vec<3>(10, 10, 10),
       0.3);
       */
       /*
@@ -753,8 +753,8 @@ namespace nglib
    NGLIB_API void Ng_STL_AddEdge (Ng_STL_Geometry * geom, 
       double * p1, double * p2)
    {
-      readedges.Append(Point3d(p1[0],p1[1],p1[2]));
-      readedges.Append(Point3d(p2[0],p2[1],p2[2]));
+      readedges.Append(Point<3>(p1[0],p1[1],p1[2]));
+      readedges.Append(Point<3>(p2[0],p2[1],p2[2]));
    }
 
 

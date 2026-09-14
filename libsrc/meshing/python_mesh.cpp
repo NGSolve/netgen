@@ -97,7 +97,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::arg("p"), "evaluate the local mesh size field at a point")
     ;
   
-  py::class_<Point<2>> (m, "Point2d")
+  py::class_<Point<2>> (m, "Point<2>")
     .def(py::init<double,double>())
     .def(py::init( [] (std::pair<double,double> xy)
             {
@@ -113,7 +113,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::implicitly_convertible<py::tuple, Point<2>>();
 
-  py::class_<Point<3>> (m, "Point3d")
+  py::class_<Point<3>> (m, "Point<3>")
     .def(py::init<double,double,double>())
     .def(py::init([](py::tuple p)
     {
@@ -147,7 +147,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                        np_array.at(2))));
                });
 
-  py::class_<Vec<2>> (m, "Vec2d")
+  py::class_<Vec<2>> (m, "Vec<2>")
     .def(py::init<double,double>())
     .def(py::init( [] (std::pair<double,double> xy)
             {
@@ -167,7 +167,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::implicitly_convertible<py::tuple, Vec<2>>();
 
-  py::class_<Vec<3>> (m, "Vec3d")
+  py::class_<Vec<3>> (m, "Vec<3>")
     .def(py::init<double,double,double>())
     .def(py::init([](py::tuple v)
     {
@@ -958,7 +958,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property_readonly("_timestamp", &Mesh::GetTimeStamp)
     .def_property_readonly("ne", [](Mesh& m) { return m.GetNE(); })
     .def_property_readonly("bounding_box", [](Mesh& m) {
-          Point3d pmin, pmax;
+          Point<3> pmin, pmax;
           m.GetBox(pmin, pmax);
           return py::make_tuple( Point<3>(pmin),Point<3>(pmax));
     })
@@ -1237,7 +1237,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def ("Add", [](Mesh & self, MeshPoint p)
           {
-            return self.AddPoint (Point3d(p));
+            return self.AddPoint (Point<3>(p));
           })
           
     .def ("Add", [](Mesh & self, const Element & el)

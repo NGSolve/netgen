@@ -180,7 +180,7 @@ public:
 
   //return a meshed polyline
   STLLine* Mesh(const Array<Point<3>,STLPointId>& ap, 
-		Array<Point3d>& mp, double ghi,
+		Array<Point<3>>& mp, double ghi,
 		class Mesh& mesh) const;
 
   void DoSplit() {split = 1;}

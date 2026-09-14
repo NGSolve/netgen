@@ -34,6 +34,15 @@ namespace netgen
 
 
 
+  /// componentwise minimum / maximum, for bounding boxes
+  template <int D>
+  inline void SetToMin (Point<D> & p, const Point<D> & q)
+  { for (int i = 0; i < D; i++) if (q(i) < p(i)) p(i) = q(i); }
+
+  template <int D>
+  inline void SetToMax (Point<D> & p, const Point<D> & q)
+  { for (int i = 0; i < D; i++) if (q(i) > p(i)) p(i) = q(i); }
+
   template <int D>
   inline double Dist (const Point<D> & a, const Point<D> & b)
   {
@@ -92,6 +101,10 @@ namespace netgen
 	v1(2) * v2(0) - v1(0) * v2(2),
 	v1(0) * v2(1) - v1(1) * v2(0) );
   }
+
+  inline void Cross (const Vec<3> & v1, const Vec<3> & v2, Vec<3> & prod)
+  { prod = Cross (v1, v2); }
+
 
 
   inline double Determinant (const Vec<3> & col1,

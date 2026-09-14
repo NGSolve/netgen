@@ -6,16 +6,6 @@
 namespace netgen
 {
 
-ostream & operator<<(ostream  & s, const Point2d & p)
-{
-  return s << "(" << p.px << ", " << p.py << ")";
-}
-
-ostream & operator<<(ostream  & s, const Vec2d & v)
-{
-  return s << "(" << v.vx << ", " << v.vy << ")";
-}
-
 #ifdef none
 ostream & operator<<(ostream  & s, const Line2d & l)
   {
@@ -55,29 +45,29 @@ double Fastatan2 (double x, double y)
 }
 
 
-double Angle (const Vec2d & v)
+double Angle (const Vec<2> & v)
 {
-  if (v.X() == 0 && v.Y() == 0)
+  if (v(0) == 0 && v(1) == 0)
     return 0;
     
-  double ang = atan2 (v.Y(), v.X());
+  double ang = atan2 (v(1), v(0));
   if (ang < 0) ang+= 2 * M_PI;
   return ang;
 }
 
-double FastAngle (const Vec2d & v)
+double FastAngle (const Vec<2> & v)
 {
-  return Fastatan2 (v.X(), v.Y());
+  return Fastatan2 (v(0), v(1));
 }
 
-double Angle (const Vec2d & v1, const Vec2d & v2)
+double Angle (const Vec<2> & v1, const Vec<2> & v2)
 {
   double ang = Angle(v2) - Angle(v1);
   if (ang < 0) ang += 2 * M_PI;
   return ang;
 }
 
-double FastAngle (const Vec2d & v1, const Vec2d & v2)
+double FastAngle (const Vec<2> & v1, const Vec<2> & v2)
 {
   double ang = FastAngle(v2) - FastAngle(v1);
   if (ang < 0) ang += 4;
@@ -85,12 +75,12 @@ double FastAngle (const Vec2d & v1, const Vec2d & v2)
 }
 
 /*
-int CW (const Point2d & p1,const Point2d & p2,const Point2d & p3)
+int CW (const Point<2> & p1,const Point<2> & p2,const Point<2> & p3)
 {
   return Cross (p2 - p1, p3 - p2) < 0;
 }
 
-int CCW (const Point2d & p1,const Point2d & p2,const Point2d & p3)
+int CCW (const Point<2> & p1,const Point<2> & p2,const Point<2> & p3)
 {
   return Cross (p2 - p1, p3 - p2) > 0;
 }
@@ -99,7 +89,7 @@ int CCW (const Point2d & p1,const Point2d & p2,const Point2d & p3)
 double  Dist2(const Line2d & g, const Line2d & h )
   {
   double   dd = 0.0, d1,d2,d3,d4;
-  Point2d  cp = CrossPoint(g,h);
+  Point<2>  cp = CrossPoint(g,h);
   
   if ( Parallel(g,h) || !IsOnLine(g,cp) || !IsOnLine(h,cp) )
     {
@@ -115,7 +105,7 @@ double  Dist2(const Line2d & g, const Line2d & h )
 }
 
 
-Point2d CrossPoint (const Line2d & l1, const Line2d & l2)
+Point<2> CrossPoint (const Line2d & l1, const Line2d & l2)
   {
   double den = Cross (l1.Delta(), l2.Delta());
   double num = Cross ( (l2.P1() - l1.P1()), l2.Delta());
@@ -131,13 +121,13 @@ int CrossPointBarycentric (const Line2d & l1, const Line2d & l2,
 			   double & lam1, double & lam2, double eps)
 {
   // p = l1.1 + lam1 (l1.2-l1.1) = l2.1 + lam2 (l2.2-l2.1)
-  double a11 = l1.p2.X() - l1.p1.X();
-  double a21 = l1.p2.Y() - l1.p1.Y();
-  double a12 = -(l2.p2.X() - l2.p1.X());
-  double a22 = -(l2.p2.Y() - l2.p1.Y());
+  double a11 = l1.p2(0) - l1.p1(0);
+  double a21 = l1.p2(1) - l1.p1(1);
+  double a12 = -(l2.p2(0) - l2.p1(0));
+  double a22 = -(l2.p2(1) - l2.p1(1));
 
-  double b1 = l2.p1.X() - l1.p1.X();
-  double b2 = l2.p1.Y() - l1.p1.Y();
+  double b1 = l2.p1(0) - l1.p1(0);
+  double b2 = l2.p1(1) - l1.p1(1);
   
   double det = a11*a22 - a12 * a21;
   /*
@@ -161,7 +151,7 @@ int Parallel (const Line2d & l1, const Line2d & l2, double peps)
   return p <= peps * l1.Length() * l2.Length();
 }
 
-int IsOnLine (const Line2d & l, const Point2d & p, double heps)
+int IsOnLine (const Line2d & l, const Point<2> & p, double heps)
   {
   double c1 = (p - l.P1()) * l.Delta();
   double c2 = (p - l.P2()) * l.Delta();
@@ -172,7 +162,7 @@ int IsOnLine (const Line2d & l, const Point2d & p, double heps)
 }
 
 #ifdef none
-int IsOnLine (const PLine2d & l, const Point2d & p, double heps)
+int IsOnLine (const PLine2d & l, const Point<2> & p, double heps)
   {
   double c1 = (p - l.P1()) * l.Delta();
   double c2 = (p - l.P2()) * l.Delta();
@@ -182,7 +172,7 @@ int IsOnLine (const PLine2d & l, const Point2d & p, double heps)
   return c1 >= -heps * len2 && c2 <= heps * len2 && d <= heps * len2;
 }
 
-int IsOnLongLine (const Line2d & l, const Point2d & p)
+int IsOnLongLine (const Line2d & l, const Point<2> & p)
   {
   double d = fabs (Cross ( (p - l.P1()), l.Delta()));
   return d <= EPSGEOM * l.Length();
@@ -207,19 +197,19 @@ void Line2d :: GetNormal (Line2d & n) const
 {
   double 	ax  = P2().X()-P1().X(),
     ay  = P2().Y()-P1().Y();
-  Point2d 	mid(P1().X()+.5*ax, P1().Y()+.5*ay);
+  Point<2> 	mid(P1().X()+.5*ax, P1().Y()+.5*ay);
  
- n=Line2d(mid,Point2d(mid.X()+ay,mid.Y()-ax)) ;
+ n=Line2d(mid,Point<2>(mid.X()+ay,mid.Y()-ax)) ;
 }
 
-Vec2d Line2d :: NormalDelta () const
+Vec<2> Line2d :: NormalDelta () const
 {
  Line2d tmp;
  GetNormal(tmp);
  return tmp.Delta();
 }
 
-int TRIANGLE2D :: IsOn (const Point2d & p) const
+int TRIANGLE2D :: IsOn (const Point<2> & p) const
   {
   return IsOnLine (Line2d (p1, p2), p) ||
          IsOnLine (Line2d (p1, p3), p) ||
@@ -227,7 +217,7 @@ int TRIANGLE2D :: IsOn (const Point2d & p) const
   }
 
 
-int TRIANGLE2D :: IsIn (const Point2d & p) const
+int TRIANGLE2D :: IsIn (const Point<2> & p) const
 {
   return ::CW(p, p1, p2) == ::CW(p, p2, p3) &&
          ::CW(p, p1, p2) == ::CW(p, p3, p1);
@@ -235,7 +225,7 @@ int TRIANGLE2D :: IsIn (const Point2d & p) const
 
 
 
-int PTRIANGLE2D :: IsOn (const Point2d & p) const
+int PTRIANGLE2D :: IsOn (const Point<2> & p) const
 {
   return IsOnLine (Line2d (*p1, *p2), p) ||
          IsOnLine (Line2d (*p1, *p3), p) ||
@@ -243,7 +233,7 @@ int PTRIANGLE2D :: IsOn (const Point2d & p) const
 }
 
 
-int PTRIANGLE2D :: IsIn (const Point2d & p) const
+int PTRIANGLE2D :: IsIn (const Point<2> & p) const
 {
   return ::CW(p, *p1, *p2) == ::CW(p, *p2, *p3) &&
          ::CW(p, *p1, *p2) == ::CW(p, *p3, *p1);

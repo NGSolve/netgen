@@ -236,7 +236,7 @@ public:
 
   ///
   int GetLocals (int baseelement,
-		 Array<Point3d, LocalPointIndex> & locpoints,
+		 Array<Point<3>, LocalPointIndex> & locpoints,
                  Array<MiniElement2d> & locfaces,   // local index
                  Array<Front3PointIndex, LocalPointIndex> & pindex,   // local -> front
                  Array<INDEX> & findex,

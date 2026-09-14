@@ -28,13 +28,13 @@ public:
   ///
   Transformation3d ();
   /// Unit tet is mapped to tet described by pp
-  Transformation3d (const Point3d ** pp);
+  Transformation3d (const Point<3> ** pp);
   /// Unit tet is mapped to tet described by pp
-  Transformation3d (const Point3d pp[]);
+  Transformation3d (const Point<3> pp[]);
   /// translation
-  Transformation3d (const Vec3d & translate);
+  Transformation3d (const Vec<3> & translate);
   /// rotation with ...
-  Transformation3d (const Point3d & c, double alpha, double beta, double gamma);
+  Transformation3d (const Point<3> & c, double alpha, double beta, double gamma);
   /// 
   void CalcInverse (Transformation3d & inv) const;
   /// this = ta x tb
@@ -42,30 +42,30 @@ public:
   /// dir = 1..3 (== x..z)
   void SetAxisRotation (int dir, double alpha);
   ///
-  void Transform (const Point3d & from, Point3d & to) const
+  void Transform (const Point<3> & from, Point<3> & to) const
     {
       for (int i = 1; i <= 3; i++)
 	{
-	  to.X(i) = offset[i-1] + lin[i-1][0] * from.X(1) + 
-	    lin[i-1][1] * from.X(2) + lin[i-1][2] * from.X(3);
+	  to(i-1) = offset[i-1] + lin[i-1][0] * from(0) + 
+	    lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
 	}
     }
 
   ///
-  void Transform (Point3d & p) const
+  void Transform (Point<3> & p) const
   {
-    Point3d hp;
+    Point<3> hp;
     Transform (p, hp);
     p = hp;
   }
 
   /// transform vector, apply only linear part, not offset
-  void Transform (const Vec3d & from, Vec3d & to) const
+  void Transform (const Vec<3> & from, Vec<3> & to) const
     {
       for (int i = 1; i <= 3; i++)
 	{
-	  to.X(i) = lin[i-1][0] * from.X(1) + 
-	    lin[i-1][1] * from.X(2) + lin[i-1][2] * from.X(3);
+	  to(i-1) = lin[i-1][0] * from(0) + 
+	    lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
 	}
     }
   friend ostream & operator<< (ostream & ost, Transformation3d & trans);

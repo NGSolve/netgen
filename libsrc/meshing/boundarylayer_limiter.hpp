@@ -409,20 +409,20 @@ struct GrowthVectorLimiter
 
     auto p = seg[0] + intersection.lam0 * (seg[1] - seg[0]) - trig[0];
 
-    Vec3d col1 = trig[1] - trig[0];
-    Vec3d col2 = trig[2] - trig[0];
-    Vec3d col3 = Cross(col1, col2);
-    Vec3d rhs = p;
-    Vec3d bary;
+    Vec<3> col1 = trig[1] - trig[0];
+    Vec<3> col2 = trig[2] - trig[0];
+    Vec<3> col3 = Cross(col1, col2);
+    Vec<3> rhs = p;
+    Vec<3> bary;
     SolveLinearSystem(col1, col2, col3, rhs, bary);
 
     intersection.lam1 = 0;
     double eps = 1e-4;
-    if (bary.X() >= -eps && bary.Y() >= -eps && bary.X() + bary.Y() <= 1 + eps)
+    if (bary(0) >= -eps && bary(1) >= -eps && bary(0) + bary(1) <= 1 + eps)
       {
-        intersection.bary[0] = bary.X();
-        intersection.bary[1] = bary.Y();
-        intersection.bary[2] = 1.0 - bary.X() - bary.Y();
+        intersection.bary[0] = bary(0);
+        intersection.bary[1] = bary(1);
+        intersection.bary[2] = 1.0 - bary(0) - bary(1);
       }
     else
       intersection.is_intersecting = false;
@@ -527,7 +527,7 @@ struct GrowthVectorLimiter
     while (changed)
       {
         changed = false;
-        Point3d pmin, pmax;
+        Point<3> pmin, pmax;
         mesh.GetBox(pmin, pmax);
         BoxTree<3, SurfaceElementIndex> setree(pmin, pmax);
 

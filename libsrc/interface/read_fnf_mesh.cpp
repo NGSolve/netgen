@@ -256,7 +256,7 @@ namespace netgen
                         int nr, ks_id;
                         double x,y,z;
                         sbuf >> nr >> st >> ch >> x >> y >> z >> ks_id;
-                        mesh.AddPoint (Point3d (x,y,z) );
+                        mesh.AddPoint (Point<3> (x,y,z) );
                       }
                     else if (token == "%ELEM")
                       {

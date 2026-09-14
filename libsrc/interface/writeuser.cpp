@@ -261,22 +261,22 @@ void WriteSTLFormat (const Mesh & mesh,
   for (i = 1; i <= mesh.GetNSE(); i++)
     {
       *outfile << "facet normal ";
-      const Point3d& p1 = mesh.Point(mesh.SurfaceElement(i).PNum(1));
-      const Point3d& p2 = mesh.Point(mesh.SurfaceElement(i).PNum(2));
-      const Point3d& p3 = mesh.Point(mesh.SurfaceElement(i).PNum(3));
+      const Point<3>& p1 = mesh.Point(mesh.SurfaceElement(i).PNum(1));
+      const Point<3>& p2 = mesh.Point(mesh.SurfaceElement(i).PNum(2));
+      const Point<3>& p3 = mesh.Point(mesh.SurfaceElement(i).PNum(3));
 
-      Vec3d normal = Cross(p2-p1,p3-p1);
+      Vec<3> normal = Cross(p2-p1,p3-p1);
       if (normal.Length() != 0)
 	{
 	  normal /= (normal.Length());
 	}
 
-      *outfile << normal.X() << " " << normal.Y() << " " << normal.Z() << "\n";
+      *outfile << normal(0) << " " << normal(1) << " " << normal(2) << "\n";
       *outfile << "outer loop\n";
 
-      *outfile << "vertex " << p1.X() << " " << p1.Y() << " " << p1.Z() << "\n";
-      *outfile << "vertex " << p2.X() << " " << p2.Y() << " " << p2.Z() << "\n";
-      *outfile << "vertex " << p3.X() << " " << p3.Y() << " " << p3.Z() << "\n";
+      *outfile << "vertex " << p1(0) << " " << p1(1) << " " << p1(2) << "\n";
+      *outfile << "vertex " << p2(0) << " " << p2(1) << " " << p2(2) << "\n";
+      *outfile << "vertex " << p3(0) << " " << p3(1) << " " << p3(2) << "\n";
 
       *outfile << "endloop\n";
       *outfile << "endfacet\n";
@@ -355,22 +355,22 @@ void WriteSTLExtFormat (const Mesh & mesh,
           for (int i = 0; i < faceSei.Size(); i++)
           {
         	  *outfile << "facet normal ";
-        	  const Point3d& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
-        	  const Point3d& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
-        	  const Point3d& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
+        	  const Point<3>& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
+        	  const Point<3>& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
+        	  const Point<3>& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
 
-        	  Vec3d normal = Cross(p2-p1,p3-p1);
+        	  Vec<3> normal = Cross(p2-p1,p3-p1);
         	  if (normal.Length() != 0)
         	  {
         		  normal /= (normal.Length());
         	  }
 
-        	  *outfile << normal.X() << " " << normal.Y() << " " << normal.Z() << "\n";
+        	  *outfile << normal(0) << " " << normal(1) << " " << normal(2) << "\n";
         	  *outfile << "outer loop\n";
 
-        	  *outfile << "vertex " << p1.X() << " " << p1.Y() << " " << p1.Z() << "\n";
-        	  *outfile << "vertex " << p2.X() << " " << p2.Y() << " " << p2.Z() << "\n";
-        	  *outfile << "vertex " << p3.X() << " " << p3.Y() << " " << p3.Z() << "\n";
+        	  *outfile << "vertex " << p1(0) << " " << p1(1) << " " << p1(2) << "\n";
+        	  *outfile << "vertex " << p2(0) << " " << p2(1) << " " << p2(2) << "\n";
+        	  *outfile << "vertex " << p3(0) << " " << p3(1) << " " << p3(2) << "\n";
 
         	  *outfile << "endloop\n";
         	  *outfile << "endfacet\n";

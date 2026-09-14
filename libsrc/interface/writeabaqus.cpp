@@ -193,12 +193,12 @@ void WriteAbaqusFormat (const Mesh & mesh,
 	      << "*BOUNDARY, OP=NEW\n";
       for (int j = 1; j <= 3; j++)
 	{
-	  Vec3d v(mesh[masternode], mesh[minions[j-1]]);
+	  Vec<3> v(mesh[masternode], mesh[minions[j-1]]);
 	  double vlen = v.Length();
 	  int dir = 0;
-	  if (fabs (v.X()) > 0.9 * vlen) dir = 2;
-	  if (fabs (v.Y()) > 0.9 * vlen) dir = 3;
-	  if (fabs (v.Z()) > 0.9 * vlen) dir = 1;
+	  if (fabs (v(0)) > 0.9 * vlen) dir = 2;
+	  if (fabs (v(1)) > 0.9 * vlen) dir = 3;
+	  if (fabs (v(2)) > 0.9 * vlen) dir = 1;
 	  if (!dir)
 	    cout << "ERROR: Problem with rigid body constraints" << endl;
 	  outfile << minions[j-1] << ", " << dir << ",,    0.\n";

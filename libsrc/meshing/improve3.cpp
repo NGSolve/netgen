@@ -517,8 +517,8 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
           puretet = 0;
   if (!puretet) return 0.0;
 
-  Point3d p1 = mesh[pi1];
-  Point3d p2 = mesh[pi2];
+  Point<3> p1 = mesh[pi1];
+  Point<3> p2 = mesh[pi2];
 
   locfaces.SetSize(0);
   for (ElementIndex ei : hasbothpoints)
@@ -542,11 +542,11 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
   par.maxit_linsearch = 50;
   par.maxit_bfgs = 20;
 
-  Point3d pnew = Center (p1, p2);
+  Point<3> pnew = Center (p1, p2);
   Vector px(3);
-  px(0) = pnew.X();
-  px(1) = pnew.Y();
-  px(2) = pnew.Z();
+  px(0) = pnew(0);
+  px(1) = pnew(1);
+  px(2) = pnew(2);
 
   if (bad1_max > 0.1 * badmax)
     {
@@ -556,13 +556,13 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
 
       if(pok)
         {
-          px(0) = pnew.X();
-          px(1) = pnew.Y();
-          px(2) = pnew.Z();
+          px(0) = pnew(0);
+          px(1) = pnew(1);
+          px(2) = pnew(2);
           BFGS (px, pf, par);
-          pnew.X() = px(0);
-          pnew.Y() = px(1);
-          pnew.Z() = px(2);
+          pnew(0) = px(0);
+          pnew(1) = px(1);
+          pnew(2) = px(2);
         }
     }
 
@@ -2526,13 +2526,13 @@ double MeshOptimize3d :: SplitImprove2Element (
   ArrayMem<ElementIndex, 50> has_both_points0;
   ArrayMem<ElementIndex, 50> has_both_points1;
 
-  Point3d p[4] = { mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]] };
+  Point<3> p[4] = { mesh[el[0]], mesh[el[1]], mesh[el[2]], mesh[el[3]] };
   auto center = Center(p[0]+minlam0*(p[1]-p[0]), p[2]+minlam1*(p[3]-p[2]));
   MeshPoint pnew;
 
-  pnew(0) = center.X();
-  pnew(1) = center.Y();
-  pnew(2) = center.Z();
+  pnew(0) = center(0);
+  pnew(1) = center(1);
+  pnew(2) = center(2);
 
   // find all tets with edge (pi0,pi1) or (pi2,pi3)
   for (auto ei0 : elements_of_point[pi0] )

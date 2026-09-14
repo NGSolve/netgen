@@ -4014,7 +4014,7 @@ namespace netgen
       msf >> nmsp;
       for (i = 1; i <= nmsp; i++)
       {
-      Point3d pi;
+      Point<3> pi;
       double hi;
       msf >> pi.X() >> pi.Y() >> pi.Z();
       msf >> hi;
@@ -4157,7 +4157,7 @@ namespace netgen
     int nseg = GetNSeg();
     int nse = GetNSE();
 
-    Array<Vec3d> normals(np);
+    Array<Vec<3>> normals(np);
     BitArray linepoint(np);
 
     linepoint.Clear();
@@ -4168,13 +4168,13 @@ namespace netgen
     }
 
     for (i = 1; i <= np; i++)
-    normals.Elem(i) = Vec3d(0,0,0);
+    normals.Elem(i) = Vec<3>(0,0,0);
 
     for (i = 1; i <= nse; i++)
     {
     Element2d & el = SurfaceElement(i);
-    Vec3d nf = Cross (Vec3d (Point (el.PNum(1)), Point(el.PNum(2))),
-    Vec3d (Point (el.PNum(1)), Point(el.PNum(3))));
+    Vec<3> nf = Cross (Vec<3> (Point (el.PNum(1)), Point(el.PNum(2))),
+    Vec<3> (Point (el.PNum(1)), Point(el.PNum(3))));
     for (j = 1; j <= 3; j++)
     normals.Elem(el.PNum(j)) += nf;
     }
@@ -4185,10 +4185,10 @@ namespace netgen
     for (i = 1; i <= nse; i++)
     {
     Element2d & el = SurfaceElement(i);
-    Vec3d nf = Cross (Vec3d (Point (el.PNum(1)), Point(el.PNum(2))),
-    Vec3d (Point (el.PNum(1)), Point(el.PNum(3))));
+    Vec<3> nf = Cross (Vec<3> (Point (el.PNum(1)), Point(el.PNum(2))),
+    Vec<3> (Point (el.PNum(1)), Point(el.PNum(3))));
     nf /= nf.Length();
-    Point3d c = Center (Point(el.PNum(1)),
+    Point<3> c = Center (Point(el.PNum(1)),
     Point(el.PNum(2)),
     Point(el.PNum(3)));
 
@@ -4395,21 +4395,6 @@ namespace netgen
             pmin(j) = min2 (pmin(j), (*this)[pi](j));
             pmax(j) = max2 (pmax(j), (*this)[pi](j));
           }
-  }
-
-  // legacy Point3d interface
-  void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, int dom) const
-  {
-    netgen::Point<3> hmin, hmax;
-    GetBox (hmin, hmax, dom);
-    pmin = hmin; pmax = hmax;
-  }
-
-  void Mesh :: GetBox (Point3d & pmin, Point3d & pmax, POINTTYPE ptyp) const
-  {
-    netgen::Point<3> hmin, hmax;
-    GetBox (hmin, hmax, ptyp);
-    pmin = hmin; pmax = hmax;
   }
 
 
@@ -4957,7 +4942,7 @@ namespace netgen
     //         return 0;
     //       }
 
-    //     //      Point3d cp(0.5, 0.5, 0.5);
+    //     //      Point<3> cp(0.5, 0.5, 0.5);
     //     for (i = 1; i <= 3; i++)
     //       {
     //         INDEX_2 i2(el.PNumMod (i), el.PNumMod (i+1));
@@ -5649,8 +5634,8 @@ namespace netgen
             const auto & p3 = Point (el.PNum(3));
             const auto & p4 = Point (el.PNum(4));
 
-            double vol = (Vec3d (p1, p2) * 
-                          Cross (Vec3d (p1, p3), Vec3d(p1, p4)));
+            double vol = (Vec<3> (p1, p2) * 
+                          Cross (Vec<3> (p1, p3), Vec<3>(p1, p4)));
             if (vol > 0)
               swap (el.PNum(3), el.PNum(4));
           }
@@ -5705,7 +5690,7 @@ namespace netgen
 
                   const auto edges = FlatArray<const ELEMENT_EDGE>(topology.GetNEdges(eltype), topology.GetEdges0(eltype));
                   for (const auto & edge: edges) {
-                    netgen::Point<3> lam = netgen::Point<3>(0.5* (verts[edge[0]] + verts[edge[1]]));
+                    netgen::Point<3> lam = netgen::Point<3>(0.5* (Vec<3>(verts[edge[0]]) + Vec<3>(verts[edge[1]])));
                     auto p = netgen::Point<3>(0.0);
                     curvedelems->CalcElementTransformation(lam,ei,p);
                     box.Add(p);
@@ -5713,7 +5698,7 @@ namespace netgen
 
                   const auto faces = FlatArray<const ELEMENT_FACE>(topology.GetNFaces(eltype), topology.GetFaces0(eltype));
                   for (const auto & face: faces) {
-                    netgen::Vec<3> lam = netgen::Vec<3>(verts[face[0]] + verts[face[1]] + verts[face[2]]);
+                    netgen::Vec<3> lam = Vec<3>(verts[face[0]]) + Vec<3>(verts[face[1]]) + Vec<3>(verts[face[2]]);
                     if(face[3] != -1) {
                       lam += netgen::Vec<3>(verts[face[3]]);
                       lam *= 0.25;
@@ -5759,10 +5744,10 @@ namespace netgen
   }
 
   
-  int SolveLinearSystemLS (const Vec3d & col1,
-                           const Vec3d & col2,
-                           const Vec3d & rhs,
-                           Vec2d & sol)
+  int SolveLinearSystemLS (const Vec<3> & col1,
+                           const Vec<3> & col2,
+                           const Vec<3> & rhs,
+                           Vec<2> & sol)
   {
     double a11 = col1 * col1;
     double a12 = col1 * col2;
@@ -5772,16 +5757,16 @@ namespace netgen
     
     if (det*det <= 1e-24 * a11 * a22)
       {
-        sol = Vec2d (0, 0);
+        sol = Vec<2> (0, 0);
         return 1;
       }
     
-    Vec2d aTrhs;
-    aTrhs.X() = col1*rhs;
-    aTrhs.Y() = col2*rhs;
+    Vec<2> aTrhs;
+    aTrhs(0) = col1*rhs;
+    aTrhs(1) = col2*rhs;
 
-    sol.X() = ( a22 * aTrhs.X() - a12 * aTrhs.Y()) / det;
-    sol.Y() = (-a12 * aTrhs.X() + a11 * aTrhs.Y()) / det;
+    sol(0) = ( a22 * aTrhs(0) - a12 * aTrhs(1)) / det;
+    sol(1) = (-a12 * aTrhs(0) + a11 * aTrhs(1)) / det;
     return 0;
   }
 
@@ -5795,8 +5780,8 @@ namespace netgen
                                          SurfaceElementIndex ei,
                                          bool consider3D) const
   {
-    Vec3d col1, col2, col3;
-    Vec3d rhs, sol;
+    Vec<3> col1, col2, col3;
+    Vec<3> rhs, sol;
     const double eps = 1e-6;
 
     Array<Element2d> loctrigs;
@@ -5842,10 +5827,10 @@ namespace netgen
 
         // Coefficients of Bilinear Mapping from Ref-Elem to global Elem
         // X = a + b x + c y + d x y 
-        Vec3d a = Point3d(p1); 
-        Vec3d b = p2 - a; 
-        Vec3d c = p4 - a; 
-        Vec3d d = p3 - a - b - c;
+        Vec<3> a (p1);
+        Vec<3> b = Vec<3>(p2) - a;
+        Vec<3> c = Vec<3>(p4) - a;
+        Vec<3> d = Vec<3>(p3) - a - b - c;
 
         /*cout << "p = " << p << endl;
         cout << "p1 = " << p1 << endl;
@@ -5859,13 +5844,13 @@ namespace netgen
         cout << "d = " << d << endl;*/
 
 
-        Vec3d pa = p-a;
-        double dxb = d.X()*b.Y()-d.Y()*b.X();
-        double dxc = d.X()*c.Y()-d.Y()*c.X();
-        double bxc = b.X()*c.Y()-b.Y()*c.X();
-        double bxpa = b.X()*pa.Y()-b.Y()*pa.X();
-        double cxpa = c.X()*pa.Y()-c.Y()*pa.X();
-        double dxpa = d.X()*pa.Y()-d.Y()*pa.X();
+        Vec<3> pa = Vec<3>(p) - a;
+        double dxb = d(0)*b(1)-d(1)*b(0);
+        double dxc = d(0)*c(1)-d(1)*c(0);
+        double bxc = b(0)*c(1)-b(1)*c(0);
+        double bxpa = b(0)*pa(1)-b(1)*pa(0);
+        double cxpa = c(0)*pa(1)-c(1)*pa(0);
+        double dxpa = d(0)*pa(1)-d(1)*pa(0);
 
         /*cout << "dxb = " << dxb << endl;
         cout << "dxc = " << dxc << endl;
@@ -5897,10 +5882,10 @@ namespace netgen
         double c1,c2,r;
 
         //First check if point is "exactly" a vertex point
-        Vec3d d1 = p-p1;
-        Vec3d d2 = p-p2;
-        Vec3d d3 = p-p3;
-        Vec3d d4 = p-p4;
+        Vec<3> d1 = p-p1;
+        Vec<3> d2 = p-p2;
+        Vec<3> d3 = p-p3;
+        Vec<3> d4 = p-p4;
 
         //cout << " d1 = " << d1 << ", d2 = " << d2 << ", d3 = " << d3 << ", d4 = " << d4 << endl;
         
@@ -5928,10 +5913,10 @@ namespace netgen
           }//if d is nearly 0: solve resulting linear system
         else if (d.Length2() < sqr(eps)*b.Length2() && d.Length2() < sqr(eps)*c.Length2())
           {
-            Vec2d sol;
-            SolveLinearSystemLS (b, c, p-a, sol);
-            lami[0] = sol.X();
-            lami[1] = sol.Y();
+            Vec<2> sol;
+            SolveLinearSystemLS (b, c, Vec<3>(p)-a, sol);
+            lami[0] = sol(0);
+            lami[1] = sol(1);
 	    return ValidBarCoord(lami, eps);
           }// if dxc is nearly 0: solve resulting linear equation for y and compute x
         else if (fabs(dxc) < sqr(eps))
@@ -6009,8 +5994,8 @@ namespace netgen
         double c0,c1,c2; // ,rt; 
         
 
-	Vec3d dp13 = p3-p1;
-	Vec3d dp24 = p4-p2;
+	Vec<3> dp13 = p3-p1;
+	Vec<3> dp24 = p4-p2;
 	double d1 = dp13.Length2();
 	double d2 = dp24.Length2();
 
@@ -6019,8 +6004,8 @@ namespace netgen
         if (d.Length2() < sqr(eps)*d1 && d.Length2() < sqr(eps)*d2)
           {
 	    //Solve Linear System
-	    Vec2d sol;
-            SolveLinearSystemLS (b, c, p-a, sol);
+	    Vec<2> sol;
+            SolveLinearSystemLS (b, c, Vec<3>(p)-a, sol);
             lami[0] = sol.X();
             lami[1] = sol.Y();
 
@@ -6135,7 +6120,7 @@ namespace netgen
           {
             if(consider3D)
               {
-                Vec3d n = Cross(b,c);
+                Vec<3> n = Cross(b,c);
                 lami[2] = 0;
                 for(int i=1; i<=3; i++)
                   lami[2] +=(p.X(i)-a.X(i)-lami[0]*b.X(i)-lami[1]*c.X(i)) * n.X(i);
@@ -6177,7 +6162,7 @@ namespace netgen
             col1 = p2-p1;
             col2 = p3-p1;
             col3 = Cross(col1,col2);
-            //col3 = Vec3d(0, 0, 1);
+            //col3 = Vec<3>(0, 0, 1);
             rhs = p - p1;
 
             // int retval = 
@@ -6191,11 +6176,11 @@ namespace netgen
             if (surfelements[ei].GetType() ==TRIG6 || curvedelems->IsSurfaceElementCurved(ei))
               {
                 // netgen::Point<2> lam(1./3,1./3);
-                netgen::Point<2> lam(sol.X(), sol.Y());
+                netgen::Point<2> lam(sol(0), sol(1));
                 if(surfelements[ei].GetType() != TRIG6)
                   {
-                    lam[0] = 1-sol.X()-sol.Y();
-                    lam[1] = sol.X();
+                    lam[0] = 1-sol(0)-sol(1);
+                    lam[1] = sol(0);
                   }
                 Vec<3> rhs;
                 Vec<2> deltalam;
@@ -6227,25 +6212,25 @@ namespace netgen
                 if(i==maxits)
                   return false;
                 
-                sol.X() = lam(0);
-                sol.Y() = lam(1);
+                sol(0) = lam(0);
+                sol(1) = lam(1);
 
                 if (surfelements[ei].GetType() !=TRIG6 )
                   {
-                    sol.Z() = sol.X();
-                    sol.X() = sol.Y();
-                    sol.Y() = 1.0 - sol.Z() - sol.X();
+                    sol(2) = sol(0);
+                    sol(0) = sol(1);
+                    sol(1) = 1.0 - sol(2) - sol(0);
                   }
 
               }
-            if (sol.X() >= -eps && sol.Y() >= -eps && 
-                sol.X() + sol.Y() <= 1+eps)
+            if (sol(0) >= -eps && sol(1) >= -eps && 
+                sol(0) + sol(1) <= 1+eps)
               {
-                if(!consider3D || (sol.Z() >= -eps && sol.Z() <= eps))
+                if(!consider3D || (sol(2) >= -eps && sol(2) <= eps))
                   {
-                    lami[0] = sol.X();
-                    lami[1] = sol.Y();
-                    lami[2] = sol.Z();
+                    lami[0] = sol(0);
+                    lami[1] = sol(1);
+                    lami[2] = sol(2);
 
                     return true;
                   }
@@ -6369,8 +6354,8 @@ namespace netgen
                                             ElementIndex element,
                                             double eps) const
   {
-    Vec3d col1, col2, col3;
-    Vec3d rhs, sol;
+    Vec<3> col1, col2, col3;
+    Vec<3> rhs, sol;
 
     Array<Element> loctets;
 
@@ -6400,8 +6385,8 @@ namespace netgen
 
         SolveLinearSystem (col1, col2, col3, rhs, sol);
 
-        if (sol.X() >= -eps && sol.Y() >= -eps && sol.Z() >= -eps &&
-            sol.X() + sol.Y() + sol.Z() <= 1+eps)
+        if (sol(0) >= -eps && sol(1) >= -eps && sol(2) >= -eps &&
+            sol(0) + sol(1) + sol(2) <= 1+eps)
           {
             Array<ElementTet> loctetsloc;
             Array<netgen::Point<3> > pointsloc;
@@ -6417,9 +6402,9 @@ namespace netgen
             const auto & lp1 = locp(1);
             netgen::Point<3> pp =
               lp1
-              + sol.X() * (locp(2) - lp1)
-              + sol.Y() * (locp(3) - lp1)
-              + sol.Z() * (locp(4) - lp1);
+              + sol(0) * (locp(2) - lp1)
+              + sol(1) * (locp(3) - lp1)
+              + sol(2) * (locp(4) - lp1);
 
             lami[0] = pp(0);
             lami[1] = pp(1);
@@ -7100,10 +7085,10 @@ namespace netgen
               const auto & p3 = Point (el.PNum(lpi3));
               const auto & p4 = Point (el.PNum(lpi4));
 
-              Vec3d n(p1, p2);
+              Vec<3> n(p1, p2);
               n /= n.Length();
-              Vec3d v1(p1, p3);
-              Vec3d v2(p1, p4);
+              Vec<3> v1(p1, p3);
+              Vec<3> v2(p1, p4);
 
               v1 -= (n * v1) * n;
               v2 -= (n * v2) * n;
@@ -7132,8 +7117,8 @@ namespace netgen
                 const auto & p2 = Point (el.PNum(lpi2));
                 const auto & p3 = Point (el.PNum(lpi3));
 
-                Vec3d v1(p1, p2);
-                Vec3d v2(p1, p3);
+                Vec<3> v1(p1, p2);
+                Vec<3> v2(p1, p3);
                 double cosphi = (v1 * v2) / (v1.Length() * v2.Length());
                 double phi = acos (cosphi);
                 if (phi > facephimax) facephimax = phi;

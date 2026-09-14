@@ -62,21 +62,21 @@ namespace netgen
 	if (geometry)
 	  {
 	    char buf[20];
-	    Point3d pmin = geometry->BoundingBox ().PMin();
-	    Point3d pmax = geometry->BoundingBox ().PMax();
+	    Point<3> pmin = geometry->BoundingBox ().PMin();
+	    Point<3> pmax = geometry->BoundingBox ().PMax();
 	    
-	    snprintf (buf, size(buf), "%5.1lf", pmin.X());
+	    snprintf (buf, size(buf), "%5.1lf", pmin(0));
 	    Tcl_SetVar (interp, "::geooptions.minx", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmin.Y());
+	    snprintf (buf, size(buf), "%5.1lf", pmin(1));
 	    Tcl_SetVar (interp, "::geooptions.miny", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmin.Z());
+	    snprintf (buf, size(buf), "%5.1lf", pmin(2));
 	    Tcl_SetVar (interp, "::geooptions.minz", buf, 0);
 	    
-	    snprintf (buf, size(buf), "%5.1lf", pmax.X());
+	    snprintf (buf, size(buf), "%5.1lf", pmax(0));
 	    Tcl_SetVar (interp, "::geooptions.maxx", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmax.Y());
+	    snprintf (buf, size(buf), "%5.1lf", pmax(1));
 	    Tcl_SetVar (interp, "::geooptions.maxy", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmax.Z());
+	    snprintf (buf, size(buf), "%5.1lf", pmax(2));
 	    Tcl_SetVar (interp, "::geooptions.maxz", buf, 0);
 	  }
       }

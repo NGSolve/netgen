@@ -137,11 +137,11 @@ void STLTopology :: SaveBinary (const filesystem::path & filename, const char* a
 
       for (j = 1; j <= 3; j++)
 	{
-	  const Point3d p = GetPoint(t.PNum(j));
+	  const Point<3> p = GetPoint(t.PNum(j));
 	  
-	  f = p.X(); FIOWriteFloat(ost,f);
-	  f = p.Y(); FIOWriteFloat(ost,f);
-	  f = p.Z(); FIOWriteFloat(ost,f);
+	  f = p(0); FIOWriteFloat(ost,f);
+	  f = p(1); FIOWriteFloat(ost,f);
+	  f = p(2); FIOWriteFloat(ost,f);
 	}
       FIOWriteString(ost,spaces,nospaces);
     }
@@ -160,8 +160,8 @@ void STLTopology :: SaveSTLE (const filesystem::path & filename) const
       const STLTriangle & t = GetTriangle(i);
       for (j = 1; j <= 3; j++)
 	{
-	  const Point3d p = GetPoint(t.PNum(j));
-	  outf << p.X() << " " << p.Y() << " " << p.Z() << endl;
+	  const Point<3> p = GetPoint(t.PNum(j));
+	  outf << p(0) << " " << p(1) << " " << p(2) << endl;
 	}
     }
 
@@ -181,8 +181,8 @@ void STLTopology :: SaveSTLE (const filesystem::path & filename) const
       if (edge.GetStatus() == ED_CONFIRMED)
 	for (j = 1; j <= 2; j++)
 	  {
-	    const Point3d p = GetPoint(edge.PNum(j));
-	    outf << p.X() << " " << p.Y() << " " << p.Z() << endl;
+	    const Point<3> p = GetPoint(edge.PNum(j));
+	    outf << p(0) << " " << p(1) << " " << p(2) << endl;
 	  }
     }      
 }
@@ -283,22 +283,22 @@ void STLTopology :: Save (const filesystem::path & filename) const
       const STLTriangle & t = GetTriangle(i);
 
       fout << "facet normal ";
-      const Vec3d& n = GetTriangle(i).Normal();
+      const Vec<3>& n = GetTriangle(i).Normal();
 
-      snprintf(buf1, size(buf1), "%1.9g",n.X());
-      snprintf(buf2, size(buf2), "%1.9g",n.Y());
-      snprintf(buf3, size(buf3), "%1.9g",n.Z());
+      snprintf(buf1, size(buf1), "%1.9g",n(0));
+      snprintf(buf2, size(buf2), "%1.9g",n(1));
+      snprintf(buf3, size(buf3), "%1.9g",n(2));
 
       fout << buf1 << " " << buf2 << " " << buf3 << "\n";
       fout << "outer loop\n";
 
       for (j = 1; j <= 3; j++)
 	{
-	  const Point3d p = GetPoint(t.PNum(j));
+	  const Point<3> p = GetPoint(t.PNum(j));
 	  
-	  snprintf(buf1, size(buf1), "%1.9g",p.X());
-	  snprintf(buf2, size(buf2), "%1.9g",p.Y());
-	  snprintf(buf3, size(buf3), "%1.9g",p.Z());
+	  snprintf(buf1, size(buf1), "%1.9g",p(0));
+	  snprintf(buf2, size(buf2), "%1.9g",p(1));
+	  snprintf(buf3, size(buf3), "%1.9g",p(2));
 
 	  fout << "vertex " << buf1 << " " << buf2 << " " << buf3 << "\n";
 	}
@@ -492,8 +492,8 @@ void STLTopology :: InitSTLGeometry(const Array<STLReadTriangle> & readtrigs)
     for (int k = 0; k < 3; k++)
       boundingbox.Add (readtrigs[i][k]);
   
-  PrintMessage(5,"boundingbox: ", Point3d(boundingbox.PMin()), " - ", 
-	       Point3d(boundingbox.PMax()));
+  PrintMessage(5,"boundingbox: ", Point<3>(boundingbox.PMin()), " - ", 
+	       Point<3>(boundingbox.PMax()));
 
   Box<3> bb = boundingbox;
   bb.Increase (1);
@@ -930,10 +930,10 @@ void STLTopology :: AddTriangle(const STLTriangle& t)
   box.Add (p3);
   /*
   //  Point<3> pmin(p1), pmax(p1);
-  pmin.SetToMin (p2);
-  pmin.SetToMin (p3);
-  pmax.SetToMax (p2);
-  pmax.SetToMax (p3);
+  SetToMin (pmin, p2);
+  SetToMin (pmin, p3);
+  SetToMax (pmax, p2);
+  SetToMax (pmax, p3);
   */
 
   trias.Last().box = box; 

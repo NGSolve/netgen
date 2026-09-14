@@ -95,16 +95,16 @@ void WriteDiffPackFormat (const Mesh & mesh,
       // for (int i = 1; i <= np; i++)
       for (PointIndex i : mesh.Points().Range())
         {
-          const Point3d & p = mesh.Point(i);
+          const Point<3> & p = mesh.Point(i);
 
           outfile.width(12);
           outfile << i << "  (";
           outfile.width(16);
-          outfile << p.X()/scale << ", ";
+          outfile << p(0)/scale << ", ";
           outfile.width(16);
-          outfile << p.Y()/scale << ", ";
+          outfile << p(1)/scale << ", ";
           outfile.width(16);
-          outfile << p.Z()/scale << ") ";
+          outfile << p(2)/scale << ") ";
 	 
 	  if(mesh[PointIndex(i)].Type() != INNERPOINT) 
 	    {
@@ -248,14 +248,14 @@ void WriteDiffPackFormat (const Mesh & mesh,
       // for (i = 1; i <= np; i++)
       for (PointIndex i : mesh.Points().Range())
         {
-          const Point3d & p = mesh.Point(i);
+          const Point<3> & p = mesh.Point(i);
 
           outfile.width(12);
           outfile << i << "  (";
           outfile.width(16);
-          outfile << p.X()/scale << ", ";
+          outfile << p(0)/scale << ", ";
           outfile.width(16);
-          outfile << p.Y()/scale << ") ";
+          outfile << p(1)/scale << ") ";
 	 
 	  if(mesh[PointIndex(i)].Type() != INNERPOINT) 
 	    {

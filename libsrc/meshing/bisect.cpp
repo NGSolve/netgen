@@ -1659,7 +1659,7 @@ namespace netgen
 		if(cutedges.Used(e2))
 		  continue;
 
-		Point3d np = Center(mesh.Point(e2.I1()),
+		Point<3> np = Center(mesh.Point(e2.I1()),
 				    mesh.Point(e2.I2()));
 		int newp = mesh.AddPoint(np);
 		cutedges.Set(e2,newp);

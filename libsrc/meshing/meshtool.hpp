@@ -36,7 +36,7 @@ extern void Save2DMesh (
 class Surface;
 ///
 extern void SaveVolumeMesh (
-         const Array<Point3d> & points,
+         const Array<Point<3>> & points,
          const Array<Element> & elements,
          const Array<Element> & volelements,
          const Array<Surface*> & surfaces,
@@ -52,13 +52,13 @@ extern int CheckCode ();
 
 
 ///
-extern double CalcTetBadness (const Point3d & p1, const Point3d & p2,
-			      const Point3d & p3, const Point3d & p4, 
+extern double CalcTetBadness (const Point<3> & p1, const Point<3> & p2,
+			      const Point<3> & p3, const Point<3> & p4, 
 			      double h,
 			      const MeshingParameters & mp);
 ///
-extern double CalcTetBadnessGrad (const Point3d & p1, const Point3d & p2,
-				  const Point3d & p3, const Point3d & p4, 
+extern double CalcTetBadnessGrad (const Point<3> & p1, const Point<3> & p2,
+				  const Point<3> & p3, const Point<3> & p4, 
 				  double h, int pi,
 				  Vec<3> & grad,
 				  const MeshingParameters & mp);
@@ -67,12 +67,12 @@ extern double CalcTetBadnessGrad (const Point3d & p1, const Point3d & p2,
 /** Calculates volume of an element.
   The volume of the tetrahedron el is computed
  */
-// extern double CalcVolume (const Array<Point3d> & points,
+// extern double CalcVolume (const Array<Point<3>> & points,
 //        const Element & el);  
 
 /** The total volume of all elements is computed.
   This function calculates the volume of the mesh */
-extern double CalcVolume (FlatArray<Point3d, PointIndex> points, 
+extern double CalcVolume (FlatArray<Point<3>, PointIndex> points, 
 	const Array<Element> & elements);
 
 ///

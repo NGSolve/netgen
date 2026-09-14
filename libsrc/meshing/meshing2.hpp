@@ -50,7 +50,7 @@ class Meshing2
   ///
   double maxarea;
 
-  Vec3d ex, ey, ez;
+  Vec<3> ex, ey, ez;
   Point<3> p1, p2;
 
   const NetgenGeometry& geo;
@@ -75,7 +75,7 @@ public:
 
 
   ///
-  DLL_HEADER Front2PointIndex AddPoint (const Point3d & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
+  DLL_HEADER Front2PointIndex AddPoint (const Point<3> & p, PointIndex globind, MultiPointGeomInfo * mgi = NULL,
 		 bool pointonsurface = true);
   DLL_HEADER PointIndex GetGlobalIndex(Front2PointIndex pi) const;
 
@@ -117,12 +117,12 @@ protected:
   
   /// projects to surface
   /// return 0 .. ok
-  virtual int BelongsToActiveChart (const Point3d & p, 
+  virtual int BelongsToActiveChart (const Point<3> & p, 
 				    const PointGeomInfo & gi);
 
   /// computes geoinfo data for line with respect to
   /// selected chart
-  virtual int ComputePointGeomInfo (const Point3d & p, 
+  virtual int ComputePointGeomInfo (const Point<3> & p, 
 				    PointGeomInfo & gi);
 
   /// Tries to select unique geominfo on active chart
@@ -138,7 +138,7 @@ protected:
     is inside of the selected chart. The endpoint must be on the
     chart
    */
-  virtual int IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
+  virtual int IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
 				   int endpoint, const PointGeomInfo & geominfo);
 
   /*

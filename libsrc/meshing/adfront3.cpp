@@ -126,21 +126,21 @@ INDEX AdFront3 :: AddFace (const FrontElement2d & aface)
   for (i = 0; i < aface.GetNP(); i++)
     points[aface[i]].AddFace();
 
-  const Point3d & p1 = points[aface[0]].P();
-  const Point3d & p2 = points[aface[1]].P();
-  const Point3d & p3 = points[aface[2]].P();
+  const Point<3> & p1 = points[aface[0]].P();
+  const Point<3> & p2 = points[aface[1]].P();
+  const Point<3> & p3 = points[aface[2]].P();
 
-  vol += 1.0/6.0 * (p1.X() + p2.X() + p3.X()) *
-    ( (p2.Y() - p1.Y()) * (p3.Z() - p1.Z()) -
-      (p2.Z() - p1.Z()) * (p3.Y() - p1.Y()) );
+  vol += 1.0/6.0 * (p1(0) + p2(0) + p3(0)) *
+    ( (p2(1) - p1(1)) * (p3(2) - p1(2)) -
+      (p2(2) - p1(2)) * (p3(1) - p1(1)) );
 
   if (aface.GetNP() == 4)
     {
       nff4++;
-      const Point3d & p4 = points[aface[3]].P();      
-      vol += 1.0/6.0 * (p1.X() + p3.X() + p4.X()) *
-	( (p3.Y() - p1.Y()) * (p4.Z() - p1.Z()) -
-	  (p3.Z() - p1.Z()) * (p4.Y() - p1.Y()) );
+      const Point<3> & p4 = points[aface[3]].P();      
+      vol += 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
+	( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
+	  (p3(2) - p1(2)) * (p4(1) - p1(1)) );
     }
 
 
@@ -195,20 +195,20 @@ void AdFront3 :: DeleteFace (INDEX fi)
     }
 
   const FrontElement2d & face = faces[fi-1].Face();
-  const Point3d & p1 = points[face.PNum(1)].P();
-  const Point3d & p2 = points[face.PNum(2)].P();
-  const Point3d & p3 = points[face.PNum(3)].P();
+  const Point<3> & p1 = points[face.PNum(1)].P();
+  const Point<3> & p2 = points[face.PNum(2)].P();
+  const Point<3> & p3 = points[face.PNum(3)].P();
 
-  vol -= 1.0/6.0 * (p1.X() + p2.X() + p3.X()) *
-    ( (p2.Y() - p1.Y()) * (p3.Z() - p1.Z()) -
-      (p2.Z() - p1.Z()) * (p3.Y() - p1.Y()) );
+  vol -= 1.0/6.0 * (p1(0) + p2(0) + p3(0)) *
+    ( (p2(1) - p1(1)) * (p3(2) - p1(2)) -
+      (p2(2) - p1(2)) * (p3(1) - p1(1)) );
 
   if (face.GetNP() == 4)
     {
-      const Point3d & p4 = points[face.PNum(4)].P();      
-      vol -= 1.0/6.0 * (p1.X() + p3.X() + p4.X()) *
-	( (p3.Y() - p1.Y()) * (p4.Z() - p1.Z()) -
-	  (p3.Z() - p1.Z()) * (p4.Y() - p1.Y()) );
+      const Point<3> & p4 = points[face.PNum(4)].P();      
+      vol -= 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
+	( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
+	  (p3(2) - p1(2)) * (p4(1) - p1(1)) );
 
       nff4--;
     }
@@ -233,7 +233,7 @@ void AdFront3 :: CreateTrees ()
 {
   int i, j;
   Front3PointIndex pi;
-  Point3d pmin, pmax;
+  Point<3> pmin, pmax;
 
   for (pi = IndexBASE<Front3PointIndex>(); 
        pi < GetNP()+IndexBASE<Front3PointIndex>(); pi++)
@@ -246,8 +246,8 @@ void AdFront3 :: CreateTrees ()
 	}
       else
 	{
-	  pmin.SetToMin (p);
-	  pmax.SetToMax (p);
+	  SetToMin (pmin, p);
+	  SetToMax (pmax, p);
 	}
     }
 
@@ -265,8 +265,8 @@ void AdFront3 :: CreateTrees ()
       for (j = 1; j < 3; j++)
 	{
 	  const Point<3> & p = GetPoint (el[j]);
-	  pmin.SetToMin (p);
-	  pmax.SetToMax (p);
+	  SetToMin (pmin, p);
+	  SetToMax (pmax, p);
 	}
       pmax = pmax + 0.01 * (pmax - pmin);
       pmin = pmin + 0.01 * (pmin - pmax);
@@ -377,20 +377,20 @@ void AdFront3 :: RebuildInternalTables ()
     {
       const FrontElement2d & face = faces[i-1].Face();
 
-      const Point3d p1 = points[face.PNum(1)].P();      
-      const Point3d p2 = points[face.PNum(2)].P();      
-      const Point3d p3 = points[face.PNum(3)].P();      
+      const Point<3> p1 = points[face.PNum(1)].P();      
+      const Point<3> p2 = points[face.PNum(2)].P();      
+      const Point<3> p3 = points[face.PNum(3)].P();      
       
-      double vi = 1.0/6.0 * (p1.X() + p2.X() + p3.X()) *
-	( (p2.Y() - p1.Y()) * (p3.Z() - p1.Z()) -
-	  (p2.Z() - p1.Z()) * (p3.Y() - p1.Y()) );
+      double vi = 1.0/6.0 * (p1(0) + p2(0) + p3(0)) *
+	( (p2(1) - p1(1)) * (p3(2) - p1(2)) -
+	  (p2(2) - p1(2)) * (p3(1) - p1(1)) );
       
       if (face.GetNP() == 4)
 	{
-	  const Point3d p4 = points[face.PNum(4)].P();      
-	  vi += 1.0/6.0 * (p1.X() + p3.X() + p4.X()) *
-	    ( (p3.Y() - p1.Y()) * (p4.Z() - p1.Z()) -
-	      (p3.Z() - p1.Z()) * (p4.Y() - p1.Y()) );
+	  const Point<3> p4 = points[face.PNum(4)].P();      
+	  vi += 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
+	    ( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
+	      (p3(2) - p1(2)) * (p4(1) - p1(1)) );
 	}
      
       clvol[faces[i-1].cluster] += vi;
@@ -493,7 +493,7 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   Array<Point3d, LocalPointIndex> & locpoints,
+			   Array<Point<3>, LocalPointIndex> & locpoints,
 			   Array<MiniElement2d> & locfaces,   // local index
 			   Array<Front3PointIndex, LocalPointIndex> & pindex,
 			   Array<INDEX> & findex,
@@ -515,7 +515,7 @@ int AdFront3 :: GetLocals (int fstind,
 
   INDEX i;
   Front3PointIndex pstind;
-  Point3d midp, p0;
+  Point<3> midp, p0;
 
   //  static Array<int, PointIndex::BASE> invpindex;
   
@@ -536,7 +536,7 @@ int AdFront3 :: GetLocals (int fstind,
   findex2.Append(fstind);
 
 
-  Box3d b1 (p0 - Vec3d(xh, xh, xh), p0 + Vec3d (xh, xh, xh));
+  Box3d b1 (p0 - Vec<3>(xh, xh, xh), p0 + Vec<3> (xh, xh, xh));
 
   if (hashon)
     {
@@ -569,9 +569,9 @@ int AdFront3 :: GetLocals (int fstind,
   for (i = 1; i <= locfaces2.Size(); i++)
     {
       const FrontElement2d & face = locfaces2[i-1];
-      const Point3d & p1 = points[face[0]].P();
-      const Point3d & p2 = points[face[1]].P();
-      const Point3d & p3 = points[face[2]].P();
+      const Point<3> & p1 = points[face[0]].P();
+      const Point<3> & p2 = points[face[1]].P();
+      const Point<3> & p3 = points[face[2]].P();
 
       midp = Center (p1, p2, p3);
 
@@ -843,14 +843,14 @@ bool AdFront3 :: Inside (const Point<3> & p) const
 {
   static Timer timer("AdFront3::Inside"); RegionTimer rt(timer);
   int cnt;
-  Vec3d n, v1, v2;
+  Vec<3> n, v1, v2;
   DenseMatrix a(3), ainv(3);
   Vector b(3), u(3);
 
   // random numbers:
-  n.X() = 0.123871;
-  n.Y() = 0.15432;
-  n.Z() = -0.43989;
+  n(0) = 0.123871;
+  n(1) = 0.15432;
+  n(2) = -0.43989;
 
   cnt = 0;
   for (int i = 1; i <= faces.Size(); i++)
@@ -863,15 +863,15 @@ bool AdFront3 :: Inside (const Point<3> & p) const
 	v1 = p2 - p1;
 	v2 = p3 - p1;
 
-	a(0, 0) = v1.X();
-	a(1, 0) = v1.Y();
-	a(2, 0) = v1.Z();
-	a(0, 1) = v2.X();
-	a(1, 1) = v2.Y();
-	a(2, 1) = v2.Z();
-	a(0, 2) = -n.X();
-	a(1, 2) = -n.Y();
-	a(2, 2) = -n.Z();
+	a(0, 0) = v1(0);
+	a(1, 0) = v1(1);
+	a(2, 0) = v1(2);
+	a(0, 1) = v2(0);
+	a(1, 1) = v2(1);
+	a(2, 1) = v2(2);
+	a(0, 2) = -n(0);
+	a(1, 2) = -n(1);
+	a(2, 2) = -n(2);
 
 	b(0) = p(0) - p1(0);
 	b(1) = p(1) - p1(1);
@@ -902,10 +902,10 @@ int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
   line[1] = &lp2;
 
 
-  Point3d pmin(lp1);
-  Point3d pmax(lp1);
-  pmin.SetToMin (lp2);
-  pmax.SetToMax (lp2);
+  Point<3> pmin(lp1);
+  Point<3> pmax(lp1);
+  SetToMin (pmin, lp2);
+  SetToMax (pmax, lp2);
   
   ArrayMem<int, 100> aprif;
   aprif.SetSize(0);

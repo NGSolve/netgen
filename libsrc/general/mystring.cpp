@@ -177,29 +177,21 @@ MyStr::MyStr(double d)
   strcpy(str, buffer);
 }
 
-MyStr::MyStr(const Point3d& p)
+MyStr::MyStr(const Point<3,double>& p)
 {
   char buffer[80];
-  //if (fabs(d) < 1E-100) {d = 0;}
-  snprintf(buffer, 80, "[%g, %g, %g]", p.X(), p.Y(), p.Z());
+  snprintf(buffer, 80, "[%g, %g, %g]", p(0), p(1), p(2));
   length = unsigned(strlen(buffer));
-  if (length > SHORTLEN)
-    str = new char[length + 1];
-  else
-    str = shortstr;
+  str = (length > SHORTLEN) ? new char[length + 1] : shortstr;
   strcpy(str, buffer);
 }
 
-MyStr::MyStr(const Vec3d& p)
+MyStr::MyStr(const Vec<3,double>& v)
 {
   char buffer[80];
-  //if (fabs(d) < 1E-100) {d = 0;}
-  snprintf(buffer, 80, "[%g, %g, %g]", p.X(), p.Y(), p.Z());
+  snprintf(buffer, 80, "[%g, %g, %g]", v(0), v(1), v(2));
   length = unsigned(strlen(buffer));
-  if (length > SHORTLEN)
-    str = new char[length + 1];
-  else
-    str = shortstr;
+  str = (length > SHORTLEN) ? new char[length + 1] : shortstr;
   strcpy(str, buffer);
 }
 

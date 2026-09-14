@@ -2087,8 +2087,8 @@ namespace netgen
 		      int spi = -1;
 		      
 		      const double searchradius = 1e-4*geomsize;//1e-5*geomsize;
-		      searchtree.GetIntersecting (apoints[i]-Vec3d(searchradius,searchradius,searchradius), 
-						  apoints[i]+Vec3d(searchradius,searchradius,searchradius), 
+		      searchtree.GetIntersecting (apoints[i]-Vec<3>(searchradius,searchradius,searchradius), 
+						  apoints[i]+Vec<3>(searchradius,searchradius,searchradius), 
 						  locsearch);
 		      
 		      for (int m = 0; m < locsearch.Size(); m++)

@@ -24,8 +24,9 @@
 namespace netgen
 {
 
-class Point3d;
-class Vec3d;
+template <int D, typename T> class Point;
+template <int D, typename T> class Vec;
+
 
 
 // extract string str which is enclosed by the given character encl from a given string in
@@ -57,8 +58,8 @@ public:
   // MyStr(long);
   // MyStr(unsigned long);
   MyStr(double);
-  MyStr(const Point3d& p);
-  MyStr(const Vec3d& p);
+  MyStr(const Point<3,double>& p);
+  MyStr(const Vec<3,double>& p);
   MyStr(const string & st);
   MyStr(string_view sv);
   MyStr(const filesystem::path & st);

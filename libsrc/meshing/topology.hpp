@@ -96,7 +96,7 @@ public:
   static inline short int GetNEdges (ELEMENT_TYPE et);
   static inline short int GetNFaces (ELEMENT_TYPE et);
 
-  DLL_HEADER static const Point3d * GetVertices (ELEMENT_TYPE et);
+  DLL_HEADER static const Point<3> * GetVertices (ELEMENT_TYPE et);
   inline static const ELEMENT_EDGE * GetEdges1 (ELEMENT_TYPE et);
   inline static const ELEMENT_EDGE * GetEdges0 (ELEMENT_TYPE et);
   inline static FlatArray<ELEMENT_EDGE> GetEdges (ELEMENT_TYPE et);

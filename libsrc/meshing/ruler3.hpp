@@ -17,16 +17,16 @@ private:
   /// name of rule
   char * name;
   /// point coordinates in reference position
-  Array<Point3d, RulePointIndex> points;
+  Array<Point<3>, RulePointIndex> points;
   /// old and new faces in reference numbering
   Array<RuleElement2d> faces;
   /// additional edges of rule
   Array<twoint> edges;
 
   /// points of freezone in reference coordinates
-  Array<Point3d> freezone;
+  Array<Point<3>> freezone;
   /// points of freezone in reference coordinates if tolcalss to infty
-  Array<Point3d> freezonelimit;
+  Array<Point<3>> freezonelimit;
   /// point index, if point equal to mappoint, otherwise 0
   Array<int> freezonepi;
   /// faces of each convex part of freezone
@@ -34,7 +34,7 @@ private:
   /// set of points of each convex part of freezone
   Array<Array<int>*> freesets;
   /// points of transformed freezone
-  Array<Point3d> transfreezone;
+  Array<Point<3>> transfreezone;
   /// edges of each convex part of freezone
   Array<Array<twoint>*> freeedges;
 
@@ -119,7 +119,7 @@ public:
 
 
   ///
-  const Point3d & GetPoint (RulePointIndex i) const { return points[i]; }
+  const Point<3> & GetPoint (RulePointIndex i) const { return points[i]; }
   ///
   const RuleElement2d & GetFace (int i) const { return faces[i-1]; }
   ///
@@ -132,7 +132,7 @@ public:
   int IsDelFace (int fn) const;
   
   ///
-  float CalcPointDist (RulePointIndex pi, const Point3d & p) const;
+  float CalcPointDist (RulePointIndex pi, const Point<3> & p) const;
   ///
   double PointDistFactor (RulePointIndex pi) const
     {
@@ -142,25 +142,25 @@ public:
   void SetFreeZoneTransformation (const Vector & allp,
 				  int tolclass);
   ///
-  int IsInFreeZone (const Point3d & p) const;
+  int IsInFreeZone (const Point<3> & p) const;
   /**
     0 not in free-zone
     1 in free-zone
     -1 maybe 
    */
-  int IsTriangleInFreeZone (const Point3d & p1, const Point3d & p2,
-                            const Point3d & p3, const Array<int> & pi, int newone);
+  int IsTriangleInFreeZone (const Point<3> & p1, const Point<3> & p2,
+                            const Point<3> & p3, const Array<int> & pi, int newone);
   ///
-  int IsQuadInFreeZone (const Point3d & p1, const Point3d & p2,
-			const Point3d & p3, const Point3d & p4,
+  int IsQuadInFreeZone (const Point<3> & p1, const Point<3> & p2,
+			const Point<3> & p3, const Point<3> & p4,
 			const Array<int> & pi, int newone);
   ///
-  int IsTriangleInFreeSet (const Point3d & p1, const Point3d & p2,
-                           const Point3d & p3, int fs, const Array<int> & pi, int newone);
+  int IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
+                           const Point<3> & p3, int fs, const Array<int> & pi, int newone);
 
   ///
-  int IsQuadInFreeSet (const Point3d & p1, const Point3d & p2,
-		       const Point3d & p3, const Point3d & p4,
+  int IsQuadInFreeSet (const Point<3> & p1, const Point<3> & p2,
+		       const Point<3> & p3, const Point<3> & p4,
 		       int fs, const Array<int> & pi, int newone);
   
   ///
@@ -169,7 +169,7 @@ public:
   /// if t1 and t2 are neighbourtriangles, NTP returns the opposite Point of t1 in t2
   int NeighbourTrianglePoint (const threeint & t1, const threeint & t2) const;
   ///
-  const Point3d & GetTransFreeZone (int i) { return transfreezone[i-1]; }
+  const Point<3> & GetTransFreeZone (int i) { return transfreezone[i-1]; }
 
   ///
   int GetNP (int fn) const
@@ -199,7 +199,7 @@ public:
   void LoadRule (istream & ist);
 
   ///
-  const Array<Point3d> & GetTransFreeZone () { return transfreezone; }
+  const Array<Point<3>> & GetTransFreeZone () { return transfreezone; }
   ///
   int TestOk () const;
 

@@ -215,12 +215,12 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 			      for (k = 1; k <= 3; k++)
 				{
 				  //find overlapping charts:
-				  Point3d pt = GetPoint(GetTriangle(nt).PNum(k));
+				  Point<3> pt = GetPoint(GetTriangle(nt).PNum(k));
 				  if (innerpointstochart.Get(GetTriangle(nt).PNum(k)) != chartnum)
 				    {
 				      for (l = 1; l <= chartpoints.Size(); l++)
 					{
-					  Vec3d vptpl(GetPoint(chartpoints.Get(l)), pt);
+					  Vec<3> vptpl(GetPoint(chartpoints.Get(l)), pt);
 					  double vlen = vptpl.Length();
 					  if (vlen > 0)
 					    {
@@ -726,7 +726,7 @@ void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum)
 		      double f1 = (double)di/(double)(divisions+1.);
 		      double f2 = (divisions+1.-(double)di)/(double)(divisions+1.);
 		      
-		      plimes1.Append(Point3d(p3p1.X()*f1+p3p2.X()*f2,
+		      plimes1.Append(Point<3>(p3p1.X()*f1+p3p2.X()*f2,
 					     p3p1.Y()*f1+p3p2.Y()*f2,
 					     p3p1.Z()*f1+p3p2.Z()*f2));
 		      //plimes1trigs.Append(t);

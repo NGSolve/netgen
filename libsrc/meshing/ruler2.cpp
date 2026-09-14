@@ -482,10 +482,10 @@ namespace netgen
 		      
 			for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
 			  {
-			    Vec2d ui(rule->GetPoint(pi), lpoints[pmap[pi]]);
+			    Vec<2> ui(rule->GetPoint(pi), lpoints[pmap[pi]]);
 			    int i = pi.Nr1();
-			    oldu (2*i-2) = ui.X();
-			    oldu (2*i-1) = ui.Y();
+			    oldu (2*i-2) = ui(0);
+			    oldu (2*i-1) = ui(1);
 			  }
 		      
 			rule -> SetFreeZoneTransformation (oldu, tolerance);

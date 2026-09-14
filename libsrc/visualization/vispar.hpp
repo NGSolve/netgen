@@ -17,7 +17,7 @@ public:
   int showstltrias;
   
   /*
-  Vec3d clipnormal;
+  Vec<3> clipnormal;
   double clipdist;
   int clipenable;
   int clipplanetimestamp;
@@ -25,7 +25,7 @@ public:
   class Clipping
   {
   public:
-    Vec3d normal;
+    Vec<3> normal = Vec<3>(0,0,0);
     double dist;
     double dist2;
     int enable;

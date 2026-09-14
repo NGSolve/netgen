@@ -38,11 +38,11 @@ namespace netgen
     for (int i=0; i<np ; i++) 
       pnums[i] = el[i]; 
     
-    const Point3d * points = 
+    const Point<3> * points = 
       MeshTopology :: GetVertices (el.GetType());
     for(int i=0;i<np;i++)
       for(int l=0;l<3;l++) 
-	param[i][l] = points[i].X(l+1); 
+	param[i][l] = points[i](l); 
   }
 
   
@@ -54,11 +54,11 @@ namespace netgen
     for (int i=0; i<np ; i++) 
       pnums[i] = el[i]; 
     
-    const Point3d * points = 
+    const Point<3> * points = 
       MeshTopology :: GetVertices (el.GetType());
     for(int i=0;i<np;i++)
       for(int l=0;l<3;l++) 
-	param[i][l] = points[i].X(l+1); 
+	param[i][l] = points[i](l); 
   }
 
   HPRefElement :: HPRefElement(Segment & el, const Mesh & mesh) :
@@ -71,11 +71,11 @@ namespace netgen
     //Reset();
     for (int i=0; i<np ; i++) 
       pnums[i] = el[i];
-    const Point3d * points = 
+    const Point<3> * points = 
       MeshTopology :: GetVertices (SEGMENT); 
     for(int i=0;i<np;i++)
       for(int l=0;l<3;l++) 
-        param[i][l] = points[i].X(l+1); 
+        param[i][l] = points[i](l); 
 
     /*
     for (int i=0; i<np; i++)

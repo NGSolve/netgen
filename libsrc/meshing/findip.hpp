@@ -6,7 +6,7 @@
 namespace netgen
 {
 
-inline void Minimize (const Array<Vec3d> & a,
+inline void Minimize (const Array<Vec<3>> & a,
 		      const Array<double> & c,
 		      int * act, 
 		      Vec<3> & x, double & f,
@@ -29,9 +29,9 @@ inline void Minimize (const Array<Vec3d> & a,
 
       for (int k = 0; k < 3; k++)
 	{
-	  m(k, 0) = a[act1[0]].X() - a[act1[k+1]].X();
-	  m(k, 1) = a[act1[0]].Y() - a[act1[k+1]].Y();
-	  m(k, 2) = a[act1[0]].Z() - a[act1[k+1]].Z();
+	  m(k, 0) = a[act1[0]](0) - a[act1[k+1]](0);
+	  m(k, 1) = a[act1[0]](1) - a[act1[k+1]](1);
+	  m(k, 2) = a[act1[0]](2) - a[act1[k+1]](2);
 	  rs(k) = c[act1[k+1]] - c[act1[0]];
 	}
 
@@ -53,7 +53,7 @@ inline void Minimize (const Array<Vec3d> & a,
 	  for (int k = 0; k < 5; k++)
 	    {
 	      double hd = 
-		xmax(0) * a[act[k]].X() + xmax(1) * a[act[k]].Y() + xmax(2) * a[act[k]].Z() + c[act[k]];
+		xmax(0) * a[act[k]](0) + xmax(1) * a[act[k]](1) + xmax(2) * a[act[k]](2) + c[act[k]];
 	      if (hd > fmax) fmax = hd;
 	    }
 
@@ -74,12 +74,12 @@ inline void Minimize (const Array<Vec3d> & a,
 template <typename POINTArray, typename FACEArray>
 inline int FindInnerPoint (POINTArray & points,
 			   FACEArray & faces,
-			   Point3d & p)
+			   Point<3> & p)
 {
   static Timer timer("FindInnerPoint");
   RegionTimer reg (timer);
 
-  Array<Vec3d> a;
+  Array<Vec<3>> a;
   Array<double> c;
   Mat<3> m, inv;
   Vec<3> rs, x = 0.0, center;
@@ -94,11 +94,11 @@ inline int FindInnerPoint (POINTArray & points,
 
   for (int i = 0; i < nf; i++)
     {
-      Point3d p1 = points[faces[i][0]];
+      Point<3> p1 = points[faces[i][0]];
       a[i] = Cross (points[faces[i][1]] - p1,
 		    points[faces[i][2]] - p1);
       a[i] /= a[i].Length();
-      c[i] = - (a[i].X() * p1.X() + a[i].Y() * p1.Y() + a[i].Z() * p1.Z());
+      c[i] = - (a[i](0) * p1(0) + a[i](1) * p1(1) + a[i](2) * p1(2));
     }
 
   /*
@@ -172,7 +172,7 @@ inline int FindInnerPoint (POINTArray & points,
       double maxval = f;
       for (int j = 0; j < nf; j++)
 	{
-	  double val = x(0) * a[j].X() + x(1) * a[j].Y() + x(2) * a[j].Z() + c[j];
+	  double val = x(0) * a[j](0) + x(1) * a[j](1) + x(2) * a[j](2) + c[j];
 	  if (val > maxval + hmax * 1e-6)
 	    {
 	      found = 1;
@@ -187,7 +187,7 @@ inline int FindInnerPoint (POINTArray & points,
   
   // cout << "converged, f = " << f << endl;
   
-  p = Point3d (x(0), x(1), x(2));
+  p = Point<3> (x(0), x(1), x(2));
   // (*testout) << "findip, f = " << f << ", hmax = " << hmax << endl;
   return (f < -1e-5 * hmax);
 }

@@ -81,7 +81,7 @@ namespace netgen
   Meshing2 :: ~Meshing2 ()
   { ; } 
 
-  Front2PointIndex Meshing2 :: AddPoint (const Point3d & p, PointIndex globind,
+  Front2PointIndex Meshing2 :: AddPoint (const Point<3> & p, PointIndex globind,
                                         MultiPointGeomInfo * mgi,
                                         bool pointonsurface)
   {
@@ -160,8 +160,8 @@ namespace netgen
   }
 
   // should be class variables !!(?)
-  // static Vec3d ex, ey;
-  // static Point3d globp1;
+  // static Vec<3> ex, ey;
+  // static Point<3> globp1;
 
   void Meshing2 :: DefineTransformation (const Point<3> & ap1,
                                          const Point<3> & ap2,
@@ -209,14 +209,14 @@ namespace netgen
   }
 
 
-  int Meshing2 :: BelongsToActiveChart (const Point3d & p, 
+  int Meshing2 :: BelongsToActiveChart (const Point<3> & p, 
 					const PointGeomInfo & gi)
   {
     return 1;
   }
 
 
-  int Meshing2 :: ComputePointGeomInfo (const Point3d & p, PointGeomInfo & gi)
+  int Meshing2 :: ComputePointGeomInfo (const Point<3> & p, PointGeomInfo & gi)
   {
     gi.trignum = 1;
     return 0;
@@ -233,7 +233,7 @@ namespace netgen
 
 
   int Meshing2 :: 
-  IsLineVertexOnChart (const Point3d & p1, const Point3d & p2,
+  IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
 		       int endpoint, const PointGeomInfo & geominfo)
   {
     return 1;
@@ -316,7 +316,7 @@ namespace netgen
                            boundingbox.PMax());
 
     Array<int> intersecttrias;
-    Array<Point3d> critpoints;
+    Array<Point<3>> critpoints;
 
     // test for doubled edges
     //INDEX_2_HASHTABLE<int> doubleedge(300000);
@@ -394,9 +394,9 @@ namespace netgen
 	  
 	  
 	  if (sel.GetNP() == 4)
-	    trigarea += Cross (Vec3d (mesh.Point (sel.PNum(1)),
+	    trigarea += Cross (Vec<3> (mesh.Point (sel.PNum(1)),
 				      mesh.Point (sel.PNum(3))),
-			       Vec3d (mesh.Point (sel.PNum(1)),
+			       Vec<3> (mesh.Point (sel.PNum(1)),
 				      mesh.Point (sel.PNum(4)))).Length() / 2;;
 	  meshedarea += trigarea;
 	}
@@ -565,7 +565,7 @@ namespace netgen
 	  }
 
 
-	// Point2d p12d, p22d;
+	// Point<2> p12d, p22d;
 
 	if (found)
 	  {
@@ -647,7 +647,7 @@ namespace netgen
 
 	    // 	  for (i = 1; i <= plainpoints.Size(); i++)
 	    // 	    if (plainzones[i] == -1)
-	    // 	      plainpoints[i] = Point2d (1e4, 1e4);
+	    // 	      plainpoints[i] = Point<2> (1e4, 1e4);
 	    */
 	  
 	  
@@ -686,8 +686,8 @@ namespace netgen
 			  
 			    /*
 			    // don't elongate line towards base-line !!
-			    if (Vec2d (pin, p12d) * v > 0 && 
-			    Vec2d (pin, p22d) * v > 0)
+			    if (Vec<2> (pin, p12d) * v > 0 && 
+			    Vec<2> (pin, p22d) * v > 0)
 			    v *= -1;  
 			    */
 
@@ -925,14 +925,14 @@ namespace netgen
 	  {
 	  for (i = 1; i <= locelements.Size(); i++)
 	  {
-	  Point3d pmin = locpoints[locelements.Get(i).PNum(1)];
-	  Point3d pmax = pmin;
+	  Point<3> pmin = locpoints[locelements.Get(i).PNum(1)];
+	  Point<3> pmax = pmin;
 	  for (j = 2; j <= 3; j++)
 	  {
-	  const Point3d & hp = 
+	  const Point<3> & hp = 
 	  locpoints[locelements.Get(i).PNum(j)];
-	  pmin.SetToMin (hp);
-	  pmax.SetToMax (hp);
+	  SetToMin (pmin, hp);
+	  SetToMax (pmax, hp);
 	  }
 	  double minh = mesh.GetMinH (pmin, pmax);
 	  if (h > violateminh * minh)
@@ -967,14 +967,14 @@ namespace netgen
 
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      {
-		Point3d pmin = locpoints[locelements[i-1].PNum(1)];
-		Point3d pmax = pmin;
+		Point<3> pmin = locpoints[locelements[i-1].PNum(1)];
+		Point<3> pmax = pmin;
 		for (int j = 2; j <= locelements[i-1].GetNP(); j++)
 		  {
-		    const Point3d & hp = 
+		    const Point<3> & hp = 
 		      locpoints[locelements[i-1].PNum(j)];
-		    pmin.SetToMin (hp);
-		    pmax.SetToMax (hp);
+		    SetToMin (pmin, hp);
+		    SetToMax (pmax, hp);
 		  }
 		double eh = mesh.GetMinH (pmin, pmax);
 		if (eh < minh)
@@ -1085,18 +1085,18 @@ namespace netgen
 	    // cout << "checkoverlap" << endl;
 	    // test for overlaps
 	  
-	    Point3d hullmin(1e10, 1e10, 1e10);
-	    Point3d hullmax(-1e10, -1e10, -1e10);
+	    Point<3> hullmin(1e10, 1e10, 1e10);
+	    Point<3> hullmax(-1e10, -1e10, -1e10);
 	  
 	    for (int i = 1; i <= locelements.Size(); i++)
 	      for (int j = 1; j <= locelements[i-1].GetNP(); j++)
 		{
-		  const Point3d & p = locpoints[locelements[i-1].PNum(j)];
-		  hullmin.SetToMin (p);
-		  hullmax.SetToMax (p);
+		  const Point<3> & p = locpoints[locelements[i-1].PNum(j)];
+		  SetToMin (hullmin, p);
+		  SetToMax (hullmax, p);
 		}
-	    hullmin += Vec3d (-his, -his, -his);
-	    hullmax += Vec3d ( his,  his,  his);
+	    hullmin += Vec<3> (-his, -his, -his);
+	    hullmax += Vec<3> ( his,  his,  his);
 
 	    surfeltree.GetIntersecting (hullmin, hullmax, intersecttrias);
 
@@ -1109,48 +1109,48 @@ namespace netgen
 		const MiniElement2d & tri = locelements[i-1];
 		if (tri.GetNP() == 3)
 		  {
-		    const Point3d & tp1 = locpoints[tri.PNum(1)];
-		    const Point3d & tp2 = locpoints[tri.PNum(2)];
-		    const Point3d & tp3 = locpoints[tri.PNum(3)];
+		    const Point<3> & tp1 = locpoints[tri.PNum(1)];
+		    const Point<3> & tp2 = locpoints[tri.PNum(2)];
+		    const Point<3> & tp3 = locpoints[tri.PNum(3)];
 		  
-		    Vec3d tv1 (tp1, tp2);
-		    Vec3d tv2 (tp1, tp3);
+		    Vec<3> tv1 (tp1, tp2);
+		    Vec<3> tv2 (tp1, tp3);
 		  
 		    double lam1, lam2;
 		    for (lam1 = 0.2; lam1 <= 0.8; lam1 += 0.2)
 		      for (lam2 = 0.2; lam2 + lam1 <= 0.8; lam2 += 0.2)
 			{
-			  Point3d hp = tp1 + lam1 * tv1 + lam2 * tv2;
+			  Point<3> hp = tp1 + lam1 * tv1 + lam2 * tv2;
 			  critpoints.Append (hp);
 			}
 		  }
 		else if (tri.GetNP() == 4)
 		  {
-		    const Point3d & tp1 = locpoints[tri.PNum(1)];
-		    const Point3d & tp2 = locpoints[tri.PNum(2)];
-		    const Point3d & tp3 = locpoints[tri.PNum(3)];
-		    const Point3d & tp4 = locpoints[tri.PNum(4)];
+		    const Point<3> & tp1 = locpoints[tri.PNum(1)];
+		    const Point<3> & tp2 = locpoints[tri.PNum(2)];
+		    const Point<3> & tp3 = locpoints[tri.PNum(3)];
+		    const Point<3> & tp4 = locpoints[tri.PNum(4)];
 		  
 		    double l1, l2;
 		    for (l1 = 0.1; l1 <= 0.9; l1 += 0.1)
 		      for (l2 = 0.1; l2 <= 0.9; l2 += 0.1)
 			{
-			  Point3d hp;
-			  hp.X() = 
-			    (1-l1)*(1-l2) * tp1.X() +
-			    l1*(1-l2) * tp2.X() +
-			    l1*l2 * tp3.X() +
-			    (1-l1)*l2 * tp4.X();
-			  hp.Y() = 
-			    (1-l1)*(1-l2) * tp1.Y() +
-			    l1*(1-l2) * tp2.Y() +
-			    l1*l2 * tp3.Y() +
-			    (1-l1)*l2 * tp4.Y();
-			  hp.Z() = 
-			    (1-l1)*(1-l2) * tp1.Z() +
-			    l1*(1-l2) * tp2.Z() +
-			    l1*l2 * tp3.Z() +
-			    (1-l1)*l2 * tp4.Z();
+			  Point<3> hp;
+			  hp(0) = 
+			    (1-l1)*(1-l2) * tp1(0) +
+			    l1*(1-l2) * tp2(0) +
+			    l1*l2 * tp3(0) +
+			    (1-l1)*l2 * tp4(0);
+			  hp(1) = 
+			    (1-l1)*(1-l2) * tp1(1) +
+			    l1*(1-l2) * tp2(1) +
+			    l1*l2 * tp3(1) +
+			    (1-l1)*l2 * tp4(1);
+			  hp(2) = 
+			    (1-l1)*(1-l2) * tp1(2) +
+			    l1*(1-l2) * tp2(2) +
+			    l1*l2 * tp3(2) +
+			    (1-l1)*l2 * tp4(2);
 
 
 			  critpoints.Append (hp);
@@ -1160,8 +1160,8 @@ namespace netgen
 	    /*
 	      for (i = oldnl+1; i <= loclines.Size(); i++)
 	      {
-	      Point3d hp = locpoints[loclines.Get(i)[0]];
-	      Vec3d hv(hp, locpoints[loclines.Get(i)[1]]);
+	      Point<3> hp = locpoints[loclines.Get(i)[0]];
+	      Vec<3> hv(hp, locpoints[loclines.Get(i)[1]]);
 	      int ncp = 2;
 	      for (j = 1; j <= ncp; j++)
 	      critpoints.Append ( hp + (double(j)/(ncp+1)) * hv);
@@ -1172,13 +1172,13 @@ namespace netgen
 	    /*
 	      for (i = oldnp+1; i <= locpoints.Size(); i++)
 	      {
-	      const Point3d & p = locpoints[i];
+	      const Point<3> & p = locpoints[i];
 	    */
 
 
 	    for (int i = 1; i <= critpoints.Size(); i++)
 	      {
-		const Point3d & p = critpoints[i-1];
+		const Point<3> & p = critpoints[i-1];
 		 
 		for (int jj = 0; jj < intersecttrias.Size(); jj++)
 		  {
@@ -1193,7 +1193,7 @@ namespace netgen
 		    int jl;
 		    for (jl = 1; jl <= ntrig; jl++)
 		      {
-			Point3d tp1, tp2, tp3;
+			Point<3> tp1, tp2, tp3;
 
 			if (jl == 1)
 			  {
@@ -1216,13 +1216,13 @@ namespace netgen
 			if (!onchart)
 			  continue;
 		      
-			Vec3d e1(tp1, tp2);
-			Vec3d e2(tp1, tp3);
-			Vec3d n = Cross (e1, e2);
+			Vec<3> e1(tp1, tp2);
+			Vec<3> e2(tp1, tp3);
+			Vec<3> n = Cross (e1, e2);
 			n /= n.Length();
 			double lam1, lam2, lam3;
-			lam3 = n * Vec3d (tp1, p);
-			LocalCoordinates (e1, e2, Vec3d (tp1, p), lam1, lam2);
+			lam3 = n * Vec<3> (tp1, p);
+			LocalCoordinates (e1, e2, Vec<3> (tp1, p), lam1, lam2);
 		      
 			if (fabs (lam3) < 0.1 * hshould && 
 			    lam1 > 0 && lam2 > 0 && (lam1 + lam2) < 1)
@@ -1397,18 +1397,18 @@ namespace netgen
 		box.Add (mesh[mtri[2]]);
 		surfeltree.Insert (box, mesh.GetNSE()-1);
 
-		const Point3d & sep1 = mesh.Point (mtri.PNum(1));
-		const Point3d & sep2 = mesh.Point (mtri.PNum(2));
-		const Point3d & sep3 = mesh.Point (mtri.PNum(3));
+		const Point<3> & sep1 = mesh.Point (mtri.PNum(1));
+		const Point<3> & sep2 = mesh.Point (mtri.PNum(2));
+		const Point<3> & sep3 = mesh.Point (mtri.PNum(3));
 
-		double trigarea = Cross (Vec3d (sep1, sep2), 
-					 Vec3d (sep1, sep3)).Length() / 2;
+		double trigarea = Cross (Vec<3> (sep1, sep2), 
+					 Vec<3> (sep1, sep3)).Length() / 2;
 
 		if (mtri.GetNP() == 4)
 		  {
-		    const Point3d & sep4 = mesh.Point (mtri.PNum(4));
-		    trigarea += Cross (Vec3d (sep1, sep3), 
-				       Vec3d (sep1, sep4)).Length() / 2;
+		    const Point<3> & sep4 = mesh.Point (mtri.PNum(4));
+		    trigarea += Cross (Vec<3> (sep1, sep3), 
+				       Vec<3> (sep1, sep4)).Length() / 2;
 		  }
 
 		meshedarea += trigarea;

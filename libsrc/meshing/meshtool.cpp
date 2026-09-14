@@ -83,12 +83,12 @@ namespace netgen
 
 
 
-  static double TriangleQualityInst (const Point3d & p1, const Point3d & p2,
-				     const Point3d & p3)
+  static double TriangleQualityInst (const Point<3> & p1, const Point<3> & p2,
+				     const Point<3> & p3)
   {
     // quality 0 (worst) .. 1 (optimal)
 
-    Vec3d v1, v2, v3;
+    Vec<3> v1, v2, v3;
     double s1, s2, s3;
     double an1, an2, an3;
 
@@ -156,15 +156,15 @@ namespace netgen
   }
 
 
-  static double TetElementQuality (const Point3d & p1, const Point3d & p2,
-				   const Point3d & p3, const Point3d & p4)
+  static double TetElementQuality (const Point<3> & p1, const Point<3> & p2,
+				   const Point<3> & p3, const Point<3> & p4)
   {
     double vol, l, l4, l5, l6;
 
 
-    Vec3d v1 = p2 - p1;
-    Vec3d v2 = p3 - p1;
-    Vec3d v3 = p4 - p1;
+    Vec<3> v1 = p2 - p1;
+    Vec<3> v2 = p3 - p1;
+    Vec<3> v3 = p4 - p1;
 
     vol = fabs ((Cross (v1, v2) * v3)) / 6;
     l4 = Dist (p2, p3);
@@ -183,16 +183,16 @@ namespace netgen
 
   // static double teterrpow = 2;
 
-  double CalcTetBadness (const Point3d & p1, const Point3d & p2,
-			 const Point3d & p3, const Point3d & p4, double h,
+  double CalcTetBadness (const Point<3> & p1, const Point<3> & p2,
+			 const Point<3> & p3, const Point<3> & p4, double h,
 			 const MeshingParameters & mp)
   {
     double vol, l, ll, lll, ll1, ll2, ll3, ll4, ll5, ll6;
     double err;
 
-    Vec3d v1 (p1, p2);
-    Vec3d v2 (p1, p3);
-    Vec3d v3 (p1, p4);
+    Vec<3> v1 (p1, p2);
+    Vec<3> v2 (p1, p3);
+    Vec<3> v3 (p1, p4);
 
     vol = Determinant (v1, v2, v3)  * (-0.166666666666666);
 
@@ -226,15 +226,15 @@ namespace netgen
   }
 
 
-  double CalcTetBadnessGrad (const Point3d & p1, const Point3d & p2,
-			     const Point3d & p3, const Point3d & p4, double h,
+  double CalcTetBadnessGrad (const Point<3> & p1, const Point<3> & p2,
+			     const Point<3> & p3, const Point<3> & p4, double h,
 			     int pi, Vec<3> & grad,
 			     const MeshingParameters & mp)
   {
     double vol, l, ll, lll;
     double err;
 
-    const Point3d *pp1, *pp2, *pp3, *pp4;
+    const Point<3> *pp1, *pp2, *pp3, *pp4;
 
     pp1 = &p1;
     pp2 = &p2;
@@ -264,17 +264,17 @@ namespace netgen
       }
   
 
-    Vec3d v1 (*pp1, *pp2);
-    Vec3d v2 (*pp1, *pp3);
-    Vec3d v3 (*pp1, *pp4);
+    Vec<3> v1 (*pp1, *pp2);
+    Vec<3> v2 (*pp1, *pp3);
+    Vec<3> v3 (*pp1, *pp4);
 
-    Vec3d v4 (*pp2, *pp3);
-    Vec3d v5 (*pp2, *pp4);
-    Vec3d v6 (*pp3, *pp4);
+    Vec<3> v4 (*pp2, *pp3);
+    Vec<3> v5 (*pp2, *pp4);
+    Vec<3> v6 (*pp3, *pp4);
 
     vol = Determinant (v1, v2, v3) * (-0.166666666666666);
 
-    Vec3d gradvol;
+    Vec<3> gradvol;
     Cross (v5, v4, gradvol);
     gradvol *= (-1.0/6.0);
 
@@ -292,25 +292,25 @@ namespace netgen
 
     if (vol <= 1e-24 * lll)
       { 
-	grad = Vec3d (0, 0, 0);
+	grad = Vec<3> (0, 0, 0);
 	return 1e24;
       }
 
 
 
-    Vec3d gradll1 (*pp2, *pp1);
-    Vec3d gradll2 (*pp3, *pp1);
-    Vec3d gradll3 (*pp4, *pp1);
+    Vec<3> gradll1 (*pp2, *pp1);
+    Vec<3> gradll2 (*pp3, *pp1);
+    Vec<3> gradll3 (*pp4, *pp1);
     gradll1 *= 2;
     gradll2 *= 2;
     gradll3 *= 2;
 
-    Vec3d gradll (gradll1);
+    Vec<3> gradll (gradll1);
     gradll += gradll2;
     gradll += gradll3;
 
     /*
-    Vec3d gradll;
+    Vec<3> gradll;
     gradll = v1+v2+v3;
     gradll *= -2;
     */
@@ -319,16 +319,16 @@ namespace netgen
 
 
     gradll *= (0.0080187537 * 1.5 * l / vol);
-    Vec3d graderr(gradll);
+    Vec<3> graderr(gradll);
     gradvol *= ( -0.0080187537 * lll / (vol * vol) );
     graderr += gradvol;
   
     if (h > 0)
       {
 	/*
-	Vec3d gradll1 (*pp2, *pp1);
-	Vec3d gradll2 (*pp3, *pp1);
-	Vec3d gradll3 (*pp4, *pp1);
+	Vec<3> gradll1 (*pp2, *pp1);
+	Vec<3> gradll2 (*pp3, *pp1);
+	Vec<3> gradll3 (*pp4, *pp1);
 	gradll1 *= 2;
 	gradll2 *= 2;
 	gradll3 *= 2;
@@ -371,16 +371,16 @@ namespace netgen
 
   /*
 
-  double CalcTetBadness (const Point3d & p1, const Point3d & p2,
-  const Point3d & p3, const Point3d & p4, double h)
+  double CalcTetBadness (const Point<3> & p1, const Point<3> & p2,
+  const Point<3> & p3, const Point<3> & p4, double h)
   {
   double vol, l;
   double err;
 
 
-  Vec3d v1 (p1, p2);
-  Vec3d v2 (p1, p3);
-  Vec3d v3 (p1, p4);
+  Vec<3> v1 (p1, p2);
+  Vec<3> v2 (p1, p3);
+  Vec<3> v3 (p1, p4);
 
   vol = -Determinant (v1, v2, v3) / 6;
 
@@ -412,14 +412,14 @@ namespace netgen
 
 
   
-  double CalcTetBadnessGrad (const Point3d & p1, const Point3d & p2,
-  const Point3d & p3, const Point3d & p4, double h,
-  int pi, Vec3d & grad)
+  double CalcTetBadnessGrad (const Point<3> & p1, const Point<3> & p2,
+  const Point<3> & p3, const Point<3> & p4, double h,
+  int pi, Vec<3> & grad)
   {
   double vol, l;
   double err;
 
-  const Point3d *pp1, *pp2, *pp3, *pp4;
+  const Point<3> *pp1, *pp2, *pp3, *pp4;
 
   pp1 = &p1;
   pp2 = &p2;
@@ -449,23 +449,23 @@ namespace netgen
   }
   
 
-  Vec3d v1 (*pp1, *pp2);
-  Vec3d v2 (*pp1, *pp3);
-  Vec3d v3 (*pp1, *pp4);
+  Vec<3> v1 (*pp1, *pp2);
+  Vec<3> v2 (*pp1, *pp3);
+  Vec<3> v3 (*pp1, *pp4);
 
-  Vec3d v4 (*pp2, *pp3);
-  Vec3d v5 (*pp2, *pp4);
-  Vec3d v6 (*pp3, *pp4);
+  Vec<3> v4 (*pp2, *pp3);
+  Vec<3> v5 (*pp2, *pp4);
+  Vec<3> v6 (*pp3, *pp4);
 
 
-  //   Vec3d n;
+  //   Vec<3> n;
   //   Cross (v1, v2, n);
   //   vol = - (n * v3) / 6;
 
 
   vol = -Determinant (v1, v2, v3) / 6;  
 
-  Vec3d gradvol;
+  Vec<3> gradvol;
   Cross (v5, v4, gradvol);
   gradvol *= (-1.0/6.0);
 
@@ -479,21 +479,21 @@ namespace netgen
 
   l = l1 + l2 + l3 +l4 + l5 + l6;
 
-  Vec3d gradl1 (*pp2, *pp1);
-  Vec3d gradl2 (*pp3, *pp1);
-  Vec3d gradl3 (*pp4, *pp1);
+  Vec<3> gradl1 (*pp2, *pp1);
+  Vec<3> gradl2 (*pp3, *pp1);
+  Vec<3> gradl3 (*pp4, *pp1);
   gradl1 /= l1;
   gradl2 /= l2;
   gradl3 /= l3;
 
-  Vec3d gradl (gradl1);
+  Vec<3> gradl (gradl1);
   gradl += gradl2;
   gradl += gradl3;
 
 
   if (vol <= 1e-24 * l * l * l)
   { 
-  grad = Vec3d (0, 0, 0);
+  grad = Vec<3> (0, 0, 0);
   return 1e24;
   }
 
@@ -503,7 +503,7 @@ namespace netgen
 
 
   gradl *= (c1 * 3 * l * l / vol);
-  Vec3d graderr(gradl);
+  Vec<3> graderr(gradl);
   gradvol *= ( -c1 * l * l * l / (vol * vol) );
   graderr+= gradvol;
   
@@ -532,25 +532,25 @@ namespace netgen
 
   
   /*
-    double CalcVolume (const Array<Point3d> & points,
+    double CalcVolume (const Array<Point<3>> & points,
     const Element & el)
     {
-    Vec3d v1 = points.Get(el.PNum(2)) - 
+    Vec<3> v1 = points.Get(el.PNum(2)) - 
     points.Get(el.PNum(1));
-    Vec3d v2 = points.Get(el.PNum(3)) - 
+    Vec<3> v2 = points.Get(el.PNum(3)) - 
     points.Get(el.PNum(1));
-    Vec3d v3 = points.Get(el.PNum(4)) - 
+    Vec<3> v3 = points.Get(el.PNum(4)) - 
     points.Get(el.PNum(1)); 
          
     return -(Cross (v1, v2) * v3) / 6;	 
     }  
   */
 
-  double CalcVolume (FlatArray<Point3d, PointIndex> points, 
+  double CalcVolume (FlatArray<Point<3>, PointIndex> points, 
 		     const Array<Element> & elements)
   {
     double vol;
-    Vec3d v1, v2, v3;
+    Vec<3> v1, v2, v3;
   
     vol = 0;
     for (int i = 0; i < elements.Size(); i++)

@@ -1166,7 +1166,7 @@ namespace netgen
 		    (*testout) << " n " << n << flush;
 		    (*testout) << " vec2in = "
 			       << locsol -> VectorIn2 (hp, m, n, eps) << " and " 
-			       << locsol -> VectorIn2 (hp, m, -1 * n, eps) << endl;
+			       << locsol -> VectorIn2 (hp, m, -1.0 * n, eps) << endl;
 		  }
 
 		//	      if (locsol -> OnFace (hp, m))
@@ -1175,7 +1175,7 @@ namespace netgen
 		// one side must be inside, the other must be outside
 		bool ok = (pre_ok[k-1] || 
 			   (locsol -> VectorIn2 (hp, m, n, eps) == IS_OUTSIDE &&
-			    locsol -> VectorIn2 (hp, m, -1 * n, eps) == IS_INSIDE));
+			    locsol -> VectorIn2 (hp, m, -1.0 * n, eps) == IS_INSIDE));
 
 		if (debug)
 		  (*testout) << "ok (before) " << ok <<  endl;

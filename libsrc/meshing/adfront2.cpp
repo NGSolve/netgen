@@ -299,14 +299,14 @@ namespace netgen
     ArrayMem<Front2PointIndex, 1000> nearpoints(0);
 
     // dominating costs !!
-    linesearchtree.GetIntersecting (p0 - Vec3d(xh, xh, xh),
-				    p0 + Vec3d(xh, xh, xh),
+    linesearchtree.GetIntersecting (p0 - Vec<3>(xh, xh, xh),
+				    p0 + Vec<3>(xh, xh, xh),
 				    nearlines);
 
     // only special points that are not in adfront,
     // other points are from linesearchtree
-    cpointsearchtree.GetIntersecting(p0 - Vec3d(xh, xh, xh),
-                                     p0 + Vec3d(xh, xh, xh),
+    cpointsearchtree.GetIntersecting(p0 - Vec<3>(xh, xh, xh),
+                                     p0 + Vec<3>(xh, xh, xh),
                                      nearpoints);
 
     for(auto i : nearlines)

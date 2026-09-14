@@ -10,7 +10,7 @@ namespace netgen
   class VisualScene
   {
   protected:
-    static NGGUI_API Point3d center;
+    static NGGUI_API Point<3> center;
     static NGGUI_API double rad;
 
     static double lookatmat[16];
@@ -52,8 +52,8 @@ namespace netgen
   
     NGGUI_API void CalcTransformationMatrices();
     NGGUI_API void StandardRotation (const char * dir);
-    NGGUI_API void ArbitraryRotation (const Array<double> & alpha, const Array<Vec3d> & vec);
-    NGGUI_API void ArbitraryRotation (const double alpha, const Vec3d & vec);
+    NGGUI_API void ArbitraryRotation (const Array<double> & alpha, const Array<Vec<3>> & vec);
+    NGGUI_API void ArbitraryRotation (const double alpha, const Vec<3> & vec);
 
     NGGUI_API virtual void MouseMove(int oldx, int oldy,
                                       int newx, int newy,
@@ -304,7 +304,7 @@ namespace netgen
   void MouseDblClickSelect (const int px, const int py,
                             const GLdouble * clipplane, const GLdouble backcolor,
                             const double * transformationmat,
-                            const Point3d & center,
+                            const Point<3> & center,
                             const double rad,
                             const int displaylist,
                             int & selelement, int & selface, int & seledge, PointIndex & selpoint,

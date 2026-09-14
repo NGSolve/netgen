@@ -652,7 +652,7 @@ namespace netgen
 
   
   /*
-  void VisualSceneSolution :: RealVec3d (const double * values, Vec3d & v, 
+  void VisualSceneSolution :: RealVec3d (const double * values, Vec<3> & v, 
                                          bool iscomplex, bool imag)
   {
     if (!iscomplex)
@@ -704,19 +704,19 @@ namespace netgen
   }
   
 
-  void VisualSceneSolution :: RealVec3d (const double * values, Vec3d & v, 
+  void VisualSceneSolution :: RealVec3d (const double * values, Vec<3> & v, 
                                          bool iscomplex, double phaser, double phasei)
   {
     if (!iscomplex)
       {
-        v.X() = values[0];
-        v.Y() = values[1];
-        v.Z() = values[2];
+        v(0) = values[0];
+        v(1) = values[1];
+        v(2) = values[2];
       }
     else
       {
         for (int i = 0; i < 3; i++)
-          v.X(i+1) = phaser * values[2*i] + phasei * values[2*i+1];
+          v(i) = phaser * values[2*i] + phasei * values[2*i+1];
       }
   }
 
@@ -865,7 +865,7 @@ namespace netgen
               {
                 const ClipPlanePoint & p = cpp[i];
                 double values[6];
-                Vec3d v;
+                Vec<3> v;
 
                 bool drawelem = 
                   GetValues (vsol, p.elnr, p.lami(0), p.lami(1), p.lami(2), values);
@@ -2268,7 +2268,7 @@ namespace netgen
                     drawelem = 0;
 
                   if ( drawelem ) 
-                    DrawCone (cp, cp+4*v, 0.8*rad / gridsize);
+                    DrawCone (cp, cp+4.0*v, 0.8*rad / gridsize);
                 }
             }
     
@@ -2293,8 +2293,8 @@ namespace netgen
     if (!vsol) return;
 
 
-    Point<3> pmin = center - Vec3d (rad, rad, rad);
-    Point<3> pmax = center - Vec3d (rad, rad, rad);
+    Point<3> pmin = center - Vec<3> (rad, rad, rad);
+    Point<3> pmax = center - Vec<3> (rad, rad, rad);
 
 
     // glColor3d (1.0, 1.0, 1.0);
@@ -2476,7 +2476,7 @@ namespace netgen
                       if (t >= miny2d && t <= maxy2d)
                         {
                           double lami[3];
-                          Point3d p3d(2*rad*s+pmin(0), 2*rad*t+pmin(1),0);
+                          Point<3> p3d(2*rad*s+pmin(0), 2*rad*t+pmin(1),0);
                           
                           if (mesh->PointContainedIn2DElement (p3d, lami, sei+1))
                             {
@@ -2525,7 +2525,7 @@ namespace netgen
                               
                               if ( drawelem )
                                 {
-                                  DrawCone (cp, cp+4*v, 0.8*rad / gridsize);
+                                  DrawCone (cp, cp+4.0*v, 0.8*rad / gridsize);
                                   (*testout) << "cp " << cp << " rad " << rad << " gridsize " << gridsize << endl;
                                 }
                               
@@ -3906,7 +3906,7 @@ namespace netgen
         Vec<3> v(0,0,0);
         if (vsol->soltype == SOL_NODAL)
           {
-            v = Vec3d(vsol->data[pnum_ * vsol->dist],
+            v = Vec<3>(vsol->data[pnum_ * vsol->dist],
                       vsol->data[pnum_ * vsol->dist+1],
                       vsol->data[pnum_ * vsol->dist+2]);
           }
@@ -3917,7 +3917,7 @@ namespace netgen
               if (el[j] == pnum)
                 {
                   int base = (4*elnr+j-1) * vsol->dist;
-                  v = Vec3d(vsol->data[base],
+                  v = Vec<3>(vsol->data[base],
                             vsol->data[base+1],
                             vsol->data[base+2]);
                 }
@@ -4302,15 +4302,15 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    Vec3d n(clipplane[0], clipplane[1], clipplane[2]);
+    Vec<3> n(clipplane[0], clipplane[1], clipplane[2]);
 
     double mu = -clipplane[3] / n.Length2();
-    Point3d p(mu*n.X(), mu * n.Y(), mu * n.Z());
+    Point<3> p(mu*n(0), mu * n(1), mu * n(2));
 
     // n /= n.Length();
     n.Normalize();
-    Vec3d t1, t2;
-    n.GetNormal (t1);
+    Vec<3> t1, t2;
+    GetNormal (n, t1);
     t2 = Cross (n, t1);
 
 
@@ -4322,7 +4322,7 @@ namespace netgen
     for (double xi1 = xi1mid-rad+xoffset/gridsize; xi1 <= xi1mid+rad+xoffset/gridsize; xi1 += rad / gridsize)
       for (double xi2 = xi2mid-rad+yoffset/gridsize; xi2 <= xi2mid+rad+yoffset/gridsize; xi2 += rad / gridsize)
         {
-          Point3d hp = p + xi1 * t1 + xi2 * t2;
+          Point<3> hp = p + xi1 * t1 + xi2 * t2;
         
           int cindex(-1);
           bool allowindex(true);
@@ -4618,7 +4618,7 @@ namespace netgen
     p1p2.Normalize();
     Vec<3> p2p1 = -p1p2;
 
-    Vec<3> t1 = p1p2.GetNormal();
+    Vec<3> t1 = GetNormal (p1p2);
     Vec<3> t2 = Cross (p1p2, t1);
 
     Point<3> oldp = p1 + r * t1;
@@ -4678,7 +4678,7 @@ namespace netgen
     p1p2.Normalize();
     // Vec<3> p2p1 = -p1p2;
 
-    Vec<3> t1 = p1p2.GetNormal();
+    Vec<3> t1 = GetNormal (p1p2);
     Vec<3> t2 = Cross (p1p2, t1);
 
     Point<3> oldhp1 = p1 + r * t1;

@@ -318,7 +318,7 @@ GetIdentifiedPoint (class Mesh & mesh, PointIndex pi)
 
 void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 {
-  Point3d p1, p2;
+  Point<3> p1, p2;
   mesh.GetBox(p1, p2);
   auto eps = 1e-6 * (p2-p1).Length();
 

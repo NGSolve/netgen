@@ -1565,11 +1565,11 @@ namespace netgen
       str << mesh->GetNSeg();
     else if (argc >= 2 && strcmp (argv[1], "bbox") == 0)
       {
-	Point3d pmin, pmax;
+	Point<3> pmin, pmax;
 	mesh->GetBox (pmin, pmax);
-	str << pmin.X() << " " << pmax.X() << " "
-	    << pmin.Y() << " " << pmax.Y() << " "
-	    << pmin.Z() << " " << pmax.Z() << endl;
+	str << pmin(0) << " " << pmax(0) << " "
+	    << pmin(1) << " " << pmax(1) << " "
+	    << pmin(2) << " " << pmax(2) << endl;
       }
     else
       {
@@ -2299,12 +2299,12 @@ namespace netgen
   {
     SetVisualScene(interp);
     Array<double> alpha;
-    Array<Vec3d> vec;
+    Array<Vec<3>> vec;
 
     for(int i=1; i<argc; i+=4)
       {
 	alpha.Append(atof(argv[i]));
-	vec.Append(Vec3d(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])));
+	vec.Append(Vec<3>(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])));
       }
 
     visual_scene->ArbitraryRotation (alpha,vec);
@@ -2535,8 +2535,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
       infile >> np;
       for (i = 1; i <= np; i++)
 	{
-	  Point3d p;
-	  infile >> p.X() >> p.Y() >> p.Z();
+	  Point<3> p;
+	  infile >> p(0) >> p(1) >> p(2);
 	  if (firsttime)
 	    mesh->AddPoint (p);
 	  else
@@ -2566,9 +2566,9 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     vispar.transp = atof (Tcl_GetVar (interp, "::viewoptions.mat.transp", TCL_GLOBAL_ONLY));
     
     VisualizationParameters::Clipping hclip;
-    hclip.normal.X() = atof (Tcl_GetVar (interp, "::viewoptions.clipping.nx", TCL_GLOBAL_ONLY));
-    hclip.normal.Y() = atof (Tcl_GetVar (interp, "::viewoptions.clipping.ny", TCL_GLOBAL_ONLY));
-    hclip.normal.Z() = atof (Tcl_GetVar (interp, "::viewoptions.clipping.nz", TCL_GLOBAL_ONLY));
+    hclip.normal(0) = atof (Tcl_GetVar (interp, "::viewoptions.clipping.nx", TCL_GLOBAL_ONLY));
+    hclip.normal(1) = atof (Tcl_GetVar (interp, "::viewoptions.clipping.ny", TCL_GLOBAL_ONLY));
+    hclip.normal(2) = atof (Tcl_GetVar (interp, "::viewoptions.clipping.nz", TCL_GLOBAL_ONLY));
     hclip.dist = atof (Tcl_GetVar (interp, "::viewoptions.clipping.dist", TCL_GLOBAL_ONLY));
     hclip.dist2 = atof (Tcl_GetVar (interp, "::viewoptions.clipping.dist2", TCL_GLOBAL_ONLY));
     hclip.enable = atoi (Tcl_GetVar (interp, "::viewoptions.clipping.enable", TCL_GLOBAL_ONLY));

@@ -102,8 +102,8 @@ void VisualSceneMeshDoctor :: DrawScene ()
       glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, matcolblue);
       glBegin (GL_POINTS);
       
-      const Point3d p = mesh->Point(selpoint);
-      glVertex3f (p.X(), p.Y(), p.Z());
+      const Point<3> p = mesh->Point(selpoint);
+      glVertex3f (p(0), p(1), p(2));
       glEnd();
     }
 
@@ -121,7 +121,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 {
   if (zoomall)
     {
-      Point3d pmin, pmax;
+      Point<3> pmin, pmax;
       mesh->GetBox (pmin, pmax, -1);
 
       if (vispar.centerpoint.IsValid())
@@ -186,18 +186,18 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 	{
 	  glBegin (GL_TRIANGLES);
 	  
-	  const Point3d & lp1 = mesh->Point (el.PNum(1));
-	  const Point3d & lp2 = mesh->Point (el.PNum(2));
-	  const Point3d & lp3 = mesh->Point (el.PNum(3));
-	  Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+	  const Point<3> & lp1 = mesh->Point (el.PNum(1));
+	  const Point<3> & lp2 = mesh->Point (el.PNum(2));
+	  const Point<3> & lp3 = mesh->Point (el.PNum(3));
+	  Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 	  n /= (n.Length()+1e-12);
-	  glNormal3d (n.X(), n.Y(), n.Z());
+	  glNormal3d (n(0), n(1), n(2));
 
 	  if (!vispar.colormeshsize)
 	    {
-	      glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	      glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	      glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+	      glVertex3d (lp1(0), lp1(1), lp1(2));
+	      glVertex3d (lp2(0), lp2(1), lp2(2));
+	      glVertex3d (lp3(0), lp3(1), lp3(2));
 	    }
 	  else
 	    {
@@ -206,13 +206,13 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 	      double h3 = mesh->GetH (lp3);
 	      
 	      SetOpenGlColor  (h1, 0.1, 10);
-	      glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
+	      glVertex3d (lp1(0), lp1(1), lp1(2));
 
 	      SetOpenGlColor  (h2, 0.1, 10);
-	      glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
+	      glVertex3d (lp2(0), lp2(1), lp2(2));
 
 	      SetOpenGlColor  (h3, 0.1, 10);
-	      glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+	      glVertex3d (lp3(0), lp3(1), lp3(2));
 	    }	    
 	  glEnd();
 	}
@@ -220,18 +220,18 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 	{
 	  glBegin (GL_QUADS);
 	  
-	  const Point3d & lp1 = mesh->Point (el.PNum(1));
-	  const Point3d & lp2 = mesh->Point (el.PNum(2));
-	  const Point3d & lp3 = mesh->Point (el.PNum(4));
-	  const Point3d & lp4 = mesh->Point (el.PNum(3));
-	  Vec3d n = Cross (Vec3d (lp1, lp2), 
-			   Vec3d (lp1, Center (lp3, lp4)));
+	  const Point<3> & lp1 = mesh->Point (el.PNum(1));
+	  const Point<3> & lp2 = mesh->Point (el.PNum(2));
+	  const Point<3> & lp3 = mesh->Point (el.PNum(4));
+	  const Point<3> & lp4 = mesh->Point (el.PNum(3));
+	  Vec<3> n = Cross (Vec<3> (lp1, lp2), 
+			   Vec<3> (lp1, Center (lp3, lp4)));
 	  n /= (n.Length()+1e-12);
-	  glNormal3d (n.X(), n.Y(), n.Z()); 
-	  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	  glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
-	  glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+	  glNormal3d (n(0), n(1), n(2)); 
+	  glVertex3d (lp1(0), lp1(1), lp1(2));
+	  glVertex3d (lp2(0), lp2(1), lp2(2));
+	  glVertex3d (lp4(0), lp4(1), lp4(2));
+	  glVertex3d (lp3(0), lp3(1), lp3(2));
 	  glEnd();
 	}
       else if (el.GetNP() == 6)
@@ -245,15 +245,15 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 
 	  for (int j = 0; j < 4; j++)
 	    {
-	      const Point3d & lp1 = mesh->Point (el.PNum(trigs[j][0]));
-	      const Point3d & lp2 = mesh->Point (el.PNum(trigs[j][1]));
-	      const Point3d & lp3 = mesh->Point (el.PNum(trigs[j][2]));
-	      Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+	      const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
+	      const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
+	      const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
+	      Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 	      n /= (n.Length() + 1e-12);
-	      glNormal3d (n.X(), n.Y(), n.Z());
-	      glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	      glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	      glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+	      glNormal3d (n(0), n(1), n(2));
+	      glVertex3d (lp1(0), lp1(1), lp1(2));
+	      glVertex3d (lp2(0), lp2(1), lp2(2));
+	      glVertex3d (lp3(0), lp3(1), lp3(2));
 	    }
 	  glEnd();
 	}
@@ -292,64 +292,64 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 	{
 	  glBegin (GL_TRIANGLES);
 	  
-	  const Point3d & lp1 = mesh->Point (el.PNum(1));
-	  const Point3d & lp2 = mesh->Point (el.PNum(2));
-	  const Point3d & lp3 = mesh->Point (el.PNum(3));
-	  Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+	  const Point<3> & lp1 = mesh->Point (el.PNum(1));
+	  const Point<3> & lp2 = mesh->Point (el.PNum(2));
+	  const Point<3> & lp3 = mesh->Point (el.PNum(3));
+	  Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 	  n /= (n.Length() + 1e-12);
-	  glNormal3d (n.X(), n.Y(), n.Z());
-	  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	  glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+	  glNormal3d (n(0), n(1), n(2));
+	  glVertex3d (lp1(0), lp1(1), lp1(2));
+	  glVertex3d (lp2(0), lp2(1), lp2(2));
+	  glVertex3d (lp3(0), lp3(1), lp3(2));
 	  glEnd();
 	}
       else if (el.GetNP() == 4)
 	{
 	  glBegin (GL_QUADS);
 	  
-	  const Point3d & lp1 = mesh->Point (el.PNum(1));
-	  const Point3d & lp2 = mesh->Point (el.PNum(2));
-	  const Point3d & lp3 = mesh->Point (el.PNum(4));
-	  const Point3d & lp4 = mesh->Point (el.PNum(3));
-	  Vec3d n = Cross (Vec3d (lp1, lp2), 
-			   Vec3d (lp1, Center (lp3, lp4)));
+	  const Point<3> & lp1 = mesh->Point (el.PNum(1));
+	  const Point<3> & lp2 = mesh->Point (el.PNum(2));
+	  const Point<3> & lp3 = mesh->Point (el.PNum(4));
+	  const Point<3> & lp4 = mesh->Point (el.PNum(3));
+	  Vec<3> n = Cross (Vec<3> (lp1, lp2), 
+			   Vec<3> (lp1, Center (lp3, lp4)));
 	  n /= (n.Length() + 1e-12);
-	  glNormal3d (n.X(), n.Y(), n.Z());
-	  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	  glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
-	  glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
+	  glNormal3d (n(0), n(1), n(2));
+	  glVertex3d (lp1(0), lp1(1), lp1(2));
+	  glVertex3d (lp2(0), lp2(1), lp2(2));
+	  glVertex3d (lp4(0), lp4(1), lp4(2));
+	  glVertex3d (lp3(0), lp3(1), lp3(2));
 	  glEnd();
 	}
       else if (el.GetNP() == 6)
 	{
 	  glBegin (GL_LINES);
 	  
-	  const Point3d & lp1 = mesh->Point (el.PNum(1));
-	  const Point3d & lp2 = mesh->Point (el.PNum(2));
-	  const Point3d & lp3 = mesh->Point (el.PNum(3));
-	  const Point3d & lp4 = mesh->Point (el.PNum(4));
-	  const Point3d & lp5 = mesh->Point (el.PNum(5));
-	  const Point3d & lp6 = mesh->Point (el.PNum(6));
+	  const Point<3> & lp1 = mesh->Point (el.PNum(1));
+	  const Point<3> & lp2 = mesh->Point (el.PNum(2));
+	  const Point<3> & lp3 = mesh->Point (el.PNum(3));
+	  const Point<3> & lp4 = mesh->Point (el.PNum(4));
+	  const Point<3> & lp5 = mesh->Point (el.PNum(5));
+	  const Point<3> & lp6 = mesh->Point (el.PNum(6));
 
-	  Vec3d n = Cross (Vec3d (lp1, lp2), Vec3d (lp1, lp3));
+	  Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
 	  n /= (n.Length()+1e-12);
-	  glNormal3d (n.X(), n.Y(), n.Z());
+	  glNormal3d (n(0), n(1), n(2));
 
-	  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	  glVertex3d (lp6.X(), lp6.Y(), lp6.Z());
-	  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	  glVertex3d (lp6.X(), lp6.Y(), lp6.Z());
+	  glVertex3d (lp1(0), lp1(1), lp1(2));
+	  glVertex3d (lp6(0), lp6(1), lp6(2));
+	  glVertex3d (lp2(0), lp2(1), lp2(2));
+	  glVertex3d (lp6(0), lp6(1), lp6(2));
 
-	  glVertex3d (lp1.X(), lp1.Y(), lp1.Z());
-	  glVertex3d (lp5.X(), lp5.Y(), lp5.Z());
-	  glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
-	  glVertex3d (lp5.X(), lp5.Y(), lp5.Z());
+	  glVertex3d (lp1(0), lp1(1), lp1(2));
+	  glVertex3d (lp5(0), lp5(1), lp5(2));
+	  glVertex3d (lp3(0), lp3(1), lp3(2));
+	  glVertex3d (lp5(0), lp5(1), lp5(2));
 
-	  glVertex3d (lp2.X(), lp2.Y(), lp2.Z());
-	  glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
-	  glVertex3d (lp3.X(), lp3.Y(), lp3.Z());
-	  glVertex3d (lp4.X(), lp4.Y(), lp4.Z());
+	  glVertex3d (lp2(0), lp2(1), lp2(2));
+	  glVertex3d (lp4(0), lp4(1), lp4(2));
+	  glVertex3d (lp3(0), lp3(1), lp3(2));
+	  glVertex3d (lp4(0), lp4(1), lp4(2));
 	  glEnd();
 	}
     }
@@ -373,8 +373,8 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   for (int i = 1; i <= mesh->GetNSeg(); i++)
     {
       const Segment & seg = mesh->LineSegment(i);
-      const Point3d & p1 = mesh->Point(seg[0]);
-      const Point3d & p2 = mesh->Point(seg[1]);
+      const Point<3> & p1 = mesh->Point(seg[0]);
+      const Point<3> & p2 = mesh->Point(seg[1]);
 
       if (edgedist[seg[0]] <= markedgedist &&
 	  edgedist[seg[1]] <= markedgedist)
@@ -390,8 +390,8 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 	  glLineWidth (2.0f);
 	}
       glBegin (GL_LINES);
-      glVertex3f (p1.X(), p1.Y(), p1.Z());
-      glVertex3f (p2.X(), p2.Y(), p2.Z());
+      glVertex3f (p1(0), p1(1), p1(2));
+      glVertex3f (p2(0), p2(1), p2(2));
       glEnd(); 
     }
 

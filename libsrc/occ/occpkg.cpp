@@ -19,8 +19,8 @@
 #include <IGESControl_Writer.hxx>
 
 // __declspec(dllimport) void AutoColourBcProps(Mesh & mesh, const char *bccolourfile);
-// __declspec(dllimport) void GetFaceColours(Mesh & mesh, Array<Vec3d> & face_colours);
-// __declspec(dllimport) bool ColourMatch(Vec3d col1, Vec3d col2, double eps = 2.5e-05);
+// __declspec(dllimport) void GetFaceColours(Mesh & mesh, Array<Vec<3>> & face_colours);
+// __declspec(dllimport) bool ColourMatch(Vec<3> col1, Vec<3> col2, double eps = 2.5e-05);
 
 extern "C" int Ng_occ_Init (Tcl_Interp * interp);
 

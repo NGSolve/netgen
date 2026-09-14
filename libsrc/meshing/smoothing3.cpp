@@ -205,19 +205,19 @@ namespace netgen
   
     for (int i = 1; i <= nf; i++)
       {
-	const Point3d & p1 = points[faces[i-1][0]];
-	const Point3d & p2 = points[faces[i-1][1]];
-	const Point3d & p3 = points[faces[i-1][2]];
-	Vec3d v1 (p1, p2);
-	Vec3d v2 (p1, p3);
-	Vec3d n;
+	const Point<3> & p1 = points[faces[i-1][0]];
+	const Point<3> & p2 = points[faces[i-1][1]];
+	const Point<3> & p3 = points[faces[i-1][2]];
+	Vec<3> v1 (p1, p2);
+	Vec<3> v2 (p1, p3);
+	Vec<3> n;
 	Cross (v1, v2, n);
 	n /= n.Length();
 
-	m.Elem(i, 1) = n.X();
-	m.Elem(i, 2) = n.Y();
-	m.Elem(i, 3) = n.Z();
-	m.Elem(i, 4) = - (n.X() * p1.X() + n.Y() * p1.Y() + n.Z() * p1.Z());
+	m.Elem(i, 1) = n(0);
+	m.Elem(i, 2) = n(1);
+	m.Elem(i, 3) = n(2);
+	m.Elem(i, 4) = - (n(0) * p1(0) + n(1) * p1(1) + n(2) * p1(2));
       } 
   }
   
@@ -227,7 +227,7 @@ namespace netgen
     /*
       int j;
       double badness = 0;
-      Point3d pp(vp.Get(1), vp.Get(2), vp.Get(3));
+      Point<3> pp(vp.Get(1), vp.Get(2), vp.Get(3));
 
       for (j = 1; j <= faces.Size(); j++)
       {
@@ -467,7 +467,7 @@ namespace netgen
 	    }
       }
   
-    Point3d hp;
+    Point<3> hp;
     int hi = FindInnerPoint (points, faces, hp);
     if (hi)
       {
@@ -479,7 +479,7 @@ namespace netgen
     //      cout << "no inner point found" << endl;
 
     /*
-    Point3d hp2;
+    Point<3> hp2;
     int hi2 = FindInnerPoint (points, faces, hp2);
     if (hi2)
       {
@@ -542,14 +542,14 @@ namespace netgen
 	      pi1 = el.PNum(j);
 	    }
 
-	const Point3d & p1 = points[pi1];
-	Vec3d v1 (p1, points[pi2]);
-	Vec3d v2 (p1, points[pi3]);
-	Vec3d n;
+	const Point<3> & p1 = points[pi1];
+	Vec<3> v1 (p1, points[pi2]);
+	Vec<3> v2 (p1, points[pi3]);
+	Vec<3> n;
 	Cross (v1, v2, n);
 	n /= n.Length();
 
-	Vec3d v (p1, points[actpind]);
+	Vec<3> v (p1, points[actpind]);
 	double c = v * n;
       
 	if (c < 0)
@@ -557,10 +557,10 @@ namespace netgen
       
 	// n is inner normal
 
-	m.Elem(i+1, 1) = n.X();
-	m.Elem(i+1, 2) = n.Y();
-	m.Elem(i+1, 3) = n.Z();
-	m.Elem(i+1, 4) = - (n.X() * p1.X() + n.Y() * p1.Y() + n.Z() * p1.Z());
+	m.Elem(i+1, 1) = n(0);
+	m.Elem(i+1, 2) = n(1);
+	m.Elem(i+1, 3) = n(2);
+	m.Elem(i+1, 4) = - (n(0) * p1(0) + n(1) * p1(1) + n(2) * p1(2));
       }
   }
 
@@ -756,16 +756,16 @@ namespace netgen
   class Opti3SurfaceMinFunction : public MinFunction
   {
     const PointFunction & pf;
-    Point3d sp1;
+    Point<3> sp1 = Point<3>(0,0,0);
     const Surface * surf;
-    Vec3d t1, t2;
+    Vec<3> t1, t2;
   
   public:
     Opti3SurfaceMinFunction (const PointFunction & apf);
   
-    void SetPoint (const Surface * asurf, const Point3d & asp1);
+    void SetPoint (const Surface * asurf, const Point<3> & asp1);
 
-    void CalcNewPoint (const Vector & x, Point3d & np) const; 
+    void CalcNewPoint (const Vector & x, Point<3> & np) const; 
     virtual double Func (const Vector & x) const;
     virtual double FuncGrad (const Vector & x, Vector & g) const;
   };
@@ -777,9 +777,9 @@ namespace netgen
     ;
   }
 
-  void Opti3SurfaceMinFunction :: SetPoint (const Surface * asurf, const Point3d & asp1)
+  void Opti3SurfaceMinFunction :: SetPoint (const Surface * asurf, const Point<3> & asp1)
   { 
-    Vec3d n;
+    Vec<3> n = Vec<3>(0,0,0);
     sp1 = asp1; 
     surf = asurf;
   
@@ -794,7 +794,7 @@ namespace netgen
 
   
   void Opti3SurfaceMinFunction :: CalcNewPoint (const Vector & x, 
-						Point3d & np) const
+						Point<3> & np) const
   {
     np.X() = sp1.X() + x.Get(1) * t1.X() + x.Get(2) * t2.X();
     np.Y() = sp1.Y() + x.Get(1) * t1.Y() + x.Get(2) * t2.Y();
@@ -808,7 +808,7 @@ namespace netgen
 
   double Opti3SurfaceMinFunction :: Func (const Vector & x) const
   {
-    Point3d pp1;
+    Point<3> pp1;
 
     CalcNewPoint (x, pp1);
     return pf.PointFunctionValue (pp1);
@@ -818,8 +818,8 @@ namespace netgen
 
   double Opti3SurfaceMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
   {
-    Vec3d n, vgrad;
-    Point3d pp1;
+    Vec<3> n, vgrad;
+    Point<3> pp1;
     VectorMem<3> freegrad;
 
     CalcNewPoint (x, pp1);
@@ -853,16 +853,16 @@ namespace netgen
   class Opti3EdgeMinFunction : public MinFunction
   {
     const PointFunction & pf;
-    Point3d sp1;
+    Point<3> sp1 = Point<3>(0,0,0);
     const Surface *surf1, *surf2;
-    Vec3d t1;
+    Vec<3> t1 = Vec<3>(0,0,0);
   
   public:
     Opti3EdgeMinFunction (const PointFunction & apf);
   
     void SetPoint (const Surface * asurf1, const Surface * asurf2,
-		   const Point3d & asp1);
-    void CalcNewPoint (const Vector & x, Point3d & np) const; 
+		   const Point<3> & asp1);
+    void CalcNewPoint (const Vector & x, Point<3> & np) const; 
     virtual double FuncGrad (const Vector & x, Vector & g) const;
     virtual double Func (const Vector & x) const;
   };
@@ -875,9 +875,9 @@ namespace netgen
   
   void Opti3EdgeMinFunction :: SetPoint (const Surface * asurf1, 
 					 const Surface * asurf2, 
-					 const Point3d & asp1) 
+					 const Point<3> & asp1) 
   { 
-    Vec3d n1, n2;
+    Vec<3> n1, n2;
     sp1 = asp1; 
     surf1 = asurf1;
     surf2 = asurf2;
@@ -891,7 +891,7 @@ namespace netgen
   }
 
   void Opti3EdgeMinFunction :: CalcNewPoint (const Vector & x,
-					     Point3d & np) const
+					     Point<3> & np) const
 {
   np.X() = sp1.X() + x.Get(1) * t1.X();
   np.Y() = sp1.Y() + x.Get(1) * t1.Y();
@@ -910,8 +910,8 @@ double Opti3EdgeMinFunction :: Func (const Vector & x) const
 
 double Opti3EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
 {
-  Vec3d n1, n2, v1, vgrad;
-  Point3d pp1;
+  Vec<3> n1, n2, v1, vgrad;
+  Point<3> pp1 = Point<3>(0,0,0);
   double badness;
   VectorMem<3> freegrad;
 
@@ -944,15 +944,15 @@ double Opti3EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
 
 int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 {
-  const Point3d & p1 = points[el.PNum(1)];
-  const Point3d & p2 = points[el.PNum(2)];
-  const Point3d & p3 = points[el.PNum(3)];
-  const Point3d & p4 = points[el.PNum(4)];
+  const Point<3> & p1 = points[el.PNum(1)];
+  const Point<3> & p2 = points[el.PNum(2)];
+  const Point<3> & p3 = points[el.PNum(3)];
+  const Point<3> & p4 = points[el.PNum(4)];
 
-  Vec3d v1(p1, p2);
-  Vec3d v2(p1, p3);
-  Vec3d v3(p1, p4);
-  Vec3d n;
+  Vec<3> v1(p1, p2);
+  Vec<3> v2(p1, p3);
+  Vec<3> v3(p1, p4);
+  Vec<3> n;
 
   Cross (v1, v2, n);
   double vol = n * v3;
@@ -1053,7 +1053,7 @@ FuncGrad (const Vector & x, Vector & g) const
     points[actpind] -= (x(0)*nv(0)+x(1)*nv(1)+x(2)*nv(2)) * nv;
 
   Vec<3> hderiv;
-  //Vec3d vdir;
+  //Vec<3> vdir;
   g.SetSize(3);
   g = 0;
 
@@ -1076,7 +1076,7 @@ FuncGrad (const Vector & x, Vector & g) const
       /*
       for (k = 1; k <= 3; k++)
 	{
-	  vdir = Vec3d(0,0,0);
+	  vdir = Vec<3>(0,0,0);
 	  vdir.X(k) = 1;
 
 	  hbad = elements.Get(eli).
@@ -1113,10 +1113,10 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
   double badness = 0;
 
   Point<3> hp = points[actpind];
-  points[actpind] = Point<3> (hp + Vec3d (x(0), x(1), x(2)));
+  points[actpind] = Point<3> (hp + Vec<3> (x(0), x(1), x(2)));
 
   if(onplane)
-    points[actpind] -= (Vec3d (x(0), x(1), x(2))*nv) * nv;
+    points[actpind] -= (Vec<3> (x(0), x(1), x(2))*nv) * nv;
 
   double hderiv;
   deriv = 0;

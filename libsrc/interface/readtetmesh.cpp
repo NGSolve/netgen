@@ -44,7 +44,7 @@ namespace netgen
     int nodeid,type,pid;
     int dummyint;
     int modelverts,modeledges,modelfaces,modelcells;
-    Point3d p;
+    Point<3> p;
     int numObj3D,numObj2D,numObj1D,numObj0D;
     // bool nullstarted;
     Array<int> eldom;
@@ -157,7 +157,7 @@ namespace netgen
               cout << "read nodes" << endl;
               for(int i=0; i<nnodes; i++)
                 {
-                  in >> nodeid >> p.X() >> p.Y() >> p.Z() >> type >> pid;
+                  in >> nodeid >> p(0) >> p(1) >> p(2) >> type >> pid;
                   mesh.AddPoint(p);		  
                   point_pids.Append(pid);
                   if(pid > maxId0D)

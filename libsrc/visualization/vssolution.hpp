@@ -220,13 +220,13 @@ public:
   void SaveSolutionData (const char * filename);
 
   /*
-  static void RealVec3d (const double * values, Vec3d & v, 
+  static void RealVec3d (const double * values, Vec<3> & v, 
 			 bool iscomplex, bool imag);
   */
   static Vec<3> RealVec3d (const double * values, 
 			   bool iscomplex, bool imag);
 
-  static void RealVec3d (const double * values, Vec3d & v, 
+  static void RealVec3d (const double * values, Vec<3> & v, 
 			 bool iscomplex, double phaser, double phasei);
 
 
