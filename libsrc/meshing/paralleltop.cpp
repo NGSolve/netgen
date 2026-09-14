@@ -183,7 +183,7 @@ namespace netgen
 
         if (mesh.mlbetweennodes.Size() == mesh.Points().Size())
           {
-            Array<PointIndices<2>,PointIndex> hml { mesh.mlbetweennodes };
+            Array<PointIndices<2>,PointIndex> hml (mesh.mlbetweennodes);
             for (PointIndex pi : Range(mesh.Points()))
               mesh.mlbetweennodes[inv_index[pi]] = hml[pi];
           }
@@ -803,7 +803,7 @@ namespace netgen
 	    auto ex2loc = dest2vert[dest];
 	    if (ex2loc.Size() == 0) continue;
 	    
-	    INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*dest2face[dest].Size()+10); 
+	    ClosedHashTable<PointIndices<3>, int> vert2face(4*dest2face[dest].Size()+16);
 	    for (int face : dest2face[dest])
 	      {
 		auto verts = topology.GetFaceVertices (face-1);

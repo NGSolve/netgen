@@ -841,7 +841,7 @@ namespace netgen
 	  {
 	    ok = 0;
 	    (*testout) << "face " << i << " with points " 
-		       << i3.I1() << "-" << i3.I2() << "-" << i3.I3() 
+		       << i3[0] << "-" << i3[1] << "-" << i3[2] 
 		       << " has " << nel << " elements" << endl;
 	  }
       }
@@ -864,8 +864,8 @@ namespace netgen
 	      {
 		ok = 0;
 		(*testout) << "element " << ei << " with face " 
-			   << i3.I1() << "-" << i3.I2() << "-"
-			   << i3.I3() 
+			   << i3[0] << "-" << i3[1] << "-"
+			   << i3[2] 
 			   << " has " << nel << " elements" << endl;
 	      }
 	  }

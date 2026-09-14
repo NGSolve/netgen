@@ -91,3 +91,26 @@ TEST_CASE("Array")
   CHECK(typeid(Range(size_t(4))) == typeid(T_Range<size_t>));
   CHECK(typeid(Range(4)) == typeid(T_Range<int>));
 }
+
+TEST_CASE("Array constructors with index type")
+{
+  // these used to initialize FlatArray<T> instead of FlatArray<T,IndexType>,
+  // so they did not compile for an array with a non-default index type
+  Array<double, netgen::PointIndex> a { 1.0, 2.0, 3.0 };
+  CHECK(a.Size() == 3);
+  auto pi = IndexBASE<netgen::PointIndex>();
+  CHECK(a[pi] == 1.0);
+  CHECK(a[pi+2] == 3.0);
+  for (auto i : a.Range())
+    CHECK(a[i] == double(i-IndexBASE<netgen::PointIndex>()+1));
+
+  Array<double> b { 1.0, 2.0 }, c { 3.0 };
+  Array<double, netgen::PointIndex> m (b, c);   // merge-copy
+  CHECK(m.Size() == 3);
+  CHECK(m[pi] == 1.0);
+  CHECK(m[pi+2] == 3.0);
+
+  LocalHeap lh(10000, "test");
+  Array<double, netgen::PointIndex> h (5, lh);
+  CHECK(h.Size() == 5);
+}

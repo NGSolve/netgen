@@ -735,7 +735,7 @@ void MeshOptimize3d :: SplitImprove ()
 double MeshOptimize3d :: SwapImproveEdge (
         const TBitArray<ElementIndex> * working_elements,
         Table<ElementIndex, PointIndex> & elementsonnode,
-        INDEX_3_HASHTABLE<int> & faces,
+        ClosedHashTable<SortedPointIndices<3>, int> & faces,
         PointIndex pi1, PointIndex pi2, bool check_only)
 {
   ArrayMem<ElementIndex, 20> hasbothpoints;
@@ -1248,7 +1248,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
   const char * savetask = multithread.task;
   multithread.task = "Optimize Volume: Swap Improve";
 
-  INDEX_3_HASHTABLE<int> faces(mesh.GetNOpenElements()/3 + 2);
+  ClosedHashTable<SortedPointIndices<3>, int> faces(mesh.GetNOpenElements() + 8);
   if (goal == OPT_CONFORM)
     {
       for (int i = 1; i <= mesh.GetNOpenElements(); i++)

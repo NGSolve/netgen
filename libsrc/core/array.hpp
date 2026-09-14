@@ -753,7 +753,7 @@ namespace ngcore
     /// Generate array in user data
     template <typename ALLOCATOR>
     NETGEN_INLINE Array(size_t asize, ALLOCATOR & lh)
-      : FlatArray<T> (asize, lh)
+      : FlatArray<T,IndexType> (asize, lh)
     {
       allocsize = asize; 
       mem_to_delete = nullptr;
@@ -812,8 +812,8 @@ namespace ngcore
     }
 
     Array (std::initializer_list<T> list) 
-      : FlatArray<T> (list.size(), 
-                      list.size() ? new T[list.size()] : NULL)
+      : FlatArray<T,IndexType> (list.size(), 
+                                list.size() ? new T[list.size()] : NULL)
     {
       allocsize = size;
       mem_to_delete = data;
@@ -825,8 +825,8 @@ namespace ngcore
 
     /// array merge-copy
     explicit Array (const Array<T> & a2, const Array<T> & a3)
-      : FlatArray<T> (a2.Size()+a3.Size(), 
-                      a2.Size()+a3.Size() ? new T[a2.Size()+a3.Size()] : 0)
+      : FlatArray<T,IndexType> (a2.Size()+a3.Size(), 
+                                a2.Size()+a3.Size() ? new T[a2.Size()+a3.Size()] : 0)
     {
       allocsize = size;
       mem_to_delete = data;

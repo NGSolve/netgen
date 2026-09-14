@@ -49,7 +49,7 @@ namespace netgen
     for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
       {
 	const Segment & el = mesh[si];
-	PointIndices<2> i2 = PointIndices<2>::Sort(el[0], el[1]);
+	PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
         if (!between.Used(i2))
           {
             between.Set (i2, PointIndex::INVALID);          
@@ -70,7 +70,7 @@ namespace netgen
 		  { 0, 1, 5 } };
               for (int j = 0; j < 3; j++)
                 {
-                  auto i2 = PointIndices<2>::Sort(el[betw[j][0]],el[betw[j][1]]);
+                  auto i2 = PointIndices<2>(el[betw[j][0]],el[betw[j][1]]).Sort();
                   if (!between.Used(i2))
                     {
                       between.Set (i2, PointIndex::INVALID);          
@@ -89,11 +89,11 @@ namespace netgen
 		  { 0, 2, 8 } };   // one diagonal of the quad. should change later to mid-point of edge mid-points
               for (int j = 0; j < 5; j++)
                 {
-                  auto i2 = PointIndices<2>::Sort(el[betw[j][0]],el[betw[j][1]]);
+                  auto i2 = PointIndices<2>(el[betw[j][0]],el[betw[j][1]]).Sort();
                   if (j == 4)
                     {
-                      auto i2a = PointIndices<2>::Sort(el[0], el[2]);
-                      auto i2b = PointIndices<2>::Sort(el[1], el[3]);
+                      auto i2a = PointIndices<2>(el[0], el[2]).Sort();
+                      auto i2b = PointIndices<2>(el[1], el[3]).Sort();
                       i2 = i2a[0] < i2b[0] ? i2a : i2b;
                     }
                   if (!between.Used(i2))
@@ -127,7 +127,7 @@ namespace netgen
 
               for (int j = 0; j < 6; j++)
                 {
-                  PointIndices<2> i2 = PointIndices<2>::Sort(el.PNum(betw[j][0]),el.PNum(betw[j][1]));
+                  PointIndices<2> i2 = PointIndices<2>(el.PNum(betw[j][0]),el.PNum(betw[j][1])).Sort();
                   if (!between.Used(i2))
                     {
                       between.Set (i2, PointIndex::INVALID);          
@@ -169,7 +169,7 @@ namespace netgen
       {
 	const Segment & el = mesh.LineSegment(si);
 
-	PointIndices<2> i2 = PointIndices<2>::Sort(el[0], el[1]);
+	PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
 	PointIndex pinew = between.Get(i2);
 	EdgePointGeomInfo ngi;
 
@@ -336,8 +336,8 @@ namespace netgen
                   
                   if (j == 4)
                     {
-                      auto i2a = PointIndices<2>::Sort(el[0], el[2]);
-                      auto i2b = PointIndices<2>::Sort(el[1], el[3]);
+                      auto i2a = PointIndices<2>(el[0], el[2]).Sort();
+                      auto i2b = PointIndices<2>(el[1], el[3]).Sort();
                       i2 = i2a[0] < i2b[0] ? i2a : i2b;
                     }
 

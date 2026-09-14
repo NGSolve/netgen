@@ -164,14 +164,14 @@ namespace netgen
 
 
               [[maybe_unused]] int facedir = 0;
-              if (face.I1() > face.I2())
-                { swap (face.I1(), face.I2()); facedir += 1; }
-              if (face.I2() > face.I3())
-                { swap (face.I2(), face.I3()); facedir += 2; }
-              if (face.I1() > face.I2())
-                { swap (face.I1(), face.I2()); facedir += 4; }
+              if (face[0] > face[1])
+                { swap (face[0], face[1]); facedir += 1; }
+              if (face[1] > face[2])
+                { swap (face[1], face[2]); facedir += 2; }
+              if (face[0] > face[1])
+                { swap (face[0], face[1]); facedir += 4; }
 
-              if (face.I1() != v) continue;
+              if (face[0] != v) continue;
 
               func (face, elnr, j, true);
             }
@@ -201,27 +201,27 @@ namespace netgen
                                     el[elfaces[j][2]], el[elfaces[j][3]]);
               
               // int facedir = 0;
-              if (min2 (face4.I1(), face4.I2()) > 
-                  min2 (face4.I4(), face4.I3())) 
+              if (min2 (face4[0], face4[1]) > 
+                  min2 (face4[3], face4[2])) 
                 {  // z - flip
                   // facedir += 1; 
-                  swap (face4.I1(), face4.I4());
-                  swap (face4.I2(), face4.I3());
+                  swap (face4[0], face4[3]);
+                  swap (face4[1], face4[2]);
                 }
-              if (min2 (face4.I1(), face4.I4()) >
-                  min2 (face4.I2(), face4.I3())) 
+              if (min2 (face4[0], face4[3]) >
+                  min2 (face4[1], face4[2])) 
                 {  // x - flip
                   // facedir += 2; 
-                  swap (face4.I1(), face4.I2());
-                  swap (face4.I3(), face4.I4());
+                  swap (face4[0], face4[1]);
+                  swap (face4[2], face4[3]);
                 }
-              if (face4.I2() > face4.I4())
+              if (face4[1] > face4[3])
                 {  // diagonal flip
                   // facedir += 4; 
-                  swap (face4.I2(), face4.I4());
+                  swap (face4[1], face4[3]);
                 }
               
-              if (face4.I1() != v) continue;
+              if (face4[0] != v) continue;
               
               func(face4, elnr, j, true);
                 /*
@@ -279,13 +279,13 @@ namespace netgen
                 swap (face[1], face[2]);
                 // facedir += 2;
               }
-            if (face.I1() > face[1])
+            if (face[0] > face[1])
               {
-                swap (face.I1(), face[1]);
+                swap (face[0], face[1]);
                 // facedir += 4;
               }
             
-            if (face.I1() != v) continue;
+            if (face[0] != v) continue;
             
             func(face, elnr, 0, false);
             /*
@@ -319,27 +319,27 @@ namespace netgen
                                   el.PNum(elfaces[0][3]));
             
             // facedir = 0;
-            if (min2 (face4.I1(), face4.I2()) > 
-                min2 (face4.I4(), face4.I3())) 
+            if (min2 (face4[0], face4[1]) > 
+                min2 (face4[3], face4[2])) 
               {  // z - orientation
                 // facedir += 1; 
-                swap (face4.I1(), face4.I4());
-                swap (face4.I2(), face4.I3());
+                swap (face4[0], face4[3]);
+                swap (face4[1], face4[2]);
               }
-            if (min2 (face4.I1(), face4.I4()) >
-                min2 (face4.I2(), face4.I3())) 
+            if (min2 (face4[0], face4[3]) >
+                min2 (face4[1], face4[2])) 
               {  // x - orientation
                 // facedir += 2; 
-                swap (face4.I1(), face4.I2());
-                swap (face4.I3(), face4.I4());
+                swap (face4[0], face4[1]);
+                swap (face4[2], face4[3]);
               }
-            if (face4.I2() > face4.I4())
+            if (face4[1] > face4[3])
               { 
                 // facedir += 4; 
-                swap (face4.I2(), face4.I4());
+                swap (face4[1], face4[3]);
               }
             
-            if (face4.I1() != v) continue;
+            if (face4[0] != v) continue;
             func(face4, elnr, 0, false);
             /*
               INDEX_3 face(face4.I1(), face4.I2(), face4.I3());
@@ -1053,12 +1053,12 @@ namespace netgen
               // auto begin = r.First();
               // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              NgClosedHashTable<PointIndices<3>, int> vert2face(2*max_face_on_vertex+10);
+              ClosedHashTable<PointIndices<3>, int> vert2face(4*max_face_on_vertex+16);
               // for (PointIndex v = begin+PointIndex::BASE;
               // v < end+PointIndex::BASE; v++)
               for (PointIndex v : Range(PointIndex::FromNr0(r.First()), PointIndex::FromNr0(r.Next())))                
                 {
-                  vert2face.DeleteData();
+                  vert2face.SetSize(4*max_face_on_vertex+16);
                   
                   for (int j = 0; j < vert2oldface[v].Size(); j++)
                     {
@@ -1118,7 +1118,7 @@ namespace netgen
               // auto begin = r.First();
               // auto end = r.Next();
               // INDEX_3_CLOSED_HASHTABLE<int> vert2face(2*max_face_on_vertex+10);
-              NgClosedHashTable<PointIndices<3>, int> vert2face(2*max_face_on_vertex+10);
+              ClosedHashTable<PointIndices<3>, int> vert2face(4*max_face_on_vertex+16);
               /*
               for (PointIndex v = begin+PointIndex::BASE;
                    v < end+PointIndex::BASE; v++)
@@ -1127,7 +1127,7 @@ namespace netgen
                 {
                   int first_fa = cnt[v];
                   int nfa = first_fa;
-                  vert2face.DeleteData();
+                  vert2face.SetSize(4*max_face_on_vertex+16);
                   
                   for (int j = 0; j < vert2oldface[v].Size(); j++)
                     {
@@ -1166,7 +1166,7 @@ namespace netgen
                   LoopOverFaces (*mesh, *this, v,
                                  [&] (PointIndices<4> i4, int elnr, int j, bool volume)
                                  {
-                                   PointIndices<3> face(i4.I1(), i4.I2(), i4.I3());
+                                   PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    /*
                                    if (!vert2face.Used (face))
                                      {
@@ -1204,7 +1204,7 @@ namespace netgen
                   LoopOverFaces (*mesh, *this, v,
                                  [&] (PointIndices<4> i4, int elnr, int j, bool volume)
                                  {
-                                   PointIndices<3> face(i4.I1(), i4.I2(), i4.I3());
+                                   PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    int facenum = vert2face.Get(face);
                                    if (volume)
                                      faces[elnr][j] = facenum;
@@ -2130,12 +2130,12 @@ namespace netgen
                      el[elfaces[j][2]], PointIndex::INVALID );
         
         int facedir = 0;
-        if (face.I1() > face.I2())
-          { swap (face.I1(), face.I2()); facedir += 1; }
-        if (face.I2() > face.I3())
-          { swap (face.I2(), face.I3()); facedir += 2; }
-        if (face.I1() > face.I2())
-          { swap (face.I1(), face.I2()); facedir += 4; }
+        if (face[0] > face[1])
+          { swap (face[0], face[1]); facedir += 1; }
+        if (face[1] > face[2])
+          { swap (face[1], face[2]); facedir += 2; }
+        if (face[0] > face[1])
+          { swap (face[0], face[1]); facedir += 4; }
 
         return facedir;
       }
@@ -2147,24 +2147,24 @@ namespace netgen
                       el[elfaces[j][2]], el[elfaces[j][3]]);
         
         int facedir = 0;
-        if (min2 (face4.I1(), face4.I2()) > 
-            min2 (face4.I4(), face4.I3())) 
+        if (min2 (face4[0], face4[1]) > 
+            min2 (face4[3], face4[2])) 
           {  // z - flip
             facedir += 1; 
-            swap (face4.I1(), face4.I4());
-            swap (face4.I2(), face4.I3());
+            swap (face4[0], face4[3]);
+            swap (face4[1], face4[2]);
           }
-        if (min2 (face4.I1(), face4.I4()) >
-            min2 (face4.I2(), face4.I3())) 
+        if (min2 (face4[0], face4[3]) >
+            min2 (face4[1], face4[2])) 
           {  // x - flip
             facedir += 2; 
-            swap (face4.I1(), face4.I2());
-            swap (face4.I3(), face4.I4());
+            swap (face4[0], face4[1]);
+            swap (face4[2], face4[3]);
           }
-        if (face4.I2() > face4.I4())
+        if (face4[1] > face4[3])
           {  // diagonal flip
             facedir += 4; 
-            swap (face4.I2(), face4.I4());
+            swap (face4[1], face4[3]);
           }
         
         return facedir;
@@ -2197,12 +2197,12 @@ namespace netgen
                      el[elfaces[j][2]], PointIndex(PointIndex::INVALID));
         
         int facedir = 0;
-        if (face.I1() > face.I2())
-          { swap (face.I1(), face.I2()); facedir += 1; }
-        if (face.I2() > face.I3())
-          { swap (face.I2(), face.I3()); facedir += 2; }
-        if (face.I1() > face.I2())
-          { swap (face.I1(), face.I2()); facedir += 4; }
+        if (face[0] > face[1])
+          { swap (face[0], face[1]); facedir += 1; }
+        if (face[1] > face[2])
+          { swap (face[1], face[2]); facedir += 2; }
+        if (face[0] > face[1])
+          { swap (face[0], face[1]); facedir += 4; }
 
         return facedir;
       }
@@ -2214,24 +2214,24 @@ namespace netgen
                       el[elfaces[j][2]], el[elfaces[j][3]]);
         
         int facedir = 0;
-        if (min2 (face4.I1(), face4.I2()) > 
-            min2 (face4.I4(), face4.I3())) 
+        if (min2 (face4[0], face4[1]) > 
+            min2 (face4[3], face4[2])) 
           {  // z - flip
             facedir += 1; 
-            swap (face4.I1(), face4.I4());
-            swap (face4.I2(), face4.I3());
+            swap (face4[0], face4[3]);
+            swap (face4[1], face4[2]);
           }
-        if (min2 (face4.I1(), face4.I4()) >
-            min2 (face4.I2(), face4.I3())) 
+        if (min2 (face4[0], face4[3]) >
+            min2 (face4[1], face4[2])) 
           {  // x - flip
             facedir += 2; 
-            swap (face4.I1(), face4.I2());
-            swap (face4.I3(), face4.I4());
+            swap (face4[0], face4[1]);
+            swap (face4[2], face4[3]);
           }
-        if (face4.I2() > face4.I4())
+        if (face4[1] > face4[3])
           {  // diagonal flip
             facedir += 4; 
-            swap (face4.I2(), face4.I4());
+            swap (face4[1], face4[3]);
           }
         
         return facedir;

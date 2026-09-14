@@ -70,7 +70,7 @@ namespace netgen
   class MeshNB
   {
     // face nodes -> one element
-    INDEX_3_CLOSED_HASHTABLE<int> faces;
+    ClosedHashTable<SortedPointIndices<3>, int> faces;
 
     // 
     Array<DelaunayTet> & tets;
@@ -114,9 +114,9 @@ namespace netgen
 
     for (int i = 0; i < 4; i++)
       {
-	INDEX_3 i3 = INDEX_3::Sort (el.GetFace(i));
+	SortedPointIndices<3> i3 = el.GetFace(i);
 
-	int posnr;
+	size_t posnr;
 	
 	if (!faces.PositionCreate (i3, posnr))
 	  {
@@ -1105,7 +1105,7 @@ namespace netgen
     //  INDEX_3_HASHTABLE<INDEX_2> innerfaces(np);
 
   
-    INDEX_3_HASHTABLE<int> boundaryfaces(mesh.GetNOpenElements()/3+1);
+    ClosedHashTable<SortedPointIndices<3>, int> boundaryfaces(2*mesh.GetNOpenElements()+8);
     /*
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
@@ -1115,13 +1115,6 @@ namespace netgen
 	boundaryfaces.PrepareSet (i3);
       }
     */
-    for (const Element2d & tri : mesh.OpenElements())
-      {
-	PointIndices<3> i3 (tri[0], tri[1], tri[2]);
-	i3.Sort();
-	boundaryfaces.PrepareSet (i3);
-      }
-    boundaryfaces.AllocateElements();
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
 	const Element2d & tri = mesh.OpenElement(i);
@@ -1182,13 +1175,13 @@ namespace netgen
     //  cout << "elsonpoint mem: ";
     //  elsonpoint.PrintMemInfo(cout);
 
-    INDEX_3_CLOSED_HASHTABLE<INDEX_2> faceht(100);   
+    ClosedHashTable<PointIndices<3>, IVec<2>> faceht(128);
   
     Element2d hel(TRIG);
     // for (PointIndex pi = mesh.Points().Begin(); pi < mesh.Points().End(); pi++)
     for (PointIndex pi : mesh.Points().Range())
       {
-	faceht.SetSize (4 * elsonpoint[pi].Size());
+	faceht.SetSize (8 * elsonpoint[pi].Size() + 8);
 	for (int ii = 0; ii < elsonpoint[pi].Size(); ii++)
 	  {
 	    int i = elsonpoint[pi][ii];
@@ -1208,17 +1201,17 @@ namespace netgen
 		      {
 			if (faceht.Used (i3))
 			  {
-			    INDEX_2 i2 = faceht.Get(i3);
+			    IVec<2> i2 = faceht.Get(i3);
 			  
-			    tempels[i-1].NB(j-1) = i2.I1();
-			    tempels[i2.I1()-1].NB(i2.I2()-1) = i;
+			    tempels[i-1].NB(j-1) = i2[0];
+			    tempels[i2[0]-1].NB(i2[1]-1) = i;
 			  }
 			else
 			  {
 			    hel.Invert();
 			    hel.NormalizeNumbering();
 			    PointIndices<3> i3i(hel[0], hel[1], hel[2]);
-			    INDEX_2 i2(i, j);
+			    IVec<2> i2(i, j);
 			    faceht.Set (i3i, i2);
 			  }
 		      }
@@ -1373,7 +1366,7 @@ namespace netgen
 
 		for (int j = 1; j <= 4; j++)
 		  {
-		    INDEX_3 i3 = tempels[ei-1].GetFace(j-1);
+		    PointIndices<3> i3 = tempels[ei-1].GetFace(j-1);
 		    /*
 		    Element2d face;
 		    tempels.Get(ei).GetFace(j, face);

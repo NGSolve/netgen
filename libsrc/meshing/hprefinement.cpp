@@ -733,7 +733,7 @@ namespace netgen
 			 el.pnums[hprs->splitfaces[j][1]-1],
 			 el.pnums[hprs->splitfaces[j][2]-1]);
 
-	      if (i3.I2() > i3.I3()) Swap (i3.I2(), i3.I3());
+	      if (i3[1] > i3[2]) Swap (i3[1], i3[2]);
 	      
 	      if (!newfacepts.Used (i3))
 		{
@@ -821,8 +821,8 @@ namespace netgen
 	      PointIndices<3> i3(el.pnums[hprs->splitfaces[j][0]-1],
 			 el.pnums[hprs->splitfaces[j][1]-1],
 			 el.pnums[hprs->splitfaces[j][2]-1]);
-	      if (i3.I2() > i3.I3())
-		Swap (i3.I2(), i3.I3());
+	      if (i3[1] > i3[2])
+		Swap (i3[1], i3[2]);
 	      PointIndex npi = newfacepts.Get(i3);
 	      newpnums[hprs->splitfaces[j][3]-1] = npi;
 	    
@@ -1754,21 +1754,21 @@ namespace netgen
   
 	    PointIndices<3> i3;
 	    if (el.GetNP() == 3) 
-	      i3 = PointIndices<3>::Sort (el[0], el[1], el[2]);
+	      i3 = PointIndices<3>(el[0], el[1], el[2]).Sort();
 	    else
 	      {
 		PointIndices<4> i4 (el[0], el[1], el[2], el[3]);
 		i4.Sort();
-		i3 = PointIndices<3>(i4.I1(), i4.I2(), i4.I3());
+		i3 = PointIndices<3>(i4[0], i4[1], i4[2]);
 	      }
 	    faces.Set (i3, domnr);
             *testout << "set face " << i3 << ", domnr = " << domnr << endl;
 	
 	    for (int j = 0; j < el.GetNP(); j++)
 	      {
-		face_edges.Set (PointIndices<2>::Sort (el[j], el[(j+1)%el.GetNP()]), domnr);
+		face_edges.Set (PointIndices<2>(el[j], el[(j+1)%el.GetNP()]).Sort(), domnr);
 	
-		surf_edges.Set (PointIndices<2>::Sort (el[j], el[(j+1)%el.GetNP()]), fd.SurfNr()+1);
+		surf_edges.Set (PointIndices<2>(el[j], el[(j+1)%el.GetNP()]).Sort(), fd.SurfNr()+1);
 		
 		facepoint[el[j]] = domnr;
 	      }
@@ -1795,8 +1795,8 @@ namespace netgen
 	    
 	    if (ed.SingEdgeLeft() * levels >= act_ref)
 	      {
-		PointIndices<2> i2 = PointIndices<2>::Sort(mesh.LineSegment(i)[0], 
-                                           mesh.LineSegment(i)[1]);
+		PointIndices<2> i2 = PointIndices<2>(mesh.LineSegment(i)[0], 
+                                           mesh.LineSegment(i)[1]).Sort();
 		edges.Set(i2,1); 
 		edgepoint.SetBit(i2[0]);
 		edgepoint.SetBit(i2[1]);
@@ -1811,8 +1811,8 @@ namespace netgen
 	    
 	    if (ed.SingEdgeRight() * levels >= act_ref)
 	      {
-		PointIndices<2> i2 = PointIndices<2>::Sort(mesh.LineSegment(i)[1], 
-                                                   mesh.LineSegment(i)[0]);  
+		PointIndices<2> i2 = PointIndices<2>(mesh.LineSegment(i)[1], 
+                                                   mesh.LineSegment(i)[0]).Sort();  
 		edges.Set (i2, 1);
 		edgepoint.SetBit(i2[0]);
 		edgepoint.SetBit(i2[1]);

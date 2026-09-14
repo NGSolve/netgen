@@ -2885,8 +2885,8 @@ namespace netgen
                    {
                      PointIndices<4> i4(el[0], el[1], el[2], el[3]);
                      i4.Sort();
-                     table.Add (i4.I1(), ei);
-                     table.Add (i4.I2(), ei);
+                     table.Add (i4[0], ei);
+                     table.Add (i4[1], ei);
                    }
                  else
                    {
@@ -3152,15 +3152,14 @@ namespace netgen
       ( [&](TaskInfo & ti)
       {
         auto myrange = points.Range().Split(ti.task_nr, ti.ntasks);
-        // NOTE: keyed on NormalizeNumbering()ed (rotated, not sorted) triples.
-        // Kept on the legacy table on purpose: FindOpenElements iterates the
-        // slots, so a different hash function reorders openelements and changes
-        // the resulting mesh - and it measured 8-12% slower here.
-        INDEX_3_CLOSED_HASHTABLE<tval> faceht(100);
+        // keyed on NormalizeNumbering()ed (rotated, not sorted) triples.
+        // The slot walk below builds openelements, so the hash decides their order
+        // and thus which mesh comes out; sized to avoid rehashing during the fill.
+        ClosedHashTable<PointIndices<3>, tval> faceht(128);
         for (PointIndex pi : myrange)
           if (selsonpoint[pi].Size()+elsonpoint[pi].Size())
             {
-              faceht.SetSize (2 * selsonpoint[pi].Size() + 4 * elsonpoint[pi].Size());
+              faceht.SetSize (4 * selsonpoint[pi].Size() + 8 * elsonpoint[pi].Size() + 16);
 
               for (SurfaceElementIndex sei : selsonpoint[pi])
                 {
@@ -3365,11 +3364,8 @@ namespace netgen
     // new version, general elements
     // hash index: pnum1-2, surfnr
     // hash data : surfel-nr (pos) or segment nr(neg)
-    // NOTE: kept on the legacy table on purpose - the loop below iterates the
-    // bags to build opensegments, so a different hash function reorders them.
-    // Converting it to ClosedHashTable<IVec<3>,int> changed the STL meshes
-    // (hinge.stl, part1.stl), CSG and 2D were unaffected.
-    INDEX_3_HASHTABLE<int> faceht(4 * GetNSE()+GetNSeg()+1);   
+    // key: the (oriented) segment point pair plus its face index
+    ClosedHashTable<std::tuple<PointIndices<2>, int>, int> faceht(2*(4 * GetNSE()+GetNSeg())+8);
 
     PrintMessage (5, "Test Opensegments");
     for (int i = 1; i <= GetNSeg(); i++)
@@ -3378,7 +3374,7 @@ namespace netgen
 
         if (surfnr == 0 || seg_fdi(seg) == surfnr)
           {
-            INDEX_3 key (seg[0].Nr1(), seg[1].Nr1(), seg_fdi(seg));
+            std::tuple<PointIndices<2>, int> key { { seg[0], seg[1] }, seg_fdi(seg) };
             int data = -i;
 
             if (faceht.Used (key))
@@ -3424,11 +3420,11 @@ namespace netgen
           {
             for (int j = 1; j <= el.GetNP(); j++)
               {
-                INDEX_3 seg (el.PNumMod(j).Nr1(), el.PNumMod(j+1).Nr1(), el.GetIndex());
-                // int data;
+                auto [pi1, pi2] = PointIndices<2>(el.PNumMod(j), el.PNumMod(j+1));
+                std::tuple<PointIndices<2>, int> seg { { pi1, pi2 }, el.GetIndex() };
 
-                if (seg.I1() == 0 || seg.I2() == 0)
-                  cerr << "seg = " << seg << endl;
+                if (!pi1.IsValid() || !pi2.IsValid())
+                  cerr << "seg = " << pi1 << "-" << pi2 << endl;
 
                 if (faceht.Used(seg))
                   {
@@ -3452,9 +3448,7 @@ namespace netgen
                   }
                 else
                   {
-                    Swap (seg.I1(), seg.I2());
-                    // data.I1() = el.GetIndex();
-                    // data.I2() = i;
+                    std::get<0>(seg) = PointIndices<2>(pi2, pi1);
                     faceht.Set (seg, i);
                   }
               }
@@ -3489,18 +3483,14 @@ namespace netgen
     (*testout) << "open segments: " << endl;
     opensegments.SetSize(0);
     opensegment_faces.SetSize(0);
-    for (int i = 1; i <= faceht.GetNBags(); i++)
-      for (int j = 1; j <= faceht.GetBagSize(i); j++)
+    for (auto [key, data] : faceht)
         {
-          INDEX_3 i2;
-          int data;
-          faceht.GetData (i, j, i2, data);
           if (data)  // surfnr
             {
+              auto [i2, face] = key;
               Segment seg;
-              seg[0] = PointIndex::FromNr1(i2.I1());
-              seg[1] = PointIndex::FromNr1(i2.I2());
-              int face = i2.I3();
+              seg[0] = i2[0];
+              seg[1] = i2[1];
 
               // find geomdata:
               if (data > 0)

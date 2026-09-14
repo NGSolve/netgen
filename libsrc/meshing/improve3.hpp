@@ -41,7 +41,7 @@ public:
   double SplitImprove2Element (ElementIndex ei, const Table<ElementIndex, PointIndex> & elements_of_point, bool check_only);
   
 
-  double SwapImproveEdge (const TBitArray<ElementIndex> * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, INDEX_3_HASHTABLE<int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
+  double SwapImproveEdge (const TBitArray<ElementIndex> * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, ClosedHashTable<SortedPointIndices<3>, int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (const TBitArray<ElementIndex> * working_elements = NULL);
   void SwapImproveSurface (const TBitArray<ElementIndex> * working_elements = NULL,
 			   const Array< idmap_type* > * idmaps = NULL);

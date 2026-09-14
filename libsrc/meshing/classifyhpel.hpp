@@ -63,12 +63,12 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
 	cp3 = cornerpoint.Test (el.pnums[pi3]);
 	cp4 = cornerpoint.Test (el.pnums[pi4]);
 	
-	isedge1 = edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[k]));
-	isedge2 = edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[pi3]));
-	isedge3 = edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[pi4]));
-	isedge4 = edges.Used (PointIndices<2>::Sort (el.pnums[k], el.pnums[pi3]));
-	isedge5 = edges.Used (PointIndices<2>::Sort (el.pnums[k], el.pnums[pi4]));
-	isedge6 = edges.Used (PointIndices<2>::Sort (el.pnums[pi3], el.pnums[pi4]));
+	isedge1 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[k]).Sort());
+	isedge2 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi3]).Sort());
+	isedge3 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi4]).Sort());
+	isedge4 = edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi3]).Sort());
+	isedge5 = edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi4]).Sort());
+	isedge6 = edges.Used (PointIndices<2>(el.pnums[pi3], el.pnums[pi4]).Sort());
 	
 	if (debug)
 	  {
@@ -100,10 +100,10 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
 	      }
 	  }
 	/*
-	  isface1 = faces.Used (PointIndices<3>::Sort (el.pnums[k], el.pnums[pi3], el.pnums[pi4]));
-	  isface2 = faces.Used (PointIndices<3>::Sort (el.pnums[j], el.pnums[pi3], el.pnums[pi4]));
-	  isface3 = faces.Used (PointIndices<3>::Sort (el.pnums[j], el.pnums[k], el.pnums[pi4]));
-	  isface4 = faces.Used (PointIndices<3>::Sort (el.pnums[j], el.pnums[k], el.pnums[pi3]));
+	  isface1 = faces.Used (PointIndices<3>(el.pnums[k], el.pnums[pi3], el.pnums[pi4]).Sort());
+	  isface2 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[pi3], el.pnums[pi4]).Sort());
+	  isface3 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[k], el.pnums[pi4]).Sort());
+	  isface4 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[k], el.pnums[pi3]).Sort());
 	*/
 	
 	isfedge1 = isfedge2 = isfedge3 = isfedge4 = isfedge5 = isfedge6 = 0;
@@ -138,12 +138,12 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
 	      }
 	  }
 	/*
-	  isfedge1 = face_edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[k]));
-	  isfedge2 = face_edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[pi3]));
-	  isfedge3 = face_edges.Used (PointIndices<2>::Sort (el.pnums[j], el.pnums[pi4]));
-	  isfedge4 = face_edges.Used (PointIndices<2>::Sort (el.pnums[k], el.pnums[pi3]));
-	  isfedge5 = face_edges.Used (PointIndices<2>::Sort (el.pnums[k], el.pnums[pi4]));
-	  isfedge6 = face_edges.Used (PointIndices<2>::Sort (el.pnums[pi3], el.pnums[pi4]));
+	  isfedge1 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[k]).Sort());
+	  isfedge2 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi3]).Sort());
+	  isfedge3 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi4]).Sort());
+	  isfedge4 = face_edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi3]).Sort());
+	  isfedge5 = face_edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi4]).Sort());
+	  isfedge6 = face_edges.Used (PointIndices<2>(el.pnums[pi3], el.pnums[pi4]).Sort());
 	*/
 	
 	fp1 = fp2 = fp3 = fp4 = 0;
@@ -629,7 +629,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
       const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (PRISM);
       for(int k=0;k<9;k++)
 	{
-	  PointIndices<2> i2 = PointIndices<2> :: Sort(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])); 
+	  PointIndices<2> i2 = PointIndices<2>(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])).Sort(); 
 	  if (edges.Used(i2)) edge_sing[k] = 2;
 	  else edge_sing[k] = face_edges.Used(i2);
 	}
@@ -640,8 +640,8 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
 	  PointIndices<3> i3; 
 	  
 	  if(k<2) 
-	    i3 = PointIndices<3>::Sort(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], 
-                                       el.pnums[p[elfaces[k][2]-1]-1]); 
+	    i3 = PointIndices<3>(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], 
+                                       el.pnums[p[elfaces[k][2]-1]-1]).Sort(); 
 	  else 
 	    { 
 	      PointIndices<4> i4 (el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1],
@@ -935,7 +935,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
 	      int ep1=p[eledges[k][0]-1];  
 	      int ep2=p[eledges[k][1]-1];  
 	     
-	      PointIndices<2> i2 = PointIndices<2>::Sort(el.PNum(ep1),el.PNum(ep2));
+	      PointIndices<2> i2 = PointIndices<2>(el.PNum(ep1),el.PNum(ep2)).Sort();
 	     
 	      if(edges.Used(i2)) 
 		{
@@ -960,8 +960,8 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
             (dim==3 || edgepoint_dom.Used( { fd.SurfNr(),pnums[k] } ) || edgepoint_dom.Used( { -1,pnums[k] } )))
           //edgepoint, but not member of sing_edge on trig -> cp
 	  {
-	    PointIndices<2> i2a = PointIndices<2>::Sort(el.PNum(p[k]), el.PNum(p[(k+1)%3])); 
-            PointIndices<2> i2b = PointIndices<2>::Sort(el.PNum(p[k]), el.PNum(p[(k+2)%3]));
+	    PointIndices<2> i2a = PointIndices<2>(el.PNum(p[k]), el.PNum(p[(k+1)%3])).Sort(); 
+            PointIndices<2> i2b = PointIndices<2>(el.PNum(p[k]), el.PNum(p[(k+2)%3])).Sort();
 	    
 	    if(!edges.Used(i2a) && !edges.Used(i2b)) 
 	      point_sing[p[k]-1] = 3; 	
@@ -1351,8 +1351,8 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
       int cpp[4] = { cp1, cp2, cp3, cp4};
       for(int k=0;k<0;k++)
         {
-          PointIndices<2> i2a=PointIndices<2>::Sort(p[k], p[(k+1)%4]); 
-          PointIndices<2> i2b=PointIndices<2>::Sort(p[k], p[(k-1)%4]); 
+          PointIndices<2> i2a=PointIndices<2>(p[k], p[(k+1)%4]).Sort(); 
+          PointIndices<2> i2b=PointIndices<2>(p[k], p[(k-1)%4]).Sort(); 
           if(!edges.Used(i2a) && !edges.Used(i2b)) 
             cpp[k] = 1; 
         }
@@ -1406,32 +1406,32 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
           if(ep1)
             if(edgepoint.Test(p[0]))
               {
-                PointIndices<2> i2a=PointIndices<2>::Sort(p[0], p[1]); 
-                PointIndices<2> i2b=PointIndices<2>::Sort(p[0], p[3]); 
+                PointIndices<2> i2a=PointIndices<2>(p[0], p[1]).Sort(); 
+                PointIndices<2> i2b=PointIndices<2>(p[0], p[3]).Sort(); 
                 if(!edges.Used(i2a) && !edges.Used(i2b)) 
                   cp1 = 1; 
               }
           if(ep2)
             if(edgepoint.Test(p[1]))
               {
-                PointIndices<2> i2a=PointIndices<2>::Sort(p[0], p[1]); 
-                PointIndices<2> i2b=PointIndices<2>::Sort(p[1], p[2]); 
+                PointIndices<2> i2a=PointIndices<2>(p[0], p[1]).Sort(); 
+                PointIndices<2> i2b=PointIndices<2>(p[1], p[2]).Sort(); 
                 if(!edges.Used(i2a) && !edges.Used(i2b)) 
                   cp2 = 1; 
               }
           if(ep3)
             if(edgepoint.Test(p[2]))
               {
-                PointIndices<2> i2a=PointIndices<2>::Sort(p[2], p[1]); 
-                PointIndices<2> i2b=PointIndices<2>::Sort(p[3], p[2]); 
+                PointIndices<2> i2a=PointIndices<2>(p[2], p[1]).Sort(); 
+                PointIndices<2> i2b=PointIndices<2>(p[3], p[2]).Sort(); 
                 if(!edges.Used(i2a) && !edges.Used(i2b)) 
                   cp3 = 1; 
               }
           if(ep4)
             if(edgepoint.Test(p[3]))
               {
-                PointIndices<2> i2a=PointIndices<2>::Sort(p[0], p[3]); 
-                PointIndices<2> i2b=PointIndices<2>::Sort(p[3], p[2]); 
+                PointIndices<2> i2a=PointIndices<2>(p[0], p[3]).Sort(); 
+                PointIndices<2> i2b=PointIndices<2>(p[3], p[2]).Sort(); 
                 if(!edges.Used(i2a) && !edges.Used(i2b)) 
                   cp4 = 1; 
               }
@@ -1701,7 +1701,7 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
 	
 	for(int k=0;k<12;k++)
           {
-            PointIndices<2> i2 = PointIndices<2>::Sort(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])); 
+            PointIndices<2> i2 = PointIndices<2>(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])).Sort(); 
             if (edges.Used(i2)) 
               { 
                 edge_sing[k] = 2;
@@ -1717,7 +1717,7 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
 	
             PointIndices<4>  i4 = PointIndices<4>(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], el.pnums[p[elfaces[k][2]-1]-1],el.pnums[p[elfaces[k][3]-1]-1]); 
             i4.Sort();
-            i3 = PointIndices<3>(i4.I1(), i4.I2(), i4.I3()); 
+            i3 = PointIndices<3>(i4[0], i4[1], i4[2]); 
 	  
             if (faces.Used (i3))
               {
@@ -1899,8 +1899,8 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
       
       for(int k=0;k<8;k++)
 	{
-	  PointIndices<2> i2 = PointIndices<2>::Sort(el.pnums[p[eledges[k][0]-1]],
-				       el.pnums[p[eledges[k][1]-1]]); 
+	  PointIndices<2> i2 = PointIndices<2>(el.pnums[p[eledges[k][0]-1]],
+				       el.pnums[p[eledges[k][1]-1]]).Sort(); 
 	  if (edges.Used(i2)) 
 	    edge_sing[k] = 2;
 	  else 
@@ -1928,7 +1928,7 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
               PointIndices<4> i4 = PointIndices<4>(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]],
                                    el.pnums[p[elfaces[k][3]-1]]); 
               i4.Sort();
-              i3 = PointIndices<3>(i4.I1(), i4.I2(), i4.I3()); 
+              i3 = PointIndices<3>(i4[0], i4[1], i4[2]); 
             }
 
           
