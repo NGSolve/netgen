@@ -203,6 +203,8 @@ namespace netgen
     constexpr T Nr1 () const { return i - BASE_ + 1; }
     /// index for a 1-based number
     static constexpr TIndex FromNr1 (T i1) { return TIndex(T(BASE_) + i1 - 1); }
+    /// the underlying integer, for diagnostics and low-level interfaces only
+    constexpr T GetRawInteger () const { return i; }
 
     void Invalidate() { i = long(TIndex::BASE)-1; }
     bool IsValid() const { return i+1 != TIndex::BASE; }
