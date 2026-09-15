@@ -115,14 +115,14 @@ namespace netgen
     void GetDistantPNums (int locpnum, int * distpnums ) const
     {
       for (int i = 0; i < loc2distvert[locpnum-1].Size(); i++ )
-	distpnums[i] = loc2distvert[locpnum-1][i];
+        distpnums[i] = loc2distvert[locpnum-1][i];
     } 
 
     // [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                    
     void GetDistantFaceNums (int locfacenum, int * distfacenums ) const
     {
       for ( int i = 0; i < loc2distface[locfacenum-1].Size(); i++ )
-	distfacenums[i] = loc2distface[locfacenum-1][i];
+        distfacenums[i] = loc2distface[locfacenum-1][i];
     } 
 
     // [[deprecated("Use GetDistantFaceNums(locnum) -> FlatArray instead!")]]                        
@@ -139,7 +139,7 @@ namespace netgen
     void GetDistantEdgeNums (int locedgenum, int * distedgenums ) const
     {
       for (int i = 0; i < loc2distedge[locedgenum-1].Size(); i++ )
-	distedgenums[i] = loc2distedge[locedgenum-1][i];
+        distedgenums[i] = loc2distedge[locedgenum-1][i];
     } 
 
     // [[deprecated("Use GetDistantEdgeNums(locnum) -> FlatArray instead!")]]                                

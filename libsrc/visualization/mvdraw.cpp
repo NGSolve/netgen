@@ -218,7 +218,7 @@ namespace netgen
 
     for(int i=0; i<alpha.Size() && i<vec.Size(); i++)
       {
-	glRotatef(alpha[i], vec[i](0), vec[i](1), vec[i](2));
+        glRotatef(alpha[i], vec[i](0), vec[i](1), vec[i](2));
       }
 
     glGetDoublev (GL_MODELVIEW_MATRIX, rotmat);
@@ -257,13 +257,13 @@ namespace netgen
       glRotatef(-90.0, 1.0f, 0.0f, 0.0f);    
     else if (strcmp (dir, "zx") == 0)
       {
-	glRotatef(180.0, 1.0f, 1.0f, 0.0f);    
-	glRotatef(-90.0, 1.0f, 0.0f, 0.0f);    
+        glRotatef(180.0, 1.0f, 1.0f, 0.0f);    
+        glRotatef(-90.0, 1.0f, 0.0f, 0.0f);    
       }
     else if (strcmp (dir, "yz") == 0)
       {
-	glRotatef(-90.0, 0.0f, 0.0f, 1.0f);    
-	glRotatef(-90.0, 0.0f, 1.0f, 0.0f);    
+        glRotatef(-90.0, 0.0f, 0.0f, 1.0f);    
+        glRotatef(-90.0, 0.0f, 1.0f, 0.0f);    
       }
     else if (strcmp (dir, "zy") == 0)
       glRotatef(90.0, 0.0f, 1.0f, 0.0f);    
@@ -282,8 +282,8 @@ namespace netgen
   }
 
   void VisualScene :: MouseMove(int oldx, int oldy,
-				int newx, int newy,
-				char mode)
+                                int newx, int newy,
+                                char mode)
   {
     int deltax = newx - oldx;
     int deltay = newy - oldy;
@@ -294,68 +294,68 @@ namespace netgen
     switch (mode)
       {
       case 'r':
-	{	
-	  glRotatef(float(deltax)/2, 0.0f, 1.0f, 0.0f);
-	  glRotatef(float(deltay)/2, 1.0f, 0.0f, 0.0f);
-	  glMultMatrixd (rotmat);
-	  glGetDoublev (GL_MODELVIEW_MATRIX, rotmat);
-	  break;
-	}
+        {       
+          glRotatef(float(deltax)/2, 0.0f, 1.0f, 0.0f);
+          glRotatef(float(deltay)/2, 1.0f, 0.0f, 0.0f);
+          glMultMatrixd (rotmat);
+          glGetDoublev (GL_MODELVIEW_MATRIX, rotmat);
+          break;
+        }
       case 'm':
-	{
-	  GLdouble projmat[16], modelviewmat[16];
-	  GLint viewport[4];
-	  glGetDoublev (GL_PROJECTION_MATRIX, projmat);
-	  glGetDoublev (GL_MODELVIEW_MATRIX, modelviewmat);
-	  glGetIntegerv (GL_VIEWPORT, viewport);
-	
-	  // vorher pvz1/2 = 0
-	  GLdouble pvx1 = 0, pvy1 = 0, pvz1 = 0.99; //  0.95;
-	  GLdouble pvx2 = deltax, pvy2 = -deltay, pvz2 = 0.99; // 0.95;
+        {
+          GLdouble projmat[16], modelviewmat[16];
+          GLint viewport[4];
+          glGetDoublev (GL_PROJECTION_MATRIX, projmat);
+          glGetDoublev (GL_MODELVIEW_MATRIX, modelviewmat);
+          glGetIntegerv (GL_VIEWPORT, viewport);
+        
+          // vorher pvz1/2 = 0
+          GLdouble pvx1 = 0, pvy1 = 0, pvz1 = 0.99; //  0.95;
+          GLdouble pvx2 = deltax, pvy2 = -deltay, pvz2 = 0.99; // 0.95;
 
-	  GLdouble px1, py1, pz1;
-	  GLdouble px2, py2, pz2;
-	
-	  gluUnProject (pvx1, pvy1, pvz1, 
-			modelviewmat, projmat, viewport,
-			&px1, &py1, &pz1);
-	  gluUnProject (pvx2, pvy2, pvz2, 
-			modelviewmat, projmat, viewport,
-			&px2, &py2, &pz2);
-	  /*
-	    gluUnProject (oldx, oldy, 1, 
-	    modelviewmat, projmat, viewport,
-	    &px1, &py1, &pz1);
-	    gluUnProject (newx, newy, 1, 
-	    modelviewmat, projmat, viewport,
-	    &px2, &py2, &pz2);
-	  */
+          GLdouble px1, py1, pz1;
+          GLdouble px2, py2, pz2;
+        
+          gluUnProject (pvx1, pvy1, pvz1, 
+                        modelviewmat, projmat, viewport,
+                        &px1, &py1, &pz1);
+          gluUnProject (pvx2, pvy2, pvz2, 
+                        modelviewmat, projmat, viewport,
+                        &px2, &py2, &pz2);
+          /*
+            gluUnProject (oldx, oldy, 1, 
+            modelviewmat, projmat, viewport,
+            &px1, &py1, &pz1);
+            gluUnProject (newx, newy, 1, 
+            modelviewmat, projmat, viewport,
+            &px2, &py2, &pz2);
+          */
 
-	  /*	
-	    cout << "pv1 = " << pvx1 << ", " << pvy1 << ", " << pvz1 << endl;
-	    cout << "p1 = " << px1 << ", " << py1 << ", " << pz1 << endl;
-	  */
+          /*    
+            cout << "pv1 = " << pvx1 << ", " << pvy1 << ", " << pvz1 << endl;
+            cout << "p1 = " << px1 << ", " << py1 << ", " << pz1 << endl;
+          */
 
-	  glTranslated (px2-px1, py2-py1, pz2-pz1);
-	
-	  glMultMatrixd (transmat);
-	  glGetDoublev (GL_MODELVIEW_MATRIX, transmat);
-	  break;
-	}
+          glTranslated (px2-px1, py2-py1, pz2-pz1);
+        
+          glMultMatrixd (transmat);
+          glGetDoublev (GL_MODELVIEW_MATRIX, transmat);
+          break;
+        }
       case 'z':
-	{
-	  // glTranslatef(0.0f, 0.0f, -dist);
+        {
+          // glTranslatef(0.0f, 0.0f, -dist);
 
-	  // cout << "deltay = " << deltay << endl;
-	  // cout << "float_bug = " << (float(deltay)/100) << endl;   gives wrong result with icc 9.0.021
-	  glScaled (exp (double (-deltay)/100), 
-		    exp (double (-deltay)/100), 
-		    exp (double (-deltay)/100));
-	  // glTranslatef(0.0f, 0.0f, dist);
-	  glMultMatrixd (transmat);
-	  glGetDoublev (GL_MODELVIEW_MATRIX, transmat);
-	  break;
-	}
+          // cout << "deltay = " << deltay << endl;
+          // cout << "float_bug = " << (float(deltay)/100) << endl;   gives wrong result with icc 9.0.021
+          glScaled (exp (double (-deltay)/100), 
+                    exp (double (-deltay)/100), 
+                    exp (double (-deltay)/100));
+          // glTranslatef(0.0f, 0.0f, dist);
+          glMultMatrixd (transmat);
+          glGetDoublev (GL_MODELVIEW_MATRIX, transmat);
+          break;
+        }
       }
 
     glLoadIdentity();
@@ -370,13 +370,13 @@ namespace netgen
 
 
   void VisualScene :: LookAt (const Point<3> & cam, const Point<3> & obj,
-			      const Point<3> & camup)
+                              const Point<3> & camup)
   {
     glPushMatrix();
     glLoadIdentity ();
     gluLookAt (cam(0), cam(1), cam(2), 
-	       obj(0), obj(1), obj(2),
-	       camup(0), camup(1), camup(2));
+               obj(0), obj(1), obj(2),
+               camup(0), camup(1), camup(2));
     glMultMatrixd (centermat);
     glGetDoublev (GL_MODELVIEW_MATRIX, transformationmat);
     glPopMatrix();
@@ -387,22 +387,22 @@ namespace netgen
   {
     if (vispar.clipping.enable)
       {
-	Vec<3> n = vispar.clipping.normal;
-	n /= (n.Length()+1e-10);
-	clipplane[0] = n(0);
-	clipplane[1] = n(1);
-	clipplane[2] = n(2);
-	clipplane[3] = -(Vec<3>(center) * n) + rad * vispar.clipping.dist;
+        Vec<3> n = vispar.clipping.normal;
+        n /= (n.Length()+1e-10);
+        clipplane[0] = n(0);
+        clipplane[1] = n(1);
+        clipplane[2] = n(2);
+        clipplane[3] = -(Vec<3>(center) * n) + rad * vispar.clipping.dist;
 
-	double clipplane2[4];
-	clipplane2[0] = n(0);
-	clipplane2[1] = n(1);
-	clipplane2[2] = n(2);
-	clipplane2[3] = -(Vec<3>(center) * n) + 
-	  rad * (vispar.clipping.dist + vispar.clipping.dist2);
+        double clipplane2[4];
+        clipplane2[0] = n(0);
+        clipplane2[1] = n(1);
+        clipplane2[2] = n(2);
+        clipplane2[3] = -(Vec<3>(center) * n) + 
+          rad * (vispar.clipping.dist + vispar.clipping.dist2);
 
-	glClipPlane(GL_CLIP_PLANE0, clipplane2);
-	glEnable(GL_CLIP_PLANE0);
+        glClipPlane(GL_CLIP_PLANE0, clipplane2);
+        glEnable(GL_CLIP_PLANE0);
       }
     else
       glDisable (GL_CLIP_PLANE0);
@@ -447,7 +447,7 @@ namespace netgen
 
 
   void VisualScene :: SetOpenGlColor(double val, double valmin, double valmax,
-				     int logscale)
+                                     int logscale)
   {
     double value;
 
@@ -455,9 +455,9 @@ namespace netgen
       value = (val - valmin) / (valmax - valmin);
     else
       {
-	if (valmax <= 0) valmax = 1;
-	if (valmin <= 0) valmin = 1e-4 * valmax;
-	value = (log(fabs(val)) - log(valmin)) / (log(valmax) - log(valmin));
+        if (valmax <= 0) valmax = 1;
+        if (valmin <= 0) valmin = 1e-4 * valmax;
+        value = (log(fabs(val)) - log(valmin)) / (log(valmax) - log(valmin));
       }
 
     if (!invcolor)
@@ -476,13 +476,13 @@ namespace netgen
 
     static const double colp[][3] =
       {
-	{ 1, 0, 0 },
-	{ 1, 1, 0 },
-	{ 0, 1, 0 },
-	{ 0, 1, 1 },
-	{ 0, 0, 1 },
-	//	{ 1, 0, 1 },
-	//	{ 1, 0, 0 },
+        { 1, 0, 0 },
+        { 1, 1, 0 },
+        { 0, 1, 0 },
+        { 0, 1, 1 },
+        { 0, 0, 1 },
+        //      { 1, 0, 1 },
+        //      { 1, 0, 0 },
       };
   
     int i = int(value);
@@ -503,74 +503,74 @@ namespace netgen
 
     if (ntexcols != ncols) 
       {
-	ntexcols = ncols;
+        ntexcols = ncols;
       
-	ArrayMem<GLubyte, 4*32> colortexture;
-	colortexture.SetSize(4*ncols);
+        ArrayMem<GLubyte, 4*32> colortexture;
+        colortexture.SetSize(4*ncols);
 
-	const double colp[][3] =
-	  {
-	    { 1, 0, 0 },
-	    { 1, 1, 0 },
-	    { 0, 1, 0 },
-	    { 0, 1, 1 },
-	    { 0, 0, 1 },
-	  };
+        const double colp[][3] =
+          {
+            { 1, 0, 0 },
+            { 1, 1, 0 },
+            { 0, 1, 0 },
+            { 0, 1, 1 },
+            { 0, 0, 1 },
+          };
   
-	for (int i = 0; i < ncols; i++)
-	  {
-	    double value = 4.0 * i / (ncols-1);
+        for (int i = 0; i < ncols; i++)
+          {
+            double value = 4.0 * i / (ncols-1);
 
-	    int iv = int(value);
-	    double r = value - iv;
+            int iv = int(value);
+            double r = value - iv;
 
-	    GLdouble col[3];
+            GLdouble col[3];
 
-	    if(r > 1e-3)
-	      for (int j = 0; j < 3; j++)
-		col[j] = (1.-r) * colp[iv][j] + r * colp[iv+1][j];
-	    else
-	      for (int j = 0; j < 3; j++)
-		col[j] = colp[iv][j];
+            if(r > 1e-3)
+              for (int j = 0; j < 3; j++)
+                col[j] = (1.-r) * colp[iv][j] + r * colp[iv+1][j];
+            else
+              for (int j = 0; j < 3; j++)
+                col[j] = colp[iv][j];
 
-	    colortexture[4*i] = GLubyte (255 * col[0]);
-	    colortexture[4*i+1] = GLubyte (255 * col[1]);
-	    colortexture[4*i+2] = GLubyte (255 * col[2]);
-	    colortexture[4*i+3] = GLubyte(255*alpha);
-	  }
+            colortexture[4*i] = GLubyte (255 * col[0]);
+            colortexture[4*i+1] = GLubyte (255 * col[1]);
+            colortexture[4*i+2] = GLubyte (255 * col[2]);
+            colortexture[4*i+3] = GLubyte(255*alpha);
+          }
 
-	// glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
+        // glPixelStorei (GL_UNPACK_ALIGNMENT, 1);
 
-	glTexImage1D (GL_TEXTURE_1D, 0, 4, ncols, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
-	glTexImage2D (GL_TEXTURE_2D, 0, 4, ncols, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
+        glTexImage1D (GL_TEXTURE_1D, 0, 4, ncols, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
+        glTexImage2D (GL_TEXTURE_2D, 0, 4, ncols, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, colortexture.Data());
 
-	glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, typ);  // DECAL or MODULATE
-	
-	GLfloat bcol[] = { 1, 1, 1, 1.0 };
-	glTexParameterfv (GL_TEXTURE_1D, GL_TEXTURE_BORDER_COLOR, bcol);
-	glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, typ);  // DECAL or MODULATE
+        
+        GLfloat bcol[] = { 1, 1, 1, 1.0 };
+        glTexParameterfv (GL_TEXTURE_1D, GL_TEXTURE_BORDER_COLOR, bcol);
+        glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 
-	glTexParameterfv (GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bcol);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameterfv (GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bcol);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	
-	if (linear)
-	  {
-	    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        
+        if (linear)
+          {
+            glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-	    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	  }
-	else
-	  {
-	    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	    glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+          }
+        else
+          {
+            glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri (GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
-	    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	  }
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+          }
       }
   }
   
@@ -603,9 +603,9 @@ namespace netgen
     for (auto i : Range(50))
       {
         double x = minx + i*1.0/49*(maxx-minx);
-	SetOpenGlColor (x, minx, maxx);
-	glVertex3d (x, miny, -5);
-	glVertex3d (x, maxy, -5);
+        SetOpenGlColor (x, minx, maxx);
+        glVertex3d (x, miny, -5);
+        glVertex3d (x, maxy, -5);
       }
     glEnd();
 
@@ -627,19 +627,19 @@ namespace netgen
     double char_width = 2.0*MyOpenGLTextWidth()/(viewport[3]);
     for (int i = 0; i <= 4; i++)
       {
-	double val;
-	if (logscale)
-	  val = minval * pow (maxval / minval, i / 4.0);
-	else
-	  val = minval + i * (maxval-minval) / 4;
+        double val;
+        if (logscale)
+          val = minval * pow (maxval / minval, i / 4.0);
+        else
+          val = minval + i * (maxval-minval) / 4;
 
-	snprintf (buf, buf_size, format.c_str(), val);
+        snprintf (buf, buf_size, format.c_str(), val);
         auto n = strlen(buf);
-	double x = minx + i * (maxx-minx) / 4;
+        double x = minx + i * (maxx-minx) / 4;
         x -= 0.5*char_width * n; // center text
-	glRasterPos3d (x, 0.7,-5);
+        glRasterPos3d (x, 0.7,-5);
 
-	MyOpenGLText (buf);
+        MyOpenGLText (buf);
       }
 
     if(unit != "")
@@ -702,8 +702,8 @@ namespace netgen
     glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
 
     GLfloat textcol[3] = { GLfloat(1 - backcolor),
-			   GLfloat(1 - backcolor),
-			   GLfloat(1 - backcolor) };
+                           GLfloat(1 - backcolor),
+                           GLfloat(1 - backcolor) };
     glColor3fv (textcol);
 
     glLineWidth (1.0f);
@@ -795,8 +795,8 @@ namespace netgen
 
     glEnable (GL_COLOR_MATERIAL);
     GLfloat textcol[3] = { GLfloat(1 - backcolor),
-			   GLfloat(1 - backcolor),
-			   GLfloat(1 - backcolor) };
+                           GLfloat(1 - backcolor),
+                           GLfloat(1 - backcolor) };
     glColor3fv (textcol);
     glLineWidth (1.0f);
 
@@ -923,11 +923,11 @@ namespace netgen
 
     if (loclines.Size() != changeval)
       {
-	center = Point<3>(0,0,-5);
-	rad = 0.1;
+        center = Point<3>(0,0,-5);
+        rad = 0.1;
 
-	// CalcTransformationMatrices();
-	changeval = loclines.Size();
+        // CalcTransformationMatrices();
+        changeval = loclines.Size();
       }
 
   glClearColor(backcolor, backcolor, backcolor, 1.0);
@@ -985,31 +985,31 @@ namespace netgen
 
     for (int i = 1; i <= loclines.Size(); i++)
       {
-	if (i == 1)
-	  {
-	    glEnable (GL_POLYGON_OFFSET_FILL);
-	    glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbl);
-	  }
-	else if (i <= oldnl)
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_cololdl);
-	else
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
+        if (i == 1)
+          {
+            glEnable (GL_POLYGON_OFFSET_FILL);
+            glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbl);
+          }
+        else if (i <= oldnl)
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_cololdl);
+        else
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colnewl);
 
-	LocalPointIndex pi1 = loclines[i-1][0];
-	LocalPointIndex pi2 = loclines[i-1][1];
+        LocalPointIndex pi1 = loclines[i-1][0];
+        LocalPointIndex pi2 = loclines[i-1][1];
 
-	if (pi1.IsValid() && pi2.IsValid())
-	  {
-	    Point<3> p1 = locpoints[pi1];
-	    Point<3> p2 = locpoints[pi2];
+        if (pi1.IsValid() && pi2.IsValid())
+          {
+            Point<3> p1 = locpoints[pi1];
+            Point<3> p2 = locpoints[pi2];
 
-	    glBegin (GL_LINES);
-	    glVertex3f (p1(0), p1(1), p1(2));
-	    glVertex3f (p2(0), p2(1), p2(2));
-	    glEnd();
-	  }
+            glBegin (GL_LINES);
+            glVertex3f (p1(0), p1(1), p1(2));
+            glVertex3f (p2(0), p2(1), p2(2));
+            glEnd();
+          }
 
-	glDisable (GL_POLYGON_OFFSET_FILL);
+        glDisable (GL_POLYGON_OFFSET_FILL);
       }
 
 
@@ -1022,8 +1022,8 @@ namespace netgen
     glBegin (GL_POINTS);
     for (auto i : locpoints.Range())
       {
-	Point<3> p = locpoints[i];
-	glVertex3f (p(0), p(1), p(2));
+        Point<3> p = locpoints[i];
+        glVertex3f (p(0), p(1), p(2));
       }
     glEnd();
 
@@ -1040,23 +1040,23 @@ namespace netgen
     glBegin (GL_LINES);
     for (int i = 1; i <= loclines.Size(); i++)
       {
-	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
-	if (i == 1)
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
+        glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d);
+        if (i == 1)
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_col2d1);
 
-	LocalPointIndex pi1 = loclines[i-1][0];
-	LocalPointIndex pi2 = loclines[i-1][1];
+        LocalPointIndex pi1 = loclines[i-1][0];
+        LocalPointIndex pi2 = loclines[i-1][1];
 
-	if (pi1.IsValid() && pi2.IsValid())
-	  {
-	    const auto& p1 = plainpoints[pi1];
-	    const auto& p2 = plainpoints[pi2];
+        if (pi1.IsValid() && pi2.IsValid())
+          {
+            const auto& p1 = plainpoints[pi1];
+            const auto& p2 = plainpoints[pi2];
 
-	    glBegin (GL_LINES);
-	    glVertex3f (scalex * p1[0] + shiftx, scaley * p1[1] + shifty, -5);
-	    glVertex3f (scalex * p2[0] + shiftx, scaley * p2[1] + shifty, -5);
-	    glEnd();
-	  }
+            glBegin (GL_LINES);
+            glVertex3f (scalex * p1[0] + shiftx, scaley * p1[1] + shifty, -5);
+            glVertex3f (scalex * p2[0] + shiftx, scaley * p2[1] + shifty, -5);
+            glEnd();
+          }
       }
     glEnd ();
 
@@ -1065,8 +1065,8 @@ namespace netgen
     glBegin (GL_POINTS);
     for (auto i : plainpoints.Range())
       {
-	const auto& p = plainpoints[i];
-	glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);
+        const auto& p = plainpoints[i];
+        glVertex3f (scalex * p[0] + shiftx, scaley * p[1] + shifty, -5);
       }
     glEnd();
 
@@ -1129,44 +1129,44 @@ namespace netgen
 
     if (!init)
       {
-	init = 1;
+        init = 1;
 
-	if (id == 0)
-	  {
-	    string displname;
-	    
-	    Display * dpy = glXGetCurrentDisplay();
-	    GLXDrawable drawable = glXGetCurrentDrawable();
-	    GLXContext ctx = glXGetCurrentContext();
-	    GLXContextID xid = glXGetContextIDEXT (ctx);
-	    
-	    displname = XDisplayName (0);
+        if (id == 0)
+          {
+            string displname;
+            
+            Display * dpy = glXGetCurrentDisplay();
+            GLXDrawable drawable = glXGetCurrentDrawable();
+            GLXContext ctx = glXGetCurrentContext();
+            GLXContextID xid = glXGetContextIDEXT (ctx);
+            
+            displname = XDisplayName (0);
 
-	    if( glXIsDirect ( dpy, ctx ) )
-	      cout << "WARNING: direct rendering enabled; this might break mpi-parallel netgen (especially if X-forwarding is used! (to disable, change -indirect to true in ng/drawing.tcl)" << endl;
-	      
-	    /*
-	    cout << "Init Parallel GL" << endl;
-	    cout << "DisplayName = " << displname << endl;
-	    cout << "current display = " << dpy << endl;
-	    cout << "current drawable = " << drawable << endl;                  
-	    cout << "current context = " << ctx << endl;                  
-	    
-	    cout << "contextid = " << xid << endl;
-	    cout << "isdirect = " << glXIsDirect ( dpy, ctx ) << endl;                  
-	    cout << "extensionstring = " << glXQueryExtensionsString( dpy, 0 ) << endl;
-	    */
+            if( glXIsDirect ( dpy, ctx ) )
+              cout << "WARNING: direct rendering enabled; this might break mpi-parallel netgen (especially if X-forwarding is used! (to disable, change -indirect to true in ng/drawing.tcl)" << endl;
+              
+            /*
+            cout << "Init Parallel GL" << endl;
+            cout << "DisplayName = " << displname << endl;
+            cout << "current display = " << dpy << endl;
+            cout << "current drawable = " << drawable << endl;                  
+            cout << "current context = " << ctx << endl;                  
+            
+            cout << "contextid = " << xid << endl;
+            cout << "isdirect = " << glXIsDirect ( dpy, ctx ) << endl;                  
+            cout << "extensionstring = " << glXQueryExtensionsString( dpy, 0 ) << endl;
+            */
 
-	    MyMPI_SendCmd ("redraw");
-	    MyMPI_SendCmd ("init");
-		
-	    for (int dest = 1; dest < ntasks; dest++)
-	      {
-		MyMPI_Send (displname, dest, MPI_TAG_VIS);
-		MyMPI_Send (int (drawable), dest, MPI_TAG_VIS);
-		MyMPI_Send (int (xid), dest, MPI_TAG_VIS);
-	      } 
-	  }
+            MyMPI_SendCmd ("redraw");
+            MyMPI_SendCmd ("init");
+                
+            for (int dest = 1; dest < ntasks; dest++)
+              {
+                MyMPI_Send (displname, dest, MPI_TAG_VIS);
+                MyMPI_Send (int (drawable), dest, MPI_TAG_VIS);
+                MyMPI_Send (int (xid), dest, MPI_TAG_VIS);
+              } 
+          }
       }
   }
 
@@ -1177,16 +1177,16 @@ namespace netgen
 
     if (id == 0)
       {
-	/*
-	for (int dest = 1; dest < ntasks; dest++)
-	  {
-	    MyMPI_Send ("redraw", dest, MPI_TAG_CMD);
-	    MyMPI_Send ("broadcast", dest, MPI_TAG_VIS);
-	  }
-	*/
+        /*
+        for (int dest = 1; dest < ntasks; dest++)
+          {
+            MyMPI_Send ("redraw", dest, MPI_TAG_CMD);
+            MyMPI_Send ("broadcast", dest, MPI_TAG_VIS);
+          }
+        */
 
-	MyMPI_SendCmd ("redraw");
-	MyMPI_SendCmd ("broadcast");
+        MyMPI_SendCmd ("redraw");
+        MyMPI_SendCmd ("broadcast");
       }
 
     MyMPI_Bcast (selface);

@@ -37,14 +37,14 @@ namespace netgen
 
   template <> 
   void CircleSeg<3> :: LineIntersections (const double a, const double b, const double c,
-					  Array < Point<3> > & points, const double eps) const
+                                          Array < Point<3> > & points, const double eps) const
   {
     cerr << "CircleSeg<3>::LineIntersections not implemented" << endl;
   }
   
   template <> 
   void CircleSeg<2> :: LineIntersections (const double a, const double b, const double c,
-					  Array < Point<2> > & points, const double eps) const
+                                          Array < Point<2> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -70,18 +70,18 @@ namespace netgen
       t.Append(-0.5*c2/c1);
     else
       {
-	t.Append((-c2+sqrt(discr))/(2.*c1));
-	t.Append((-c2-sqrt(discr))/(2.*c1));
+        t.Append((-c2+sqrt(discr))/(2.*c1));
+        t.Append((-c2-sqrt(discr))/(2.*c1));
       }
 
     for(int i=0; i<t.Size(); i++)
       {
-	Point<2> p (px-t[i]*b,py+t[i]*a);
+        Point<2> p (px-t[i]*b,py+t[i]*a);
 
-	double angle = atan2(p(1),p(0))+M_PI;
+        double angle = atan2(p(1),p(0))+M_PI;
 
-	if(angle > StartAngle()-eps && angle < EndAngle()+eps)
-	  points.Append(p);
+        if(angle > StartAngle()-eps && angle < EndAngle()+eps)
+          points.Append(p);
       }
   }
 
@@ -90,8 +90,8 @@ namespace netgen
 
   template<int D>
   SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1, 
-			       const GeomPoint<D> & ap2,
-			       const GeomPoint<D> & ap3,
+                               const GeomPoint<D> & ap2,
+                               const GeomPoint<D> & ap3,
                                string bcname,
                                double maxh)
     : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2), p3(ap3)
@@ -104,8 +104,8 @@ namespace netgen
 
   template<int D>
   SplineSeg3<D> :: SplineSeg3 (const GeomPoint<D> & ap1,
-			       const GeomPoint<D> & ap2,
-			       const GeomPoint<D> & ap3,
+                               const GeomPoint<D> & ap2,
+                               const GeomPoint<D> & ap3,
                                double aweight,
                                string bcname,
                                double maxh)
@@ -134,8 +134,8 @@ namespace netgen
 
     if(D==3)
       {
-	double z = p1(2) * b1 + p2(2) * b2 + p3(2) * b3;
-	return Point<D> (x/w, y/w, z/w);
+        double z = p1(2) * b1 + p2(2) * b2 + p3(2) * b3;
+        return Point<D> (x/w, y/w, z/w);
       }
     else
       return Point<D> (x/w, y/w);
@@ -176,13 +176,13 @@ namespace netgen
     double t = 0;
     for (int i = 0; i < 5; i++, t += 0.25)
       {
-	Point<D> p = GetPoint (t);
-	a(i, 0) = p(0) * p(0);
-	a(i, 1) = p(1) * p(1);
-	a(i, 2) = p(0) * p(1);
-	a(i, 3) = p(0);
-	a(i, 4) = p(1);
-	a(i, 5) = 1;
+        Point<D> p = GetPoint (t);
+        a(i, 0) = p(0) * p(0);
+        a(i, 1) = p(1) * p(1);
+        a(i, 2) = p(0) * p(1);
+        a(i, 3) = p(0);
+        a(i, 4) = p(1);
+        a(i, 5) = 1;
       }
     a(5, 0) = 1;
 
@@ -220,13 +220,13 @@ namespace netgen
     double t = 0;
     for (int i = 0; i < 5; i++, t += 0.25)
       {
-	Vec<D> p = GetPoint (t)-pref;
-	a(i, 0) = p(0) * p(0);
-	a(i, 1) = p(1) * p(1);
-	a(i, 2) = p(0) * p(1);
-	a(i, 3) = p(0);
-	a(i, 4) = p(1);
-	a(i, 5) = 1;
+        Vec<D> p = GetPoint (t)-pref;
+        a(i, 0) = p(0) * p(0);
+        a(i, 1) = p(1) * p(1);
+        a(i, 2) = p(0) * p(1);
+        a(i, 3) = p(0);
+        a(i, 4) = p(1);
+        a(i, 5) = 1;
       }
     a(5, 0) = 1;
 
@@ -285,7 +285,7 @@ namespace netgen
     while(t > -0.5 && t < 1.5 && i<20 && fabs(t-t_old) > 1e-15 )
       {
         GetDerivatives(t,phi,phip,phipp);
-	
+        
         t_old = t;
 
         phimp = phi-point;
@@ -309,9 +309,9 @@ namespace netgen
           }
 
         point_on_curve = SplineSeg3<D>::GetPoint(t);
-	
+        
         double dist = Dist(point,point_on_curve);
-	
+        
         phi =  SplineSeg3<D> ::GetPoint(0);
         double auxdist = Dist(phi,point);
         if(auxdist < dist)
@@ -337,11 +337,11 @@ namespace netgen
 
         double d0,d1,d2;
 
-	
+        
         //(*testout) << "newtonersatz" << endl;
         while(t2-t0 > 1e-8)
           {
-	    
+            
             phi =  SplineSeg3<D> ::GetPoint(t0); d0 = Dist(phi,point);
             phi =  SplineSeg3<D> ::GetPoint(t1); d1 = Dist(phi,point);
             phi =  SplineSeg3<D> ::GetPoint(t2); d2 = Dist(phi,point);
@@ -380,13 +380,13 @@ namespace netgen
                     t0 = max2(0.,t1-auxt1);
                     t2 = min2(1.,t1+auxt1);
                   }
-		
+                
                 t1 = 0.5*(t2+t0);
               }  
 
           }
 
-	
+        
         phi =  SplineSeg3<D> ::GetPoint(t0); d0 = Dist(phi,point);
         phi =  SplineSeg3<D> ::GetPoint(t1); d1 = Dist(phi,point);
         phi =  SplineSeg3<D> ::GetPoint(t2); d2 = Dist(phi,point);
@@ -504,7 +504,7 @@ namespace netgen
 
   template<int D>
   void SplineSeg3<D> :: LineIntersections (const double a, const double b, const double c,
-					   Array < Point<D> > & points, const double eps) const
+                                           Array < Point<D> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -518,13 +518,13 @@ namespace netgen
 
     if(fabs(c1) < 1e-20)
       {
-	if(fabs(c2) < 1e-20)
-	  return;
+        if(fabs(c2) < 1e-20)
+          return;
 
-	t = -c3/c2;
-	if((t > -eps) && (t < 1.+eps))
-	  points.Append(GetPoint(t));
-	return;
+        t = -c3/c2;
+        if((t > -eps) && (t < 1.+eps))
+          points.Append(GetPoint(t));
+        return;
       }
 
     const double discr = c2*c2-4.*c1*c3;
@@ -534,10 +534,10 @@ namespace netgen
 
     if(fabs(discr/(c1*c1)) < 1e-14)
       {
-	t = -0.5*c2/c1;
-	if((t > -eps) && (t < 1.+eps))
-	  points.Append(GetPoint(t));
-	return;
+        t = -0.5*c2/c1;
+        if((t > -eps) && (t < 1.+eps))
+          points.Append(GetPoint(t));
+        return;
       }
 
     t = (-c2 + sqrt(discr))/(2.*c1);

@@ -65,37 +65,37 @@ public:
   bool IsCurved (SegmentIndex segnr) const      { return IsSegmentCurved(segnr); }
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
-				  Point<3> & x)
+                                  Point<3> & x)
   { CalcSegmentTransformation<double> (xi, segnr, &x, NULL); };
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
-				  Vec<3> & dxdxi)
+                                  Vec<3> & dxdxi)
   { CalcSegmentTransformation<double> (xi, segnr, NULL, &dxdxi); };
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
-				  Point<3> & x, Vec<3> & dxdxi)
+                                  Point<3> & x, Vec<3> & dxdxi)
   { CalcSegmentTransformation<double> (xi, segnr, &x, &dxdxi, NULL); };
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
-				  Point<3> & x, Vec<3> & dxdxi, bool & curved)
+                                  Point<3> & x, Vec<3> & dxdxi, bool & curved)
   { CalcSegmentTransformation (xi, segnr, &x, &dxdxi, &curved); };
 
 
 
   void CalcSurfaceTransformation (const Point<2> & xi, SurfaceElementIndex elnr,
-				  Point<3> & x)
+                                  Point<3> & x)
   { CalcSurfaceTransformation (xi, elnr, &x, NULL); };
 
   void CalcSurfaceTransformation (const Point<2> & xi, SurfaceElementIndex elnr,
-				  Mat<3,2> & dxdxi)
+                                  Mat<3,2> & dxdxi)
   { CalcSurfaceTransformation (xi, elnr, NULL, &dxdxi); };
 
   void CalcSurfaceTransformation (const Point<2> & xi, SurfaceElementIndex elnr,
-				  Point<3> & x, Mat<3,2> & dxdxi)
+                                  Point<3> & x, Mat<3,2> & dxdxi)
   { CalcSurfaceTransformation (xi, elnr, &x, &dxdxi, NULL); };
 
   void CalcSurfaceTransformation (const Point<2> & xi, SurfaceElementIndex elnr,
-				  Point<3> & x, Mat<3,2> & dxdxi, bool & curved)
+                                  Point<3> & x, Mat<3,2> & dxdxi, bool & curved)
   { CalcSurfaceTransformation (xi, elnr, &x, &dxdxi, &curved); };
 
 
@@ -103,31 +103,31 @@ public:
 
 
   void CalcElementTransformation (const Point<3> & xi, ElementIndex elnr,
-				  Point<3> & x)
+                                  Point<3> & x)
   { CalcElementTransformation (xi, elnr, &x, NULL); };
 
   void CalcElementTransformation (const Point<3> & xi, ElementIndex elnr,
-				  Mat<3,3> & dxdxi)
+                                  Mat<3,3> & dxdxi)
   { CalcElementTransformation (xi, elnr, NULL, &dxdxi); };
 
   void CalcElementTransformation (const Point<3> & xi, ElementIndex elnr,
-				  Point<3> & x, Mat<3,3> & dxdxi)
+                                  Point<3> & x, Mat<3,3> & dxdxi)
   { CalcElementTransformation (xi, elnr, &x, &dxdxi /* , NULL */ ); };
 
   void CalcElementTransformation (const Point<3> & xi, ElementIndex elnr,
-				  Point<3> & x, Mat<3,3> & dxdxi,
+                                  Point<3> & x, Mat<3,3> & dxdxi,
                                   void * buffer, bool valid)
   { CalcElementTransformation (xi, elnr, &x, &dxdxi, /* NULL, */ buffer, valid ); };
 
   // void CalcElementTransformation (const Point<3> & xi, ElementIndex elnr,
-  // 				  Point<3> & x, Mat<3,3> & dxdxi) // , bool & curved)
+  //                              Point<3> & x, Mat<3,3> & dxdxi) // , bool & curved)
   //   { CalcElementTransformation (xi, elnr, &x, &dxdxi /* , &curved * ); }
 
 
   /*
   void CalcMultiPointSegmentTransformation (Array<double> * xi, SegmentIndex segnr,
-					    Array<Point<3> > * x,
-					    Array<Vec<3> > * dxdxi);
+                                            Array<Point<3> > * x,
+                                            Array<Vec<3> > * dxdxi);
   */
   
   template <int DIM_SPACE, typename T>
@@ -137,8 +137,8 @@ public:
                                             T * dxdxi, size_t sdxdxi);
 
   DLL_HEADER void CalcMultiPointSurfaceTransformation (Array< Point<2> > * xi, SurfaceElementIndex elnr,
-					    Array< Point<3> > * x,
-					    Array< Mat<3,2> > * dxdxi);
+                                            Array< Point<3> > * x,
+                                            Array< Mat<3,2> > * dxdxi);
 
   template <int DIM_SPACE, typename T>
   void CalcMultiPointSurfaceTransformation (SurfaceElementIndex elnr, int n,
@@ -147,8 +147,8 @@ public:
                                             T * dxdxi, size_t sdxdxi);
 
   DLL_HEADER void CalcMultiPointElementTransformation (Array< Point<3> > * xi, ElementIndex elnr,
-					    Array< Point<3> > * x,
-					    Array< Mat<3,3> > * dxdxi);
+                                            Array< Point<3> > * x,
+                                            Array< Mat<3,3> > * dxdxi);
 
   template <typename T>
   void CalcMultiPointElementTransformation (ElementIndex elnr, int n,
@@ -163,13 +163,13 @@ private:
 
   template <typename T>
   DLL_HEADER void CalcSegmentTransformation (const T & xi, SegmentIndex segnr,
-				  Point<3,T> * x = NULL, Vec<3,T> * dxdxi = NULL, bool * curved = NULL);
+                                  Point<3,T> * x = NULL, Vec<3,T> * dxdxi = NULL, bool * curved = NULL);
 
   DLL_HEADER void CalcSurfaceTransformation (Point<2> xi, SurfaceElementIndex elnr,
-				  Point<3> * x = NULL, Mat<3,2> * dxdxi = NULL, bool * curved = NULL);
+                                  Point<3> * x = NULL, Mat<3,2> * dxdxi = NULL, bool * curved = NULL);
 
   DLL_HEADER void CalcElementTransformation (Point<3> xi, ElementIndex elnr,
-				  Point<3> * x = NULL, Mat<3,3> * dxdxi = NULL, // bool * curved = NULL,
+                                  Point<3> * x = NULL, Mat<3,3> * dxdxi = NULL, // bool * curved = NULL,
                                   void * buffer = NULL, bool valid = 0);
 
 

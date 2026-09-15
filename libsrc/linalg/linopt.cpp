@@ -58,10 +58,10 @@ void LinearOptimize (const DenseMatrix & a, const Vector & b,
            << " res2 = " << res2 << " prod = " << prod << endl;
 */
 
-	
-	double rmin = res(0);
-	for (int hi = 1; hi < res.Size(); hi++)
-	  if (res(hi) < rmin) rmin = res(hi);
+        
+        double rmin = res(0);
+        for (int hi = 1; hi < res.Size(); hi++)
+          if (res(hi) < rmin) rmin = res(hi);
         
         if ( (f < fmin) && rmin >= -1e-8)
           {

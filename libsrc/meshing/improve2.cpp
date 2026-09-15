@@ -358,7 +358,7 @@ namespace netgen
 
         for (auto [t1,o1] : elements_with_improvement)
             done |= EdgeSwapping(usemetric, neighbors, swapped, t1, o1, t, pdef, false);
-	t--;
+        t--;
       }
 
     mesh.SetNextTimeStamp();
@@ -854,7 +854,7 @@ namespace netgen
     (*testout) << "el " << i << " node " << el.PNum(j)
     << "has angle = " << angle << endl;
     }
-    }	
+    }   
 
     for (j = 1; j <= 3; j++)
     {

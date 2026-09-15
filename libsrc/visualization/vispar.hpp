@@ -33,10 +33,10 @@ public:
     bool operator== (Clipping & clip2)
     {
       return 
-	(normal == clip2.normal) && 
-	(dist == clip2.dist) && 
-	// (dist2 == clip2.dist2) && 
-	(enable == clip2.enable);
+        (normal == clip2.normal) && 
+        (dist == clip2.dist) && 
+        // (dist2 == clip2.dist2) && 
+        (enable == clip2.enable);
     }
   };
   Clipping clipping;

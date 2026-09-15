@@ -30,17 +30,17 @@ namespace netgen
 
 
   int Ng_ParseGeometry (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     CSGeometry * csgeom = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (csgeom)
       {
-	double detail = atof (Tcl_GetVar (interp, "::geooptions.detail", 0));
-	double facets = atof (Tcl_GetVar (interp, "::geooptions.facets", 0));
+        double detail = atof (Tcl_GetVar (interp, "::geooptions.detail", 0));
+        double facets = atof (Tcl_GetVar (interp, "::geooptions.facets", 0));
       
-	if (atoi (Tcl_GetVar (interp, "::geooptions.drawcsg", 0)))
-	  csgeom->CalcTriangleApproximation(detail, facets);
+        if (atoi (Tcl_GetVar (interp, "::geooptions.drawcsg", 0)))
+          csgeom->CalcTriangleApproximation(detail, facets);
       }
     return TCL_OK;
   }
@@ -49,8 +49,8 @@ namespace netgen
 
 
   int Ng_GeometryOptions (ClientData clientData,
-			  Tcl_Interp * interp,
-			  int argc, tcl_const char *argv[])
+                          Tcl_Interp * interp,
+                          int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
 
@@ -59,26 +59,26 @@ namespace netgen
 
     if (strcmp (command, "get") == 0)
       {
-	if (geometry)
-	  {
-	    char buf[20];
-	    Point<3> pmin = geometry->BoundingBox ().PMin();
-	    Point<3> pmax = geometry->BoundingBox ().PMax();
-	    
-	    snprintf (buf, size(buf), "%5.1lf", pmin(0));
-	    Tcl_SetVar (interp, "::geooptions.minx", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmin(1));
-	    Tcl_SetVar (interp, "::geooptions.miny", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmin(2));
-	    Tcl_SetVar (interp, "::geooptions.minz", buf, 0);
-	    
-	    snprintf (buf, size(buf), "%5.1lf", pmax(0));
-	    Tcl_SetVar (interp, "::geooptions.maxx", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmax(1));
-	    Tcl_SetVar (interp, "::geooptions.maxy", buf, 0);
-	    snprintf (buf, size(buf), "%5.1lf", pmax(2));
-	    Tcl_SetVar (interp, "::geooptions.maxz", buf, 0);
-	  }
+        if (geometry)
+          {
+            char buf[20];
+            Point<3> pmin = geometry->BoundingBox ().PMin();
+            Point<3> pmax = geometry->BoundingBox ().PMax();
+            
+            snprintf (buf, size(buf), "%5.1lf", pmin(0));
+            Tcl_SetVar (interp, "::geooptions.minx", buf, 0);
+            snprintf (buf, size(buf), "%5.1lf", pmin(1));
+            Tcl_SetVar (interp, "::geooptions.miny", buf, 0);
+            snprintf (buf, size(buf), "%5.1lf", pmin(2));
+            Tcl_SetVar (interp, "::geooptions.minz", buf, 0);
+            
+            snprintf (buf, size(buf), "%5.1lf", pmax(0));
+            Tcl_SetVar (interp, "::geooptions.maxx", buf, 0);
+            snprintf (buf, size(buf), "%5.1lf", pmax(1));
+            Tcl_SetVar (interp, "::geooptions.maxy", buf, 0);
+            snprintf (buf, size(buf), "%5.1lf", pmax(2));
+            Tcl_SetVar (interp, "::geooptions.maxz", buf, 0);
+          }
       }
     else if (strcmp (command, "set") == 0)
       {
@@ -88,10 +88,10 @@ namespace netgen
         Point<3> pmax (atof (Tcl_GetVar (interp, "::geooptions.maxx", 0)),
                        atof (Tcl_GetVar (interp, "::geooptions.maxy", 0)),
                        atof (Tcl_GetVar (interp, "::geooptions.maxz", 0)));
-	Box<3> box (pmin, pmax);
-	if (geometry)
-	  geometry -> SetBoundingBox (box);
-	CSGeometry::SetDefaultBoundingBox (box);
+        Box<3> box (pmin, pmax);
+        if (geometry)
+          geometry -> SetBoundingBox (box);
+        CSGeometry::SetDefaultBoundingBox (box);
       }
 
     return TCL_OK;
@@ -104,14 +104,14 @@ namespace netgen
   // attempt of a simple modeller
 
   int Ng_CreatePrimitive (ClientData clientData,
-			  Tcl_Interp * interp,
-			  int argc, tcl_const char *argv[])
+                          Tcl_Interp * interp,
+                          int argc, tcl_const char *argv[])
   {/*
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -119,7 +119,7 @@ namespace netgen
     tcl_const char * name = argv[2];
 
     cout << "Create primitive, class = " << classname
-	 << ", name = " << name << endl;
+         << ", name = " << name << endl;
 
     Primitive * nprim = Primitive::CreatePrimitive (classname);
     Solid * nsol = new Solid (nprim);
@@ -127,26 +127,26 @@ namespace netgen
     char sname[100];
     for (int j = 1; j <= nprim->GetNSurfaces(); j++)
       {
-	sprintf (sname, "%s,%d", name, j);
-	geometry -> AddSurface (sname, &nprim->GetSurface(j));
-	nprim -> SetSurfaceId (j, geometry->GetNSurf());
+        sprintf (sname, "%s,%d", name, j);
+        geometry -> AddSurface (sname, &nprim->GetSurface(j));
+        nprim -> SetSurfaceId (j, geometry->GetNSurf());
       }
 
     geometry->SetSolid (name, nsol);
-	*/
+        */
     return TCL_OK;
   }
 
 
   int Ng_SetPrimitiveData (ClientData clientData,
-			   Tcl_Interp * interp,
-			   int argc, tcl_const char *argv[])
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -157,15 +157,15 @@ namespace netgen
 
 
     cout << "Set primitive data, name = " << name
-	 << ", value = " << value  << endl;
+         << ", value = " << value  << endl;
 
 
     istringstream vst (value);
     double val;
     while (!vst.eof())
       {
-	vst >> val;
-	coeffs.Append (val);
+        vst >> val;
+        coeffs.Append (val);
       }
 
     ((Primitive*)
@@ -177,14 +177,14 @@ namespace netgen
 
 
   int Ng_SetSolidData (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {/*
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -192,26 +192,26 @@ namespace netgen
     tcl_const char * val = argv[2];
 
     cout << "Set Solid Data, name = " << name
-	 << ", value = " << val << endl;
+         << ", value = " << val << endl;
 
     istringstream vst (val);
 
     Solid * nsol = Solid::CreateSolid (vst, geometry->GetSolids());
     geometry->SetSolid (name, nsol);
-	*/
+        */
     return TCL_OK;
   }
 
 
   int Ng_GetPrimitiveData (ClientData clientData,
-			   Tcl_Interp * interp,
-			   int argc, tcl_const char *argv[])
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -230,10 +230,10 @@ namespace netgen
       vst << coeffs[i-1] << " ";
 
     cout << "GetPrimitiveData, name = " << name
-	 << ", classnamevar = " << classnamevar
-	 << ", classname = " << classname << endl
-	 << " valuevar = " << valuevar
-	 << ", values = " << vst.str() << endl;
+         << ", classnamevar = " << classnamevar
+         << ", classname = " << classname << endl
+         << " valuevar = " << valuevar
+         << ", values = " << vst.str() << endl;
 
     Tcl_SetVar  (interp, classnamevar, (char*)classname, 0);
     Tcl_SetVar  (interp, valuevar, (char*)vst.str().c_str(), 0);
@@ -242,14 +242,14 @@ namespace netgen
   }
 
   int Ng_GetSolidData (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {/*
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     tcl_const char * name = argv[1];
@@ -263,20 +263,20 @@ namespace netgen
     cout << "GetSolidData, name = " << name << ", data = " << vst.str() << endl;
 
     Tcl_SetVar  (interp, valuevar, (char*)vst.str().c_str(), 0);
-	*/
+        */
     return TCL_OK;
   }
 
 
   int Ng_GetPrimitiveList (ClientData clientData,
-			   Tcl_Interp * interp,
-			   int argc, tcl_const char *argv[])
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -287,9 +287,9 @@ namespace netgen
 
     for (i = 1; i <= geometry->GetNSolids(); i++)
       {
-	const Solid * sol = geometry->GetSolid(i);
-	if (sol->GetPrimitive())
-	  vst << sol->Name() << " ";
+        const Solid * sol = geometry->GetSolid(i);
+        if (sol->GetPrimitive())
+          vst << sol->Name() << " ";
       }
 
     cout << "primnames = " << vst.str() << endl;
@@ -302,14 +302,14 @@ namespace netgen
 
 
   int Ng_GetSurfaceList (ClientData clientData,
-			 Tcl_Interp * interp,
-			 int argc, tcl_const char *argv[])
+                         Tcl_Interp * interp,
+                         int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -320,8 +320,8 @@ namespace netgen
 
     for (i = 1; i <= geometry->GetNSurf(); i++)
       {
-	const Surface * surf = geometry->GetSurface(i);
-	vst << surf->Name() << " ";
+        const Surface * surf = geometry->GetSurface(i);
+        vst << surf->Name() << " ";
       }
 
     cout << "surfnames = " << vst.str() << endl;
@@ -333,14 +333,14 @@ namespace netgen
 
 
   int Ng_GetSolidList (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     tcl_const char * valuevar = argv[1];
@@ -350,9 +350,9 @@ namespace netgen
 
     for (i = 1; i <= geometry->GetNSolids(); i++)
       {
-	const Solid * sol = geometry->GetSolid(i);
-	if (!sol->GetPrimitive())
-	  vst << sol->Name() << " ";
+        const Solid * sol = geometry->GetSolid(i);
+        if (!sol->GetPrimitive())
+          vst << sol->Name() << " ";
       }
 
     cout << "solnames = " << vst.str() << endl;
@@ -364,14 +364,14 @@ namespace netgen
 
 
   int Ng_TopLevel (ClientData clientData,
-		   Tcl_Interp * interp,
-		   int argc, tcl_const char *argv[])
+                   Tcl_Interp * interp,
+                   int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -384,101 +384,101 @@ namespace netgen
 
     if (strcmp (argv[1], "getlist") == 0)
       {
-	stringstream vst;
+        stringstream vst;
 
-	for (i = 0; i < geometry->GetNTopLevelObjects(); i++)
-	  {
-	    const Solid * sol;
-	    const Surface * surf;
-	    geometry->GetTopLevelObject (i, sol, surf);
+        for (i = 0; i < geometry->GetNTopLevelObjects(); i++)
+          {
+            const Solid * sol;
+            const Surface * surf;
+            geometry->GetTopLevelObject (i, sol, surf);
 
-	    if (!surf)
-	      vst << "{ " << sol->Name() << " } ";
-	    else
-	      vst << "{ " << sol->Name() << " " << surf->Name() << " } ";
-	  }
+            if (!surf)
+              vst << "{ " << sol->Name() << " } ";
+            else
+              vst << "{ " << sol->Name() << " " << surf->Name() << " } ";
+          }
 
-	tcl_const char * valuevar = argv[2];
-	Tcl_SetVar  (interp, valuevar, (char*)vst.str().c_str(), 0);
+        tcl_const char * valuevar = argv[2];
+        Tcl_SetVar  (interp, valuevar, (char*)vst.str().c_str(), 0);
       }
 
     if (strcmp (argv[1], "set") == 0)
       {
-	tcl_const char * solname = argv[2];
-	tcl_const char * surfname = argv[3];
-	Solid * sol = (Solid*)geometry->GetSolid (solname);
-	Surface * surf = (Surface*)geometry->GetSurface (surfname);
-	geometry->SetTopLevelObject (sol, surf);
+        tcl_const char * solname = argv[2];
+        tcl_const char * surfname = argv[3];
+        Solid * sol = (Solid*)geometry->GetSolid (solname);
+        Surface * surf = (Surface*)geometry->GetSurface (surfname);
+        geometry->SetTopLevelObject (sol, surf);
       }
 
     if (strcmp (argv[1], "remove") == 0)
       {
-	tcl_const char * solname = argv[2];
-	tcl_const char * surfname = argv[3];
-	Solid * sol = (Solid*)geometry->GetSolid (solname);
-	Surface * surf = (Surface*)geometry->GetSurface (surfname);
-	geometry->RemoveTopLevelObject (sol, surf);
+        tcl_const char * solname = argv[2];
+        tcl_const char * surfname = argv[3];
+        Solid * sol = (Solid*)geometry->GetSolid (solname);
+        Surface * surf = (Surface*)geometry->GetSurface (surfname);
+        geometry->RemoveTopLevelObject (sol, surf);
       }
 
     if (strcmp (argv[1], "setprop") == 0)
       {
-	tcl_const char * solname = argv[2];
-	tcl_const char * surfname = argv[3];
-	tcl_const char * propvar = argv[4];
-	Solid * sol = (Solid*)geometry->GetSolid (solname);
-	Surface * surf = (Surface*)geometry->GetSurface (surfname);
-	TopLevelObject * tlo = geometry->GetTopLevelObject (sol, surf);
+        tcl_const char * solname = argv[2];
+        tcl_const char * surfname = argv[3];
+        tcl_const char * propvar = argv[4];
+        Solid * sol = (Solid*)geometry->GetSolid (solname);
+        Surface * surf = (Surface*)geometry->GetSurface (surfname);
+        TopLevelObject * tlo = geometry->GetTopLevelObject (sol, surf);
 
-	if (!tlo) return TCL_OK;
+        if (!tlo) return TCL_OK;
 
-	char varname[50];
-	snprintf (varname, size(varname), "%s(red)", propvar);
-	double red = atof (Tcl_GetVar (interp, varname, 0));
-	snprintf (varname, size(varname), "%s(blue)", propvar);
-	double blue = atof (Tcl_GetVar (interp, varname, 0));
-	snprintf (varname, size(varname), "%s(green)", propvar);
-	double green = atof (Tcl_GetVar (interp, varname, 0));
-	tlo -> SetRGB (red, green, blue);
+        char varname[50];
+        snprintf (varname, size(varname), "%s(red)", propvar);
+        double red = atof (Tcl_GetVar (interp, varname, 0));
+        snprintf (varname, size(varname), "%s(blue)", propvar);
+        double blue = atof (Tcl_GetVar (interp, varname, 0));
+        snprintf (varname, size(varname), "%s(green)", propvar);
+        double green = atof (Tcl_GetVar (interp, varname, 0));
+        tlo -> SetRGB (red, green, blue);
 
-	snprintf (varname, size(varname), "%s(visible)", propvar);
-	tlo -> SetVisible (bool(atoi (Tcl_GetVar (interp, varname, 0))));
-	snprintf (varname, size(varname), "%s(transp)", propvar);
-	tlo -> SetTransparent (bool(atoi (Tcl_GetVar (interp, varname, 0))));
+        snprintf (varname, size(varname), "%s(visible)", propvar);
+        tlo -> SetVisible (bool(atoi (Tcl_GetVar (interp, varname, 0))));
+        snprintf (varname, size(varname), "%s(transp)", propvar);
+        tlo -> SetTransparent (bool(atoi (Tcl_GetVar (interp, varname, 0))));
       }
 
     if (strcmp (argv[1], "getprop") == 0)
       {
-	tcl_const char * solname = argv[2];
-	tcl_const char * surfname = argv[3];
-	tcl_const char * propvar = argv[4];
+        tcl_const char * solname = argv[2];
+        tcl_const char * surfname = argv[3];
+        tcl_const char * propvar = argv[4];
 
-	Solid * sol = (Solid*)geometry->GetSolid (solname);
-	Surface * surf = (Surface*)geometry->GetSurface (surfname);
-	TopLevelObject * tlo = geometry->GetTopLevelObject (sol, surf);
+        Solid * sol = (Solid*)geometry->GetSolid (solname);
+        Surface * surf = (Surface*)geometry->GetSurface (surfname);
+        TopLevelObject * tlo = geometry->GetTopLevelObject (sol, surf);
 
-	if (!tlo) return TCL_OK;
+        if (!tlo) return TCL_OK;
 
-	char varname[50], varval[10];
+        char varname[50], varval[10];
 
-	snprintf (varname, size(varname), "%s(red)", propvar);
-	snprintf (varval, size(varval), "%lf", tlo->GetRed());
-	Tcl_SetVar (interp, varname, varval, 0);
+        snprintf (varname, size(varname), "%s(red)", propvar);
+        snprintf (varval, size(varval), "%lf", tlo->GetRed());
+        Tcl_SetVar (interp, varname, varval, 0);
 
-	snprintf (varname, size(varname), "%s(green)", propvar);
-	snprintf (varval, size(varval), "%lf", tlo->GetGreen());
-	Tcl_SetVar (interp, varname, varval, 0);
+        snprintf (varname, size(varname), "%s(green)", propvar);
+        snprintf (varval, size(varval), "%lf", tlo->GetGreen());
+        Tcl_SetVar (interp, varname, varval, 0);
 
-	snprintf (varname, size(varname), "%s(blue)", propvar);
-	snprintf (varval, size(varval), "%lf", tlo->GetBlue());
-	Tcl_SetVar (interp, varname, varval, 0);
+        snprintf (varname, size(varname), "%s(blue)", propvar);
+        snprintf (varval, size(varval), "%lf", tlo->GetBlue());
+        Tcl_SetVar (interp, varname, varval, 0);
 
-	snprintf (varname, size(varname), "%s(visible)", propvar);
-	snprintf (varval, size(varval), "%d", tlo->GetVisible());
-	Tcl_SetVar (interp, varname, varval, 0);
+        snprintf (varname, size(varname), "%s(visible)", propvar);
+        snprintf (varval, size(varval), "%d", tlo->GetVisible());
+        Tcl_SetVar (interp, varname, varval, 0);
 
-	snprintf (varname, size(varname), "%s(transp)", propvar);
-	snprintf (varval, size(varval), "%d", tlo->GetTransparent());
-	Tcl_SetVar (interp, varname, varval, 0);
+        snprintf (varname, size(varname), "%s(transp)", propvar);
+        snprintf (varval, size(varval), "%d", tlo->GetTransparent());
+        Tcl_SetVar (interp, varname, varval, 0);
       }
 
 
@@ -489,25 +489,25 @@ namespace netgen
 
 
   int Ng_SingularEdgeMS (ClientData clientData,
-			 Tcl_Interp * interp,
-			 int argc, tcl_const char *argv[])
+                         Tcl_Interp * interp,
+                         int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     // double globh = mparam.maxh;
@@ -518,14 +518,14 @@ namespace netgen
 
 
   int Ng_SingularPointMS (ClientData clientData,
-			  Tcl_Interp * interp,
-			  int argc, tcl_const char *argv[])
+                          Tcl_Interp * interp,
+                          int argc, tcl_const char *argv[])
   {
     CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     if (!geometry)
       {
-	Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needscsgeometry, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     // double globh = mparam.maxh;
@@ -537,8 +537,8 @@ namespace netgen
 
 
   int Ng_SelectSurface (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     int surfnr = atoi (argv[1]);
     vsgeom.SelectSurface (surfnr);
@@ -558,8 +558,8 @@ namespace netgen
     const CSGeometry * geometry = dynamic_cast<const CSGeometry*> (geom);
     if (geometry)
       {
-	vsgeom.SetGeometry (const_cast<CSGeometry*>(geometry));
-	return &vsgeom;
+        vsgeom.SetGeometry (const_cast<CSGeometry*>(geometry));
+        return &vsgeom;
       }
     return NULL;
   }
@@ -575,65 +575,65 @@ int Ng_CSG_Init (Tcl_Interp * interp)
   
 
   Tcl_CreateCommand (interp, "Ng_ParseGeometry", Ng_ParseGeometry,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   // geometry
   Tcl_CreateCommand (interp, "Ng_CreatePrimitive", Ng_CreatePrimitive,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_SetPrimitiveData", Ng_SetPrimitiveData,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_GetPrimitiveData", Ng_GetPrimitiveData,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_GetPrimitiveList", Ng_GetPrimitiveList,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
 
   Tcl_CreateCommand (interp, "Ng_GetSurfaceList", Ng_GetSurfaceList,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
 
 
   Tcl_CreateCommand (interp, "Ng_SetSolidData", Ng_SetSolidData,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_GetSolidData", Ng_GetSolidData,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_GetSolidList", Ng_GetSolidList,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
 
   Tcl_CreateCommand (interp, "Ng_TopLevel", Ng_TopLevel,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_GeometryOptions", Ng_GeometryOptions,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
   Tcl_CreateCommand (interp, "Ng_SingularEdgeMS", Ng_SingularEdgeMS,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
   
   Tcl_CreateCommand (interp, "Ng_SingularPointMS", Ng_SingularPointMS,
-		     (ClientData)NULL,
-		     (Tcl_CmdDeleteProc*) NULL);
+                     (ClientData)NULL,
+                     (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SelectSurface", Ng_SelectSurface,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
   return TCL_OK;

@@ -55,7 +55,7 @@ QuadraticPolynomial2V ()
 
 QuadraticPolynomial2V :: 
 QuadraticPolynomial2V (double ac, double acx, double acy,
-		       double acxx, double acxy, double acyy)
+                       double acxx, double acxy, double acyy)
 {
   c = ac;
   cx = acx;
@@ -104,9 +104,9 @@ MinUnitSquare ()
   for (x = 0; x <= 1; x += 0.1)
     for (y = 0; y <= 1; y += 0.1)
       {
-	val = Value (x, y);
-	if (val < minv)
-	  minv = val;
+        val = Value (x, y);
+        if (val < minv)
+          minv = val;
       }
   return minv;
 };
@@ -131,10 +131,10 @@ MaxUnitSquare ()
       y0 = (cxy * cx -2 * cxx * cy) / det;
 
       if (x0 >= 0 && x0 <= 1 && y0 >= 0 && y0 <= 1)
-	{
-	  hv = Value (x0, y0);
-	  if (hv > maxv) maxv = hv;
-	}
+        {
+          hv = Value (x0, y0);
+          if (hv > maxv) maxv = hv;
+        }
     }
   
   QuadraticPolynomial1V e1(c, cx, cxx);
@@ -176,9 +176,9 @@ MaxUnitTriangle ()
       y0 = (cxy * cx -2 * cxx * cy) / det;
 
       if (x0 >= 0 && y0 >= 0 && x0+y0 <= 1)
-	{
-	  return Value (x0, y0);
-	}
+        {
+          return Value (x0, y0);
+        }
     }
   
   

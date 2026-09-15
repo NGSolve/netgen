@@ -15,8 +15,8 @@ namespace netgen
     //delete old Hashtable:
     if (size.i1 != 0)
       {
-	for (int i = 0; i < size.i1*size.i2*size.i3; i++)
-	  delete hashtable[i];
+        for (int i = 0; i < size.i1*size.i2*size.i3; i++)
+          delete hashtable[i];
       } 
   }
 
@@ -40,12 +40,12 @@ namespace netgen
   
     for (int i=2; i <= 3; i++)
       {
-	maxp(0)=max2((*points)[elem.PNum(i)].P()(0),maxp(0));
-	maxp(1)=max2((*points)[elem.PNum(i)].P()(1),maxp(1));
-	maxp(2)=max2((*points)[elem.PNum(i)].P()(2),maxp(2));
-	minp(0)=min2((*points)[elem.PNum(i)].P()(0),minp(0));
-	minp(1)=min2((*points)[elem.PNum(i)].P()(1),minp(1));
-	minp(2)=min2((*points)[elem.PNum(i)].P()(2),minp(2));
+        maxp(0)=max2((*points)[elem.PNum(i)].P()(0),maxp(0));
+        maxp(1)=max2((*points)[elem.PNum(i)].P()(1),maxp(1));
+        maxp(2)=max2((*points)[elem.PNum(i)].P()(2),maxp(2));
+        minp(0)=min2((*points)[elem.PNum(i)].P()(0),minp(0));
+        minp(1)=min2((*points)[elem.PNum(i)].P()(1),minp(1));
+        minp(2)=min2((*points)[elem.PNum(i)].P()(2),minp(2));
       }
   }
 
@@ -68,90 +68,90 @@ namespace netgen
     INDEX i,j,k;
     if (reset)
       {
-	const double hashelemsizefactor = 4;
-	reset = 0;
-	/*
-	  minext=Point<3>(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
-	  maxext=Point<3>(MINDOUBLE, MINDOUBLE, MINDOUBLE);
-	*/
-	ElemMaxExt(minext, maxext, faces->operator[](0).Face());
-	Point<3> maxp, minp;
-	Vec<3> midext(0,0,0);
+        const double hashelemsizefactor = 4;
+        reset = 0;
+        /*
+          minext=Point<3>(MAXDOUBLE, MAXDOUBLE, MAXDOUBLE);
+          maxext=Point<3>(MINDOUBLE, MINDOUBLE, MINDOUBLE);
+        */
+        ElemMaxExt(minext, maxext, faces->operator[](0).Face());
+        Point<3> maxp, minp;
+        Vec<3> midext(0,0,0);
       
-	//get max Extension of Frontfaces
-	for (i = 1; i <= faces->Size(); i++)
-	  {
-	    ElemMaxExt(minp, maxp, faces->operator[](i-1).Face());
-	    MinCoords(minp, minext);
-	    MaxCoords(maxp, maxext);
-	    midext+=maxp-minp;
-	  }
+        //get max Extension of Frontfaces
+        for (i = 1; i <= faces->Size(); i++)
+          {
+            ElemMaxExt(minp, maxp, faces->operator[](i-1).Face());
+            MinCoords(minp, minext);
+            MaxCoords(maxp, maxext);
+            midext+=maxp-minp;
+          }
 
 
-	maxextreal = maxext;
-	maxext = maxext + 1e-4 * (maxext - minext);
+        maxextreal = maxext;
+        maxext = maxext + 1e-4 * (maxext - minext);
 
-	midext*=1./faces->Size();
-	Vec<3> boxext = maxext - minext;
+        midext*=1./faces->Size();
+        Vec<3> boxext = maxext - minext;
       
-	//delete old Hashtable:
-	if (size.i1 != 0)
-	  {
-	    for (i = 1; i <= size.i1*size.i2*size.i3; i++)
-	      {
-		delete hashtable[i-1];
-	      }
-	  } 
+        //delete old Hashtable:
+        if (size.i1 != 0)
+          {
+            for (i = 1; i <= size.i1*size.i2*size.i3; i++)
+              {
+                delete hashtable[i-1];
+              }
+          } 
       
-	size.i1 = int (boxext(0)/midext(0)/hashelemsizefactor+1);
-	size.i2 = int (boxext(1)/midext(1)/hashelemsizefactor+1);
-	size.i3 = int (boxext(2)/midext(2)/hashelemsizefactor+1);
+        size.i1 = int (boxext(0)/midext(0)/hashelemsizefactor+1);
+        size.i2 = int (boxext(1)/midext(1)/hashelemsizefactor+1);
+        size.i3 = int (boxext(2)/midext(2)/hashelemsizefactor+1);
 
-	int nfaces = faces->Size();
-	size.i1 = min(size.i1, nfaces);
-	size.i2 = min(size.i2, nfaces);
-	size.i3 = min(size.i3, nfaces);
+        int nfaces = faces->Size();
+        size.i1 = min(size.i1, nfaces);
+        size.i2 = min(size.i2, nfaces);
+        size.i3 = min(size.i3, nfaces);
 
-	// PrintMessage (5, "hashsizes = ", size.i1, ", ", size.i2, ", ", size.i3);
+        // PrintMessage (5, "hashsizes = ", size.i1, ", ", size.i2, ", ", size.i3);
       
-	elemsize(0)=boxext(0)/size.i1;
-	elemsize(1)=boxext(1)/size.i2;
-	elemsize(2)=boxext(2)/size.i3;
+        elemsize(0)=boxext(0)/size.i1;
+        elemsize(1)=boxext(1)/size.i2;
+        elemsize(2)=boxext(2)/size.i3;
 
-	//create Hasharrays:
-	hashtable.SetSize(size.i1*size.i2*size.i3);
-	for (i = 1; i <= size.i1; i++)
-	  {
-	    for (j = 1; j <= size.i2; j++)
-	      {
-		for (k = 1; k <= size.i3; k++)
-		  {
-		    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
-		    hashtable[ind-1] = new Array <int> ();
-		  }
-	      }
-	  }
+        //create Hasharrays:
+        hashtable.SetSize(size.i1*size.i2*size.i3);
+        for (i = 1; i <= size.i1; i++)
+          {
+            for (j = 1; j <= size.i2; j++)
+              {
+                for (k = 1; k <= size.i3; k++)
+                  {
+                    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
+                    hashtable[ind-1] = new Array <int> ();
+                  }
+              }
+          }
       }
     else
       {
-	//Clear all Hash-Arrays
-	for (i = 1; i <= size.i1; i++)
-	  {
-	    for (j = 1; j <= size.i2; j++)
-	      {
-		for (k = 1; k <= size.i3; k++)
-		  {
-		    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
-		    hashtable[ind-1]->SetSize(0);
-		  }
-	      }
-	  }	  
+        //Clear all Hash-Arrays
+        for (i = 1; i <= size.i1; i++)
+          {
+            for (j = 1; j <= size.i2; j++)
+              {
+                for (k = 1; k <= size.i3; k++)
+                  {
+                    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
+                    hashtable[ind-1]->SetSize(0);
+                  }
+              }
+          }       
       }
   
     //Faces in Hashtable einfuegen:
     for (i = 1; i <= faces->Size(); i++)
       {
-	AddElem(faces->operator[](i-1).Face(),i);
+        AddElem(faces->operator[](i-1).Face(),i);
       }
   
   }
@@ -176,14 +176,14 @@ namespace netgen
               {
                 cerr << "Illegal hash-position";
                 cerr << "Position: " << ix << "," << iy << "," << iz << endl;
-		    throw NgException ("Illegal position in Geomsearch");
+                    throw NgException ("Illegal position in Geomsearch");
               }
-            hashtable[ind-1]->Append(elemnum);		      
+            hashtable[ind-1]->Append(elemnum);                
           }
   }
 
   void GeomSearch3d :: GetLocals(Array<FrontElement2d> & locfaces,  Array<INDEX> & findex,
-				 INDEX fstind, const Point<3>& p0, double xh)
+                                 INDEX fstind, const Point<3>& p0, double xh)
   {
     hashcount++;
   
@@ -212,47 +212,47 @@ namespace netgen
   
     for (ix = sx; ix <= ex; ix++)
       {
-	for (iy = sy; iy <= ey; iy++)
-	  {
-	    for (iz = sz; iz <= ez; iz++)
-	      {
-		INDEX ind=ix+(iy-1)*size.i1+(iz-1)*size.i2*size.i1;
-	      
-		//go through all elements in one hash area
-		const Array <int> & area = *hashtable[ind-1];
-		for (k = 1; k <= area.Size(); k++)
-		  {
-		    cnt2++;
-		    i = area[k-1];
-		    if (faces->operator[](i-1).Cluster() == cluster && 
-			faces->operator[](i-1).Valid() &&
-			faces->operator[](i-1).HashValue() != hashcount && 
-			i != fstind)
-		      {
-			cnt1++;
-			const FrontElement2d & face = faces->operator[](i-1).Face();
-		      
-			const Point<3> & p1 = (*points)[face.PNum(1)].P();
-			const Point<3> & p2 = (*points)[face.PNum(2)].P();
-			const Point<3> & p3 = (*points)[face.PNum(3)].P();
-		      
-			midp = Center (p1, p2, p3);
-		      
-			// if (Dist2 (midp, p0) <= xh*xh)  
+        for (iy = sy; iy <= ey; iy++)
+          {
+            for (iz = sz; iz <= ez; iz++)
+              {
+                INDEX ind=ix+(iy-1)*size.i1+(iz-1)*size.i2*size.i1;
+              
+                //go through all elements in one hash area
+                const Array <int> & area = *hashtable[ind-1];
+                for (k = 1; k <= area.Size(); k++)
+                  {
+                    cnt2++;
+                    i = area[k-1];
+                    if (faces->operator[](i-1).Cluster() == cluster && 
+                        faces->operator[](i-1).Valid() &&
+                        faces->operator[](i-1).HashValue() != hashcount && 
+                        i != fstind)
+                      {
+                        cnt1++;
+                        const FrontElement2d & face = faces->operator[](i-1).Face();
+                      
+                        const Point<3> & p1 = (*points)[face.PNum(1)].P();
+                        const Point<3> & p2 = (*points)[face.PNum(2)].P();
+                        const Point<3> & p3 = (*points)[face.PNum(3)].P();
+                      
+                        midp = Center (p1, p2, p3);
+                      
+                        // if (Dist2 (midp, p0) <= xh*xh)  
                         if((Dist2 (p1, p0) <= xh*xh) ||
                            (Dist2 (p2, p0) <= xh*xh) ||
                            (Dist2 (p3, p0) <= xh*xh) ||
                            (Dist2 (midp, p0) <= xh*xh) )  // by Jochen Wild
-			  {
-			    cnt3++;
-			    locfaces.Append(faces->operator[](i-1).Face());
-			    findex.Append(i);
-			    faces->operator[](i-1).SetHashValue(hashcount);
-			  }
-		      }
-		  }
-	      }
-	  }
+                          {
+                            cnt3++;
+                            locfaces.Append(faces->operator[](i-1).Face());
+                            findex.Append(i);
+                            faces->operator[](i-1).SetHashValue(hashcount);
+                          }
+                      }
+                  }
+              }
+          }
       }
     /*
       if (faces->Size() != 0 && hashcount % 200 == 0)

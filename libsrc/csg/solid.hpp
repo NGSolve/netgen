@@ -136,10 +136,10 @@ namespace netgen
     bool VectorStrictIn (const Point<3> & p, const Vec<3> & v, double eps = 1e-6) const;
   
     bool VectorIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-		    double eps) const;
+                    double eps) const;
     /*
     bool VectorIn2Rec (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-		       double eps) const;
+                       double eps) const;
     */
     bool VectorStrictIn2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
                           double eps) const;
@@ -152,17 +152,17 @@ namespace netgen
                                         Array<int> & surfids, double eps) const;
 
     /** compute localization in point p, with second order approximation to edge
-	p + s t + s*s/2 t2 **/
+        p + s t + s*s/2 t2 **/
     unique_ptr<Solid> TangentialSolid3 (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
                                         Array<int> & surfids, double eps) const;
 
 
 
     /** tangential solid, which follows the edge
-	p + s t + s*s/2 t2
-	with second order, and the neighbouring face
-	p + s t + s*s/2 t2 + r m
-	with first order
+        p + s t + s*s/2 t2
+        with second order, and the neighbouring face
+        p + s t + s*s/2 t2 + r m
+        with first order
     **/
     unique_ptr<Solid> TangentialEdgeSolid (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
                                            const Vec<3> & m, 
@@ -208,27 +208,27 @@ namespace netgen
     ///
 
     void RecBoundaries (const Point<3> & p, Array<int> & bounds, 
-			int & in, int & strin) const;
+                        int & in, int & strin) const;
     ///
     void RecTangentialSolid (const Point<3> & p, Solid *& tansol, Array<int> & surfids, 
                              bool & in, bool & strin, double eps) const;
 
     void RecTangentialSolid2 (const Point<3> & p, const Vec<3> & vec, 
-			      Solid *& tansol, Array<int> & surfids, 
-			      bool & in, bool & strin, double eps) const;
+                              Solid *& tansol, Array<int> & surfids, 
+                              bool & in, bool & strin, double eps) const;
     ///
     void RecTangentialSolid3 (const Point<3> & p, const Vec<3> & vec,const Vec<3> & vec2, 
-			      Solid *& tansol, Array<int> & surfids, 
-			      bool & in, bool & strin, double eps) const;
+                              Solid *& tansol, Array<int> & surfids, 
+                              bool & in, bool & strin, double eps) const;
     ///
     void RecTangentialEdgeSolid (const Point<3> & p, const Vec<3> & t, const Vec<3> & t2, 
-				 const Vec<3> & m, 
-				 Solid *& tansol, Array<int> & surfids, 
-				 bool & in, bool & strin, double eps) const;
+                                 const Vec<3> & m, 
+                                 Solid *& tansol, Array<int> & surfids, 
+                                 bool & in, bool & strin, double eps) const;
 
     ///
     void RecEdge (const Point<3> & p, const Vec<3> & v,
-		  bool & in, bool & strin, int & faces, double eps) const;
+                  bool & in, bool & strin, int & faces, double eps) const;
     ///
     void CalcSurfaceInverseRec (int inv);
     ///
@@ -238,9 +238,9 @@ namespace netgen
     void RecGetTangentialSurfaceIndices (const Point<3> & p, Array<int> & surfids, double eps) const;
     void RecGetTangentialSurfaceIndices2 (const Point<3> & p, const Vec<3> & v, Array<int> & surfids, double eps) const;
     void RecGetTangentialSurfaceIndices3 (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, 
-					  Array<int> & surfids, double eps) const;
+                                          Array<int> & surfids, double eps) const;
     void RecGetTangentialEdgeSurfaceIndices (const Point<3> & p, const Vec<3> & v, const Vec<3> & v2, const Vec<3> & m,
-					     Array<int> & surfids, double eps) const;
+                                             Array<int> & surfids, double eps) const;
     void RecGetSurfaceIndices (IndexSet & iset) const;
 
     void RecCalcOnePrimitiveSpecialPoints (Array<Point<3> > & pts) const;
@@ -273,7 +273,7 @@ namespace netgen
     virtual void Do (Solid * sol)
     {
       if (sol -> GetPrimitive())
-	sol -> GetPrimitive() -> Reduce (box);
+        sol -> GetPrimitive() -> Reduce (box);
     }
   };
 
@@ -286,7 +286,7 @@ namespace netgen
     virtual void Do (Solid * sol)
     {
       if (sol -> GetPrimitive())
-	sol -> GetPrimitive() -> UnReduce ();
+        sol -> GetPrimitive() -> UnReduce ();
     }
   };
 

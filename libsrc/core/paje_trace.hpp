@@ -240,7 +240,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return -1;
           if(!trace_threads && !trace_thread_counter) return -1;
-	  if(unlikely(tasks[thread_id].size() == max_num_events_per_thread))
+          if(unlikely(tasks[thread_id].size() == max_num_events_per_thread))
             StopTracing();
           int task_num = tasks[thread_id].size();
           tasks[thread_id].push_back( Task{thread_id, id, id_type, additional_value, GetTimeCounter(), true} );

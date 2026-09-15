@@ -49,57 +49,57 @@ void ParallelRun()
 
       if ( message.compare(0, 3, "ngs") == 0 ) 
         {
-	  if (NGS_ParallelRun == NULL)
-	    {
-	      static Timer timer("load shared library ngsolve");
-	      RegionTimer reg (timer);
+          if (NGS_ParallelRun == NULL)
+            {
+              static Timer timer("load shared library ngsolve");
+              RegionTimer reg (timer);
   
 
-	      void * handle = dlopen ("libngsolve.so", RTLD_NOW | RTLD_GLOBAL);
-	      if (!handle)
-		{
-		  cerr << "cannot load shared library libngsolve.so" << endl;
-		  exit(1);
-		}
-	      
-	      NGS_ParallelRun = (void (*) (const string & message))  dlsym (handle, "NGS_ParallelRun");
-	      
-	      if (!NGS_ParallelRun)
-		{
-		  cerr << "cannot bind function NGS_ParallelRun" << endl;
-		  exit(1);
-		}
-	    }
+              void * handle = dlopen ("libngsolve.so", RTLD_NOW | RTLD_GLOBAL);
+              if (!handle)
+                {
+                  cerr << "cannot load shared library libngsolve.so" << endl;
+                  exit(1);
+                }
+              
+              NGS_ParallelRun = (void (*) (const string & message))  dlsym (handle, "NGS_ParallelRun");
+              
+              if (!NGS_ParallelRun)
+                {
+                  cerr << "cannot bind function NGS_ParallelRun" << endl;
+                  exit(1);
+                }
+            }
           (*NGS_ParallelRun) (message);
         }
       else if ( message == "mesh" )
-	{
-	  VT_USER_START ("Mesh::ReceiveParallelMesh");
-	  mesh.Reset( new netgen::Mesh);
-	  mesh->SendRecvMesh();
-	  VT_USER_END ("Mesh::ReceiveParallelMesh");
-	}
+        {
+          VT_USER_START ("Mesh::ReceiveParallelMesh");
+          mesh.Reset( new netgen::Mesh);
+          mesh->SendRecvMesh();
+          VT_USER_END ("Mesh::ReceiveParallelMesh");
+        }
 
       else if ( message == "visualize" )
-	{
-	  cout << "parallel message visualize depreciated" << endl;
-	}
+        {
+          cout << "parallel message visualize depreciated" << endl;
+        }
       
       else if ( message == "bcastparthread" )
-	{
-	  MyMPI_Bcast (mparam.parthread);
-	}
+        {
+          MyMPI_Bcast (mparam.parthread);
+        }
 
       else if ( message ==  "end" )
-	{
-	  break;
-	}
+        {
+          break;
+        }
       
       else
-	{
-	  PrintMessage ( 1, "received unidentified message '" + message + "'\n");
-	  break;
-	}
+        {
+          PrintMessage ( 1, "received unidentified message '" + message + "'\n");
+          break;
+        }
       
     }
 }

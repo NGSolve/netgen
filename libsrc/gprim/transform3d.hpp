@@ -45,10 +45,10 @@ public:
   void Transform (const Point<3> & from, Point<3> & to) const
     {
       for (int i = 1; i <= 3; i++)
-	{
-	  to(i-1) = offset[i-1] + lin[i-1][0] * from(0) + 
-	    lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
-	}
+        {
+          to(i-1) = offset[i-1] + lin[i-1][0] * from(0) + 
+            lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
+        }
     }
 
   ///
@@ -63,10 +63,10 @@ public:
   void Transform (const Vec<3> & from, Vec<3> & to) const
     {
       for (int i = 1; i <= 3; i++)
-	{
-	  to(i-1) = lin[i-1][0] * from(0) + 
-	    lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
-	}
+        {
+          to(i-1) = lin[i-1][0] * from(0) + 
+            lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
+        }
     }
   friend ostream & operator<< (ostream & ost, Transformation3d & trans);
 };
@@ -174,7 +174,7 @@ public:
     {
       v(i) = 0;
       for (j = 0; j <= 2; j++)
-	m(i,j) = 0;
+        m(i,j) = 0;
     }
     
     m(dir,dir) = 1;

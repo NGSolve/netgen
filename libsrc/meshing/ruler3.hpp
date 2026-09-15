@@ -140,7 +140,7 @@ public:
     }
   ///
   void SetFreeZoneTransformation (const Vector & allp,
-				  int tolclass);
+                                  int tolclass);
   ///
   int IsInFreeZone (const Point<3> & p) const;
   /**
@@ -152,16 +152,16 @@ public:
                             const Point<3> & p3, const Array<int> & pi, int newone);
   ///
   int IsQuadInFreeZone (const Point<3> & p1, const Point<3> & p2,
-			const Point<3> & p3, const Point<3> & p4,
-			const Array<int> & pi, int newone);
+                        const Point<3> & p3, const Point<3> & p4,
+                        const Array<int> & pi, int newone);
   ///
   int IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
                            const Point<3> & p3, int fs, const Array<int> & pi, int newone);
 
   ///
   int IsQuadInFreeSet (const Point<3> & p1, const Point<3> & p2,
-		       const Point<3> & p3, const Point<3> & p4,
-		       int fs, const Array<int> & pi, int newone);
+                       const Point<3> & p3, const Point<3> & p4,
+                       int fs, const Array<int> & pi, int newone);
   
   ///
   int ConvexFreeZone () const;

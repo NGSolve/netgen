@@ -139,8 +139,8 @@ INDEX AdFront3 :: AddFace (const FrontElement2d & aface)
       nff4++;
       const Point<3> & p4 = points[aface[3]].P();      
       vol += 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
-	( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
-	  (p3(2) - p1(2)) * (p4(1) - p1(1)) );
+        ( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
+          (p3(2) - p1(2)) * (p4(1) - p1(1)) );
     }
 
 
@@ -149,7 +149,7 @@ INDEX AdFront3 :: AddFace (const FrontElement2d & aface)
     {
       int fpn = points[aface[i]].FrontNr();
       if (i == 0 || fpn < minfn)
-	minfn = fpn;
+        minfn = fpn;
     }
 
 
@@ -157,7 +157,7 @@ INDEX AdFront3 :: AddFace (const FrontElement2d & aface)
   for (i = 1; i <= aface.GetNP(); i++)
     {
       if (points[aface.PNum(i)].cluster.IsValid())
-	cluster = points[aface.PNum(i)].cluster;
+        cluster = points[aface.PNum(i)].cluster;
     }
   for (i = 1; i <= aface.GetNP(); i++)
     points[aface.PNum(i)].cluster = cluster;
@@ -191,7 +191,7 @@ void AdFront3 :: DeleteFace (INDEX fi)
     {
       points[pi].RemoveFace();
       if (!points[pi].Valid())
-	delpointl.Append (pi);
+        delpointl.Append (pi);
     }
 
   const FrontElement2d & face = faces[fi-1].Face();
@@ -207,8 +207,8 @@ void AdFront3 :: DeleteFace (INDEX fi)
     {
       const Point<3> & p4 = points[face.PNum(4)].P();      
       vol -= 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
-	( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
-	  (p3(2) - p1(2)) * (p4(1) - p1(1)) );
+        ( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
+          (p3(2) - p1(2)) * (p4(1) - p1(1)) );
 
       nff4--;
     }
@@ -240,15 +240,15 @@ void AdFront3 :: CreateTrees ()
     {
       const Point<3> & p = GetPoint(pi);
       if (pi == IndexBASE<Front3PointIndex>())
-	{
-	  pmin = p;
-	  pmax = p;
-	}
+        {
+          pmin = p;
+          pmax = p;
+        }
       else
-	{
-	  SetToMin (pmin, p);
-	  SetToMax (pmax, p);
-	}
+        {
+          SetToMin (pmin, p);
+          SetToMax (pmax, p);
+        }
     }
 
   pmax = pmax + 0.5 * (pmax - pmin);
@@ -263,11 +263,11 @@ void AdFront3 :: CreateTrees ()
       pmin = GetPoint (el[0]);
       pmax = pmin;
       for (j = 1; j < 3; j++)
-	{
-	  const Point<3> & p = GetPoint (el[j]);
-	  SetToMin (pmin, p);
-	  SetToMax (pmax, p);
-	}
+        {
+          const Point<3> & p = GetPoint (el[j]);
+          SetToMin (pmin, p);
+          SetToMax (pmax, p);
+        }
       pmax = pmax + 0.01 * (pmax - pmin);
       pmin = pmin + 0.01 * (pmin - pmax);
       //      (*testout) << "insert " << i << ": " << pmin << " - " << pmax << "\n";
@@ -277,7 +277,7 @@ void AdFront3 :: CreateTrees ()
 
 
 void AdFront3 :: GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-				       Array<int> & ifaces) const
+                                       Array<int> & ifaces) const
 {
   facetree -> GetIntersecting (pmin, pmax, ifaces);
 }
@@ -298,14 +298,14 @@ void AdFront3 :: RebuildInternalTables ()
   static Timer timer_d("Adfront3::RebuildInternal D");
 
 
-  timer_a.Start();	  
+  timer_a.Start();        
   int hi = 0;
   for (int i = 1; i <= faces.Size(); i++)
     if (faces[i-1].Valid())
       {
-	hi++;
-	if (hi < i)
-	  faces[hi-1] = faces[i-1];
+        hi++;
+        if (hi < i)
+          faces[hi-1] = faces[i-1];
       }
   
   faces.SetSize (nff);
@@ -316,7 +316,7 @@ void AdFront3 :: RebuildInternalTables ()
   for (Front3PointIndex pi : points.Range())
     points[pi].cluster = pi;
   
-  timer_a.Stop();	  
+  timer_a.Stop();         
   timer_b.Start();
 
   int change;
@@ -324,26 +324,26 @@ void AdFront3 :: RebuildInternalTables ()
     {
       change = 0;
       for (int i = 1; i <= faces.Size(); i++)
-	{
-	  const FrontElement2d & el = faces[i-1].Face();
+        {
+          const FrontElement2d & el = faces[i-1].Face();
 
-	  Front3PointIndex mini = points[el.PNum(1)].cluster;
-	  Front3PointIndex maxi = mini;
-	  
-	  for (int j = 2; j <= 3; j++)
-	    {
-	      Front3PointIndex ci = points[el.PNum(j)].cluster;
-	      if (ci < mini) mini = ci;
-	      if (ci > maxi) maxi = ci;
-	    }
+          Front3PointIndex mini = points[el.PNum(1)].cluster;
+          Front3PointIndex maxi = mini;
+          
+          for (int j = 2; j <= 3; j++)
+            {
+              Front3PointIndex ci = points[el.PNum(j)].cluster;
+              if (ci < mini) mini = ci;
+              if (ci > maxi) maxi = ci;
+            }
 
-	  if (mini < maxi)
-	    {
-	      change = 1;
-	      for (int j = 1; j <= 3; j++)
-		points[el.PNum(j)].cluster = mini;
-	    }
-	}
+          if (mini < maxi)
+            {
+              change = 1;
+              for (int j = 1; j <= 3; j++)
+                points[el.PNum(j)].cluster = mini;
+            }
+        }
     }
   while (change);
 
@@ -360,7 +360,7 @@ void AdFront3 :: RebuildInternalTables ()
     {
       usecl[points[faces[i-1].Face().PNum(1)].cluster] = true;
       faces[i-1].cluster =
-	points[faces[i-1].Face().PNum(1)].cluster;
+        points[faces[i-1].Face().PNum(1)].cluster;
     }
   /*
   int cntcl = 0;
@@ -382,21 +382,21 @@ void AdFront3 :: RebuildInternalTables ()
       const Point<3> p3 = points[face.PNum(3)].P();      
       
       double vi = 1.0/6.0 * (p1(0) + p2(0) + p3(0)) *
-	( (p2(1) - p1(1)) * (p3(2) - p1(2)) -
-	  (p2(2) - p1(2)) * (p3(1) - p1(1)) );
+        ( (p2(1) - p1(1)) * (p3(2) - p1(2)) -
+          (p2(2) - p1(2)) * (p3(1) - p1(1)) );
       
       if (face.GetNP() == 4)
-	{
-	  const Point<3> p4 = points[face.PNum(4)].P();      
-	  vi += 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
-	    ( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
-	      (p3(2) - p1(2)) * (p4(1) - p1(1)) );
-	}
+        {
+          const Point<3> p4 = points[face.PNum(4)].P();      
+          vi += 1.0/6.0 * (p1(0) + p3(0) + p4(0)) *
+            ( (p3(1) - p1(1)) * (p4(2) - p1(2)) -
+              (p3(2) - p1(2)) * (p4(1) - p1(1)) );
+        }
      
       clvol[faces[i-1].cluster] += vi;
     }
 
-  timer_c.Stop();	  
+  timer_c.Stop();         
   timer_d.Start();
 
 
@@ -409,9 +409,9 @@ void AdFront3 :: RebuildInternalTables ()
   if (negvol)
     {
       for (int i = 1; i <= faces.Size(); i++)
-	faces[i-1].cluster = IndexBASE<Front3PointIndex>();
+        faces[i-1].cluster = IndexBASE<Front3PointIndex>();
       for (Front3PointIndex pi : points.Range())
-	points[pi].cluster = IndexBASE<Front3PointIndex>();
+        points[pi].cluster = IndexBASE<Front3PointIndex>();
     }
 
   if (hashon) 
@@ -453,37 +453,37 @@ int AdFront3 :: SelectBaseElement ()
   for (int i = lasti+1; i <= faces.Size() && !fstind; i++)
     if (faces[i-1].Valid())
       {
-	int hi = faces[i-1].QualClass() +
-	  points[faces[i-1].Face().PNum(1)].FrontNr() +
-	  points[faces[i-1].Face().PNum(2)].FrontNr() +
-	  points[faces[i-1].Face().PNum(3)].FrontNr();
-	
-	if (hi <= minval)
-	  {
-	    minval = hi;
-	    fstind = i;
-	    lasti = fstind;
-	  }
+        int hi = faces[i-1].QualClass() +
+          points[faces[i-1].Face().PNum(1)].FrontNr() +
+          points[faces[i-1].Face().PNum(2)].FrontNr() +
+          points[faces[i-1].Face().PNum(3)].FrontNr();
+        
+        if (hi <= minval)
+          {
+            minval = hi;
+            fstind = i;
+            lasti = fstind;
+          }
       }
   
   if (!fstind)
     {
       minval = INT_MAX;
       for (int i = 1; i <= faces.Size(); i++)
-	if (faces[i-1].Valid())
-	  {
-	    int hi = faces[i-1].QualClass() +
-	      points[faces[i-1].Face().PNum(1)].FrontNr() +
-	      points[faces[i-1].Face().PNum(2)].FrontNr() +
-	      points[faces[i-1].Face().PNum(3)].FrontNr();
-	    
-	    if (hi <= minval)
-	      {
-		minval = hi;
-		fstind = i;
-		lasti = 0;
-	      }
-	  }
+        if (faces[i-1].Valid())
+          {
+            int hi = faces[i-1].QualClass() +
+              points[faces[i-1].Face().PNum(1)].FrontNr() +
+              points[faces[i-1].Face().PNum(2)].FrontNr() +
+              points[faces[i-1].Face().PNum(3)].FrontNr();
+            
+            if (hi <= minval)
+              {
+                minval = hi;
+                fstind = i;
+                lasti = 0;
+              }
+          }
     }
 
 
@@ -493,14 +493,14 @@ int AdFront3 :: SelectBaseElement ()
 
 
 int AdFront3 :: GetLocals (int fstind,
-			   Array<Point<3>, LocalPointIndex> & locpoints,
-			   Array<MiniElement2d> & locfaces,   // local index
-			   Array<Front3PointIndex, LocalPointIndex> & pindex,
-			   Array<INDEX> & findex,
-			   INDEX_2_HASHTABLE<int> & getconnectedpairs,
-			   float xh,
-			   float relh,
-			   INDEX& facesplit)
+                           Array<Point<3>, LocalPointIndex> & locpoints,
+                           Array<MiniElement2d> & locfaces,   // local index
+                           Array<Front3PointIndex, LocalPointIndex> & pindex,
+                           Array<INDEX> & findex,
+                           INDEX_2_HASHTABLE<int> & getconnectedpairs,
+                           float xh,
+                           float relh,
+                           INDEX& facesplit)
 {
   // static Timer timer("AdFront3::GetLocals");
   // RegionTimer reg (timer);
@@ -545,22 +545,22 @@ int AdFront3 :: GetLocals (int fstind,
   else
     {
       for (i = 1; i <= faces.Size(); i++)
-	{
-	  const FrontElement2d & face = faces[i-1].Face();
-	  if (faces[i-1].cluster == cluster && faces[i-1].Valid() && i != fstind)
-	    {
-	      Box3d b2;
-	      b2.SetPoint (points[face[0]].P());
-	      b2.AddPoint (points[face[1]].P());
-	      b2.AddPoint (points[face[2]].P());
+        {
+          const FrontElement2d & face = faces[i-1].Face();
+          if (faces[i-1].cluster == cluster && faces[i-1].Valid() && i != fstind)
+            {
+              Box3d b2;
+              b2.SetPoint (points[face[0]].P());
+              b2.AddPoint (points[face[1]].P());
+              b2.AddPoint (points[face[2]].P());
 
-	      if (b1.Intersect (b2))
-		{
-		  locfaces2.Append(faces[i-1].Face());
-		  findex2.Append(i);
-		}
-	    }
-	}
+              if (b1.Intersect (b2))
+                {
+                  locfaces2.Append(faces[i-1].Face());
+                  findex2.Append(i);
+                }
+            }
+        }
     }
 
   Array<FrontElement2d> frontfaces;         // the selected faces, front numbering
@@ -576,12 +576,12 @@ int AdFront3 :: GetLocals (int fstind,
       midp = Center (p1, p2, p3);
 
       if (Dist2 (midp, p0) <= relh * relh || i == 1)
-	{
+        {
           frontfaces.Append(locfaces2[i-1]);
-	  findex.Append(findex2[i-1]);
-	}
+          findex.Append(findex2[i-1]);
+        }
       else
-	locfaces3.Append (i);
+        locfaces3.Append (i);
     }
   
   facesplit=frontfaces.Size();
@@ -600,7 +600,7 @@ int AdFront3 :: GetLocals (int fstind,
   for (i = 1; i <= locfaces.Size(); i++)
     for (j = 1; j <= locfaces.Get(i).GetNP(); j++)
       {
-	PointIndex pi = locfaces.Get(i).PNum(j);
+        PointIndex pi = locfaces.Get(i).PNum(j);
         invpindex[pi] = PointIndex::INVALID;
       }
   */
@@ -612,16 +612,16 @@ int AdFront3 :: GetLocals (int fstind,
     {
       MiniElement2d locface(f.GetNP());
       for (int j = 1; j <= f.GetNP(); j++)
-	{
+        {
           Front3PointIndex pi = f.PNum(j);
-	  if (!invpindex[pi].IsValid())
-	    {
-	      pindex.Append (pi);
+          if (!invpindex[pi].IsValid())
+            {
+              pindex.Append (pi);
               locpoints.Append (points[pi].P());
-	      invpindex[pi] = pindex.Size()-1+IndexBASE<LocalPointIndex>();
+              invpindex[pi] = pindex.Size()-1+IndexBASE<LocalPointIndex>();
             }
           locface.PNum(j) = invpindex[pi];
-	}
+        }
       locfaces.Append (locface);
     }
 
@@ -631,30 +631,30 @@ int AdFront3 :: GetLocals (int fstind,
     {
       // for (i = 1; i <= locpoints.Size(); i++)
       for (auto i : locpoints.Range())
-	{
-	  Front3PointIndex pind = pindex[i]; // .Get(i);
-	  // if (pind.IsValid() && pind <= connectedpairs->Size ())
+        {
+          Front3PointIndex pind = pindex[i]; // .Get(i);
+          // if (pind.IsValid() && pind <= connectedpairs->Size ())
           if (connectedpairs->Range().Contains(pind))
-	    {
-	      // for (int j = 1; j <= connectedpairs->EntrySize(pind); j++)
+            {
+              // for (int j = 1; j <= connectedpairs->EntrySize(pind); j++)
               for (auto j : (*connectedpairs)[pind].Range())
-		{
-		  //PointIndex oi = connectedpairs->Get(pind, j);
+                {
+                  //PointIndex oi = connectedpairs->Get(pind, j);
                   Front3PointIndex oi = (*connectedpairs)[pind][j];
-		  LocalPointIndex other = invpindex[oi];
-		  // if (other >= 1 && other <= pindex.Size() &&
+                  LocalPointIndex other = invpindex[oi];
+                  // if (other >= 1 && other <= pindex.Size() &&
                   if (pindex.Range().Contains(other) &&
-		      pindex[other] == oi)
-		    {
-		      // INDEX_2 coned(i, other);
-		      // coned.Sort();
-		      // (*testout) << "connected: " << locpoints.Get(i) << "-" << locpoints.Get(other) << endl;
-		      getconnectedpairs.Set (INDEX_2::Sort (i.Nr0(),
-							    other.Nr0()), 1);
-		    }
-		}
-	    }
-	}
+                      pindex[other] == oi)
+                    {
+                      // INDEX_2 coned(i, other);
+                      // coned.Sort();
+                      // (*testout) << "connected: " << locpoints.Get(i) << "-" << locpoints.Get(other) << endl;
+                      getconnectedpairs.Set (INDEX_2::Sort (i.Nr0(),
+                                                            other.Nr0()), 1);
+                    }
+                }
+            }
+        }
     }
   
 
@@ -663,12 +663,12 @@ int AdFront3 :: GetLocals (int fstind,
   for (i = 1; i <= points.Size(); i++)
     if (points.Elem(i).Valid() && Dist (points.Elem(i).P(), p0) <= xh)
       {
-	if (!invpindex.Get(i))
-	  {
-	    locpoints.Append (points.Get(i).P());
-	    pindex.Append (i);
-	    invpindex.Elem(i) = pindex.Size();
-	  }
+        if (!invpindex.Get(i))
+          {
+            locpoints.Append (points.Get(i).P());
+            pindex.Append (i);
+            invpindex.Elem(i) = pindex.Size();
+          }
       }
       */
   return faces[fstind-1].QualClass();
@@ -677,10 +677,10 @@ int AdFront3 :: GetLocals (int fstind,
 
 // returns all points connected with fi
 void AdFront3 :: GetGroup (int fi,
-			   Array<MeshPoint, LocalPointIndex> & grouppoints,
-			   Array<MiniElement2d> & groupelements,
-			   Array<Front3PointIndex, LocalPointIndex> & pindex,
-			   Array<INDEX> & findex) 
+                           Array<MeshPoint, LocalPointIndex> & grouppoints,
+                           Array<MiniElement2d> & groupelements,
+                           Array<Front3PointIndex, LocalPointIndex> & pindex,
+                           Array<INDEX> & findex) 
 {
   // static Array<char> pingroup;
   int changed;
@@ -697,42 +697,42 @@ void AdFront3 :: GetGroup (int fi,
 
       /*
       for (i = 1; i <= faces.Size(); i++)
-	if (faces.Get(i).Valid())
-	  {
-	    const MiniElement2d & face = faces.Get(i).Face();
+        if (faces.Get(i).Valid())
+          {
+            const MiniElement2d & face = faces.Get(i).Face();
 
-	    int fused = 0;
-	    for (j = 1; j <= 3; j++)
-	      if (pingroup.Elem(face.PNum(j))) 
-		fused++;
+            int fused = 0;
+            for (j = 1; j <= 3; j++)
+              if (pingroup.Elem(face.PNum(j))) 
+                fused++;
             
-	    if (fused >= 2)
-	      for (j = 1; j <= 3; j++)
-		if (!pingroup.Elem(face.PNum(j)))
-		  {
-		    pingroup.Elem(face.PNum(j)) = 1;
-		    changed = 1;
-		  }
-	  }
+            if (fused >= 2)
+              for (j = 1; j <= 3; j++)
+                if (!pingroup.Elem(face.PNum(j)))
+                  {
+                    pingroup.Elem(face.PNum(j)) = 1;
+                    changed = 1;
+                  }
+          }
       */
       for (auto & f : faces)
-	if (f.Valid())
-	  {
-	    const FrontElement2d & face = f.Face();
+        if (f.Valid())
+          {
+            const FrontElement2d & face = f.Face();
 
-	    int fused = 0;
-	    for (int j = 1; j <= 3; j++)
-	      if (pingroup[face.PNum(j)]) 
-		fused++;
+            int fused = 0;
+            for (int j = 1; j <= 3; j++)
+              if (pingroup[face.PNum(j)]) 
+                fused++;
             
-	    if (fused >= 2)
-	      for (int j = 1; j <= 3; j++)
-		if (!pingroup[face.PNum(j)])
-		  {
-		    pingroup[face.PNum(j)] = 1;
-		    changed = 1;
-		  }
-	  }
+            if (fused >= 2)
+              for (int j = 1; j <= 3; j++)
+                if (!pingroup[face.PNum(j)])
+                  {
+                    pingroup[face.PNum(j)] = 1;
+                    changed = 1;
+                  }
+          }
 
     }
   while (changed);
@@ -743,28 +743,28 @@ void AdFront3 :: GetGroup (int fi,
   for (Front3PointIndex pi : points.Range())
     if (points[pi].Valid())
       {
-	grouppoints.Append (points[pi].P());
+        grouppoints.Append (points[pi].P());
         pindex.Append (pi);
-	invpindex[pi] = pindex.Size()-1 + IndexBASE<LocalPointIndex>();
+        invpindex[pi] = pindex.Size()-1 + IndexBASE<LocalPointIndex>();
       }
 
   for (int i = 1; i <= faces.Size(); i++)
     if (faces[i-1].Valid())
       {
-	int fused = 0;
-	for (int j = 1; j <= 3; j++)
-	  if (pingroup[faces[i-1].Face().PNum(j)])
-	    fused++;
+        int fused = 0;
+        for (int j = 1; j <= 3; j++)
+          if (pingroup[faces[i-1].Face().PNum(j)])
+            fused++;
 
-	if (fused >= 2)
-	  {
-	    const FrontElement2d & f = faces[i-1].Face();
-	    MiniElement2d ge(f.GetNP());
-	    for (int j = 1; j <= f.GetNP(); j++)
-	      ge.PNum(j) = invpindex[f.PNum(j)];
-	    groupelements.Append (ge);
-	    findex.Append (i);
-	  }
+        if (fused >= 2)
+          {
+            const FrontElement2d & f = faces[i-1].Face();
+            MiniElement2d ge(f.GetNP());
+            for (int j = 1; j <= f.GetNP(); j++)
+              ge.PNum(j) = invpindex[f.PNum(j)];
+            groupelements.Append (ge);
+            findex.Append (i);
+          }
       }
 
 }
@@ -775,17 +775,17 @@ void AdFront3 :: SetStartFront (int /* baseelnp */)
   for (INDEX i = 1; i <= faces.Size(); i++)
     if (faces[i-1].Valid())
       {
-	const FrontElement2d & face = faces[i-1].Face();
-	for (int j = 1; j <= 3; j++)
-	  points[face.PNum(j)].DecFrontNr(0);
+        const FrontElement2d & face = faces[i-1].Face();
+        for (int j = 1; j <= 3; j++)
+          points[face.PNum(j)].DecFrontNr(0);
       }
 
   /*
   if (baseelnp)
     {
       for (i = 1; i <= faces.Size(); i++)
-	if (faces.Get(i).Valid() && faces.Get(i).Face().GetNP() != baseelnp)
-	  faces.Elem(i).qualclass = 1000;
+        if (faces.Get(i).Valid() && faces.Get(i).Face().GetNP() != baseelnp)
+          faces.Elem(i).qualclass = 1000;
     }
     */
 }
@@ -830,8 +830,8 @@ bool AdFront3 :: PointInsideGroup(const Array<Front3PointIndex, LocalPointIndex>
           CalcInverse (a, ainv);
           ainv.Mult (b, u);
           if (u(0) >= 0 && u(1) >= 0 && u(0)+u(1) <= 1 &&
-	    u(2) > 0)
-	    count++;
+            u(2) > 0)
+            count++;
         }
         if (count % 2 == 1)
           return true;
@@ -856,35 +856,35 @@ bool AdFront3 :: Inside (const Point<3> & p) const
   for (int i = 1; i <= faces.Size(); i++)
     if (faces[i-1].Valid())
       {
-	const Point<3> & p1 = points[faces[i-1].Face().PNum(1)].P();
-	const Point<3> & p2 = points[faces[i-1].Face().PNum(2)].P();
-	const Point<3> & p3 = points[faces[i-1].Face().PNum(3)].P();
+        const Point<3> & p1 = points[faces[i-1].Face().PNum(1)].P();
+        const Point<3> & p2 = points[faces[i-1].Face().PNum(2)].P();
+        const Point<3> & p3 = points[faces[i-1].Face().PNum(3)].P();
 
-	v1 = p2 - p1;
-	v2 = p3 - p1;
+        v1 = p2 - p1;
+        v2 = p3 - p1;
 
-	a(0, 0) = v1(0);
-	a(1, 0) = v1(1);
-	a(2, 0) = v1(2);
-	a(0, 1) = v2(0);
-	a(1, 1) = v2(1);
-	a(2, 1) = v2(2);
-	a(0, 2) = -n(0);
-	a(1, 2) = -n(1);
-	a(2, 2) = -n(2);
+        a(0, 0) = v1(0);
+        a(1, 0) = v1(1);
+        a(2, 0) = v1(2);
+        a(0, 1) = v2(0);
+        a(1, 1) = v2(1);
+        a(2, 1) = v2(2);
+        a(0, 2) = -n(0);
+        a(1, 2) = -n(1);
+        a(2, 2) = -n(2);
 
-	b(0) = p(0) - p1(0);
-	b(1) = p(1) - p1(1);
-	b(2) = p(2) - p1(2);
+        b(0) = p(0) - p1(0);
+        b(1) = p(1) - p1(1);
+        b(2) = p(2) - p1(2);
 
-	CalcInverse (a, ainv);
-	ainv.Mult (b, u);
+        CalcInverse (a, ainv);
+        ainv.Mult (b, u);
 
-	if (u(0) >= 0 && u(1) >= 0 && u(0)+u(1) <= 1 &&
-	    u(2) > 0)
-	  {
-	    cnt++;
-	  }
+        if (u(0) >= 0 && u(1) >= 0 && u(0)+u(1) <= 1 &&
+            u(2) > 0)
+          {
+            cnt++;
+          }
       }
 
   return ((cnt % 2) != 0);
@@ -895,7 +895,7 @@ bool AdFront3 :: Inside (const Point<3> & p) const
 
 
 int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
-			  const Array<int> * testfaces) const
+                          const Array<int> * testfaces) const
 {
   const Point<3> *line[2];
   line[0] = &lp1;
@@ -922,15 +922,15 @@ int AdFront3 :: SameSide (const Point<3> & lp1, const Point<3> & lp2,
       int i = aprif[ii-1];
       
       if (faces[i-1].Valid())
-	{
-	  const Point<3> *tri[3];
-	  tri[0] = &points[faces[i-1].Face().PNum(1)].P();
-	  tri[1] = &points[faces[i-1].Face().PNum(2)].P();
-	  tri[2] = &points[faces[i-1].Face().PNum(3)].P();
-	  	  
-	  if (IntersectTriangleLine (&tri[0], &line[0]))
-	    cnt++;
-	}
+        {
+          const Point<3> *tri[3];
+          tri[0] = &points[faces[i-1].Face().PNum(1)].P();
+          tri[1] = &points[faces[i-1].Face().PNum(2)].P();
+          tri[2] = &points[faces[i-1].Face().PNum(3)].P();
+                  
+          if (IntersectTriangleLine (&tri[0], &line[0]))
+            cnt++;
+        }
     }
 
   return ((cnt+1) % 2);

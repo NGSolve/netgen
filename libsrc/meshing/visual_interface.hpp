@@ -27,9 +27,9 @@ namespace netgen {
   inline constexpr int NG_TCL_DYNAMIC  = 3;
   */
 
-#define NG_TCL_VOLATILE		((Tcl_FreeProc *) 1)
-#define NG_TCL_STATIC		((Tcl_FreeProc *) 0)
-#define NG_TCL_DYNAMIC		((Tcl_FreeProc *) 3)
+#define NG_TCL_VOLATILE         ((Tcl_FreeProc *) 1)
+#define NG_TCL_STATIC           ((Tcl_FreeProc *) 0)
+#define NG_TCL_DYNAMIC          ((Tcl_FreeProc *) 3)
 
     inline constexpr int NG_TCL_OK       = 0;
     inline constexpr int NG_TCL_ERROR    = 1;

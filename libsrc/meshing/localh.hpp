@@ -125,10 +125,10 @@ namespace netgen
   
     /// find inner boxes
     void FindInnerBoxes (const class AdFront3 & adfront,
-			 int (*testinner)(const Point<3> & p1));
+                         int (*testinner)(const Point<3> & p1));
 
     void FindInnerBoxes (const class AdFront2 & adfront,
-			 int (*testinner)(const Point<2> & p1));
+                         int (*testinner)(const Point<2> & p1));
 
 
     /// clears all flags 
@@ -158,31 +158,31 @@ namespace netgen
   private:
     /// 
     double GetMinHRec (const Point<3> & pmin, const Point<3> & pmax,
-		       const GradingBox * box) const;
+                       const GradingBox * box) const;
     ///
     void CutBoundaryRec (const Point<3> & pmin, const Point<3> & pmax,
-			 GradingBox * box);
+                         GradingBox * box);
 
     ///
     void FindInnerBoxesRec ( int (*inner)(const Point<3> & p),
-			     GradingBox * box);
+                             GradingBox * box);
 
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
-			     const class AdFront3 & adfront,
-			     Array<Box3d> & faceboxes,
-			     Array<int> & finds, int nfinbox);
+                             const class AdFront3 & adfront,
+                             Array<Box3d> & faceboxes,
+                             Array<int> & finds, int nfinbox);
 
 
 
     void FindInnerBoxesRec ( int (*inner)(const Point<2> & p),
-			     GradingBox * box);
+                             GradingBox * box);
 
     ///
     void FindInnerBoxesRec2 (GradingBox * box,
-			     const class AdFront2 & adfront,
-			     FlatArray<Box<2>> faceboxes,
-			     FlatArray<int> finds); // , int nfinbox);
+                             const class AdFront2 & adfront,
+                             FlatArray<Box<2>> faceboxes,
+                             FlatArray<int> finds); // , int nfinbox);
 
 
 
@@ -206,8 +206,8 @@ namespace netgen
   inline ostream & operator<< (ostream & ost, const GradingBox & box)
   {
     ost << "gradbox, pmid = " << box.PMid() << ", h2 = " << box.H2() 
-	<< " cutbound = " << box.flags.cutboundary << " isinner = " << box.flags.isinner 
-	<< endl;
+        << " cutbound = " << box.flags.cutboundary << " isinner = " << box.flags.isinner 
+        << endl;
     return ost;
   }
 

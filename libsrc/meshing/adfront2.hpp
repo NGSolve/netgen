@@ -50,7 +50,7 @@ namespace netgen
 
     ///
     FrontPoint2 (const Point<3> & ap, PointIndex agi,
-		 MultiPointGeomInfo * amgi, bool aonsurface = true);
+                 MultiPointGeomInfo * amgi, bool aonsurface = true);
     ///
     ~FrontPoint2 () { ; }
 
@@ -68,7 +68,7 @@ namespace netgen
     {
       nlinetopoint--;
       if (nlinetopoint == 0)
-	nlinetopoint = -1;
+        nlinetopoint = -1;
     }
 
     ///
@@ -142,8 +142,8 @@ namespace netgen
 
     void SetGeomInfo (const PointGeomInfo & gi1, const PointGeomInfo & gi2)
       {
-	geominfo[0] = gi1;
-	geominfo[1] = gi2;
+        geominfo[0] = gi1;
+        geominfo[1] = gi2;
       }
 
     const PointGeomInfo * GetGeomInfo () const
@@ -205,14 +205,14 @@ public:
 
   ///
   int SelectBaseLine (Point<3> & p1, Point<3> & p2, 
-		      const PointGeomInfo *& geominfo1,
-		      const PointGeomInfo *& geominfo2,
-		      int & qualclass);
+                      const PointGeomInfo *& geominfo1,
+                      const PointGeomInfo *& geominfo2,
+                      int & qualclass);
 
   ///
   int GetLocals (int baseline, 
-		 Array<Point<3>, LocalPointIndex> & locpoints,
-		 Array<MultiPointGeomInfo, LocalPointIndex> & pgeominfo,
+                 Array<Point<3>, LocalPointIndex> & locpoints,
+                 Array<MultiPointGeomInfo, LocalPointIndex> & pgeominfo,
                  Array<IVec<2,LocalPointIndex>> & loclines,
                  Array<Front2PointIndex, LocalPointIndex> & pindex,   // local -> front
                  Array<int> & lindex,

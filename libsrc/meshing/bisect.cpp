@@ -86,8 +86,8 @@ namespace netgen
 
     for(int i=0; i<4; i++)
       {
-	ost >> auxchar;
-	mt.faceedges[i] = auxchar;
+        ost >> auxchar;
+        mt.faceedges[i] = auxchar;
       }
 
     ost >> mt.incorder;
@@ -274,21 +274,21 @@ namespace netgen
     int order = mt.order;
 
     ost << "MT: " << mt.pnums[0] << " - " << mt.pnums[1] << " - " 
-	<< mt.pnums[2] << " - " << mt.pnums[3] << endl
-	<< "marked edge: " << te1 << " - " << te2
-	<< ", order = " << order << endl;
+        << mt.pnums[2] << " - " << mt.pnums[3] << endl
+        << "marked edge: " << te1 << " - " << te2
+        << ", order = " << order << endl;
     //for (int k = 0; k < 4; k++)
     //  ost << int(mt.faceedges[k]) << "  ";
     for (int k = 0; k < 4; k++)
       {
-	ost << "face";
-	for (int j=0; j<4; j++)
-	  if(j != k)
-	    ost << " " << mt.pnums[j];
-	for(int i=0; i<3; i++)
-	  for(int j=i+1; j<4; j++)
-	    if(i != k && j != k && int(mt.faceedges[k]) == 6-k-i-j)
-	      ost << " marked edge " << mt.pnums[i] << " " << mt.pnums[j] << endl;
+        ost << "face";
+        for (int j=0; j<4; j++)
+          if(j != k)
+            ost << " " << mt.pnums[j];
+        for(int i=0; i<3; i++)
+          for(int j=i+1; j<4; j++)
+            if(i != k && j != k && int(mt.faceedges[k]) == 6-k-i-j)
+              ost << " marked edge " << mt.pnums[i] << " " << mt.pnums[j] << endl;
       }
     ost << endl;
   }
@@ -297,7 +297,7 @@ namespace netgen
 
   template <typename HASHTABLE_EDGENUMBER>
   int BTSortEdges (const Mesh & mesh,
-		   const Array<idmap_type*> & idmaps,
+                   const Array<idmap_type*> & idmaps,
                    HASHTABLE_EDGENUMBER & edgenumber)
   {
     PrintMessage(4,"sorting ... ");
@@ -305,539 +305,539 @@ namespace netgen
     //  if (mesh.PureTetMesh())
     if (true)
       {
-	// new, fast version
-	Array<PointIndices<2>> edges;
+        // new, fast version
+        Array<PointIndices<2>> edges;
       
-	// int i, j, k;
-	int cntedges = 0;
-	bool go_on;
-	int ned(0);
+        // int i, j, k;
+        int cntedges = 0;
+        bool go_on;
+        int ned(0);
       
-	// enumerate edges:
+        // enumerate edges:
 
         for (const Element & el : mesh.VolumeElements())
           {
-	    static int tetedges[6][2] =
-	      { { 1, 2 },
-		{ 1, 3 },
-		{ 1, 4 },
-		{ 2, 3 },
-		{ 2, 4 },
-		{ 3, 4 } } ;
-	    static int prismedges[9][2] =
-	      { { 1, 2 },
-		{ 1, 3 },
-		{ 2, 3 },
-		{ 4, 5 },
-		{ 4, 6 },
-		{ 5, 6 },
-		{ 1, 4 },
-		{ 2, 5 },
-		{ 3, 6 } };
-	    int pyramidedges[6][2] =
-	      { { 1, 2 },
-		{ 3, 4 },
-		{ 1, 5 },
-		{ 2, 5 },
-		{ 3, 5 },
-		{ 4, 5 } };
-	  
-	    int (*tip)[2] = NULL;
-	  
-	    switch (el.GetType())
-	      {
-	      case TET:
-	      case TET10:
-		{
-		  tip = tetedges;
-		  ned = 6;
-		  break;
-		}
-	      case PRISM:
-	      case PRISM12:
-		{
-		  tip = prismedges;
-		  ned = 6;
-		  break;
-		}
-	      case PYRAMID:
-		{
-		  tip = pyramidedges;
-		  ned = 6;
-		  break;
-		}
+            static int tetedges[6][2] =
+              { { 1, 2 },
+                { 1, 3 },
+                { 1, 4 },
+                { 2, 3 },
+                { 2, 4 },
+                { 3, 4 } } ;
+            static int prismedges[9][2] =
+              { { 1, 2 },
+                { 1, 3 },
+                { 2, 3 },
+                { 4, 5 },
+                { 4, 6 },
+                { 5, 6 },
+                { 1, 4 },
+                { 2, 5 },
+                { 3, 6 } };
+            int pyramidedges[6][2] =
+              { { 1, 2 },
+                { 3, 4 },
+                { 1, 5 },
+                { 2, 5 },
+                { 3, 5 },
+                { 4, 5 } };
+          
+            int (*tip)[2] = NULL;
+          
+            switch (el.GetType())
+              {
+              case TET:
+              case TET10:
+                {
+                  tip = tetedges;
+                  ned = 6;
+                  break;
+                }
+              case PRISM:
+              case PRISM12:
+                {
+                  tip = prismedges;
+                  ned = 6;
+                  break;
+                }
+              case PYRAMID:
+                {
+                  tip = pyramidedges;
+                  ned = 6;
+                  break;
+                }
               default:
                 throw NgException("Bisect, element type not handled in switch");
-	      }
-	      
-	    for (int j = 0; j < ned; j++)
-	      {
-		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
-		i2.Sort();
-		if (!edgenumber.Used(i2))
-		  {
-		    cntedges++;
-		    edges.Append (i2);
-		    edgenumber.Set(i2, cntedges);
-		  }
-	      }
-	  }
+              }
+              
+            for (int j = 0; j < ned; j++)
+              {
+                PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
+                i2.Sort();
+                if (!edgenumber.Used(i2))
+                  {
+                    cntedges++;
+                    edges.Append (i2);
+                    edgenumber.Set(i2, cntedges);
+                  }
+              }
+          }
       
-	// additional surface edges:
+        // additional surface edges:
 
         for (const Element2d & el : mesh.SurfaceElements())
           {
-	    static int trigedges[3][2] =
-	      { { 1, 2 },
-		{ 2, 3 },
-		{ 3, 1 } };
+            static int trigedges[3][2] =
+              { { 1, 2 },
+                { 2, 3 },
+                { 3, 1 } };
 
-	    static int quadedges[4][2] =
-	      { { 1, 2 },
-		{ 2, 3 },
-		{ 3, 4 },
-		{ 4, 1 } };
-
-
-	    int (*tip)[2] = NULL;
-	  
-	    switch (el.GetType())
-	      {
-	      case TRIG:
-	      case TRIG6:
-		{
-		  tip = trigedges;
-		  ned = 3;
-		  break;
-		}
-	      case QUAD:
-	      case QUAD6:
-		{
-		  tip = quadedges;
-		  ned = 4;
-		  break;
-		}
-	      default:
-		{
-		  cerr << "Error: Sort for Bisect, SE has " << el.GetNP() << " points" << endl;
-		  ned = 0;
-		}
-	      }
-	      
-	    for (int j = 0; j < ned; j++)
-	      {
-		PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
-		i2.Sort();
-		if (!edgenumber.Used(i2))
-		  {
-		    cntedges++;
-		    edges.Append (i2);
-		    edgenumber.Set(i2, cntedges);
-		  }
-	      }
-	  }
+            static int quadedges[4][2] =
+              { { 1, 2 },
+                { 2, 3 },
+                { 3, 4 },
+                { 4, 1 } };
 
 
-	Array<int> eclasses(cntedges);
-	for (int i = 1; i <= cntedges; i++)
-	  eclasses[i-1] = i;
+            int (*tip)[2] = NULL;
+          
+            switch (el.GetType())
+              {
+              case TRIG:
+              case TRIG6:
+                {
+                  tip = trigedges;
+                  ned = 3;
+                  break;
+                }
+              case QUAD:
+              case QUAD6:
+                {
+                  tip = quadedges;
+                  ned = 4;
+                  break;
+                }
+              default:
+                {
+                  cerr << "Error: Sort for Bisect, SE has " << el.GetNP() << " points" << endl;
+                  ned = 0;
+                }
+              }
+              
+            for (int j = 0; j < ned; j++)
+              {
+                PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
+                i2.Sort();
+                if (!edgenumber.Used(i2))
+                  {
+                    cntedges++;
+                    edges.Append (i2);
+                    edgenumber.Set(i2, cntedges);
+                  }
+              }
+          }
 
-	// identify edges in element stack
-	do
-	  {
-	    go_on = false;
+
+        Array<int> eclasses(cntedges);
+        for (int i = 1; i <= cntedges; i++)
+          eclasses[i-1] = i;
+
+        // identify edges in element stack
+        do
+          {
+            go_on = false;
             for (auto ei : mesh.VolumeElements().Range())
-	      {
-		const Element & el = mesh[ei];
-	      
-		if (el.GetType() != PRISM &&
-		    el.GetType() != PRISM12 &&
-		    el.GetType() != PYRAMID)
-		  continue;
+              {
+                const Element & el = mesh[ei];
+              
+                if (el.GetType() != PRISM &&
+                    el.GetType() != PRISM12 &&
+                    el.GetType() != PYRAMID)
+                  continue;
 
-		int prismpairs[3][4] =
-		  { { 1, 2, 4, 5 },
-		    { 2, 3, 5, 6 },
-		    { 1, 3, 4, 6 } };
-	      
-		int pyramidpairs[3][4] =
-		  { { 1, 2, 4, 3 },
-		    { 1, 5, 4, 5 },
-		    { 2, 5, 3, 5 } };
+                int prismpairs[3][4] =
+                  { { 1, 2, 4, 5 },
+                    { 2, 3, 5, 6 },
+                    { 1, 3, 4, 6 } };
+              
+                int pyramidpairs[3][4] =
+                  { { 1, 2, 4, 3 },
+                    { 1, 5, 4, 5 },
+                    { 2, 5, 3, 5 } };
                 
-		int (*pairs)[4] = NULL;
-		switch (el.GetType())
-		  {
-		  case PRISM:
-		  case PRISM12:
-		    {
-		      pairs = prismpairs;
-		      break;
-		    }
-		  case PYRAMID:
-		    {
-		      pairs = pyramidpairs;
-		      break;
-		    }
+                int (*pairs)[4] = NULL;
+                switch (el.GetType())
+                  {
+                  case PRISM:
+                  case PRISM12:
+                    {
+                      pairs = prismpairs;
+                      break;
+                    }
+                  case PYRAMID:
+                    {
+                      pairs = pyramidpairs;
+                      break;
+                    }
                   default:
                     throw NgException("Bisect, element type not handled in switch, 2");
-		  }
+                  }
 
-		for (int j = 0; j < 3; j++)
-		  {
-		    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
+                for (int j = 0; j < 3; j++)
+                  {
+                    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
                                         el.PNum(pairs[j][1]));
-		    PointIndices<2> e2 (el.PNum(pairs[j][2]), 
+                    PointIndices<2> e2 (el.PNum(pairs[j][2]), 
                                         el.PNum(pairs[j][3]));
-		    e1.Sort();
-		    e2.Sort();
-		      
-		    int eclass1 = edgenumber.Get (e1);
-		    int eclass2 = edgenumber.Get (e2);
+                    e1.Sort();
+                    e2.Sort();
+                      
+                    int eclass1 = edgenumber.Get (e1);
+                    int eclass2 = edgenumber.Get (e2);
 
-		    //		  (*testout) << "identify edges " << eclass1 << "-" << eclass2 << endl;
+                    //            (*testout) << "identify edges " << eclass1 << "-" << eclass2 << endl;
 
-		    if (eclasses[eclass1-1] >
-			eclasses[eclass2-1])
-		      {
-			eclasses[eclass1-1] = 
-			  eclasses[eclass2-1];
-			go_on = true;
-		      }
-		    else if (eclasses[eclass2-1] >
-			     eclasses[eclass1-1])
-		      {
-			eclasses[eclass2-1] = 
-			  eclasses[eclass1-1];
-			go_on = true;
-		      }
-		  }
-	      }
+                    if (eclasses[eclass1-1] >
+                        eclasses[eclass2-1])
+                      {
+                        eclasses[eclass1-1] = 
+                          eclasses[eclass2-1];
+                        go_on = true;
+                      }
+                    else if (eclasses[eclass2-1] >
+                             eclasses[eclass1-1])
+                      {
+                        eclasses[eclass2-1] = 
+                          eclasses[eclass1-1];
+                        go_on = true;
+                      }
+                  }
+              }
 
             for (const Element2d & el2d : mesh.SurfaceElements())
               {
-		for(int i = 0; i < el2d.GetNP(); i++)
-		  {
-		    PointIndices<2> e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
-		    e1.Sort();
-		    PointIndices<2> e2;
-		    
-		    for(int k = 0; k < idmaps.Size(); k++)
-		      {
-			e2[0] = (*idmaps[k])[e1[0]];
-			e2[1] = (*idmaps[k])[e1[1]];
-			
-			if(!e2[0].IsValid() || !e2[1].IsValid() ||
-			   e1[0] == e2[0] || e1[1] == e2[1])
-			  continue;
-			
-			e2.Sort();
-			if(!edgenumber.Used(e2))
-			  continue;
-			
+                for(int i = 0; i < el2d.GetNP(); i++)
+                  {
+                    PointIndices<2> e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
+                    e1.Sort();
+                    PointIndices<2> e2;
+                    
+                    for(int k = 0; k < idmaps.Size(); k++)
+                      {
+                        e2[0] = (*idmaps[k])[e1[0]];
+                        e2[1] = (*idmaps[k])[e1[1]];
+                        
+                        if(!e2[0].IsValid() || !e2[1].IsValid() ||
+                           e1[0] == e2[0] || e1[1] == e2[1])
+                          continue;
+                        
+                        e2.Sort();
+                        if(!edgenumber.Used(e2))
+                          continue;
+                        
 
-			int eclass1 = edgenumber.Get (e1);
-			int eclass2 = edgenumber.Get (e2);
-			
-			if (eclasses[eclass1-1] >
-			    eclasses[eclass2-1])
-			  {
-			    eclasses[eclass1-1] = 
-			      eclasses[eclass2-1];
+                        int eclass1 = edgenumber.Get (e1);
+                        int eclass2 = edgenumber.Get (e2);
+                        
+                        if (eclasses[eclass1-1] >
+                            eclasses[eclass2-1])
+                          {
+                            eclasses[eclass1-1] = 
+                              eclasses[eclass2-1];
 
 
-			    go_on = true;
-			  }
-			else if (eclasses[eclass2-1] >
-				 eclasses[eclass1-1])
-			  {
-			    eclasses[eclass2-1] = 
-			      eclasses[eclass1-1];
-			    go_on = true;
-			  }
-		      }		      
-		  }
-		
-	      }
+                            go_on = true;
+                          }
+                        else if (eclasses[eclass2-1] >
+                                 eclasses[eclass1-1])
+                          {
+                            eclasses[eclass2-1] = 
+                              eclasses[eclass1-1];
+                            go_on = true;
+                          }
+                      }               
+                  }
+                
+              }
 
-	  }
-	while (go_on);
+          }
+        while (go_on);
 
-// 	for (i = 1; i <= cntedges; i++)
-// 	  {
-// 	    (*testout) << "edge " << i << ": " 
-// 		       << edges.Get(i).I1() << "-" << edges.Get(i).I2()
-// 		       << ", class = " << eclasses.Get(i) << endl;
-// 	  }
-	
-	// compute classlength:
-	Array<double> edgelength(cntedges);
+//      for (i = 1; i <= cntedges; i++)
+//        {
+//          (*testout) << "edge " << i << ": " 
+//                     << edges.Get(i).I1() << "-" << edges.Get(i).I2()
+//                     << ", class = " << eclasses.Get(i) << endl;
+//        }
+        
+        // compute classlength:
+        Array<double> edgelength(cntedges);
 
-	/*
-	for (i = 1; i <= cntedges; i++)
-	  edgelength.Elem(i) = 1e20;
-	*/
+        /*
+        for (i = 1; i <= cntedges; i++)
+          edgelength.Elem(i) = 1e20;
+        */
 
-	for (int i = 0; i < cntedges; i++)
+        for (int i = 0; i < cntedges; i++)
           edgelength[i] = Dist (mesh[edges[i][0]], mesh[edges[i][1]]);
 
-	/*
-	  for (i = 1; i <= mesh.GetNE(); i++)
-	  {
-	  const Element & el = mesh.VolumeElement (i);
-	  
-	  if (el.GetType() == TET)
-	  {
-	  for (j = 1; j <= 3; j++)
-	  for (k = j+1; k <= 4; k++)
-	  {
-	  INDEX_2 i2(el.PNum(j), el.PNum(k));
-	  i2.Sort();
-		    
-	  int enr = edgenumber.Get(i2);
-	  double elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
-	  if (elen < edgelength.Get(enr))
-	  edgelength.Set (enr, elen);
-	  }
-	  }
-	  else if (el.GetType() == PRISM)
-	  {
-	  for (j = 1; j <= 3; j++)
-	  {
-	  k = (j % 3) + 1;
-		  
-	  INDEX_2 i2(el.PNum(j), el.PNum(k));
-	  i2.Sort();
-		  
-	  int enr = edgenumber.Get(i2);
-	  double elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
-	  if (elen < edgelength.Get(enr))
-	  edgelength.Set (enr, elen);
-		  
-	  i2 = INDEX_2(el.PNum(j+3), el.PNum(k+3));
-	  i2.Sort();
-		  
-	  enr = edgenumber.Get(i2);
-	  elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
-	  if (elen < edgelength.Get(enr))
-	  edgelength.Set (enr, elen);
-		  
-	  if (!edgenumber.Used(i2))
-	  {
-	  cntedges++;
-	  edgenumber.Set(i2, cntedges);
-	  }
-	  i2 = INDEX_2(el.PNum(j), el.PNum(j+3));
-	  i2.Sort();
-		  
-	  enr = edgenumber.Get(i2);
-	  elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
-	  if (elen < edgelength.Get(enr))
-	  edgelength.Set (enr, elen);
-	  }
-	  }
-	  }
-	*/
+        /*
+          for (i = 1; i <= mesh.GetNE(); i++)
+          {
+          const Element & el = mesh.VolumeElement (i);
+          
+          if (el.GetType() == TET)
+          {
+          for (j = 1; j <= 3; j++)
+          for (k = j+1; k <= 4; k++)
+          {
+          INDEX_2 i2(el.PNum(j), el.PNum(k));
+          i2.Sort();
+                    
+          int enr = edgenumber.Get(i2);
+          double elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          if (elen < edgelength.Get(enr))
+          edgelength.Set (enr, elen);
+          }
+          }
+          else if (el.GetType() == PRISM)
+          {
+          for (j = 1; j <= 3; j++)
+          {
+          k = (j % 3) + 1;
+                  
+          INDEX_2 i2(el.PNum(j), el.PNum(k));
+          i2.Sort();
+                  
+          int enr = edgenumber.Get(i2);
+          double elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          if (elen < edgelength.Get(enr))
+          edgelength.Set (enr, elen);
+                  
+          i2 = INDEX_2(el.PNum(j+3), el.PNum(k+3));
+          i2.Sort();
+                  
+          enr = edgenumber.Get(i2);
+          elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          if (elen < edgelength.Get(enr))
+          edgelength.Set (enr, elen);
+                  
+          if (!edgenumber.Used(i2))
+          {
+          cntedges++;
+          edgenumber.Set(i2, cntedges);
+          }
+          i2 = INDEX_2(el.PNum(j), el.PNum(j+3));
+          i2.Sort();
+                  
+          enr = edgenumber.Get(i2);
+          elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          if (elen < edgelength.Get(enr))
+          edgelength.Set (enr, elen);
+          }
+          }
+          }
+        */
 
       
-	for (int i = 1; i <= cntedges; i++)
-	  {
-	    if (eclasses[i-1] != i)
-	      {
-		if (edgelength[i-1] < edgelength[eclasses[i-1]-1])
-		  edgelength[eclasses[i-1]-1] = edgelength[i-1];
-		edgelength[i-1] = 1e20;
-	      }
-	  }
+        for (int i = 1; i <= cntedges; i++)
+          {
+            if (eclasses[i-1] != i)
+              {
+                if (edgelength[i-1] < edgelength[eclasses[i-1]-1])
+                  edgelength[eclasses[i-1]-1] = edgelength[i-1];
+                edgelength[i-1] = 1e20;
+              }
+          }
 
 
-	TABLE<int> eclasstab(cntedges);
-	for (int i = 1; i <= cntedges; i++)
-	  eclasstab.Add1 (eclasses[i-1], i-1);
+        TABLE<int> eclasstab(cntedges);
+        for (int i = 1; i <= cntedges; i++)
+          eclasstab.Add1 (eclasses[i-1], i-1);
 
 
-	// sort edges:
-	Array<int> sorted(cntedges);
+        // sort edges:
+        Array<int> sorted(cntedges);
       
-	QuickSort (edgelength, sorted);
+        QuickSort (edgelength, sorted);
       
-	int cnt = 0;
-	for (int i = 1; i <= cntedges; i++)
-	  {
-	    int ii = sorted[i-1];
-	    for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
+        int cnt = 0;
+        for (int i = 1; i <= cntedges; i++)
+          {
+            int ii = sorted[i-1];
+            for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
               edgenumber.Set (edges[eclasstab.Get(ii, j)], ++cnt);
             
-	  }
-	return cnt;
+          }
+        return cnt;
       }
 
     else
     
       {
-	// old version
+        // old version
       
-	// int i, j;
-	int cnt = 0;
-	bool found;
-	double len2, maxlen2;
-	PointIndices<2> ep;
+        // int i, j;
+        int cnt = 0;
+        bool found;
+        double len2, maxlen2;
+        PointIndices<2> ep;
       
-	// sort edges by length, parallel edges (on prisms)
-	// are added in blocks
+        // sort edges by length, parallel edges (on prisms)
+        // are added in blocks
       
-	do
-	  {
-	    found = false;
-	    maxlen2 = 1e30;
-	  
-	    // for (int i = 1; i <= mesh.GetNE(); i++)
+        do
+          {
+            found = false;
+            maxlen2 = 1e30;
+          
+            // for (int i = 1; i <= mesh.GetNE(); i++)
             for (auto ei : mesh.VolumeElements().Range())
-	      {
-		const Element & el = mesh[ei]; // .VolumeElement (i);
-		int ned;
-		int tetedges[6][2] =
-		  { { 1, 2 },
-		    { 1, 3 },
-		    { 1, 4 },
-		    { 2, 3 },
-		    { 2, 4 },
-		    { 3, 4 } };
-		int prismedges[6][2] =
-		  { { 1, 2 },
-		    { 1, 3 },
-		    { 2, 4 },
-		    { 4, 5 },
-		    { 4, 6 },
-		    { 5, 6 } };
-		int pyramidedges[6][2] =
-		  { { 1, 2 },
-		    { 3, 4 },
-		    { 1, 5 },
-		    { 2, 5 },
-		    { 3, 5 },
-		    { 4, 5 } };
+              {
+                const Element & el = mesh[ei]; // .VolumeElement (i);
+                int ned;
+                int tetedges[6][2] =
+                  { { 1, 2 },
+                    { 1, 3 },
+                    { 1, 4 },
+                    { 2, 3 },
+                    { 2, 4 },
+                    { 3, 4 } };
+                int prismedges[6][2] =
+                  { { 1, 2 },
+                    { 1, 3 },
+                    { 2, 4 },
+                    { 4, 5 },
+                    { 4, 6 },
+                    { 5, 6 } };
+                int pyramidedges[6][2] =
+                  { { 1, 2 },
+                    { 3, 4 },
+                    { 1, 5 },
+                    { 2, 5 },
+                    { 3, 5 },
+                    { 4, 5 } };
 
-		int (*tip)[2];
+                int (*tip)[2];
 
-		switch (el.GetType())
-		  {
-		  case TET:
-		    {
-		      tip = tetedges;
-		      ned = 6;
-		      break;
-		    }
-		  case PRISM:
-		    {
-		      tip = prismedges;
-		      ned = 6;
-		      break;
-		    }
-		  case PYRAMID:
-		    {
-		      tip = pyramidedges;
-		      ned = 6;
-		      break;
-		    }
+                switch (el.GetType())
+                  {
+                  case TET:
+                    {
+                      tip = tetedges;
+                      ned = 6;
+                      break;
+                    }
+                  case PRISM:
+                    {
+                      tip = prismedges;
+                      ned = 6;
+                      break;
+                    }
+                  case PYRAMID:
+                    {
+                      tip = pyramidedges;
+                      ned = 6;
+                      break;
+                    }
                   default:
                     throw NgException("Bisect, element type not handled in switch, 3");
-		  }
-	      
-		for (int j = 0; j < ned; j++)
-		  {
-		    PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
-		    i2.Sort();
-		    if (!edgenumber.Used(i2))
-		      {
-			len2 = Dist (mesh.Point (i2[0]),
-				     mesh.Point (i2[1]));
-			if (len2 < maxlen2)
-			  {
-			    maxlen2 = len2;
-			    ep = i2;
-			    found = true;
-			  }
-		      }
-		  }
-	      }
-	    if (found)
-	      {
-		cnt++;
-		edgenumber.Set (ep, cnt);
-	      
-	      
-		// find connected edges:
-		bool go_on = false;
-		do
-		  {
-		    go_on = false;
-		    //for (int i = 1; i <= mesh.GetNE(); i++)
+                  }
+              
+                for (int j = 0; j < ned; j++)
+                  {
+                    PointIndices<2> i2(el.PNum(tip[j][0]), el.PNum(tip[j][1]));
+                    i2.Sort();
+                    if (!edgenumber.Used(i2))
+                      {
+                        len2 = Dist (mesh.Point (i2[0]),
+                                     mesh.Point (i2[1]));
+                        if (len2 < maxlen2)
+                          {
+                            maxlen2 = len2;
+                            ep = i2;
+                            found = true;
+                          }
+                      }
+                  }
+              }
+            if (found)
+              {
+                cnt++;
+                edgenumber.Set (ep, cnt);
+              
+              
+                // find connected edges:
+                bool go_on = false;
+                do
+                  {
+                    go_on = false;
+                    //for (int i = 1; i <= mesh.GetNE(); i++)
                     for (auto ei : mesh.VolumeElements().Range())
-		      {
-			const Element & el = mesh[ei]; // .VolumeElement (i);	      
-			if (el.GetNP() != 6) continue;
+                      {
+                        const Element & el = mesh[ei]; // .VolumeElement (i);         
+                        if (el.GetNP() != 6) continue;
 
-			int prismpairs[3][4] =
-			  { { 1, 2, 4, 5 },
-			    { 2, 3, 5, 6 },
-			    { 1, 3, 4, 6 } };
+                        int prismpairs[3][4] =
+                          { { 1, 2, 4, 5 },
+                            { 2, 3, 5, 6 },
+                            { 1, 3, 4, 6 } };
 
-			int pyramidpairs[3][4] =
-			  { { 1, 2, 4, 3 },
-			    { 1, 5, 4, 5 },
-			    { 2, 5, 3, 5 } };
-		      
-			int (*pairs)[4];
-			switch (el.GetType())
-			  {
-			  case PRISM:
-			    {
-			      pairs = prismpairs;
-			      break;
-			    }
-			  case PYRAMID:
-			    {
-			      pairs = pyramidpairs;
-			      break;
-			    }
+                        int pyramidpairs[3][4] =
+                          { { 1, 2, 4, 3 },
+                            { 1, 5, 4, 5 },
+                            { 2, 5, 3, 5 } };
+                      
+                        int (*pairs)[4];
+                        switch (el.GetType())
+                          {
+                          case PRISM:
+                            {
+                              pairs = prismpairs;
+                              break;
+                            }
+                          case PYRAMID:
+                            {
+                              pairs = pyramidpairs;
+                              break;
+                            }
                           default:
                             throw NgException("Bisect, element type not handled in switch, 3a");
-			  }
+                          }
 
-			for (int j = 0; j < 3; j++)
-			  {
-			    PointIndices<2> e1 (el.PNum(pairs[j][0]), 
+                        for (int j = 0; j < 3; j++)
+                          {
+                            PointIndices<2> e1 (el.PNum(pairs[j][0]), 
                                                 el.PNum(pairs[j][1]));
-			    PointIndices<2> e2 (el.PNum(pairs[j][2]), 
+                            PointIndices<2> e2 (el.PNum(pairs[j][2]), 
                                                 el.PNum(pairs[j][3]));
-			    e1.Sort();
-			    e2.Sort();
-			  
-			    bool used1 = edgenumber.Used (e1);
-			    bool used2 = edgenumber.Used (e2);
-			  
-			    if (used1 && !used2)
-			      {
-				cnt++;
-				edgenumber.Set (e2, cnt);
-				go_on = true;
-			      }
-			    if (used2 && !used1)
-			      {
-				cnt++;
-				edgenumber.Set (e1, cnt);
-				go_on = true;
-			      }
-			  }
-		      }
-		  }
-		while (go_on);
-	      }
-	  }
-	while (found);
+                            e1.Sort();
+                            e2.Sort();
+                          
+                            bool used1 = edgenumber.Used (e1);
+                            bool used2 = edgenumber.Used (e2);
+                          
+                            if (used1 && !used2)
+                              {
+                                cnt++;
+                                edgenumber.Set (e2, cnt);
+                                go_on = true;
+                              }
+                            if (used2 && !used1)
+                              {
+                                cnt++;
+                                edgenumber.Set (e1, cnt);
+                                go_on = true;
+                              }
+                          }
+                      }
+                  }
+                while (go_on);
+              }
+          }
+        while (found);
 
-	return cnt;
+        return cnt;
       }
   }
 
@@ -845,8 +845,8 @@ namespace netgen
 
   template <typename T_EDGENUMBER>
   void BTDefineMarkedTet (const Element & el,
-			  T_EDGENUMBER & edgenumber,
-			  MarkedTet & mt)
+                          T_EDGENUMBER & edgenumber,
+                          MarkedTet & mt)
   {
     for (int i = 0; i < 4; i++)
       mt.pnums[i] = el[i];
@@ -861,40 +861,40 @@ namespace netgen
     // find marked edge of tet:
     for (int i = 0; i < 3; i++)
       for (int j = i+1; j < 4; j++)
-	{
-	  PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
-	  i2.Sort();
-	  int hval = edgenumber.Get(i2);
-	  if (hval > val)
-	    {
-	      val = hval;
-	      mt.tetedge1 = i;
-	      mt.tetedge2 = j;    
-	    }
-	}
+        {
+          PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
+          i2.Sort();
+          int hval = edgenumber.Get(i2);
+          if (hval > val)
+            {
+              val = hval;
+              mt.tetedge1 = i;
+              mt.tetedge2 = j;    
+            }
+        }
 
 
     // find marked edges of faces:
     for (int k = 0; k < 4; k++)
       {
-	val = 0;
-	for (int i = 0; i < 3; i++)
-	  for (int j = i+1; j < 4; j++)
-	    if (i != k && j != k)
-	      {
+        val = 0;
+        for (int i = 0; i < 3; i++)
+          for (int j = i+1; j < 4; j++)
+            if (i != k && j != k)
+              {
                 /*
-		PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
-		i2.Sort();
-		int hval = edgenumber.Get(i2);
+                PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
+                i2.Sort();
+                int hval = edgenumber.Get(i2);
                 */
-		int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] } ];
-		if (hval > val)
-		  {
-		    val = hval;
+                int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] } ];
+                if (hval > val)
+                  {
+                    val = hval;
                     int hi = 6 - k - i - j;
                     mt.faceedges[k] = char(hi);
-		  }
-	      }
+                  }
+              }
       }
   }
 
@@ -902,34 +902,34 @@ namespace netgen
 
   template <typename T_EDGENUMBER>  
   void BTDefineMarkedPrism (const Element & el,
-			    T_EDGENUMBER & edgenumber,
-			    MarkedPrism & mp)
+                            T_EDGENUMBER & edgenumber,
+                            MarkedPrism & mp)
   {
     if (el.GetType() == PRISM ||
-	el.GetType() == PRISM12)
+        el.GetType() == PRISM12)
       {
-	for (int i = 0; i < 6; i++)
-	  mp.pnums[i] = el[i];
+        for (int i = 0; i < 6; i++)
+          mp.pnums[i] = el[i];
       }
     else if (el.GetType() == PYRAMID)
       {
-	static int map[6] = 
-	  { 1, 2, 5, 4, 3, 5 };
-	for (int i = 0; i < 6; i++)
-	  mp.pnums[i] = el.PNum(map[i]);
+        static int map[6] = 
+          { 1, 2, 5, 4, 3, 5 };
+        for (int i = 0; i < 6; i++)
+          mp.pnums[i] = el.PNum(map[i]);
       }
     else if (el.GetType() == TET ||
-	     el.GetType() == TET10)
+             el.GetType() == TET10)
       {
-	static int map[6] = 
-	  { 1, 4, 3, 2, 4, 3 };
-	for (int i = 0; i < 6; i++)
-	  mp.pnums[i] = el.PNum(map[i]);
+        static int map[6] = 
+          { 1, 4, 3, 2, 4, 3 };
+        for (int i = 0; i < 6; i++)
+          mp.pnums[i] = el.PNum(map[i]);
       
       }
     else
       {
-	PrintSysError ("Define marked prism called for non-prism and non-pyramid");
+        PrintSysError ("Define marked prism called for non-prism and non-pyramid");
       }
   
 
@@ -942,24 +942,24 @@ namespace netgen
     int val = 0;
     for (int i = 0; i < 2; i++)
       for (int j = i+1; j < 3; j++)
-	{
-	  PointIndices<2> i2(mp.pnums[i], mp.pnums[j]);
-	  i2.Sort();
-	  int hval = edgenumber.Get(i2);
-	  if (hval > val)
-	    {
-	      val = hval;
-	      mp.markededge = 3 - i - j;
-	    }
-	}
+        {
+          PointIndices<2> i2(mp.pnums[i], mp.pnums[j]);
+          i2.Sort();
+          int hval = edgenumber.Get(i2);
+          if (hval > val)
+            {
+              val = hval;
+              mp.markededge = 3 - i - j;
+            }
+        }
   }
 
 
   template <typename T_EDGENUMBER>
   bool BTDefineMarkedId(const Element2d & el, 
-			T_EDGENUMBER & edgenumber, 
-			const idmap_type & idmap,
-			MarkedIdentification & mi)
+                        T_EDGENUMBER & edgenumber, 
+                        const idmap_type & idmap,
+                        MarkedIdentification & mi)
   {
 
     bool identified = true;
@@ -968,38 +968,38 @@ namespace netgen
     PointIndex min1(PointIndex::INVALID), min2(PointIndex::INVALID);
     for(int j = 0; identified && j < mi.np; j++)
       {
-	mi.pnums[j] = el[j];
-	mi.pnums[j+mi.np] = idmap[el[j]];
+        mi.pnums[j] = el[j];
+        mi.pnums[j+mi.np] = idmap[el[j]];
 
-	if(j == 0 || el[j] < min1)
-	  min1 = el[j];
-	if(j == 0 || mi.pnums[j+mi.np] < min2)
-	  min2 = mi.pnums[j+mi.np];
+        if(j == 0 || el[j] < min1)
+          min1 = el[j];
+        if(j == 0 || mi.pnums[j+mi.np] < min2)
+          min2 = mi.pnums[j+mi.np];
 
-	identified = (mi.pnums[j+mi.np].IsValid() && mi.pnums[j+mi.np] != mi.pnums[j]);
+        identified = (mi.pnums[j+mi.np].IsValid() && mi.pnums[j+mi.np] != mi.pnums[j]);
       }
 
     identified = identified && (min1 < min2);
 
     if(identified)
       {
-	mi.marked = 0;
-	
-	mi.incorder = 0;
-	mi.order = 1;
+        mi.marked = 0;
+        
+        mi.incorder = 0;
+        mi.order = 1;
 
-	int val = 0;
-	for (int i = 0; i < mi.np; i++)
-	  {
-	    PointIndices<2> i2(mi.pnums[i], mi.pnums[(i+1)%mi.np]);
-	    i2.Sort();
-	    int hval = edgenumber.Get(i2);
-	    if (hval > val)
-	      {
-		val = hval;
-		mi.markededge = i;
-	      }
-	  }
+        int val = 0;
+        for (int i = 0; i < mi.np; i++)
+          {
+            PointIndices<2> i2(mi.pnums[i], mi.pnums[(i+1)%mi.np]);
+            i2.Sort();
+            int hval = edgenumber.Get(i2);
+            if (hval > val)
+              {
+                val = hval;
+                mi.markededge = i;
+              }
+          }
       }
 
     return identified;
@@ -1008,13 +1008,13 @@ namespace netgen
   
   template <typename T_EDGENUMBER>
   void BTDefineMarkedTri (const Element2d & el,
-			  T_EDGENUMBER & edgenumber,
-			  MarkedTri & mt)
+                          T_EDGENUMBER & edgenumber,
+                          MarkedTri & mt)
   {
     for (int i = 0; i < 3; i++)
       {
-	mt.pnums[i] = el[i];
-	mt.pgeominfo[i] = el.GeomInfoPi (i+1);
+        mt.pnums[i] = el[i];
+        mt.pgeominfo[i] = el.GeomInfoPi (i+1);
       }
 
     mt.marked = 0;
@@ -1026,20 +1026,20 @@ namespace netgen
     int val = -1;
     for (int i = 0; i < 2; i++)
       for (int j = i+1; j < 3; j++)
-	{
+        {
           /*
-	  PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
-	  i2.Sort();
-	  int hval = edgenumber.Get(i2);
+          PointIndices<2> i2(mt.pnums[i], mt.pnums[j]);
+          i2.Sort();
+          int hval = edgenumber.Get(i2);
           */
           int hval = edgenumber[ SortedPointIndices<2>(mt.pnums[i], mt.pnums[j]) ];
           // int hval = edgenumber[ { mt.pnums[i], mt.pnums[j] }];
-	  if (hval > val)
-	    {
-	      val = hval;
-	      mt.markededge = 3 - i - j;
-	    }
-	}
+          if (hval > val)
+            {
+              val = hval;
+              mt.markededge = 3 - i - j;
+            }
+        }
   }
   
 
@@ -1051,8 +1051,8 @@ namespace netgen
     ost << "  marked = " << mt.marked << ", markededge=" << mt.markededge << endl;
     for(int i=0; i<2; i++)
       for(int j=i+1; j<3; j++)
-	if(mt.markededge == 3-i-j)
-	  ost << "  marked edge pnums = " << mt.pnums[i] << " " << mt.pnums[j] << endl;
+        if(mt.markededge == 3-i-j)
+          ost << "  marked edge pnums = " << mt.pnums[i] << " " << mt.pnums[j] << endl;
   }
 
 
@@ -1068,8 +1068,8 @@ namespace netgen
 
   template <typename T_EDGENUMBER>
   void BTDefineMarkedQuad (const Element2d & el,
-			   T_EDGENUMBER & edgenumber,
-			   MarkedQuad & mq)
+                           T_EDGENUMBER & edgenumber,
+                           MarkedQuad & mq)
   {
     for (int i = 0; i < 4; i++)
       {
@@ -1089,8 +1089,8 @@ namespace netgen
 
   // mark elements due to local h
   int BTMarkTets (T_MTETS & mtets,
-		  T_MPRISMS & mprisms,
-		  const Mesh & mesh)
+                  T_MPRISMS & mprisms,
+                  const Mesh & mesh)
   {
     int marked = 0;
 
@@ -1103,96 +1103,96 @@ namespace netgen
   
     for (int step = 1; step <= 2; step++)
       {
-	// for (int i = 1; i <= mtets.Size(); i++)
+        // for (int i = 1; i <= mtets.Size(); i++)
         for (ElementIndex ei : mtets.Range())
-	  {
-	    double h = 0;
-	  
-	    for (int j = 0; j < 3; j++)
-	      for (int k = j+1; k < 4; k++)
-		{
-		  const Point<3> & p1 = mesh.Point (mtets[ei].pnums[j]);
-		  const Point<3> & p2 = mesh.Point (mtets[ei].pnums[k]);
-		  double hh = Dist2 (p1, p2);
-		  if (hh > h) h = hh;
-		}
-	    h = sqrt (h);
-	  
-	    double hshould = 1e10;
-	    for (int j = 0; j < 4; j++)
-	      {
-		double hi = hv (mtets[ei].pnums[j]-IndexBASE<PointIndex>());
-		if (hi < hshould)
-		  hshould = hi;
-	      }
-	  
-	
-	    if (step == 1)
-	      {
-		if (h / hshould > hfac)
-		  hfac = h / hshould;
-	      }
-	    else
-	      {
-		if (h > hshould * hfac)
-		  {
-		    mtets[ei].marked = 1;
-		    marked = 1;
-		  }
-		else
-		  mtets[ei].marked = 0;
-	      }
-	  }
-	for (int i = 1; i <= mprisms.Size(); i++)
-	  {
-	    double h = 0;
-	  
-	    for (int j = 0; j < 2; j++)
-	      for (int k = j+1; k < 3; k++)
-		{
-		  const Point<3> & p1 = mesh.Point (mprisms[i-1].pnums[j]);
-		  const Point<3> & p2 = mesh.Point (mprisms[i-1].pnums[k]);
-		  double hh = Dist2 (p1, p2);
-		  if (hh > h) h = hh;
-		}
-	    h = sqrt (h);
-	  
-	    double hshould = 1e10;
-	    for (int j = 0; j < 6; j++)
-	      {
-		double hi = hv (mprisms[i-1].pnums[j]-IndexBASE<PointIndex>());
-		if (hi < hshould)
-		  hshould = hi;
-	      }
-	  
-	
-	    if (step == 1)
-	      {
-		if (h / hshould > hfac)
-		  hfac = h / hshould;
-	      }
-	    else
-	      {
-		if (h > hshould * hfac)
-		  {
-		    mprisms[i-1].marked = 1;
-		    marked = 1;
-		  }
-		else
-		  mprisms[i-1].marked = 0;
-	      }
-	  
-	  }
+          {
+            double h = 0;
+          
+            for (int j = 0; j < 3; j++)
+              for (int k = j+1; k < 4; k++)
+                {
+                  const Point<3> & p1 = mesh.Point (mtets[ei].pnums[j]);
+                  const Point<3> & p2 = mesh.Point (mtets[ei].pnums[k]);
+                  double hh = Dist2 (p1, p2);
+                  if (hh > h) h = hh;
+                }
+            h = sqrt (h);
+          
+            double hshould = 1e10;
+            for (int j = 0; j < 4; j++)
+              {
+                double hi = hv (mtets[ei].pnums[j]-IndexBASE<PointIndex>());
+                if (hi < hshould)
+                  hshould = hi;
+              }
+          
+        
+            if (step == 1)
+              {
+                if (h / hshould > hfac)
+                  hfac = h / hshould;
+              }
+            else
+              {
+                if (h > hshould * hfac)
+                  {
+                    mtets[ei].marked = 1;
+                    marked = 1;
+                  }
+                else
+                  mtets[ei].marked = 0;
+              }
+          }
+        for (int i = 1; i <= mprisms.Size(); i++)
+          {
+            double h = 0;
+          
+            for (int j = 0; j < 2; j++)
+              for (int k = j+1; k < 3; k++)
+                {
+                  const Point<3> & p1 = mesh.Point (mprisms[i-1].pnums[j]);
+                  const Point<3> & p2 = mesh.Point (mprisms[i-1].pnums[k]);
+                  double hh = Dist2 (p1, p2);
+                  if (hh > h) h = hh;
+                }
+            h = sqrt (h);
+          
+            double hshould = 1e10;
+            for (int j = 0; j < 6; j++)
+              {
+                double hi = hv (mprisms[i-1].pnums[j]-IndexBASE<PointIndex>());
+                if (hi < hshould)
+                  hshould = hi;
+              }
+          
+        
+            if (step == 1)
+              {
+                if (h / hshould > hfac)
+                  hfac = h / hshould;
+              }
+            else
+              {
+                if (h > hshould * hfac)
+                  {
+                    mprisms[i-1].marked = 1;
+                    marked = 1;
+                  }
+                else
+                  mprisms[i-1].marked = 0;
+              }
+          
+          }
 
 
 
-	if (step == 1)
-	  {
-	    if (hfac > 2)
-	      hfac /= 2;
-	    else
-	      hfac = 1;
-	  }
+        if (step == 1)
+          {
+            if (hfac > 2)
+              hfac /= 2;
+            else
+              hfac = 1;
+          }
 
       }
     return marked;
@@ -1212,7 +1212,7 @@ namespace netgen
 
 
   void BTBisectTet (const MarkedTet & oldtet, PointIndex newp, 
-		    MarkedTet & newtet1, MarkedTet & newtet2)
+                    MarkedTet & newtet1, MarkedTet & newtet2)
   {
 #ifdef DEBUG
     *testout << "bisect tet " << oldtet << endl;
@@ -1234,20 +1234,20 @@ namespace netgen
     int istypep = 0;
     for (int i = 0; i < 4; i++)
       {
-	int cnt = 0;
-	for (int j = 0; j < 4; j++)
-	  if (oldtet.faceedges[j] == i)
-	    cnt++;
-	if (cnt == 3)
-	  istypep = 1;
+        int cnt = 0;
+        for (int j = 0; j < 4; j++)
+          if (oldtet.faceedges[j] == i)
+            cnt++;
+        if (cnt == 3)
+          istypep = 1;
       }
 
 
   
     for (int i = 0; i < 4; i++)
       {
-	newtet1.pnums[i] = oldtet.pnums[i];
-	newtet2.pnums[i] = oldtet.pnums[i];
+        newtet1.pnums[i] = oldtet.pnums[i];
+        newtet2.pnums[i] = oldtet.pnums[i];
       }
     newtet1.flagged = istypep && !oldtet.flagged;
     newtet2.flagged = istypep && !oldtet.flagged;
@@ -1266,29 +1266,29 @@ namespace netgen
 
     for (int i = 0; i < 4; i++)
       {
-	if (i == oldtet.tetedge1)
-	  {
+        if (i == oldtet.tetedge1)
+          {
             newtet2.newest_vertex = i;
-	    newtet2.pnums[i] = newp;
-	    newtet2.faceedges[i] = oldtet.faceedges[i];  // inherited face
-	    newtet2.faceedges[vis1] = i;        // cut faces
-	    newtet2.faceedges[vis2] = i;
+            newtet2.pnums[i] = newp;
+            newtet2.faceedges[i] = oldtet.faceedges[i];  // inherited face
+            newtet2.faceedges[vis1] = i;        // cut faces
+            newtet2.faceedges[vis2] = i;
 
-	    int j = 0;
-	    while (j == i || j == oldtet.faceedges[i])
-	      j++;
-	    int k = 6 - i - oldtet.faceedges[i] - j;
-	    newtet2.tetedge1 = j;                        // tet-edge
-	    newtet2.tetedge2 = k;         
+            int j = 0;
+            while (j == i || j == oldtet.faceedges[i])
+              j++;
+            int k = 6 - i - oldtet.faceedges[i] - j;
+            newtet2.tetedge1 = j;                        // tet-edge
+            newtet2.tetedge2 = k;         
 
-	    // new face:
-	    if (istypep && oldtet.flagged)
+            // new face:
+            if (istypep && oldtet.flagged)
               {
                 int hi = 6 - oldtet.tetedge1 - j - k;
                 newtet2.faceedges[oldtet.tetedge2] = char(hi);
               }
-	    else
-	      newtet2.faceedges[oldtet.tetedge2] = oldtet.tetedge1;
+            else
+              newtet2.faceedges[oldtet.tetedge2] = oldtet.tetedge1;
             
 #ifdef DEBUG
             *testout << "i = " << i << ", j = " << j << " k = " << k 
@@ -1304,29 +1304,29 @@ namespace netgen
                   *testout << "ERROR1" << endl;
                 }
 #endif
-	  }
+          }
 
-	if (i == oldtet.tetedge2)
-	  {
-	    newtet1.pnums[i] = newp;
-	    newtet1.faceedges[i] = oldtet.faceedges[i];  // inherited face
-	    newtet1.faceedges[vis1] = i;
-	    newtet1.faceedges[vis2] = i;
-	    int j = 0;
-	    while (j == i || j == oldtet.faceedges[i])
-	      j++;
-	    int k = 6 - i - oldtet.faceedges[i] - j;
-	    newtet1.tetedge1 = j;        
-	    newtet1.tetedge2 = k;
+        if (i == oldtet.tetedge2)
+          {
+            newtet1.pnums[i] = newp;
+            newtet1.faceedges[i] = oldtet.faceedges[i];  // inherited face
+            newtet1.faceedges[vis1] = i;
+            newtet1.faceedges[vis2] = i;
+            int j = 0;
+            while (j == i || j == oldtet.faceedges[i])
+              j++;
+            int k = 6 - i - oldtet.faceedges[i] - j;
+            newtet1.tetedge1 = j;        
+            newtet1.tetedge2 = k;
 
-	    // new face:
-	    if (istypep && oldtet.flagged)
+            // new face:
+            if (istypep && oldtet.flagged)
               {
                 int hi = 6 - oldtet.tetedge2 - j - k;
                 newtet1.faceedges[oldtet.tetedge1] = char(hi);
               }
-	    else
-	      newtet1.faceedges[oldtet.tetedge1] = oldtet.tetedge2;
+            else
+              newtet1.faceedges[oldtet.tetedge1] = oldtet.tetedge2;
 
 #ifdef DEBUG
             for (int j = 0; j < 4; j++)
@@ -1335,7 +1335,7 @@ namespace netgen
                   *testout << "ERROR2" << endl;
                 }
 #endif
-	  }
+          }
       }
 
     newtet1.matindex = oldtet.matindex;
@@ -1353,12 +1353,12 @@ namespace netgen
   
 
   void BTBisectPrism (const MarkedPrism & oldprism, PointIndex newp1, PointIndex newp2,
-		      MarkedPrism & newprism1, MarkedPrism & newprism2)
+                      MarkedPrism & newprism1, MarkedPrism & newprism2)
   {
     for (int i = 0; i < 6; i++)
       {
-	newprism1.pnums[i] = oldprism.pnums[i];
-	newprism2.pnums[i] = oldprism.pnums[i];
+        newprism1.pnums[i] = oldprism.pnums[i];
+        newprism2.pnums[i] = oldprism.pnums[i];
       }  
     
     int pe1 = 0;
@@ -1389,14 +1389,14 @@ namespace netgen
 
 
   void BTBisectIdentification (const MarkedIdentification & oldid,
-			       Array<PointIndex> & newp,
-			       MarkedIdentification & newid1,
-			       MarkedIdentification & newid2)
+                               Array<PointIndex> & newp,
+                               MarkedIdentification & newid1,
+                               MarkedIdentification & newid2)
   {
     for(int i=0; i<2*oldid.np; i++)
       {
-	newid1.pnums[i] = oldid.pnums[i];
-	newid2.pnums[i] = oldid.pnums[i];
+        newid1.pnums[i] = oldid.pnums[i];
+        newid2.pnums[i] = oldid.pnums[i];
       }
     newid1.np = newid2.np = oldid.np;
 
@@ -1412,27 +1412,27 @@ namespace netgen
 
     if(oldid.np == 3)
       {
-	newid1.pnums[(oldid.markededge+1)%3] = newp[0];
-	newid1.pnums[(oldid.markededge+1)%3+3] = newp[1];
-	newid1.markededge = (oldid.markededge+2)%3;
+        newid1.pnums[(oldid.markededge+1)%3] = newp[0];
+        newid1.pnums[(oldid.markededge+1)%3+3] = newp[1];
+        newid1.markededge = (oldid.markededge+2)%3;
 
-	newid2.pnums[oldid.markededge] = newp[0];
-	newid2.pnums[oldid.markededge+3] = newp[1];
-	newid2.markededge = (oldid.markededge+1)%3;
+        newid2.pnums[oldid.markededge] = newp[0];
+        newid2.pnums[oldid.markededge+3] = newp[1];
+        newid2.markededge = (oldid.markededge+1)%3;
       }
     else if(oldid.np == 4)
       {
-	newid1.pnums[(oldid.markededge+1)%4] = newp[0];
-	newid1.pnums[(oldid.markededge+2)%4] = newp[2];
-	newid1.pnums[(oldid.markededge+1)%4+4] = newp[1];
-	newid1.pnums[(oldid.markededge+2)%4+4] = newp[3];
-	newid1.markededge = (oldid.markededge+3)%4;
+        newid1.pnums[(oldid.markededge+1)%4] = newp[0];
+        newid1.pnums[(oldid.markededge+2)%4] = newp[2];
+        newid1.pnums[(oldid.markededge+1)%4+4] = newp[1];
+        newid1.pnums[(oldid.markededge+2)%4+4] = newp[3];
+        newid1.markededge = (oldid.markededge+3)%4;
 
-	newid2.pnums[oldid.markededge] = newp[0];
-	newid2.pnums[(oldid.markededge+3)%4] = newp[2];
-	newid2.pnums[oldid.markededge+4] = newp[1];
-	newid2.pnums[(oldid.markededge+3)%4+4] = newp[3];
-	newid2.markededge = (oldid.markededge+1)%4;
+        newid2.pnums[oldid.markededge] = newp[0];
+        newid2.pnums[(oldid.markededge+3)%4] = newp[2];
+        newid2.pnums[oldid.markededge+4] = newp[1];
+        newid2.pnums[(oldid.markededge+3)%4+4] = newp[3];
+        newid2.markededge = (oldid.markededge+1)%4;
       }
 
     
@@ -1446,14 +1446,14 @@ namespace netgen
 
 
   void BTBisectTri (const MarkedTri & oldtri, PointIndex newp, const PointGeomInfo & newpgi,
-		    MarkedTri & newtri1, MarkedTri & newtri2)
+                    MarkedTri & newtri1, MarkedTri & newtri2)
   {
     for (int i = 0; i < 3; i++)
       {
-	newtri1.pnums[i] = oldtri.pnums[i];
-	newtri1.pgeominfo[i] = oldtri.pgeominfo[i];
-	newtri2.pnums[i] = oldtri.pnums[i];
-	newtri2.pgeominfo[i] = oldtri.pgeominfo[i];
+        newtri1.pnums[i] = oldtri.pnums[i];
+        newtri1.pgeominfo[i] = oldtri.pgeominfo[i];
+        newtri2.pnums[i] = oldtri.pnums[i];
+        newtri2.pgeominfo[i] = oldtri.pgeominfo[i];
       }  
 
     int pe1 = 0;
@@ -1487,16 +1487,16 @@ namespace netgen
 
 
   void BTBisectQuad (const MarkedQuad & oldquad, 
-		     PointIndex newp1, const PointGeomInfo & npgi1, 
-		     PointIndex newp2, const PointGeomInfo & npgi2, 
-		     MarkedQuad & newquad1, MarkedQuad & newquad2)
+                     PointIndex newp1, const PointGeomInfo & npgi1, 
+                     PointIndex newp2, const PointGeomInfo & npgi2, 
+                     MarkedQuad & newquad1, MarkedQuad & newquad2)
   {
     for (int i = 0; i < 4; i++)
       {
-	newquad1.pnums[i] = oldquad.pnums[i];
-	newquad1.pgeominfo[i] = oldquad.pgeominfo[i];
-	newquad2.pnums[i] = oldquad.pnums[i];
-	newquad2.pgeominfo[i] = oldquad.pgeominfo[i];
+        newquad1.pnums[i] = oldquad.pnums[i];
+        newquad1.pgeominfo[i] = oldquad.pgeominfo[i];
+        newquad2.pnums[i] = oldquad.pnums[i];
+        newquad2.pgeominfo[i] = oldquad.pgeominfo[i];
       }  
 
 /*    if (oldquad.marked==1) // he/sz: 2d quads or 3d prism
@@ -1583,34 +1583,34 @@ namespace netgen
 
   template <typename HASHTABLE_CUTEDGES>
   int MarkHangingIdentifications(T_MIDS & mids, 
-				 const HASHTABLE_CUTEDGES & cutedges)
+                                 const HASHTABLE_CUTEDGES & cutedges)
   {
     int hanging = 0;
     for (int i = 1; i <= mids.Size(); i++)
       {
-	if (mids[i-1].marked)
-	  {
-	    hanging = 1;
-	    continue;
-	  }
+        if (mids[i-1].marked)
+          {
+            hanging = 1;
+            continue;
+          }
 
-	const int np = mids[i-1].np;
-	for(int j = 0; j < np; j++)
-	  {
-	    PointIndices<2> edge1(mids[i-1].pnums[j],
+        const int np = mids[i-1].np;
+        for(int j = 0; j < np; j++)
+          {
+            PointIndices<2> edge1(mids[i-1].pnums[j],
                                   mids[i-1].pnums[(j+1) % np]);
-	    PointIndices<2> edge2(mids[i-1].pnums[j+np],
+            PointIndices<2> edge2(mids[i-1].pnums[j+np],
                                   mids[i-1].pnums[((j+1) % np) + np]);
 
-	    edge1.Sort();
-	    edge2.Sort();
-	    if (cutedges.Used (edge1) ||
-		cutedges.Used (edge2))
-	      {
-		mids[i-1].marked = 1;
-		hanging = 1;
-	      }
-	  }
+            edge1.Sort();
+            edge2.Sort();
+            if (cutedges.Used (edge1) ||
+                cutedges.Used (edge2))
+              {
+                mids[i-1].marked = 1;
+                hanging = 1;
+              }
+          }
       }
 
     return hanging;
@@ -1619,52 +1619,52 @@ namespace netgen
 
   /*
   void IdentifyCutEdges(Mesh & mesh,
-			INDEX_2_CLOSED_HASHTABLE<int> & cutedges)
+                        INDEX_2_CLOSED_HASHTABLE<int> & cutedges)
   {
     int i,j,k;
 
     Array< Array<int,PointIndex::BASE>* > idmaps;
     for(i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	idmaps.Append(new Array<int,PointIndex::BASE>);
-	mesh.GetIdentifications().GetMap(i,*idmaps.Last());
+        idmaps.Append(new Array<int,PointIndex::BASE>);
+        mesh.GetIdentifications().GetMap(i,*idmaps.Last());
       }
 
 
     
     for (const Element2d & el2d : mesh.SurfaceElements())
       {
-	
-	for(i = 0; i < el2d.GetNP(); i++)
-	  {
-	    INDEX_2 e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
-	    e1.Sort();
+        
+        for(i = 0; i < el2d.GetNP(); i++)
+          {
+            INDEX_2 e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
+            e1.Sort();
 
-	    if(!cutedges.Used(e1))
-	      continue;
+            if(!cutedges.Used(e1))
+              continue;
 
-	    
-	    for(k = 0; k < idmaps.Size(); k++)
-	      {
-		INDEX_2 e2((*idmaps[k])[e1.I1()],
-			   (*idmaps[k])[e1.I2()]);
-		
-		if(!PointIndex(e2.I1()).IsValid() || !PointIndex(e2.I2()).IsValid() ||
-		   e1.I1() == e2.I1() || e1.I2() == e2.I2())
-		  continue;
-		
-		e2.Sort();
+            
+            for(k = 0; k < idmaps.Size(); k++)
+              {
+                INDEX_2 e2((*idmaps[k])[e1.I1()],
+                           (*idmaps[k])[e1.I2()]);
+                
+                if(!PointIndex(e2.I1()).IsValid() || !PointIndex(e2.I2()).IsValid() ||
+                   e1.I1() == e2.I1() || e1.I2() == e2.I2())
+                  continue;
+                
+                e2.Sort();
 
-		if(cutedges.Used(e2))
-		  continue;
+                if(cutedges.Used(e2))
+                  continue;
 
-		Point<3> np = Center(mesh.Point(e2.I1()),
-				    mesh.Point(e2.I2()));
-		int newp = mesh.AddPoint(np);
-		cutedges.Set(e2,newp);
-		(*testout) << "DAAA" << endl;
-	      }
-	  }
+                Point<3> np = Center(mesh.Point(e2.I1()),
+                                    mesh.Point(e2.I2()));
+                int newp = mesh.AddPoint(np);
+                cutedges.Set(e2,newp);
+                (*testout) << "DAAA" << endl;
+              }
+          }
       }
 
     
@@ -1677,7 +1677,7 @@ namespace netgen
 
   template <typename HASHTABLE_CUTEDGES>  
   int MarkHangingTets (T_MTETS & mtets, 
-		       const HASHTABLE_CUTEDGES & cutedges,
+                       const HASHTABLE_CUTEDGES & cutedges,
                        NgTaskManager tm)                       
   {
     static Timer timer("MarkHangingTets");    
@@ -1723,33 +1723,33 @@ namespace netgen
 
   template <typename HASHTABLE_CUTEDGES>  
   int MarkHangingPrisms (T_MPRISMS & mprisms, 
-			 const HASHTABLE_CUTEDGES & cutedges)
+                         const HASHTABLE_CUTEDGES & cutedges)
   {
     int hanging = 0;
     for (int i = 1; i <= mprisms.Size(); i++)
       {
-	if (mprisms[i-1].marked)
-	  {
-	    hanging = 1;
-	    continue;
-	  }
+        if (mprisms[i-1].marked)
+          {
+            hanging = 1;
+            continue;
+          }
 
-	for (int j = 0; j < 2; j++)
-	  for (int k = j+1; k < 3; k++)
-	    {
-	      PointIndices<2> edge1(mprisms[i-1].pnums[j],
+        for (int j = 0; j < 2; j++)
+          for (int k = j+1; k < 3; k++)
+            {
+              PointIndices<2> edge1(mprisms[i-1].pnums[j],
                                     mprisms[i-1].pnums[k]);
-	      PointIndices<2> edge2(mprisms[i-1].pnums[j+3],
+              PointIndices<2> edge2(mprisms[i-1].pnums[j+3],
                                     mprisms[i-1].pnums[k+3]);
-	      edge1.Sort();
-	      edge2.Sort();
-	      if (cutedges.Used (edge1) ||
-		  cutedges.Used (edge2))
-		{
-		  mprisms[i-1].marked = 1;
-		  hanging = 1;
-		}
-	    }
+              edge1.Sort();
+              edge2.Sort();
+              if (cutedges.Used (edge1) ||
+                  cutedges.Used (edge2))
+                {
+                  mprisms[i-1].marked = 1;
+                  hanging = 1;
+                }
+            }
       }
     return hanging;
   }
@@ -1799,31 +1799,31 @@ namespace netgen
 
   template <typename HASHTABLE_CUTEDGES>
   int MarkHangingQuads (T_MQUADS & mquads, 
-			const HASHTABLE_CUTEDGES & cutedges)
+                        const HASHTABLE_CUTEDGES & cutedges)
   {
     int hanging = 0;
     for (int i = 1; i <= mquads.Size(); i++)
       {
-	if (mquads[i-1].marked)
-	  {
-	    hanging = 1;
-	    continue;
-	  }
-
-	PointIndices<2> edge1(mquads[i-1].pnums[0],
-                              mquads[i-1].pnums[1]);
-	PointIndices<2> edge2(mquads[i-1].pnums[2],
-                              mquads[i-1].pnums[3]);
-	edge1.Sort();
-	edge2.Sort();
-	if (cutedges.Used (edge1) ||
-	    cutedges.Used (edge2))
-	  {
-	    mquads[i-1].marked = 1;
-            mquads[i-1].markededge = 0;
-	    hanging = 1;
+        if (mquads[i-1].marked)
+          {
+            hanging = 1;
             continue;
-	  }
+          }
+
+        PointIndices<2> edge1(mquads[i-1].pnums[0],
+                              mquads[i-1].pnums[1]);
+        PointIndices<2> edge2(mquads[i-1].pnums[2],
+                              mquads[i-1].pnums[3]);
+        edge1.Sort();
+        edge2.Sort();
+        if (cutedges.Used (edge1) ||
+            cutedges.Used (edge2))
+          {
+            mquads[i-1].marked = 1;
+            mquads[i-1].markededge = 0;
+            hanging = 1;
+            continue;
+          }
           
         // he/sz: second case: split horizontally
         PointIndices<2> edge3(mquads[i-1].pnums[1],
@@ -1849,17 +1849,17 @@ namespace netgen
 
 
   void ConnectToNodeRec (int node, int tonode, 
-			 const TABLE<int> & conto, Array<int> & connecttonode)
+                         const TABLE<int> & conto, Array<int> & connecttonode)
   {
     //  (*testout) << "connect " << node << " to " << tonode << endl;
     for (int i = 1; i <= conto.EntrySize(node); i++)
       {
-	int n2 = conto.Get(node, i);
-	if (!connecttonode[n2-1])
-	  {
-	    connecttonode[n2-1] = tonode;
-	    ConnectToNodeRec (n2, tonode, conto, connecttonode);
-	  }
+        int n2 = conto.Get(node, i);
+        if (!connecttonode[n2-1])
+          {
+            connecttonode[n2-1] = tonode;
+            ConnectToNodeRec (n2, tonode, conto, connecttonode);
+          }
       }
   }
 
@@ -1969,9 +1969,9 @@ namespace netgen
 
 
   void BisectTetsCopyMesh (Mesh & mesh, const NetgenGeometry *,
-			   BisectionOptions & opt,
-			   const Array<idmap_type*> & idmaps,
-			   const string & refinfofile)
+                           BisectionOptions & opt,
+                           const Array<idmap_type*> & idmaps,
+                           const string & refinfofile)
   {
     auto& mtets = *mesh.bisectioninfo.mtets;
     auto& mprisms = *mesh.bisectioninfo.mprisms;
@@ -1999,176 +1999,176 @@ namespace netgen
 
     if(refinfofile != "")
       {
-	PrintMessage(3,"Reading marked-element information from \"",refinfofile,"\"");
-	ifstream ist(refinfofile.c_str());
+        PrintMessage(3,"Reading marked-element information from \"",refinfofile,"\"");
+        ifstream ist(refinfofile.c_str());
 
-	readok = ReadMarkedElements(ist,mesh);
+        readok = ReadMarkedElements(ist,mesh);
 
-	ist.close();
+        ist.close();
       }
 
     if(!readok)
       {
-	PrintMessage(3,"resetting marked-element information");
-	mtets.SetSize(0);
-	mprisms.SetSize(0);
-	mids.SetSize(0);
-	mtris.SetSize(0);
-	mquads.SetSize(0);
-	
-	
-	ClosedHashTable<SortedPointIndices<2>, int> shortedges(128);
-	// for (int i = 1; i <= ne; i++)
+        PrintMessage(3,"resetting marked-element information");
+        mtets.SetSize(0);
+        mprisms.SetSize(0);
+        mids.SetSize(0);
+        mtris.SetSize(0);
+        mquads.SetSize(0);
+        
+        
+        ClosedHashTable<SortedPointIndices<2>, int> shortedges(128);
+        // for (int i = 1; i <= ne; i++)
         for (auto ei : mesh.VolumeElements().Range())
-	  {
-	    const Element & el = mesh[ei];
-	    if (el.GetType() == PRISM ||
-		el.GetType() == PRISM12)
-	      {
-		for (int j = 1; j <= 3; j++)
-		  {
-		    PointIndices<2> se(el.PNum(j), el.PNum(j+3));
-		    se.Sort();
-		    shortedges.Set (se, 1);
-		  }
-	      }
-	  }
-	
-	
-	
-	// INDEX_2_HASHTABLE<int> edgenumber(np);
+          {
+            const Element & el = mesh[ei];
+            if (el.GetType() == PRISM ||
+                el.GetType() == PRISM12)
+              {
+                for (int j = 1; j <= 3; j++)
+                  {
+                    PointIndices<2> se(el.PNum(j), el.PNum(j+3));
+                    se.Sort();
+                    shortedges.Set (se, 1);
+                  }
+              }
+          }
+        
+        
+        
+        // INDEX_2_HASHTABLE<int> edgenumber(np);
         // INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*ne+4*nse);  
         // ClosedHashTable<INDEX_2, int> edgenumber(9*ne+4*nse);
         ClosedHashTable<SortedPointIndices<2>, int> edgenumber(9*ne+4*nse);
-	BTSortEdges (mesh, idmaps, edgenumber);
-	
-	
-	// for (int i = 1; i <= ne; i++)
+        BTSortEdges (mesh, idmaps, edgenumber);
+        
+        
+        // for (int i = 1; i <= ne; i++)
         for (auto ei : mesh.VolumeElements().Range())
-	  {
-	    const Element & el = mesh[ei];
-	    
-	    switch (el.GetType())
-	      {
-	      case TET:
-	      case TET10:
-		{
-		  // if tet has short edge, it is handled as degenerated prism
-		  
-		  int foundse = 0;
-		  for (int j = 1; j <= 3; j++)
-		    for (int k = j+1; k <= 4; k++)
-		      {
-			PointIndices<2> se(el.PNum(j), el.PNum(k));
-			se.Sort();
-			if (shortedges.Used (se))
-			  {
-			    //		      cout << "tet converted to prism" << endl;
-			    
-			    foundse = 1;
-			    int p3 = 1;
-			    while (p3 == j || p3 == k)
-			      p3++;
-			    int p4 = 10 - j - k - p3;
-			    
-			    // even permutation ?
-			    int pi[4];
-			    pi[0] = j;
-			    pi[1] = k;
-			    pi[2] = p3;
-			    pi[3] = p4;
-			    int cnt = 0;
-			    for (int l = 1; l <= 4; l++)
-			      for (int m = 0; m < 3; m++)
-				if (pi[m] > pi[m+1])
-				  {
-				    Swap (pi[m], pi[m+1]);
-				    cnt++;
-				  }
-			    if (cnt % 2)
-			      Swap (p3, p4);
-			    
-			    Element hel = el;
-			    hel.PNum(1) = el.PNum(j);
-			    hel.PNum(2) = el.PNum(k);
-			    hel.PNum(3) = el.PNum(p3);
-			    hel.PNum(4) = el.PNum(p4);
-			    
-			    MarkedPrism mp;
-			    BTDefineMarkedPrism (hel, edgenumber, mp);
-			    mp.matindex = el.GetIndex();
-			    mprisms.Append (mp);
-			  }
-		      }
-		  if (!foundse)
-		    {
-		      MarkedTet mt;
-		      BTDefineMarkedTet (el, edgenumber, mt);
-		      mt.matindex = el.GetIndex();
-		      mtets.Append (mt);
-		    }
-		  break;
-		}
-	      case PYRAMID:
-		{
-		  // eventually rotate
-		  MarkedPrism mp;
-		  
-		  PointIndices<2> se(el.PNum(1), el.PNum(2));
-		  se.Sort();
-		  if (shortedges.Used (se))
-		    {
-		      Element hel = el;
-		      hel.PNum(1) = el.PNum(2);
-		      hel.PNum(2) = el.PNum(3);
-		      hel.PNum(3) = el.PNum(4);
-		      hel.PNum(4) = el.PNum(1);
-		      BTDefineMarkedPrism (hel, edgenumber, mp);
-		    }
-		  else
-		    {
-		      BTDefineMarkedPrism (el, edgenumber, mp);
-		    }
-		  
-		  mp.matindex = el.GetIndex();
-		  mprisms.Append (mp);
-		  break;
-		}
-	      case PRISM:
-	      case PRISM12:
-		{
-		  MarkedPrism mp;
-		  BTDefineMarkedPrism (el, edgenumber, mp);
-		  mp.matindex = el.GetIndex();
-		  mprisms.Append (mp);
-		  break;
-		}
+          {
+            const Element & el = mesh[ei];
+            
+            switch (el.GetType())
+              {
+              case TET:
+              case TET10:
+                {
+                  // if tet has short edge, it is handled as degenerated prism
+                  
+                  int foundse = 0;
+                  for (int j = 1; j <= 3; j++)
+                    for (int k = j+1; k <= 4; k++)
+                      {
+                        PointIndices<2> se(el.PNum(j), el.PNum(k));
+                        se.Sort();
+                        if (shortedges.Used (se))
+                          {
+                            //                cout << "tet converted to prism" << endl;
+                            
+                            foundse = 1;
+                            int p3 = 1;
+                            while (p3 == j || p3 == k)
+                              p3++;
+                            int p4 = 10 - j - k - p3;
+                            
+                            // even permutation ?
+                            int pi[4];
+                            pi[0] = j;
+                            pi[1] = k;
+                            pi[2] = p3;
+                            pi[3] = p4;
+                            int cnt = 0;
+                            for (int l = 1; l <= 4; l++)
+                              for (int m = 0; m < 3; m++)
+                                if (pi[m] > pi[m+1])
+                                  {
+                                    Swap (pi[m], pi[m+1]);
+                                    cnt++;
+                                  }
+                            if (cnt % 2)
+                              Swap (p3, p4);
+                            
+                            Element hel = el;
+                            hel.PNum(1) = el.PNum(j);
+                            hel.PNum(2) = el.PNum(k);
+                            hel.PNum(3) = el.PNum(p3);
+                            hel.PNum(4) = el.PNum(p4);
+                            
+                            MarkedPrism mp;
+                            BTDefineMarkedPrism (hel, edgenumber, mp);
+                            mp.matindex = el.GetIndex();
+                            mprisms.Append (mp);
+                          }
+                      }
+                  if (!foundse)
+                    {
+                      MarkedTet mt;
+                      BTDefineMarkedTet (el, edgenumber, mt);
+                      mt.matindex = el.GetIndex();
+                      mtets.Append (mt);
+                    }
+                  break;
+                }
+              case PYRAMID:
+                {
+                  // eventually rotate
+                  MarkedPrism mp;
+                  
+                  PointIndices<2> se(el.PNum(1), el.PNum(2));
+                  se.Sort();
+                  if (shortedges.Used (se))
+                    {
+                      Element hel = el;
+                      hel.PNum(1) = el.PNum(2);
+                      hel.PNum(2) = el.PNum(3);
+                      hel.PNum(3) = el.PNum(4);
+                      hel.PNum(4) = el.PNum(1);
+                      BTDefineMarkedPrism (hel, edgenumber, mp);
+                    }
+                  else
+                    {
+                      BTDefineMarkedPrism (el, edgenumber, mp);
+                    }
+                  
+                  mp.matindex = el.GetIndex();
+                  mprisms.Append (mp);
+                  break;
+                }
+              case PRISM:
+              case PRISM12:
+                {
+                  MarkedPrism mp;
+                  BTDefineMarkedPrism (el, edgenumber, mp);
+                  mp.matindex = el.GetIndex();
+                  mprisms.Append (mp);
+                  break;
+                }
               default:
                 throw NgException("Bisect, element type not handled in switch, 4");
-	      }
-	  }
-	
-	// for (int i = 1; i <= nse; i++)
+              }
+          }
+        
+        // for (int i = 1; i <= nse; i++)
         /*
         for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
-	  {
-	    const Element2d & el = mesh[sei];
+          {
+            const Element2d & el = mesh[sei];
         */
         for (const Element2d & el  : mesh.SurfaceElements())
           {
-	    if (el.GetType() == TRIG ||
-		el.GetType() == TRIG6)
-	      {
-		MarkedTri mt;
-		BTDefineMarkedTri (el, edgenumber, mt);
-		mtris.Append (mt);
-	      }
-	    else
-	      {
-		MarkedQuad mq;
-		BTDefineMarkedQuad (el, edgenumber, mq);
-		mquads.Append (mq);
-	      }
+            if (el.GetType() == TRIG ||
+                el.GetType() == TRIG6)
+              {
+                MarkedTri mt;
+                BTDefineMarkedTri (el, edgenumber, mt);
+                mtris.Append (mt);
+              }
+            else
+              {
+                MarkedQuad mq;
+                BTDefineMarkedQuad (el, edgenumber, mq);
+                mquads.Append (mq);
+              }
 
             if(mesh.GetDimension() == 3)
               {
@@ -2177,7 +2177,7 @@ namespace netgen
                   if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
                     mids.Append(mi);
               }
-	  }
+          }
         if(mesh.GetDimension() == 2)
           {
             /*
@@ -2210,7 +2210,7 @@ namespace netgen
               }
           }
       }
-	
+        
 
 
 
@@ -2238,7 +2238,7 @@ namespace netgen
 
   /*
   void UpdateEdgeMarks2(Mesh & mesh,
-			const Array< Array<int,PointIndex::BASE>* > & idmaps)
+                        const Array< Array<int,PointIndex::BASE>* > & idmaps)
   {
     Array< Array<MarkedTet>*,PointIndex::BASE > mtets_old(mesh.GetNP());
     Array< Array<MarkedPrism>*,PointIndex::BASE > mprisms_old(mesh.GetNP());
@@ -2265,9 +2265,9 @@ namespace netgen
       mids_old[mids[i].pnums[0]]->Append(mids[i]);
     for(int i=0; i<mtris.Size(); i++)
       {
-	(*testout) << "i " << i << endl;
-	(*testout) << "mtris[i] " << mtris[i].pnums[0] << " " << mtris[i].pnums[1] << " " << mtris[i].pnums[2] << endl; 
-	mtris_old[mtris[i].pnums[0]]->Append(mtris[i]);
+        (*testout) << "i " << i << endl;
+        (*testout) << "mtris[i] " << mtris[i].pnums[0] << " " << mtris[i].pnums[1] << " " << mtris[i].pnums[2] << endl; 
+        mtris_old[mtris[i].pnums[0]]->Append(mtris[i]);
       }
     for(int i=0; i<mquads.Size(); i++)
       mquads_old[mquads[i].pnums[0]]->Append(mquads[i]);
@@ -2295,17 +2295,17 @@ namespace netgen
     ClosedHashTable<SortedPointIndices<2>, int> shortedges(128);
     for (i = 1; i <= ne; i++)
       {
-	const Element & el = mesh.VolumeElement(i);
-	if (el.GetType() == PRISM ||
-	    el.GetType() == PRISM12)
-	  {
-	    for (j = 1; j <= 3; j++)
-	      {
-		INDEX_2 se(el.PNum(j), el.PNum(j+3));
-		se.Sort();
-		shortedges.Set (se, 1);
-	      }
-	  }
+        const Element & el = mesh.VolumeElement(i);
+        if (el.GetType() == PRISM ||
+            el.GetType() == PRISM12)
+          {
+            for (j = 1; j <= 3; j++)
+              {
+                INDEX_2 se(el.PNum(j), el.PNum(j+3));
+                se.Sort();
+                shortedges.Set (se, 1);
+              }
+          }
       }
 
 
@@ -2318,159 +2318,159 @@ namespace netgen
 
     for (i = 1; i <= ne; i++)
       {
-	const Element & el = mesh.VolumeElement(i);
-	  
-	switch (el.GetType())
-	  {
-	  case TET:
-	  case TET10:
-	    {
-	      // if tet has short edge, it is handled as degenerated prism
+        const Element & el = mesh.VolumeElement(i);
+          
+        switch (el.GetType())
+          {
+          case TET:
+          case TET10:
+            {
+              // if tet has short edge, it is handled as degenerated prism
 
-	      int foundse = 0;
-	      for (j = 1; j <= 3; j++)
-		for (k = j+1; k <= 4; k++)
-		  {
-		    INDEX_2 se(el.PNum(j), el.PNum(k));
-		    se.Sort();
-		    if (shortedges.Used (se))
-		      {
-//		      cout << "tet converted to prism" << endl;
+              int foundse = 0;
+              for (j = 1; j <= 3; j++)
+                for (k = j+1; k <= 4; k++)
+                  {
+                    INDEX_2 se(el.PNum(j), el.PNum(k));
+                    se.Sort();
+                    if (shortedges.Used (se))
+                      {
+//                    cout << "tet converted to prism" << endl;
 
-			foundse = 1;
-			int p3 = 1;
-			while (p3 == j || p3 == k)
-			  p3++;
-			int p4 = 10 - j - k - p3;
+                        foundse = 1;
+                        int p3 = 1;
+                        while (p3 == j || p3 == k)
+                          p3++;
+                        int p4 = 10 - j - k - p3;
 
-			// even permutation ?
-			int pi[4];
-			pi[0] = j;
-			pi[1] = k;
-			pi[2] = p3;
-			pi[3] = p4;
-			int cnt = 0;
-			for (l = 1; l <= 4; l++)
-			  for (m = 0; m < 3; m++)
-			    if (pi[m] > pi[m+1])
-			      {
-				Swap (pi[m], pi[m+1]);
-				cnt++;
-			      }
-			if (cnt % 2)
-			  Swap (p3, p4);
+                        // even permutation ?
+                        int pi[4];
+                        pi[0] = j;
+                        pi[1] = k;
+                        pi[2] = p3;
+                        pi[3] = p4;
+                        int cnt = 0;
+                        for (l = 1; l <= 4; l++)
+                          for (m = 0; m < 3; m++)
+                            if (pi[m] > pi[m+1])
+                              {
+                                Swap (pi[m], pi[m+1]);
+                                cnt++;
+                              }
+                        if (cnt % 2)
+                          Swap (p3, p4);
 
-			Element hel = el;
-			hel.PNum(1) = el.PNum(j);
-			hel.PNum(2) = el.PNum(k);
-			hel.PNum(3) = el.PNum(p3);
-			hel.PNum(4) = el.PNum(p4);
+                        Element hel = el;
+                        hel.PNum(1) = el.PNum(j);
+                        hel.PNum(2) = el.PNum(k);
+                        hel.PNum(3) = el.PNum(p3);
+                        hel.PNum(4) = el.PNum(p4);
 
-			MarkedPrism mp;
+                        MarkedPrism mp;
 
-			BTDefineMarkedPrism (hel, edgenumber, mp);
-			mp.matindex = el.GetIndex();
-			mprisms.Append (mp);
-		      }
-		  }
-	      if (!foundse)
-		{
-		  MarkedTet mt;
-		  
-		  int oldind = -1;
-		  for(l = 0; oldind < 0 && l<mtets_old[el[0]]->Size(); l++)
-		    if(el[1] == (*mtets_old[el[0]])[l].pnums[1] &&
-		       el[2] == (*mtets_old[el[0]])[l].pnums[2] &&
-		       el[3] == (*mtets_old[el[0]])[l].pnums[3])
-		      oldind = l;
+                        BTDefineMarkedPrism (hel, edgenumber, mp);
+                        mp.matindex = el.GetIndex();
+                        mprisms.Append (mp);
+                      }
+                  }
+              if (!foundse)
+                {
+                  MarkedTet mt;
+                  
+                  int oldind = -1;
+                  for(l = 0; oldind < 0 && l<mtets_old[el[0]]->Size(); l++)
+                    if(el[1] == (*mtets_old[el[0]])[l].pnums[1] &&
+                       el[2] == (*mtets_old[el[0]])[l].pnums[2] &&
+                       el[3] == (*mtets_old[el[0]])[l].pnums[3])
+                      oldind = l;
 
-		  if(oldind >= 0)
-		    mtets.Append((*mtets_old[el[0]])[oldind]);
-		  else
-		    {
-		      BTDefineMarkedTet (el, edgenumber, mt);
-		      mt.matindex = el.GetIndex();
-		      mtets.Append (mt);
-		    }
-		}
-	      break;
-	    }
-	  case PYRAMID:
-	    {
-	      // eventually rotate
-	      MarkedPrism mp;
-	    
-	      INDEX_2 se(el.PNum(1), el.PNum(2));
-	      se.Sort();
-	      if (shortedges.Used (se))
-		{
-		  Element hel = el;
-		  hel.PNum(1) = el.PNum(2);
-		  hel.PNum(2) = el.PNum(3);
-		  hel.PNum(3) = el.PNum(4);
-		  hel.PNum(4) = el.PNum(1);
-		  BTDefineMarkedPrism (hel, edgenumber, mp);
-		}
-	      else
-		{
-		  BTDefineMarkedPrism (el, edgenumber, mp);
-		}
+                  if(oldind >= 0)
+                    mtets.Append((*mtets_old[el[0]])[oldind]);
+                  else
+                    {
+                      BTDefineMarkedTet (el, edgenumber, mt);
+                      mt.matindex = el.GetIndex();
+                      mtets.Append (mt);
+                    }
+                }
+              break;
+            }
+          case PYRAMID:
+            {
+              // eventually rotate
+              MarkedPrism mp;
+            
+              INDEX_2 se(el.PNum(1), el.PNum(2));
+              se.Sort();
+              if (shortedges.Used (se))
+                {
+                  Element hel = el;
+                  hel.PNum(1) = el.PNum(2);
+                  hel.PNum(2) = el.PNum(3);
+                  hel.PNum(3) = el.PNum(4);
+                  hel.PNum(4) = el.PNum(1);
+                  BTDefineMarkedPrism (hel, edgenumber, mp);
+                }
+              else
+                {
+                  BTDefineMarkedPrism (el, edgenumber, mp);
+                }
 
-	      mp.matindex = el.GetIndex();
-	      mprisms.Append (mp);
-	      break;
-	    }
-	  case PRISM:
-	  case PRISM12:
-	    {
-	      MarkedPrism mp;
-	      BTDefineMarkedPrism (el, edgenumber, mp);
-	      mp.matindex = el.GetIndex();
-	      mprisms.Append (mp);
-	      break;
-	    }
-	  }
+              mp.matindex = el.GetIndex();
+              mprisms.Append (mp);
+              break;
+            }
+          case PRISM:
+          case PRISM12:
+            {
+              MarkedPrism mp;
+              BTDefineMarkedPrism (el, edgenumber, mp);
+              mp.matindex = el.GetIndex();
+              mprisms.Append (mp);
+              break;
+            }
+          }
       }
 
     for (i = 1; i <= nse; i++)
       {
-	const Element2d & el = mesh.SurfaceElement(i);
-	if (el.GetType() == TRIG ||
-	    el.GetType() == TRIG6)
-	  {
-	    MarkedTri mt;
-	    BTDefineMarkedTri (el, edgenumber, mt);
-	    mtris.Append (mt);
-	  }
-	else
-	  {
-	    MarkedQuad mq;
-	    BTDefineMarkedQuad (el, edgenumber, mq);
-	    mquads.Append (mq);
-	  }
-	
-	MarkedIdentification mi;
+        const Element2d & el = mesh.SurfaceElement(i);
+        if (el.GetType() == TRIG ||
+            el.GetType() == TRIG6)
+          {
+            MarkedTri mt;
+            BTDefineMarkedTri (el, edgenumber, mt);
+            mtris.Append (mt);
+          }
+        else
+          {
+            MarkedQuad mq;
+            BTDefineMarkedQuad (el, edgenumber, mq);
+            mquads.Append (mq);
+          }
+        
+        MarkedIdentification mi;
 
-	
+        
 
-	for(j=0; j<idmaps.Size(); j++)
-	  if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
-	    {
-	      mids.Append(mi);
-		
-	      int oldind = -1;
-	      for(l = 0; oldind < 0 && l<mids_old[mi.pnums[0]]->Size(); l++)
-		{
-		  bool equal = true;
-		  for(int m = 1; equal && m < mi.np; m++)
-		    equal = (mi.pnums[m] == (*mids_old[el[0]])[l].pnums[m]);
-		  if(equal)
-		    oldind = l;
-		}
+        for(j=0; j<idmaps.Size(); j++)
+          if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
+            {
+              mids.Append(mi);
+                
+              int oldind = -1;
+              for(l = 0; oldind < 0 && l<mids_old[mi.pnums[0]]->Size(); l++)
+                {
+                  bool equal = true;
+                  for(int m = 1; equal && m < mi.np; m++)
+                    equal = (mi.pnums[m] == (*mids_old[el[0]])[l].pnums[m]);
+                  if(equal)
+                    oldind = l;
+                }
 
-	      if(oldind >= 0)
-		mids.Last() = (*mids_old[mi.pnums[0]])[oldind];
-	    }
+              if(oldind >= 0)
+                mids.Last() = (*mids_old[mi.pnums[0]])[oldind];
+            }
 
       }
 
@@ -2491,11 +2491,11 @@ namespace netgen
 
   
   void UpdateEdgeMarks (Mesh & mesh,
-			const Array< idmap_type* > & idmaps)
+                        const Array< idmap_type* > & idmaps)
   //const Array < Array<Element>* > & elements_before,
   //const Array < Array<int>* > & markedelts_num,
-  //		const Array < Array<Element2d>* > & surfelements_before,
-  //		const Array < Array<int>* > & markedsurfelts_num)
+  //            const Array < Array<Element2d>* > & surfelements_before,
+  //            const Array < Array<int>* > & markedsurfelts_num)
   {
     /*
     T_MTETS mtets_old; mtets_old.Copy(mtets);
@@ -2536,102 +2536,102 @@ namespace netgen
     // for(int m = 0; m < mtets_old.Size(); m++)
     for (auto mi : mtets_old.Range())
       {
-	MarkedTet & mt = mtets_old[mi];
+        MarkedTet & mt = mtets_old[mi];
 
-	//(*testout) << "old mt " << mt;
-	
-	PointIndices<2> edge (mt.pnums[mt.tetedge1],mt.pnums[mt.tetedge2]);
-	edge.Sort();
-	if(edgenumber.Used(edge))
-	  {
-	    int val = edgenumber.Get(edge);
-	    //(*testout) << "set voledge " << edge << " from " << val;
-	    if(val <= maxnum)
-	      {
-		val += 2*maxnum;
-		edgenumber.Set(edge,val);
-	      }
-	    else if(val <= 2*maxnum)
-	      {
-		val += maxnum;
-		edgenumber.Set(edge,val);
-	      }
-	    //(*testout) << " to " << val << endl;
-	  }
-	
-	for(int k=0; k<4; k++)
-	  for(int i=0; i<3; i++)
-	    for(int j=i+1; i != k && j<4; j++)
-	      if(j != k && int(mt.faceedges[k]) == 6-k-i-j)
-		{
-		  edge[0] = mt.pnums[i];
-		  edge[1] = mt.pnums[j];
-		  edge.Sort();
-		  if(edgenumber.Used(edge))
-		    {
-		      int val = edgenumber.Get(edge);
-		      //(*testout) << "set faceedge " << edge << " from " << val;
-		      if(val <= maxnum)
-			{
-			  val += maxnum;
-			  edgenumber.Set(edge,val);
-			}
-		      //(*testout) << " to " << val << endl;
-		    }		      
-		}
+        //(*testout) << "old mt " << mt;
+        
+        PointIndices<2> edge (mt.pnums[mt.tetedge1],mt.pnums[mt.tetedge2]);
+        edge.Sort();
+        if(edgenumber.Used(edge))
+          {
+            int val = edgenumber.Get(edge);
+            //(*testout) << "set voledge " << edge << " from " << val;
+            if(val <= maxnum)
+              {
+                val += 2*maxnum;
+                edgenumber.Set(edge,val);
+              }
+            else if(val <= 2*maxnum)
+              {
+                val += maxnum;
+                edgenumber.Set(edge,val);
+              }
+            //(*testout) << " to " << val << endl;
+          }
+        
+        for(int k=0; k<4; k++)
+          for(int i=0; i<3; i++)
+            for(int j=i+1; i != k && j<4; j++)
+              if(j != k && int(mt.faceedges[k]) == 6-k-i-j)
+                {
+                  edge[0] = mt.pnums[i];
+                  edge[1] = mt.pnums[j];
+                  edge.Sort();
+                  if(edgenumber.Used(edge))
+                    {
+                      int val = edgenumber.Get(edge);
+                      //(*testout) << "set faceedge " << edge << " from " << val;
+                      if(val <= maxnum)
+                        {
+                          val += maxnum;
+                          edgenumber.Set(edge,val);
+                        }
+                      //(*testout) << " to " << val << endl;
+                    }                 
+                }
       }
 
-	
+        
     
     /*
     for (auto ei : mesh.VolumeElements().Range())
       {
-	const Element & el = mesh[ei];
+        const Element & el = mesh[ei];
     */
 
     for (const Element & el : mesh.VolumeElements())
       {
-	//int pos = elements_before[el[0]]->Pos(el);
-	//int elnum = (pos >= 0) ? (*markedelts_num[el[0]])[pos] : -1;
-	 
-	switch (el.GetType())
-	  {
-	  case TET:
-	  case TET10:
-	    {
-	      //if(elnum >= 0)
-	      // {
-	      //   mtets.Append(mtets_old[elnum]);
-	      // } 
-	      //else
-	      // {
-	      MarkedTet mt;
-	      BTDefineMarkedTet (el, edgenumber, mt);
-	      mt.matindex = el.GetIndex();
-	      
-	      mtets.Append (mt);
-	    
-	      //(*testout) << "mtet " << mtets.Last() << endl;
-	      break;
-	    }
-	  case PYRAMID:
-	    {
-	      cerr << "Refinement :: UpdateEdgeMarks not yet implemented for pyramids"
-		   << endl;
-	      break;
-	    }
-	    
-	  case PRISM:
-	  case PRISM12:
-	    {
-	      cerr << "Refinement :: UpdateEdgeMarks not yet implemented for prisms"
-		   << endl;
-	      break;
-	    }
+        //int pos = elements_before[el[0]]->Pos(el);
+        //int elnum = (pos >= 0) ? (*markedelts_num[el[0]])[pos] : -1;
+         
+        switch (el.GetType())
+          {
+          case TET:
+          case TET10:
+            {
+              //if(elnum >= 0)
+              // {
+              //   mtets.Append(mtets_old[elnum]);
+              // } 
+              //else
+              // {
+              MarkedTet mt;
+              BTDefineMarkedTet (el, edgenumber, mt);
+              mt.matindex = el.GetIndex();
+              
+              mtets.Append (mt);
+            
+              //(*testout) << "mtet " << mtets.Last() << endl;
+              break;
+            }
+          case PYRAMID:
+            {
+              cerr << "Refinement :: UpdateEdgeMarks not yet implemented for pyramids"
+                   << endl;
+              break;
+            }
+            
+          case PRISM:
+          case PRISM12:
+            {
+              cerr << "Refinement :: UpdateEdgeMarks not yet implemented for prisms"
+                   << endl;
+              break;
+            }
           default:
             throw NgException("Bisect, element type not handled in switch, 6");
-	  }
-	
+          }
+        
       }
     
     /*
@@ -2641,103 +2641,103 @@ namespace netgen
 
     for (const Element2d & el : mesh.SurfaceElements())
       {
-	 /*
-	 for(int k=0; k<3; k++)
-	   auxind3[k] = el[k];
+         /*
+         for(int k=0; k<3; k++)
+           auxind3[k] = el[k];
 
-	 auxind3.Sort();
-	 
-	 int pos = oldfaces[auxind3[0]]->Pos(auxind3);
-	 if(pos < 0)
-	   cout << "UIUIUI" << endl;
-	 */	 
-	 
-	 switch (el.GetType())
-	   {
-	   case TRIG:
-	   case TRIG6:
-	     {
-	       MarkedTri mt;
-	       BTDefineMarkedTri (el, edgenumber, mt);
-	       mtris.Append (mt);
-	       break;
-	     }
-	     
-	   case QUAD:
-	   case QUAD6:
-	     {
-	       MarkedQuad mt;
-	       BTDefineMarkedQuad (el, edgenumber, mt);
-	       mquads.Append (mt);
-	       break;
-	     }
+         auxind3.Sort();
+         
+         int pos = oldfaces[auxind3[0]]->Pos(auxind3);
+         if(pos < 0)
+           cout << "UIUIUI" << endl;
+         */      
+         
+         switch (el.GetType())
+           {
+           case TRIG:
+           case TRIG6:
+             {
+               MarkedTri mt;
+               BTDefineMarkedTri (el, edgenumber, mt);
+               mtris.Append (mt);
+               break;
+             }
+             
+           case QUAD:
+           case QUAD6:
+             {
+               MarkedQuad mt;
+               BTDefineMarkedQuad (el, edgenumber, mt);
+               mquads.Append (mt);
+               break;
+             }
            default:
              throw NgException("Bisect, element type not handled in switch, 5");
-	   }
+           }
 
-	 
-	MarkedIdentification mi;
-	for(int j=0; j<idmaps.Size(); j++)
-	  if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
-	    mids.Append(mi);
+         
+        MarkedIdentification mi;
+        for(int j=0; j<idmaps.Size(); j++)
+          if(BTDefineMarkedId(el, edgenumber, *idmaps[j], mi))
+            mids.Append(mi);
 
 
-	 /*
-	 int pos = surfelements_before[el[0]]->Pos(el);
-	 int elnum = (pos >= 0) ? (*markedsurfelts_num[el[0]])[pos] : -1;
-	 
-	 
-	 switch (el.GetType())
-	   {
-	   case TRIG:
-	   case TRIG6:
-	     {
-	       if(elnum >= 0)
-		 mtris.Append(mtris_old[elnum]);
-	       else
-		 {
-		   MarkedTri mt;
-		   BTDefineMarkedTri (el, edgenumber, mt);
-		   mtris.Append (mt);
-		   (*testout) << "(new) ";
-		 }
-	       (*testout) << "mtri " << mtris.Last();
-	       break;
-	     }
-	     
-	   case QUAD:
-	   case QUAD6:
-	     {
-	       if(elnum >= 0)
-		 mquads.Append(mquads_old[elnum]);
-	       else
-		 {
-		   MarkedQuad mt;
-		   BTDefineMarkedQuad (el, edgenumber, mt);
-		   mquads.Append (mt);
-		 }
-	       break;
-	     }
-	   }
-	 */
+         /*
+         int pos = surfelements_before[el[0]]->Pos(el);
+         int elnum = (pos >= 0) ? (*markedsurfelts_num[el[0]])[pos] : -1;
+         
+         
+         switch (el.GetType())
+           {
+           case TRIG:
+           case TRIG6:
+             {
+               if(elnum >= 0)
+                 mtris.Append(mtris_old[elnum]);
+               else
+                 {
+                   MarkedTri mt;
+                   BTDefineMarkedTri (el, edgenumber, mt);
+                   mtris.Append (mt);
+                   (*testout) << "(new) ";
+                 }
+               (*testout) << "mtri " << mtris.Last();
+               break;
+             }
+             
+           case QUAD:
+           case QUAD6:
+             {
+               if(elnum >= 0)
+                 mquads.Append(mquads_old[elnum]);
+               else
+                 {
+                   MarkedQuad mt;
+                   BTDefineMarkedQuad (el, edgenumber, mt);
+                   mquads.Append (mt);
+                 }
+               break;
+             }
+           }
+         */
        }
      
      /*
      for(int i=0; i<oldfaces.Size(); i++)
        {
-	 delete oldfaces[i];
-	 delete oldmarkededges[i];
+         delete oldfaces[i];
+         delete oldmarkededges[i];
        }
      */
      
   }
-				      
+                                      
 
 
 
   void Refinement :: Bisect (Mesh & mesh, 
-			     BisectionOptions & opt,
-			     Array<double, ElementIndex> * quality_loss) const
+                             BisectionOptions & opt,
+                             Array<double, ElementIndex> * quality_loss) const
   {
     PrintMessage(1,"Mesh bisection");
     PushStatus("Mesh bisection");
@@ -2779,11 +2779,11 @@ namespace netgen
     Array< idmap_type* > idmaps;
     for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
-	  {
-	    idmaps.Append(new idmap_type);
-	    mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
-	  }
+        if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
+          {
+            idmaps.Append(new idmap_type);
+            mesh.GetIdentifications().GetMap(i,*idmaps.Last(),true);
+          }
       }
 
     
@@ -2792,28 +2792,28 @@ namespace netgen
 
     if(opt.refinementfilename)
       {
-	ifstream inf(opt.refinementfilename);
-	string st;
-	inf >> st;
-	if(st == "refinementinfo")
-	  {
-	    while(inf)
-	      {
-		while(inf && st != "markedelementsfile")
-		  inf >> st;
-		
-		if(inf)
-		  inf >> st;
-		
-		if(st == "read" && inf)
-		  ReadEnclString(inf,refelementinfofileread,'\"');
-		else if(st == "write" && inf)
-		  ReadEnclString(inf,refelementinfofilewrite,'\"');
-	      }
-	  }
-	inf.close();
+        ifstream inf(opt.refinementfilename);
+        string st;
+        inf >> st;
+        if(st == "refinementinfo")
+          {
+            while(inf)
+              {
+                while(inf && st != "markedelementsfile")
+                  inf >> st;
+                
+                if(inf)
+                  inf >> st;
+                
+                if(st == "read" && inf)
+                  ReadEnclString(inf,refelementinfofileread,'\"');
+                else if(st == "write" && inf)
+                  ReadEnclString(inf,refelementinfofilewrite,'\"');
+              }
+          }
+        inf.close();
       }
-	
+        
     mesh.ComputeNVertices();
 
     // if (mesh.mglevels == 1 || idmaps.Size() > 0)
@@ -2857,51 +2857,51 @@ namespace netgen
 
     if (opt.refine_p)   
       {
-	// int ne = mesh.GetNE();
-	int nse = mesh.GetNSE();
-	int ox,oy,oz; 
-	// for (ElementIndex ei = 0; ei < ne; ei++)
+        // int ne = mesh.GetNE();
+        int nse = mesh.GetNSE();
+        int ox,oy,oz; 
+        // for (ElementIndex ei = 0; ei < ne; ei++)
         for (auto ei : mesh.VolumeElements().Range())
-	  if (mesh[ei].TestRefinementFlag())
-	    {
-	      mesh[ei].GetOrder(ox,oy,oz);
-	      mesh[ei].SetOrder (ox+1,oy+1,oz+1);
-	      if (mesh[ei].TestStrongRefinementFlag())
-		mesh[ei].SetOrder (ox+2,oy+2,oz+2);
-	    }
-	for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
-	  if (mesh[sei].TestRefinementFlag())
-	    {
-	      mesh[sei].GetOrder(ox,oy);
-	      mesh[sei].SetOrder(ox+1,oy+1);
-	      if (mesh[sei].TestStrongRefinementFlag())
-		mesh[sei].SetOrder(ox+2,oy+2);
-	    }
+          if (mesh[ei].TestRefinementFlag())
+            {
+              mesh[ei].GetOrder(ox,oy,oz);
+              mesh[ei].SetOrder (ox+1,oy+1,oz+1);
+              if (mesh[ei].TestStrongRefinementFlag())
+                mesh[ei].SetOrder (ox+2,oy+2,oz+2);
+            }
+        for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
+          if (mesh[sei].TestRefinementFlag())
+            {
+              mesh[sei].GetOrder(ox,oy);
+              mesh[sei].SetOrder(ox+1,oy+1);
+              if (mesh[sei].TestStrongRefinementFlag())
+                mesh[sei].SetOrder(ox+2,oy+2);
+            }
 
 #ifndef SABINE //Nachbarelemente mit ordx,ordy,ordz 
         
         // Array<int,PointIndex::BASE> v_order (mesh.GetNP());
           Array<int,PointIndex> v_order (mesh.GetNP());
-	  v_order = 0;
+          v_order = 0;
 
-	  // for (ElementIndex ei = 0; ei < ne; ei++)
+          // for (ElementIndex ei = 0; ei < ne; ei++)
           for (auto ei : mesh.VolumeElements().Range())
             for (int j = 0; j < mesh[ei].GetNP(); j++)
               if (mesh[ei].GetOrder() > v_order[mesh[ei][j]])
                 v_order[mesh[ei][j]] = mesh[ei].GetOrder();
 
-	  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
+          for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
             for (int j = 0; j < mesh[sei].GetNP(); j++)
               if (mesh[sei].GetOrder() > v_order[mesh[sei][j]])
                 v_order[mesh[sei][j]] = mesh[sei].GetOrder();
 
-	  // for (ElementIndex ei = 0; ei < ne; ei++)
+          // for (ElementIndex ei = 0; ei < ne; ei++)
           for (auto ei : mesh.VolumeElements().Range())          
             for (int j = 0; j < mesh[ei].GetNP(); j++)
               if (mesh[ei].GetOrder() < v_order[mesh[ei][j]]-1)
                 mesh[ei].SetOrder(v_order[mesh[ei][j]]-1);
 
-	  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
+          for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
             for (int j = 0; j < mesh[sei].GetNP(); j++)
               if (mesh[sei].GetOrder() < v_order[mesh[sei][j]]-1)
                 mesh[sei].SetOrder(v_order[mesh[sei][j]]-1);
@@ -2924,629 +2924,629 @@ namespace netgen
     
     for (int l = 1; l <= 1; l++)
       {
-	int marked = 0;
-	if (opt.refinementfilename)
-	  {
-	    ifstream inf(opt.refinementfilename);
-	    PrintMessage(3,"load refinementinfo from file ",opt.refinementfilename);
+        int marked = 0;
+        if (opt.refinementfilename)
+          {
+            ifstream inf(opt.refinementfilename);
+            PrintMessage(3,"load refinementinfo from file ",opt.refinementfilename);
 
-	    string st;
-	    inf >> st;
-	    if(st == "refinementinfo")
-	      // new version
-	      {
+            string st;
+            inf >> st;
+            if(st == "refinementinfo")
+              // new version
+              {
                 /*
-		for(int i=1; i<=mtets.Size(); i++)
-		  mtets[i-1].marked = 0;
+                for(int i=1; i<=mtets.Size(); i++)
+                  mtets[i-1].marked = 0;
                 */
-		for(auto ei : mtets.Range())
-		  mtets[ei].marked = 0;
-		for(int i=1; i<=mprisms.Size(); i++)
-		  mprisms[i-1].marked = 0;
-		for(int i=1; i<=mtris.Size(); i++)
-		  mtris[i-1].marked = 0;
-		for(int i=1; i<=mquads.Size(); i++)
-		  mquads[i-1].marked = 0;
-		for(int i=1; i<=mprisms.Size(); i++)
-		  mids[i-1].marked = 0;
+                for(auto ei : mtets.Range())
+                  mtets[ei].marked = 0;
+                for(int i=1; i<=mprisms.Size(); i++)
+                  mprisms[i-1].marked = 0;
+                for(int i=1; i<=mtris.Size(); i++)
+                  mtris[i-1].marked = 0;
+                for(int i=1; i<=mquads.Size(); i++)
+                  mquads[i-1].marked = 0;
+                for(int i=1; i<=mprisms.Size(); i++)
+                  mids[i-1].marked = 0;
 
-		inf >> st;
-		while(inf)
-		  {
-		    if(st[0] == '#')
-		      {
-			inf.ignore(10000,'\n');
-			inf >> st;
-		      }
-		    else if(st == "markedelementsfile")
-		      {
-			inf >> st;
-			ReadEnclString(inf,st,'\"');
-			inf >> st;
-		      }
-		    else if(st == "noprojection")
-		      {
-			noprojection = true;
-			inf >> st;
-		      }
-		    else if(st == "refine")
-		      {
-			inf >> st;
-			if(st == "elements")
-			  {
-			    inf >> st;
-			    bool isint = true;
-				for(string::size_type ii=0; isint && ii<st.size(); ii++)
-			      isint = (isdigit(st[ii]) != 0);
-			    
-			    while(inf && isint)
-			      {
-				// mtets[atoi(st.c_str())-1].marked = 3;
+                inf >> st;
+                while(inf)
+                  {
+                    if(st[0] == '#')
+                      {
+                        inf.ignore(10000,'\n');
+                        inf >> st;
+                      }
+                    else if(st == "markedelementsfile")
+                      {
+                        inf >> st;
+                        ReadEnclString(inf,st,'\"');
+                        inf >> st;
+                      }
+                    else if(st == "noprojection")
+                      {
+                        noprojection = true;
+                        inf >> st;
+                      }
+                    else if(st == "refine")
+                      {
+                        inf >> st;
+                        if(st == "elements")
+                          {
+                            inf >> st;
+                            bool isint = true;
+                                for(string::size_type ii=0; isint && ii<st.size(); ii++)
+                              isint = (isdigit(st[ii]) != 0);
+                            
+                            while(inf && isint)
+                              {
+                                // mtets[atoi(st.c_str())-1].marked = 3;
                                 mtets[IndexBASE<ElementIndex>()+(atoi(st.c_str())-1)].marked = 3;
-				marked = 1;
+                                marked = 1;
 
-				inf >> st;
-				isint = true;
-				for(string::size_type ii=0; isint && ii<st.size(); ii++)
-				  isint = (isdigit(st[ii]) != 0);
-			      }
-			  }
-			else if(st == "orthobrick")
-			  {
-			    double bounds[6];
-			    for(int i=0; i<6; i++)
-			      inf >> bounds[i];
-			    
-			    int cnt = 0;
+                                inf >> st;
+                                isint = true;
+                                for(string::size_type ii=0; isint && ii<st.size(); ii++)
+                                  isint = (isdigit(st[ii]) != 0);
+                              }
+                          }
+                        else if(st == "orthobrick")
+                          {
+                            double bounds[6];
+                            for(int i=0; i<6; i++)
+                              inf >> bounds[i];
+                            
+                            int cnt = 0;
 
-			    // for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+                            // for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
                             for (auto ei : mesh.VolumeElements().Range())
-			      {
-				const Element & el = mesh[ei];
-				
-				//
-				Point<3> center(0,0,0);
-				for(int i=0; i<el.GetNP(); i++)
-				  {
-				    const MeshPoint & point = mesh[el[i]];
-				    center(0) += point(0);
-				    center(1) += point(1);
-				    center(2) += point(2);
-				  }
-				for(int i=0; i<3; i++)
-				  center(i) *= 1./double(el.GetNP());
-				if(bounds[0] <= center(0) && center(0) <= bounds[3] &&
-				   bounds[1] <= center(1) && center(1) <= bounds[4] &&
-				   bounds[2] <= center(2) && center(2) <= bounds[5])
-				  {
-				    mtets[ei].marked = 3;
-				    cnt++;
-				  }
-				
-				  
-// 				bool contained = false;
-// 				for(int i=0; !contained && i<el.GetNP(); i++)
-// 				  {
-// 				    const MeshPoint & point = mesh[el[i]];
-// 				    contained = (bounds[0] <= point.X() && point.X() <= bounds[3] &&
-// 						 bounds[1] <= point.Y() && point.Y() <= bounds[4] &&
-// 						 bounds[2] <= point.Z() && point.Z() <= bounds[5]);
-// 				  }
-// 				if(contained)
-// 				  {
-// 				    mtets[ei].marked = 3;
-// 				    cnt++;
-// 				  }
-			      }
+                              {
+                                const Element & el = mesh[ei];
+                                
+                                //
+                                Point<3> center(0,0,0);
+                                for(int i=0; i<el.GetNP(); i++)
+                                  {
+                                    const MeshPoint & point = mesh[el[i]];
+                                    center(0) += point(0);
+                                    center(1) += point(1);
+                                    center(2) += point(2);
+                                  }
+                                for(int i=0; i<3; i++)
+                                  center(i) *= 1./double(el.GetNP());
+                                if(bounds[0] <= center(0) && center(0) <= bounds[3] &&
+                                   bounds[1] <= center(1) && center(1) <= bounds[4] &&
+                                   bounds[2] <= center(2) && center(2) <= bounds[5])
+                                  {
+                                    mtets[ei].marked = 3;
+                                    cnt++;
+                                  }
+                                
+                                  
+//                              bool contained = false;
+//                              for(int i=0; !contained && i<el.GetNP(); i++)
+//                                {
+//                                  const MeshPoint & point = mesh[el[i]];
+//                                  contained = (bounds[0] <= point.X() && point.X() <= bounds[3] &&
+//                                               bounds[1] <= point.Y() && point.Y() <= bounds[4] &&
+//                                               bounds[2] <= point.Z() && point.Z() <= bounds[5]);
+//                                }
+//                              if(contained)
+//                                {
+//                                  mtets[ei].marked = 3;
+//                                  cnt++;
+//                                }
+                              }
 
 
-			    ostringstream strstr;
-			    strstr.precision(2);
-			    strstr << "marked " << float(cnt)/float(mesh.GetNE())*100. 
+                            ostringstream strstr;
+                            strstr.precision(2);
+                            strstr << "marked " << float(cnt)/float(mesh.GetNE())*100. 
 #ifdef WIN32
-				   << "%%"
+                                   << "%%"
 #else
-				   << "%"
+                                   << "%"
 #endif
-				   <<" of the elements";
-			    PrintMessage(4,strstr.str());
+                                   <<" of the elements";
+                            PrintMessage(4,strstr.str());
 
-			    if(cnt > 0)
-			      marked = 1;
+                            if(cnt > 0)
+                              marked = 1;
 
 
-			    inf >> st;
-			  }
-			else
-			  {
-			    throw NgException("something wrong with refinementinfo file");
-			  }
-		      }
-		  }		
-	      }
-	    else
-	      {
-		inf.close();
-		inf.open(opt.refinementfilename);
+                            inf >> st;
+                          }
+                        else
+                          {
+                            throw NgException("something wrong with refinementinfo file");
+                          }
+                      }
+                  }             
+              }
+            else
+              {
+                inf.close();
+                inf.open(opt.refinementfilename);
 
-		char ch;
-		// for (int i = 1; i <= mtets.Size(); i++)
+                char ch;
+                // for (int i = 1; i <= mtets.Size(); i++)
                 for (auto ei : mtets.Range())
-		  {
-		    inf >> ch;
-		    if(!inf)
-		      throw NgException("something wrong with refinementinfo file (old format)");
-		    mtets[ei].marked = (ch == '1');
-		  }
-		marked = 1;
-	      }
-	    inf.close();
-	  }
+                  {
+                    inf >> ch;
+                    if(!inf)
+                      throw NgException("something wrong with refinementinfo file (old format)");
+                    mtets[ei].marked = (ch == '1');
+                  }
+                marked = 1;
+              }
+            inf.close();
+          }
 
-	else if (opt.usemarkedelements)
-	  {
-	    int cntm = 0;
+        else if (opt.usemarkedelements)
+          {
+            int cntm = 0;
 
-	    // all in one !
-	    if (mprisms.Size())
-	      {
-		ElementIndex cnttet = IndexBASE<ElementIndex>();
-		int cntprism = 0;
-		// for (int i = 1; i <= mesh.GetNE(); i++)
+            // all in one !
+            if (mprisms.Size())
+              {
+                ElementIndex cnttet = IndexBASE<ElementIndex>();
+                int cntprism = 0;
+                // for (int i = 1; i <= mesh.GetNE(); i++)
                 for (auto ei : mesh.VolumeElements().Range())
-		  {
-		    if (mesh.VolumeElement(ei).GetType() == TET ||
-			mesh.VolumeElement(ei).GetType() == TET10)
-		      {
-			mtets[cnttet].marked =
-			  (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(ei).TestRefinementFlag();
-			if (mtets[cnttet].marked)
-			  cntm++;
-			cnttet++;
-		      }
-		    else
-		      {
-			cntprism++;
-			mprisms[cntprism-1].marked =
-			  2 * mesh.VolumeElement(ei).TestRefinementFlag();
-			if (mprisms[cntprism-1].marked)
-			  cntm++;
-		      }
+                  {
+                    if (mesh.VolumeElement(ei).GetType() == TET ||
+                        mesh.VolumeElement(ei).GetType() == TET10)
+                      {
+                        mtets[cnttet].marked =
+                          (opt.onlyonce ? 3 : 1) * mesh.VolumeElement(ei).TestRefinementFlag();
+                        if (mtets[cnttet].marked)
+                          cntm++;
+                        cnttet++;
+                      }
+                    else
+                      {
+                        cntprism++;
+                        mprisms[cntprism-1].marked =
+                          2 * mesh.VolumeElement(ei).TestRefinementFlag();
+                        if (mprisms[cntprism-1].marked)
+                          cntm++;
+                      }
 
-		  }
-	      }
-	    else
-	      // for (int i = 1; i <= mtets.Size(); i++)
+                  }
+              }
+            else
+              // for (int i = 1; i <= mtets.Size(); i++)
               for (auto ei : mtets.Range())
-		{
-		  mtets[ei].marked =
-		    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(ei).TestRefinementFlag();
-		  if (mtets[ei].marked)
-		    cntm++;
-		}
+                {
+                  mtets[ei].marked =
+                    (opt.onlyonce ? 1 : 3) * mesh.VolumeElement(ei).TestRefinementFlag();
+                  if (mtets[ei].marked)
+                    cntm++;
+                }
 
-	    // (*testout) << "mtets = " << mtets << endl;
+            // (*testout) << "mtets = " << mtets << endl;
 
-	    /*
-	      for (i = 1; i <= mtris.Size(); i++)
-	      mtris.Elem(i).marked = 0;
-	      for (i = 1; i <= mquads.Size(); i++)
-	      mquads.Elem(i).marked = 0;
-	    */
+            /*
+              for (i = 1; i <= mtris.Size(); i++)
+              mtris.Elem(i).marked = 0;
+              for (i = 1; i <= mquads.Size(); i++)
+              mquads.Elem(i).marked = 0;
+            */
 
-	    if (printmessage_importance>0)
-	      {
-		ostringstream str;
-		str << "marked elements: " << cntm;
-		PrintMessage(4,str.str());
-	      }
+            if (printmessage_importance>0)
+              {
+                ostringstream str;
+                str << "marked elements: " << cntm;
+                PrintMessage(4,str.str());
+              }
 
-	    int cnttrig = 0;
-	    int cntquad = 0;
-	    // for (int i = 1; i <= mesh.GetNSE(); i++)
+            int cnttrig = 0;
+            int cntquad = 0;
+            // for (int i = 1; i <= mesh.GetNSE(); i++)
             for (auto & el : mesh.SurfaceElements())
-	      {
-		if (el.GetType() == TRIG ||
-		    el.GetType() == TRIG6)
-		  {
-		    cnttrig++;
-		    mtris[cnttrig-1].marked =
-		      el.TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
-		    // mtris.Elem(cnttrig).marked = 0;
-		    if (mtris[cnttrig-1].marked)
-		      cntm++;
-		  }
-		else
-		  {
-		    cntquad++;
+              {
+                if (el.GetType() == TRIG ||
+                    el.GetType() == TRIG6)
+                  {
+                    cnttrig++;
+                    mtris[cnttrig-1].marked =
+                      el.TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
+                    // mtris.Elem(cnttrig).marked = 0;
+                    if (mtris[cnttrig-1].marked)
+                      cntm++;
+                  }
+                else
+                  {
+                    cntquad++;
                     // 2d: marked=2, 3d prisms: marked=1
-		    mquads[cntquad-1].marked =
+                    mquads[cntquad-1].marked =
                         el.TestRefinementFlag() ? 4-mesh.GetDimension() : 0 ;
-		    // mquads.Elem(cntquad).marked = 0;
-		    if (mquads[cntquad-1].marked)
-		      cntm++;
-		  }
-	      }
+                    // mquads.Elem(cntquad).marked = 0;
+                    if (mquads[cntquad-1].marked)
+                      cntm++;
+                  }
+              }
 
               if (printmessage_importance>0)
-		{
-		  ostringstream str;
-		  str << "with surface-elements: " << cntm;
-		  PrintMessage(4,str.str());
-		}
+                {
+                  ostringstream str;
+                  str << "with surface-elements: " << cntm;
+                  PrintMessage(4,str.str());
+                }
 
             // he/sz: das wird oben schon richtig gemacht.
             // hier sind die quads vergessen!
             /*
-	    if (mesh.GetDimension() == 2)
-	      {
-		cntm = 0;
-		for (i = 1; i <= mtris.Size(); i++)
-		  {
-		    mtris.Elem(i).marked =
-		      2 * mesh.SurfaceElement(i).TestRefinementFlag();
-		    //		  mtris.Elem(i).marked = 2;
-		    if (mtris.Elem(i).marked)
-		      cntm++;
-		  }
+            if (mesh.GetDimension() == 2)
+              {
+                cntm = 0;
+                for (i = 1; i <= mtris.Size(); i++)
+                  {
+                    mtris.Elem(i).marked =
+                      2 * mesh.SurfaceElement(i).TestRefinementFlag();
+                    //            mtris.Elem(i).marked = 2;
+                    if (mtris.Elem(i).marked)
+                      cntm++;
+                  }
 
-		if (!cntm)
-		  {
-		    for (i = 1; i <= mtris.Size(); i++)
-		      {
-			mtris.Elem(i).marked = 2;
-			cntm++;
-		      }
-		  }
-		cout << "trigs: " << mtris.Size() << " ";
-		cout << "marked: " << cntm << endl;
-	      }
+                if (!cntm)
+                  {
+                    for (i = 1; i <= mtris.Size(); i++)
+                      {
+                        mtris.Elem(i).marked = 2;
+                        cntm++;
+                      }
+                  }
+                cout << "trigs: " << mtris.Size() << " ";
+                cout << "marked: " << cntm << endl;
+              }
             */ 
             
-	    marked = (cntm > 0);
-	  }
-	else
-	  {
-	    marked = BTMarkTets (mtets, mprisms, mesh);
-	  }
+            marked = (cntm > 0);
+          }
+        else
+          {
+            marked = BTMarkTets (mtets, mprisms, mesh);
+          }
 
-	if (!marked) break;
+        if (!marked) break;
         
 
-	//(*testout) << "mtets " << mtets << endl;
+        //(*testout) << "mtets " << mtets << endl;
 
-	if (opt.refine_p)
-	  {
-	    PrintMessage(3,"refine p");
+        if (opt.refine_p)
+          {
+            PrintMessage(3,"refine p");
 
-	    for (auto ei : mtets.Range())
-	      mtets[ei].incorder = mtets[ei].marked ? 1 : 0;
-
-	    for (auto ei : mtets.Range())              
-	      if (mtets[ei].incorder)
-		mtets[ei].marked = 0;
-
-
-	    for (int i = 1; i <= mprisms.Size(); i++)
-	      mprisms[i-1].incorder = mprisms[i-1].marked ? 1 : 0;
-
-	    for (int i = 1; i <= mprisms.Size(); i++)
-	      if (mprisms[i-1].incorder)
-		mprisms[i-1].marked = 0;
-
-
-	    for (int i = 1; i <= mtris.Size(); i++)
-	      mtris[i-1].incorder = mtris[i-1].marked ? 1 : 0;
-
-	    for (int i = 1; i <= mtris.Size(); i++)
-	      {
-		if (mtris[i-1].incorder)
-		  mtris[i-1].marked = 0;
-	      }
-	  }
-
-	if (opt.refine_hp)
-	  {
-	    PrintMessage(3,"refine hp");
-	    TBitArray<PointIndex> singv(np);
-	    singv.Clear();
-
-	    if (mesh.GetDimension() == 3)
-	      {
-		for (auto & seg : mesh.LineSegments())
-		  {
-		    singv.SetBit (seg[0]);
-		    singv.SetBit (seg[1]);
-		  }
-		/*
-		  for ( i=1; i<= mesh.GetNSE(); i++)
-		  {
-		  const Element2d & sel = mesh.SurfaceElement(i);
-		  for(int j=1; j<=sel.GetNP(); j++)
-		  singv.Set(sel.PNum(j));
-		  }
-		*/
-	      }
-	    else
-	      {
-		// vertices with 2 different bnds
-		Array<int,PointIndex> bndind(np);
-		bndind = 0;
-		for (auto & seg : mesh.LineSegments())
-		  {
-		    int ednr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
-		    for (int j = 0; j < 2; j++)
-		      {
-			PointIndex pi = (j == 0) ? seg[0] : seg[1];
-			if (bndind[pi] == 0)
-			  bndind[pi] = ednr;
-			else if (bndind[pi] != ednr)
-			  singv.SetBit (pi);
-		      }
-		  }
-	      }
-
-
-
-	    // for (int i = 1; i <= mtets.Size(); i++)
             for (auto ei : mtets.Range())
-	      mtets[ei].incorder = 1;
-	    // for (int i = 1; i <= mtets.Size(); i++)
+              mtets[ei].incorder = mtets[ei].marked ? 1 : 0;
+
             for (auto ei : mtets.Range())              
-	      {
-		if (!mtets[ei].marked)
-		  mtets[ei].incorder = 0;
-		for (int j = 0; j < 4; j++)
-		  if (singv.Test (mtets[ei].pnums[j]))
-		    mtets[ei].incorder = 0;
-	      }
-	    // for (int i = 1; i <= mtets.Size(); i++)
+              if (mtets[ei].incorder)
+                mtets[ei].marked = 0;
+
+
+            for (int i = 1; i <= mprisms.Size(); i++)
+              mprisms[i-1].incorder = mprisms[i-1].marked ? 1 : 0;
+
+            for (int i = 1; i <= mprisms.Size(); i++)
+              if (mprisms[i-1].incorder)
+                mprisms[i-1].marked = 0;
+
+
+            for (int i = 1; i <= mtris.Size(); i++)
+              mtris[i-1].incorder = mtris[i-1].marked ? 1 : 0;
+
+            for (int i = 1; i <= mtris.Size(); i++)
+              {
+                if (mtris[i-1].incorder)
+                  mtris[i-1].marked = 0;
+              }
+          }
+
+        if (opt.refine_hp)
+          {
+            PrintMessage(3,"refine hp");
+            TBitArray<PointIndex> singv(np);
+            singv.Clear();
+
+            if (mesh.GetDimension() == 3)
+              {
+                for (auto & seg : mesh.LineSegments())
+                  {
+                    singv.SetBit (seg[0]);
+                    singv.SetBit (seg[1]);
+                  }
+                /*
+                  for ( i=1; i<= mesh.GetNSE(); i++)
+                  {
+                  const Element2d & sel = mesh.SurfaceElement(i);
+                  for(int j=1; j<=sel.GetNP(); j++)
+                  singv.Set(sel.PNum(j));
+                  }
+                */
+              }
+            else
+              {
+                // vertices with 2 different bnds
+                Array<int,PointIndex> bndind(np);
+                bndind = 0;
+                for (auto & seg : mesh.LineSegments())
+                  {
+                    int ednr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
+                    for (int j = 0; j < 2; j++)
+                      {
+                        PointIndex pi = (j == 0) ? seg[0] : seg[1];
+                        if (bndind[pi] == 0)
+                          bndind[pi] = ednr;
+                        else if (bndind[pi] != ednr)
+                          singv.SetBit (pi);
+                      }
+                  }
+              }
+
+
+
+            // for (int i = 1; i <= mtets.Size(); i++)
             for (auto ei : mtets.Range())
-	      if (mtets[ei].incorder)
-		mtets[ei].marked = 0;
+              mtets[ei].incorder = 1;
+            // for (int i = 1; i <= mtets.Size(); i++)
+            for (auto ei : mtets.Range())              
+              {
+                if (!mtets[ei].marked)
+                  mtets[ei].incorder = 0;
+                for (int j = 0; j < 4; j++)
+                  if (singv.Test (mtets[ei].pnums[j]))
+                    mtets[ei].incorder = 0;
+              }
+            // for (int i = 1; i <= mtets.Size(); i++)
+            for (auto ei : mtets.Range())
+              if (mtets[ei].incorder)
+                mtets[ei].marked = 0;
 
 
-	    for (int i = 1; i <= mprisms.Size(); i++)
-	      mprisms[i-1].incorder = 1;
-	    for (int i = 1; i <= mprisms.Size(); i++)
-	      {
-		if (!mprisms[i-1].marked)
-		  mprisms[i-1].incorder = 0;
-		for (int j = 0; j < 6; j++)
-		  if (singv.Test (mprisms[i-1].pnums[j]))
-		    mprisms[i-1].incorder = 0;
-	      }
-	    for (int i = 1; i <= mprisms.Size(); i++)
-	      if (mprisms[i-1].incorder)
-		mprisms[i-1].marked = 0;
+            for (int i = 1; i <= mprisms.Size(); i++)
+              mprisms[i-1].incorder = 1;
+            for (int i = 1; i <= mprisms.Size(); i++)
+              {
+                if (!mprisms[i-1].marked)
+                  mprisms[i-1].incorder = 0;
+                for (int j = 0; j < 6; j++)
+                  if (singv.Test (mprisms[i-1].pnums[j]))
+                    mprisms[i-1].incorder = 0;
+              }
+            for (int i = 1; i <= mprisms.Size(); i++)
+              if (mprisms[i-1].incorder)
+                mprisms[i-1].marked = 0;
 
 
-	    for (int i = 1; i <= mtris.Size(); i++)
-	      mtris[i-1].incorder = 1;
-	    for (int i = 1; i <= mtris.Size(); i++)
-	      {
-		if (!mtris[i-1].marked)
-		  mtris[i-1].incorder = 0;
-		for (int j = 0; j < 3; j++)
-		  if (singv.Test (mtris[i-1].pnums[j]))
-		    mtris[i-1].incorder = 0;
-	      }
-	    for (int i = 1; i <= mtris.Size(); i++)
-	      {
-		if (mtris[i-1].incorder)
-		  mtris[i-1].marked = 0;
-	      }
-	  }
+            for (int i = 1; i <= mtris.Size(); i++)
+              mtris[i-1].incorder = 1;
+            for (int i = 1; i <= mtris.Size(); i++)
+              {
+                if (!mtris[i-1].marked)
+                  mtris[i-1].incorder = 0;
+                for (int j = 0; j < 3; j++)
+                  if (singv.Test (mtris[i-1].pnums[j]))
+                    mtris[i-1].incorder = 0;
+              }
+            for (int i = 1; i <= mtris.Size(); i++)
+              {
+                if (mtris[i-1].incorder)
+                  mtris[i-1].marked = 0;
+              }
+          }
 
 
 
-	int hangingvol, hangingsurf, hangingedge;
+        int hangingvol, hangingsurf, hangingedge;
 
-	//cout << "write?" << endl;
-	//string yn;
-	//cin >> yn;
+        //cout << "write?" << endl;
+        //string yn;
+        //cin >> yn;
         
     
         (*testout) << "refine volume elements" << endl;
-	do
-	  {
-	    // refine volume elements
+        do
+          {
+            // refine volume elements
             timer_bisecttet.Start();
             (*opt.tracer)("bisecttet", false);
-	    size_t nel = mtets.Size();
-	    // for (size_t i = 0; i < nel; i++)
+            size_t nel = mtets.Size();
+            // for (size_t i = 0; i < nel; i++)
             for (auto ei : ngcore::T_Range<ElementIndex>(nel))
-	      if (mtets[ei].marked)
-		{
-		  MarkedTet oldtet = mtets[ei];
+              if (mtets[ei].marked)
+                {
+                  MarkedTet oldtet = mtets[ei];
                   
-		  SortedPointIndices<2> edge(oldtet.pnums[oldtet.tetedge1],
+                  SortedPointIndices<2> edge(oldtet.pnums[oldtet.tetedge1],
                                              oldtet.pnums[oldtet.tetedge2]);
 
-		  PointIndex newp;
+                  PointIndex newp;
                   if (auto optnewp = cutedges.GetIfUsed(edge))
                     {
                       newp = *optnewp;
                     }
-		  else
-		    {
-		      Point<3> npt = Center (mesh[edge[0]], mesh[edge[1]]);
+                  else
+                    {
+                      Point<3> npt = Center (mesh[edge[0]], mesh[edge[1]]);
                       newp = mesh.AddPoint (npt);
-		      cutedges.Set (edge, newp);
-		    }
+                      cutedges.Set (edge, newp);
+                    }
 
-		  MarkedTet newtet1, newtet2;
-		  BTBisectTet (oldtet, newp, newtet1, newtet2);
+                  MarkedTet newtet1, newtet2;
+                  BTBisectTet (oldtet, newp, newtet1, newtet2);
 
-		  mtets[ei] = newtet1;
-		  mtets.Append (newtet2);
-		  mesh.mlparentelement.Append (ei);
-		}
+                  mtets[ei] = newtet1;
+                  mtets.Append (newtet2);
+                  mesh.mlparentelement.Append (ei);
+                }
             timer_bisecttet.Stop();
             (*opt.tracer)("bisecttet", true);            
-	    int npr = mprisms.Size();
-	    for (int i = 1; i <= npr; i++)
-	      if (mprisms[i-1].marked)
-		{
-		  MarkedPrism oldprism;
-		  MarkedPrism newprism1, newprism2;
-		  PointIndex newp1, newp2;
+            int npr = mprisms.Size();
+            for (int i = 1; i <= npr; i++)
+              if (mprisms[i-1].marked)
+                {
+                  MarkedPrism oldprism;
+                  MarkedPrism newprism1, newprism2;
+                  PointIndex newp1, newp2;
 
-		  oldprism = mprisms[i-1];
-		  int pi1 = 0;
-		  if (pi1 == oldprism.markededge)
-		    pi1++;
-		  int pi2 = 3-pi1-oldprism.markededge;
+                  oldprism = mprisms[i-1];
+                  int pi1 = 0;
+                  if (pi1 == oldprism.markededge)
+                    pi1++;
+                  int pi2 = 3-pi1-oldprism.markededge;
                   
-		  SortedPointIndices<2> edge1(oldprism.pnums[pi1],
+                  SortedPointIndices<2> edge1(oldprism.pnums[pi1],
                                               oldprism.pnums[pi2]);
-		  SortedPointIndices<2> edge2(oldprism.pnums[pi1+3],
+                  SortedPointIndices<2> edge2(oldprism.pnums[pi1+3],
                                               oldprism.pnums[pi2+3]);
 
-		  if (cutedges.Used (edge1))
-		    newp1 = cutedges.Get(edge1);
-		  else
-		    {
-		      Point<3> npt = Center (mesh[edge1[0]], mesh[edge1[1]]);
+                  if (cutedges.Used (edge1))
+                    newp1 = cutedges.Get(edge1);
+                  else
+                    {
+                      Point<3> npt = Center (mesh[edge1[0]], mesh[edge1[1]]);
                       newp1 = mesh.AddPoint (npt);
-		      cutedges.Set (edge1, newp1);
-		    }
-		  if (cutedges.Used (edge2))
-		    newp2 = cutedges.Get(edge2);
-		  else
-		    {
-		      Point<3> npt = Center (mesh[edge2[0]], mesh[edge2[1]]);
+                      cutedges.Set (edge1, newp1);
+                    }
+                  if (cutedges.Used (edge2))
+                    newp2 = cutedges.Get(edge2);
+                  else
+                    {
+                      Point<3> npt = Center (mesh[edge2[0]], mesh[edge2[1]]);
                       newp2 = mesh.AddPoint (npt);
-		      cutedges.Set (edge2, newp2);
-		    }
-		
+                      cutedges.Set (edge2, newp2);
+                    }
+                
 
-		  BTBisectPrism (oldprism, newp1, newp2, newprism1, newprism2);
-		  //if(yn == "y")
-		  //  (*testout) << "bisected prism " << oldprism << "and got " << newprism1 << "and " << newprism2 << endl;
-		  mprisms[i-1] = newprism1;
-		  mprisms.Append (newprism2);
-		}
+                  BTBisectPrism (oldprism, newp1, newp2, newprism1, newprism2);
+                  //if(yn == "y")
+                  //  (*testout) << "bisected prism " << oldprism << "and got " << newprism1 << "and " << newprism2 << endl;
+                  mprisms[i-1] = newprism1;
+                  mprisms.Append (newprism2);
+                }
 
-	    int nid = mids.Size();
-	    for (int i = 1; i <= nid; i++)
-	      if (mids[i-1].marked)
-		{
-		  MarkedIdentification oldid,newid1,newid2;
-		  Array<PointIndex> newp;
+            int nid = mids.Size();
+            for (int i = 1; i <= nid; i++)
+              if (mids[i-1].marked)
+                {
+                  MarkedIdentification oldid,newid1,newid2;
+                  Array<PointIndex> newp;
 
-		  oldid = mids[i-1];
-		  
-		  Array<PointIndices<2>> edges;
-		  edges.Append( {
+                  oldid = mids[i-1];
+                  
+                  Array<PointIndices<2>> edges;
+                  edges.Append( {
                       oldid.pnums[oldid.markededge],
                       oldid.pnums[(oldid.markededge+1)%oldid.np] } );
-		  edges.Append( {
+                  edges.Append( {
                       oldid.pnums[oldid.markededge + oldid.np],
                       oldid.pnums[(oldid.markededge+1)%oldid.np + oldid.np] } );
                   
-		  if(oldid.np == 4)
-		    {
-		      edges.Append( {
+                  if(oldid.np == 4)
+                    {
+                      edges.Append( {
                           oldid.pnums[(oldid.markededge+2)%oldid.np],
                           oldid.pnums[(oldid.markededge+3)%oldid.np]} );
-		      edges.Append( {
+                      edges.Append( {
                           oldid.pnums[(oldid.markededge+2)%oldid.np + oldid.np],
                           oldid.pnums[(oldid.markededge+3)%oldid.np + oldid.np] } );
-		    }
-		  for (int j = 0; j < edges.Size(); j++)
-		    {
-		      edges[j].Sort();
+                    }
+                  for (int j = 0; j < edges.Size(); j++)
+                    {
+                      edges[j].Sort();
 
-		      if(cutedges.Used(edges[j]))
-			newp.Append(cutedges.Get(edges[j]));
-		      else
-			{
-			  Point<3> npt = Center (mesh.Point (edges[j][0]),
-						mesh.Point (edges[j][1]));
-			  newp.Append(mesh.AddPoint(npt));
-			  cutedges.Set(edges[j],newp[j]);
-			}			 
-		    }
-		  
-		  BTBisectIdentification(oldid,newp,newid1,newid2);
-		  mids[i-1] = newid1;
-		  mids.Append(newid2);		  
-		}
+                      if(cutedges.Used(edges[j]))
+                        newp.Append(cutedges.Get(edges[j]));
+                      else
+                        {
+                          Point<3> npt = Center (mesh.Point (edges[j][0]),
+                                                mesh.Point (edges[j][1]));
+                          newp.Append(mesh.AddPoint(npt));
+                          cutedges.Set(edges[j],newp[j]);
+                        }                        
+                    }
+                  
+                  BTBisectIdentification(oldid,newp,newid1,newid2);
+                  mids[i-1] = newid1;
+                  mids.Append(newid2);            
+                }
 
-	    
-	    //IdentifyCutEdges(mesh, cutedges);
+            
+            //IdentifyCutEdges(mesh, cutedges);
             
             (*opt.tracer)("mark elements", false);
 
-	    hangingvol = 
-	      MarkHangingTets (mtets, cutedges, opt.task_manager) +
-	      MarkHangingPrisms (mprisms, cutedges) +
-	      MarkHangingIdentifications (mids, cutedges);
+            hangingvol = 
+              MarkHangingTets (mtets, cutedges, opt.task_manager) +
+              MarkHangingPrisms (mprisms, cutedges) +
+              MarkHangingIdentifications (mids, cutedges);
 
             (*opt.tracer)("mark elements", true);
 
-	    size_t nsel = mtris.Size();
+            size_t nsel = mtris.Size();
             timer_bisecttrig.Start();
             (*opt.tracer)("Bisect trigs", false);            
-	    for (size_t i = 0; i < nsel; i++)
-	      if (mtris[i].marked)
-		{
-		  MarkedTri newtri1, newtri2;
-		  PointIndex newp;
-		
-		  MarkedTri oldtri = mtris[i];
-		  PointIndex oldpi1 = oldtri.pnums[(oldtri.markededge+1)%3];
-		  PointIndex oldpi2 = oldtri.pnums[(oldtri.markededge+2)%3];
-		  PointIndices<2> edge(oldpi1, oldpi2);
-		  edge.Sort();
+            for (size_t i = 0; i < nsel; i++)
+              if (mtris[i].marked)
+                {
+                  MarkedTri newtri1, newtri2;
+                  PointIndex newp;
+                
+                  MarkedTri oldtri = mtris[i];
+                  PointIndex oldpi1 = oldtri.pnums[(oldtri.markededge+1)%3];
+                  PointIndex oldpi2 = oldtri.pnums[(oldtri.markededge+2)%3];
+                  PointIndices<2> edge(oldpi1, oldpi2);
+                  edge.Sort();
 
                   int si = mesh.GetFaceDescriptor (oldtri.surfid).SurfNr();
                   PointGeomInfo npgi;
                   PointGeomInfo gi1 = oldtri.pgeominfo[(oldtri.markededge+1)%3];
                   PointGeomInfo gi2 = oldtri.pgeominfo[(oldtri.markededge+2)%3];
 
-		  if (cutedges.Used (edge))
-		    {
-		      newp = cutedges.Get(edge);
+                  if (cutedges.Used (edge))
+                    {
+                      newp = cutedges.Get(edge);
                       npgi.u = 0.5*(gi1.u + gi2.u);
                       npgi.v = 0.5*(gi1.v + gi2.v);
                       geo.ProjectPointGI (si, mesh[newp], npgi);
-		    }
-		  else
-		    {
-		      Point<3> npt = Center (mesh.Point (edge[0]),
+                    }
+                  else
+                    {
+                      Point<3> npt = Center (mesh.Point (edge[0]),
                                              mesh.Point (edge[1]));
-		      newp = mesh.AddPoint (npt);
+                      newp = mesh.AddPoint (npt);
                       cutedges.Set (edge, newp);
                       geo.PointBetween (mesh.Point (oldpi1), mesh.Point (oldpi2),
                                       0.5, si, gi1, gi2, mesh.Point (newp), npgi);
-		    }
-		
-		  BTBisectTri (oldtri, newp, npgi, newtri1, newtri2);
-		
-		  mtris[i] = newtri1;
-		  mtris.Append (newtri2);
-		  mesh.mlparentsurfaceelement.Append (SurfaceElementIndex::FromNr0(i));
-		}
+                    }
+                
+                  BTBisectTri (oldtri, newp, npgi, newtri1, newtri2);
+                
+                  mtris[i] = newtri1;
+                  mtris.Append (newtri2);
+                  mesh.mlparentsurfaceelement.Append (SurfaceElementIndex::FromNr0(i));
+                }
 
             timer_bisecttrig.Stop();
             (*opt.tracer)("Bisect trigs", true);                        
             
-	    int nquad = mquads.Size();
-	    for (int i = 1; i <= nquad; i++)
-	      if (mquads[i-1].marked)
-		{
-		  MarkedQuad oldquad;
-		  MarkedQuad newquad1, newquad2;
-		  PointIndex newp1, newp2;
-		
-		  oldquad = mquads[i-1];
+            int nquad = mquads.Size();
+            for (int i = 1; i <= nquad; i++)
+              if (mquads[i-1].marked)
+                {
+                  MarkedQuad oldquad;
+                  MarkedQuad newquad1, newquad2;
+                  PointIndex newp1, newp2;
+                
+                  oldquad = mquads[i-1];
                   /*
-		  INDEX_2 edge1(oldquad.pnums[0],
-				oldquad.pnums[1]);
-		  INDEX_2 edge2(oldquad.pnums[2],
-				oldquad.pnums[3]);
+                  INDEX_2 edge1(oldquad.pnums[0],
+                                oldquad.pnums[1]);
+                  INDEX_2 edge2(oldquad.pnums[2],
+                                oldquad.pnums[3]);
                   */
                   PointIndices<2> edge1, edge2;
                   PointGeomInfo pgi11, pgi12, pgi21, pgi22;
@@ -3566,35 +3566,35 @@ namespace netgen
                   }
                   
                   edge1.Sort();
-		  edge2.Sort();
+                  edge2.Sort();
 
-		  if (cutedges.Used (edge1))
-		    {
-		      newp1 = cutedges.Get(edge1);
-		    }
-		  else
-		    {
-		      Point<3> np1 = Center (mesh.Point (edge1[0]),
+                  if (cutedges.Used (edge1))
+                    {
+                      newp1 = cutedges.Get(edge1);
+                    }
+                  else
+                    {
+                      Point<3> np1 = Center (mesh.Point (edge1[0]),
                                              mesh.Point (edge1[1]));
                       newp1 = mesh.AddPoint (np1);
-		      cutedges.Set (edge1, newp1);
+                      cutedges.Set (edge1, newp1);
                     }
 
-		  if (cutedges.Used (edge2))
-		    {
-		      newp2 = cutedges.Get(edge2);
-		    }
-		  else
-		    {
-		      Point<3> np2 = Center (mesh.Point (edge2[0]),
+                  if (cutedges.Used (edge2))
+                    {
+                      newp2 = cutedges.Get(edge2);
+                    }
+                  else
+                    {
+                      Point<3> np2 = Center (mesh.Point (edge2[0]),
                                              mesh.Point (edge2[1]));
-		      newp2 = mesh.AddPoint (np2);
-		      cutedges.Set (edge2, newp2);
+                      newp2 = mesh.AddPoint (np2);
+                      cutedges.Set (edge2, newp2);
                     }
 
-		  PointGeomInfo npgi1, npgi2;
-		
-		  int si = mesh.GetFaceDescriptor (oldquad.surfid).SurfNr();
+                  PointGeomInfo npgi1, npgi2;
+                
+                  int si = mesh.GetFaceDescriptor (oldquad.surfid).SurfNr();
                   geo.PointBetween(mesh.Point (edge1[0]), mesh.Point (edge1[1]),
                                    0.5, si,
                                    pgi11,
@@ -3606,81 +3606,81 @@ namespace netgen
                                     pgi22,
                                     mesh.Point (newp2), npgi2);
 
-		  BTBisectQuad (oldquad, newp1, npgi1, newp2, npgi2,
-				newquad1, newquad2);
+                  BTBisectQuad (oldquad, newp1, npgi1, newp2, npgi2,
+                                newquad1, newquad2);
                   
-		  mquads[i-1] = newquad1;
-		  mquads.Append (newquad2);
-		}
+                  mquads[i-1] = newquad1;
+                  mquads.Append (newquad2);
+                }
 
             timer1b.Start();
-	    hangingsurf = 
-	      MarkHangingTris (mtris, cutedges, opt.task_manager) +
-	      MarkHangingQuads (mquads, cutedges);
+            hangingsurf = 
+              MarkHangingTris (mtris, cutedges, opt.task_manager) +
+              MarkHangingQuads (mquads, cutedges);
 
-	    hangingedge = mesh.GetDimension() == 3 ? 0 : MarkHangingIdentifications(mids, cutedges);
+            hangingedge = mesh.GetDimension() == 3 ? 0 : MarkHangingIdentifications(mids, cutedges);
             timer1b.Stop();
             timer_bisectsegms.Start();
-	    int nseg = mesh.GetNSeg ();
-	    for (SegmentIndex i : T_Range<SegmentIndex>(nseg))
-	      {
-		Segment & seg = mesh[i];
-		PointIndices<2> edge(seg[0], seg[1]);
-		edge.Sort();
-		if (cutedges.Used (edge))
-		  {
-		    hangingedge = 1;
-		    Segment nseg1 = seg;
-		    Segment nseg2 = seg;
-		  
-		    PointIndex newpi = cutedges.Get(edge);
-		  
-		    nseg1[1] = newpi;
-		    nseg2[0] = newpi;
-		  
-		    EdgePointGeomInfo newepgi;
-		  
-		    geo.PointBetweenEdge(mesh.Point (seg[0]), mesh.Point (seg[1]),
+            int nseg = mesh.GetNSeg ();
+            for (SegmentIndex i : T_Range<SegmentIndex>(nseg))
+              {
+                Segment & seg = mesh[i];
+                PointIndices<2> edge(seg[0], seg[1]);
+                edge.Sort();
+                if (cutedges.Used (edge))
+                  {
+                    hangingedge = 1;
+                    Segment nseg1 = seg;
+                    Segment nseg2 = seg;
+                  
+                    PointIndex newpi = cutedges.Get(edge);
+                  
+                    nseg1[1] = newpi;
+                    nseg2[0] = newpi;
+                  
+                    EdgePointGeomInfo newepgi;
+                  
+                    geo.PointBetweenEdge(mesh.Point (seg[0]), mesh.Point (seg[1]),
                                          0.5,
                                          mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0),
                                          mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1),
                                          seg.EPGeomInfo(0), seg.EPGeomInfo(1),
                                          mesh.Point (newpi), newepgi, mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr());
-		    nseg1.EPGeomInfo(1) = newepgi;
-		    nseg2.EPGeomInfo(0) = newepgi;
-		  
-		    mesh[i] = nseg1;
-		    mesh.AddSegment (nseg2);
-		  }
-	      }
+                    nseg1.EPGeomInfo(1) = newepgi;
+                    nseg2.EPGeomInfo(0) = newepgi;
+                  
+                    mesh[i] = nseg1;
+                    mesh.AddSegment (nseg2);
+                  }
+              }
 
             timer_bisectsegms.Stop();
-	  }
-	while (hangingvol || hangingsurf || hangingedge);
+          }
+        while (hangingvol || hangingsurf || hangingedge);
         
-	/*
+        /*
         if (printmessage_importance>0)
-	  {
-	    ostringstream strstr;
-	    strstr << mtets.Size() << " tets" << endl
-		   << mtris.Size() << " trigs" << endl;
-	    if (mprisms.Size())
-	      {
-		strstr << mprisms.Size() << " prisms" << endl
-		       << mquads.Size() << " quads" << endl;
-	      }
-	    strstr << mesh.GetNP() << " points";
-	    PrintMessage(4,strstr.str());
-	  }
-	*/
-	PrintMessage (4, mtets.Size(), " tets");
-	PrintMessage (4, mtris.Size(), " trigs");
-	if (mprisms.Size())
-	  {
-	    PrintMessage (4, mprisms.Size(), " prisms");
-	    PrintMessage (4, mquads.Size(), " quads");
-	  }
-	PrintMessage (4, mesh.GetNP(), " points");
+          {
+            ostringstream strstr;
+            strstr << mtets.Size() << " tets" << endl
+                   << mtris.Size() << " trigs" << endl;
+            if (mprisms.Size())
+              {
+                strstr << mprisms.Size() << " prisms" << endl
+                       << mquads.Size() << " quads" << endl;
+              }
+            strstr << mesh.GetNP() << " points";
+            PrintMessage(4,strstr.str());
+          }
+        */
+        PrintMessage (4, mtets.Size(), " tets");
+        PrintMessage (4, mtris.Size(), " trigs");
+        if (mprisms.Size())
+          {
+            PrintMessage (4, mprisms.Size(), " prisms");
+            PrintMessage (4, mquads.Size(), " quads");
+          }
+        PrintMessage (4, mesh.GetNP(), " points");
       }
 
     timer1.Stop();
@@ -3690,46 +3690,46 @@ namespace netgen
 
     if (opt.refine_hp)
       {
-	//
-	Array<int,PointIndex> v_order (mesh.GetNP());
-	v_order = 0;
-	if (mesh.GetDimension() == 3)
-	  {
-	    // for (int i = 1; i <= mtets.Size(); i++)
+        //
+        Array<int,PointIndex> v_order (mesh.GetNP());
+        v_order = 0;
+        if (mesh.GetDimension() == 3)
+          {
+            // for (int i = 1; i <= mtets.Size(); i++)
             for (auto ei : mtets.Range())
-	      if (mtets[ei].incorder)
-		mtets[ei].order++;
+              if (mtets[ei].incorder)
+                mtets[ei].order++;
       
-	    // for (int i = 0; i < mtets.Size(); i++)
+            // for (int i = 0; i < mtets.Size(); i++)
             for (auto ei : mtets.Range())              
-	      for (int j = 0; j < 4; j++)
-		if (int(mtets[ei].order) > v_order[mtets[ei].pnums[j]])
-		  v_order[mtets[ei].pnums[j]] = mtets[ei].order;
-	    // for (int i = 0; i < mtets.Size(); i++)
+              for (int j = 0; j < 4; j++)
+                if (int(mtets[ei].order) > v_order[mtets[ei].pnums[j]])
+                  v_order[mtets[ei].pnums[j]] = mtets[ei].order;
+            // for (int i = 0; i < mtets.Size(); i++)
             for (auto ei : mtets.Range())                            
-	      for (int j = 0; j < 4; j++)
-		if (int(mtets[ei].order) < v_order[mtets[ei].pnums[j]]-1)
-		  mtets[ei].order = v_order[mtets[ei].pnums[j]]-1;
-	  }
-	else
-	  {
-	    for (int i = 1; i <= mtris.Size(); i++)
-	      if (mtris[i-1].incorder)
-		{
-		  mtris[i-1].order++;
-		}
+              for (int j = 0; j < 4; j++)
+                if (int(mtets[ei].order) < v_order[mtets[ei].pnums[j]]-1)
+                  mtets[ei].order = v_order[mtets[ei].pnums[j]]-1;
+          }
+        else
+          {
+            for (int i = 1; i <= mtris.Size(); i++)
+              if (mtris[i-1].incorder)
+                {
+                  mtris[i-1].order++;
+                }
 
-	    for (int i = 0; i < mtris.Size(); i++)
-	      for (int j = 0; j < 3; j++)
-		if (int(mtris[i].order) > v_order[mtris[i].pnums[j]])
-		  v_order[mtris[i].pnums[j]] = mtris[i].order;
-	    for (int i = 0; i < mtris.Size(); i++)
-	      {
-		for (int j = 0; j < 3; j++)
-		  if (int(mtris[i].order) < v_order[mtris[i].pnums[j]]-1)
-		    mtris[i].order = v_order[mtris[i].pnums[j]]-1;
-	      }
-	  }
+            for (int i = 0; i < mtris.Size(); i++)
+              for (int j = 0; j < 3; j++)
+                if (int(mtris[i].order) > v_order[mtris[i].pnums[j]])
+                  v_order[mtris[i].pnums[j]] = mtris[i].order;
+            for (int i = 0; i < mtris.Size(); i++)
+              {
+                for (int j = 0; j < 3; j++)
+                  if (int(mtris[i].order) < v_order[mtris[i].pnums[j]]-1)
+                    mtris[i].order = v_order[mtris[i].pnums[j]]-1;
+              }
+          }
       }
 
     timer2.Stop();
@@ -3749,12 +3749,12 @@ namespace netgen
     /*
     for (int i = 1; i <= mtets.Size(); i++)
       {
-	Element el(TET);
-	el.SetIndex (mtets.Get(i).matindex);
-	for (int j = 1; j <= 4; j++)
-	  el.PNum(j) = mtets.Get(i).pnums[j-1];
-	el.SetOrder (mtets.Get(i).order);
-	mesh.AddVolumeElement (el);
+        Element el(TET);
+        el.SetIndex (mtets.Get(i).matindex);
+        for (int j = 1; j <= 4; j++)
+          el.PNum(j) = mtets.Get(i).pnums[j-1];
+        el.SetOrder (mtets.Get(i).order);
+        mesh.AddVolumeElement (el);
       }
     */
     ngcore::ParallelForRange
@@ -3777,57 +3777,57 @@ namespace netgen
     
     for (int i = 1; i <= mprisms.Size(); i++)
       {
-	Element el(PRISM);
-	el.SetIndex (mprisms[i-1].matindex);
-	for (int j = 1; j <= 6; j++)
-	  el.PNum(j) = mprisms[i-1].pnums[j-1];
-	el.SetOrder (mprisms[i-1].order);
+        Element el(PRISM);
+        el.SetIndex (mprisms[i-1].matindex);
+        for (int j = 1; j <= 6; j++)
+          el.PNum(j) = mprisms[i-1].pnums[j-1];
+        el.SetOrder (mprisms[i-1].order);
 
-	// degenerated prism ?
-	static const int map1[] = { 3, 2, 5, 6, 1 };
-	static const int map2[] = { 1, 3, 6, 4, 2 };
-	static const int map3[] = { 2, 1, 4, 5, 3 };
+        // degenerated prism ?
+        static const int map1[] = { 3, 2, 5, 6, 1 };
+        static const int map2[] = { 1, 3, 6, 4, 2 };
+        static const int map3[] = { 2, 1, 4, 5, 3 };
       
 
-	const int * map = NULL;
-	int deg1 = 0, deg2 = 0, deg3 = 0;
-	// int deg = 0;
-	if (el.PNum(1) == el.PNum(4)) { map = map1; deg1 = 1; }
-	if (el.PNum(2) == el.PNum(5)) { map = map2; deg2 = 1; }
-	if (el.PNum(3) == el.PNum(6)) { map = map3; deg3 = 1; }
-	  
-	switch (deg1+deg2+deg3)
-	  {
-	  case 1:
-	    {
-	      for (int j = 1; j <= 5; j++)
-		el.PNum(j) = mprisms[i-1].pnums[map[j-1]-1];
-	    
-	      el.SetType (PYRAMID);
-	      break;
-	    }
-	  case 2:
-	    {
-	      static const int tetmap1[] = { 1, 2, 3, 4 };
-	      static const int tetmap2[] = { 2, 3, 1, 5 };
-	      static const int tetmap3[] = { 3, 1, 2, 6 };
-	      if (!deg1) map = tetmap1;
-	      if (!deg2) map = tetmap2;
-	      if (!deg3) map = tetmap3; 
-	      for (int j = 1; j <= 4; j++)
-		el.PNum(j) = mprisms[i-1].pnums[map[j-1]-1];
-	      /*
-		if (!deg1) el.PNum(4) = el.PNum(4);
-		if (!deg2) el.PNum(4) = el.PNum(5);
-		if (!deg3) el.PNum(4) = el.PNum(6);
-	      */
-	      el.SetType(TET);
-	      break;
-	    }
-	  default:
-	    ;
-	  }
-	mesh.AddVolumeElement (el);
+        const int * map = NULL;
+        int deg1 = 0, deg2 = 0, deg3 = 0;
+        // int deg = 0;
+        if (el.PNum(1) == el.PNum(4)) { map = map1; deg1 = 1; }
+        if (el.PNum(2) == el.PNum(5)) { map = map2; deg2 = 1; }
+        if (el.PNum(3) == el.PNum(6)) { map = map3; deg3 = 1; }
+          
+        switch (deg1+deg2+deg3)
+          {
+          case 1:
+            {
+              for (int j = 1; j <= 5; j++)
+                el.PNum(j) = mprisms[i-1].pnums[map[j-1]-1];
+            
+              el.SetType (PYRAMID);
+              break;
+            }
+          case 2:
+            {
+              static const int tetmap1[] = { 1, 2, 3, 4 };
+              static const int tetmap2[] = { 2, 3, 1, 5 };
+              static const int tetmap3[] = { 3, 1, 2, 6 };
+              if (!deg1) map = tetmap1;
+              if (!deg2) map = tetmap2;
+              if (!deg3) map = tetmap3; 
+              for (int j = 1; j <= 4; j++)
+                el.PNum(j) = mprisms[i-1].pnums[map[j-1]-1];
+              /*
+                if (!deg1) el.PNum(4) = el.PNum(4);
+                if (!deg2) el.PNum(4) = el.PNum(5);
+                if (!deg3) el.PNum(4) = el.PNum(6);
+              */
+              el.SetType(TET);
+              break;
+            }
+          default:
+            ;
+          }
+        mesh.AddVolumeElement (el);
       }
   
     mesh.ClearSurfaceElements();
@@ -3837,15 +3837,15 @@ namespace netgen
     /*
     for (auto & trig : mtris)
       {
-	Element2d el(TRIG);
-	el.SetIndex (trig.surfid);
-	el.SetOrder (trig.order);
-	for (int j = 0; j < 3; j++)
-	  {
-	    el[j] = trig.pnums[j];
-	    el.GeomInfoPi(j+1) = trig.pgeominfo[j];
-	  }
-	mesh.AddSurfaceElement (el);
+        Element2d el(TRIG);
+        el.SetIndex (trig.surfid);
+        el.SetOrder (trig.order);
+        for (int j = 0; j < 3; j++)
+          {
+            el[j] = trig.pnums[j];
+            el.GeomInfoPi(j+1) = trig.pgeominfo[j];
+          }
+        mesh.AddSurfaceElement (el);
       }
     */
 
@@ -3873,12 +3873,12 @@ namespace netgen
     
     for (int i = 1; i <= mquads.Size(); i++)
       {
-	Element2d el(QUAD);
-	el.SetIndex (mquads[i-1].surfid);
-	for (int j = 1; j <= 4; j++)
-	  el.PNum(j) = mquads[i-1].pnums[j-1];
-	Swap (el.PNum(3), el.PNum(4));
-	mesh.AddSurfaceElement (el);
+        Element2d el(QUAD);
+        el.SetIndex (mquads[i-1].surfid);
+        for (int j = 1; j <= 4; j++)
+          el.PNum(j) = mquads[i-1].pnums[j-1];
+        Swap (el.PNum(3), el.PNum(4));
+        mesh.AddSurfaceElement (el);
       }
     timer2b.Stop();
 
@@ -3889,13 +3889,13 @@ namespace netgen
     // if (mesh.mglevels <= 2)
     if (mesh.level_nv.Size() <= 1)
       {
-	PrintMessage(4,"RESETTING mlbetweennodes");
+        PrintMessage(4,"RESETTING mlbetweennodes");
         /*
-	for (int i = 1; i <= np; i++)
-	  {
-	    mesh.mlbetweennodes.Elem(i).I1() = 0;
-	    mesh.mlbetweennodes.Elem(i).I2() = 0;
-	  }
+        for (int i = 1; i <= np; i++)
+          {
+            mesh.mlbetweennodes.Elem(i).I1() = 0;
+            mesh.mlbetweennodes.Elem(i).I2() = 0;
+          }
         */
         for (auto i : mesh.mlbetweennodes.Range())
           mesh.mlbetweennodes[i] = { PointIndex::INVALID, PointIndex::INVALID };
@@ -3924,13 +3924,13 @@ namespace netgen
     /*
     for (int i = 0; i < cutedges.Size(); i++)
       if (cutedges.UsedPos0(i))
-	{
-	  INDEX_2 edge;
-	  PointIndex newpi;
-	  cutedges.GetData0 (i, edge, newpi);
-	  isnewpoint.SetBit(newpi);
-	  mesh.mlbetweennodes[newpi] = edge;
-	}
+        {
+          INDEX_2 edge;
+          PointIndex newpi;
+          cutedges.GetData0 (i, edge, newpi);
+          isnewpoint.SetBit(newpi);
+          mesh.mlbetweennodes[newpi] = edge;
+        }
     */
     for (auto [edge,newpi] : cutedges)
       {
@@ -3964,7 +3964,7 @@ namespace netgen
     {
     int n1 = mprisms.Get(i).pnums[j-1];
     int n2 = mprisms.Get(i).pnums[(j+2)%6];
-    //	    if (n1 != n2)
+    //      if (n1 != n2)
     {
     int found = 0;
     for (k = 1; k <= conto.EntrySize(n1); k++)
@@ -3986,10 +3986,10 @@ namespace netgen
     //       for (i = 1; i <= np; i++)
     //       {
     //       (*testout) << "node " << i << ": ";
-    // 	  for (j = 1; j <= conto.EntrySize(i); j++)
-    // 	  (*testout) << conto.Get(i, j) << " ";
-    // 	  (*testout) << endl;
-    // 	}
+    //    for (j = 1; j <= conto.EntrySize(i); j++)
+    //    (*testout) << conto.Get(i, j) << " ";
+    //    (*testout) << endl;
+    //  }
 
   
     for (i = 1; i <= np; i++)
@@ -4016,46 +4016,46 @@ namespace netgen
     // update identification tables    
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	idmap_type identmap;
+        idmap_type identmap;
 
-	mesh.GetIdentifications().GetMap (i, identmap);
-
-
-	/*
-	  for (j = 1; j <= cutedges.GetNBags(); j++)
-	  for (k = 1; k <= cutedges.GetBagSize(j); k++)
-	  {
-	  INDEX_2 i2;
-	  int newpi;
-	  cutedges.GetData (j, k, i2, newpi);
-	  INDEX_2 oi2(identmap.Get(i2.I1()),
-	  identmap.Get(i2.I2()));
-	  oi2.Sort();
-	  if (cutedges.Used (oi2))
-	  {
-	  int onewpi = cutedges.Get(oi2);
-	  mesh.GetIdentifications().Add (newpi, onewpi, i);
-	  }
-	  }
-	*/
+        mesh.GetIdentifications().GetMap (i, identmap);
 
 
         /*
-	for (int j = 0; j < cutedges.Size(); j++)
-	  if (cutedges.UsedPos0(j))
-	    {
-	      PointIndices<2> i2;
-	      PointIndex newpi;
-	      cutedges.GetData0 (j, i2, newpi);
-	      PointIndices<2> oi2(identmap[i2[0]], 
+          for (j = 1; j <= cutedges.GetNBags(); j++)
+          for (k = 1; k <= cutedges.GetBagSize(j); k++)
+          {
+          INDEX_2 i2;
+          int newpi;
+          cutedges.GetData (j, k, i2, newpi);
+          INDEX_2 oi2(identmap.Get(i2.I1()),
+          identmap.Get(i2.I2()));
+          oi2.Sort();
+          if (cutedges.Used (oi2))
+          {
+          int onewpi = cutedges.Get(oi2);
+          mesh.GetIdentifications().Add (newpi, onewpi, i);
+          }
+          }
+        */
+
+
+        /*
+        for (int j = 0; j < cutedges.Size(); j++)
+          if (cutedges.UsedPos0(j))
+            {
+              PointIndices<2> i2;
+              PointIndex newpi;
+              cutedges.GetData0 (j, i2, newpi);
+              PointIndices<2> oi2(identmap[i2[0]], 
                                   identmap[i2[1]]);
-	      oi2.Sort();
-	      if (cutedges.Used (oi2))
-		{
-		  PointIndex onewpi = cutedges.Get(oi2);
-		  mesh.GetIdentifications().Add (newpi, onewpi, i);
-		}
-	    }
+              oi2.Sort();
+              if (cutedges.Used (oi2))
+                {
+                  PointIndex onewpi = cutedges.Get(oi2);
+                  mesh.GetIdentifications().Add (newpi, onewpi, i);
+                }
+            }
         */
         for (auto [i2, newpi] : cutedges)
           {
@@ -4086,16 +4086,16 @@ namespace netgen
 
     if(noprojection)
       {
-	do_repair = false;
-	// for(int ii=1; ii<=mesh.GetNP(); ii++)
+        do_repair = false;
+        // for(int ii=1; ii<=mesh.GetNP(); ii++)
         for (auto ii : mesh.Points().Range())
-	  {
-	    if(isnewpoint.Test(ii) && mesh.mlbetweennodes[ii][0].IsValid())
-	      {
-		mesh.Point(ii) = Center(mesh.Point(mesh.mlbetweennodes[ii][0]),
+          {
+            if(isnewpoint.Test(ii) && mesh.mlbetweennodes[ii][0].IsValid())
+              {
+                mesh.Point(ii) = Center(mesh.Point(mesh.mlbetweennodes[ii][0]),
                                         mesh.Point(mesh.mlbetweennodes[ii][1]));
-	      }
-	  }
+              }
+          }
       }
 
     
@@ -4116,84 +4116,84 @@ namespace netgen
    
     if(do_repair || quality_loss != NULL)
       {
-	GetPureBadness(mesh,pure_badness,isnewpoint);
+        GetPureBadness(mesh,pure_badness,isnewpoint);
       }
 
 
     if(do_repair)  // by Markus W
       {
-	const double max_worsening = 1;
-	
-	const bool uselocalworsening = false;
-	
-	// bool repaired = false;
-	
-	Validate(mesh,bad_elts,pure_badness,max_worsening,uselocalworsening);
-	
+        const double max_worsening = 1;
+        
+        const bool uselocalworsening = false;
+        
+        // bool repaired = false;
+        
+        Validate(mesh,bad_elts,pure_badness,max_worsening,uselocalworsening);
+        
         if (printmessage_importance>0)
-	  {
-	    ostringstream strstr;
-	    for(int ii=0; ii<bad_elts.Size(); ii++)
-	      strstr << "bad element " << bad_elts[ii] << "\n";
-	    PrintMessage(1,strstr.str());
-	  }
-	if(repaired_once || bad_elts.Size() > 0)
-	  {
-	    clock_t t1(clock());
-	    
-	    
-	    // update id-maps
-	    int j=0;
-	    for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
-	      {
-		if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
-		  {
-		    mesh.GetIdentifications().GetMap(i,*idmaps[j],true);
-		    j++;
-		  }
-	      }
+          {
+            ostringstream strstr;
+            for(int ii=0; ii<bad_elts.Size(); ii++)
+              strstr << "bad element " << bad_elts[ii] << "\n";
+            PrintMessage(1,strstr.str());
+          }
+        if(repaired_once || bad_elts.Size() > 0)
+          {
+            clock_t t1(clock());
+            
+            
+            // update id-maps
+            int j=0;
+            for(int i=1; i<=mesh.GetIdentifications().GetMaxNr(); i++)
+              {
+                if(mesh.GetIdentifications().GetType(i) == Identifications::PERIODIC)
+                  {
+                    mesh.GetIdentifications().GetMap(i,*idmaps[j],true);
+                    j++;
+                  }
+              }
 
     
-	    // do the repair
-	    try
-	      {
-		RepairBisection(mesh,bad_elts,isnewpoint,*this,
-				pure_badness,
-				max_worsening,uselocalworsening,
-				idmaps);
-		// repaired = true;
-		repaired_once = true;
-	      }
-	    catch(NgException & ex)
-	      {
-		PrintMessage(1,string("Problem: ") + ex.What());
-	      }
+            // do the repair
+            try
+              {
+                RepairBisection(mesh,bad_elts,isnewpoint,*this,
+                                pure_badness,
+                                max_worsening,uselocalworsening,
+                                idmaps);
+                // repaired = true;
+                repaired_once = true;
+              }
+            catch(NgException & ex)
+              {
+                PrintMessage(1,string("Problem: ") + ex.What());
+              }
 
 
             if (printmessage_importance>0)
             {
-	      ostringstream strstr;
+              ostringstream strstr;
               strstr << "Time for Repair: " << double(clock() - t1)/double(CLOCKS_PER_SEC) << endl
-		     << "bad elements after repair: " << bad_elts << endl;
-	      PrintMessage(1,strstr.str());
+                     << "bad elements after repair: " << bad_elts << endl;
+              PrintMessage(1,strstr.str());
             }
-	    
-	    if(quality_loss != NULL)
-	      Validate(mesh,bad_elts,pure_badness,1e100,uselocalworsening,quality_loss);
+            
+            if(quality_loss != NULL)
+              Validate(mesh,bad_elts,pure_badness,1e100,uselocalworsening,quality_loss);
 
-	    if(idmaps.Size() == 0)
-	      UpdateEdgeMarks(mesh,idmaps);
-	    
-	    /*
-	    if(1==1)
-	      UpdateEdgeMarks(mesh,idmaps);
-	    else
-	      mesh.mglevels = 1;
-	    */
-	    
-	    //mesh.ImproveMesh();
-	    
-	  }
+            if(idmaps.Size() == 0)
+              UpdateEdgeMarks(mesh,idmaps);
+            
+            /*
+            if(1==1)
+              UpdateEdgeMarks(mesh,idmaps);
+            else
+              mesh.mglevels = 1;
+            */
+            
+            //mesh.ImproveMesh();
+            
+          }
       }
     reptimer.Stop();
 
@@ -4216,12 +4216,12 @@ namespace netgen
 
     if(refelementinfofilewrite != "")
       {
-	PrintMessage(3,"writing marked-elements information to \"",refelementinfofilewrite,"\"");
-	ofstream ofst(refelementinfofilewrite.c_str());
+        PrintMessage(3,"writing marked-elements information to \"",refelementinfofilewrite,"\"");
+        ofstream ofst(refelementinfofilewrite.c_str());
 
-	WriteMarkedElements(mesh, ofst);
+        WriteMarkedElements(mesh, ofst);
 
-	ofst.close();
+        ofst.close();
       }
 
     timer3b.Start();

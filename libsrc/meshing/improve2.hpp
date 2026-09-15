@@ -116,7 +116,7 @@ public:
   DLL_HEADER void ImproveMeshJacobian (const MeshingParameters & mp);
   DLL_HEADER void ImproveVolumeMesh ();
   DLL_HEADER void ProjectBoundaryPoints(Array<int> & surfaceindex, 
-			     const Array<Point<3>* > & from, Array<Point<3>* > & dest);
+                             const Array<Point<3>* > & from, Array<Point<3>* > & dest);
 
   DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour, SurfaceElementIndex> &neighbors, Array<bool, SurfaceElementIndex> &swapped,
                                 const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
@@ -155,24 +155,24 @@ public:
 
 
 extern void CalcTriangleBadness (double x2, double x3, double y3, 
-				 double metricweight,
-				 double h, double & badness, 
-				 double & g1x, double & g1y);
+                                 double metricweight,
+                                 double h, double & badness, 
+                                 double & g1x, double & g1y);
 
 
 
 
 extern double CalcTriangleBadness (const Point<3> & p1, 
-				   const Point<3> & p2, 
-				   const Point<3> & p3,
-				   double metricweight,
-				   double h);
+                                   const Point<3> & p2, 
+                                   const Point<3> & p3,
+                                   double metricweight,
+                                   double h);
 
 extern double CalcTriangleBadness (const Point<3> & p1, 
-				   const Point<3> & p2, 
-				   const Point<3> & p3,
-				   const Vec<3> & n,
-				   double metricweight,
-				   double h);
+                                   const Point<3> & p2, 
+                                   const Point<3> & p3,
+                                   const Vec<3> & n,
+                                   double metricweight,
+                                   double h);
 } // namespace netgen
 #endif // NETGEN_IMPROVE2_HPP

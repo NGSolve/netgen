@@ -57,7 +57,7 @@ int main (int argc, char ** argv)
    if(!stl_geom)
    {
       cout << "Error reading in STL File: " << argv[1] << endl;
-	  return 1;
+          return 1;
    }
    cout << "Successfully loaded STL File: " << argv[1] << endl;
 
@@ -73,7 +73,7 @@ int main (int argc, char ** argv)
    if(ng_res != NG_OK)
    {
       cout << "Error Initialising the STL Geometry....Aborting!!" << endl;
-	   return 1;
+           return 1;
    }
 
    cout << "Start Edge Meshing...." << endl;
@@ -81,7 +81,7 @@ int main (int argc, char ** argv)
    if(ng_res != NG_OK)
    {
       cout << "Error in Edge Meshing....Aborting!!" << endl;
-	   return 1;
+           return 1;
    }
 
    cout << "Start Surface Meshing...." << endl;
@@ -89,7 +89,7 @@ int main (int argc, char ** argv)
    if(ng_res != NG_OK)
    {
       cout << "Error in Surface Meshing....Aborting!!" << endl;
-	   return 1;
+           return 1;
    }
    
    cout << "Start Volume Meshing...." << endl;
@@ -97,7 +97,7 @@ int main (int argc, char ** argv)
    if(ng_res != NG_OK)
    {
       cout << "Error in Volume Meshing....Aborting!!" << endl;
-	  return 1;
+          return 1;
    }
    
    cout << "Meshing successfully completed....!!" << endl;

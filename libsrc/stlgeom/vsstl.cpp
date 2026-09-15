@@ -58,15 +58,15 @@ void VisualSceneSTLMeshing :: DrawScene ()
       double ms;
 
       for (i = 1; i <= stlgeometry->GetNP(); i++)
-	{
-	  ms = mesh->GetH (stlgeometry->GetPoint(i));
-	  hmin = min2(hmin,ms);
-	  hmax = max2(hmax,ms);
-	}
+        {
+          ms = mesh->GetH (stlgeometry->GetPoint(i));
+          hmin = min2(hmin,ms);
+          hmax = max2(hmax,ms);
+        }
 
       //hmax = mparam.maxh;
       //hmin = mesh->GetMinH (stlgeometry->GetBoundingBox().PMin(),
-      //			    stlgeometry->GetBoundingBox().PMax());
+      //                            stlgeometry->GetBoundingBox().PMax());
   
       if (hmin == 0) hmin = 0.1 * hmax;
       //hmax *= 1.1;
@@ -156,17 +156,17 @@ void VisualSceneSTLMeshing :: DrawScene ()
     glBegin (GL_TRIANGLES);
     for (i = 1; i <= trigs.Size(); i++)
       {
-	const MoTriangle & tria = trigs.Get(i);
-	glNormal3f (tria.normal.X(),
-		    tria.normal.Y(),
-		    tria.normal.Z());
-	
-	for (k = 0; k < 3; k++)
-	  {
-	    glVertex3f (tria.pts[k].X(),
-			tria.pts[k].Y(),
-			tria.pts[k].Z());
-	  }
+        const MoTriangle & tria = trigs.Get(i);
+        glNormal3f (tria.normal.X(),
+                    tria.normal.Y(),
+                    tria.normal.Z());
+        
+        for (k = 0; k < 3; k++)
+          {
+            glVertex3f (tria.pts[k].X(),
+                        tria.pts[k].Y(),
+                        tria.pts[k].Z());
+          }
       }    
     glEnd ();
     
@@ -182,35 +182,35 @@ void VisualSceneSTLMeshing :: DrawScene ()
     {
       glBegin (GL_TRIANGLES);
       for (j = 1; j <= stlgeometry -> GetNT(); j++)
-	{
-	  /*
-	  if (j % 10 == seltria)
-	    glMaterialfv (GL_FRONT_AND_BACK, 
-			  GL_AMBIENT_AND_DIFFUSE, mat_colred);
-	  */
+        {
+          /*
+          if (j % 10 == seltria)
+            glMaterialfv (GL_FRONT_AND_BACK, 
+                          GL_AMBIENT_AND_DIFFUSE, mat_colred);
+          */
 
-	  const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	  glNormal3f (n(0), n(1), n(2));
-	  /*
-	  const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
-	  glNormal3f (tria.normal.X(),
-		      tria.normal.Y(),
-		      tria.normal.Z());
-	  */
+          const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+          glNormal3f (n(0), n(1), n(2));
+          /*
+          const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
+          glNormal3f (tria.normal.X(),
+                      tria.normal.Y(),
+                      tria.normal.Z());
+          */
 
-	  
-	  for (k = 1; k <= 3; k++)
-	    {
-	      const Point<3> & tp = stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
-	      glVertex3f (tp(0), tp(1), tp(2));
+          
+          for (k = 1; k <= 3; k++)
+            {
+              const Point<3> & tp = stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
+              glVertex3f (tp(0), tp(1), tp(2));
 
-	    }
-	  /*
-	  if (j%10 == seltria)
-	    glMaterialfv (GL_FRONT_AND_BACK, 
-			  GL_AMBIENT_AND_DIFFUSE, mat_colblue);
-	  */
-	}    
+            }
+          /*
+          if (j%10 == seltria)
+            glMaterialfv (GL_FRONT_AND_BACK, 
+                          GL_AMBIENT_AND_DIFFUSE, mat_colblue);
+          */
+        }    
       glEnd ();
   
       glDisable (GL_POLYGON_OFFSET_FILL);
@@ -218,44 +218,44 @@ void VisualSceneSTLMeshing :: DrawScene ()
       int showtrias = vispar.stlshowtrias;
 
       if (showtrias)
-	{
-	  float mat_coll[] = { 0.2f, 0.2f, 0.2f, 1.f };
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_coll);
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+        {
+          float mat_coll[] = { 0.2f, 0.2f, 0.2f, 1.f };
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_coll);
+          glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
       
-	  glEnable (GL_NORMALIZE);
+          glEnable (GL_NORMALIZE);
       
-	  glBegin (GL_TRIANGLES);
-	  for (j = 1; j <= stlgeometry -> GetNT(); j++)
-	    {
-	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n(0), n(1), n(2));
-	      /*
-	      const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
-	      glNormal3f (tria.normal.X(),
-			  tria.normal.Y(),
-			  tria.normal.Z());
-	      */  
+          glBegin (GL_TRIANGLES);
+          for (j = 1; j <= stlgeometry -> GetNT(); j++)
+            {
+              const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+              glNormal3f (n(0), n(1), n(2));
+              /*
+              const STLReadTriangle & tria = stlgeometry -> GetReadTriangle(j);
+              glNormal3f (tria.normal.X(),
+                          tria.normal.Y(),
+                          tria.normal.Z());
+              */  
 
-	      for (k = 1; k <= 3; k++)
-		{
-		  const Point<3> & tp = 
-		    stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
-		  glVertex3f (tp(0), tp(1), tp(2));
-		  
-		}
-	      
-	      /*
-	      for (k = 0; k < 3; k++)
-		{
-		  glVertex3f (tria.pts[k].X(),
-			      tria.pts[k].Y(),
-			      tria.pts[k].Z());
-		}
-	      */
-	    }    
-	  glEnd ();
-	}
+              for (k = 1; k <= 3; k++)
+                {
+                  const Point<3> & tp = 
+                    stlgeometry->GetPoint(stlgeometry->GetTriangle(j).PNum(k));
+                  glVertex3f (tp(0), tp(1), tp(2));
+                  
+                }
+              
+              /*
+              for (k = 0; k < 3; k++)
+                {
+                  glVertex3f (tria.pts[k].X(),
+                              tria.pts[k].Y(),
+                              tria.pts[k].Z());
+                }
+              */
+            }    
+          glEnd ();
+        }
     }
   else
     {
@@ -265,533 +265,533 @@ void VisualSceneSTLMeshing :: DrawScene ()
 
       int chartnumber;
       if (vispar.stlshowmarktrias)
-	chartnumber = vispar.stlchartnumber + vispar.stlchartnumberoffset;
+        chartnumber = vispar.stlchartnumber + vispar.stlchartnumberoffset;
       else
-	chartnumber = stlgeometry->GetMeshChartNr();
+        chartnumber = stlgeometry->GetMeshChartNr();
 
       if (showfilledtrias)
-	{
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-	  if (colormeshsize)
-	    glEnable (GL_COLOR_MATERIAL);
-	  
-	  glPolygonOffset (pgoff*4, pgoff*4);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  glEnable (GL_NORMALIZE);
+        {
+          glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+          if (colormeshsize)
+            glEnable (GL_COLOR_MATERIAL);
+          
+          glPolygonOffset (pgoff*4, pgoff*4);
+          glEnable (GL_POLYGON_OFFSET_FILL);
+          glEnable (GL_NORMALIZE);
 
 
-	  glBegin (GL_TRIANGLES);
+          glBegin (GL_TRIANGLES);
 
-	  int selt = stlgeometry -> GetSelectTrig();
-	  if (stldoctor.selectmode != 0) 
-	    {selt = 0; } //do not show selected triangle!!!!
+          int selt = stlgeometry -> GetSelectTrig();
+          if (stldoctor.selectmode != 0) 
+            {selt = 0; } //do not show selected triangle!!!!
 
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colstlbody);
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colstlbody);
 
-	  for (j = 1; j <= stlgeometry -> GetNT(); j++)
-	    {
-	      if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) {continue;}
+          for (j = 1; j <= stlgeometry -> GetNT(); j++)
+            {
+              if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) {continue;}
 
-	      if (j == selt)
-		{
-		  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colseltrig);
-		}
-	      else if (j == selt+1)
-		{
-		  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colstlbody);
-		}
-	      
-	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
+              if (j == selt)
+                {
+                  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colseltrig);
+                }
+              else if (j == selt+1)
+                {
+                  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colstlbody);
+                }
+              
+              const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n(0), n(1), n(2));
-	  
-	      /*
-	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
-	      glNormal3f (tria.normal.X(),
-			  tria.normal.Y(),
-			  tria.normal.Z());
-	      */
-	      for (k = 0; k < 3; k++)
-		{
-		  const Point<3> & p = stlgeometry->GetPoint(st[k]);
-		  if (colormeshsize)
-		    {
-		      SetOpenGlColor (mesh->GetH (p), hmin, hmax, 1);
-		    }
+              const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+              glNormal3f (n(0), n(1), n(2));
+          
+              /*
+              const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
+              glNormal3f (tria.normal.X(),
+                          tria.normal.Y(),
+                          tria.normal.Z());
+              */
+              for (k = 0; k < 3; k++)
+                {
+                  const Point<3> & p = stlgeometry->GetPoint(st[k]);
+                  if (colormeshsize)
+                    {
+                      SetOpenGlColor (mesh->GetH (p), hmin, hmax, 1);
+                    }
 
-		  glVertex3f (p(0), p(1), p(2));
-		}
-	    } 
+                  glVertex3f (p(0), p(1), p(2));
+                }
+            } 
    
-	  glEnd ();
-	}
+          glEnd ();
+        }
       
       int foundseltrig = stlgeometry -> GetSelectTrig();
       if (foundseltrig == 0 || foundseltrig > stlgeometry->GetNT() ||
-	  (stldoctor.showvicinity && !stlgeometry->Vicinity(foundseltrig)))
-	{foundseltrig = 0;}
+          (stldoctor.showvicinity && !stlgeometry->Vicinity(foundseltrig)))
+        {foundseltrig = 0;}
 
       if (foundseltrig)
-	{
+        {
 
-	  glPolygonOffset (pgoff*0, 0);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
+          glPolygonOffset (pgoff*0, 0);
+          glEnable (GL_POLYGON_OFFSET_FILL);
 
-	  //glDisable (GL_POLYGON_OFFSET_FILL);      
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colseledge);
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
-	  
-	  glEnable (GL_NORMALIZE);
+          //glDisable (GL_POLYGON_OFFSET_FILL);      
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colseledge);
+          glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+          
+          glEnable (GL_NORMALIZE);
 
-	  if (stldoctor.selectmode == 2)
-	    {
-	      //point
-	      const STLTriangle& st = stlgeometry -> GetTriangle(foundseltrig);
-	      const Point<3> & p1 = stlgeometry->GetPoint(st[0]);
-	      const Point<3> & p2 = stlgeometry->GetPoint(st[1]);
-	      const Point<3> & p3 = stlgeometry->GetPoint(st[2]);
+          if (stldoctor.selectmode == 2)
+            {
+              //point
+              const STLTriangle& st = stlgeometry -> GetTriangle(foundseltrig);
+              const Point<3> & p1 = stlgeometry->GetPoint(st[0]);
+              const Point<3> & p2 = stlgeometry->GetPoint(st[1]);
+              const Point<3> & p3 = stlgeometry->GetPoint(st[2]);
 
-	      double cs = (Dist(p1,p2)+Dist(p2,p3)+Dist(p3,p1))/100.;
+              double cs = (Dist(p1,p2)+Dist(p2,p3)+Dist(p3,p1))/100.;
 
-	      const Point<3> & p = stlgeometry->GetPoint(st[nodeofseltrig-1]);
-	      
-	      glLineWidth (4);
-	      glBegin (GL_LINES);
-	      glVertex3f(p(0)+cs, p(1)+cs, p(2)+cs);
-	      glVertex3f(p(0)-cs, p(1)-cs, p(2)-cs);
-	      
-	      glVertex3f(p(0)-cs, p(1)+cs, p(2)+cs);
-	      glVertex3f(p(0)+cs, p(1)-cs, p(2)-cs);
+              const Point<3> & p = stlgeometry->GetPoint(st[nodeofseltrig-1]);
+              
+              glLineWidth (4);
+              glBegin (GL_LINES);
+              glVertex3f(p(0)+cs, p(1)+cs, p(2)+cs);
+              glVertex3f(p(0)-cs, p(1)-cs, p(2)-cs);
+              
+              glVertex3f(p(0)-cs, p(1)+cs, p(2)+cs);
+              glVertex3f(p(0)+cs, p(1)-cs, p(2)-cs);
 
-	      glVertex3f(p(0)-cs, p(1)+cs, p(2)+cs);
-	      glVertex3f(p(0)+cs, p(1)-cs, p(2)-cs);
-	      
-	      glVertex3f(p(0)+cs, p(1)-cs, p(2)+cs);
-	      glVertex3f(p(0)-cs, p(1)+cs, p(2)-cs);
-	      
-	      glEnd ();	  
-	      glLineWidth (1);
-	    }
-	  else if (stldoctor.selectmode == 1 || 
-		   stldoctor.selectmode == 3 || 
-		   stldoctor.selectmode == 4)
-	    {
-	      //multiedge
-	      
-	      const Array<twoint>& me = stlgeometry->SelectedMultiEdge();
-	      if (stlgeometry->GetSelectTrig() > 0 && 
-		  stlgeometry->GetSelectTrig() <= stlgeometry->GetNT() &&
-		  me.Size())
-		{
+              glVertex3f(p(0)-cs, p(1)+cs, p(2)+cs);
+              glVertex3f(p(0)+cs, p(1)-cs, p(2)-cs);
+              
+              glVertex3f(p(0)+cs, p(1)-cs, p(2)+cs);
+              glVertex3f(p(0)-cs, p(1)+cs, p(2)-cs);
+              
+              glEnd ();   
+              glLineWidth (1);
+            }
+          else if (stldoctor.selectmode == 1 || 
+                   stldoctor.selectmode == 3 || 
+                   stldoctor.selectmode == 4)
+            {
+              //multiedge
+              
+              const Array<twoint>& me = stlgeometry->SelectedMultiEdge();
+              if (stlgeometry->GetSelectTrig() > 0 && 
+                  stlgeometry->GetSelectTrig() <= stlgeometry->GetNT() &&
+                  me.Size())
+                {
 
-		  int en = stlgeometry->EdgeDataList().GetEdgeNum(me[0].i1,me[0].i2);
-		  int status = stlgeometry->EdgeDataList().Get(en).GetStatus();
-		  
-		  switch (status)
-		    {
-		    case ED_CONFIRMED:
-		      glMaterialfv (GL_FRONT_AND_BACK, 
-				    GL_AMBIENT_AND_DIFFUSE, mat_collgreen);
-		      break;
-		    case ED_CANDIDATE:
-		      glMaterialfv (GL_FRONT_AND_BACK, 
-				    GL_AMBIENT_AND_DIFFUSE, mat_collbrown);
-		      break;
-		    case ED_EXCLUDED:
-		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_collred);
-		      break;
-		    }
+                  int en = stlgeometry->EdgeDataList().GetEdgeNum(me[0].i1,me[0].i2);
+                  int status = stlgeometry->EdgeDataList().Get(en).GetStatus();
+                  
+                  switch (status)
+                    {
+                    case ED_CONFIRMED:
+                      glMaterialfv (GL_FRONT_AND_BACK, 
+                                    GL_AMBIENT_AND_DIFFUSE, mat_collgreen);
+                      break;
+                    case ED_CANDIDATE:
+                      glMaterialfv (GL_FRONT_AND_BACK, 
+                                    GL_AMBIENT_AND_DIFFUSE, mat_collbrown);
+                      break;
+                    case ED_EXCLUDED:
+                      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_collred);
+                      break;
+                    }
 
-		  glLineWidth (2);
-		  glBegin (GL_LINES);
-		  for (j = 1; j <= me.Size(); j++)
-		    { 
-		      Point<3> p1 = stlgeometry->GetPoint(me[j-1].i1);
-		      Point<3> p2 = stlgeometry->GetPoint(me[j-1].i2);
-		      
-		      glVertex3f(p1(0), p1(1), p1(2));
-		      glVertex3f(p2(0), p2(1), p2(2));
-		    }
-		  glEnd ();
-		  glLineWidth (1);
-		}
-	    }
-	}
+                  glLineWidth (2);
+                  glBegin (GL_LINES);
+                  for (j = 1; j <= me.Size(); j++)
+                    { 
+                      Point<3> p1 = stlgeometry->GetPoint(me[j-1].i1);
+                      Point<3> p2 = stlgeometry->GetPoint(me[j-1].i2);
+                      
+                      glVertex3f(p1(0), p1(1), p1(2));
+                      glVertex3f(p2(0), p2(1), p2(2));
+                    }
+                  glEnd ();
+                  glLineWidth (1);
+                }
+            }
+        }
 
       int showmarktrias = vispar.stlshowmarktrias || vispar.stlshowactivechart;
  
       if (stldoctor.showmarkedtrigs)
-	{
-	  //(*mycout) << "marked" << endl;
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_LINE); //GL_LINE
-	  glPolygonOffset (pgoff*1, pgoff*1);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbluegreen);
-	  glEnable (GL_NORMALIZE);
+        {
+          //(*mycout) << "marked" << endl;
+          glPolygonMode (GL_FRONT_AND_BACK, GL_LINE); //GL_LINE
+          glPolygonOffset (pgoff*1, pgoff*1);
+          glEnable (GL_POLYGON_OFFSET_FILL);
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbluegreen);
+          glEnable (GL_NORMALIZE);
 
-	  glBegin (GL_TRIANGLES);
+          glBegin (GL_TRIANGLES);
 
-	  for (j = 1; j <= stlgeometry -> GetNT(); j++)
-	    {
-	      if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) 
-		{continue;}
+          for (j = 1; j <= stlgeometry -> GetNT(); j++)
+            {
+              if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) 
+                {continue;}
 
-	      if (!stlgeometry->IsMarkedTrig(j)) 
-		{continue;}
-	      
-	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
+              if (!stlgeometry->IsMarkedTrig(j)) 
+                {continue;}
+              
+              const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n(0), n(1), n(2));
-	      /*
-	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
-	      glNormal3f (tria.normal.X(),
-			  tria.normal.Y(),
-			  tria.normal.Z());
-	      */
-	      for (k = 0; k < 3; k++)
-		{
-		  const Point<3> & p = stlgeometry->GetPoint(st[k]);
-		  glVertex3f (p(0), p(1), p(2));
-		}
-	    }    
-	  glEnd ();
+              const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+              glNormal3f (n(0), n(1), n(2));
+              /*
+              const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
+              glNormal3f (tria.normal.X(),
+                          tria.normal.Y(),
+                          tria.normal.Z());
+              */
+              for (k = 0; k < 3; k++)
+                {
+                  const Point<3> & p = stlgeometry->GetPoint(st[k]);
+                  glVertex3f (p(0), p(1), p(2));
+                }
+            }    
+          glEnd ();
 
-	  //show OpenSegments on original geometry
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colviolet);
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
-	  glPolygonOffset (pgoff*1, 1);
+          //show OpenSegments on original geometry
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colviolet);
+          glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+          glPolygonOffset (pgoff*1, 1);
       
-	  glEnable (GL_NORMALIZE);
+          glEnable (GL_NORMALIZE);
       
-	  glBegin (GL_LINES);
+          glBegin (GL_LINES);
 
-	  if (stlgeometry->GetNMarkedSegs())
-	    {
-	      Point<3> p1,p2;	      
-	      for (j = 1; j <= stlgeometry -> GetNMarkedSegs(); j++)
-		{
-		  stlgeometry->GetMarkedSeg(j,p1,p2);
-		  glVertex3dv(&p1(0));
-		  glVertex3dv(&p2(0));
-		}
-	    }
-	  glEnd ();
-	}
+          if (stlgeometry->GetNMarkedSegs())
+            {
+              Point<3> p1,p2;         
+              for (j = 1; j <= stlgeometry -> GetNMarkedSegs(); j++)
+                {
+                  stlgeometry->GetMarkedSeg(j,p1,p2);
+                  glVertex3dv(&p1(0));
+                  glVertex3dv(&p2(0));
+                }
+            }
+          glEnd ();
+        }
 
 
       if (stldoctor.showfaces)
-	{
-	  int facenumber = vispar.stlchartnumber + vispar.stlchartnumberoffset;
+        {
+          int facenumber = vispar.stlchartnumber + vispar.stlchartnumberoffset;
 
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-	  glPolygonOffset (pgoff*3, 3);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_collgrey);
-	  glEnable (GL_NORMALIZE);
+          glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+          glPolygonOffset (pgoff*3, 3);
+          glEnable (GL_POLYGON_OFFSET_FILL);
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_collgrey);
+          glEnable (GL_NORMALIZE);
 
-	  glBegin (GL_TRIANGLES);
+          glBegin (GL_TRIANGLES);
 
-	  for (j = 1; j <= stlgeometry -> GetNT(); j++)
-	    {
-	      if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) 
-		{continue;}
+          for (j = 1; j <= stlgeometry -> GetNT(); j++)
+            {
+              if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) 
+                {continue;}
 
-	      //(*mycout) << " facenum = " << stlgeometry->GetTriangle(j).GetFaceNum() << " ";
-	      if (stlgeometry->GetTriangle(j).GetFaceNum() != facenumber) 
-		{continue;}
-	      
-	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
+              //(*mycout) << " facenum = " << stlgeometry->GetTriangle(j).GetFaceNum() << " ";
+              if (stlgeometry->GetTriangle(j).GetFaceNum() != facenumber) 
+                {continue;}
+              
+              const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n(0), n(1), n(2));
-	      /*
-	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
-	      glNormal3f (tria.normal.X(),
-			  tria.normal.Y(),
-			  tria.normal.Z());
-	      */
-	      for (k = 0; k < 3; k++)
-		{
-		  Point<3> p = stlgeometry->GetPoint(st[k]);
-		  glVertex3f (p(0), p(1), p(2));
-		}
-	    }    
-	  glEnd ();
-	}
+              const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+              glNormal3f (n(0), n(1), n(2));
+              /*
+              const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
+              glNormal3f (tria.normal.X(),
+                          tria.normal.Y(),
+                          tria.normal.Z());
+              */
+              for (k = 0; k < 3; k++)
+                {
+                  Point<3> p = stlgeometry->GetPoint(st[k]);
+                  glVertex3f (p(0), p(1), p(2));
+                }
+            }    
+          glEnd ();
+        }
 
       if (showmarktrias && stlgeometry->AtlasMade())
-	{
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
-	  glPolygonOffset (pgoff*3, 3);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
+        {
+          glPolygonMode (GL_FRONT_AND_BACK, GL_FILL);
+          glPolygonOffset (pgoff*3, 3);
+          glEnable (GL_POLYGON_OFFSET_FILL);
 
-	  glBegin (GL_TRIANGLES);
-	  
-	  if (chartnumber >= 1 && chartnumber <= stlgeometry->GetNOCharts())
-	    {
-	      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbrown);
-	      const STLChart& chart = stlgeometry->GetChart(chartnumber);
-	      for (j = 1; j <= chart.GetNChartT(); j++)
-		{
-		  /*
-		  if (j == charttrignumber) 
-		    {glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);}
-		  else
-		    {glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbrown);}
-		  */
-		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig1(j));
+          glBegin (GL_TRIANGLES);
+          
+          if (chartnumber >= 1 && chartnumber <= stlgeometry->GetNOCharts())
+            {
+              glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbrown);
+              const STLChart& chart = stlgeometry->GetChart(chartnumber);
+              for (j = 1; j <= chart.GetNChartT(); j++)
+                {
+                  /*
+                  if (j == charttrignumber) 
+                    {glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);}
+                  else
+                    {glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colbrown);}
+                  */
+                  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetChartTrig1(j));
 
-		  
-		  const Vec<3> & n = stlgeometry->GetTriangle(chart.GetChartTrig1(j)).Normal();
-		  glNormal3f (n(0), n(1), n(2));
-		  /*
-		  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetChartTrig(j));
-		  glNormal3f (tria.normal.X(),
-			      tria.normal.Y(),
-			      tria.normal.Z());
-		  */
-		  for (k = 0; k < 3; k++)
-		    {
-		      glVertex3f (stlgeometry->GetPoint(st[k])(0),
-				  stlgeometry->GetPoint(st[k])(1),
-				  stlgeometry->GetPoint(st[k])(2));
-		    }
-		}
-	      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
-	      
-	      for (j = 1; j <= chart.GetNOuterT(); j++)
-		{
-		  
-		  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig1(j));
+                  
+                  const Vec<3> & n = stlgeometry->GetTriangle(chart.GetChartTrig1(j)).Normal();
+                  glNormal3f (n(0), n(1), n(2));
+                  /*
+                  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetChartTrig(j));
+                  glNormal3f (tria.normal.X(),
+                              tria.normal.Y(),
+                              tria.normal.Z());
+                  */
+                  for (k = 0; k < 3; k++)
+                    {
+                      glVertex3f (stlgeometry->GetPoint(st[k])(0),
+                                  stlgeometry->GetPoint(st[k])(1),
+                                  stlgeometry->GetPoint(st[k])(2));
+                    }
+                }
+              glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
+              
+              for (j = 1; j <= chart.GetNOuterT(); j++)
+                {
+                  
+                  const STLTriangle& st = stlgeometry -> GetTriangle(chart.GetOuterTrig1(j));
 
-		  const Vec<3> & n = stlgeometry->GetTriangle(chart.GetOuterTrig1(j)).Normal();
-		  glNormal3f (n(0), n(1), n(2));
+                  const Vec<3> & n = stlgeometry->GetTriangle(chart.GetOuterTrig1(j)).Normal();
+                  glNormal3f (n(0), n(1), n(2));
 
 
-		  /*
-		  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetOuterTrig(j));
-		  glNormal3f (tria.normal.X(),
-			      tria.normal.Y(),
-			      tria.normal.Z());
-		  */
-		  for (k = 0; k < 3; k++)
-		    {
-		      glVertex3f (stlgeometry->GetPoint(st[k])(0),
-				  stlgeometry->GetPoint(st[k])(1),
-				  stlgeometry->GetPoint(st[k])(2));
-		    }
-		}
-	    }
-	  glEnd ();
-	}
+                  /*
+                  const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(chart.GetOuterTrig(j));
+                  glNormal3f (tria.normal.X(),
+                              tria.normal.Y(),
+                              tria.normal.Z());
+                  */
+                  for (k = 0; k < 3; k++)
+                    {
+                      glVertex3f (stlgeometry->GetPoint(st[k])(0),
+                                  stlgeometry->GetPoint(st[k])(1),
+                                  stlgeometry->GetPoint(st[k])(2));
+                    }
+                }
+            }
+          glEnd ();
+        }
 
       int showtrias = vispar.stlshowtrias;
 
       if (showtrias)
-	{
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgrey);
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
-	  glPolygonOffset (pgoff*2, 2);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  glEnable (GL_NORMALIZE);
+        {
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgrey);
+          glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+          glPolygonOffset (pgoff*2, 2);
+          glEnable (GL_POLYGON_OFFSET_FILL);
+          glEnable (GL_NORMALIZE);
 
-	  glBegin (GL_TRIANGLES);
-	  
-	  for (j = 1; j <= stlgeometry -> GetNT(); j++)
-	    {	  
-	      if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) {continue;}
+          glBegin (GL_TRIANGLES);
+          
+          for (j = 1; j <= stlgeometry -> GetNT(); j++)
+            {     
+              if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) {continue;}
 
-	      const STLTriangle& st = stlgeometry -> GetTriangle(j);
+              const STLTriangle& st = stlgeometry -> GetTriangle(j);
 
-	      const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	      glNormal3f (n(0), n(1), n(2));
-	      /*
-	      const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
-	      glNormal3f (tria.normal.X(),
-			  tria.normal.Y(),
-			  tria.normal.Z());
-	      */	  
-	      for (k = 0; k < 3; k++)
-		{
-		  glVertex3f (stlgeometry->GetPoint(st[k])(0),
-			      stlgeometry->GetPoint(st[k])(1),
-			      stlgeometry->GetPoint(st[k])(2));
-		}
-	    }    
-	  glEnd ();
-	} 
+              const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+              glNormal3f (n(0), n(1), n(2));
+              /*
+              const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
+              glNormal3f (tria.normal.X(),
+                          tria.normal.Y(),
+                          tria.normal.Z());
+              */          
+              for (k = 0; k < 3; k++)
+                {
+                  glVertex3f (stlgeometry->GetPoint(st[k])(0),
+                              stlgeometry->GetPoint(st[k])(1),
+                              stlgeometry->GetPoint(st[k])(2));
+                }
+            }    
+          glEnd ();
+        } 
 
       int showedges = vispar.stlshowedges;
       
       if (showedges)
-	{
-	  glPolygonOffset (pgoff*1, 1);
-	  glEnable (GL_POLYGON_OFFSET_FILL);
-	  //glDisable (GL_POLYGON_OFFSET_FILL);      
+        {
+          glPolygonOffset (pgoff*1, 1);
+          glEnable (GL_POLYGON_OFFSET_FILL);
+          //glDisable (GL_POLYGON_OFFSET_FILL);      
 
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
-	  glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
+          glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
       
-	  glEnable (GL_NORMALIZE);
+          glEnable (GL_NORMALIZE);
       
-	  glBegin (GL_LINES);
+          glBegin (GL_LINES);
 
-	  /*
-	  if (stldoctor.useexternaledges)
-	    {
-	      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colorange);
-	      for (j = 1; j <= stlgeometry -> NOExternalEdges(); j++)
-		{
-		  twoint v = stlgeometry->GetExternalEdge(j);
-		  Point<3> p1 = stlgeometry->GetPoint(v.i1);
-		  Point<3> p2 = stlgeometry->GetPoint(v.i2);
-		  
-		  Vec<3> n1 = stlgeometry->GetNormal(v.i1);
-		  Vec<3> n2 = stlgeometry->GetNormal(v.i2);
-		  
-		  glNormal3f(n1.X(), n1.Y(), n1.Z());
-		  glVertex3f(p1.X(), p1.Y(), p1.Z());
-		  glNormal3f(n2.X(), n2.Y(), n2.Z());
-		  glVertex3f(p2.X(), p2.Y(), p2.Z());
-		}
-	    }
-	  */
+          /*
+          if (stldoctor.useexternaledges)
+            {
+              glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colorange);
+              for (j = 1; j <= stlgeometry -> NOExternalEdges(); j++)
+                {
+                  twoint v = stlgeometry->GetExternalEdge(j);
+                  Point<3> p1 = stlgeometry->GetPoint(v.i1);
+                  Point<3> p2 = stlgeometry->GetPoint(v.i2);
+                  
+                  Vec<3> n1 = stlgeometry->GetNormal(v.i1);
+                  Vec<3> n2 = stlgeometry->GetNormal(v.i2);
+                  
+                  glNormal3f(n1.X(), n1.Y(), n1.Z());
+                  glVertex3f(p1.X(), p1.Y(), p1.Z());
+                  glNormal3f(n2.X(), n2.Y(), n2.Z());
+                  glVertex3f(p2.X(), p2.Y(), p2.Z());
+                }
+            }
+          */
 
-	  
-	  if (!stlgeometry->meshlines.Size() || !stldoctor.drawmeshededges)
-	    {
-	      /*
-	      for (j = 1; j <= stlgeometry -> GetNE(); j++)
-		{
-		  STLEdge v = stlgeometry->GetEdge(j);
-		  Point<3> p1 = stlgeometry->GetPoint(v.pts[0]);
-		  Point<3> p2 = stlgeometry->GetPoint(v.pts[1]);
-		  
-		  Vec<3> n1 = stlgeometry->GetNormal(v.pts[0]);
-		  Vec<3> n2 = stlgeometry->GetNormal(v.pts[1]);
-		  
-		  glNormal3f(n1.X(), n1.Y(), n1.Z());
-		  glVertex3f(p1.X(), p1.Y(), p1.Z());
-		  glNormal3f(n2.X(), n2.Y(), n2.Z());
-		  glVertex3f(p2.X(), p2.Y(), p2.Z());
-		}
-	      */
-	      const STLEdgeDataList& ed = stlgeometry->EdgeDataList();
-	      for (i = 1; i <= ed.Size(); i++)
-		{
-		  if (ed.Get(i).GetStatus() != ED_UNDEFINED)
-		    {
-		      switch (ed.Get(i).GetStatus())
-			{
-			case ED_CONFIRMED:
-			  glMaterialfv (GL_FRONT_AND_BACK, 
-					GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
-			  break;
-			case ED_CANDIDATE:
-			  glMaterialfv (GL_FRONT_AND_BACK, 
-					GL_AMBIENT_AND_DIFFUSE, mat_colbrown);
-			  break;
-			case ED_EXCLUDED:
-			  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
-			  break;
-			}
+          
+          if (!stlgeometry->meshlines.Size() || !stldoctor.drawmeshededges)
+            {
+              /*
+              for (j = 1; j <= stlgeometry -> GetNE(); j++)
+                {
+                  STLEdge v = stlgeometry->GetEdge(j);
+                  Point<3> p1 = stlgeometry->GetPoint(v.pts[0]);
+                  Point<3> p2 = stlgeometry->GetPoint(v.pts[1]);
+                  
+                  Vec<3> n1 = stlgeometry->GetNormal(v.pts[0]);
+                  Vec<3> n2 = stlgeometry->GetNormal(v.pts[1]);
+                  
+                  glNormal3f(n1.X(), n1.Y(), n1.Z());
+                  glVertex3f(p1.X(), p1.Y(), p1.Z());
+                  glNormal3f(n2.X(), n2.Y(), n2.Z());
+                  glVertex3f(p2.X(), p2.Y(), p2.Z());
+                }
+              */
+              const STLEdgeDataList& ed = stlgeometry->EdgeDataList();
+              for (i = 1; i <= ed.Size(); i++)
+                {
+                  if (ed.Get(i).GetStatus() != ED_UNDEFINED)
+                    {
+                      switch (ed.Get(i).GetStatus())
+                        {
+                        case ED_CONFIRMED:
+                          glMaterialfv (GL_FRONT_AND_BACK, 
+                                        GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
+                          break;
+                        case ED_CANDIDATE:
+                          glMaterialfv (GL_FRONT_AND_BACK, 
+                                        GL_AMBIENT_AND_DIFFUSE, mat_colbrown);
+                          break;
+                        case ED_EXCLUDED:
+                          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
+                          break;
+                        }
 
-		      if (ed.Get(i).GetStatus() == ED_EXCLUDED && !stldoctor.showexcluded) continue;
+                      if (ed.Get(i).GetStatus() == ED_EXCLUDED && !stldoctor.showexcluded) continue;
 
-		      Point<3> p1 = stlgeometry->GetPoint(ed.Get(i).PNum(1));
-		      Point<3> p2 = stlgeometry->GetPoint(ed.Get(i).PNum(2));
-		      glVertex3f(p1(0), p1(1), p1(2));
-		      glVertex3f(p2(0), p2(1), p2(2));		   
-		    }
-		}
-	    }
+                      Point<3> p1 = stlgeometry->GetPoint(ed.Get(i).PNum(1));
+                      Point<3> p2 = stlgeometry->GetPoint(ed.Get(i).PNum(2));
+                      glVertex3f(p1(0), p1(1), p1(2));
+                      glVertex3f(p2(0), p2(1), p2(2));             
+                    }
+                }
+            }
 
-	  /*
-	  else     
-	  if (stlgeometry->meshlines.Size() == 0)
-	    {
-	      for (j = 1; j <= stlgeometry->GetNLines(); j++)
-		{
-		  STLLine* line = stlgeometry->GetLine(j);
-		  int pn1, pn2;
-		  for (int k = 1; k <= line->NP()-1; k++)
-		    {
-		      pn1 = line->PNum(k);
-		      pn2 = line->PNum(k+1);
+          /*
+          else     
+          if (stlgeometry->meshlines.Size() == 0)
+            {
+              for (j = 1; j <= stlgeometry->GetNLines(); j++)
+                {
+                  STLLine* line = stlgeometry->GetLine(j);
+                  int pn1, pn2;
+                  for (int k = 1; k <= line->NP()-1; k++)
+                    {
+                      pn1 = line->PNum(k);
+                      pn2 = line->PNum(k+1);
 
-		      Point<3> p1 = stlgeometry->GetPoint(pn1);
-		      Point<3> p2 = stlgeometry->GetPoint(pn2);
-		  
-		      Vec<3> n1 = stlgeometry->GetNormal(pn1);
-		      Vec<3> n2 = stlgeometry->GetNormal(pn2);
-		  
-		      glNormal3f(n1.X(), n1.Y(), n1.Z());
-		      glVertex3f(p1.X(), p1.Y(), p1.Z());
-		      glNormal3f(n2.X(), n2.Y(), n2.Z());
-		      glVertex3f(p2.X(), p2.Y(), p2.Z());
-		    }
-		}    
-	    }
-	  */
-	    
-	  else if (stlgeometry->meshlines.Size() != 0)
-	    {
-	      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
-	      for (j = 1; j <= stlgeometry->meshlines.Size(); j++)
-		{
-		  STLLine* line = stlgeometry->meshlines[j-1];
-		  int pn1, pn2;
-		  for (int k = 1; k <= line->NP()-1; k++)
-		    {
-		      pn1 = line->PNum(k);
-		      pn2 = line->PNum(k+1);
+                      Point<3> p1 = stlgeometry->GetPoint(pn1);
+                      Point<3> p2 = stlgeometry->GetPoint(pn2);
+                  
+                      Vec<3> n1 = stlgeometry->GetNormal(pn1);
+                      Vec<3> n2 = stlgeometry->GetNormal(pn2);
+                  
+                      glNormal3f(n1.X(), n1.Y(), n1.Z());
+                      glVertex3f(p1.X(), p1.Y(), p1.Z());
+                      glNormal3f(n2.X(), n2.Y(), n2.Z());
+                      glVertex3f(p2.X(), p2.Y(), p2.Z());
+                    }
+                }    
+            }
+          */
+            
+          else if (stlgeometry->meshlines.Size() != 0)
+            {
+              glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
+              for (j = 1; j <= stlgeometry->meshlines.Size(); j++)
+                {
+                  STLLine* line = stlgeometry->meshlines[j-1];
+                  int pn1, pn2;
+                  for (int k = 1; k <= line->NP()-1; k++)
+                    {
+                      pn1 = line->PNum(k);
+                      pn2 = line->PNum(k+1);
 
-		      Point<3> p1 = stlgeometry->meshpoints[pn1-1];
-		      Point<3> p2 = stlgeometry->meshpoints[pn2-1];
-		  		  
-		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
-		      glVertex3f(p1(0), p1(1), p1(2));
-		      glVertex3f(p2(0), p2(1), p2(2));
+                      Point<3> p1 = stlgeometry->meshpoints[pn1-1];
+                      Point<3> p2 = stlgeometry->meshpoints[pn2-1];
+                                  
+                      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colgreen);
+                      glVertex3f(p1(0), p1(1), p1(2));
+                      glVertex3f(p2(0), p2(1), p2(2));
 
-		      
-		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
-		      double cs = 0.02*Dist(p1,p2);
-		      glVertex3f(p1(0)+cs, p1(1)+cs, p1(2)+cs);
-		      glVertex3f(p1(0)-cs, p1(1)-cs, p1(2)-cs);
-		      glVertex3f(p2(0)+cs, p2(1)+cs, p2(2)+cs);
-		      glVertex3f(p2(0)-cs, p2(1)-cs, p2(2)-cs);
+                      
+                      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
+                      double cs = 0.02*Dist(p1,p2);
+                      glVertex3f(p1(0)+cs, p1(1)+cs, p1(2)+cs);
+                      glVertex3f(p1(0)-cs, p1(1)-cs, p1(2)-cs);
+                      glVertex3f(p2(0)+cs, p2(1)+cs, p2(2)+cs);
+                      glVertex3f(p2(0)-cs, p2(1)-cs, p2(2)-cs);
 
-		      glVertex3f(p1(0)-cs, p1(1)+cs, p1(2)+cs);
-		      glVertex3f(p1(0)+cs, p1(1)-cs, p1(2)-cs);
-		      glVertex3f(p2(0)-cs, p2(1)+cs, p2(2)+cs);
-		      glVertex3f(p2(0)+cs, p2(1)-cs, p2(2)-cs);
-		      
-		    }
-		}
-	    }
-	    
+                      glVertex3f(p1(0)-cs, p1(1)+cs, p1(2)+cs);
+                      glVertex3f(p1(0)+cs, p1(1)-cs, p1(2)-cs);
+                      glVertex3f(p2(0)-cs, p2(1)+cs, p2(2)+cs);
+                      glVertex3f(p2(0)+cs, p2(1)-cs, p2(2)-cs);
+                      
+                    }
+                }
+            }
+            
 
-	  glEnd ();
-	}
+          glEnd ();
+        }
 
       if (stldoctor.showedgecornerpoints && stlgeometry->LineEndPointsSet())
-	{
-	  glPointSize (5);
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
-	  glBegin (GL_POINTS);
-	  for (i = 1; i <= stlgeometry->GetNP(); i++)
-	    {
-	      if (stlgeometry->IsLineEndPoint(i))
-		{
-		  const Point<3> p = stlgeometry->GetPoint(i);
-		  glVertex3f (p(0), p(1), p(2));
-		}
-	    }
-	  glEnd();
-	  
-	}
+        {
+          glPointSize (5);
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colred);
+          glBegin (GL_POINTS);
+          for (i = 1; i <= stlgeometry->GetNP(); i++)
+            {
+              if (stlgeometry->IsLineEndPoint(i))
+                {
+                  const Point<3> p = stlgeometry->GetPoint(i);
+                  glVertex3f (p(0), p(1), p(2));
+                }
+            }
+          glEnd();
+          
+        }
 
 
     }
@@ -875,83 +875,83 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
       if (stldoctor.showvicinity && !stlgeometry->Vicinity(j)) {continue;}
 
       const STLTriangle& st = stlgeometry -> GetTriangle(j);
-			
+                        
       //const STLReadTriangle& tria = stlgeometry -> GetReadTriangle(j);
       //glNormal3f (tria.normal.X(), tria.normal.Y(), tria.normal.Z());
       
       if (stldoctor.selectmode == 0)
-	{
-	  glLoadName (j);
-	  glBegin (GL_TRIANGLES);
-	  for (k = 0; k < 3; k++)
-	    {
-	      Point<3> p = stlgeometry->GetPoint(st[k]);
-	      glVertex3f (p(0), p(1), p(2));
-	    }
-	  glEnd ();
-	} 
+        {
+          glLoadName (j);
+          glBegin (GL_TRIANGLES);
+          for (k = 0; k < 3; k++)
+            {
+              Point<3> p = stlgeometry->GetPoint(st[k]);
+              glVertex3f (p(0), p(1), p(2));
+            }
+          glEnd ();
+        } 
       else if (stldoctor.selectmode == 1 || stldoctor.selectmode == 3
-	        || stldoctor.selectmode == 4)
-	{
-	  Point<3> pm = Center(stlgeometry->GetPoint(st[0]),
-			      stlgeometry->GetPoint(st[1]),
-			      stlgeometry->GetPoint(st[2]));
+                || stldoctor.selectmode == 4)
+        {
+          Point<3> pm = Center(stlgeometry->GetPoint(st[0]),
+                              stlgeometry->GetPoint(st[1]),
+                              stlgeometry->GetPoint(st[2]));
 
-	  for (k = 0; k < 3; k++)
-	    {
-	      glLoadName (j*3+k-2);
-	      glBegin (GL_TRIANGLES);
+          for (k = 0; k < 3; k++)
+            {
+              glLoadName (j*3+k-2);
+              glBegin (GL_TRIANGLES);
 
-	      Point<3> p1 = stlgeometry->GetPoint(st[k]);
-	      Point<3> p2 = stlgeometry->GetPoint(st[(k+1)%3]);
-	      glVertex3f (p1(0), p1(1), p1(2));
-	      glVertex3f (p2(0), p2(1), p2(2));
-	      glVertex3f (pm(0), pm(1), pm(2));
+              Point<3> p1 = stlgeometry->GetPoint(st[k]);
+              Point<3> p2 = stlgeometry->GetPoint(st[(k+1)%3]);
+              glVertex3f (p1(0), p1(1), p1(2));
+              glVertex3f (p2(0), p2(1), p2(2));
+              glVertex3f (pm(0), pm(1), pm(2));
 
-	      glEnd ();
-	    }
-	}
+              glEnd ();
+            }
+        }
       else
-	{
-	  Point<3> pm1 = Center(stlgeometry->GetPoint(st[0]),
-			       stlgeometry->GetPoint(st[1]));
-	  Point<3> pm2 = Center(stlgeometry->GetPoint(st[1]),
-			       stlgeometry->GetPoint(st[2]));
-	  Point<3> pm3 = Center(stlgeometry->GetPoint(st[2]),
-			       stlgeometry->GetPoint(st[0]));
+        {
+          Point<3> pm1 = Center(stlgeometry->GetPoint(st[0]),
+                               stlgeometry->GetPoint(st[1]));
+          Point<3> pm2 = Center(stlgeometry->GetPoint(st[1]),
+                               stlgeometry->GetPoint(st[2]));
+          Point<3> pm3 = Center(stlgeometry->GetPoint(st[2]),
+                               stlgeometry->GetPoint(st[0]));
 
-	  Point<3> p1 = stlgeometry->GetPoint(st[0]);
-	  Point<3> p2 = stlgeometry->GetPoint(st[1]);
-	  Point<3> p3 = stlgeometry->GetPoint(st[2]);
+          Point<3> p1 = stlgeometry->GetPoint(st[0]);
+          Point<3> p2 = stlgeometry->GetPoint(st[1]);
+          Point<3> p3 = stlgeometry->GetPoint(st[2]);
 
-	  glLoadName (j*4-3);
-	  glBegin (GL_TRIANGLES);
-	  glVertex3f (p1(0), p1(1), p1(2));
-	  glVertex3f (pm1(0), pm1(1), pm1(2));
-	  glVertex3f (pm3(0), pm3(1), pm3(2));
-	  glEnd ();
+          glLoadName (j*4-3);
+          glBegin (GL_TRIANGLES);
+          glVertex3f (p1(0), p1(1), p1(2));
+          glVertex3f (pm1(0), pm1(1), pm1(2));
+          glVertex3f (pm3(0), pm3(1), pm3(2));
+          glEnd ();
 
-	  glLoadName (j*4-2);
-	  glBegin (GL_TRIANGLES);
-	  glVertex3f (p2(0), p2(1), p2(2));
-	  glVertex3f (pm2(0), pm2(1), pm2(2));
-	  glVertex3f (pm1(0), pm1(1), pm1(2));
-	  glEnd ();
+          glLoadName (j*4-2);
+          glBegin (GL_TRIANGLES);
+          glVertex3f (p2(0), p2(1), p2(2));
+          glVertex3f (pm2(0), pm2(1), pm2(2));
+          glVertex3f (pm1(0), pm1(1), pm1(2));
+          glEnd ();
 
-	  glLoadName (j*4-1);
-	  glBegin (GL_TRIANGLES);
-	  glVertex3f (p3(0), p3(1), p3(2));
-	  glVertex3f (pm3(0), pm3(1), pm3(2));
-	  glVertex3f (pm2(0), pm2(1), pm2(2));
-	  glEnd ();
+          glLoadName (j*4-1);
+          glBegin (GL_TRIANGLES);
+          glVertex3f (p3(0), p3(1), p3(2));
+          glVertex3f (pm3(0), pm3(1), pm3(2));
+          glVertex3f (pm2(0), pm2(1), pm2(2));
+          glEnd ();
 
-	  glLoadName (j*4);
-	  glBegin (GL_TRIANGLES);
-	  glVertex3f (pm1(0), pm1(1), pm1(2));
-	  glVertex3f (pm2(0), pm2(1), pm2(2));
-	  glVertex3f (pm3(0), pm3(1), pm3(2));
-	  glEnd ();
-	}
+          glLoadName (j*4);
+          glBegin (GL_TRIANGLES);
+          glVertex3f (pm1(0), pm1(1), pm1(2));
+          glVertex3f (pm2(0), pm2(1), pm2(2));
+          glVertex3f (pm3(0), pm3(1), pm3(2));
+          glEnd ();
+        }
     }    
 
   glPopName();
@@ -964,7 +964,7 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
   glFlush();  
 
-	
+        
   hits = glRenderMode (GL_RENDER);
 
   //  (*mycout) << "hits = " << hits << endl;
@@ -979,15 +979,15 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
       /*      
       (*mycout) << selbuf[4*i] << " " << selbuf[4*i+1] << " " 
-	   << selbuf[4*i+2] << " " << selbuf[4*i+3] << endl;
+           << selbuf[4*i+2] << " " << selbuf[4*i+3] << endl;
       */
       if (curname &&
-	  (curdepth < mindepth || !minname))
-	{
-	  //minrec = i;
-	  mindepth = curdepth;
-	  minname = curname;
-	}
+          (curdepth < mindepth || !minname))
+        {
+          //minrec = i;
+          mindepth = curdepth;
+          minname = curname;
+        }
     }
 
   if (!minname) {return;}
@@ -997,9 +997,9 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
       int oldtrig = selecttrig;
       selecttrig = minname;
       if (selecttrig == oldtrig)
-	nodeofseltrig = (nodeofseltrig % 3) + 1;
+        nodeofseltrig = (nodeofseltrig % 3) + 1;
       else
-	nodeofseltrig = 1;
+        nodeofseltrig = 1;
 
       stlgeometry->SetSelectTrig(selecttrig);
       stlgeometry->SetNodeOfSelTrig(nodeofseltrig);
@@ -1016,29 +1016,29 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
       stlgeometry->PrintSelectInfo();
 
       if (stldoctor.selectmode == 1)
-	{
-	  stlgeometry->BuildSelectedEdge(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
-						stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
-	}
+        {
+          stlgeometry->BuildSelectedEdge(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
+                                                stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
+        }
       if (stldoctor.selectmode == 3)
-	{
-	  stlgeometry->BuildSelectedMultiEdge(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
-						     stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
-	}
+        {
+          stlgeometry->BuildSelectedMultiEdge(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
+                                                     stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
+        }
       else if (stldoctor.selectmode == 4)
-	{
-	  stlgeometry->BuildSelectedCluster(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
-						   stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
-	}
+        {
+          stlgeometry->BuildSelectedCluster(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
+                                                   stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
+        }
  
       switch (stldoctor.edgeselectmode)
-	{
-	case 1: stlgeometry->STLDoctorUndefinedEdge(); break;
-	case 2: stlgeometry->STLDoctorConfirmEdge(); break;
-	case 3: stlgeometry->STLDoctorCandidateEdge(); break;
-	case 4: stlgeometry->STLDoctorExcludeEdge(); break;
-	default: break;
-	}
+        {
+        case 1: stlgeometry->STLDoctorUndefinedEdge(); break;
+        case 2: stlgeometry->STLDoctorConfirmEdge(); break;
+        case 3: stlgeometry->STLDoctorCandidateEdge(); break;
+        case 4: stlgeometry->STLDoctorExcludeEdge(); break;
+        default: break;
+        }
     }
   else if (stldoctor.selectmode == 2)
     {
@@ -1133,11 +1133,11 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
     if (showtrias)
       {
-	float mat_coll[] = { 0.2f, 0.2f, 0.2f, 1.0f };
-	glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_coll);
-	glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
+        float mat_coll[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+        glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_coll);
+        glPolygonMode (GL_FRONT_AND_BACK, GL_LINE);
       
-	glCallList (trilists[0]);
+        glCallList (trilists[0]);
       }
 
     /*
@@ -1149,7 +1149,7 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
     glNormal3f (tria.normal.X(),
     tria.normal.Y(),
     tria.normal.Z());
-		  
+                  
     for (k = 0; k < 3; k++)
     {
     glVertex3f (tria.pts[k].X(),
@@ -1191,15 +1191,15 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
     glBegin (GL_TRIANGLES);
     for (int j = 1; j <= stlgeometry -> GetNT(); j++)
       {
-	const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
-	glNormal3f (n(0), n(1), n(2));
+        const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
+        glNormal3f (n(0), n(1), n(2));
       
-	for (int k = 1; k <= 3; k++)
-	  {
-	    const Point<3> & p = 
-	      stlgeometry->GetPoint (stlgeometry -> GetTriangle(j).PNum(k));
-	    glVertex3f (p(0),p(1), p(2));
-	  }
+        for (int k = 1; k <= 3; k++)
+          {
+            const Point<3> & p = 
+              stlgeometry->GetPoint (stlgeometry -> GetTriangle(j).PNum(k));
+            glVertex3f (p(0),p(1), p(2));
+          }
       }    
     glEnd ();
       
@@ -1218,23 +1218,23 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
 NGCORE_API_EXPORT void ExportSTLVis(py::module &m)
 {
-	using namespace netgen;
+        using namespace netgen;
 
-	py::class_<VisualSceneSTLGeometry, shared_ptr<VisualSceneSTLGeometry>>
-		(m, "VisualSceneSTLGeometry")
-		.def("Draw", &VisualSceneSTLGeometry::DrawScene)
-		;
+        py::class_<VisualSceneSTLGeometry, shared_ptr<VisualSceneSTLGeometry>>
+                (m, "VisualSceneSTLGeometry")
+                .def("Draw", &VisualSceneSTLGeometry::DrawScene)
+                ;
 
     m.def("SetBackGroundColor", &VisualSceneSTLGeometry::SetBackGroundColor);
 
-	m.def("VS",
-		[](STLGeometry & geom)
-	{
-		auto vs = make_shared<VisualSceneSTLGeometry>();
+        m.def("VS",
+                [](STLGeometry & geom)
+        {
+                auto vs = make_shared<VisualSceneSTLGeometry>();
 
-		vs->SetGeometry(&geom);
-		return vs;
-	});
+                vs->SetGeometry(&geom);
+                return vs;
+        });
 }
 
 PYBIND11_MODULE(libstlvis, m) {

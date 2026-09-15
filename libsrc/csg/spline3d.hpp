@@ -10,7 +10,7 @@ namespace netgen
   public:
     ///
     splinesegment3d (const Point<3> & ap1, const Point<3> & ap2, 
-		     const Point<3> & ap3);
+                     const Point<3> & ap3);
     ///
     void Evaluate (double t, Point<3> & p) const;
     ///

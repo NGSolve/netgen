@@ -28,7 +28,7 @@ DLL_HEADER MESHING3_RESULT MeshVolume (const MeshingParameters & mp, Mesh& mesh3
 
 /// Optimize tet-mesh
 DLL_HEADER MESHING3_RESULT OptimizeVolume (const MeshingParameters & mp, Mesh& mesh3d);
-//			       const CSGeometry * geometry = NULL);
+//                             const CSGeometry * geometry = NULL);
 
 DLL_HEADER void RemoveIllegalElements (Mesh & mesh3d, int domain = 0);
 DLL_HEADER void ConformToFreeSegments (Mesh & mesh3d, int domain);

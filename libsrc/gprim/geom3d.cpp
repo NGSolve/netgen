@@ -312,8 +312,8 @@ void Box3d :: ReadData(ifstream& fin)
 
 
 Box3dSphere :: Box3dSphere ( double aminx, double amaxx,
-			     double aminy, double amaxy,
-			     double aminz, double amaxz )
+                             double aminy, double amaxy,
+                             double aminz, double amaxz )
   : Box3d (aminx, amaxx, aminy, amaxy, aminz, amaxz)
 {
   CalcDiamCenter ();
@@ -323,8 +323,8 @@ Box3dSphere :: Box3dSphere ( double aminx, double amaxx,
 void Box3dSphere :: CalcDiamCenter ()
 {
   diam = sqrt( sqr (maxx[0] - minx[0]) +
-	       sqr (maxx[1] - minx[1]) + 
-	       sqr (maxx[2] - minx[2]));
+               sqr (maxx[1] - minx[1]) + 
+               sqr (maxx[2] - minx[2]));
   
   c(0) = 0.5 * (minx[0] + maxx[0]);
   c(1) = 0.5 * (minx[1] + maxx[1]);
@@ -382,8 +382,8 @@ void Box3dSphere :: GetSubBox (int i, Box3dSphere & sbox) const
 
 /*
 double Determinant (const Vec<3> & col1,
-		    const Vec<3> & col2,
-		    const Vec<3> & col3)
+                    const Vec<3> & col2,
+                    const Vec<3> & col3)
 {
   return
     col1(0) * ( col2(1) * col3(2) - col2(2) * col3(1)) +
@@ -409,8 +409,8 @@ void Transpose (Vec<3> & v1, Vec<3> & v2, Vec<3> & v3)
 #endif
 
 int SolveLinearSystem (const Vec<3> & col1, const Vec<3> & col2,
-		       const Vec<3> & col3, const Vec<3> & rhs,
-		       Vec<3> & sol)
+                       const Vec<3> & col3, const Vec<3> & rhs,
+                       Vec<3> & sol)
 {
   // changed by MW
   double matrix[3][3];
@@ -430,32 +430,32 @@ int SolveLinearSystem (const Vec<3> & col1, const Vec<3> & col2,
       int pivot = i;
       double maxv = fabs(matrix[i][i]);
       for(int j=i+1; j<3; j++)
-	if(fabs(matrix[j][i]) > maxv)
-	  {
-	    maxv = fabs(matrix[j][i]);
-	    pivot = j;
-	  }
+        if(fabs(matrix[j][i]) > maxv)
+          {
+            maxv = fabs(matrix[j][i]);
+            pivot = j;
+          }
 
       if(fabs(maxv) > 1e-40)
-	{
-	  if(pivot != i)
-	    {
-	      swap(matrix[i][0],matrix[pivot][0]);
-	      swap(matrix[i][1],matrix[pivot][1]);
-	      swap(matrix[i][2],matrix[pivot][2]);
-	      swap(locrhs[i],locrhs[pivot]);
-	    }
-	  for(int j=i+1; j<3; j++)
-	    {
-	      double fac = matrix[j][i] / matrix[i][i];
-	      
-	      for(int k=i+1; k<3; k++)
-		matrix[j][k] -= fac*matrix[i][k];
-	      locrhs[j] -= fac*locrhs[i];
-	    }
-	}
+        {
+          if(pivot != i)
+            {
+              swap(matrix[i][0],matrix[pivot][0]);
+              swap(matrix[i][1],matrix[pivot][1]);
+              swap(matrix[i][2],matrix[pivot][2]);
+              swap(locrhs[i],locrhs[pivot]);
+            }
+          for(int j=i+1; j<3; j++)
+            {
+              double fac = matrix[j][i] / matrix[i][i];
+              
+              for(int k=i+1; k<3; k++)
+                matrix[j][k] -= fac*matrix[i][k];
+              locrhs[j] -= fac*locrhs[i];
+            }
+        }
       else
-	retval = 1;
+        retval = 1;
     }
 
   if(fabs(matrix[2][2]) < 1e-40)
@@ -469,7 +469,7 @@ int SolveLinearSystem (const Vec<3> & col1, const Vec<3> & col2,
     {
       double sum = locrhs[i];
       for(int j=2; j>i; j--)
-	sum -= matrix[i][j]*sol(j);
+        sum -= matrix[i][j]*sol(j);
 
       sol(i) = sum/matrix[i][i];
     }
@@ -516,7 +516,7 @@ int SolveLinearSystem (const Vec<3> & col1, const Vec<3> & col2,
     {
       det = Determinant (col1, col2, col3);
       if (fabs (det) < 1e-40)
-	return 1;
+        return 1;
       
       sol.X() = Determinant (rhs, col2, col3) / det;
       sol.Y() = Determinant (col1, rhs, col3) / det;
@@ -534,9 +534,9 @@ int SolveLinearSystem (const Vec<3> & col1, const Vec<3> & col2,
 
 
 int SolveLinearSystemLS (const Vec<3> & col1,
-			 const Vec<3> & col2,
-			 const Vec<2> & rhs,
-			 Vec<3> & sol)
+                         const Vec<3> & col2,
+                         const Vec<2> & rhs,
+                         Vec<3> & sol)
 {
   double a11 = col1 * col1;
   double a12 = col1 * col2;
@@ -571,9 +571,9 @@ int SolveLinearSystemLS (const Vec<3> & col1,
 }
 
 int SolveLinearSystemLS2 (const Vec<3> & col1,
-			 const Vec<3> & col2,
-			 const Vec<2> & rhs,
-			 Vec<3> & sol, double & x, double & y)
+                         const Vec<3> & col2,
+                         const Vec<2> & rhs,
+                         Vec<3> & sol, double & x, double & y)
 {
   double a11 = col1 * col1;
   double a12 = col1 * col2;
@@ -613,9 +613,9 @@ int SolveLinearSystemLS2 (const Vec<3> & col1,
 }
 
 int PseudoInverse (const Vec<3> & col1,
-		   const Vec<3> & col2,
-		   Vec<3> & inv1,
-		   Vec<3> & inv2)
+                   const Vec<3> & col2,
+                   Vec<3> & inv1,
+                   Vec<3> & inv2)
 {
   double a11 = col1 * col1;
   double a12 = col1 * col2;
@@ -669,9 +669,9 @@ QuadraticFunction3d (const Point<3> & p, const Vec<3> & v)
 
   /*
   (*testout) << "c0 = " << c0
-	     << " clin = " << cx << " " << cy << " " << cz 
-	     << " cq = " << cxx << " " << cyy << " " << czz
-	     << cxy << " " << cyz << " " << cyz << endl;
+             << " clin = " << cx << " " << cy << " " << cz 
+             << " cq = " << cxx << " " << cyy << " " << czz
+             << cxy << " " << cyz << " " << cyz << endl;
   */
 }
 

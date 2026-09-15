@@ -13,7 +13,7 @@ Transformation3d :: Transformation3d ()
     {
       offset[i] = 0;
       for (int j = 0; j < 3; j++)
-	lin[i][j] = 0;
+        lin[i][j] = 0;
     }
 }
 
@@ -32,7 +32,7 @@ Transformation3d :: Transformation3d (const Vec<3> & translate)
 
 Transformation3d :: 
 Transformation3d (const Point<3> & c, double alpha, 
-		  double beta, double gamma)
+                  double beta, double gamma)
 {
   // total = T_c x Rot_0 x T_c^{-1}
   // Use Euler angles, see many books from tech mech, e.g. 
@@ -65,7 +65,7 @@ Transformation3d :: Transformation3d (const Point<3> ** pp)
     {
       offset[i-1] = (*pp[0])(i-1);
       for (int j = 1; j <= 3; j++)
-	lin[i-1][j-1] = (*pp[j])(i-1) - (*pp[0])(i-1);
+        lin[i-1][j-1] = (*pp[j])(i-1) - (*pp[0])(i-1);
     }
 }
 
@@ -75,7 +75,7 @@ Transformation3d :: Transformation3d (const Point<3> pp[])
     {
       offset[i-1] = pp[0](i-1);
       for (int j = 1; j <= 3; j++)
-	lin[i-1][j-1] = pp[j](i-1) - pp[0](i-1);
+        lin[i-1][j-1] = pp[j](i-1) - pp[0](i-1);
     }
 }
 
@@ -89,7 +89,7 @@ void Transformation3d :: CalcInverse (Transformation3d & inv) const
     {
       b(i) = offset[i];
       for (int j = 0; j < 3; j++)
-	a(i, j) = lin[i][j];
+        a(i, j) = lin[i][j];
     }
 
   ::netgen::CalcInverse (a, inva);
@@ -99,7 +99,7 @@ void Transformation3d :: CalcInverse (Transformation3d & inv) const
     {
       inv.offset[i] = -sol(i);
       for (int j = 0; j < 3; j++)
-	inv.lin[i][j] = inva(i, j);
+        inv.lin[i][j] = inva(i, j);
     }
 }
 
@@ -114,15 +114,15 @@ Combine (const Transformation3d & ta, const Transformation3d & tb)
     {
       offset[i] = ta.offset[i];
       for (int j = 0; j <= 2; j++)
-	offset[i] += ta.lin[i][j] * tb.offset[j];
+        offset[i] += ta.lin[i][j] * tb.offset[j];
     }
   
   for (int i = 0; i <= 2; i++)
     for (int j = 0; j <= 2; j++)
       {
-	lin[i][j] = 0;
-	for (int k = 0; k <= 2; k++)
-	  lin[i][j] += ta.lin[i][k] * tb.lin[k][j];
+        lin[i][j] = 0;
+        for (int k = 0; k <= 2; k++)
+          lin[i][j] += ta.lin[i][k] * tb.lin[k][j];
       }
 }
 void Transformation3d :: SetAxisRotation (int dir, double alpha)
@@ -138,7 +138,7 @@ void Transformation3d :: SetAxisRotation (int dir, double alpha)
     {
       offset[i] = 0;
       for (j = 0; j <= 2; j++)
-	lin[i][j] = 0;
+        lin[i][j] = 0;
     }
 
   lin[dir][dir] = 1;
@@ -157,7 +157,7 @@ ostream & operator<< (ostream & ost, Transformation3d & trans)
   for (int i = 0; i <= 2; i++)
     {
       for (int j = 0; j <= 2; j++)
-	ost << trans.lin[i][j] << " ";
+        ost << trans.lin[i][j] << " ";
       ost << endl;
     }
   return ost;

@@ -9,7 +9,7 @@
 
 namespace netgen
 {
-	
+        
 
   // extern DLL_HEADER NetgenGeometry * ng_geometry;
   static VisualSceneGeometry2d vsgeom2d;
@@ -31,8 +31,8 @@ namespace netgen
     const SplineGeometry2d * geometry = dynamic_cast<const SplineGeometry2d*> (geom);
     if (geometry)
       {
-	vsgeom2d.SetGeometry (geometry);
-	return &vsgeom2d;
+        vsgeom2d.SetGeometry (geometry);
+        return &vsgeom2d;
       }
     return NULL;
   }

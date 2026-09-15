@@ -19,8 +19,8 @@ namespace netgen
     trigs.Append (tri);
     if (invert)
       {
-	trigs.Last()[1] = tri[2];
-	trigs.Last()[2] = tri[1];
+        trigs.Last()[1] = tri[2];
+        trigs.Last()[2] = tri[1];
       }
     return trigs.Size()-1;
   }
@@ -36,22 +36,22 @@ namespace netgen
     used.Clear();
     for (i = 0; i < GetNT(); i++)
       for (j = 0; j < 3; j++)
-	used.SetBit (GetTriangle (i)[j]);
+        used.SetBit (GetTriangle (i)[j]);
 
     for (i = 0; i < GetNP(); i++)
       if (used.Test(i))
-	map[i] = cnt++;
+        map[i] = cnt++;
   
     for (i = 0; i < GetNT(); i++)
       for (j = 0; j < 3; j++)
-	trigs[i][j] = map[trigs[i][j]];
+        trigs[i][j] = map[trigs[i][j]];
 
     for (i = 0; i < GetNP(); i++)
       if (used.Test(i))
-	{
-	  points[map[i]] = points[i];
-	  normals[map[i]] = normals[i];
-	}
+        {
+          points[map[i]] = points[i];
+          normals[map[i]] = normals[i];
+        }
 
     points.SetSize (cnt);
     normals.SetSize (cnt);

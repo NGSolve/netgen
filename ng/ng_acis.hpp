@@ -25,23 +25,23 @@ extern int ACISGenerateMesh (ACISGeometry & geometry, Mesh*& mesh,
 
 
   int Ng_ACISCommand (ClientData /* clientData */,
-		      Tcl_Interp * interp,
-		      int argc, tcl_const char *argv[]) 
+                      Tcl_Interp * interp,
+                      int argc, tcl_const char *argv[]) 
   {
     if (argc >= 2)
       {
-	if (strcmp (argv[1], "isACISavailable") == 0)
-	  {
-	    Tcl_SetResult (interp, (char*)"yes", TCL_STATIC);
-	    return TCL_OK;
-	  }
+        if (strcmp (argv[1], "isACISavailable") == 0)
+          {
+            Tcl_SetResult (interp, (char*)"yes", TCL_STATIC);
+            return TCL_OK;
+          }
       }
     
 
     if (!acisgeometry)
       {
-	Tcl_SetResult (interp, (char*)"This operation needs an ACIS geometry", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, (char*)"This operation needs an ACIS geometry", TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
@@ -165,24 +165,24 @@ extern int ACISGenerateMesh (ACISGeometry & geometry, Mesh*& mesh,
 
     if (argc >= 2 && strcmp (argv[1], "createct") == 0)
       {
-	acisgeometry -> CreateCT();
+        acisgeometry -> CreateCT();
       }
 
     if (argc >= 2 && strcmp (argv[1], "combineall") == 0)
       {
-	cout << "combineall " << endl;
-	acisgeometry -> Combine();
+        cout << "combineall " << endl;
+        acisgeometry -> Combine();
       }
 
 
 
     if (argc >= 4)
       {
-	if (strcmp (argv[1], "subtract") == 0)
-	  {
-	    cout << "subtract " << argv[2] << " minus " << argv[3] << endl;
-	    acisgeometry -> Subtract (atoi (argv[2])-1, atoi (argv[3])-1);
-	  }
+        if (strcmp (argv[1], "subtract") == 0)
+          {
+            cout << "subtract " << argv[2] << " minus " << argv[3] << endl;
+            acisgeometry -> Subtract (atoi (argv[2])-1, atoi (argv[3])-1);
+          }
 
       }
 

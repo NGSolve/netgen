@@ -39,7 +39,7 @@ namespace netgen
   DLL_HEADER double FastAngle (const Vec<2> & v);
   DLL_HEADER double Angle (const Vec<2> & v1, const Vec<2> & v2);
   DLL_HEADER double FastAngle (const Vec<2> & v1, const Vec<2> & v2);
-  double Dist2(const Line2d & g, const Line2d & h );		// GH
+  double Dist2(const Line2d & g, const Line2d & h );            // GH
   int Near (const Point<2> & p1, const Point<2> & p2, const double eps);
 
   int Parallel (const Line2d & l1, const Line2d & l2, double peps = EPSGEOM);
@@ -103,19 +103,19 @@ namespace netgen
     ///
     double Length2 () const
     { return sqr (p1(0) - p2(0)) +
-	sqr (p1(1) - p2(1)); }
+        sqr (p1(1) - p2(1)); }
 
-    void GetNormal (Line2d & n) const;					// GH
-    Vec<2> NormalDelta () const;						// GH
+    void GetNormal (Line2d & n) const;                                  // GH
+    Vec<2> NormalDelta () const;                                                // GH
 
     /// square of the distance between two 2d-lines.
-    friend double Dist2(const Line2d & g, const Line2d & h );		// GH
+    friend double Dist2(const Line2d & g, const Line2d & h );           // GH
 
     ///
     friend DLL_HEADER Point<2> CrossPoint (const Line2d & l1, const Line2d & l2);
     /// returns 1 iff parallel
     friend int CrossPointBarycentric (const Line2d & l1, const Line2d & l2,
-				      double & lam1, double & lam2, double eps);
+                                      double & lam1, double & lam2, double eps);
     
     ///
     friend int Parallel (const Line2d & l1, const Line2d & l2, double peps);
@@ -176,7 +176,7 @@ namespace netgen
     ///
     double Length2 () const
     { return sqr (p1->X() - p2->X()) +
-	sqr (p1->Y() - p2->Y()); }
+        sqr (p1->Y() - p2->Y()); }
 
 
     
@@ -253,7 +253,7 @@ namespace netgen
     TRIANGLE2D() { };
     ///
     TRIANGLE2D (const Point<2> & ap1, const Point<2> & ap2,
-		const Point<2> & ap3)
+                const Point<2> & ap3)
     { p1 = ap1; p2 = ap2; p3 = ap3;}
 
     ///
@@ -314,7 +314,7 @@ namespace netgen
     PTRIANGLE2D() { };
     ///
     PTRIANGLE2D (const Point<2> * ap1, const Point<2> * ap2,
-		 const Point<2> * ap3)
+                 const Point<2> * ap3)
     { p1 = ap1; p2 = ap2; p3 = ap3;}
 
     ///
@@ -484,8 +484,8 @@ namespace netgen
       MyError ("Mat2d::Solve: zero determinant");
     else
       {
-	x(0) = (coeff[3] * rhs(0) - coeff[1] * rhs(1)) / det;
-	x(1) = (-coeff[2] * rhs(0) + coeff[0] * rhs(1)) / det;
+        x(0) = (coeff[3] * rhs(0) - coeff[1] * rhs(1)) / det;
+        x(1) = (-coeff[2] * rhs(0) + coeff[0] * rhs(1)) / det;
       }
   }
 

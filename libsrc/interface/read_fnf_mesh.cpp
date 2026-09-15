@@ -124,17 +124,17 @@ namespace netgen
                     
                     if (token == "%ELEM_TYPE")
                       {
-			int nr;
-			string def;
+                        int nr;
+                        string def;
                         char ch;
                         sbuf >> nr >> def >> ch;
-			if (def == "DEF")
-			  {
-			    string classname, type;
-			    sbuf >> classname >> type;
-			    if (classname != "SOLID" || type != "TETRA")
-			      cerr << "Element not supported: " << buf << endl;
-			  }
+                        if (def == "DEF")
+                          {
+                            string classname, type;
+                            sbuf >> classname >> type;
+                            if (classname != "SOLID" || type != "TETRA")
+                              cerr << "Element not supported: " << buf << endl;
+                          }
                       }
                     else if (token == "%END_SECT")
                       {
@@ -187,7 +187,7 @@ namespace netgen
  
             else if (token == "MATERIALS")
               {
-		*testout << "parse materials" << endl;
+                *testout << "parse materials" << endl;
                 Array<double> young_modulus, poisson_ratio, mass_density;
 
                 while (1)
@@ -215,7 +215,7 @@ namespace netgen
                         else
                           {
                             sbuf >> val;
-			    *testout << "prop = " << prop << ", val = " << val << endl;
+                            *testout << "prop = " << prop << ", val = " << val << endl;
                             if (prop == "YOUNG_MODULUS")
                               young_modulus.Append (val);
                             else if  (prop == "POISSON_RATIO")
@@ -229,8 +229,8 @@ namespace netgen
                         mesh.SetUserData ("YOUNG_MODULUS", young_modulus);
                         mesh.SetUserData ("POISSON_RATIO", poisson_ratio);
                         mesh.SetUserData ("MASS_DENSITY", mass_density);
-			*testout << "young = " << young_modulus << endl;
-			*testout << "poisson = " << poisson_ratio << endl;
+                        *testout << "young = " << young_modulus << endl;
+                        *testout << "poisson = " << poisson_ratio << endl;
                         break;
                       }
                     else
@@ -341,7 +341,7 @@ namespace netgen
 
                             FaceDescriptor fd(-1, -1, -1, -1);
                             fd.SetBCProperty (nr);
-			    *testout << "add fd " << mesh.GetNFD() << ", nr = " << nr << endl;
+                            *testout << "add fd " << mesh.GetNFD() << ", nr = " << nr << endl;
                             mesh.AddFaceDescriptor (fd);
                               
                             for (int j = 0; j < fnums.Size(); j += 2)

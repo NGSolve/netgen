@@ -1537,7 +1537,7 @@ namespace netgen
 ///
 
 EllipticCone :: EllipticCone (const Point<3> & aa, const Vec<3> & avl,
-	      const Vec<3> & avs, double ah, double avlr)
+              const Vec<3> & avs, double ah, double avlr)
 {
   a = aa;
   h = ah;
@@ -1545,13 +1545,13 @@ EllipticCone :: EllipticCone (const Point<3> & aa, const Vec<3> & avl,
 
   if (avl.Length2() >= avs.Length2())
      {
- 	vl = avl;
- 	vs = avs;
+        vl = avl;
+        vs = avs;
       }
   else
      {
-	vl = avs;
-	vs = avl;
+        vl = avs;
+        vs = avl;
      }
 
 
@@ -1641,7 +1641,7 @@ void EllipticCone :: CalcData ()
   double maxlvl = max2( lvl,lvltop);
   cxx /= maxlvl; cyy /= maxlvl; czz /= maxlvl;
   cxy /= maxlvl; cxz /= maxlvl; cyz /= maxlvl;
-  cx /= maxlvl;  cy /= maxlvl;	cz /= maxlvl;
+  cx /= maxlvl;  cy /= maxlvl;  cz /= maxlvl;
   c1 /= maxlvl;
 }
 
@@ -1722,22 +1722,22 @@ void EllipticCone :: GetTriangleApproximation
   for ( j = 0; j <= n; j++ )
     for (i = 0; i <= n; i++)
       {
-	lg = 2 *M_PI * double (i) /n;
-	bg = double(j) /n;
+        lg = 2 *M_PI * double (i) /n;
+        bg = double(j) /n;
 
-	Point<3> p = a + (bg *vh)
-	  + (( lvl*(1 + (vlr -1)*bg) * cos(lg)) * nvl)
+        Point<3> p = a + (bg *vh)
+          + (( lvl*(1 + (vlr -1)*bg) * cos(lg)) * nvl)
           + (( lvs*(1 + (vlr -1)*bg)* sin(lg) ) * nvs);
 
-	tas.AddPoint (p);
+        tas.AddPoint (p);
      }
 
   for ( j = 0; j < n; j++)
     for ( i = 0; i < n; i++)
       {
-	int pi = i + (n+1) * j;
-	tas.AddTriangle (TATriangle (0, pi, pi+1, pi+n+2));
-	tas.AddTriangle (TATriangle (0, pi, pi+n+2, pi+n+1));
+        int pi = i + (n+1) * j;
+        tas.AddTriangle (TATriangle (0, pi, pi+1, pi+n+2));
+        tas.AddTriangle (TATriangle (0, pi, pi+n+2, pi+n+1));
       }
 }
 
@@ -1890,7 +1890,7 @@ void EllipticCone :: GetTriangleApproximation
   }
 
   double Torus :: HesseNorm () const
-  {	
+  {     
     return 4/(r*r);
     // return  ( 2 / r + 2 / ( R - r ) );
   }
@@ -1906,8 +1906,8 @@ void EllipticCone :: GetTriangleApproximation
   /// }
 
   /// void Torus :: ToPlane (const Point<3> & p, 
-  ///			  Point<2> & pplane, 
-  ///			  double h, int & zone) const
+  ///                     Point<2> & pplane, 
+  ///                     double h, int & zone) const
   /// {
   /// }
 
@@ -1949,21 +1949,21 @@ void EllipticCone :: GetTriangleApproximation
   
     for (int j = 0; j <= N; j++)
       for (int i = 0; i <= N; i++)
-	{
+        {
           double lg = 2 * M_PI * double (i) / N;
           double bg = 2 * M_PI * double(j) / N;
-	
+        
           Point<3> p = c + ( R + r * cos(lg) ) * ( cos(bg) * n1 + sin(bg) * n2 ) + r * sin(lg) * n;
           tas.AddPoint (p);
-	}
-	
+        }
+        
     for (int j = 0; j < N; j++)
       for (int i = 0; i < N; i++)
-	{
+        {
           int pi = i + (N+1) * j;
           tas.AddTriangle (TATriangle (0, pi, pi+1, pi+N+2));
           tas.AddTriangle (TATriangle (0, pi, pi+N+2, pi+N+1));
-	}
+        }
   } 
   
   void Torus :: Read (istream & ist)

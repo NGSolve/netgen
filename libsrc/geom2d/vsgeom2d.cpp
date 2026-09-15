@@ -56,31 +56,31 @@ namespace netgen
 
     for (int i = 1; i <= geometry2d->GetSplines().Size(); i++)
       {
-	geometry2d->GetSplines()[i-1]->GetPoints (200, points);
+        geometry2d->GetSplines()[i-1]->GetPoints (200, points);
       
-	glBegin (GL_LINE_STRIP);
-	for (int j = 0; j < points.Size(); j++)
-	  glVertex3d (points[j](0), points[j](1), 0);
-	glEnd(); 
+        glBegin (GL_LINE_STRIP);
+        for (int j = 0; j < points.Size(); j++)
+          glVertex3d (points[j](0), points[j](1), 0);
+        glEnd(); 
       } 
 
     glColor3f (1, 0, 0);
 
     for (int i = 1; i <= geometry2d->GetSplines().Size(); i++)
       {
-	int other = geometry2d->GetSpline(i-1).copyfrom;
-	if (other != -1)
-	  {
-	    geometry2d->GetSplines()[i-1]->GetPoints (6, points);
-	    geometry2d->GetSplines()[other-1]->GetPoints (6, otherpoints);
-	    glBegin (GL_LINES);
-	    for (int j = 1; j < 5; j++)
-	      {
-		glVertex3d (points[j](0), points[j](1), 0);
-		glVertex3d (otherpoints[j](0), otherpoints[j](1), 0);
-	      }
-	    glEnd ();
-	  }
+        int other = geometry2d->GetSpline(i-1).copyfrom;
+        if (other != -1)
+          {
+            geometry2d->GetSplines()[i-1]->GetPoints (6, points);
+            geometry2d->GetSplines()[other-1]->GetPoints (6, otherpoints);
+            glBegin (GL_LINES);
+            for (int j = 1; j < 5; j++)
+              {
+                glVertex3d (points[j](0), points[j](1), 0);
+                glVertex3d (otherpoints[j](0), otherpoints[j](1), 0);
+              }
+            glEnd ();
+          }
       }
 
 

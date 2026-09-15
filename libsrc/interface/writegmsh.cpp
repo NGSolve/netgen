@@ -178,8 +178,8 @@ void WriteGmshFormat (const Mesh & mesh,
                   outfile << " ";
                   outfile << el.PNum(l);
                   }
-	              outfile << "\n";
-		  
+                      outfile << "\n";
+                  
                }
                outfile << "$ENDELM$ \n";
     }

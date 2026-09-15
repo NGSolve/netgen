@@ -50,7 +50,7 @@ namespace ngcore
   inline NGSOStream operator<< (std::ostream & ost, const IM & im)
   {
     return NGSOStream (ost, 
-		       (im.Value() <= printmessage_importance));
+                       (im.Value() <= printmessage_importance));
   }
 
   /*

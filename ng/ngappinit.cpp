@@ -69,8 +69,8 @@ int main(int argc, char ** argv)
       cout << "NETGEN-" << netgen::netgen_version << endl;
       
       cout << "Developed by Joachim Schoeberl at" << endl
-	   << "2010-xxxx Vienna University of Technology" << endl
-	   << "2006-2010 RWTH Aachen University" << endl
+           << "2010-xxxx Vienna University of Technology" << endl
+           << "2006-2010 RWTH Aachen University" << endl
            << "1996-2006 Johannes Kepler University Linz" << endl;
       
 #ifdef OCCGEOMETRY
@@ -100,7 +100,7 @@ int main(int argc, char ** argv)
   for (int i = 1; i < argc; i++)
     {
       if (argv[i][0] == '-')
-	parameters.SetCommandLineFlag (argv[i]);
+        parameters.SetCommandLineFlag (argv[i]);
       else
         {
           if (strstr(argv[i], ".py"))
@@ -238,11 +238,11 @@ int main(int argc, char ** argv)
       
       tcl_const char * exportft = Tcl_GetVar (myinterp, "exportfiletype", 0);
       for (int i = 1; i <= userformats.Size(); i++)
-	{
-	  fstr << ".ngmenu.file.filetype add radio -label \"" 
-	       << userformats.Get(i) << "\" -variable exportfiletype -command { .ngmenu.file invoke \"Export Mesh...\" } \n";
-	  fstr << "lappend meshexportformats { {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
-	}
+        {
+          fstr << ".ngmenu.file.filetype add radio -label \"" 
+               << userformats.Get(i) << "\" -variable exportfiletype -command { .ngmenu.file invoke \"Export Mesh...\" } \n";
+          fstr << "lappend meshexportformats { {" << userformats.Get(i) << "} {" << extensions.Get(i) << "} }\n";
+        }
 
         Tcl_Eval (myinterp, (char*)fstr.str().c_str());
       Tcl_SetVar (myinterp, "exportfiletype", exportft, 0);
@@ -262,7 +262,7 @@ int main(int argc, char ** argv)
       Tcl_Exit(0);
     }
 
-  return 0;		
+  return 0;             
 }
 
 

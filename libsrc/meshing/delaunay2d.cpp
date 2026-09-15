@@ -379,15 +379,15 @@ namespace netgen
     
     for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront.GetLine (i);
+        const FrontLine & line = adfront.GetLine (i);
 
-	const Point<3> & p1 = adfront.GetPoint(line.L()[0]);
-	const Point<3> & p2 = adfront.GetPoint(line.L()[1]);
-	
+        const Point<3> & p1 = adfront.GetPoint(line.L()[0]);
+        const Point<3> & p2 = adfront.GetPoint(line.L()[1]);
+        
         maxh = max (maxh, Dist (p1, p2));
-	
-	bbox.Add (p1);
-	bbox.Add (p2);
+        
+        bbox.Add (p1);
+        bbox.Add (p2);
       }
 
     
@@ -410,39 +410,39 @@ namespace netgen
         tcf.Start();
         // mesh.LocalHFunction().ClearFlags();
         mesh.LocalHFunction().ClearRootFlags();
-	tcf.Stop();
+        tcf.Stop();
         
         static Timer tcut("tcut");
         tcut.Start();
-	for (int i = 0; i < adfront.GetNFL(); i++)
-	  {
-	    const FrontLine & line = adfront.GetLine(i);
-	    
-	    Box<3> bbox (adfront.GetPoint (line.L()[0]));
-	    bbox.Add (adfront.GetPoint (line.L()[1]));
+        for (int i = 0; i < adfront.GetNFL(); i++)
+          {
+            const FrontLine & line = adfront.GetLine(i);
+            
+            Box<3> bbox (adfront.GetPoint (line.L()[0]));
+            bbox.Add (adfront.GetPoint (line.L()[1]));
 
-	    
-	    double filld = filldist * bbox.Diam();
-	    bbox.Increase (filld);
-	    
-	    mesh.LocalHFunction().CutBoundary (bbox); 
-	  }
-	tcut.Stop();
+            
+            double filld = filldist * bbox.Diam();
+            bbox.Increase (filld);
+            
+            mesh.LocalHFunction().CutBoundary (bbox); 
+          }
+        tcut.Stop();
 
-	mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
-	
-	npoints.SetSize(0);
-	mesh.LocalHFunction().GetInnerPoints (npoints);
+        mesh.LocalHFunction().FindInnerBoxes (adfront, NULL);
+        
+        npoints.SetSize(0);
+        mesh.LocalHFunction().GetInnerPoints (npoints);
 
-	changed = false;
-	for (int i = 0; i < npoints.Size(); i++)
-	  {
-	    if (mesh.LocalHFunction().GetH(npoints[i]) > 1.2 * maxh)
-	      {
-		mesh.LocalHFunction().SetH (npoints[i], maxh);
-		changed = true;
-	      }
-	  }
+        changed = false;
+        for (int i = 0; i < npoints.Size(); i++)
+          {
+            if (mesh.LocalHFunction().GetH(npoints[i]) > 1.2 * maxh)
+              {
+                mesh.LocalHFunction().SetH (npoints[i], maxh);
+                changed = true;
+              }
+          }
       }
     while (changed);
 
@@ -473,24 +473,24 @@ namespace netgen
       {
         size_t hi = (size_t(prim) * size_t(i)) % npoints.Size();
         
-	if (meshbox.IsIn (npoints[hi]))
-	  {
-	    PointIndex gpnum = mesh.AddPoint (npoints[hi]);
-	    adfront.AddPoint (npoints[hi], gpnum);
-	    
-	    if (debugparam.slowchecks)
-	      {
-		(*testout) << npoints[hi] << endl;
+        if (meshbox.IsIn (npoints[hi]))
+          {
+            PointIndex gpnum = mesh.AddPoint (npoints[hi]);
+            adfront.AddPoint (npoints[hi], gpnum);
+            
+            if (debugparam.slowchecks)
+              {
+                (*testout) << npoints[hi] << endl;
 
-		Point<2> p2d (npoints[hi](0), npoints[hi](1));
-		if (!adfront.Inside(p2d))
-		  {
-		    cout << "add outside point" << endl;
-		    (*testout) << "outside" << endl;
-		  }
-	      }
-	    
-	  }
+                Point<2> p2d (npoints[hi](0), npoints[hi](1));
+                if (!adfront.Inside(p2d))
+                  {
+                    cout << "add outside point" << endl;
+                    (*testout) << "outside" << endl;
+                  }
+              }
+            
+          }
       }
     
     timer3.Stop();
@@ -503,24 +503,24 @@ namespace netgen
 
     for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront.GetLine(i);
-	
-	Box<3> bbox (adfront.GetPoint (line.L()[0]));
-	bbox.Add (adfront.GetPoint (line.L()[1]));
-	
-	loch2.SetH (bbox.Center(), bbox.Diam());
+        const FrontLine & line = adfront.GetLine(i);
+        
+        Box<3> bbox (adfront.GetPoint (line.L()[0]));
+        bbox.Add (adfront.GetPoint (line.L()[1]));
+        
+        loch2.SetH (bbox.Center(), bbox.Diam());
       }
 
 
     for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront.GetLine(i);
-	
-	Box<3> bbox (adfront.GetPoint (line.L()[0]));
-	bbox.Add (adfront.GetPoint (line.L()[1]));
+        const FrontLine & line = adfront.GetLine(i);
+        
+        Box<3> bbox (adfront.GetPoint (line.L()[0]));
+        bbox.Add (adfront.GetPoint (line.L()[1]));
 
-	bbox.Increase (filldist * bbox.Diam());
-	loch2.CutBoundary (bbox);
+        bbox.Increase (filldist * bbox.Diam());
+        loch2.CutBoundary (bbox);
       }
     
     loch2.FindInnerBoxes (adfront, NULL);
@@ -532,11 +532,11 @@ namespace netgen
     /*
     for (int i = 1; i <= npoints.Size(); i++)
       {
-	if (meshbox.IsIn (npoints.Get(i)))
-	  {
-	    PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
-	    adfront.AddPoint (npoints.Get(i), gpnum);
-	  }
+        if (meshbox.IsIn (npoints.Get(i)))
+          {
+            PointIndex gpnum = mesh.AddPoint (npoints.Get(i));
+            adfront.AddPoint (npoints.Get(i), gpnum);
+          }
       }  
     */
 
@@ -575,7 +575,7 @@ namespace netgen
 
     for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront.GetLine(i);
+        const FrontLine & line = adfront.GetLine(i);
         bbox.Add (P2(Point<3> (adfront.GetPoint (line.L()[0]))));
         bbox.Add (P2(Point<3> (adfront.GetPoint (line.L()[1]))));
       }
@@ -605,7 +605,7 @@ namespace netgen
     /*
     for (int i = 0; i < adfront.GetNFL(); i++)
       {
-	const FrontLine & line = adfront.GetLine(i);
+        const FrontLine & line = adfront.GetLine(i);
         for (int j = 0; j < 2; j++)
           add_point.SetBit (adfront.GetGlobalIndex (line.L()[j]))adfront.GetGlobalIndex (line.L()[j]));
       }

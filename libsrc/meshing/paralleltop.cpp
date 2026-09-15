@@ -29,19 +29,19 @@ namespace netgen
 
     if (glob_edge.Size() != ned)
       {
-	glob_edge.SetSize(ned);
-	glob_face.SetSize(nfa);
-	glob_edge = -1;
-	glob_face = -1;
+        glob_edge.SetSize(ned);
+        glob_face.SetSize(nfa);
+        glob_edge = -1;
+        glob_face = -1;
 
-	loc2distedge.ChangeSize (ned);
-	loc2distface.ChangeSize (nfa);
+        loc2distedge.ChangeSize (ned);
+        loc2distface.ChangeSize (nfa);
       }
 
     if (glob_vert.Size() != mesh.GetNV())
       {
-	SetNV(mesh.GetNV());
-	SetNE(mesh.GetNE());
+        SetNV(mesh.GetNV());
+        SetNE(mesh.GetNE());
       }
   }
 
@@ -224,7 +224,7 @@ namespace netgen
   {
     for ( int i = 0; i < loc2distface[locnum-1].Size(); i+=1 )
       if ( loc2distface[locnum-1][i] == dest )
-	return;
+        return;
     loc2distface.Add(locnum-1, dest);
   }
 
@@ -232,7 +232,7 @@ namespace netgen
   {
     for ( int i = 0;  i < loc2distvert[locnum-1].Size(); i+=1 )
       if ( loc2distvert[locnum-1][i] == dest )
-	return;
+        return;
     loc2distvert.Add (locnum-1, dest);  
   }
 
@@ -241,7 +241,7 @@ namespace netgen
   {
     for ( int i = 0; i < loc2distedge[locnum-1].Size(); i+=1 )
       if ( loc2distedge[locnum-1][i] == dest )
-	return;
+        return;
     loc2distedge.Add (locnum-1, dest);
   }
   */
@@ -307,79 +307,79 @@ namespace netgen
 
     if ( id == 0 )
       {
-	Array<Array<int>*> sendarrays(ntasks);
-	for (int dest = 1; dest < ntasks; dest++)
-	  sendarrays[dest] = new Array<int>;
+        Array<Array<int>*> sendarrays(ntasks);
+        for (int dest = 1; dest < ntasks; dest++)
+          sendarrays[dest] = new Array<int>;
 
-	Array<int> edges, faces;
-	for (int el = 1; el <= mesh.GetNE(); el++)
-	  {
-	    topology.GetElementFaces (el, faces);
-	    topology.GetElementEdges (el, edges);
-	    // const Element & volel = mesh.VolumeElement (el);
+        Array<int> edges, faces;
+        for (int el = 1; el <= mesh.GetNE(); el++)
+          {
+            topology.GetElementFaces (el, faces);
+            topology.GetElementEdges (el, edges);
+            // const Element & volel = mesh.VolumeElement (el);
 
-	    // Array<int> & sendarray = *sendarrays[volel.GetPartition()];
+            // Array<int> & sendarray = *sendarrays[volel.GetPartition()];
             Array<int> & sendarray = *sendarrays[mesh.vol_partition[el-1]];
 
-	    for ( int i = 0; i < edges.Size(); i++ )
-	      sendarray.Append (edges[i]);
-	    for ( int i = 0; i < faces.Size(); i++ )
-	      sendarray.Append (faces[i]);
-	  }
+            for ( int i = 0; i < edges.Size(); i++ )
+              sendarray.Append (edges[i]);
+            for ( int i = 0; i < faces.Size(); i++ )
+              sendarray.Append (faces[i]);
+          }
 
-	for (int el = 1; el <= mesh.GetNSE(); el++)
-	  {
-	    topology.GetSurfaceElementEdges (el, edges);
-	    // const Element2d & surfel = mesh.SurfaceElement (el);
-	    // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
+        for (int el = 1; el <= mesh.GetNSE(); el++)
+          {
+            topology.GetSurfaceElementEdges (el, edges);
+            // const Element2d & surfel = mesh.SurfaceElement (el);
+            // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
             Array<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
-	    for ( int i = 0; i < edges.Size(); i++ )
-	      sendarray.Append (edges[i]);
-	    sendarray.Append (topology.GetSurfaceElementFace (el));
-	  }
+            for ( int i = 0; i < edges.Size(); i++ )
+              sendarray.Append (edges[i]);
+            sendarray.Append (topology.GetSurfaceElementFace (el));
+          }
 
-	Array<NG_MPI_Request> sendrequests;
-	for (int dest = 1; dest < ntasks; dest++)
-	  // sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, NG_MPI_TAG_MESH+10, comm));
+        Array<NG_MPI_Request> sendrequests;
+        for (int dest = 1; dest < ntasks; dest++)
+          // sendrequests.Append (MyMPI_ISend (*sendarrays[dest], dest, NG_MPI_TAG_MESH+10, comm));
           sendrequests.Append (comm.ISend (FlatArray<int>(*sendarrays[dest]), dest, NG_MPI_TAG_MESH+10));
-	MyMPI_WaitAll (sendrequests);
+        MyMPI_WaitAll (sendrequests);
 
-	for (int dest = 1; dest < ntasks; dest++)
-	  delete sendarrays[dest];
+        for (int dest = 1; dest < ntasks; dest++)
+          delete sendarrays[dest];
       }
 
     else
 
       {
-	// Array<int> recvarray;
-	// MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
-	Array<int> recvarray;
-	comm.Recv (recvarray, 0, NG_MPI_TAG_MESH+10); // MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
+        // Array<int> recvarray;
+        // MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
+        Array<int> recvarray;
+        comm.Recv (recvarray, 0, NG_MPI_TAG_MESH+10); // MyMPI_Recv (recvarray, 0, NG_MPI_TAG_MESH+10, comm);
 
-	int ii = 0;
+        int ii = 0;
 
-	Array<int> faces, edges;
+        Array<int> faces, edges;
 
-	for (int volel = 1; volel <= mesh.GetNE(); volel++)
-	  {
-	    topology.GetElementEdges ( volel, edges);
-	    for ( int i = 0; i  < edges.Size(); i++)
-	      SetLoc2Glob_Edge ( edges[i], recvarray[ii++]);
+        for (int volel = 1; volel <= mesh.GetNE(); volel++)
+          {
+            topology.GetElementEdges ( volel, edges);
+            for ( int i = 0; i  < edges.Size(); i++)
+              SetLoc2Glob_Edge ( edges[i], recvarray[ii++]);
 
-	    topology.GetElementFaces( volel, faces);
-	    for ( int i = 0; i  < faces.Size(); i++)
-	      SetLoc2Glob_Face ( faces[i], recvarray[ii++]);
-	  }
+            topology.GetElementFaces( volel, faces);
+            for ( int i = 0; i  < faces.Size(); i++)
+              SetLoc2Glob_Face ( faces[i], recvarray[ii++]);
+          }
 
-	for (int surfel = 1; surfel <= mesh.GetNSE(); surfel++)
-	  {
-	    topology.GetSurfaceElementEdges (surfel, edges);
-	    for (int i = 0; i  < edges.Size(); i++)
-	      SetLoc2Glob_Edge (edges[i], recvarray[ii++]);
-	    int face = topology.GetSurfaceElementFace (surfel);
-	    SetLoc2Glob_Face ( face, recvarray[ii++]);
-	  }
+        for (int surfel = 1; surfel <= mesh.GetNSE(); surfel++)
+          {
+            topology.GetSurfaceElementEdges (surfel, edges);
+            for (int i = 0; i  < edges.Size(); i++)
+              SetLoc2Glob_Edge (edges[i], recvarray[ii++]);
+            int face = topology.GetSurfaceElementFace (surfel);
+            SetLoc2Glob_Face ( face, recvarray[ii++]);
+          }
       }
     
     is_updated = true;
@@ -419,23 +419,23 @@ namespace netgen
         
         loc2distvert.ChangeSize(mesh.mlbetweennodes.Size());
 
-	bool changed = true;
-	while (changed)
-	  {
-	    changed = false;
+        bool changed = true;
+        while (changed)
+          {
+            changed = false;
 
-	    // build exchange vertices
-	    cnt_send = 0;
-	    for (PointIndex pi : mesh.Points().Range())
-	      for (int dist : GetDistantProcs(pi))
-		cnt_send[dist]++;
+            // build exchange vertices
+            cnt_send = 0;
+            for (PointIndex pi : mesh.Points().Range())
+              for (int dist : GetDistantProcs(pi))
+                cnt_send[dist]++;
             // TABLE<int> dest2vert(cnt_send);    
-	    DynamicTable<PointIndex> dest2vert(cnt_send);    
-	    for (PointIndex pi : mesh.Points().Range())
-	      for (int dist : GetDistantProcs(pi))
-		dest2vert.Add (dist, pi);
+            DynamicTable<PointIndex> dest2vert(cnt_send);    
+            for (PointIndex pi : mesh.Points().Range())
+              for (int dist : GetDistantProcs(pi))
+                dest2vert.Add (dist, pi);
             
-	    for (PointIndex pi = IndexBASE<PointIndex>(); pi < newnv+IndexBASE<PointIndex>(); pi++)
+            for (PointIndex pi = IndexBASE<PointIndex>(); pi < newnv+IndexBASE<PointIndex>(); pi++)
               if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())              
                 {
                   auto procs1 = GetDistantProcs(v1);
@@ -445,7 +445,7 @@ namespace netgen
                       cnt_send[p]++;
                 }
 
-	    // TABLE<int> dest2pair(cnt_send);
+            // TABLE<int> dest2pair(cnt_send);
             DynamicTable<PointIndex> dest2pair(cnt_send);            
             
             for (PointIndex pi : mesh.mlbetweennodes.Range())
@@ -458,8 +458,8 @@ namespace netgen
                       dest2pair.Add (p, pi);
                 }
 
-	    cnt_send = 0;
-	    for (PointIndex pi : mesh.mlbetweennodes.Range())
+            cnt_send = 0;
+            for (PointIndex pi : mesh.mlbetweennodes.Range())
               if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())
                 {
                   auto procs1 = GetDistantProcs(v1);
@@ -469,21 +469,21 @@ namespace netgen
                     if (procs2.Contains(p))
                       cnt_send[p]+=2;
                 }
-	    
-	    // TABLE<int> send_verts(cnt_send);
+            
+            // TABLE<int> send_verts(cnt_send);
             DynamicTable<int> send_verts(cnt_send);
 
-	    Array<int, PointIndex> loc2exchange(mesh.GetNV());
+            Array<int, PointIndex> loc2exchange(mesh.GetNV());
 
-	    for (int dest = 0; dest < ntasks; dest++)
-	      if (dest != id)
-		{
-		  loc2exchange = -1;
-		  int cnt = 0;
-		  for (PointIndex pi : dest2vert[dest])
-		    loc2exchange[pi] = cnt++;
-		  
-		  for (PointIndex pi : dest2pair[dest])
+            for (int dest = 0; dest < ntasks; dest++)
+              if (dest != id)
+                {
+                  loc2exchange = -1;
+                  int cnt = 0;
+                  for (PointIndex pi : dest2vert[dest])
+                    loc2exchange[pi] = cnt++;
+                  
+                  for (PointIndex pi : dest2pair[dest])
                     if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())                    
                       {
                         auto procs1 = GetDistantProcs(v1);
@@ -495,43 +495,43 @@ namespace netgen
                             send_verts.Add (dest, loc2exchange[v2]);
                           }
                       }
-		}
+                }
 
-	    DynamicTable<int> recv_verts(ntasks);
+            DynamicTable<int> recv_verts(ntasks);
             comm.ExchangeTable (send_verts, recv_verts, NG_MPI_TAG_MESH+9);
 
-	    for (int dest = 0; dest < ntasks; dest++)
-	      if (dest != id)
-		{
-		  loc2exchange = -1;
-		  int cnt = 0;
+            for (int dest = 0; dest < ntasks; dest++)
+              if (dest != id)
+                {
+                  loc2exchange = -1;
+                  int cnt = 0;
 
-		  for (PointIndex pi : dest2vert[dest])
-		    loc2exchange[pi] = cnt++;
-		  
-		  FlatArray<int> recvarray = recv_verts[dest];
-		  for (int ii = 0; ii < recvarray.Size(); ii+=2)
-		    for (PointIndex pi : dest2pair[dest])
-		      {
-			PointIndex v1 = mesh.mlbetweennodes[pi][0];
-			PointIndex v2 = mesh.mlbetweennodes[pi][1];
-			if (v1.IsValid())
-			  {
-			    INDEX_2 re(recvarray[ii], recvarray[ii+1]);
-			    INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
-			    // if (es == re && !IsExchangeVert(dest, pi))
+                  for (PointIndex pi : dest2vert[dest])
+                    loc2exchange[pi] = cnt++;
+                  
+                  FlatArray<int> recvarray = recv_verts[dest];
+                  for (int ii = 0; ii < recvarray.Size(); ii+=2)
+                    for (PointIndex pi : dest2pair[dest])
+                      {
+                        PointIndex v1 = mesh.mlbetweennodes[pi][0];
+                        PointIndex v2 = mesh.mlbetweennodes[pi][1];
+                        if (v1.IsValid())
+                          {
+                            INDEX_2 re(recvarray[ii], recvarray[ii+1]);
+                            INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
+                            // if (es == re && !IsExchangeVert(dest, pi))
                             if (es == re && !GetDistantProcs(pi).Contains(dest))
-			      {
-				// SetDistantPNum(dest, pi);
+                              {
+                                // SetDistantPNum(dest, pi);
                                 AddDistantProc (pi, dest);
-				changed = true;
-			      }
-			  }
-		      }
-		}
+                                changed = true;
+                              }
+                          }
+                      }
+                }
 
             changed = comm.AllReduce (changed, NG_MPI_LOR);
-	  }
+          }
       }
 
     Array<int> sendarray, recvarray;
@@ -548,12 +548,12 @@ namespace netgen
     cnt_send = 0;
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	cnt_send[dist]++;
+        cnt_send[dist]++;
     // TABLE<int> dest2vert(cnt_send);
     DynamicTable<PointIndex> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	dest2vert.Add (dist, pi);
+        dest2vert.Add (dist, pi);
     
     // NG_MPI_Group_free(&NG_MPI_LocalGroup);
     // NG_MPI_Comm_free(&NG_MPI_LocalComm);
@@ -627,29 +627,29 @@ namespace netgen
     cnt_send = 0;
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	cnt_send[dist]++;
+        cnt_send[dist]++;
     // TABLE<int> dest2vert(cnt_send);
     DynamicTable<PointIndex> dest2vert(cnt_send);    
     for (PointIndex pi : mesh.Points().Range())
       for (int dist : GetDistantProcs(pi))
-	dest2vert.Add (dist, pi);
+        dest2vert.Add (dist, pi);
 
     // exchange edges
     cnt_send = 0;
     // int v1, v2;
     for (int edge = 1; edge <= ned; edge++)
       {
-	// topology.GetEdgeVertices (edge, v1, v2);
+        // topology.GetEdgeVertices (edge, v1, v2);
         auto [v1,v2] = topology.GetEdgeVertices(edge-1);
         /*
-	for (int dest = 1; dest < ntasks; dest++)
-	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+        for (int dest = 1; dest < ntasks; dest++)
+          // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
           if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
-	    cnt_send[dest-1]+=1;
+            cnt_send[dest-1]+=1;
         */
         for (auto p : GetDistantProcs(v1))
           if (GetDistantProcs(v2).Contains(p))
-	    cnt_send[p]+=1;
+            cnt_send[p]+=1;
       }
     
     // TABLE<int> dest2edge(cnt_send);
@@ -660,12 +660,12 @@ namespace netgen
 
     for (int edge = 1; edge <= ned; edge++)
       {
-	// topology.GetEdgeVertices (edge, v1, v2);
+        // topology.GetEdgeVertices (edge, v1, v2);
         auto [v1,v2] = topology.GetEdgeVertices(edge-1);        
-	for (int dest = 0; dest < ntasks; dest++)
-	  // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
+        for (int dest = 0; dest < ntasks; dest++)
+          // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
           if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
-	    dest2edge.Add (dest, edge);
+            dest2edge.Add (dest, edge);
       }
 
 
@@ -675,9 +675,9 @@ namespace netgen
         loc2exchange = -1;
         int cnt = 0;
         for (PointIndex pi : dest2vert[dest])
-	  loc2exchange[pi] = cnt++;
+          loc2exchange[pi] = cnt++;
 
-	for (int edge : dest2edge[dest])
+        for (int edge : dest2edge[dest])
           {
             // topology.GetEdgeVertices (edge, v1, v2);
             auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
@@ -695,26 +695,26 @@ namespace netgen
 
     for (int dest = 0; dest < ntasks; dest++)
       {
-	auto ex2loc = dest2vert[dest];
-	if (ex2loc.Size() == 0) continue;
+        auto ex2loc = dest2vert[dest];
+        if (ex2loc.Size() == 0) continue;
 
-	ClosedHashTable<PointIndices<2>, int> vert2edge(4*dest2edge[dest].Size()+16);
-	for (int edge : dest2edge[dest])
-	  {
-	    // topology.GetEdgeVertices (edge, v1, v2);
+        ClosedHashTable<PointIndices<2>, int> vert2edge(4*dest2edge[dest].Size()+16);
+        for (int edge : dest2edge[dest])
+          {
+            // topology.GetEdgeVertices (edge, v1, v2);
             auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
-	    vert2edge.Set(PointIndices<2>(v1,v2), edge);
-	  }
+            vert2edge.Set(PointIndices<2>(v1,v2), edge);
+          }
 
-	FlatArray<int> recvarray = recv_edges[dest];
+        FlatArray<int> recvarray = recv_edges[dest];
         for (int ii = 0; ii < recvarray.Size(); ii+=2)
-	  {
-	    PointIndices<2> re(ex2loc[recvarray[ii]], 
-			       ex2loc[recvarray[ii+1]]);
-	    if (vert2edge.Used(re))
-	      // SetDistantEdgeNum(dest, vert2edge.Get(re));
+          {
+            PointIndices<2> re(ex2loc[recvarray[ii]], 
+                               ex2loc[recvarray[ii+1]]);
+            if (vert2edge.Used(re))
+              // SetDistantEdgeNum(dest, vert2edge.Get(re));
               AddDistantEdgeProc(vert2edge.Get(re)-1, dest);
-	  }
+          }
       }
 
 
@@ -724,104 +724,104 @@ namespace netgen
     // cout << "UpdateCoarseGrid - faces" << endl;
     if (mesh.GetDimension() == 3)
       {
-	timerf.Start();
+        timerf.Start();
 
-	// exchange faces
-	cnt_send = 0;
-	for (int face = 1; face <= nfa; face++)
-	  {
-	    auto verts = topology.GetFaceVertices (face-1);
-	    for (int dest = 0; dest < ntasks; dest++)
-	      if (dest != id)
+        // exchange faces
+        cnt_send = 0;
+        for (int face = 1; face <= nfa; face++)
+          {
+            auto verts = topology.GetFaceVertices (face-1);
+            for (int dest = 0; dest < ntasks; dest++)
+              if (dest != id)
                 /*
-		if (IsExchangeVert (dest, verts[0]) && 
-		    IsExchangeVert (dest, verts[1]) &&
-		    IsExchangeVert (dest, verts[2]))
+                if (IsExchangeVert (dest, verts[0]) && 
+                    IsExchangeVert (dest, verts[1]) &&
+                    IsExchangeVert (dest, verts[2]))
                 */
                 if (GetDistantProcs (verts[0]).Contains(dest) &&
                     GetDistantProcs (verts[1]).Contains(dest) &&
                     GetDistantProcs (verts[2]).Contains(dest))
-		  cnt_send[dest]++;
-	  }
-	
-	// TABLE<int> dest2face(cnt_send);
+                  cnt_send[dest]++;
+          }
+        
+        // TABLE<int> dest2face(cnt_send);
         DynamicTable<int> dest2face(cnt_send);
-	for (int face = 1; face <= nfa; face++)
-	  {
-	    auto verts = topology.GetFaceVertices (face-1);
-	    for (int dest = 0; dest < ntasks; dest++)
-	      if (dest != id)
+        for (int face = 1; face <= nfa; face++)
+          {
+            auto verts = topology.GetFaceVertices (face-1);
+            for (int dest = 0; dest < ntasks; dest++)
+              if (dest != id)
                 /*
-		if (IsExchangeVert (dest, verts[0]) && 
-		    IsExchangeVert (dest, verts[1]) &&
-		    IsExchangeVert (dest, verts[2]))
+                if (IsExchangeVert (dest, verts[0]) && 
+                    IsExchangeVert (dest, verts[1]) &&
+                    IsExchangeVert (dest, verts[2]))
                 */
                 if (GetDistantProcs (verts[0]).Contains(dest) && 
                     GetDistantProcs (verts[1]).Contains(dest) &&
                     GetDistantProcs (verts[2]).Contains(dest))
-		  dest2face.Add(dest, face);
-	  }
+                  dest2face.Add(dest, face);
+          }
 
-	for (int & c : cnt_send) c*=3;
-	// TABLE<int> send_faces(cnt_send);
+        for (int & c : cnt_send) c*=3;
+        // TABLE<int> send_faces(cnt_send);
         DynamicTable<int> send_faces(cnt_send);
-	Array<int, PointIndex> loc2exchange(mesh.GetNV());
-	for (int dest = 0; dest < ntasks; dest++)
-	  if (dest != id)
-	    {
-	      if (dest2vert[dest].Size() == 0) continue;
+        Array<int, PointIndex> loc2exchange(mesh.GetNV());
+        for (int dest = 0; dest < ntasks; dest++)
+          if (dest != id)
+            {
+              if (dest2vert[dest].Size() == 0) continue;
 
-	      loc2exchange = -1;
-	      int cnt = 0;
-	      for (PointIndex pi : dest2vert[dest])
-		loc2exchange[pi] = cnt++;
-	      
-	      for (int face : dest2face[dest])
-		{
-		  auto verts = topology.GetFaceVertices (face-1);
+              loc2exchange = -1;
+              int cnt = 0;
+              for (PointIndex pi : dest2vert[dest])
+                loc2exchange[pi] = cnt++;
+              
+              for (int face : dest2face[dest])
+                {
+                  auto verts = topology.GetFaceVertices (face-1);
                   /*
-		  if (IsExchangeVert (dest, verts[0]) && 
-		      IsExchangeVert (dest, verts[1]) &&
-		      IsExchangeVert (dest, verts[2]))
+                  if (IsExchangeVert (dest, verts[0]) && 
+                      IsExchangeVert (dest, verts[1]) &&
+                      IsExchangeVert (dest, verts[2]))
                   */
                   if (GetDistantProcs (verts[0]).Contains(dest) &&
                       GetDistantProcs (verts[1]).Contains(dest) &&
                       GetDistantProcs (verts[2]).Contains(dest))
-		    {
-		      send_faces.Add (dest, loc2exchange[verts[0]]);
-		      send_faces.Add (dest, loc2exchange[verts[1]]);
-		      send_faces.Add (dest, loc2exchange[verts[2]]);
-		    }
-		}
-	    }
-	
-	DynamicTable<int> recv_faces(ntasks);
+                    {
+                      send_faces.Add (dest, loc2exchange[verts[0]]);
+                      send_faces.Add (dest, loc2exchange[verts[1]]);
+                      send_faces.Add (dest, loc2exchange[verts[2]]);
+                    }
+                }
+            }
+        
+        DynamicTable<int> recv_faces(ntasks);
         comm.ExchangeTable (send_faces, recv_faces, NG_MPI_TAG_MESH+9);
-	
-	for (int dest = 0; dest < ntasks; dest++)
-	  {
-	    auto ex2loc = dest2vert[dest];
-	    if (ex2loc.Size() == 0) continue;
-	    
-	    ClosedHashTable<PointIndices<3>, int> vert2face(4*dest2face[dest].Size()+16);
-	    for (int face : dest2face[dest])
-	      {
-		auto verts = topology.GetFaceVertices (face-1);
-		vert2face.Set(PointIndices<3>(verts[0], verts[1], verts[2]), face);
-	      }
-	    
-	    FlatArray<int> recvarray = recv_faces[dest];
-	    for (int ii = 0; ii < recvarray.Size(); ii+=3)
-	      {
-		PointIndices<3> re(ex2loc[recvarray[ii]], 
-				   ex2loc[recvarray[ii+1]],
-				   ex2loc[recvarray[ii+2]]);
-		if (vert2face.Used(re))
-		  AddDistantFaceProc(vert2face.Get(re)-1, dest);
-	      }
-	  }
-	
-	timerf.Stop();
+        
+        for (int dest = 0; dest < ntasks; dest++)
+          {
+            auto ex2loc = dest2vert[dest];
+            if (ex2loc.Size() == 0) continue;
+            
+            ClosedHashTable<PointIndices<3>, int> vert2face(4*dest2face[dest].Size()+16);
+            for (int face : dest2face[dest])
+              {
+                auto verts = topology.GetFaceVertices (face-1);
+                vert2face.Set(PointIndices<3>(verts[0], verts[1], verts[2]), face);
+              }
+            
+            FlatArray<int> recvarray = recv_faces[dest];
+            for (int ii = 0; ii < recvarray.Size(); ii+=3)
+              {
+                PointIndices<3> re(ex2loc[recvarray[ii]], 
+                                   ex2loc[recvarray[ii+1]],
+                                   ex2loc[recvarray[ii+2]]);
+                if (vert2face.Used(re))
+                  AddDistantFaceProc(vert2face.Get(re)-1, dest);
+              }
+          }
+        
+        timerf.Stop();
       }
     // cout << "UpdateCoarseGrid - done" << endl;
     // EnumeratePointsGlobally();

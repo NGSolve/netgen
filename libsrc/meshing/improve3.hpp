@@ -44,7 +44,7 @@ public:
   double SwapImproveEdge (const TBitArray<ElementIndex> * working_elements, Table<ElementIndex,PointIndex> & elementsonnode, ClosedHashTable<SortedPointIndices<3>, int> & faces, PointIndex pi1, PointIndex pi2, bool check_only=false);
   void SwapImprove (const TBitArray<ElementIndex> * working_elements = NULL);
   void SwapImproveSurface (const TBitArray<ElementIndex> * working_elements = NULL,
-			   const Array< idmap_type* > * idmaps = NULL);
+                           const Array< idmap_type* > * idmaps = NULL);
   void SwapImprove2 (bool conform_segments = false);
   double SwapImprove2 (ElementIndex eli1, int face, Table<ElementIndex, PointIndex> & elementsonnode, DynamicTable<SurfaceElementIndex, PointIndex> & belementsonnode, bool conform_segments, bool check_only=false );
 
@@ -55,7 +55,7 @@ public:
   {
     if (elem.GetType() == TET)
       return CalcTetBadness (points[elem[0]], points[elem[1]],  
-			     points[elem[2]], points[elem[3]], h, mp);  
+                             points[elem[2]], points[elem[3]], h, mp);  
     return 0;
   }
 
@@ -73,7 +73,7 @@ CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h, const Me
 {
   if (elem.GetType() == TET)
     return CalcTetBadness (points[elem[0]], points[elem[1]],  
-			   points[elem[2]], points[elem[3]], h, mp);  
+                           points[elem[2]], points[elem[3]], h, mp);  
   return 0;
 }
 
@@ -113,9 +113,9 @@ class PointFunction1 : public MinFunction
   double h;
 public:
   PointFunction1 (Mesh::T_POINTS & apoints, 
-		  const Array<PointIndices<3>> & afaces,
-		  const MeshingParameters & amp,
-		  double ah);
+                  const Array<PointIndices<3>> & afaces,
+                  const MeshingParameters & amp,
+                  double ah);
   
   virtual double Func (const Vector & x) const;
   virtual double FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const;
@@ -136,7 +136,7 @@ public:
   
 public:
   JacobianPointFunction (Mesh::T_POINTS & apoints, 
-			 const Array<Element, ElementIndex> & aelements);
+                         const Array<Element, ElementIndex> & aelements);
   virtual ~JacobianPointFunction () { ; }
   virtual void SetPointIndex (PointIndex aactpind);
   virtual double Func (const Vector & x) const;

@@ -69,9 +69,9 @@ namespace netgen
     }
 
     virtual void GetDerivatives (const double t, 
-				 Point<D> & point,
-				 Vec<D> & first,
-				 Vec<D> & second) const 
+                                 Point<D> & point,
+                                 Vec<D> & first,
+                                 Vec<D> & second) const 
     {
       double eps = 1e-6;
       point = GetPoint (t);
@@ -88,10 +88,10 @@ namespace netgen
     /// returns terminal point on curve
     virtual const GeomPoint<D> & EndPI () const = 0;
     /** writes curve description for fepp:
-	for implicitly given quadratic curves, the 6 coefficients of
-	the polynomial
-	$$ a x^2 + b y^2 + c x y + d x + e y + f = 0 $$
-	are written to ost */
+        for implicitly given quadratic curves, the 6 coefficients of
+        the polynomial
+        $$ a x^2 + b y^2 + c x y + d x + e y + f = 0 $$
+        are written to ost */
     void PrintCoeff (ostream & ost) const;
 
     virtual void GetCoeff (Vector & coeffs) const = 0;
@@ -100,10 +100,10 @@ namespace netgen
     virtual void GetPoints (int n, Array<Point<D> > & points) const;
 
     /** calculates (2D) lineintersections:
-	for lines $$ a x + b y + c = 0 $$ the intersecting points are calculated
-	and stored in points */
+        for lines $$ a x + b y + c = 0 $$ the intersecting points are calculated
+        and stored in points */
     virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const
+                                    Array < Point<D> > & points, const double eps) const
     {points.SetSize(0);}
 
     // is the point in the convex hull (increased by eps) of the spline ?
@@ -149,9 +149,9 @@ namespace netgen
 
   
     virtual void GetDerivatives (const double t, 
-				 Point<D> & point,
-				 Vec<D> & first,
-				 Vec<D> & second) const;
+                                 Point<D> & point,
+                                 Vec<D> & first,
+                                 Vec<D> & second) const;
     ///
     virtual const GeomPoint<D> & StartPI () const { return p1; };
     ///
@@ -163,7 +163,7 @@ namespace netgen
     virtual string GetType(void) const {return "line";}
 
     virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const;
+                                    Array < Point<D> > & points, const double eps) const;
     
     virtual bool InConvexHull (Point<D> p, double eps) const
     {
@@ -189,13 +189,13 @@ namespace netgen
   public:
     ///
     DLL_HEADER SplineSeg3 (const GeomPoint<D> & ap1,
-		const GeomPoint<D> & ap2, 
-		const GeomPoint<D> & ap3,
+                const GeomPoint<D> & ap2, 
+                const GeomPoint<D> & ap3,
                 string bcname="default",
                 double maxh=1e99);
     DLL_HEADER SplineSeg3 (const GeomPoint<D> & ap1,
-		const GeomPoint<D> & ap2,
-		const GeomPoint<D> & ap3,
+                const GeomPoint<D> & ap2,
+                const GeomPoint<D> & ap3,
                 double aweight,
                 string bcname="default",
                 double maxh=1e99);
@@ -216,9 +216,9 @@ namespace netgen
 
   
     DLL_HEADER virtual void GetDerivatives (const double t, 
-				 Point<D> & point,
-				 Vec<D> & first,
-				 Vec<D> & second) const;
+                                 Point<D> & point,
+                                 Vec<D> & first,
+                                 Vec<D> & second) const;
     ///
     DLL_HEADER virtual const GeomPoint<D> & StartPI () const { return p1; };
     ///
@@ -232,7 +232,7 @@ namespace netgen
     const GeomPoint<D> & TangentPoint (void) const { return p2; }
 
     DLL_HEADER virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const;
+                                    Array < Point<D> > & points, const double eps) const;
 
     virtual bool InConvexHull (Point<D> p, double eps) const
     {
@@ -254,15 +254,15 @@ namespace netgen
   {
     ///
   private:
-    GeomPoint<D>	p1, p2, p3;
-    //const GeomPoint<D>	&p1, &p2, &p3;
-    Point<D>		pm;
-    double		radius, w1,w3;
+    GeomPoint<D>        p1, p2, p3;
+    //const GeomPoint<D>        &p1, &p2, &p3;
+    Point<D>            pm;
+    double              radius, w1,w3;
   public:
     ///
     CircleSeg (const GeomPoint<D> & ap1, 
-	       const GeomPoint<D> & ap2, 
-	       const GeomPoint<D> & ap3);
+               const GeomPoint<D> & ap2, 
+               const GeomPoint<D> & ap3);
     // default constructor for archive
     CircleSeg() {}
     virtual void DoArchive(Archive& ar)
@@ -289,7 +289,7 @@ namespace netgen
     virtual string GetType(void) const {return "circle";}
 
     virtual void LineIntersections (const double a, const double b, const double c,
-				    Array < Point<D> > & points, const double eps) const;
+                                    Array < Point<D> > & points, const double eps) const;
 
     virtual bool InConvexHull (Point<D> p, double eps) const
     {
@@ -354,9 +354,9 @@ namespace netgen
     double l = 0;
     for (int i = 1; i <= n; i++)
       {
-	Point<D> p = GetPoint (i * dt);
-	l += Dist (p, pold);
-	pold = p;
+        Point<D> p = GetPoint (i * dt);
+        l += Dist (p, pold);
+        pold = p;
       }
 
     return l;
@@ -369,7 +369,7 @@ namespace netgen
     points.SetSize (n);
     if (n >= 2)
       for (int i = 0; i < n; i++)
-	points[i] = GetPoint(double(i) / (n-1));
+        points[i] = GetPoint(double(i) / (n-1));
   }
 
 
@@ -394,7 +394,7 @@ namespace netgen
 
   template<int D>
   LineSeg<D> :: LineSeg (const GeomPoint<D> & ap1, 
-			 const GeomPoint<D> & ap2,
+                         const GeomPoint<D> & ap2,
                          double maxh, string bcname)
     : SplineSeg<D>(maxh, bcname), p1(ap1), p2(ap2)
   {
@@ -416,9 +416,9 @@ namespace netgen
 
   template<int D>
   void LineSeg<D> :: GetDerivatives (const double t, 
-				     Point<D> & point,
-				     Vec<D> & first,
-				     Vec<D> & second) const
+                                     Point<D> & point,
+                                     Vec<D> & first,
+                                     Vec<D> & second) const
   {
     first = p2 - p1;
     point = p1 + t * first;
@@ -464,7 +464,7 @@ namespace netgen
 
   template<int D>
   void LineSeg<D> :: LineIntersections (const double a, const double b, const double c,
-					Array < Point<D> > & points, const double eps) const
+                                        Array < Point<D> > & points, const double eps) const
   {
     points.SetSize(0);
 
@@ -531,12 +531,12 @@ namespace netgen
 
 
   //########################################################################
-  //		circlesegment
+  //            circlesegment
 
   template<int D>
   CircleSeg<D> :: CircleSeg (const GeomPoint<D> & ap1, 
-			     const GeomPoint<D> & ap2,
-			     const GeomPoint<D> & ap3)
+                             const GeomPoint<D> & ap2,
+                             const GeomPoint<D> & ap3)
     : p1(ap1), p2(ap2), p3(ap3)
   {
     Vec<D> v1,v2;
@@ -567,8 +567,8 @@ namespace netgen
     w3      = Angle(auxv);
     if ( fabs(w3-w1) > M_PI )
       {  
-	if ( w3>M_PI )   w3 -= 2*M_PI;
-	if ( w1>M_PI )   w1 -= 2*M_PI;
+        if ( w3>M_PI )   w3 -= 2*M_PI;
+        if ( w1>M_PI )   w1 -= 2*M_PI;
       }
   }
 
@@ -623,8 +623,8 @@ namespace netgen
   { 
     for(int i=0; i<D; i++)
       {
-	p1n(i) = apts[0](i);
-	p2n(i) = apts.Last()(i);
+        p1n(i) = apts[0](i);
+        p2n(i) = apts.Last()(i);
       }
     p1n.refatpoint = 1;
     p2n.refatpoint = 1;
@@ -705,8 +705,8 @@ namespace netgen
     /*
     for(int i=0; i<D; i++)
       {
-	p1n(i) = apts[0](i);
-	p2n(i) = apts.Last()(i);
+        p1n(i) = apts[0](i);
+        p2n(i) = apts.Last()(i);
       }
     */
     p1n = apts[0];
@@ -753,16 +753,16 @@ namespace netgen
     
     for(int degree=1;degree<ORDER;degree++)
       for (int k = 0; k <= degree; k++)
-	{
-	  int j = interval_nr-degree+k;
-	  double bnew = 0;
+        {
+          int j = interval_nr-degree+k;
+          double bnew = 0;
 
-	  if (k != 0) 
-	    bnew += (t-ti[j]) / ( ti[j+degree]-ti[j] ) * b[k-degree+ORDER-1];
-	  if (k != degree)
-	    bnew += (ti[j+degree+1]-t) / ( ti[j+degree+1]-ti[j+1] ) * b[k-degree+ORDER];
-	  b[k-degree+ORDER-1] = bnew;
-	}
+          if (k != 0) 
+            bnew += (t-ti[j]) / ( ti[j+degree]-ti[j] ) * b[k-degree+ORDER-1];
+          if (k != degree)
+            bnew += (ti[j+degree+1]-t) / ( ti[j+degree+1]-ti[j+1] ) * b[k-degree+ORDER];
+          b[k-degree+ORDER-1] = bnew;
+        }
 
     Point<D> p = 0.0;
     for(int i=0; i < ORDER; i++) 

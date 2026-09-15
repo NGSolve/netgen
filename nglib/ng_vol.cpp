@@ -85,7 +85,7 @@ int main (int argc, char ** argv)
     {
       Ng_GetVolumeElement (mesh, i, tet);
       cout << i << ": " << tet[0] << " " << tet[1] 
-	   << " " << tet[2] << " " << tet[3] << endl;
+           << " " << tet[2] << " " << tet[3] << endl;
     }
 
   Ng_SaveMesh(mesh,"test.vol");

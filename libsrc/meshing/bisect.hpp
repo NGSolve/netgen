@@ -36,10 +36,10 @@ public:
 
 
 DLL_HEADER extern void BisectTetsCopyMesh (Mesh &, const NetgenGeometry *,
-				BisectionOptions & opt);
+                                BisectionOptions & opt);
 
 DLL_HEADER extern void ZRefinement (Mesh &, const class NetgenGeometry *,
-			 ZRefinementOptions & opt);
+                         ZRefinementOptions & opt);
 
 
 
@@ -62,7 +62,7 @@ public:
 
   void ValidateSecondOrder (Mesh & mesh);
   void ValidateRefinedMesh (Mesh & mesh, 
-			    Array<PointIndices<2>, PointIndex> & parents);
+                            Array<PointIndices<2>, PointIndex> & parents);
   
   virtual void LocalizeEdgePoints(Mesh & /* mesh */) const {;}
 };

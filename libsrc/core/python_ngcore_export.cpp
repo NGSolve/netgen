@@ -216,25 +216,25 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     })
     .def("__getitem__", [](Flags & self, const string& name) -> py::object {
 
-	  if(self.NumListFlagDefined(name))
-	    return py::cast(self.GetNumListFlag(name));
+          if(self.NumListFlagDefined(name))
+            return py::cast(self.GetNumListFlag(name));
 
-	  if(self.StringListFlagDefined(name))
-	    return py::cast(self.GetStringListFlag(name));
-	 
-	  if(self.NumFlagDefined(name))
-	    return py::cast(*self.GetNumFlagPtr(name));
-	  
-	  if(self.StringFlagDefined(name))
-	    return py::cast(self.GetStringFlag(name));
+          if(self.StringListFlagDefined(name))
+            return py::cast(self.GetStringListFlag(name));
+         
+          if(self.NumFlagDefined(name))
+            return py::cast(*self.GetNumFlagPtr(name));
+          
+          if(self.StringFlagDefined(name))
+            return py::cast(self.GetStringFlag(name));
 
-	  if(self.FlagsFlagDefined(name))
-	    return py::cast(self.GetFlagsFlag(name));
+          if(self.FlagsFlagDefined(name))
+            return py::cast(self.GetFlagsFlag(name));
 
           if(self.AnyFlagDefined(name))
             return CastAnyToPy(self.GetAnyFlag(name));
 
-	  return py::cast(self.GetDefineFlag(name));
+          return py::cast(self.GetDefineFlag(name));
       }, py::arg("name"), "Return flag by given name")
     .def("ToDict", [](const Flags& flags)
     {
@@ -395,11 +395,11 @@ threads : int
     ;
   
   m.def("Timers",
-	  []() 
-	   {
-	     py::list timers;
-	     for (int i = 0; i < NgProfiler::SIZE; i++)
-	       if (!NgProfiler::timers[i].name.empty())
+          []() 
+           {
+             py::list timers;
+             for (int i = 0; i < NgProfiler::SIZE; i++)
+               if (!NgProfiler::timers[i].name.empty())
                {
                  py::dict timer;
                  timer["name"] = py::str(NgProfiler::timers[i].name);
@@ -409,9 +409,9 @@ threads : int
                  timer["Gflop/s"] = py::float_(NgProfiler::GetFlops(i)/NgProfiler::GetTime(i)*1e-9);
                  timers.append(timer);
                }
-	     return timers;
-	   }, "Returns list of timers"
-	   );
+             return timers;
+           }, "Returns list of timers"
+           );
   m.def("ResetTimers", &NgProfiler::Reset);
 
   py::class_<NgMPI_Comm> (m, "MPI_Comm")
@@ -438,7 +438,7 @@ threads : int
           { procs[i] = proc_list[i]; }
         if (!procs.Contains(c.Rank()))
           { throw Exception("rank "+ToString(c.Rank())+" not in subcomm"); }
-	return c.SubCommunicator(procs);
+        return c.SubCommunicator(procs);
       }, py::arg("procs"));
   ;
 

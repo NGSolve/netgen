@@ -1409,10 +1409,10 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME)
       {
-	multithread.task = "Volume optimization";
+        multithread.task = "Volume optimization";
 
-	OptimizeVolume (mparam, *mesh);
-	if (multithread.terminate) return 0;
+        OptimizeVolume (mparam, *mesh);
+        if (multithread.terminate) return 0;
       }
     FinalizeMesh(*mesh);
     return 0;

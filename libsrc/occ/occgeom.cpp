@@ -349,12 +349,12 @@ namespace netgen
     for (TopExp_Explorer exp_solid(shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
       {
         cout << "cnt = " << cnt << endl;
-	if (cnt == 0)
-	  my_fuse = exp_solid.Current();
-	else
+        if (cnt == 0)
+          my_fuse = exp_solid.Current();
+        else
           // my_fuse = BRepAlgoAPI_Fuse (my_fuse, exp_solid.Current());
           my_fuse = QANewModTopOpe_Glue::QANewModTopOpe_Glue(my_fuse, exp_solid.Current());
-	cnt++;
+        cnt++;
       }
     cout << "remove" << endl;
     // for (int i = 1; i <= somap.Size(); i++)
@@ -805,10 +805,10 @@ namespace netgen
                   TopoDS_Solid newsolid = solid;
                   BRepLib::OrientClosedSolid (newsolid);
                   Handle(ShapeBuild_ReShape) rebuild = new ShapeBuild_ReShape;
-                  //		  rebuild->Apply(shape);
+                  //              rebuild->Apply(shape);
                   rebuild->Replace(solid, newsolid);
                   TopoDS_Shape newshape = rebuild->Apply(shape, TopAbs_COMPSOLID);//, 1);
-                  //		  TopoDS_Shape newshape = rebuild->Apply(shape);
+                  //              TopoDS_Shape newshape = rebuild->Apply(shape);
                   shape = newshape;
                }
 
@@ -1672,9 +1672,9 @@ namespace netgen
 
     if (ext == ".igs")
       {
-	IGESControl_Writer writer("millimeters", 1);
-	writer.AddShape (shape);
-	writer.Write (c_filename);
+        IGESControl_Writer writer("millimeters", 1);
+        writer.AddShape (shape);
+        writer.Write (c_filename);
       }
     else if (ext == ".stp")
       {
@@ -1682,15 +1682,15 @@ namespace netgen
       }
     else if (ext == ".stl")
       {
-	StlAPI_Writer writer;
-	writer.ASCIIMode() = Standard_True;
-	writer.Write (shape, c_filename);
+        StlAPI_Writer writer;
+        writer.ASCIIMode() = Standard_True;
+        writer.Write (shape, c_filename);
       }
     else if (ext == ".stlb")
       {
-	StlAPI_Writer writer;
-	writer.ASCIIMode() = Standard_False;
-	writer.Write (shape, c_filename);
+        StlAPI_Writer writer;
+        writer.ASCIIMode() = Standard_False;
+        writer.Write (shape, c_filename);
       }
 
     throw NgException ("Unknown target format: " + filename);
@@ -1863,21 +1863,21 @@ namespace netgen
          str << lname2.str() << " ";
 
          switch (e.Current().ShapeType())
-	   {
-	   case TopAbs_SOLID:
-	     count2 = somap.FindIndex(TopoDS::Solid(e.Current())); break;
-	   case TopAbs_SHELL:
-	     count2 = shmap.FindIndex(TopoDS::Shell(e.Current())); break;
-	   case TopAbs_FACE:
-	     count2 = fmap.FindIndex(TopoDS::Face(e.Current())); break;
-	   case TopAbs_WIRE:
-	     count2 = wmap.FindIndex(TopoDS::Wire(e.Current())); break;
-	   case TopAbs_EDGE:
-	     count2 = emap.FindIndex(TopoDS::Edge(e.Current())); break;
-	   case TopAbs_VERTEX:
-	     count2 = vmap.FindIndex(TopoDS::Vertex(e.Current())); break;
-	   default:
-	     cout << "RecursiveTopologyTree: Case " << e.Current().ShapeType() << " not handled" << endl;
+           {
+           case TopAbs_SOLID:
+             count2 = somap.FindIndex(TopoDS::Solid(e.Current())); break;
+           case TopAbs_SHELL:
+             count2 = shmap.FindIndex(TopoDS::Shell(e.Current())); break;
+           case TopAbs_FACE:
+             count2 = fmap.FindIndex(TopoDS::Face(e.Current())); break;
+           case TopAbs_WIRE:
+             count2 = wmap.FindIndex(TopoDS::Wire(e.Current())); break;
+           case TopAbs_EDGE:
+             count2 = emap.FindIndex(TopoDS::Edge(e.Current())); break;
+           case TopAbs_VERTEX:
+             count2 = vmap.FindIndex(TopoDS::Vertex(e.Current())); break;
+           default:
+             cout << "RecursiveTopologyTree: Case " << e.Current().ShapeType() << " not handled" << endl;
          }
 
          int nrsubshapes = 0;
@@ -2235,8 +2235,8 @@ namespace netgen
   void OCCParameters :: Print(ostream & ost) const
    {
       ost << "OCC Parameters:" << endl
-		 << "minimum edge length: " << resthminedgelenenable
-		 << ", min len = " << resthminedgelen << endl;
+                 << "minimum edge length: " << resthminedgelenenable
+                 << ", min len = " << resthminedgelen << endl;
    }
 
   DLL_HEADER extern OCCParameters occparam;

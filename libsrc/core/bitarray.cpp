@@ -118,9 +118,9 @@ namespace ngcore
     size_t n = ba.Size();
     for (size_t i = 0; i < n; i++)
       {
-	if (i % 50 == 0) s << i << ": ";
-	s << int(ba[i]);
-	if (i % 50 == 49) s << "\n";
+        if (i % 50 == 0) s << i << ": ";
+        s << int(ba[i]);
+        if (i % 50 == 49) s << "\n";
       }
     s << std::flush;
     return s;

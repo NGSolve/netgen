@@ -274,8 +274,8 @@ namespace netgen
     mat_col[2] = 0.2;
     break;
     default:
-    //	  mat_col[0] = 1-(1.0/double(shapenr));
-    //	  mat_col[1] = 0.5;
+    //    mat_col[0] = 1-(1.0/double(shapenr));
+    //    mat_col[1] = 0.5;
     mat_col[0] = 0.5+double((shapenr*shapenr*shapenr*shapenr) % 10)/20.0;
     mat_col[1] = 0.5+double(int(shapenr*shapenr*shapenr*shapenr*sin(double(shapenr))) % 10)/20.0;
     mat_col[2] = 0.5+double((shapenr*shapenr*shapenr) % 10)/20.0;
@@ -607,7 +607,7 @@ namespace netgen
 #endif
                prop.SetParameters (uv.X(), uv.Y());
 
-               //	      surf->D0 (uv.X(), uv.Y(), pnt);
+               //             surf->D0 (uv.X(), uv.Y(), pnt);
 
                if (prop.IsNormalDefined())
                n = prop.Normal();
@@ -615,7 +615,7 @@ namespace netgen
                {
                   (*testout) << "Visualization of face " << i
                   << ": Normal vector not defined" << endl;
-                  //		  n = gp_Vec (0,0,0);
+                  //              n = gp_Vec (0,0,0);
                   gp_Vec a(p[0],p[1]);
                   gp_Vec b(p[0],p[2]);
                   n = b^a;

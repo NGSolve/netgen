@@ -548,7 +548,7 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
   if (params.grow_edges)
     {
       for (const auto& sel : mesh.SurfaceElements())
-	if (is_boundary_projected.Test(sel.GetIndex()))
+        if (is_boundary_projected.Test(sel.GetIndex()))
           {
             auto n = getNormal(sel);
             for (auto i : Range(sel.PNums()))

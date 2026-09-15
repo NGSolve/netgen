@@ -23,8 +23,8 @@ IntersectTriangleLine (const Point<3> ** tri, const Point<3> ** line)
 
   /*
   (*testout) << "Tri-Line inters: " << endl
-	     << "tri = " << *tri[0] << ", " << *tri[1] << ", " << *tri[2] << endl
-	     << "line = " << *line[0] << ", " << *line[1] << endl;
+             << "tri = " << *tri[0] << ", " << *tri[1] << ", " << *tri[2] << endl
+             << "line = " << *line[0] << ", " << *line[1] << endl;
   */
   for (i = 0; i < 3; i++)
     {
@@ -53,15 +53,15 @@ IntersectTriangleLine (const Point<3> ** tri, const Point<3> ** line)
       //      (*testout) << "WARNING: IntersectTriangleLine degenerated\n";
       /*
       (*testout) << "lin-tri intersection: " << endl
-		 << "line = " << *line[0] << " - " << *line[1] << endl
-		 << "tri = " << *tri[0] << " - " << *tri[1] << " - " << *tri[2] << endl
-		 << "lami = " << lami << endl
-		 << "pc = " << ( *line[0] + lami.Get(1) * vl ) << endl
-		 << "   = " << ( *tri[0] + lami.Get(2) * vt1 + lami.Get(3) * vt2) << endl
-		 << " a = " << a << endl
-		 << " ainv = " << ainv << endl
-		 << " det(a) = " << det << endl
-		 << " rs = " << rs << endl;
+                 << "line = " << *line[0] << " - " << *line[1] << endl
+                 << "tri = " << *tri[0] << " - " << *tri[1] << " - " << *tri[2] << endl
+                 << "lami = " << lami << endl
+                 << "pc = " << ( *line[0] + lami.Get(1) * vl ) << endl
+                 << "   = " << ( *tri[0] + lami.Get(2) * vt1 + lami.Get(3) * vt2) << endl
+                 << " a = " << a << endl
+                 << " ainv = " << ainv << endl
+                 << " det(a) = " << det << endl
+                 << " rs = " << rs << endl;
       */
 #endif
       return 0;
@@ -89,15 +89,15 @@ IntersectTriangleLine (const Point<3> ** tri, const Point<3> ** line)
       (*testout) << "WARNING: IntersectTriangleLine numerical inexact" << endl;
 
       (*testout) << "lin-tri intersection: " << endl
-		 << "line = " << *line[0] << " - " << *line[1] << endl
-		 << "tri = " << *tri[0] << " - " << *tri[1] << " - " << *tri[2] << endl
-		 << "lami = " << lami << endl
-		 << "pc = " << ( *line[0] + lami(0) * vl ) << endl
-		 << "   = " << ( *tri[0] + lami(1) * vt1 + lami(2) * vt2) << endl
-		 << " a = " << a << endl
-		 << " ainv = " << ainv << endl
-		 << " det(a) = " << det << endl
-		 << " rs = " << rs << endl;
+                 << "line = " << *line[0] << " - " << *line[1] << endl
+                 << "tri = " << *tri[0] << " - " << *tri[1] << " - " << *tri[2] << endl
+                 << "lami = " << lami << endl
+                 << "pc = " << ( *line[0] + lami(0) * vl ) << endl
+                 << "   = " << ( *tri[0] + lami(1) * vt1 + lami(2) * vt2) << endl
+                 << " a = " << a << endl
+                 << " ainv = " << ainv << endl
+                 << " det(a) = " << det << endl
+                 << " rs = " << rs << endl;
 #endif
     }
       
@@ -117,7 +117,7 @@ IntersectTriangleLine (const Point<3> ** tri, const Point<3> ** line)
 
 
 int IntersectTetTriangle (const Point<3> ** tet, const Point<3> ** tri,
-			  const int * tetpi, const int * tripi)
+                          const int * tetpi, const int * tripi)
 {
   int i, j;
   double diam = Dist (*tri[0], *tri[1]);
@@ -140,44 +140,44 @@ int IntersectTetTriangle (const Point<3> ** tet, const Point<3> ** tri,
   if (!tetpi)
     {
       for (i = 0; i <= 2; i++)
-	{
-	  //	  loctripi[i] = -1;
-	  for (j = 0; j <= 3; j++)
-	    {
-	      if (Dist2 (*tet[j], *tri[i]) < eps2)
-		{
-		  //		  loctripi[i] = j;
-		  //		  loctetpi[j] = i;
-		  cnt++;
-		  tetp2 = tetp1;
-		  tetp1 = j;
-		  trip2 = trip1;
-		  trip1 = i;
-		  break;
-		}
-	    }
-	}
+        {
+          //      loctripi[i] = -1;
+          for (j = 0; j <= 3; j++)
+            {
+              if (Dist2 (*tet[j], *tri[i]) < eps2)
+                {
+                  //              loctripi[i] = j;
+                  //              loctetpi[j] = i;
+                  cnt++;
+                  tetp2 = tetp1;
+                  tetp1 = j;
+                  trip2 = trip1;
+                  trip1 = i;
+                  break;
+                }
+            }
+        }
     }
   else
     {
       for (i = 0; i <= 2; i++)
-	{
-	  //	  loctripi[i] = -1;
-	  for (j = 0; j <= 3; j++)
-	    {
-	      if (tetpi[j] == tripi[i])
-		{
-		  //		  loctripi[i] = j;
-		  //		  loctetpi[j] = i;
-		  cnt++;
-		  tetp2 = tetp1;
-		  tetp1 = j;
-		  trip2 = trip1;
-		  trip1 = i;
-		  break;
-		}
-	    }
-	}
+        {
+          //      loctripi[i] = -1;
+          for (j = 0; j <= 3; j++)
+            {
+              if (tetpi[j] == tripi[i])
+                {
+                  //              loctripi[i] = j;
+                  //              loctetpi[j] = i;
+                  cnt++;
+                  tetp2 = tetp1;
+                  tetp1 = j;
+                  trip2 = trip1;
+                  trip1 = i;
+                  break;
+                }
+            }
+        }
     }  
   
   //  (*testout) << "cnt = " << cnt << endl;
@@ -190,235 +190,235 @@ int IntersectTetTriangle (const Point<3> ** tet, const Point<3> ** tri,
     {
     case 0:
       {
-	Vec<3> no, n;
-	int inpi[3];
+        Vec<3> no, n;
+        int inpi[3];
 
-	// check, if some trigpoint is in tet:
+        // check, if some trigpoint is in tet:
 
-	for (j = 0; j < 3; j++)
-	  inpi[j] = 1;
+        for (j = 0; j < 3; j++)
+          inpi[j] = 1;
 
-	for (i = 1; i <= 4; i++)
-	  {
-	    int pi1 = i % 4;
-	    int pi2 = (i+1) % 4;
-	    int pi3 = (i+2) % 4;
-	    int pi4 = (i+3) % 4;
+        for (i = 1; i <= 4; i++)
+          {
+            int pi1 = i % 4;
+            int pi2 = (i+1) % 4;
+            int pi3 = (i+2) % 4;
+            int pi4 = (i+3) % 4;
 
-	    Vec<3> v1 (*tet[pi1], *tet[pi2]);
-	    Vec<3> v2 (*tet[pi1], *tet[pi3]);
-	    Vec<3> v3 (*tet[pi1], *tet[pi4]);
-	    Cross (v1, v2, n);
+            Vec<3> v1 (*tet[pi1], *tet[pi2]);
+            Vec<3> v2 (*tet[pi1], *tet[pi3]);
+            Vec<3> v3 (*tet[pi1], *tet[pi4]);
+            Cross (v1, v2, n);
 
-	    // n /= n.Length();
-	    double nl = n.Length();
+            // n /= n.Length();
+            double nl = n.Length();
 
-	    if (v3 * n > 0)
-	      n *= -1;
+            if (v3 * n > 0)
+              n *= -1;
 
-	    int outeri = 1;
-	    for (j = 0; j < 3; j++)
-	      {
-		Vec<3> v(*tet[pi1], *tri[j]);
-		if ( v * n < eps * nl)
-		  outeri = 0;
-		else
-		  inpi[j] = 0;
-	      }
+            int outeri = 1;
+            for (j = 0; j < 3; j++)
+              {
+                Vec<3> v(*tet[pi1], *tri[j]);
+                if ( v * n < eps * nl)
+                  outeri = 0;
+                else
+                  inpi[j] = 0;
+              }
 
-	    if (outeri)
-	      return 0;
-	  }
+            if (outeri)
+              return 0;
+          }
 
-	if (inpi[0] || inpi[1] || inpi[2])
-	  {
-	    return 1;
-	  }
-
-
-	// check, if some tet edge intersects triangle:
-	const Point<3> * line[2], *tetf[3];
-	for (i = 0; i <= 2; i++)
-	  for (j = i+1; j <= 3; j++)
-	    {
-	      line[0] = tet[i];
-	      line[1] = tet[j];
-
-	      if (IntersectTriangleLine (tri, &line[0]))
-		return 1;
-	    }
-
-	// check, if triangle line intersects tet face:
-	for (i = 0; i <= 3; i++)
-	  {
-	    for (j = 0; j <= 2; j++)
-	      tetf[j] = tet[(i+j) % 4];
-	    
-	    for (j = 0; j <= 2; j++)
-	      {
-		line[0] = tri[j];
-		line[1] = tri[(j+1) % 3];
-		
-		if (IntersectTriangleLine (&tetf[0], &line[0]))
-		  return 1;
-	      }
-	  }
+        if (inpi[0] || inpi[1] || inpi[2])
+          {
+            return 1;
+          }
 
 
-	return 0;
-//GH	break;
+        // check, if some tet edge intersects triangle:
+        const Point<3> * line[2], *tetf[3];
+        for (i = 0; i <= 2; i++)
+          for (j = i+1; j <= 3; j++)
+            {
+              line[0] = tet[i];
+              line[1] = tet[j];
+
+              if (IntersectTriangleLine (tri, &line[0]))
+                return 1;
+            }
+
+        // check, if triangle line intersects tet face:
+        for (i = 0; i <= 3; i++)
+          {
+            for (j = 0; j <= 2; j++)
+              tetf[j] = tet[(i+j) % 4];
+            
+            for (j = 0; j <= 2; j++)
+              {
+                line[0] = tri[j];
+                line[1] = tri[(j+1) % 3];
+                
+                if (IntersectTriangleLine (&tetf[0], &line[0]))
+                  return 1;
+              }
+          }
+
+
+        return 0;
+//GH    break;
       }
     case 1:
       {
-	trip2 = 0;
-	while (trip2 == trip1)
-	  trip2++;
-	trip3 = 3 - trip1 - trip2;
+        trip2 = 0;
+        while (trip2 == trip1)
+          trip2++;
+        trip3 = 3 - trip1 - trip2;
 
-	tetp2 = 0;
-	while (tetp2 == tetp1)
-	  tetp2++;
-	tetp3 = 0;
-	while (tetp3 == tetp1 || tetp3 == tetp2)
-	  tetp3++;
-	tetp4 = 6 - tetp1 - tetp2 - tetp3;
+        tetp2 = 0;
+        while (tetp2 == tetp1)
+          tetp2++;
+        tetp3 = 0;
+        while (tetp3 == tetp1 || tetp3 == tetp2)
+          tetp3++;
+        tetp4 = 6 - tetp1 - tetp2 - tetp3;
 
-	Vec<3> vtri1 = *tri[trip2] - *tri[trip1];
-	Vec<3> vtri2 = *tri[trip3] - *tri[trip1];
-	Vec<3> ntri;
-	Cross (vtri1, vtri2, ntri);
+        Vec<3> vtri1 = *tri[trip2] - *tri[trip1];
+        Vec<3> vtri2 = *tri[trip3] - *tri[trip1];
+        Vec<3> ntri;
+        Cross (vtri1, vtri2, ntri);
 
-	// tri durch tet ?
-	// fehlt noch
+        // tri durch tet ?
+        // fehlt noch
 
 
-	// test 3 tet-faces:
-	for (i = 1; i <= 3; i++)
-	  {
-	    Vec<3> vtet1, vtet2;
-	    switch (i)
-	      {
-	      case 1:
-		{
-		  vtet1 = *tet[tetp2] - *tet[tetp1];
-		  vtet2 = *tet[tetp3] - *tet[tetp1];
-		  break;
-		}
-	      case 2:
-		{
-		  vtet1 = *tet[tetp3] - *tet[tetp1];
-		  vtet2 = *tet[tetp4] - *tet[tetp1];
-		  break;
-		}
-	      case 3:
-		{
-		  vtet1 = *tet[tetp4] - *tet[tetp1];
-		  vtet2 = *tet[tetp2] - *tet[tetp1];
-		  break;
-		}
-	      }
-	    
-	    Vec<3> ntet;
-	    Cross (vtet1, vtet2, ntet);
-	    
-	    Vec<3> crline = Cross (ntri, ntet);
+        // test 3 tet-faces:
+        for (i = 1; i <= 3; i++)
+          {
+            Vec<3> vtet1, vtet2;
+            switch (i)
+              {
+              case 1:
+                {
+                  vtet1 = *tet[tetp2] - *tet[tetp1];
+                  vtet2 = *tet[tetp3] - *tet[tetp1];
+                  break;
+                }
+              case 2:
+                {
+                  vtet1 = *tet[tetp3] - *tet[tetp1];
+                  vtet2 = *tet[tetp4] - *tet[tetp1];
+                  break;
+                }
+              case 3:
+                {
+                  vtet1 = *tet[tetp4] - *tet[tetp1];
+                  vtet2 = *tet[tetp2] - *tet[tetp1];
+                  break;
+                }
+              }
+            
+            Vec<3> ntet;
+            Cross (vtet1, vtet2, ntet);
+            
+            Vec<3> crline = Cross (ntri, ntet);
 
-	    double lcrline = crline.Length();
+            double lcrline = crline.Length();
 
-	    if (lcrline < eps * eps * eps * eps)  // new change !
-	      continue;
+            if (lcrline < eps * eps * eps * eps)  // new change !
+              continue;
 
-	    if (vtri1 * crline + vtri2 * crline < 0)
-	      crline *= -1;
+            if (vtri1 * crline + vtri2 * crline < 0)
+              crline *= -1;
 
-	    crline /= lcrline;
+            crline /= lcrline;
 
-	    double lam1, lam2, lam3, lam4;
-	    LocalCoordinates (vtri1, vtri2, crline, lam1, lam2);
-	    LocalCoordinates (vtet1, vtet2, crline, lam3, lam4);
-	    
-	    if (lam1 > -epsrel && lam2 > -epsrel &&
-		lam3 > -epsrel && lam4 > -epsrel)
-	      {
-		
-		/*
-		(*testout) << "lcrline = " << lcrline 
-			   << " eps = " << eps << " diam = " << diam << endl;
-		 
-		(*testout) << "hit, cnt == 1 " 
-			   << "lam1,2,3,4 = " << lam1 << ", " 
-			   << lam2 << ", " << lam3 << ", " << lam4
-			   << "\n";
-		*/
-		return 1;
-	      }
-	  }
-	return 0;
-//GH	break;
+            double lam1, lam2, lam3, lam4;
+            LocalCoordinates (vtri1, vtri2, crline, lam1, lam2);
+            LocalCoordinates (vtet1, vtet2, crline, lam3, lam4);
+            
+            if (lam1 > -epsrel && lam2 > -epsrel &&
+                lam3 > -epsrel && lam4 > -epsrel)
+              {
+                
+                /*
+                (*testout) << "lcrline = " << lcrline 
+                           << " eps = " << eps << " diam = " << diam << endl;
+                 
+                (*testout) << "hit, cnt == 1 " 
+                           << "lam1,2,3,4 = " << lam1 << ", " 
+                           << lam2 << ", " << lam3 << ", " << lam4
+                           << "\n";
+                */
+                return 1;
+              }
+          }
+        return 0;
+//GH    break;
       }
     case 2:
       {
-	// common edge
-	tetp3 = 0;
-	while (tetp3 == tetp1 || tetp3 == tetp2)
-	  tetp3++;
-	tetp4 = 6 - tetp1 - tetp2 - tetp3;
-	trip3 = 3 - trip1 - trip2;
+        // common edge
+        tetp3 = 0;
+        while (tetp3 == tetp1 || tetp3 == tetp2)
+          tetp3++;
+        tetp4 = 6 - tetp1 - tetp2 - tetp3;
+        trip3 = 3 - trip1 - trip2;
 
-	//	(*testout) << "trip1,2,3 = " << trip1 << ", " << trip2 << ", " << trip3 << endl;
-	//	(*testout) << "tetp1,2,3,4 = " << tetp1 << ", " << tetp2 
-	//		   << ", " << tetp3 << ", " << tetp4 << endl;
+        //      (*testout) << "trip1,2,3 = " << trip1 << ", " << trip2 << ", " << trip3 << endl;
+        //      (*testout) << "tetp1,2,3,4 = " << tetp1 << ", " << tetp2 
+        //                 << ", " << tetp3 << ", " << tetp4 << endl;
 
-	Vec<3> vtri = *tri[trip3] - *tri[trip1];
-	Vec<3> vtet1 = *tet[tetp3] - *tri[trip1];
-	Vec<3> vtet2 = *tet[tetp4] - *tri[trip1];
+        Vec<3> vtri = *tri[trip3] - *tri[trip1];
+        Vec<3> vtet1 = *tet[tetp3] - *tri[trip1];
+        Vec<3> vtet2 = *tet[tetp4] - *tri[trip1];
 
-	Vec<3> n = *tri[trip2] - *tri[trip1];
-	n /= n.Length();
+        Vec<3> n = *tri[trip2] - *tri[trip1];
+        n /= n.Length();
 
-	vtet1 -= (n * vtet1) * n;
-	vtet2 -= (n * vtet2) * n;
+        vtet1 -= (n * vtet1) * n;
+        vtet2 -= (n * vtet2) * n;
 
 
-	double lam1, lam2;
-	LocalCoordinates (vtet1, vtet2, vtri, lam1, lam2);
-	
-	if (lam1 < -epsrel || lam2 < -epsrel)
-	  return 0;
-	else
-	  {
-	    /*
+        double lam1, lam2;
+        LocalCoordinates (vtet1, vtet2, vtri, lam1, lam2);
+        
+        if (lam1 < -epsrel || lam2 < -epsrel)
+          return 0;
+        else
+          {
+            /*
 
-	    (*testout) << "vtet1 = " << vtet1 << endl;
-	    (*testout) << "vtet2 = " << vtet2 << endl;
-	    (*testout) << "vtri = " << vtri << endl;
-	    (*testout) << "lam1 = " << lam1 << " lam2 = " << lam2 << endl;
-	    (*testout) << (lam1 * (vtet1 * vtet1) + lam2 * (vtet1 * vtet2))
-		       << " = " << (vtet1 * vtri) << endl;
-	    (*testout) << (lam1 * (vtet1 * vtet2) + lam2 * (vtet2 * vtet2))
-		       << " = " << (vtet2 * vtri) << endl;
-	    
-	    (*testout) << "tet = ";
-	    for (j = 0; j < 4; j++)
-	      (*testout) << (*tet[j]) << " ";
-	    (*testout) << endl;
-	    (*testout) << "tri = ";
-	    for (j = 0; j < 3; j++)
-	      (*testout) << (*tri[j]) << " ";
-	    (*testout) << endl;
+            (*testout) << "vtet1 = " << vtet1 << endl;
+            (*testout) << "vtet2 = " << vtet2 << endl;
+            (*testout) << "vtri = " << vtri << endl;
+            (*testout) << "lam1 = " << lam1 << " lam2 = " << lam2 << endl;
+            (*testout) << (lam1 * (vtet1 * vtet1) + lam2 * (vtet1 * vtet2))
+                       << " = " << (vtet1 * vtri) << endl;
+            (*testout) << (lam1 * (vtet1 * vtet2) + lam2 * (vtet2 * vtet2))
+                       << " = " << (vtet2 * vtri) << endl;
+            
+            (*testout) << "tet = ";
+            for (j = 0; j < 4; j++)
+              (*testout) << (*tet[j]) << " ";
+            (*testout) << endl;
+            (*testout) << "tri = ";
+            for (j = 0; j < 3; j++)
+              (*testout) << (*tri[j]) << " ";
+            (*testout) << endl;
 
-	    (*testout) << "hit, cnt == 2" << endl;
-	    */
-	    
-	    return 1;
-	  }
-	  
-	break;
+            (*testout) << "hit, cnt == 2" << endl;
+            */
+            
+            return 1;
+          }
+          
+        break;
       }
     case 3:
       {
-	// common face
-	return 0;
+        // common face
+        return 0;
       }
     }
 
@@ -458,39 +458,39 @@ int IntersectTetTriangleRef (const Point<3> ** tri, const int * tripi)
   if (!tetpi)
     {
       for (i = 0; i <= 2; i++)
-	{
-	  for (j = 0; j <= 3; j++)
-	    {
-	      if (Dist2 (*tet[j], *tri[i]) < eps2)
-		{
-		  cnt++;
-		  tetp2 = tetp1;
-		  tetp1 = j;
-		  trip2 = trip1;
-		  trip1 = i;
-		  break;
-		}
-	    }
-	}
+        {
+          for (j = 0; j <= 3; j++)
+            {
+              if (Dist2 (*tet[j], *tri[i]) < eps2)
+                {
+                  cnt++;
+                  tetp2 = tetp1;
+                  tetp1 = j;
+                  trip2 = trip1;
+                  trip1 = i;
+                  break;
+                }
+            }
+        }
     }
   else
   */
     {
       for (i = 0; i <= 2; i++)
-	{
-	  for (j = 0; j <= 3; j++)
-	    {
-	      if (tetpi[j] == tripi[i])
-		{
-		  cnt++;
-		  tetp2 = tetp1;
-		  tetp1 = j;
-		  trip2 = trip1;
-		  trip1 = i;
-		  break;
-		}
-	    }
-	}
+        {
+          for (j = 0; j <= 3; j++)
+            {
+              if (tetpi[j] == tripi[i])
+                {
+                  cnt++;
+                  tetp2 = tetp1;
+                  tetp1 = j;
+                  trip2 = trip1;
+                  trip1 = i;
+                  break;
+                }
+            }
+        }
     }  
   
   //  (*testout) << "cnt = " << cnt << endl;
@@ -500,215 +500,215 @@ int IntersectTetTriangleRef (const Point<3> ** tri, const int * tripi)
     {
     case 0:
       {
-	Vec<3> no, n;
-	//	int inpi[3];
-	int pside[3][4];
+        Vec<3> no, n;
+        //      int inpi[3];
+        int pside[3][4];
 
-	for (j = 0; j < 3; j++)
-	  {
-	    pside[j][0] = (*tri[j])(0) > -eps;
-	    pside[j][1] = (*tri[j])(1) > -eps;
-	    pside[j][2] = (*tri[j])(2) > -eps;
-	    pside[j][3] = (*tri[j])(0) + (*tri[j])(1) + (*tri[j])(2) < 1+eps;
-	  }
+        for (j = 0; j < 3; j++)
+          {
+            pside[j][0] = (*tri[j])(0) > -eps;
+            pside[j][1] = (*tri[j])(1) > -eps;
+            pside[j][2] = (*tri[j])(2) > -eps;
+            pside[j][3] = (*tri[j])(0) + (*tri[j])(1) + (*tri[j])(2) < 1+eps;
+          }
 
-	
-	for (j = 0; j < 4; j++)
-	  {
-	    if (!pside[0][j] && !pside[1][j] && !pside[2][j])
-	      return 0;
-	  }
+        
+        for (j = 0; j < 4; j++)
+          {
+            if (!pside[0][j] && !pside[1][j] && !pside[2][j])
+              return 0;
+          }
 
-	for (j = 0; j < 3; j++)
-	  {
-	    if (pside[j][0] && pside[j][1] && pside[j][2] && pside[j][3])
-	      return 1;
-	  }
-
-
-	const Point<3> * line[2], *tetf[3];
-	for (i = 0; i <= 2; i++)
-	  for (j = i+1; j <= 3; j++)
-	    {
-	      line[0] = tet[i];
-	      line[1] = tet[j];
-
-	      if (IntersectTriangleLine (tri, &line[0]))
-		return 1;
-	    }
-
-	for (i = 0; i <= 3; i++)
-	  {
-	    for (j = 0; j <= 2; j++)
-	      tetf[j] = tet[(i+j) % 4];
-	    
-	    for (j = 0; j <= 2; j++)
-	      {
-		line[0] = tri[j];
-		line[1] = tri[(j+1) % 3];
-
-	      if (IntersectTriangleLine (&tetf[0], &line[0]))
-		return 1;
-	      }
-	  }
+        for (j = 0; j < 3; j++)
+          {
+            if (pside[j][0] && pside[j][1] && pside[j][2] && pside[j][3])
+              return 1;
+          }
 
 
-	return 0;
-	break;
+        const Point<3> * line[2], *tetf[3];
+        for (i = 0; i <= 2; i++)
+          for (j = i+1; j <= 3; j++)
+            {
+              line[0] = tet[i];
+              line[1] = tet[j];
+
+              if (IntersectTriangleLine (tri, &line[0]))
+                return 1;
+            }
+
+        for (i = 0; i <= 3; i++)
+          {
+            for (j = 0; j <= 2; j++)
+              tetf[j] = tet[(i+j) % 4];
+            
+            for (j = 0; j <= 2; j++)
+              {
+                line[0] = tri[j];
+                line[1] = tri[(j+1) % 3];
+
+              if (IntersectTriangleLine (&tetf[0], &line[0]))
+                return 1;
+              }
+          }
+
+
+        return 0;
+        break;
       }
     case 1:
       {
-	trip2 = 0;
-	if (trip2 == trip1)
-	  trip2++;
-	trip3 = 3 - trip1 - trip2;
+        trip2 = 0;
+        if (trip2 == trip1)
+          trip2++;
+        trip3 = 3 - trip1 - trip2;
 
-	tetp2 = 0;
-	while (tetp2 == tetp1)
-	  tetp2++;
-	tetp3 = 0;
-	while (tetp3 == tetp1 || tetp3 == tetp2)
-	  tetp3++;
-	tetp4 = 6 - tetp1 - tetp2 - tetp3;
+        tetp2 = 0;
+        while (tetp2 == tetp1)
+          tetp2++;
+        tetp3 = 0;
+        while (tetp3 == tetp1 || tetp3 == tetp2)
+          tetp3++;
+        tetp4 = 6 - tetp1 - tetp2 - tetp3;
 
-	Vec<3> vtri1 = *tri[trip2] - *tri[trip1];
-	Vec<3> vtri2 = *tri[trip3] - *tri[trip1];
-	Vec<3> ntri;
-	Cross (vtri1, vtri2, ntri);
+        Vec<3> vtri1 = *tri[trip2] - *tri[trip1];
+        Vec<3> vtri2 = *tri[trip3] - *tri[trip1];
+        Vec<3> ntri;
+        Cross (vtri1, vtri2, ntri);
 
-	// tri durch tet ?
+        // tri durch tet ?
 
-	/*
-	Vec<3> vtet1(*tet[tetp1], *tet[tetp2]);
-	Vec<3> vtet2(*tet[tetp1], *tet[tetp3]);
-	Vec<3> vtet3(*tet[tetp1], *tet[tetp4]);
-	Vec<3> sol;
-	
-	SolveLinearSystem (vtet1, vtet2, vtet3, vtri1, sol);
-	if (sol.X() > 0 && sol.Y() > 0 && sol.Z() > 0)
-	  return 1;
+        /*
+        Vec<3> vtet1(*tet[tetp1], *tet[tetp2]);
+        Vec<3> vtet2(*tet[tetp1], *tet[tetp3]);
+        Vec<3> vtet3(*tet[tetp1], *tet[tetp4]);
+        Vec<3> sol;
+        
+        SolveLinearSystem (vtet1, vtet2, vtet3, vtri1, sol);
+        if (sol.X() > 0 && sol.Y() > 0 && sol.Z() > 0)
+          return 1;
 
-	SolveLinearSystem (vtet1, vtet2, vtet3, vtri2, sol);
-	if (sol.X() > 0 && sol.Y() > 0 && sol.Z() > 0)
-	  return 1;
-	*/
+        SolveLinearSystem (vtet1, vtet2, vtet3, vtri2, sol);
+        if (sol.X() > 0 && sol.Y() > 0 && sol.Z() > 0)
+          return 1;
+        */
 
-	// test 3 tet-faces:
-	for (i = 1; i <= 3; i++)
-	  {
-	    Vec<3> vtet1, vtet2;
-	    switch (i)
-	      {
-	      case 1:
-		{
-		  vtet1 = *tet[tetp2] - *tet[tetp1];
-		  vtet2 = *tet[tetp3] - *tet[tetp1];
-		  break;
-		}
-	      case 2:
-		{
-		  vtet1 = *tet[tetp3] - *tet[tetp1];
-		  vtet2 = *tet[tetp4] - *tet[tetp1];
-		  break;
-		}
-	      case 3:
-		{
-		  vtet1 = *tet[tetp4] - *tet[tetp1];
-		  vtet2 = *tet[tetp2] - *tet[tetp1];
-		  break;
-		}
-	      }
-	    
-	    Vec<3> ntet;
-	    Cross (vtet1, vtet2, ntet);
-	    
-	    Vec<3> crline = Cross (ntri, ntet);
+        // test 3 tet-faces:
+        for (i = 1; i <= 3; i++)
+          {
+            Vec<3> vtet1, vtet2;
+            switch (i)
+              {
+              case 1:
+                {
+                  vtet1 = *tet[tetp2] - *tet[tetp1];
+                  vtet2 = *tet[tetp3] - *tet[tetp1];
+                  break;
+                }
+              case 2:
+                {
+                  vtet1 = *tet[tetp3] - *tet[tetp1];
+                  vtet2 = *tet[tetp4] - *tet[tetp1];
+                  break;
+                }
+              case 3:
+                {
+                  vtet1 = *tet[tetp4] - *tet[tetp1];
+                  vtet2 = *tet[tetp2] - *tet[tetp1];
+                  break;
+                }
+              }
+            
+            Vec<3> ntet;
+            Cross (vtet1, vtet2, ntet);
+            
+            Vec<3> crline = Cross (ntri, ntet);
 
-	    double lcrline = crline.Length();
-	    if (lcrline < eps * eps)
-	      continue;
+            double lcrline = crline.Length();
+            if (lcrline < eps * eps)
+              continue;
 
 
-	    if (vtri1 * crline + vtri2 * crline < 0)
-	      crline *= -1;
+            if (vtri1 * crline + vtri2 * crline < 0)
+              crline *= -1;
 
-	    double lam1, lam2, lam3, lam4;
-	    LocalCoordinates (vtri1, vtri2, crline, lam1, lam2);
-	    LocalCoordinates (vtet1, vtet2, crline, lam3, lam4);
-	    
-	    if (lam1 > -eps && lam2 > -eps &&
-		lam3 > -eps && lam4 > -eps)
-	      {
-		//		(*testout) << "hit, cnt == 1" << "\n";
-		return 1;
-	      }
-	  }
+            double lam1, lam2, lam3, lam4;
+            LocalCoordinates (vtri1, vtri2, crline, lam1, lam2);
+            LocalCoordinates (vtet1, vtet2, crline, lam3, lam4);
+            
+            if (lam1 > -eps && lam2 > -eps &&
+                lam3 > -eps && lam4 > -eps)
+              {
+                //              (*testout) << "hit, cnt == 1" << "\n";
+                return 1;
+              }
+          }
 
-	return 0;
-	break;
+        return 0;
+        break;
       }
     case 2:
       {
-	// common edge
-	tetp3 = 0;
-	while (tetp3 == tetp1 || tetp3 == tetp2)
-	  tetp3++;
-	tetp4 = 6 - tetp1 - tetp2 - tetp3;
-	trip3 = 3 - trip1 - trip2;
+        // common edge
+        tetp3 = 0;
+        while (tetp3 == tetp1 || tetp3 == tetp2)
+          tetp3++;
+        tetp4 = 6 - tetp1 - tetp2 - tetp3;
+        trip3 = 3 - trip1 - trip2;
 
-	//	(*testout) << "trip1,2,3 = " << trip1 << ", " << trip2 << ", " << trip3 << endl;
-	//	(*testout) << "tetp1,2,3,4 = " << tetp1 << ", " << tetp2 
-	//		   << ", " << tetp3 << ", " << tetp4 << endl;
+        //      (*testout) << "trip1,2,3 = " << trip1 << ", " << trip2 << ", " << trip3 << endl;
+        //      (*testout) << "tetp1,2,3,4 = " << tetp1 << ", " << tetp2 
+        //                 << ", " << tetp3 << ", " << tetp4 << endl;
 
-	Vec<3> vtri = *tri[trip3] - *tri[trip1];
-	Vec<3> vtet1 = *tet[tetp3] - *tri[trip1];
-	Vec<3> vtet2 = *tet[tetp4] - *tri[trip1];
+        Vec<3> vtri = *tri[trip3] - *tri[trip1];
+        Vec<3> vtet1 = *tet[tetp3] - *tri[trip1];
+        Vec<3> vtet2 = *tet[tetp4] - *tri[trip1];
 
-	Vec<3> n = *tri[trip2] - *tri[trip1];
-	n /= n.Length();
+        Vec<3> n = *tri[trip2] - *tri[trip1];
+        n /= n.Length();
 
-	vtet1 -= (n * vtet1) * n;
-	vtet2 -= (n * vtet2) * n;
+        vtet1 -= (n * vtet1) * n;
+        vtet2 -= (n * vtet2) * n;
 
 
-	double lam1, lam2;
-	LocalCoordinates (vtet1, vtet2, vtri, lam1, lam2);
-	
-	if (lam1 < -eps || lam2 < -eps)
-	  return 0;
-	else
-	  {
+        double lam1, lam2;
+        LocalCoordinates (vtet1, vtet2, vtri, lam1, lam2);
+        
+        if (lam1 < -eps || lam2 < -eps)
+          return 0;
+        else
+          {
 
-// 	    (*testout) << "vtet1 = " << vtet1 << endl;
-// 	    (*testout) << "vtet2 = " << vtet2 << endl;
-// 	    (*testout) << "vtri = " << vtri << endl;
-// 	    (*testout) << "lam1 = " << lam1 << " lam2 = " << lam2 << endl;
+//          (*testout) << "vtet1 = " << vtet1 << endl;
+//          (*testout) << "vtet2 = " << vtet2 << endl;
+//          (*testout) << "vtri = " << vtri << endl;
+//          (*testout) << "lam1 = " << lam1 << " lam2 = " << lam2 << endl;
 
-// 	    (*testout) << (lam1 * (vtet1 * vtet1) + lam2 * (vtet1 * vtet2))
-// 		       << " = " << (vtet1 * vtri) << endl;
-// 	    (*testout) << (lam1 * (vtet1 * vtet2) + lam2 * (vtet2 * vtet2))
-// 		       << " = " << (vtet2 * vtri) << endl;
-	    
-// 	    (*testout) << "tet = ";
-// 	    for (j = 0; j < 4; j++)
-// 	      (*testout) << (*tet[j]) << " ";
-// 	    (*testout) << endl;
-// 	    (*testout) << "tri = ";
-// 	    for (j = 0; j < 3; j++)
-// 	      (*testout) << (*tri[j]) << " ";
-// 	    (*testout) << endl;
+//          (*testout) << (lam1 * (vtet1 * vtet1) + lam2 * (vtet1 * vtet2))
+//                     << " = " << (vtet1 * vtri) << endl;
+//          (*testout) << (lam1 * (vtet1 * vtet2) + lam2 * (vtet2 * vtet2))
+//                     << " = " << (vtet2 * vtri) << endl;
+            
+//          (*testout) << "tet = ";
+//          for (j = 0; j < 4; j++)
+//            (*testout) << (*tet[j]) << " ";
+//          (*testout) << endl;
+//          (*testout) << "tri = ";
+//          for (j = 0; j < 3; j++)
+//            (*testout) << (*tri[j]) << " ";
+//          (*testout) << endl;
 
-// 	    (*testout) << "hit, cnt == 2" << endl;
+//          (*testout) << "hit, cnt == 2" << endl;
 
-	    return 1;
-	  }
-	  
-	break;
+            return 1;
+          }
+          
+        break;
       }
     case 3:
       {
-	// common face
-	return 0;
+        // common face
+        return 0;
       }
     }
 
@@ -756,51 +756,51 @@ int IntersectTriangleTriangle (const Point<3> ** tri1, const Point<3> ** tri2)
     {
       //      tri2pi[i] = -1;
       for (j = 0; j <= 2; j++)
-	{
-	  if (Dist2 (*tri1[j], *tri2[i]) < eps2)
-	    {
-	      //	      tri2pi[i] = j;
-	      //	      tri1pi[j] = i;
-	      cnt++;
-	      //	      tri1p2 = tri1p1;
-	      //	      tri1p1 = j;
-	      //	      tri2p2 = tri2p1;
-	      //	      tri2p1 = i;
-	      break;
-	    }
-	}
+        {
+          if (Dist2 (*tri1[j], *tri2[i]) < eps2)
+            {
+              //              tri2pi[i] = j;
+              //              tri1pi[j] = i;
+              cnt++;
+              //              tri1p2 = tri1p1;
+              //              tri1p1 = j;
+              //              tri2p2 = tri2p1;
+              //              tri2p1 = i;
+              break;
+            }
+        }
     }
   
   switch (cnt)
     {
     case 0:
       {
-	const Point<3> * line[2];
-	
-	for (i = 0; i <= 2; i++)
-	  {
-	    line[0] = tri2[i];
-	    line[1] = tri2[(i+1)%3];
+        const Point<3> * line[2];
+        
+        for (i = 0; i <= 2; i++)
+          {
+            line[0] = tri2[i];
+            line[1] = tri2[(i+1)%3];
 
-	    if (IntersectTriangleLine (tri1, &line[0]))
-	      {
-		(*testout) << "int1, line = " << *line[0] << " - " << *line[1] << endl;
-		return 1;
-	      }
-	  }	
+            if (IntersectTriangleLine (tri1, &line[0]))
+              {
+                (*testout) << "int1, line = " << *line[0] << " - " << *line[1] << endl;
+                return 1;
+              }
+          }     
 
-	for (i = 0; i <= 2; i++)
-	  {
-	    line[0] = tri1[i];
-	    line[1] = tri1[(i+1)%3];
+        for (i = 0; i <= 2; i++)
+          {
+            line[0] = tri1[i];
+            line[1] = tri1[(i+1)%3];
 
-	    if (IntersectTriangleLine (tri2, &line[0]))
-	      {
-		(*testout) << "int2, line = " << *line[0] << " - " << *line[1] << endl;
-		return 1;
-	      }
-	  }	
-	break;
+            if (IntersectTriangleLine (tri2, &line[0]))
+              {
+                (*testout) << "int2, line = " << *line[0] << " - " << *line[1] << endl;
+                return 1;
+              }
+          }     
+        break;
       }
     default:
       return 0;
@@ -813,7 +813,7 @@ int IntersectTriangleTriangle (const Point<3> ** tri1, const Point<3> ** tri2)
 
 void
 LocalCoordinates (const Vec<3> & e1, const Vec<3> & e2,
-		  const Vec<3> & v, double & lam1, double & lam2)
+                  const Vec<3> & v, double & lam1, double & lam2)
 {
   double m11 = e1 * e1;
   double m12 = e1 * e2;
@@ -837,8 +837,8 @@ int CalcSphereCenter (const Point<3> ** pts, Point<3> & c)
   Vec<3> row3 (*pts[0], *pts[3]);
 
   Vec<3> rhs(0.5 * (row1*row1),
-	    0.5 * (row2*row2),
-	    0.5 * (row3*row3));
+            0.5 * (row2*row2),
+            0.5 * (row3*row3));
   Transpose (row1, row2, row3);
   
   Vec<3> sol;
@@ -894,9 +894,9 @@ int CalcTriangleCenter (const Point<3> ** pts, Point<3> & c)
 
 
 double ComputeCylinderRadius (const Point<3> & p1, 
-			      const Point<3> & p2,
-			      const Point<3> & p3, 
-			      const Point<3> & p4)
+                              const Point<3> & p2,
+                              const Point<3> & p3, 
+                              const Point<3> & p4)
 {
   Vec<3> v12(p1, p2);
   Vec<3> v13(p1, p3);
@@ -904,7 +904,7 @@ double ComputeCylinderRadius (const Point<3> & p1,
 
   Vec<3> n1 = Cross (v12, v13);
   Vec<3> n2 = Cross (v14, v12);
-		
+                
   double n1l = n1.Length();
   double n2l = n2.Length();
   n1 /= n1l;
@@ -916,7 +916,7 @@ double ComputeCylinderRadius (const Point<3> & p1,
   
   /*
   (*testout) << "n1 = " << n1 << " n2 = " << n2 
-	     << "h1 = " << h1 << " h2 = " << h2 << endl;
+             << "h1 = " << h1 << " h2 = " << h2 << endl;
   */
   return ComputeCylinderRadius (n1, n2, h1, h2);
 }
@@ -929,7 +929,7 @@ double ComputeCylinderRadius (const Point<3> & p1,
   The height over the common edge is h1, and h2.
  */
 double ComputeCylinderRadius (const Vec<3> & n1, const Vec<3> & n2,
-				     double h1, double h2)
+                                     double h1, double h2)
 {
   Vec<3> t1, t2;
   double n11 = n1 * n1;
@@ -962,10 +962,10 @@ double ComputeCylinderRadius (const Vec<3> & n1, const Vec<3> & n2,
   double rad = (lam1 * n1 + lam2 * n2).Length();
   /*
   (*testout) << "n1 = " << n1
-	     << " n2 = " << n2
-	     << " t1 = " << t1
-	     << " t2 = " << t2
-	     << " rad = " << rad << endl;
+             << " n2 = " << n2
+             << " t1 = " << t1
+             << " t2 = " << t2
+             << " rad = " << rad << endl;
   */
   return rad;
 }
@@ -1070,13 +1070,13 @@ double MinDistLP2 (const Point<3> & lp1, const Point<3> & lp2, const Point<3> & 
 
 
 double MinDistTP2 (const Point<3> & tp1, const Point<3> & tp2, 
-		   const Point<3> & tp3, const Point<3> & p)
+                   const Point<3> & tp3, const Point<3> & p)
 {
   double lam1, lam2;
   double res;
 
   LocalCoordinates (Vec<3> (tp1, tp2), Vec<3> (tp1, tp3),
-		    Vec<3> (tp1, p), lam1, lam2);
+                    Vec<3> (tp1, p), lam1, lam2);
   int in1 = lam1 >= 0;
   int in2 = lam2 >= 0;
   int in3 = lam1+lam2 <= 1;
@@ -1090,20 +1090,20 @@ double MinDistTP2 (const Point<3> & tp1, const Point<3> & tp2,
     {
       res = Dist2 (tp1, p);
       if (!in1)
-	{
-	  double hv = MinDistLP2 (tp1, tp3, p);
-	  if (hv < res) res = hv; 
-	}
+        {
+          double hv = MinDistLP2 (tp1, tp3, p);
+          if (hv < res) res = hv; 
+        }
       if (!in2)
-	{
-	  double hv = MinDistLP2 (tp1, tp2, p);
-	  if (hv < res) res = hv; 
-	}
+        {
+          double hv = MinDistLP2 (tp1, tp2, p);
+          if (hv < res) res = hv; 
+        }
       if (!in3)
-	{
-	  double hv = MinDistLP2 (tp2, tp3, p);
-	  if (hv < res) res = hv; 
-	}
+        {
+          double hv = MinDistLP2 (tp2, tp3, p);
+          if (hv < res) res = hv; 
+        }
       /*
       double d1 = MinDistLP2 (tp1, tp2, p);
       double d2 = MinDistLP2 (tp1, tp3, p);
@@ -1135,7 +1135,7 @@ double MinDistTP2 (const Point<3> & tp1, const Point<3> & tp2,
 
 // 0 checks !!!
 double MinDistLL2 (const Point<3> & l1p1, const Point<3> & l1p2,
-		  const Point<3> & l2p1, const Point<3> & l2p2, double & lam1, double & lam2 )
+                  const Point<3> & l2p1, const Point<3> & l2p2, double & lam1, double & lam2 )
 {
   // dist(lam1,lam2) = \| l2p1+lam2v2 - (l1p1+lam1 v1) \|
   // min !
@@ -1195,7 +1195,7 @@ double MinDistLL2 (const Point<3> & l1p1, const Point<3> & l1p2,
 
   return minv;
 }
-			 
+                         
 }
 
 

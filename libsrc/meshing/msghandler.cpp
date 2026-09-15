@@ -26,7 +26,7 @@ void PrintDot(char ch)
 }
 
 void PrintMessage(int importance, 
-		  const MyStr& s1, const MyStr& s2)
+                  const MyStr& s1, const MyStr& s2)
 {
   if (importance <= printmessage_importance)
     {
@@ -35,7 +35,7 @@ void PrintMessage(int importance,
 }
 
 void PrintMessage(int importance, 
-		  const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4)
+                  const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4)
 {
   if (importance <= printmessage_importance)
     {
@@ -44,8 +44,8 @@ void PrintMessage(int importance,
 }
 
 void PrintMessage(int importance, 
-		  const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		  const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                  const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
+                  const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (importance <= printmessage_importance)
     {
@@ -54,8 +54,8 @@ void PrintMessage(int importance,
 }
 
 void PrintMessageCR(int importance, 
-		    const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		    const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                    const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
+                    const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (importance <= printmessage_importance)
     {
@@ -64,48 +64,48 @@ void PrintMessageCR(int importance,
 }
 
 void PrintFnStart(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		  const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                  const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (printfnstart)
     Ng_PrintDest(MyStr(" Start Function: ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));
 }
 
 void PrintWarning(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		  const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                  const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (printwarnings)
     Ng_PrintDest(MyStr(" WARNING: ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));
 }
 
 void PrintError(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (printerrors)
     Ng_PrintDest(MyStr(" ERROR: ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));
 }
 
 void PrintFileError(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		    const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                    const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (printerrors)
     Ng_PrintDest(MyStr(" FILE ERROR: ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));
 }
 
 void PrintUserError(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   Ng_PrintDest(MyStr(" USER ERROR: ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));
 }
 
 void PrintSysError(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-		const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+                const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (printerrors)
     Ng_PrintDest(MyStr(" SYSTEM ERROR: ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));
 }
 
 void PrintTime(const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-	       const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
+               const MyStr& s5, const MyStr& s6, const MyStr& s7, const MyStr& s8)
 {
   if (printmessage_importance >= 3)
     Ng_PrintDest(MyStr(" Time = ")+s1+s2+s3+s4+s5+s6+s7+s8+MyStr("\n"));

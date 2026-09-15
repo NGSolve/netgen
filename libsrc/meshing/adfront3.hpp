@@ -113,8 +113,8 @@ public:
   {
     if (qualclass > 1)
       {
-	qualclass = 1;
-	oldfront = 0;
+        qualclass = 1;
+        oldfront = 0;
       }
   }
   
@@ -226,7 +226,7 @@ public:
 
   ///
   void GetIntersectingFaces (const Point<3> & pmin, const Point<3> & pmax, 
-			     Array<int> & ifaces) const;
+                             Array<int> & ifaces) const;
 
   bool PointInsideGroup(const Array<Front3PointIndex, LocalPointIndex> &grouppindex,
                         const Array<MiniElement2d>& groupfaces) const;
@@ -236,14 +236,14 @@ public:
 
   ///
   int GetLocals (int baseelement,
-		 Array<Point<3>, LocalPointIndex> & locpoints,
+                 Array<Point<3>, LocalPointIndex> & locpoints,
                  Array<MiniElement2d> & locfaces,   // local index
                  Array<Front3PointIndex, LocalPointIndex> & pindex,   // local -> front
                  Array<INDEX> & findex,
-		 INDEX_2_HASHTABLE<int> & connectedpairs,
+                 INDEX_2_HASHTABLE<int> & connectedpairs,
                  float xh,
-		 float relh,
-		 INDEX& facesplit);
+                 float relh,
+                 INDEX& facesplit);
   
   ///
   void GetGroup (int fi,
@@ -275,7 +275,7 @@ public:
   bool Inside (const Point<3> & p) const;
   /// both points on same side ?
   int SameSide (const Point<3> & lp1, const Point<3> & lp2, 
-		const Array<int> * testfaces = NULL) const;
+                const Array<int> * testfaces = NULL) const;
 
 
   ///

@@ -211,19 +211,19 @@ namespace netgen
 
 
 
-	void STLInfo(double* data);
+        void STLInfo(double* data);
     //stldoctor:
-	void SmoothNormals(const STLParameters& stlparam);
-	void MarkNonSmoothNormals(const STLParameters& stlparam);
+        void SmoothNormals(const STLParameters& stlparam);
+        void MarkNonSmoothNormals(const STLParameters& stlparam);
 
-	void CalcEdgeData();
-	void CalcEdgeDataAngles();
+        void CalcEdgeData();
+        void CalcEdgeDataAngles();
 
     const STLEdgeDataList& EdgeDataList() const {return *edgedata;}
 
-	void UndoEdgeChange();
-	void StoreEdgeData();
-	void RestoreEdgeData();
+        void UndoEdgeChange();
+        void StoreEdgeData();
+        void RestoreEdgeData();
 
     //void ClearSelectedMultiEdge() {selectedmultiedge.SetSize(0);}
     //void AddSelectedMultiEdge(twoint ep) {selectedmultiedge.Append(ep);}
@@ -234,64 +234,64 @@ namespace netgen
     void BuildSelectedEdge(twoint ep);
     void BuildSelectedCluster(twoint ep);
 
-	void ImportEdges();
-	void AddEdges(const Array<Point<3> >& eps);
-	void ExportEdges();
-	void LoadEdgeData(const filesystem::path & file);
-	void SaveEdgeData(const filesystem::path & file);
+        void ImportEdges();
+        void AddEdges(const Array<Point<3> >& eps);
+        void ExportEdges();
+        void LoadEdgeData(const filesystem::path & file);
+        void SaveEdgeData(const filesystem::path & file);
     //  void SetEdgeAtSelected(int mode);
   
 
-	void STLDoctorConfirmEdge();
-	void STLDoctorCandidateEdge();
-	void STLDoctorExcludeEdge();
-	void STLDoctorUndefinedEdge();
+        void STLDoctorConfirmEdge();
+        void STLDoctorCandidateEdge();
+        void STLDoctorExcludeEdge();
+        void STLDoctorUndefinedEdge();
 
-	void STLDoctorSetAllUndefinedEdges();
-	void STLDoctorEraseCandidateEdges();
-	void STLDoctorConfirmCandidateEdges();
-	void STLDoctorConfirmedToCandidateEdges();
+        void STLDoctorSetAllUndefinedEdges();
+        void STLDoctorEraseCandidateEdges();
+        void STLDoctorConfirmCandidateEdges();
+        void STLDoctorConfirmedToCandidateEdges();
 
-	void STLDoctorDirtyEdgesToCandidates();
-	void STLDoctorLongLinesToCandidates();
+        void STLDoctorDirtyEdgesToCandidates();
+        void STLDoctorLongLinesToCandidates();
 
-	void UndoExternalEdges();
-	void StoreExternalEdges();
-	void RestoreExternalEdges();
+        void UndoExternalEdges();
+        void StoreExternalEdges();
+        void RestoreExternalEdges();
 
-	void ImportExternalEdges(const char * filename);  // Flame edges, JS
+        void ImportExternalEdges(const char * filename);  // Flame edges, JS
     //  void LoadExternalEdges();
 
-	void BuildExternalEdgesFromEdges();
-	void SaveExternalEdges();
-	void AddExternalEdgeAtSelected();
-	void AddClosedLinesToExternalEdges();
-	void AddLongLinesToExternalEdges();
-	void AddAllNotSingleLinesToExternalEdges();
-	void STLDoctorBuildEdges(const STLParameters& stlparam);
-	void AddExternalEdgesFromGeomLine();
-	void DeleteDirtyExternalEdges();
-	void DeleteExternalEdgeAtSelected();
-	void DeleteExternalEdgeInVicinity();
+        void BuildExternalEdgesFromEdges();
+        void SaveExternalEdges();
+        void AddExternalEdgeAtSelected();
+        void AddClosedLinesToExternalEdges();
+        void AddLongLinesToExternalEdges();
+        void AddAllNotSingleLinesToExternalEdges();
+        void STLDoctorBuildEdges(const STLParameters& stlparam);
+        void AddExternalEdgesFromGeomLine();
+        void DeleteDirtyExternalEdges();
+        void DeleteExternalEdgeAtSelected();
+        void DeleteExternalEdgeInVicinity();
     void AddExternalEdge(int p1, int p2);
     void DeleteExternalEdge(int p1, int p2);
     int IsExternalEdge(int p1, int p2);
     int NOExternalEdges() const {return externaledges.Size();}
     twoint GetExternalEdge(int i) const {return externaledges[i-1];}
 
-	void DestroyDirtyTrigs();
-	void CalcNormalsFromGeometry();
-	void MoveSelectedPointToMiddle();
-	void NeighbourAnglesOfSelectedTrig();
-	void PrintSelectInfo();
-	void ShowSelectedTrigChartnum();
-	void ShowSelectedTrigCoords();
-	void SmoothGeometry ();
+        void DestroyDirtyTrigs();
+        void CalcNormalsFromGeometry();
+        void MoveSelectedPointToMiddle();
+        void NeighbourAnglesOfSelectedTrig();
+        void PrintSelectInfo();
+        void ShowSelectedTrigChartnum();
+        void ShowSelectedTrigCoords();
+        void SmoothGeometry ();
 
 
-	void LoadMarkedTrigs();
-	void SaveMarkedTrigs();
-	void ClearMarkedSegs() {markedsegs.SetSize(0);}
+        void LoadMarkedTrigs();
+        void SaveMarkedTrigs();
+        void ClearMarkedSegs() {markedsegs.SetSize(0);}
     void AddMarkedSeg(const Point<3> & ap1, const Point<3> & ap2) 
     {
       markedsegs.Append(ap1);markedsegs.Append(ap2);
@@ -303,26 +303,26 @@ namespace netgen
       ap2=markedsegs[i*2-1];
     }
     int GetNMarkedSegs() {return markedsegs.Size()/2;}
-	void CalcVicinity(int starttrig);
-	void GetVicinity(int starttrig, int size, Array<int>& vic);
+        void CalcVicinity(int starttrig);
+        void GetVicinity(int starttrig, int size, Array<int>& vic);
 
-	int Vicinity(int trig) const;
+        int Vicinity(int trig) const;
 
-	void InitMarkedTrigs();
-	void MarkDirtyTrigs(const STLParameters& stlparam);
-	void SmoothDirtyTrigs(const STLParameters& stlparam);
-	void GeomSmoothRevertedTrigs(const STLParameters& stlparam);
-	void MarkRevertedTrigs(const STLParameters& stlparam);
-	double CalcTrigBadness(int i);
-	int IsMarkedTrig(int trig) const;
-	void SetMarkedTrig(int trig, int num);
-	void MarkTopErrorTrigs ();
+        void InitMarkedTrigs();
+        void MarkDirtyTrigs(const STLParameters& stlparam);
+        void SmoothDirtyTrigs(const STLParameters& stlparam);
+        void GeomSmoothRevertedTrigs(const STLParameters& stlparam);
+        void MarkRevertedTrigs(const STLParameters& stlparam);
+        double CalcTrigBadness(int i);
+        int IsMarkedTrig(int trig) const;
+        void SetMarkedTrig(int trig, int num);
+        void MarkTopErrorTrigs ();
 
     //Selected triangle
-	void SetSelectTrig(int trig);
-	int GetSelectTrig() const;
-	void SetNodeOfSelTrig(int n);
-	int GetNodeOfSelTrig() const;
+        void SetSelectTrig(int trig);
+        int GetSelectTrig() const;
+        void SetNodeOfSelTrig(int n);
+        int GetNodeOfSelTrig() const;
 
 
     int AddNormal(const Vec<3>& n) { normals.Append(n); return normals.Size(); }
@@ -385,7 +385,7 @@ namespace netgen
     void AddFaceEdges(); //each face should have at least one starting edge (outherwise it won't be meshed)
 
     void GetDirtyChartTrigs(int chartnum, STLChart& chart, const Array<ChartId, STLTrigId>& outercharttrigs, 
-			    Array<ChartId>& chartpointchecked, Array<int>& dirtytrigs);
+                            Array<ChartId>& chartpointchecked, Array<int>& dirtytrigs);
 
     void ClearSpiralPoints();
     void SetSpiralPoint(int pn) {spiralpoints[pn-1] = 1;};
@@ -424,8 +424,8 @@ namespace netgen
     //FOR MESHING
     int GetMeshChartNr () { return meshchart; }
     void GetMeshChartBoundary (Array<Point<2>> & points,
-			       Array<Point<3>> & points3d,
-			       Array<INDEX_2> & lines, double h);
+                               Array<Point<3>> & points3d,
+                               Array<INDEX_2> & lines, double h);
 
 
     Point<3> PointBetween(const Point<3> & p1, int t1, const Point<3> & p2, int t2);
@@ -443,7 +443,7 @@ namespace netgen
 
     // list of trigs
     void ToPlane (const Point<3> & locpoint, int * trigs, Point<2> & plainpoint, 
-		  double h, int& zone, int checkchart);
+                  double h, int& zone, int checkchart);
     //return 0, wenn alles OK, 1 sonst
     int FromPlane (const Point<2> & plainpoint, Point<3> & locpoint, double h);
   
@@ -469,7 +469,7 @@ namespace netgen
     void RestrictLocalH(class Mesh & mesh, double gh, const STLParameters& stlparam, const MeshingParameters& mparam);
     void RestrictLocalHCurv(class Mesh & mesh, double gh, const STLParameters& stlparam);
     void RestrictHChartDistOneChart(ChartId chartnum, Array<int>& acttrigs, class Mesh & mesh, 
-				    double gh, double fact, double minh, const STLParameters& stlparam);
+                                    double gh, double fact, double minh, const STLParameters& stlparam);
 
     friend class MeshingSTLSurface;
 

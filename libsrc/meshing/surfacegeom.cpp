@@ -295,7 +295,7 @@ namespace netgen
 
       for(int l=0; l < layer_thickness[0].Size(); l++,j++)
         {
-	  AddPoint(offsetx+layer_thickness[0][l]*double(j-l), offsety, pids, pgis);
+          AddPoint(offsetx+layer_thickness[0][l]*double(j-l), offsety, pids, pgis);
           offsetx += layer_thickness[0][l];
         }
       
@@ -307,7 +307,7 @@ namespace netgen
       int startj = j;
       for(int l=0; l < layer_thickness[2].Size(); l++, j++)
         {
-	  AddPoint(offsetx+layer_thickness[2][layer_thickness[2].Size()-1-l]*double(j-startj-l+1), offsety, pids, pgis);
+          AddPoint(offsetx+layer_thickness[2][layer_thickness[2].Size()-1-l]*double(j-startj-l+1), offsety, pids, pgis);
 
           offsetx += layer_thickness[2][layer_thickness[2].Size()-1-l];
         }
@@ -321,21 +321,21 @@ namespace netgen
 
     for(int k=0; k < layer_thickness[1].Size(); k++,i++)
       {
-	InternalLoop(offsety, pids, pgis);
-	offsety += layer_thickness[1][k];
+        InternalLoop(offsety, pids, pgis);
+        offsety += layer_thickness[1][k];
       }
 
     for(; i <= ny-total_layer_el[3]; i++)
       {
         InternalLoop(offsety, pids, pgis);        
-	offsety +=  interior_y/(ny-total_layer_el[1]-total_layer_el[3]);
+        offsety +=  interior_y/(ny-total_layer_el[1]-total_layer_el[3]);
       }
     offsety -=  interior_y/(ny-total_layer_el[1]-total_layer_el[3]);
 
     for(int k=0; k < layer_thickness[3].Size(); k++,i++)
       {
-	offsety += layer_thickness[3][layer_thickness[3].Size()-1-k];
-	InternalLoop(offsety, pids, pgis); 
+        offsety += layer_thickness[3][layer_thickness[3].Size()-1-k];
+        InternalLoop(offsety, pids, pgis); 
       }
 
     for (bool f : found)

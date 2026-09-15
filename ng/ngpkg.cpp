@@ -144,8 +144,8 @@ namespace netgen
 
   // file handling ..
   int Ng_New (ClientData clientData,
-	      Tcl_Interp * interp,
-	      int argc, tcl_const char *argv[])
+              Tcl_Interp * interp,
+              int argc, tcl_const char *argv[])
   {
     if (strcmp (argv[1], "mesh") == 0)
       mesh.reset();
@@ -153,8 +153,8 @@ namespace netgen
     if (strcmp (argv[1], "geom") == 0)
       {
         /*
-	delete ng_geometry;
-	ng_geometry = new NetgenGeometry;
+        delete ng_geometry;
+        ng_geometry = new NetgenGeometry;
         */
         ng_geometry = make_shared<NetgenGeometry>();
       }
@@ -166,18 +166,18 @@ namespace netgen
 
 
   int Ng_ImportMesh (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[]);
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[]);
 
   int Ng_LoadMesh (ClientData clientData,
-		   Tcl_Interp * interp,
-		   int argc, tcl_const char *argv[])
+                   Tcl_Interp * interp,
+                   int argc, tcl_const char *argv[])
   {
     auto filename = filesystem::u8path(argv[1]);
 
     if (filename.string().find(".vol") == string::npos)
       {
-	return Ng_ImportMesh(clientData,interp,argc,argv);
+        return Ng_ImportMesh(clientData,interp,argc,argv);
       }
 
     PrintMessage (1, "load mesh from file ", filename);
@@ -185,24 +185,24 @@ namespace netgen
     mesh = make_shared<Mesh>();
     try
       {
-	mesh -> Load(filename);
+        mesh -> Load(filename);
         SetGlobalMesh (mesh);
 
 #ifdef PARALLEL_NETGEN
-	MyMPI_SendCmd ("mesh");
-	mesh -> Distribute();
+        MyMPI_SendCmd ("mesh");
+        mesh -> Distribute();
 #endif
         if(mesh->GetGeometry())
           ng_geometry = mesh->GetGeometry();
       }
     catch (const NgException & e)
       {
-	PrintMessage (3, e.What());
-	return TCL_ERROR;
+        PrintMessage (3, e.What());
+        return TCL_ERROR;
       }
 
     PrintMessage (2,  mesh->GetNP(), " Points, ",
-		  mesh->GetNE(), " Elements.");
+                  mesh->GetNE(), " Elements.");
 
     return TCL_OK;
   }
@@ -212,13 +212,13 @@ namespace netgen
 
 
   int Ng_SaveMesh (ClientData clientData,
-		   Tcl_Interp * interp,
-		   int argc, tcl_const char *argv[])
+                   Tcl_Interp * interp,
+                   int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     string filename (argv[1]);
@@ -246,8 +246,8 @@ namespace netgen
 
 
   int Ng_MergeMesh (ClientData clientData,
-		    Tcl_Interp * interp,
-		    int argc, tcl_const char *argv[])
+                    Tcl_Interp * interp,
+                    int argc, tcl_const char *argv[])
   {
     string filename (argv[1]);
 
@@ -255,29 +255,29 @@ namespace netgen
 
     try
       {
-	CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
+        CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
     
-	//mesh -> Merge (filename);
-	ifstream infile(filename.c_str());
-	const int offset = (geometry) ? geometry->GetNSurf() : 0;
-	mesh -> Merge(infile,offset);
+        //mesh -> Merge (filename);
+        ifstream infile(filename.c_str());
+        const int offset = (geometry) ? geometry->GetNSurf() : 0;
+        mesh -> Merge(infile,offset);
 
-	string auxstring;
-	if(infile.good())
-	  {
-	    infile >> auxstring;
-	    if(geometry && auxstring == "csgsurfaces")
-	      geometry -> LoadSurfaces(infile);
-	  }
+        string auxstring;
+        if(infile.good())
+          {
+            infile >> auxstring;
+            if(geometry && auxstring == "csgsurfaces")
+              geometry -> LoadSurfaces(infile);
+          }
       }
     catch (const NgException & e)
       {
-	PrintMessage (3, e.What());
-	return TCL_ERROR;
+        PrintMessage (3, e.What());
+        return TCL_ERROR;
       }
 
     PrintMessage (2,  mesh->GetNP(), " Points, ",
-		  mesh->GetNSE(), " Surface Elements.");
+                  mesh->GetNSE(), " Surface Elements.");
 
     return TCL_OK;
   }
@@ -317,13 +317,13 @@ namespace netgen
 
 
   int Ng_ExportMesh (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     string filename (argv[1]);
@@ -333,10 +333,10 @@ namespace netgen
     // CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry);
     if (WriteUserFormat (filetype, *mesh, /* *ng_geometry, */ filename))
       {
-	ostringstream ost;
-	ost << "Sorry, nothing known about file format " << filetype << endl;
-	Tcl_SetResult (interp, (char*)ost.str().c_str(), TCL_VOLATILE);
-	return TCL_ERROR;
+        ostringstream ost;
+        ost << "Sorry, nothing known about file format " << filetype << endl;
+        Tcl_SetResult (interp, (char*)ost.str().c_str(), TCL_VOLATILE);
+        return TCL_ERROR;
       }
 
     PrintMessage (1, "Export mesh to file .... DONE!");
@@ -346,8 +346,8 @@ namespace netgen
 
 
   int Ng_ImportMesh (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
     const string filename (argv[1]);
     const string format (argv[2]);
@@ -357,7 +357,7 @@ namespace netgen
 
     ReadUserFormat (*mesh, filename, format);
     PrintMessage (2, mesh->GetNP(), " Points, ",
-		  mesh->GetNE(), " Elements.");
+                  mesh->GetNE(), " Elements.");
 
     SetGlobalMesh (mesh);
     mesh->SetGlobalH (mparam.maxh);
@@ -369,13 +369,13 @@ namespace netgen
 
 
   int Ng_ImportSolution (ClientData clientData,
-			 Tcl_Interp * interp,
-			 int argc, tcl_const char *argv[])
+                         Tcl_Interp * interp,
+                         int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     const char * filename = argv[1];
@@ -389,8 +389,8 @@ namespace netgen
 
   static DemoView * demoview = 0;
   int Ng_ShowDemo (ClientData clientData,
-		   Tcl_Interp * interp,
-		   int argc, tcl_const char *argv[])
+                   Tcl_Interp * interp,
+                   int argc, tcl_const char *argv[])
   {
     const char * filename = argv[1];
     PrintMessage (1, "Show demo ", filename);
@@ -402,8 +402,8 @@ namespace netgen
 
 
   int Ng_DemoSetTime (ClientData clientData,
-		      Tcl_Interp * interp,
-		      int argc, tcl_const char *argv[])
+                      Tcl_Interp * interp,
+                      int argc, tcl_const char *argv[])
   {
     cout << "demosettime, time = " << argv[1] << endl;
     int result = -1;
@@ -429,13 +429,13 @@ namespace netgen
 
 
   int Ng_SaveSolution (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     const char * filename = argv[1];
@@ -449,8 +449,8 @@ namespace netgen
 
 
   int Ng_SetNextTimeStamp  (ClientData clientData,
-			    Tcl_Interp * interp,
-			    int argqc, tcl_const char *argv[])
+                            Tcl_Interp * interp,
+                            int argqc, tcl_const char *argv[])
   {
     if (mesh)
       mesh -> SetNextTimeStamp();
@@ -461,13 +461,13 @@ namespace netgen
 
 
   int Ng_LoadGeometry (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     tcl_const char * lgfilename = argv[1];
@@ -483,79 +483,79 @@ namespace netgen
 
     try
       {
-	for (auto loader : GeometryRegister())
-	  {
-	    NetgenGeometry * hgeom = loader->Load (lgfilename);
-	    if (hgeom)
-	      {
+        for (auto loader : GeometryRegister())
+          {
+            NetgenGeometry * hgeom = loader->Load (lgfilename);
+            if (hgeom)
+              {
                 // delete ng_geometry;
-		// ng_geometry = hgeom;
+                // ng_geometry = hgeom;
                 ng_geometry = shared_ptr<NetgenGeometry> (hgeom);
                 loader->SetParameters(interp);
-		
-		mesh.reset();
-		return TCL_OK;
-	      }
-	  }
+                
+                mesh.reset();
+                return TCL_OK;
+              }
+          }
 
 
-	ifstream infile(lgfilename);
+        ifstream infile(lgfilename);
 
-	if (strlen(lgfilename) < 4)
-	  {
-	    cout << "ERROR: cannot recognise file format!" << endl;
-	  }
-	else
-	  {
-	    if ((strcmp (&lgfilename[strlen(lgfilename)-4], "iges") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "igs") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "IGS") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-4], "IGES") == 0))
-	      {
-		Tcl_SetResult (interp, (char*)"IGES import requires the OpenCascade geometry kernel. "
-			       "Please install OpenCascade as described in the Netgen-website",
-			       TCL_STATIC);
-		return TCL_ERROR;
-	      }
+        if (strlen(lgfilename) < 4)
+          {
+            cout << "ERROR: cannot recognise file format!" << endl;
+          }
+        else
+          {
+            if ((strcmp (&lgfilename[strlen(lgfilename)-4], "iges") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-3], "igs") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-3], "IGS") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-4], "IGES") == 0))
+              {
+                Tcl_SetResult (interp, (char*)"IGES import requires the OpenCascade geometry kernel. "
+                               "Please install OpenCascade as described in the Netgen-website",
+                               TCL_STATIC);
+                return TCL_ERROR;
+              }
 
-	    else if (strcmp (&lgfilename[strlen(lgfilename)-3], "sat") == 0)
-	      {
+            else if (strcmp (&lgfilename[strlen(lgfilename)-3], "sat") == 0)
+              {
 #ifdef ACIS
-		PrintMessage (1, "Load ACIS geometry file ", lgfilename);
-		acisgeometry = netgen::LoadACIS_SAT (lgfilename);
+                PrintMessage (1, "Load ACIS geometry file ", lgfilename);
+                acisgeometry = netgen::LoadACIS_SAT (lgfilename);
 #endif
-	      }
-	    else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "step") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "stp") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-3], "STP") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-4], "STEP") == 0))
-	      {
+              }
+            else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "step") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-3], "stp") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-3], "STP") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-4], "STEP") == 0))
+              {
 #ifdef ACISxxx
-		PrintMessage (1, "Load STEP geometry file ", lgfilename);
-		acisgeometry = netgen::LoadACIS_STEP (lgfilename);
+                PrintMessage (1, "Load STEP geometry file ", lgfilename);
+                acisgeometry = netgen::LoadACIS_STEP (lgfilename);
 #else
-		Tcl_SetResult (interp, (char*)"IGES import requires the OpenCascade geometry kernel. "
-			       "Please install OpenCascade as described in the Netgen-website",
-			       TCL_STATIC);
-		return TCL_ERROR;
+                Tcl_SetResult (interp, (char*)"IGES import requires the OpenCascade geometry kernel. "
+                               "Please install OpenCascade as described in the Netgen-website",
+                               TCL_STATIC);
+                return TCL_ERROR;
 #endif
-	      }
-	    else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "brep") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-4], "Brep") == 0) ||
-		     (strcmp (&lgfilename[strlen(lgfilename)-4], "BREP") == 0))
-	      {
-		Tcl_SetResult (interp, (char*)"BREP import requires the OpenCascade geometry kernel. "
-			       "Please install OpenCascade as described in the Netgen-website",
-			       TCL_STATIC);
-		return TCL_ERROR;
-	      }
-	  }
+              }
+            else if ((strcmp (&lgfilename[strlen(lgfilename)-4], "brep") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-4], "Brep") == 0) ||
+                     (strcmp (&lgfilename[strlen(lgfilename)-4], "BREP") == 0))
+              {
+                Tcl_SetResult (interp, (char*)"BREP import requires the OpenCascade geometry kernel. "
+                               "Please install OpenCascade as described in the Netgen-website",
+                               TCL_STATIC);
+                return TCL_ERROR;
+              }
+          }
       }
 
     catch (const NgException & e)
       {
-	Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
+        return TCL_ERROR;
       }
 
     mesh.reset();
@@ -572,50 +572,50 @@ namespace netgen
 
 
   int Ng_SaveGeometry (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     if (argc == 2)
       {
-	const char * cfilename = argv[1];
+        const char * cfilename = argv[1];
 
-	try
-	  {
-	    ng_geometry -> Save (string (cfilename));
-	  }
-	catch (const NgException & e)
-	  {
-	    Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
-	    return TCL_ERROR;
-	  }
+        try
+          {
+            ng_geometry -> Save (string (cfilename));
+          }
+        catch (const NgException & e)
+          {
+            Tcl_SetResult (interp, const_cast<char*> (e.What().c_str()), TCL_VOLATILE);
+            return TCL_ERROR;
+          }
 
-	PrintMessage (1, "Save geometry to file ", cfilename);
+        PrintMessage (1, "Save geometry to file ", cfilename);
 
-	if (strlen(cfilename) < 4) {cout << "ERROR: can not recognise file format!!!" << endl;}
-	else
-	  {
+        if (strlen(cfilename) < 4) {cout << "ERROR: can not recognise file format!!!" << endl;}
+        else
+          {
 #ifdef ACIS
-	    if (acisgeometry)
-	      {
-		char * filename = const_cast<char*> (argv[1]);
-		if (strcmp (&filename[strlen(filename)-3], "sat") == 0)
-		  {
-		    acisgeometry -> SaveSATFile (filename);
-		  }
-	      }
+            if (acisgeometry)
+              {
+                char * filename = const_cast<char*> (argv[1]);
+                if (strcmp (&filename[strlen(filename)-3], "sat") == 0)
+                  {
+                    acisgeometry -> SaveSATFile (filename);
+                  }
+              }
 #endif
-	    /*
-	    if (strcmp (&cfilename[strlen(cfilename)-3], "ngg") == 0)
-	      {
-		CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry);
-		if (geometry)
-		  {
-		    ofstream of(cfilename);
-		    geometry->Save (of);
-		  }
-	      }
-	    */
-	  }
+            /*
+            if (strcmp (&cfilename[strlen(cfilename)-3], "ngg") == 0)
+              {
+                CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry);
+                if (geometry)
+                  {
+                    ofstream of(cfilename);
+                    geometry->Save (of);
+                  }
+              }
+            */
+          }
       }
 
     return TCL_OK;
@@ -630,8 +630,8 @@ namespace netgen
 
 
   int Ng_ReadStatus (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
     char buf[20], lstring[200];
     static int prev_np = -1;
@@ -739,111 +739,111 @@ namespace netgen
 
 
   int Ng_MemInfo (ClientData clientData,
-		  Tcl_Interp * interp,
-		  int argc, tcl_const char *argv[])
+                  Tcl_Interp * interp,
+                  int argc, tcl_const char *argv[])
   {/*
     if (argc < 2) return TCL_ERROR;
 
     if (strcmp (argv[1], "usedmb") == 0)
       { // returns string of 512 '0' or '1'
 
-	static char usedmb[513];
-	for (int i = 0; i < 512; i++)
-	  usedmb[i] = (i % 7 == 0) ? '1' : '0';
+        static char usedmb[513];
+        for (int i = 0; i < 512; i++)
+          usedmb[i] = (i % 7 == 0) ? '1' : '0';
 
-	usedmb[512] = 0;
-	BaseDynamicMem::GetUsed (512, usedmb);
-	Tcl_SetResult (interp, usedmb, TCL_STATIC);
-	return TCL_OK;
+        usedmb[512] = 0;
+        BaseDynamicMem::GetUsed (512, usedmb);
+        Tcl_SetResult (interp, usedmb, TCL_STATIC);
+        return TCL_OK;
       }
-	*/
+        */
     return TCL_ERROR;
   }
 
 
 
   int Ng_BCProp (ClientData clientData,
-		 Tcl_Interp * interp,
-		 int argc, tcl_const char *argv[])
+                 Tcl_Interp * interp,
+                 int argc, tcl_const char *argv[])
   {
     static char buf[100];
 
     if (argc < 2)
       {
-	Tcl_SetResult (interp, (char*)"Ng_BCProp needs arguments", TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, (char*)"Ng_BCProp needs arguments", TCL_STATIC);
+        return TCL_ERROR;
       }
 
     if (strcmp (argv[1], "setbc") == 0)
       {
-	int facenr = atoi (argv[2]);
-	int bcnr = atoi (argv[3]);
-	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
-	  mesh->GetFaceDescriptor (facenr).SetBCProperty (bcnr);
+        int facenr = atoi (argv[2]);
+        int bcnr = atoi (argv[3]);
+        if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
+          mesh->GetFaceDescriptor (facenr).SetBCProperty (bcnr);
       }
 
     if (strcmp (argv[1], "setall") == 0)
       {
-	int bcnr = atoi (argv[2]);
-	if (mesh)
-	  {
-	    int nfd = mesh->GetNFD();
-	    for (int i = 1; i <= nfd; i++)
-	      mesh->GetFaceDescriptor (i).SetBCProperty (bcnr);
-	  }
+        int bcnr = atoi (argv[2]);
+        if (mesh)
+          {
+            int nfd = mesh->GetNFD();
+            for (int i = 1; i <= nfd; i++)
+              mesh->GetFaceDescriptor (i).SetBCProperty (bcnr);
+          }
       }
 
     if (strcmp (argv[1], "getbc") == 0)
       {
-	int facenr = atoi (argv[2]);
-	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
-	  {
-	    snprintf (buf, size(buf),  "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
-	  }
-	else
-	  {
-	    strcpy (buf, "0");
-	  }
-	Tcl_SetResult (interp, buf, TCL_STATIC);
+        int facenr = atoi (argv[2]);
+        if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
+          {
+            snprintf (buf, size(buf),  "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
+          }
+        else
+          {
+            strcpy (buf, "0");
+          }
+        Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
     if (strcmp (argv[1], "getbcname") == 0)
       {
-	int facenr = atoi (argv[2]);
-	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
-	  {
-	    snprintf (buf, size(buf),  "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
-	  }
-	else
-	  {
-	    strcpy (buf, "-");
-	  }
-	Tcl_SetResult (interp, buf, TCL_STATIC);
+        int facenr = atoi (argv[2]);
+        if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
+          {
+            snprintf (buf, size(buf),  "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
+          }
+        else
+          {
+            strcpy (buf, "-");
+          }
+        Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
 
     if (strcmp (argv[1], "getactive") == 0)
       {
-	snprintf (buf, size(buf),  "%d", vsmesh.SelectedFace());
-	Tcl_SetResult (interp, buf, TCL_STATIC);
+        snprintf (buf, size(buf),  "%d", vsmesh.SelectedFace());
+        Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
     if (strcmp (argv[1], "setactive") == 0)
       {
-	int facenr = atoi (argv[2]);
-	if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
-	  {
-	    vsmesh.SetSelectedFace (facenr);
-	  }
+        int facenr = atoi (argv[2]);
+        if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
+          {
+            vsmesh.SetSelectedFace (facenr);
+          }
       }
 
     if (strcmp (argv[1], "getnfd") == 0)
       {
-	if (mesh)
-	  snprintf (buf, size(buf),  "%d", mesh->GetNFD());
-	else
-	  snprintf (buf, size(buf),  "0");
-	Tcl_SetResult (interp, buf, TCL_STATIC);
+        if (mesh)
+          snprintf (buf, size(buf),  "%d", mesh->GetNFD());
+        else
+          snprintf (buf, size(buf),  "0");
+        Tcl_SetResult (interp, buf, TCL_STATIC);
       }
 
     return TCL_OK;
@@ -854,32 +854,32 @@ namespace netgen
 
 
   int Ng_Refine  (ClientData clientData,
-		  Tcl_Interp * interp,
-		  int argc, tcl_const char *argv[])
+                  Tcl_Interp * interp,
+                  int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 #ifdef ACIS
     if (acisgeometry)
       {
-	ACISRefinementSurfaces ref (*acisgeometry);
-	ACISMeshOptimize2dSurfaces opt(*acisgeometry);
-	ref.Set2dOptimizer(&opt);
-	ref.Refine (*mesh);
+        ACISRefinementSurfaces ref (*acisgeometry);
+        ACISMeshOptimize2dSurfaces opt(*acisgeometry);
+        ref.Set2dOptimizer(&opt);
+        ref.Refine (*mesh);
       }
     else
 #endif
       {
-	// ng_geometry -> GetRefinement().Refine(*mesh);
+        // ng_geometry -> GetRefinement().Refine(*mesh);
         mesh->GetGeometry()->GetRefinement().Refine(*mesh);
       }
 
@@ -891,18 +891,18 @@ namespace netgen
   }
 
   int Ng_SecondOrder  (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
     
     const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement()).MakeSecondOrder (*mesh);
@@ -928,18 +928,18 @@ namespace netgen
   }
 
   int Ng_HighOrder  (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     multithread.running = 1;
@@ -967,18 +967,18 @@ namespace netgen
 
 
   int Ng_ValidateSecondOrder  (ClientData clientData,
-			       Tcl_Interp * interp,
-			       int argc, tcl_const char *argv[])
+                               Tcl_Interp * interp,
+                               int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     multithread.running = 1;
@@ -989,18 +989,18 @@ namespace netgen
 
 
   int Ng_ZRefinement  (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     ZRefinementOptions opt;
@@ -1014,18 +1014,18 @@ namespace netgen
   }
 
   int Ng_HPRefinement  (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     int levels = atoi (argv[1]);
@@ -1038,18 +1038,18 @@ namespace netgen
 
 
   int Ng_LoadMeshSize  (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     mesh->LoadLocalMeshSize(argv[1]);
@@ -1058,18 +1058,18 @@ namespace netgen
 
 
   int Ng_MeshSizeFromSurfaceMesh  (ClientData clientData,
-				   Tcl_Interp * interp,
-				   int argc, tcl_const char *argv[])
+                                   Tcl_Interp * interp,
+                                   int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     mesh->SetGlobalH (mparam.maxh);
@@ -1159,18 +1159,18 @@ namespace netgen
 
 
   int Ng_InsertVirtualBL (ClientData clientData,
-			  Tcl_Interp * interp,
-			  int argc, tcl_const char *argv[])
+                          Tcl_Interp * interp,
+                          int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     InsertVirtualBoundaryLayer (*mesh);
@@ -1178,8 +1178,8 @@ namespace netgen
   }
 
   int Ng_CutOffAndCombine (ClientData clientData,
-			   Tcl_Interp * interp,
-			   int argc, tcl_const char *argv[])
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
   {
     Mesh othermesh;
     othermesh.Load (argv[1]);
@@ -1192,8 +1192,8 @@ namespace netgen
 
 
   int Ng_HelmholtzMesh (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     HelmholtzMesh (*mesh);
     return TCL_OK;
@@ -1203,8 +1203,8 @@ namespace netgen
 
 
   int Ng_SetMeshingParameters  (ClientData clientData,
-				Tcl_Interp * interp,
-				int argc, tcl_const char *argv[])
+                                Tcl_Interp * interp,
+                                int argc, tcl_const char *argv[])
   {
     mparam.maxh = atof (Tcl_GetVar (interp, "::options.meshsize", 0));
     mparam.minh = atof (Tcl_GetVar (interp, "::options.minmeshsize", 0));
@@ -1253,8 +1253,8 @@ namespace netgen
     // 1048576 * atoi (Tcl_GetVar (interp, "::options.memory", 0));
     if (mesh)
       {
-	mesh->SetGlobalH (mparam.maxh);
-	mesh->SetMinimalH (mparam.minh);
+        mesh->SetGlobalH (mparam.maxh);
+        mesh->SetMinimalH (mparam.minh);
       }
 
 #ifdef PARALLELGL
@@ -1268,8 +1268,8 @@ namespace netgen
 
 
   int Ng_SetDebugParameters  (ClientData clientData,
-			      Tcl_Interp * interp,
-			      int argc, tcl_const char *argv[])
+                              Tcl_Interp * interp,
+                              int argc, tcl_const char *argv[])
   {
     debugparam.slowchecks = atoi (Tcl_GetVar (interp, "::debug.slowchecks", 0));
     debugparam.debugoutput = atoi (Tcl_GetVar (interp, "::debug.debugoutput", 0));
@@ -1290,14 +1290,14 @@ namespace netgen
 
 
   int Ng_SetCommandLineParameter  (ClientData clientData,
-				   Tcl_Interp * interp,
-				   int argc, tcl_const char *argv[])
+                                   Tcl_Interp * interp,
+                                   int argc, tcl_const char *argv[])
   {
     if (argc != 2)
       {
-	Tcl_SetResult (interp, (char*)"Ng_SetCommandLineParameter needs 1 parameter",
+        Tcl_SetResult (interp, (char*)"Ng_SetCommandLineParameter needs 1 parameter",
                        TCL_STATIC);
-	return TCL_ERROR;
+        return TCL_ERROR;
       }
 
     if (argv[1][0] == '-')
@@ -1314,14 +1314,14 @@ namespace netgen
 
 
   int Ng_GetCommandLineParameter  (ClientData clientData,
-				   Tcl_Interp * interp,
-				   int argc, tcl_const char *argv[])
+                                   Tcl_Interp * interp,
+                                   int argc, tcl_const char *argv[])
   {
     if (argc != 2)
       {
-	Tcl_SetResult (interp, (char*)"Ng_GetCommandLineParameter needs 1 parameter",
+        Tcl_SetResult (interp, (char*)"Ng_GetCommandLineParameter needs 1 parameter",
                        TCL_STATIC);
-	return TCL_ERROR;
+        return TCL_ERROR;
       }
 
     static char buf[10];
@@ -1331,8 +1331,8 @@ namespace netgen
                        const_cast<char*>(parameters.GetStringFlag (argv[1], NULL).c_str()), TCL_VOLATILE);
     else if (parameters.NumFlagDefined (argv[1]))
       {
-	snprintf (buf, size(buf),  "%lf", parameters.GetNumFlag (argv[1], 0));
-	Tcl_SetResult (interp, buf, TCL_STATIC);
+        snprintf (buf, size(buf),  "%lf", parameters.GetNumFlag (argv[1], 0));
+        Tcl_SetResult (interp, buf, TCL_STATIC);
       }
     else if (parameters.GetDefineFlag (argv[1]))
       Tcl_SetResult (interp, (char*)"defined", TCL_STATIC);
@@ -1362,20 +1362,20 @@ namespace netgen
       {
 
 #ifdef LOG_STREAM
-	(*logout) << "Start meshing" << endl;
-	(*logout) << "Meshing parameters:" << endl;
-	mparam.Print (*logout);
+        (*logout) << "Start meshing" << endl;
+        (*logout) << "Meshing parameters:" << endl;
+        mparam.Print (*logout);
 #endif
 
 #ifdef ACIS
-	if (acisgeometry)
-	  {
-	    ACISGenerateMesh(*acisgeometry, mesh.Ptr(), perfstepsstart, perfstepsend, optstring);
-	  }
-	else
+        if (acisgeometry)
+          {
+            ACISGenerateMesh(*acisgeometry, mesh.Ptr(), perfstepsstart, perfstepsend, optstring);
+          }
+        else
 #endif
           if (ng_geometry)
-	    {
+            {
               if (perfstepsstart == 1)
                 {
                   mesh = make_shared<Mesh> ();
@@ -1386,18 +1386,18 @@ namespace netgen
               if(!mesh)
                 throw Exception("Need existing global mesh");
               mparam.perfstepsstart = perfstepsstart;
-	      mparam.perfstepsend = perfstepsend;
+              mparam.perfstepsend = perfstepsend;
               if(optstring)
                 mparam.optimize3d = *optstring;
               int res = ng_geometry -> GenerateMesh (mesh, mparam);
 
-	      if (res != MESHING3_OK) 
-		{
-		  multithread.task = savetask;
-		  multithread.running = 0;
-		  return 0;
-		}
-	    }
+              if (res != MESHING3_OK) 
+                {
+                  multithread.task = savetask;
+                  multithread.running = 0;
+                  return 0;
+                }
+            }
           else if (mesh)
             {
               if(perfstepsstart > 1 && perfstepsstart < 5)
@@ -1415,35 +1415,35 @@ namespace netgen
 
 
 
-	if (mparam.autozrefine)
-	  {
-	    ZRefinementOptions opt;
-	    opt.minref = 5;
-	    ZRefinement (*mesh, ng_geometry.get(), opt);
-	    mesh -> SetNextMajorTimeStamp();
-	  }
-	
-	if (mparam.secondorder)
-	  {
-	    const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement()).MakeSecondOrder (*mesh);
-	    mesh -> SetNextMajorTimeStamp();
-	  }
+        if (mparam.autozrefine)
+          {
+            ZRefinementOptions opt;
+            opt.minref = 5;
+            ZRefinement (*mesh, ng_geometry.get(), opt);
+            mesh -> SetNextMajorTimeStamp();
+          }
+        
+        if (mparam.secondorder)
+          {
+            const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement()).MakeSecondOrder (*mesh);
+            mesh -> SetNextMajorTimeStamp();
+          }
 
-	if (mparam.elementorder > 1)
-	  {
-	    mesh -> GetCurvedElements().BuildCurvedElements (&const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement()),
-							     mparam.elementorder);
+        if (mparam.elementorder > 1)
+          {
+            mesh -> GetCurvedElements().BuildCurvedElements (&const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement()),
+                                                             mparam.elementorder);
 
-	    mesh -> SetNextMajorTimeStamp();
-	  }
+            mesh -> SetNextMajorTimeStamp();
+          }
 
 
-	PrintMessage (1, "Meshing done, time = ", GetTime(), " sec");
+        PrintMessage (1, "Meshing done, time = ", GetTime(), " sec");
       }
 
     catch (const NgException & e)
       {
-	cout << e.What() << endl;
+        cout << e.What() << endl;
       }
 
     multithread.task = savetask;
@@ -1454,8 +1454,8 @@ namespace netgen
     OCCGeometry * occgeometry = dynamic_cast<OCCGeometry*> (ng_geometry);
     if (occgeometry && occgeometry->ErrorInSurfaceMeshing())
       {
-	char script[] = "rebuildoccdialog";
-	Tcl_GlobalEval (tcl_interp, script);
+        char script[] = "rebuildoccdialog";
+        Tcl_GlobalEval (tcl_interp, script);
       }
 #endif
     return NULL;
@@ -1478,13 +1478,13 @@ namespace netgen
 
 
   int Ng_GenerateMesh  (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     multithread.running = 1;
@@ -1509,22 +1509,22 @@ namespace netgen
 
     if (argc == 2)
       {
-	perfstepsstart = 1;
-	perfstepsend = MeshingVal(argv[1]);
+        perfstepsstart = 1;
+        perfstepsend = MeshingVal(argv[1]);
       }
     else if (argc == 3)
       {
-	perfstepsstart = MeshingVal(argv[1]);
-	perfstepsend = MeshingVal(argv[2]);
+        perfstepsstart = MeshingVal(argv[1]);
+        perfstepsend = MeshingVal(argv[2]);
       }
     else if (argc == 4)
       {
-	perfstepsstart = MeshingVal(argv[1]);
-	perfstepsend = MeshingVal(argv[2]);
-	optstring = new char[strlen(argv[3])+1];
-	strcpy(optstring, argv[3]);
-	optstringcsg = new char[strlen(argv[3])+1];
-	strcpy(optstringcsg, argv[3]);
+        perfstepsstart = MeshingVal(argv[1]);
+        perfstepsend = MeshingVal(argv[2]);
+        optstring = new char[strlen(argv[3])+1];
+        strcpy(optstring, argv[3]);
+        optstringcsg = new char[strlen(argv[3])+1];
+        strcpy(optstringcsg, argv[3]);
       }
 
     RunParallel (MeshingDummy, NULL);
@@ -1534,21 +1534,21 @@ namespace netgen
 
 
   int Ng_StopMeshing  (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     multithread.terminate = 1;
     return TCL_OK;
   }
 
   int Ng_MeshInfo  (ClientData clientData,
-		    Tcl_Interp * interp,
-		    int argc, tcl_const char *argv[])
+                    Tcl_Interp * interp,
+                    int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     ostringstream str;
@@ -1565,17 +1565,17 @@ namespace netgen
       str << mesh->GetNSeg();
     else if (argc >= 2 && strcmp (argv[1], "bbox") == 0)
       {
-	Point<3> pmin, pmax;
-	mesh->GetBox (pmin, pmax);
-	str << pmin(0) << " " << pmax(0) << " "
-	    << pmin(1) << " " << pmax(1) << " "
-	    << pmin(2) << " " << pmax(2) << endl;
+        Point<3> pmin, pmax;
+        mesh->GetBox (pmin, pmax);
+        str << pmin(0) << " " << pmax(0) << " "
+            << pmin(1) << " " << pmax(1) << " "
+            << pmin(2) << " " << pmax(2) << endl;
       }
     else
       {
-	cout << "argv[1] = " << argv[1] << endl;
-	Tcl_SetResult (interp, (char*)"Ng_MeshInfo requires an argument out of \n dim np ne", TCL_STATIC);
-	return TCL_ERROR;
+        cout << "argv[1] = " << argv[1] << endl;
+        Tcl_SetResult (interp, (char*)"Ng_MeshInfo requires an argument out of \n dim np ne", TCL_STATIC);
+        return TCL_ERROR;
       }
 
     Tcl_SetResult  (interp, (char*)str.str().c_str(), TCL_VOLATILE);
@@ -1583,18 +1583,18 @@ namespace netgen
   }
 
   int Ng_MeshQuality  (ClientData clientData,
-		       Tcl_Interp * interp,
-		       int argc, tcl_const char *argv[])
+                       Tcl_Interp * interp,
+                       int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     double angles[4];
@@ -1604,7 +1604,7 @@ namespace netgen
       mesh->CalcMinMaxAngle(mparam.badellimit, angles);
     else
       {
-	angles[0] = angles[1] = angles[2] = angles[3] = 0;
+        angles[0] = angles[1] = angles[2] = angles[3] = 0;
       }
     snprintf (buf, size(buf),  "%5.1lf", angles[0]);
     Tcl_SetVar (interp, argv[1], buf, 0);
@@ -1619,29 +1619,29 @@ namespace netgen
   }
 
   int Ng_CheckSurfaceMesh  (ClientData clientData,
-			    Tcl_Interp * interp,
-			    int argc, tcl_const char *argv[])
+                            Tcl_Interp * interp,
+                            int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     mesh->FindOpenElements();
     if (mesh->CheckConsistentBoundary())
       {
-	PrintMessage (1, "surface mesh not consistent, trying orientation");
-	mesh->SurfaceMeshOrientation();
+        PrintMessage (1, "surface mesh not consistent, trying orientation");
+        mesh->SurfaceMeshOrientation();
       }
     else
       {
-	PrintMessage (1, "surface mesh consistent");
+        PrintMessage (1, "surface mesh consistent");
       }
 
     mesh->CheckOverlappingBoundary();
@@ -1649,18 +1649,18 @@ namespace netgen
   }
 
   int Ng_CheckVolumeMesh  (ClientData clientData,
-			   Tcl_Interp * interp,
-			   int argc, tcl_const char *argv[])
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     mesh->CheckVolumeMesh();
@@ -1669,8 +1669,8 @@ namespace netgen
 
 
   int Ng_DeleteVolMesh  (ClientData clientData,
-			 Tcl_Interp * interp,
-			 int argc, tcl_const char *argv[])
+                         Tcl_Interp * interp,
+                         int argc, tcl_const char *argv[])
   {
     if (mesh)
       mesh->ClearVolumeElements();
@@ -1680,8 +1680,8 @@ namespace netgen
 
 
   int Ng_SplitSeparatedFaces (ClientData clientData,
-			      Tcl_Interp * interp,
-			      int argc, tcl_const char *argv[])
+                              Tcl_Interp * interp,
+                              int argc, tcl_const char *argv[])
   {
     if (mesh)
       mesh->SplitSeparatedFaces ();
@@ -1691,18 +1691,18 @@ namespace netgen
 
 
   int Ng_RestrictH  (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     if (argc != 3)
@@ -1714,18 +1714,18 @@ namespace netgen
     double loch = atof (argv[2]);
     if (strcmp (argv[1], "face") == 0)
       {
-	cout << "Restrict h at face to " << loch << endl;
-	mesh -> RestrictLocalH  (RESTRICTH_FACE, vsmesh.SelectedFace(), loch);
+        cout << "Restrict h at face to " << loch << endl;
+        mesh -> RestrictLocalH  (RESTRICTH_FACE, vsmesh.SelectedFace(), loch);
       }
     if (strcmp (argv[1], "edge") == 0)
       {
-	cout << "Restrict h at edge to " << loch << endl;
-	mesh -> RestrictLocalH  (RESTRICTH_EDGE, vsmesh.SelectedEdge(), loch);
+        cout << "Restrict h at edge to " << loch << endl;
+        mesh -> RestrictLocalH  (RESTRICTH_EDGE, vsmesh.SelectedEdge(), loch);
       }
     if (strcmp (argv[1], "point") == 0)
       {
-	cout << "Restrict h at point to " << loch << endl;
-	mesh -> RestrictLocalH  (RESTRICTH_POINT, vsmesh.SelectedPoint().Nr1(), loch);
+        cout << "Restrict h at point to " << loch << endl;
+        mesh -> RestrictLocalH  (RESTRICTH_POINT, vsmesh.SelectedPoint().Nr1(), loch);
       }
 
     return TCL_OK;
@@ -1736,18 +1736,18 @@ namespace netgen
 
 
   int Ng_Anisotropy  (ClientData clientData,
-		      Tcl_Interp * interp,
-		      int argc, tcl_const char *argv[])
+                      Tcl_Interp * interp,
+                      int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     if (argc != 2)
@@ -1757,16 +1757,16 @@ namespace netgen
 
     if (strcmp (argv[1], "edge") == 0)
       {
-	int edgenr = vsmesh.SelectedEdge();
-	for (auto & seg : mesh->LineSegments())
-	  {
-	    auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
-	    if (ed.EdgeNr() == edgenr)
-	      {
-		ed.SetSingEdgeLeft(1 - ed.SingEdgeLeft());
-		ed.SetSingEdgeRight(1 - ed.SingEdgeRight());
-	      }
-	  }
+        int edgenr = vsmesh.SelectedEdge();
+        for (auto & seg : mesh->LineSegments())
+          {
+            auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
+            if (ed.EdgeNr() == edgenr)
+              {
+                ed.SetSingEdgeLeft(1 - ed.SingEdgeLeft());
+                ed.SetSingEdgeRight(1 - ed.SingEdgeRight());
+              }
+          }
       }
 
     return TCL_OK;
@@ -1786,16 +1786,16 @@ namespace netgen
 #ifdef ACIS
     if (acisgeometry)
       {
-	// ref = new ACISRefinementSurfaces(*acisgeometry);
-	opt = new ACISMeshOptimize2dSurfaces(*acisgeometry);
-	ref->Set2dOptimizer(opt);
+        // ref = new ACISRefinementSurfaces(*acisgeometry);
+        opt = new ACISMeshOptimize2dSurfaces(*acisgeometry);
+        ref->Set2dOptimizer(opt);
       }
 #endif
     else
       {
-	ref = new RefinementSurfaces(*geometry);
-	opt = new MeshOptimize2dSurfaces(*geometry);
-	ref->Set2dOptimizer(opt);
+        ref = new RefinementSurfaces(*geometry);
+        opt = new MeshOptimize2dSurfaces(*geometry);
+        ref->Set2dOptimizer(opt);
       }
     */
 
@@ -1815,25 +1815,25 @@ namespace netgen
 
 
   int Ng_Bisect  (ClientData clientData,
-		  Tcl_Interp * interp,
-		  int argc, tcl_const char *argv[])
+                  Tcl_Interp * interp,
+                  int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
 
     if (multithread.running)
       {
-	cout << "Thread alrad running" << endl;
-	return TCL_OK;
+        cout << "Thread alrad running" << endl;
+        return TCL_OK;
       }
     multithread.running = 1;
 
@@ -1857,18 +1857,18 @@ namespace netgen
 
 
   //   int Ng_BisectCopyMesh  (ClientData clientData,
-  // 			  Tcl_Interp * interp,
-  // 			  int argc, tcl_const char *argv[])
+  //                      Tcl_Interp * interp,
+  //                      int argc, tcl_const char *argv[])
   //   {
   //     if (!mesh)
   //       {
-  // 	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-  // 	return TCL_ERROR;
+  //    Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+  //    return TCL_ERROR;
   //       }
   //     if (multithread.running)
   //       {
-  // 	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-  // 	return TCL_ERROR;
+  //    Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+  //    return TCL_ERROR;
   //       }
 
   //     BisectTetsCopyMesh (*mesh, geometry.Ptr(), biopt);
@@ -1881,18 +1881,18 @@ namespace netgen
 
 
   int Ng_Split2Tets  (ClientData clientData,
-		      Tcl_Interp * interp,
-		      int argc, tcl_const char *argv[])
+                      Tcl_Interp * interp,
+                      int argc, tcl_const char *argv[])
   {
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
     if (multithread.running)
       {
-	Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_jobrunning, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     mesh->Split2Tets ();
@@ -1908,8 +1908,8 @@ namespace netgen
 
 
   extern int Ng_MeshDoctor (ClientData clientData,
-			    Tcl_Interp * interp,
-			    int argc, tcl_const char *argv[]);
+                            Tcl_Interp * interp,
+                            int argc, tcl_const char *argv[]);
 
 
 
@@ -1924,7 +1924,7 @@ namespace netgen
   }
 
   void AddVisualizationScene (const string & name,
-			      VisualScene * avs)
+                              VisualScene * avs)
   {
     GetVisualizationScenes().Set (name.c_str(), avs);
   }
@@ -1938,38 +1938,38 @@ namespace netgen
     vs = &visual_scene_cross;
     if (GetVisualizationScenes().Used(vismode))
       {
-	vs = GetVisualizationScenes()[vismode];
+        vs = GetVisualizationScenes()[vismode];
       }
     else if (vismode)
       {
-	if (strcmp (vismode, "geometry") == 0)
-	  {
-	    for (auto loader : GeometryRegister())
-	      {
-		VisualScene * hvs = loader->GetVisualScene (ng_geometry.get());
-		if (hvs)
-		  {
-		    vs = hvs;
-		    return;
-		  }
-	      }
+        if (strcmp (vismode, "geometry") == 0)
+          {
+            for (auto loader : GeometryRegister())
+              {
+                VisualScene * hvs = loader->GetVisualScene (ng_geometry.get());
+                if (hvs)
+                  {
+                    vs = hvs;
+                    return;
+                  }
+              }
 
 #ifdef ACIS
-	    else if (acisgeometry)
-	      vs = &vsacisgeom;
+            else if (acisgeometry)
+              vs = &vsacisgeom;
 #endif // ACIS
-	  }
-	
-	if (strcmp (vismode, "mesh") == 0)
-	  {
-	    if (!meshdoctor.active)
-	      vs = &vsmesh;
-	    else
-	      vs = &vsmeshdoc;
-	  }
+          }
+        
+        if (strcmp (vismode, "mesh") == 0)
+          {
+            if (!meshdoctor.active)
+              vs = &vsmesh;
+            else
+              vs = &vsmeshdoc;
+          }
 
-	if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
-	if (strcmp (vismode, "specpoints") == 0) vs = &vsspecpoints;
+        if (strcmp (vismode, "surfmeshing") == 0) vs = &vssurfacemeshing;
+        if (strcmp (vismode, "specpoints") == 0) vs = &vsspecpoints;
         if (strcmp (vismode, "solution") == 0) vs = &netgen::GetVSSolution();
       }
   }
@@ -2228,8 +2228,8 @@ namespace netgen
 
 
   int Ng_MouseMove (ClientData clientData,
-		    Tcl_Interp * interp,
-		    int argc, tcl_const char *argv[])
+                    Tcl_Interp * interp,
+                    int argc, tcl_const char *argv[])
   {
     int oldx, oldy;
     int newx, newy;
@@ -2247,8 +2247,8 @@ namespace netgen
 
 
   int Ng_MouseDblClick (ClientData clientData,
-			Tcl_Interp * interp,
-			int argc, tcl_const char *argv[])
+                        Tcl_Interp * interp,
+                        int argc, tcl_const char *argv[])
   {
     int px = Togl_PixelScale(togl)*atoi (argv[1]);
     int py = Togl_PixelScale(togl)*atoi (argv[2]);
@@ -2261,8 +2261,8 @@ namespace netgen
 
 
   int Ng_ZoomAll (ClientData clientData,
-		  Tcl_Interp * interp,
-		  int argc, tcl_const char *argv[])
+                  Tcl_Interp * interp,
+                  int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
     visual_scene->BuildScene (1);
@@ -2272,8 +2272,8 @@ namespace netgen
 
 
   int Ng_Center (ClientData clientData,
-		 Tcl_Interp * interp,
-		 int argc, tcl_const char *argv[])
+                 Tcl_Interp * interp,
+                 int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
     visual_scene->BuildScene (2);
@@ -2283,8 +2283,8 @@ namespace netgen
 
 
   int Ng_StandardRotation (ClientData clientData,
-			   Tcl_Interp * interp,
-			   int argc, tcl_const char *argv[])
+                           Tcl_Interp * interp,
+                           int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
     visual_scene->StandardRotation (argv[1]);
@@ -2293,8 +2293,8 @@ namespace netgen
   }
 
   int Ng_ArbitraryRotation (ClientData clientData,
-			    Tcl_Interp * interp,
-			    int argc, tcl_const char *argv[])
+                            Tcl_Interp * interp,
+                            int argc, tcl_const char *argv[])
   {
     SetVisualScene(interp);
     Array<double> alpha;
@@ -2302,8 +2302,8 @@ namespace netgen
 
     for(int i=1; i<argc; i+=4)
       {
-	alpha.Append(atof(argv[i]));
-	vec.Append(Vec<3>(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])));
+        alpha.Append(atof(argv[i]));
+        vec.Append(Vec<3>(atof(argv[i+1]),atof(argv[i+2]),atof(argv[i+3])));
       }
 
     visual_scene->ArbitraryRotation (alpha,vec);
@@ -2314,14 +2314,14 @@ namespace netgen
 
 
   int Ng_Metis (ClientData clientData,
-		Tcl_Interp * interp,
-		int argc, tcl_const char *argv[])
+                Tcl_Interp * interp,
+                int argc, tcl_const char *argv[])
   {
 #ifdef PARALLEL
     if (!mesh)
       {
-	Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
-	return TCL_ERROR;
+        Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
+        return TCL_ERROR;
       }
 
     int nparts = atoi (argv[1]);
@@ -2349,66 +2349,66 @@ namespace netgen
 
     if (mesh->GetDimension() == 3)
       {
-	using namespace metis;
+        using namespace metis;
 
-	int ne = mesh->GetNE();
-	if (ne < 3)
-	  {
-	    Tcl_SetResult (interp, "This operation needs a volume mesh", TCL_STATIC);
-	    return TCL_ERROR;
-	  }
+        int ne = mesh->GetNE();
+        if (ne < 3)
+          {
+            Tcl_SetResult (interp, "This operation needs a volume mesh", TCL_STATIC);
+            return TCL_ERROR;
+          }
 
-	int nn = mesh->GetNP();
+        int nn = mesh->GetNP();
 
-	ELEMENT_TYPE elementtype = mesh->VolumeElement(1).GetType();
-	int npe = mesh->VolumeElement(1).GetNP();
+        ELEMENT_TYPE elementtype = mesh->VolumeElement(1).GetType();
+        int npe = mesh->VolumeElement(1).GetNP();
 
-	for (int i = 2; i<=ne; i++)
-	  if (mesh->VolumeElement(i).GetType() != elementtype)
-	    {
-	      Tcl_SetResult (interp, "Works in 3D only uniformal tet or hex meshes", TCL_STATIC);
-	      return TCL_ERROR;
-	    }
+        for (int i = 2; i<=ne; i++)
+          if (mesh->VolumeElement(i).GetType() != elementtype)
+            {
+              Tcl_SetResult (interp, "Works in 3D only uniformal tet or hex meshes", TCL_STATIC);
+              return TCL_ERROR;
+            }
 
-	idxtype *elmnts;
-	elmnts = new idxtype[ne*npe];
+        idxtype *elmnts;
+        elmnts = new idxtype[ne*npe];
 
-	int etype;
-	if (elementtype == TET)
-	  etype = 2;
-	else if (elementtype == HEX)
-	  etype = 3;
-	else
-	  {
-	    Tcl_SetResult (interp, "Works in 3D only uniformal tet or hex meshes", TCL_STATIC);
-	    return TCL_ERROR;
-	  }
+        int etype;
+        if (elementtype == TET)
+          etype = 2;
+        else if (elementtype == HEX)
+          etype = 3;
+        else
+          {
+            Tcl_SetResult (interp, "Works in 3D only uniformal tet or hex meshes", TCL_STATIC);
+            return TCL_ERROR;
+          }
 
-	for (int i=1; i<=ne; i++)
-	  for (int j=1; j<=npe; j++)
-	    elmnts[(i-1)*npe+(j-1)] = mesh->VolumeElement(i).PNum(j)-1;
+        for (int i=1; i<=ne; i++)
+          for (int j=1; j<=npe; j++)
+            elmnts[(i-1)*npe+(j-1)] = mesh->VolumeElement(i).PNum(j)-1;
 
 
-	int numflag = 0;
-	int nparts = atoi (argv[1]);
-	int edgecut;
-	idxtype *epart, *npart;
-	epart = new idxtype[ne];
-	npart = new idxtype[nn];
+        int numflag = 0;
+        int nparts = atoi (argv[1]);
+        int edgecut;
+        idxtype *epart, *npart;
+        epart = new idxtype[ne];
+        npart = new idxtype[nn];
 
-	cout << "Starting Metis (" << ne << " Elements, " << nn << " Nodes, " << nparts << " Partitions) ... " << flush;
+        cout << "Starting Metis (" << ne << " Elements, " << nn << " Nodes, " << nparts << " Partitions) ... " << flush;
 
-	METIS_PartMeshNodal (&ne, &nn, elmnts, &etype, &numflag, &nparts,
-			     &edgecut, epart, npart);
+        METIS_PartMeshNodal (&ne, &nn, elmnts, &etype, &numflag, &nparts,
+                             &edgecut, epart, npart);
 
-	cout << "done" << endl;
+        cout << "done" << endl;
 
-	cout << "edge-cut: " << edgecut << ", balance: " << ComputeElementBalance(ne, nparts, epart) << endl;
+        cout << "edge-cut: " << edgecut << ", balance: " << ComputeElementBalance(ne, nparts, epart) << endl;
 
-	for (int i=1; i<=ne; i++)
-	  mesh->VolumeElement(i).SetPartition(epart[i-1]);
+        for (int i=1; i<=ne; i++)
+          mesh->VolumeElement(i).SetPartition(epart[i-1]);
 
-	mesh->SetNextTimeStamp();
+        mesh->SetNextTimeStamp();
       }
 
 
@@ -2433,16 +2433,16 @@ namespace netgen
 
 #ifndef ACIS
   int Ng_ACISCommand (ClientData clientData,
-		      Tcl_Interp * interp,
-		      int argc, tcl_const char *argv[])
+                      Tcl_Interp * interp,
+                      int argc, tcl_const char *argv[])
   {
     if (argc >= 2)
       {
-	if (strcmp (argv[1], "isACISavailable") == 0)
-	  {
+        if (strcmp (argv[1], "isACISavailable") == 0)
+          {
             Tcl_SetResult (interp, (char*)"no", TCL_STATIC);
-	    return TCL_OK;
-	  }
+            return TCL_OK;
+          }
       }
     Tcl_SetResult (interp, (char*)"undefined ACiS command", TCL_STATIC);
     return TCL_ERROR;
@@ -2459,8 +2459,8 @@ namespace netgen
     snprintf (buf, size(buf),  "visoptions.%s", name);
     if (printmessage_importance>0)
       {
-	cout << "name = " << name << ", value = " << value << endl;
-	cout << "set tcl-variable " << buf << " to " << value << endl;
+        cout << "name = " << name << ", value = " << value << endl;
+        cout << "set tcl-variable " << buf << " to " << value << endl;
       }
     Tcl_SetVar (tcl_interp, buf, const_cast<char*> (value), 0);
     Tcl_Eval (tcl_interp, "Ng_Vis_Set parameters;");
@@ -2529,18 +2529,18 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
       tri.SetIndex(1); //faceind
       
       for (j = 1; j <= 3; j++)
-	infile >> tri.PNum(j);
+        infile >> tri.PNum(j);
 
       infile >> np;
       for (i = 1; i <= np; i++)
-	{
-	  Point<3> p;
-	  infile >> p(0) >> p(1) >> p(2);
-	  if (firsttime)
-	    mesh->AddPoint (p);
-	  else
-	    mesh->Point(PointIndex::FromNr1(i)) = Point<3> (p);
-	}
+        {
+          Point<3> p;
+          infile >> p(0) >> p(1) >> p(2);
+          if (firsttime)
+            mesh->AddPoint (p);
+          else
+            mesh->Point(PointIndex::FromNr1(i)) = Point<3> (p);
+        }
 
       //firsttime = 0;
       Ng_Redraw();
@@ -2551,8 +2551,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
 
   int Ng_SetVisParameters  (ClientData clientData,
-			    Tcl_Interp * interp,
-			    int argc, tcl_const char *argv[])
+                            Tcl_Interp * interp,
+                            int argc, tcl_const char *argv[])
   {
     if (!Tcl_GetVar (interp, "::viewoptions.light.amb", TCL_GLOBAL_ONLY))
       return TCL_ERROR;
@@ -2578,8 +2578,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
     if ( ! (hclip == vispar.clipping) )
       {
-	vispar.clipping = hclip;
-	vispar.clipping.timestamp = NextTimeStamp();
+        vispar.clipping = hclip;
+        vispar.clipping.timestamp = NextTimeStamp();
       }
 
     vispar.whitebackground = atoi (Tcl_GetVar (interp, "::viewoptions.whitebackground", TCL_GLOBAL_ONLY));
@@ -2717,8 +2717,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
 
   int Ng_BuildFieldLines (ClientData clientData,
-			  Tcl_Interp * interp,
-			  int argc, tcl_const char *argv[])
+                          Tcl_Interp * interp,
+                          int argc, tcl_const char *argv[])
   {
     netgen::GetVSSolution().BuildFieldLinesPlot();
     return TCL_OK;
@@ -2727,8 +2727,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
 
   int Ng_Exit (ClientData clientData,
-	       Tcl_Interp * interp,
-	       int argc, tcl_const char *argv[])
+               Tcl_Interp * interp,
+               int argc, tcl_const char *argv[])
   {
     /*
 #ifdef PARALLEL
@@ -2828,8 +2828,8 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
   // extern "C" int Ng_Geom2d_Init (Tcl_Interp * interp); 
 
   //   int main_Eero (ClientData clientData,
-  // 	       Tcl_Interp * interp,
-  // 		 int argc, tcl_const char *argv[]);
+  //           Tcl_Interp * interp,
+  //             int argc, tcl_const char *argv[]);
 
 
   int Ng_Init (Tcl_Interp * interp)
@@ -2852,70 +2852,70 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     tcl_interp = interp;
 
     //     Tcl_CreateCommand (interp, "Ng_Eero", main_Eero,
-    // 		       (ClientData)NULL,
-    // 		       (Tcl_CmdDeleteProc*) NULL);
+    //                 (ClientData)NULL,
+    //                 (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_New", Ng_New,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     //     Tcl_CreateCommand (interp, "Ng_Lock", Ng_Lock,
-    // 		       (ClientData)NULL,
-    // 		       (Tcl_CmdDeleteProc*) NULL);
+    //                 (ClientData)NULL,
+    //                 (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_LoadGeometry", Ng_LoadGeometry,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SaveGeometry", Ng_SaveGeometry,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_LoadMesh", Ng_LoadMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SaveMesh", Ng_SaveMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MergeMesh", Ng_MergeMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_GetImportFormats", Ng_GetImportFormats,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_GetExportFormats", Ng_GetExportFormats,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ExportMesh", Ng_ExportMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ImportMesh", Ng_ImportMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ImportSolution", Ng_ImportSolution,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ShowDemo", Ng_ShowDemo,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_DemoSetTime", Ng_DemoSetTime,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SaveSolution", Ng_SaveSolution,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
 
@@ -2924,199 +2924,199 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
     // meshing
     Tcl_CreateCommand (interp, "Ng_GenerateMesh", Ng_GenerateMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_StopMeshing", Ng_StopMeshing,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MeshInfo", Ng_MeshInfo,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MeshQuality", Ng_MeshQuality,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_CheckSurfaceMesh", Ng_CheckSurfaceMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_CheckVolumeMesh", Ng_CheckVolumeMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_DeleteVolMesh", Ng_DeleteVolMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SplitSeparatedFaces", Ng_SplitSeparatedFaces,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetNextTimeStamp", Ng_SetNextTimeStamp,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Refine", Ng_Refine,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SecondOrder", Ng_SecondOrder,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_HighOrder", Ng_HighOrder,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ValidateSecondOrder", Ng_ValidateSecondOrder,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_RestrictH", Ng_RestrictH,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Anisotropy", Ng_Anisotropy,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Bisect", Ng_Bisect,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     //     Tcl_CreateCommand (interp, "Ng_BisectCopyMesh", Ng_BisectCopyMesh,
-    // 		       (ClientData)NULL,
-    // 		       (Tcl_CmdDeleteProc*) NULL);
+    //                 (ClientData)NULL,
+    //                 (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Split2Tets", Ng_Split2Tets,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ZRefinement", Ng_ZRefinement,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_HPRefinement", Ng_HPRefinement,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_LoadMeshSize", Ng_LoadMeshSize,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MeshSizeFromSurfaceMesh", Ng_MeshSizeFromSurfaceMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_GenerateBoundaryLayer", Ng_GenerateBoundaryLayer,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_InsertVirtualBL", Ng_InsertVirtualBL,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_CutOffAndCombine", Ng_CutOffAndCombine,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_HelmholtzMesh", Ng_HelmholtzMesh,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ReadStatus", Ng_ReadStatus,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MemInfo", Ng_MemInfo,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_MeshDoctor", Ng_MeshDoctor,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_BCProp", Ng_BCProp,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
 
 
     Tcl_CreateCommand (interp, "Ng_ACISCommand",
-		       Ng_ACISCommand,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_ACISCommand,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_MouseMove", Ng_MouseMove,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_MouseDblClick", Ng_MouseDblClick,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_ZoomAll", Ng_ZoomAll,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Center", Ng_Center,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_StandardRotation", Ng_StandardRotation,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_ArbitraryRotation", Ng_ArbitraryRotation,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_SetVisParameters", Ng_SetVisParameters,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetMeshingParameters", Ng_SetMeshingParameters,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetDebugParameters", Ng_SetDebugParameters,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_SetCommandLineParameter",
-		       Ng_SetCommandLineParameter,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_SetCommandLineParameter,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_GetCommandLineParameter",
-		       Ng_GetCommandLineParameter,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_GetCommandLineParameter,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Exit",
-		       Ng_Exit,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_Exit,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_Metis",
-		       Ng_Metis,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_Metis,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_BuildFieldLines",
-		       Ng_BuildFieldLines,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_BuildFieldLines,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     /*
      * Specify the C callback functions for widget creation, display,
@@ -3126,17 +3126,17 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
     if (!nodisplay)
       {
-	if (Togl_Init(interp) == TCL_ERROR) 
-	  return TCL_ERROR;
-	
-	
-	Tcl_CreateObjCommand(interp, "init", init, NULL, NULL);
-	Tcl_CreateObjCommand(interp, "zap", zap, NULL, NULL);
-	Tcl_CreateObjCommand(interp, "draw", draw, NULL, NULL);
-	Tcl_CreateObjCommand(interp, "reshape", reshape, NULL, NULL);
-	
-	//   Togl_TimerFunc(  idle );
-	Tcl_CreateObjCommand(interp, "Ng_SnapShot", Ng_SnapShot, NULL, NULL);
+        if (Togl_Init(interp) == TCL_ERROR) 
+          return TCL_ERROR;
+        
+        
+        Tcl_CreateObjCommand(interp, "init", init, NULL, NULL);
+        Tcl_CreateObjCommand(interp, "zap", zap, NULL, NULL);
+        Tcl_CreateObjCommand(interp, "draw", draw, NULL, NULL);
+        Tcl_CreateObjCommand(interp, "reshape", reshape, NULL, NULL);
+        
+        //   Togl_TimerFunc(  idle );
+        Tcl_CreateObjCommand(interp, "Ng_SnapShot", Ng_SnapShot, NULL, NULL);
         Tcl_CreateObjCommand(interp, "Ng_VideoClip", Ng_VideoClip, NULL, NULL);
       }
 
@@ -3153,17 +3153,17 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
 
     Tcl_LinkVar (interp, "multithread_pause",
-		 (char*)&multithread.pause, TCL_LINK_INT);
+                 (char*)&multithread.pause, TCL_LINK_INT);
     Tcl_LinkVar (interp, "multithread_testmode",
-		 (char*)&multithread.testmode, TCL_LINK_INT);
+                 (char*)&multithread.testmode, TCL_LINK_INT);
     Tcl_LinkVar (interp, "multithread_redraw",
-		 (char*)&multithread.redraw, TCL_LINK_INT);
+                 (char*)&multithread.redraw, TCL_LINK_INT);
     Tcl_LinkVar (interp, "multithread_drawing",
-		 (char*)&multithread.drawing, TCL_LINK_INT);
+                 (char*)&multithread.drawing, TCL_LINK_INT);
     Tcl_LinkVar (interp, "multithread_terminate",
-		 (char*)&multithread.terminate, TCL_LINK_INT);
+                 (char*)&multithread.terminate, TCL_LINK_INT);
     Tcl_LinkVar (interp, "multithread_running",
-		 (char*)&multithread.running, TCL_LINK_INT);
+                 (char*)&multithread.running, TCL_LINK_INT);
 
 
     //testout->setstate(ios_base::badbit);

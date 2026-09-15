@@ -47,7 +47,7 @@ public:
 
   ///GetLocal faces in sphere with radius xh and middlepoint p
   void GetLocals(Array<FrontElement2d> & locfaces,  Array<INDEX> & findex,
-		 INDEX fstind, const Point<3>& p0, double xh);
+                 INDEX fstind, const Point<3>& p0, double xh);
 
 private:
   

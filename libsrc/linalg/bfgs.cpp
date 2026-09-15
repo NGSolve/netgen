@@ -19,7 +19,7 @@ namespace netgen
 {
 
 void Cholesky (const DenseMatrix & a,
-	       DenseMatrix & l, Vector & d)
+               DenseMatrix & l, Vector & d)
 {
   // Factors   A = L D L^T
 
@@ -34,28 +34,28 @@ void Cholesky (const DenseMatrix & a,
   for (int i = 1; i <= n; i++)
     {
       for (int j = i; j <= n; j++)
-	{
-	  x = l.Get(i, j);
+        {
+          x = l.Get(i, j);
 
-	  for (int k = 1; k < i; k++)
-	    x -= l.Get(i, k) * l.Get(j, k) * d(k-1); 
+          for (int k = 1; k < i; k++)
+            x -= l.Get(i, k) * l.Get(j, k) * d(k-1); 
           
-	  if (i == j)
-	    {
-	      d(i-1) = x;
-	    }
-	  else
-	    {
-	      l.Elem(j, i) = x / d(i-1);
-	    }
-	}
+          if (i == j)
+            {
+              d(i-1) = x;
+            }
+          else
+            {
+              l.Elem(j, i) = x / d(i-1);
+            }
+        }
     }
 
   for (int i = 1; i <= n; i++)
     {
       l.Elem(i, i) = 1;
       for (int j = i+1; j <= n; j++)
-	l.Elem(i, j) = 0;
+        l.Elem(i, j) = 0;
     }
 
   /*
@@ -64,10 +64,10 @@ void Cholesky (const DenseMatrix & a,
   for (i = 1; i <= n; i++)
     for (j = 1; j <= n; j++)
       {
-	x = 0;
-	for (k = 1; k <= n; k++)
-	  x += l.Get(i, k) * l.Get(j, k) * d.Get(k);
-	(*testout) << x << " ";
+        x = 0;
+        for (k = 1; k <= n; k++)
+          x += l.Get(i, k) * l.Get(j, k) * d.Get(k);
+        (*testout) << x << " ";
       }
   (*testout) << endl;
   */
@@ -86,7 +86,7 @@ void MultLDLt (const DenseMatrix & l, const Vector & d, const Vector & g, Vector
     {
       val = 0;
       for (j = i; j <= n; j++)
-	val += p.Get(j) * l.Get(j, i);
+        val += p.Get(j) * l.Get(j, i);
       p.Set(i, val);
     }
   for (i = 1; i <= n; i++)
@@ -96,7 +96,7 @@ void MultLDLt (const DenseMatrix & l, const Vector & d, const Vector & g, Vector
     {
       val = 0;
       for (j = 1; j <= i; j++)
-	val += p.Get(j) * l.Get(i, j);
+        val += p.Get(j) * l.Get(i, j);
       p.Set(i, val);
     }
   */
@@ -112,7 +112,7 @@ void MultLDLt (const DenseMatrix & l, const Vector & d, const Vector & g, Vector
     {
       val = 0;
       for (int j = i; j < n; j++)
-	val += p(j) * l(j, i);
+        val += p(j) * l(j, i);
       p(i) = val;
     }
 
@@ -123,7 +123,7 @@ void MultLDLt (const DenseMatrix & l, const Vector & d, const Vector & g, Vector
     {
       val = 0;
       for (int j = 0; j <= i; j++)
-	val += p(j) * l(i, j);
+        val += p(j) * l(i, j);
       p(i) = val;
     }
 }
@@ -139,7 +139,7 @@ void SolveLDLt (const DenseMatrix & l, const Vector & d, const Vector & g, Vecto
     {
       val = 0;
       for (int j = 0; j < i; j++)
-	val += p(j) * l(i,j);
+        val += p(j) * l(i,j);
       p(i) -= val;
     }
 
@@ -150,7 +150,7 @@ void SolveLDLt (const DenseMatrix & l, const Vector & d, const Vector & g, Vecto
     {
       val = 0;
       for (int j = i+1; j < n; j++)
-	val += p(j) * l(j, i);
+        val += p(j) * l(j, i);
       p(i) -= val;
     }
 }
@@ -174,20 +174,20 @@ int LDLtUpdate (DenseMatrix & l, Vector & d, double a, const Vector & u)
       t = told + a * sqr (v(j-1)) / d(j-1);
 
       if (t <= 0) 
-	{
-	  (*testout) << "update err, t = " << t << endl;
-	  return 1;
-	}
+        {
+          (*testout) << "update err, t = " << t << endl;
+          return 1;
+        }
 
       xi = a * v(j-1) / (d(j-1) * t);
 
       d(j-1) *= t / told;
 
       for (int i = j + 1; i <= n; i++)
-	{
-	  v(i-1) -= v(j-1) * l.Elem(i, j);
-	  l.Elem(i, j) += xi * v(i-1);
-	}
+        {
+          v(i-1) -= v(j-1) * l.Elem(i, j);
+          l.Elem(i, j) += xi * v(i-1);
+        }
 
       told = t;
     }
@@ -197,12 +197,12 @@ int LDLtUpdate (DenseMatrix & l, Vector & d, double a, const Vector & u)
 
 
 double BFGS (
-	     Vector & x,         // i: Startwert
-	     // o: Loesung, falls IFAIL = 0
-	     const MinFunction & fun,
-	     const OptiParameters & par,
-	     double eps
-	     )
+             Vector & x,         // i: Startwert
+             // o: Loesung, falls IFAIL = 0
+             const MinFunction & fun,
+             const OptiParameters & par,
+             double eps
+             )
 
 
 {
@@ -250,31 +250,31 @@ double BFGS (
       // Restart
       // cout << "it " << it << "f = " << f << endl;
       if (it % (5 * n) == 0)
-	{
+        {
 
-	  for (int i = 1; i <= n; i++)
-	    d(i-1) = typf/ sqr (typx(i-1));   // 1;
-	  for (int i = 2; i <= n; i++)
-	    for (int j = 1; j < i; j++)
-	      l.Elem(i, j) = 0;
+          for (int i = 1; i <= n; i++)
+            d(i-1) = typf/ sqr (typx(i-1));   // 1;
+          for (int i = 2; i <= n; i++)
+            for (int j = 1; j < i; j++)
+              l.Elem(i, j) = 0;
 
-	  /*
-	  hesse = 0;
-	  for (i = 1; i <= n; i++)
-	    hesse.Elem(i, i) = typf / sqr (typx.Get(i));  
+          /*
+          hesse = 0;
+          for (i = 1; i <= n; i++)
+            hesse.Elem(i, i) = typf / sqr (typx.Get(i));  
 
-	  fun.ApproximateHesse (x, hesse);
+          fun.ApproximateHesse (x, hesse);
 
-	  Cholesky (hesse, l, d);
-	  */
-	}
+          Cholesky (hesse, l, d);
+          */
+        }
 
       it++;
       if (it > par.maxit_bfgs)
-	{
-	  ifail = 2;
-	  break;
-	}
+        {
+          ifail = 2;
+          break;
+        }
 
 
       // Solve with factorized B
@@ -282,9 +282,9 @@ double BFGS (
       SolveLDLt (l, d, g, p);
 
  //      (*testout) << "l " << l << endl
-// 		 << "d " << d << endl
-// 		 << "g " << g << endl
-// 		 << "p " << p << endl;
+//               << "d " << d << endl
+//               << "g " << g << endl
+//               << "p " << p << endl;
 
 
       p *= -1;
@@ -296,19 +296,19 @@ double BFGS (
 
       alphahat = 1;
       lines (x, xneu, p, f, g, fun, par, alphahat, fmin,
-	     mu1, sigma, xi1, xi2, tau, tau1, tau2, ifail);
+             mu1, sigma, xi1, xi2, tau, tau1, tau2, ifail);
 
       if(ifail == 1)
-	(*testout) << "no success with linesearch" << endl;
+        (*testout) << "no success with linesearch" << endl;
 
        /*
       // if (it > par.maxit_bfgs/2)
-	{
-	  (*testout) << "x = " << x << endl;
-	  (*testout) << "xneu = " << xneu << endl;
-	  (*testout) << "f = " << f << endl;
-	  (*testout) << "g = " << g << endl;
-	}
+        {
+          (*testout) << "x = " << x << endl;
+          (*testout) << "xneu = " << xneu << endl;
+          (*testout) << "f = " << f << endl;
+          (*testout) << "g = " << g << endl;
+        }
       */
 
       //      (*testout) << "it = " << it << " f = " << f << endl;
@@ -328,35 +328,35 @@ double BFGS (
       a2 = s * bs;
 
       if (a1 > 0 && a2 > 0)
-	{
-	  if (LDLtUpdate (l, d, 1 / a1, y) != 0)
-	    {
+        {
+          if (LDLtUpdate (l, d, 1 / a1, y) != 0)
+            {
               // cerr << "BFGS update error1" << endl;
-	      (*testout) << "BFGS update error1" << endl;
-	      (*testout) << "l " << endl << l << endl
-			 << "d " << d << endl;
-	      ifail = 1;
-	      break;
-	    }
+              (*testout) << "BFGS update error1" << endl;
+              (*testout) << "l " << endl << l << endl
+                         << "d " << d << endl;
+              ifail = 1;
+              break;
+            }
 
-	  if (LDLtUpdate (l, d, -1 / a2, bs) != 0)
-	    {
+          if (LDLtUpdate (l, d, -1 / a2, bs) != 0)
+            {
               // cerr << "BFGS update error2" << endl;
-	      (*testout) << "BFGS update error2" << endl;
-	      (*testout) << "l " << endl << l << endl
-			 << "d " << d << endl;
-	      ifail = 1;
-	      break;
-	    }
-	}
+              (*testout) << "BFGS update error2" << endl;
+              (*testout) << "l " << endl << l << endl
+                         << "d " << d << endl;
+              ifail = 1;
+              break;
+            }
+        }
 
       // Calculate stop conditions
 
       hd = eps * max2 (typf, fabs (f));
       a1crit = 1;
       for (int i = 1; i <= n; i++)
-	if ( fabs (g(i-1)) * max2 (typx(i-1), fabs (x(i-1))) > hd)
-	  a1crit = 0;
+        if ( fabs (g(i-1)) * max2 (typx(i-1), fabs (x(i-1))) > hd)
+          a1crit = 0;
 
 
       a3acrit = (fold - f <= tauf * max2 (typf, fabs (f)));
@@ -365,22 +365,22 @@ double BFGS (
       //    testout << "a1crit, a3crit = " << int(a1crit) << ", " << int(a3acrit) << endl;
 
       /*
-	// Output for tests
+        // Output for tests
 
-	normg = sqrt (g * g);
+        normg = sqrt (g * g);
 
-	testout << "it =" << setw (5) << it
-	<< " f =" << setw (12) << setprecision (5) << f
-	<< " |g| =" << setw (12) << setprecision (5) << normg;
+        testout << "it =" << setw (5) << it
+        << " f =" << setw (12) << setprecision (5) << f
+        << " |g| =" << setw (12) << setprecision (5) << normg;
 
-	testout << " x = (" << setw (12) << setprecision (5) << x.Elem(1);
-	for (i = 2; i <= n; i++)
-	testout << "," << setw (12) << setprecision (5) << x.Elem(i);
-	testout << ")" << endl;
-	*/
+        testout << " x = (" << setw (12) << setprecision (5) << x.Elem(1);
+        for (i = 2; i <= n; i++)
+        testout << "," << setw (12) << setprecision (5) << x.Elem(i);
+        testout << ")" << endl;
+        */
 
       //(*testout) << "it = " << it << " f = " << f << " x = " << x << endl
-      //	 << " g = " << g << " p = " << p << endl << endl;
+      //         << " g = " << g << " p = " << p << endl << endl;
 
       //      (*testout) << "|g| = " << g.L2Norm() << endl;
 
@@ -391,7 +391,7 @@ double BFGS (
 
   /*
   (*testout) << "it = " << it << " g = " << g << " f = " << f 
-	     << " fail = " << ifail << endl;
+             << " fail = " << ifail << endl;
   */
   if (f0 < f || (ifail == 1))
     {

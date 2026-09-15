@@ -81,11 +81,11 @@ void Ng_LoadGeometry (const char * filename)
     {
       NetgenGeometry * hgeom = loader->Load (filename);
       if (hgeom)
-	{
+        {
           ng_geometry.reset (hgeom);
-	  mesh.reset();
-	  return;
-	}
+          mesh.reset();
+          return;
+        }
     }
 
 
@@ -122,7 +122,7 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
   if ( string(filename).find(".vol") == string::npos )
     {
       if(ntasks>1)
-	throw NgException("Not sure what to do with this?? Does this work with MPI??");
+        throw NgException("Not sure what to do with this?? Does this work with MPI??");
       mesh.reset (new Mesh());
       mesh->SetCommunicator(comm);
       ReadFile(*mesh,filename);
@@ -172,64 +172,64 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     if (ntasks > 1)
       {
 
-	char * weightsfilename = new char [strlen(filename)+1];
-	strcpy (weightsfilename, filename);            
-	weightsfilename[strlen (weightsfilename)-3] = 'w';
-	weightsfilename[strlen (weightsfilename)-2] = 'e';
-	weightsfilename[strlen (weightsfilename)-1] = 'i';
+        char * weightsfilename = new char [strlen(filename)+1];
+        strcpy (weightsfilename, filename);            
+        weightsfilename[strlen (weightsfilename)-3] = 'w';
+        weightsfilename[strlen (weightsfilename)-2] = 'e';
+        weightsfilename[strlen (weightsfilename)-1] = 'i';
 
-	ifstream weightsfile(weightsfilename);      
-	delete [] weightsfilename;  
-	  
-	if (!(weightsfile.good()))
-	  {
-	    // cout << "regular distribute" << endl;
-	    mesh -> Distribute();
-	  }
-	else
-	  {
-	    char str[20];   
-	    bool endfile = false;
-	    int n, dummy;
-	      
-	    Array<int> segment_weights;
-	    Array<int> surface_weights;
-	    Array<int> volume_weights;
-	      
-	    while (weightsfile.good() && !endfile)
-	      {
-		weightsfile >> str;
-		  
-		if (strcmp (str, "edgeweights") == 0)
-		  {
-		    weightsfile >> n;
-		    segment_weights.SetSize(n);
-		    for (int i = 0; i < n; i++)
-		      weightsfile >> dummy >> segment_weights[i];
-		  }
-		  
-		if (strcmp (str, "surfaceweights") == 0)
-		  {
-		    weightsfile >> n;
-		    surface_weights.SetSize(n);
-		    for (int i=0; i<n; i++)
-		      weightsfile >> dummy >> surface_weights[i];
-		  }
-		  
-		if (strcmp (str, "volumeweights") == 0)
-		  {
-		    weightsfile >> n;
-		    volume_weights.SetSize(n);
-		    for (int i=0; i<n; i++)
-		      weightsfile >> dummy >> volume_weights[i];
-		  }
-		  
-		if (strcmp (str, "endfile") == 0)
-		  endfile = true;  
-	      }     
-	      
-	    mesh -> Distribute(volume_weights, surface_weights, segment_weights);
-	  }
+        ifstream weightsfile(weightsfilename);      
+        delete [] weightsfilename;  
+          
+        if (!(weightsfile.good()))
+          {
+            // cout << "regular distribute" << endl;
+            mesh -> Distribute();
+          }
+        else
+          {
+            char str[20];   
+            bool endfile = false;
+            int n, dummy;
+              
+            Array<int> segment_weights;
+            Array<int> surface_weights;
+            Array<int> volume_weights;
+              
+            while (weightsfile.good() && !endfile)
+              {
+                weightsfile >> str;
+                  
+                if (strcmp (str, "edgeweights") == 0)
+                  {
+                    weightsfile >> n;
+                    segment_weights.SetSize(n);
+                    for (int i = 0; i < n; i++)
+                      weightsfile >> dummy >> segment_weights[i];
+                  }
+                  
+                if (strcmp (str, "surfaceweights") == 0)
+                  {
+                    weightsfile >> n;
+                    surface_weights.SetSize(n);
+                    for (int i=0; i<n; i++)
+                      weightsfile >> dummy >> surface_weights[i];
+                  }
+                  
+                if (strcmp (str, "volumeweights") == 0)
+                  {
+                    weightsfile >> n;
+                    volume_weights.SetSize(n);
+                    for (int i=0; i<n; i++)
+                      weightsfile >> dummy >> volume_weights[i];
+                  }
+                  
+                if (strcmp (str, "endfile") == 0)
+                  endfile = true;  
+              }     
+              
+            mesh -> Distribute(volume_weights, surface_weights, segment_weights);
+          }
       } // ntasks>1 end
   } // id==0 end
   else {
@@ -330,55 +330,55 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
       int i;
       const Element & el = (*mesh)[ElementIndex::FromNr1(ei)];
       for (i = 0; i < el.GetNP(); i++)
-	epi[i] = PointNr(el.PNum(i+1));
+        epi[i] = PointNr(el.PNum(i+1));
       
       if (np)
-	*np = el.GetNP();
+        *np = el.GetNP();
 
       if (el.GetType() == PRISM)
-	{
-	  // degenerated prism, (should be obsolete)
-	  const int map1[] = { 3, 2, 5, 6, 1 };
-	  const int map2[] = { 1, 3, 6, 4, 2 };
-	  const int map3[] = { 2, 1, 4, 5, 3 };
-	  
-	  const int * map = NULL;
-	  int deg1 = 0, deg2 = 0, deg3 = 0;
-	  //int deg = 0;
-	  if (el.PNum(1) == el.PNum(4)) { map = map1; deg1 = 1; }
-	  if (el.PNum(2) == el.PNum(5)) { map = map2; deg2 = 1; }
-	  if (el.PNum(3) == el.PNum(6)) { map = map3; deg3 = 1; }
-	  
-	  switch (deg1+deg2+deg3)
-	    {
-	      {
-	      case 1:
+        {
+          // degenerated prism, (should be obsolete)
+          const int map1[] = { 3, 2, 5, 6, 1 };
+          const int map2[] = { 1, 3, 6, 4, 2 };
+          const int map3[] = { 2, 1, 4, 5, 3 };
+          
+          const int * map = NULL;
+          int deg1 = 0, deg2 = 0, deg3 = 0;
+          //int deg = 0;
+          if (el.PNum(1) == el.PNum(4)) { map = map1; deg1 = 1; }
+          if (el.PNum(2) == el.PNum(5)) { map = map2; deg2 = 1; }
+          if (el.PNum(3) == el.PNum(6)) { map = map3; deg3 = 1; }
+          
+          switch (deg1+deg2+deg3)
+            {
+              {
+              case 1:
                 if (printmessage_importance>0)
                   cout << "degenerated prism found, deg = 1" << endl;
-		for (i = 0; i < 5; i++)
-		  epi[i] = PointNr(el.PNum (map[i]));
-		
-		if (np) *np = 5;
-		return NG_PYRAMID;
-		break;
-	      }
-	    case 2:
-	      {
+                for (i = 0; i < 5; i++)
+                  epi[i] = PointNr(el.PNum (map[i]));
+                
+                if (np) *np = 5;
+                return NG_PYRAMID;
+                break;
+              }
+            case 2:
+              {
                 if (printmessage_importance>0)
                   cout << "degenerated prism found, deg = 2" << endl;
-		if (!deg1) epi[3] = PointNr(el.PNum(4));
-		if (!deg2) epi[3] = PointNr(el.PNum(5));
-		if (!deg3) epi[3] = PointNr(el.PNum(6));
-		
-		if (np) *np = 4;
-		return NG_TET;
-		break;
-	      }
-	    default:
-	      ;
-	    }
-	  
-	}
+                if (!deg1) epi[3] = PointNr(el.PNum(4));
+                if (!deg2) epi[3] = PointNr(el.PNum(5));
+                if (!deg3) epi[3] = PointNr(el.PNum(6));
+                
+                if (np) *np = 4;
+                return NG_TET;
+                break;
+              }
+            default:
+              ;
+            }
+          
+        }
 
       return NG_ELEMENT_TYPE (el.GetType());
     }
@@ -386,7 +386,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
     {
       const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
-	epi[i] = PointNr(el.PNum(i+1));      
+        epi[i] = PointNr(el.PNum(i+1));      
 
       if (np) *np = el.GetNP();
       return NG_ELEMENT_TYPE (el.GetType());
@@ -407,11 +407,11 @@ NG_ELEMENT_TYPE Ng_GetElementType (int ei)
     {
       const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       switch (el.GetNP())
-	{
-	case 3: return NG_TRIG; 
-	case 4: return NG_QUAD; 
-	case 6: return NG_TRIG6; 
-	}
+        {
+        case 3: return NG_TRIG; 
+        case 4: return NG_QUAD; 
+        case 6: return NG_TRIG6; 
+        }
     }
 
   // should not occur
@@ -446,10 +446,10 @@ const char * Ng_GetElementMaterial (int ei)
       // cout << "ind = " << ind << endl;
       const string * mat = mesh->GetMaterialPtr (ind);
       if (mat)
-	// return const_cast<char*> (mat);
+        // return const_cast<char*> (mat);
         return mat->c_str();
       else 
-	return empty;
+        return empty;
     }
   // add astrid
   else
@@ -458,9 +458,9 @@ const char * Ng_GetElementMaterial (int ei)
       ind = mesh->GetFaceDescriptor(ind).BCProperty();
       const string * mat = mesh->GetMaterialPtr ( ind );
       if (mat)
-	return mat->c_str();
+        return mat->c_str();
       else
-	return empty;
+        return empty;
     }
   return 0;
 }
@@ -473,9 +473,9 @@ const char * Ng_GetDomainMaterial (int dom)
     {
       const string * mat = mesh->GetMaterialPtr(dom);
       if (mat)
-	return mat->c_str();
+        return mat->c_str();
       else 
-	return empty;      
+        return empty;      
     }
 
   return 0;
@@ -503,7 +503,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
     {
       const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
-	epi[i] = PointNr(el[i]);
+        epi[i] = PointNr(el[i]);
       
       if (np) *np = el.GetNP();
       
@@ -514,22 +514,22 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
       const Segment & seg = (*mesh)[SegmentIndex::FromNr1(ei)];
 
       if (!seg[2].IsValid())
-	{
-	  epi[0] = PointNr(seg[0]);
-	  epi[1] = PointNr(seg[1]);
-	  
-	  if (np) *np = 2;
-	  return NG_SEGM;
-	}
+        {
+          epi[0] = PointNr(seg[0]);
+          epi[1] = PointNr(seg[1]);
+          
+          if (np) *np = 2;
+          return NG_SEGM;
+        }
       else
-	{
-	  epi[0] = PointNr(seg[0]);
-	  epi[1] = PointNr(seg[1]);
-	  epi[2] = PointNr(seg[2]);
+        {
+          epi[0] = PointNr(seg[0]);
+          epi[1] = PointNr(seg[1]);
+          epi[2] = PointNr(seg[2]);
 
-	  if (np) *np = 3;
-	  return NG_SEGM3;
-	}
+          if (np) *np = 3;
+          return NG_SEGM3;
+        }
     }
 
   return NG_TRIG;
@@ -613,22 +613,22 @@ void Ng_GetNormalVector (int sei, int locpi, double * nv)
 #ifdef OCCGEOMETRYxxx
       OCCGeometry * occgeometry = dynamic_cast<OCCGeometry*> (ng_geometry);
       if (occgeometry)
-	{
-	  PointGeomInfo gi = mesh->SurfaceElement(sei).GeomInfoPi(locpi);
-	  occgeometry->GetSurface (surfi).GetNormalVector(p, gi, n);
-	  nv[0] = n(0);
-	  nv[1] = n(1);
-	  nv[2] = n(2);
-	}
+        {
+          PointGeomInfo gi = mesh->SurfaceElement(sei).GeomInfoPi(locpi);
+          occgeometry->GetSurface (surfi).GetNormalVector(p, gi, n);
+          nv[0] = n(0);
+          nv[1] = n(1);
+          nv[2] = n(2);
+        }
 #endif
       CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
       if (geometry)
-	{
-	  n = geometry->GetSurface (surfi) -> GetNormalVector(p);
-	  nv[0] = n(0);
-	  nv[1] = n(1);
-	  nv[2] = n(2);
-	}
+        {
+          n = geometry->GetSurface (surfi) -> GetNormalVector(p);
+          nv[0] = n(0);
+          nv[1] = n(1);
+          nv[2] = n(2);
+        }
     }
 }
 */
@@ -641,7 +641,7 @@ void Ng_SetPointSearchStartElement(const int el)
 
 
 int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree, 
-			   const int * const indices, const int numind)
+                           const int * const indices, const int numind)
   
 {
   Array<int> * dummy(NULL);
@@ -657,28 +657,28 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
     {
       Point<3> p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
+        mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
     }
   else
     {
       double lam3[3];
       Point<3> p2d(p[0], p[1], 0);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0).Nr1();
+        mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0).Nr1();
 
       if (ind > 0)
-	{
-	  if((*mesh)[SurfaceElementIndex::FromNr1(ind)].GetType()==QUAD)
-	    {
-	      lami[0] = lam3[0];
-	      lami[1] = lam3[1];
-	    }
-	  else 
-	    {
-	      lami[0] = 1-lam3[0]-lam3[1];
-	      lami[1] = lam3[0];
-	    }
-	}
+        {
+          if((*mesh)[SurfaceElementIndex::FromNr1(ind)].GetType()==QUAD)
+            {
+              lami[0] = lam3[0];
+              lami[1] = lam3[1];
+            }
+          else 
+            {
+              lami[0] = 1-lam3[0]-lam3[1];
+              lami[1] = lam3[0];
+            }
+        }
     }
 
   delete dummy;
@@ -687,7 +687,7 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
 }
 
 int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtree, 
-				  const int * const indices, const int numind)
+                                  const int * const indices, const int numind)
   
 {
   Array<int> * dummy(NULL);
@@ -703,7 +703,7 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
     {
       Point<3> p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
+        mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
     }
   else
     {
@@ -747,7 +747,7 @@ int Ng_IsSurfaceElementCurved (int sei)
 
 
 void Ng_GetElementTransformation (int ei, const double * xi, 
-				  double * x, double * dxdxi)
+                                  double * x, double * dxdxi)
 {
   if (mesh->GetDimension() == 2)
     {
@@ -758,19 +758,19 @@ void Ng_GetElementTransformation (int ei, const double * xi,
       mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr1(ei), xg, dx);
 
       if (x)
-	{
-	  for (int i = 0; i < 2; i++)
-	    x[i] = xg(i);
-	}
-	  
+        {
+          for (int i = 0; i < 2; i++)
+            x[i] = xg(i);
+        }
+          
       if (dxdxi)
-	{
-	  for (int i=0; i<2; i++)
-	    {
-	      dxdxi[2*i] = dx(i,0);
-	      dxdxi[2*i+1] = dx(i,1);
-	    }
-	}
+        {
+          for (int i=0; i<2; i++)
+            {
+              dxdxi[2*i] = dx(i,0);
+              dxdxi[2*i+1] = dx(i,1);
+            }
+        }
     }
   else
     {
@@ -781,20 +781,20 @@ void Ng_GetElementTransformation (int ei, const double * xi,
       mesh->GetCurvedElements().CalcElementTransformation (xl, ElementIndex::FromNr1(ei), xg, dx);
 
       if (x)
-	{
-	  for (int i = 0; i < 3; i++)
-	    x[i] = xg(i);
-	}
+        {
+          for (int i = 0; i < 3; i++)
+            x[i] = xg(i);
+        }
 
       if (dxdxi)
-	{
-	  for (int i=0; i<3; i++)
-	    {
-	      dxdxi[3*i] = dx(i,0);
-	      dxdxi[3*i+1] = dx(i,1);
+        {
+          for (int i=0; i<3; i++)
+            {
+              dxdxi[3*i] = dx(i,0);
+              dxdxi[3*i+1] = dx(i,1);
               dxdxi[3*i+2] = dx(i,2);
-	    }
-	}
+            }
+        }
     }
 }
 
@@ -815,7 +815,7 @@ void Ng_GetMultiElementTransformation (int ei, int n,
 
 
 void Ng_GetSurfaceElementTransformation (int sei, const double * xi, 
-					 double * x, double * dxdxi)
+                                         double * x, double * dxdxi)
 {
   if (mesh->GetDimension() == 2)
     {
@@ -826,11 +826,11 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
 
       if (x)
         for (int i = 0; i < 2; i++)
-	  x[i] = xg(i);
-	  
+          x[i] = xg(i);
+          
       if (dxdxi)
         for (int i=0; i<2; i++)
-	  dxdxi[i] = dx(i);
+          dxdxi[i] = dx(i);
 
     }
   else
@@ -842,15 +842,15 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
       mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr1(sei), xg, dx);
       
       for (int i=0; i<3; i++)
-	{
-	  if (x)
-	    x[i] = xg(i);
-	  if (dxdxi)
-	    {
-	      dxdxi[2*i] = dx(i,0);
-	      dxdxi[2*i+1] = dx(i,1);
-	    }
-	}
+        {
+          if (x)
+            x[i] = xg(i);
+          if (dxdxi)
+            {
+              dxdxi[2*i] = dx(i,0);
+              dxdxi[2*i+1] = dx(i,1);
+            }
+        }
     }
 }
 
@@ -1551,9 +1551,9 @@ int Ng_GetSurfaceElement_Edges (int elnr, int * edges, int * orient)
   else
     {
       if (orient)
-	topology.GetSegmentEdge(elnr, edges[0], orient[0]);
+        topology.GetSegmentEdge(elnr, edges[0], orient[0]);
       else
-	edges[0] = topology.GetSegmentEdge(elnr);
+        edges[0] = topology.GetSegmentEdge(elnr);
     }
   return 1;
   /*
@@ -1582,7 +1582,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
       SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(selnr);
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
-	*orient = topology.GetSurfaceElementFaceOrientation (selnr);
+        *orient = topology.GetSurfaceElementFaceOrientation (selnr);
       return topology.GetFace(sei);
     }
   return -1;
@@ -1761,12 +1761,12 @@ int Ng_GetParentElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentelement.Size())
-	return mesh->mlparentelement[ElementIndex::FromNr1(ei)].Nr1();
+        return mesh->mlparentelement[ElementIndex::FromNr1(ei)].Nr1();
     }
   else
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
+        return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
     }
   return 0;
 }
@@ -1777,7 +1777,7 @@ int Ng_GetParentSElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
+        return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
     }
   else
     {
@@ -1813,7 +1813,7 @@ int Ng_GetClusterRepElement (int pi)
 
 
 
-		
+                
 int Ng_GetNPeriodicVertices (int idnr)
 {
   Array<PointIndices<2>> apairs;
@@ -1851,14 +1851,14 @@ int Ng_GetNPeriodicEdges (int idnr)
 
     for (SegmentIndex si : T_Range<SegmentIndex>(nse))
       {
-	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
-	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
-	//  (*testout) << "seg = " << (*mesh)[si] << "; other = " 
-	//     << other1 << "-" << other2 << endl;
-	if (other1.IsValid() && other2.IsValid() && mesh->IsSegment (other1, other2))
-	  {
-	    cnt++;
-	  }
+        PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
+        PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
+        //  (*testout) << "seg = " << (*mesh)[si] << "; other = " 
+        //     << other1 << "-" << other2 << endl;
+        if (other1.IsValid() && other2.IsValid() && mesh->IsSegment (other1, other2))
+          {
+            cnt++;
+          }
       }
   }
   return cnt;
@@ -1879,16 +1879,16 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
 
     for (SegmentIndex si : T_Range<SegmentIndex>(nse))
       {
-	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
-	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
-	if (other1.IsValid() && other2.IsValid() && mesh->IsSegment (other1, other2))
-	  {
-	    SegmentIndex otherseg = mesh->SegmentNr (other1, other2);
-	    // pairs[cnt++] = top.GetSegmentEdge (si+1);
-	    // pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
-	    pairs[cnt++] = top.GetEdge (si)+1;
-	    pairs[cnt++] = top.GetEdge (otherseg)+1;
-	  }
+        PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
+        PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
+        if (other1.IsValid() && other2.IsValid() && mesh->IsSegment (other1, other2))
+          {
+            SegmentIndex otherseg = mesh->SegmentNr (other1, other2);
+            // pairs[cnt++] = top.GetSegmentEdge (si+1);
+            // pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
+            pairs[cnt++] = top.GetEdge (si)+1;
+            pairs[cnt++] = top.GetEdge (otherseg)+1;
+          }
       }
   }
 }
@@ -2043,9 +2043,9 @@ int Ng_SocketClientOpen( const int port, const char * host )
   try
     {
       if(host)
-	clientsocket.Reset(new ClientSocket(port,host));
+        clientsocket.Reset(new ClientSocket(port,host));
       else
-	clientsocket.Reset(new ClientSocket(port));
+        clientsocket.Reset(new ClientSocket(port));
     }
   catch( SocketException e)
     {
@@ -2174,10 +2174,10 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
         // joachim, oct 2014
       CSGeometry * geometry = dynamic_cast<CSGeometry*> (ng_geometry.get());
       if (geometry)
-	{
-	  opt = new MeshOptimize2dSurfaces(*geometry);
-	  ref->Set2dOptimizer(opt);
-	}
+        {
+          opt = new MeshOptimize2dSurfaces(*geometry);
+          ref->Set2dOptimizer(opt);
+        }
       */
     }
 
@@ -2199,7 +2199,7 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
       *qualityloss = new double[qualityloss_arr->Size()+1];
 
       for(ElementIndex ei : qualityloss_arr->Range())
-	(*qualityloss)[ei.Nr1()] = (*qualityloss_arr)[ei];
+        (*qualityloss)[ei.Nr1()] = (*qualityloss_arr)[ei];
 
       retval = qualityloss_arr->Size();
 

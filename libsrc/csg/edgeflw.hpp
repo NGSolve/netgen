@@ -51,8 +51,8 @@ namespace netgen
      points have to be given.
   */
   extern void CalcEdges (const CSGeometry & geometry,
-			 const Array<SpecialPoint> & specpoints,
-			 double h, Mesh & mesh);
+                         const Array<SpecialPoint> & specpoints,
+                         double h, Mesh & mesh);
 
 
 
@@ -75,7 +75,7 @@ namespace netgen
 
   public:
     EdgeCalculation (const CSGeometry & ageometry,
-		     Array<SpecialPoint> & aspecpoints,
+                     Array<SpecialPoint> & aspecpoints,
                      MeshingParameters & amparam);
 
     ~EdgeCalculation();
@@ -90,40 +90,40 @@ namespace netgen
   
 
     void FollowEdge (int pi1, int & ep, int & pos,
-		     // const Array<SpecialPoint> & hsp,
-		     const Array<int> & hsp,
-		     double h, const Mesh & mesh,
-		     Array<Point<3> > & edgepoints,
-		     Array<double> & curvelength);
-		   
+                     // const Array<SpecialPoint> & hsp,
+                     const Array<int> & hsp,
+                     double h, const Mesh & mesh,
+                     Array<Point<3> > & edgepoints,
+                     Array<double> & curvelength);
+                   
 
     void AnalyzeEdge (int s1, int s2, int s1_rep, int s2_rep, int pos, int layer,
-		      const Array<Point<3> > & edgepoints,
-		      Array<RefEdge> & refedges,
-		      Array<bool> & refedgesinv);
+                      const Array<Point<3> > & edgepoints,
+                      Array<RefEdge> & refedges,
+                      Array<bool> & refedgesinv);
 
     void StoreEdge (const Array<RefEdge> & refedges,
-		    const Array<bool> & refedgesinv,
-		    const Array<Point<3> > & edgepoints,
-		    const Array<double> & curvelength,
-		    int layer,
-		    Mesh & mesh);
+                    const Array<bool> & refedgesinv,
+                    const Array<Point<3> > & edgepoints,
+                    const Array<double> & curvelength,
+                    int layer,
+                    Mesh & mesh);
 
     void StoreShortEdge (const Array<RefEdge> & refedges,
-			 const Array<bool> & refedgesinv,
-			 const Array<Point<3> > & edgepoints,
-			 const Array<double> & curvelength,
-			 int layer,
-			 Mesh & mesh);
+                         const Array<bool> & refedgesinv,
+                         const Array<Point<3> > & edgepoints,
+                         const Array<double> & curvelength,
+                         int layer,
+                         Mesh & mesh);
 
     void CopyEdge (const Array<RefEdge> & refedges,
-		   const Array<bool> & refedgesinv,
-		   int copyfromedge, 
-		   const Point<3> & fromstart, const Point<3> & fromend,
-		   const Point<3> & tostart, const Point<3> & toend,
-		   int copyedgeidentification,
-		   int layer,
-		   Mesh & mesh);
+                   const Array<bool> & refedgesinv,
+                   int copyfromedge, 
+                   const Point<3> & fromstart, const Point<3> & fromend,
+                   const Point<3> & tostart, const Point<3> & toend,
+                   int copyedgeidentification,
+                   int layer,
+                   Mesh & mesh);
 
   
     void SplitEqualOneSegEdges (Mesh & mesh);

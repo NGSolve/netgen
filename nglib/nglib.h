@@ -102,7 +102,7 @@ public:
    int closeedgeenable;                //!< Enable / Disable mesh refinement at close edges
    double closeedgefact;               //!< Factor to use for refinement at close edges (larger => finer)
 
-   int minedgelenenable;			   //!< Enable / Disable user defined minimum edge length for edge subdivision
+   int minedgelenenable;                           //!< Enable / Disable user defined minimum edge length for edge subdivision
    double minedgelen;                  //!< Minimum edge length to use while subdividing the edges (default = 1e-4)
 
    int second_order;                   //!< Generate second-order surface and volume elements
@@ -659,13 +659,13 @@ NGLIB_API void Ng_Uniform_Refinement (Ng_Mesh * mesh);
 // uniform mesh refinement with geometry adaption:
 
 NGLIB_API void Ng_2D_Uniform_Refinement (Ng_Geometry_2D * geom,
-					  Ng_Mesh * mesh);
+                                          Ng_Mesh * mesh);
 
 NGLIB_API void Ng_STL_Uniform_Refinement (Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh);
+                                           Ng_Mesh * mesh);
 
 NGLIB_API void Ng_CSG_Uniform_Refinement (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh);
+                                           Ng_Mesh * mesh);
 
 
 
@@ -681,13 +681,13 @@ NGLIB_API void Ng_Generate_SecondOrder (Ng_Mesh * mesh);
 // convert mesh to second order with geometry adaption:
 
 NGLIB_API void Ng_2D_Generate_SecondOrder (Ng_Geometry_2D * geom,
-					  Ng_Mesh * mesh);
+                                          Ng_Mesh * mesh);
 
 NGLIB_API void Ng_STL_Generate_SecondOrder (Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh);
+                                           Ng_Mesh * mesh);
 
 NGLIB_API void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh);
+                                           Ng_Mesh * mesh);
 
 
 #ifdef OCCGEOMETRY

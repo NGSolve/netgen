@@ -124,13 +124,13 @@ public:
     if ( print )
       {
 #ifdef PARALLEL
-	if ( printheader )
-	  {
-	    *out << "proc " << netgen::id << ": ";
-	    printheader = false;
-	  }
+        if ( printheader )
+          {
+            *out << "proc " << netgen::id << ": ";
+            printheader = false;
+          }
 #endif
-	*out << var;
+        *out << var;
       }
     return (*this); 
   }

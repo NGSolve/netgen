@@ -66,46 +66,46 @@ public:
 #ifdef DEBUG
     if (prod.Size() != height)
       {
-	(*myerr) << "Mult: wrong vector size " << endl;
+        (*myerr) << "Mult: wrong vector size " << endl;
       }
     if (!height) 
       {
-	cout << "DenseMatrix::Mult height = 0" << endl;
+        cout << "DenseMatrix::Mult height = 0" << endl;
       }
     if (!width) 
       {
-	cout << "DenseMatrix::Mult width = 0" << endl;
+        cout << "DenseMatrix::Mult width = 0" << endl;
       }
     
     if (width != v.Size())
       {
-	(*myerr) << "\nMatrix and Vector don't fit" << endl;
+        (*myerr) << "\nMatrix and Vector don't fit" << endl;
       }
     else if (Height() != prod.Size())
       {
-	(*myerr) << "Base_Matrix::operator*(Vector): prod vector not ok" << endl;
+        (*myerr) << "Base_Matrix::operator*(Vector): prod vector not ok" << endl;
       }
     else
 #endif
       {      
-	mp = data;
-	dp = &prod(0);
+        mp = data;
+        dp = &prod(0);
         for (int i = 0; i < height; i++)
-	  {
-	    sum = 0;
-	    sp = &v(0);
-	    
-	    for (int j = 0; j < width; j++)
-	      {
-		//        sum += Get(i,j) * v.Get(j);
-		sum += *mp * *sp;
-		mp++;
-		sp++;
-	      }
-	    
-	    *dp = sum;
-	    dp++;
-	  }
+          {
+            sum = 0;
+            sp = &v(0);
+            
+            for (int j = 0; j < width; j++)
+              {
+                //        sum += Get(i,j) * v.Get(j);
+                sum += *mp * *sp;
+                mp++;
+                sp++;
+              }
+            
+            *dp = sum;
+            dp++;
+          }
       }
   }
 
@@ -191,10 +191,10 @@ public:
   {
     if (h != height)
       {
-	if (ownmem) delete data;
-	height = h;
-	data = new T[WIDTH*height]; 
-	ownmem = true;
+        if (ownmem) delete data;
+        height = h;
+        data = new T[WIDTH*height]; 
+        ownmem = true;
       }
   }
 
@@ -228,18 +228,18 @@ public:
     dp = &prod[0];
     for (int i = 0; i < height; i++)
       {
-	sum = 0;
-	sp = &v[0];
-	
-	for (int j = 0; j < WIDTH; j++)
-	  {
-	    sum += *mp * *sp;
-	    mp++;
-	    sp++;
-	  }
-	    
-	*dp = sum;
-	dp++;
+        sum = 0;
+        sp = &v[0];
+        
+        for (int j = 0; j < WIDTH; j++)
+          {
+            sum += *mp * *sp;
+            mp++;
+            sp++;
+          }
+            
+        *dp = sum;
+        dp++;
       }
   }
   */
@@ -307,10 +307,10 @@ public:
   {
     if (h != height)
       {
-	if (ownmem) delete data;
-	height = h;
-	data = new double[WIDTH*height]; 
-	ownmem = true;
+        if (ownmem) delete data;
+        height = h;
+        data = new double[WIDTH*height]; 
+        ownmem = true;
       }
   }
 
@@ -338,8 +338,8 @@ public:
     /*    
     if (prod.Size() != height)
       {
-	cerr << "MatrixFixWidth::Mult: wrong vector size " << endl;
-	assert (1);
+        cerr << "MatrixFixWidth::Mult: wrong vector size " << endl;
+        assert (1);
       }
     */    
 
@@ -347,18 +347,18 @@ public:
     dp = &prod[0];
     for (int i = 0; i < height; i++)
       {
-	sum = 0;
-	sp = &v[0];
-	
-	for (int j = 0; j < WIDTH; j++)
-	  {
-	    sum += *mp * *sp;
-	    mp++;
-	    sp++;
-	  }
-	    
-	*dp = sum;
-	dp++;
+        sum = 0;
+        sp = &v[0];
+        
+        for (int j = 0; j < WIDTH; j++)
+          {
+            sum += *mp * *sp;
+            mp++;
+            sp++;
+          }
+            
+        *dp = sum;
+        dp++;
       }
   }
 
@@ -400,7 +400,7 @@ extern ostream & operator<< (ostream & ost, const MatrixFixWidth<WIDTH> & m)
   for (int i = 0; i < m.Height(); i++)
     {
       for (int j = 0; j < m.Width(); j++)
-	ost << m.Get(i+1,j+1) << " ";
+        ost << m.Get(i+1,j+1) << " ";
       ost << endl;
     }
   return ost;

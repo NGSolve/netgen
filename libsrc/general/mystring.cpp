@@ -33,24 +33,24 @@ namespace netgen
     in.get(currchar);
     while(in && (currchar == ' ' || currchar == '\t' || currchar == '\n') )
       in.get(currchar);
-	
+        
     if(currchar == encl)
       {
-	in.get(currchar);
-	while(in && currchar != encl)
-	  {
-	    str += currchar;
-	    in.get(currchar);
-	  }
+        in.get(currchar);
+        while(in && currchar != encl)
+          {
+            str += currchar;
+            in.get(currchar);
+          }
       }
     else
       {
-	in.putback(currchar);
-	in >> str;
+        in.putback(currchar);
+        in >> str;
       }
   }
-	    
-	
+            
+        
     
   
 

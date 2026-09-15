@@ -12,10 +12,10 @@ namespace netgen
 
 
   void CalcPartition (const SplineSegExt & spline, 
-		      // double l, 
-		      MeshingParameters & mp, Mesh & mesh, 
-		      // double h, double h1, double h2, double hcurve, 
-		      double elto0, Array<double> & points)
+                      // double l, 
+                      MeshingParameters & mp, Mesh & mesh, 
+                      // double h, double h1, double h2, double hcurve, 
+                      double elto0, Array<double> & points)
   {
     int n = 1;
     Array<Point<2> > xi;
@@ -64,9 +64,9 @@ namespace netgen
     double sum = 0;
     for (int i = 1; i <= n; i++)
       {
-	// double t = (i-0.5)*dt;
-	double fun = hi[i-1];
-	sum += dt / fun;
+        // double t = (i-0.5)*dt;
+        double fun = hi[i-1];
+        sum += dt / fun;
       }
 
     int nel = int (sum+0.5);
@@ -80,18 +80,18 @@ namespace netgen
 
     for (int j = 1; j <= n && i < nel; j++)
       {
-	// double t = (j-0.5)*dt;
-	double fun = hi[j-1];
+        // double t = (j-0.5)*dt;
+        double fun = hi[j-1];
 
-	double f = oldf + dt / fun;
+        double f = oldf + dt / fun;
 
-	while (i * fperel < f && i < nel)
-	  {
-	    points.Append ( dt * (j-1) +  (i * fperel - oldf) * fun);
-	    i++;
-	  }
-	oldf = f;
-	// t += dt;
+        while (i * fperel < f && i < nel)
+          {
+            points.Append ( dt * (j-1) +  (i * fperel - oldf) * fun);
+            i++;
+          }
+        oldf = f;
+        // t += dt;
       }
     points.Append (len);
   }
@@ -106,8 +106,8 @@ namespace netgen
 
   // partitionizes spline curve
   void Partition (const SplineSegExt & spline,
-		  MeshingParameters & mp, double hxxx, double elto0,
-		  Mesh & mesh, Point3dTree<PointIndex> & searchtree, int segnr) 
+                  MeshingParameters & mp, double hxxx, double elto0,
+                  Mesh & mesh, Point3dTree<PointIndex> & searchtree, int segnr) 
   {
     int n = 100;
 
@@ -143,60 +143,60 @@ namespace netgen
     
     for (int i = 1; i <= n; i++)
       {
-	Point<2> p = spline.GetPoint (i*dt);
-	double l = lold + Dist (p, pold);
-	while (j < curvepoints.Size() && (l >= curvepoints[j] || i == n))
-	  {
-	    double frac = (curvepoints[j]-lold) / (l-lold);
-	    edgelength = i*dt + (frac-1)*dt;
-	    mark = spline.GetPoint (edgelength);
-	  
-	    {
-	      PointIndex pi1{PointIndex::INVALID};
-	      PointIndex pi2{PointIndex::INVALID};
+        Point<2> p = spline.GetPoint (i*dt);
+        double l = lold + Dist (p, pold);
+        while (j < curvepoints.Size() && (l >= curvepoints[j] || i == n))
+          {
+            double frac = (curvepoints[j]-lold) / (l-lold);
+            edgelength = i*dt + (frac-1)*dt;
+            mark = spline.GetPoint (edgelength);
+          
+            {
+              PointIndex pi1{PointIndex::INVALID};
+              PointIndex pi2{PointIndex::INVALID};
 
-	  
-	      Point<3> mark3(mark(0), mark(1), 0);
-	      Point<3> oldmark3(oldmark(0), oldmark(1), 0);
+          
+              Point<3> mark3(mark(0), mark(1), 0);
+              Point<3> oldmark3(oldmark(0), oldmark(1), 0);
 
-	      double h = mesh.GetH (Point<3> (oldmark(0), oldmark(1), 0));
-	      Vec<3> v (1e-4*h, 1e-4*h, 1e-4*h);
-	      searchtree.GetIntersecting (oldmark3 - v, oldmark3 + v, locsearch);
+              double h = mesh.GetH (Point<3> (oldmark(0), oldmark(1), 0));
+              Vec<3> v (1e-4*h, 1e-4*h, 1e-4*h);
+              searchtree.GetIntersecting (oldmark3 - v, oldmark3 + v, locsearch);
 
-	      for (PointIndex pk : locsearch)
-		if (mesh[pk].GetLayer() == spline.layer) pi1 = pk;
-	      
-	      searchtree.GetIntersecting (mark3 - v, mark3 + v, locsearch);
-	      for (PointIndex pk : locsearch)
-		if (mesh[pk].GetLayer() == spline.layer) pi2 = pk;
+              for (PointIndex pk : locsearch)
+                if (mesh[pk].GetLayer() == spline.layer) pi1 = pk;
+              
+              searchtree.GetIntersecting (mark3 - v, mark3 + v, locsearch);
+              for (PointIndex pk : locsearch)
+                if (mesh[pk].GetLayer() == spline.layer) pi2 = pk;
 
-	      if (!pi1.IsValid())
-		{
-		  pi1 = mesh.AddPoint(oldmark3, spline.layer);
-		  searchtree.Insert (oldmark3, pi1);
-		}
-	      if (!pi2.IsValid())
-		{
-		  pi2 = mesh.AddPoint(mark3, spline.layer);
-		  searchtree.Insert (mark3, pi2);
-		}
+              if (!pi1.IsValid())
+                {
+                  pi1 = mesh.AddPoint(oldmark3, spline.layer);
+                  searchtree.Insert (oldmark3, pi1);
+                }
+              if (!pi2.IsValid())
+                {
+                  pi2 = mesh.AddPoint(mark3, spline.layer);
+                  searchtree.Insert (mark3, pi2);
+                }
 
-	      Segment seg;
-	      seg[0] = pi1;
-	      seg[1] = pi2;
-	      seg.EPGeomInfo(0).dist = edgelengthold;
-	      seg.EPGeomInfo(1).dist = edgelength;
-	      seg.SetIndex(edsi);
-	      mesh.AddSegment (seg);
-	    }
-	
-	    oldmark = mark;
-	    edgelengthold = edgelength;
-	    j++;
-	  }
+              Segment seg;
+              seg[0] = pi1;
+              seg[1] = pi2;
+              seg.EPGeomInfo(0).dist = edgelengthold;
+              seg.EPGeomInfo(1).dist = edgelength;
+              seg.SetIndex(edsi);
+              mesh.AddSegment (seg);
+            }
+        
+            oldmark = mark;
+            edgelengthold = edgelength;
+            j++;
+          }
     
-	pold = p;
-	lold = l;
+        pold = p;
+        lold = l;
       }
   }
 
@@ -214,18 +214,18 @@ namespace netgen
     pmin(2) = -dist; pmax(2) = dist;
     for(int j=0;j<D;j++)
       {
-	pmin(j) = bbox.PMin()(j);
-	pmax(j) = bbox.PMax()(j);
+        pmin(j) = bbox.PMin()(j);
+        pmax(j) = bbox.PMax()(j);
       }
 
     Point3dTree<PointIndex> searchtree (pmin, pmax);
 
     for (int i = 0; i < splines.Size(); i++)
       for (int side = 0; side <= 1; side++)
-	{
-	  int dom = (side == 0) ? GetSpline(i).leftdom : GetSpline(i).rightdom;
-	  if (dom != 0) GetSpline(i).layer = GetDomainLayer (dom);
-	}
+        {
+          int dom = (side == 0) ? GetSpline(i).leftdom : GetSpline(i).rightdom;
+          if (dom != 0) GetSpline(i).layer = GetDomainLayer (dom);
+        }
 
 
     // mesh size restrictions ...
@@ -235,24 +235,24 @@ namespace netgen
     
     for (int i = 0; i < splines.Size(); i++)
       {
-	const SplineSegExt & spline = GetSpline(i);
-	const GeomPoint<2> & p1 = spline.StartPI();
-	const GeomPoint<2> & p2 = spline.EndPI();
+        const SplineSegExt & spline = GetSpline(i);
+        const GeomPoint<2> & p1 = spline.StartPI();
+        const GeomPoint<2> & p2 = spline.EndPI();
 
-	double h1 = min (p1.hmax, h/p1.refatpoint);
-	mesh2d.RestrictLocalH (Point<3>(p1(0),p1(1),0), h1);
-	double h2 = min (p2.hmax, h/p2.refatpoint);
-	mesh2d.RestrictLocalH (Point<3>(p2(0),p2(1),0), h2);
+        double h1 = min (p1.hmax, h/p1.refatpoint);
+        mesh2d.RestrictLocalH (Point<3>(p1(0),p1(1),0), h1);
+        double h2 = min (p2.hmax, h/p2.refatpoint);
+        mesh2d.RestrictLocalH (Point<3>(p2(0),p2(1),0), h2);
 
-	double len = spline.Length();
-	mesh2d.RestrictLocalHLine (Point<3>(p1(0),p1(1),0), 
-				   Point<3>(p2(0),p2(1),0), len/mp.segmentsperedge);
+        double len = spline.Length();
+        mesh2d.RestrictLocalHLine (Point<3>(p1(0),p1(1),0), 
+                                   Point<3>(p2(0),p2(1),0), len/mp.segmentsperedge);
 
-	double hcurve = min (spline.hmax, h/spline.reffak);
-	double hl = GetDomainMaxh (spline.leftdom);
-	if (hl > 0) hcurve = min2 (hcurve, hl);
-	double hr = GetDomainMaxh (spline.rightdom);
-	if (hr > 0) hcurve = min2 (hcurve, hr);
+        double hcurve = min (spline.hmax, h/spline.reffak);
+        double hl = GetDomainMaxh (spline.leftdom);
+        if (hl > 0) hcurve = min2 (hcurve, hl);
+        double hr = GetDomainMaxh (spline.rightdom);
+        if (hr > 0) hcurve = min2 (hcurve, hr);
 
         // skip curvature restrictions for straight lines
         if(spline.MaxCurvature()==0)
@@ -304,36 +304,36 @@ namespace netgen
               if (Dist2 (mesh2d.Point(pi), newp) < 1e-12 * diam2 && mesh2d.Point(pi).GetLayer() == layer)
                 npi = pi;
             
-	    if (!npi.IsValid())
-	      {
-		npi = mesh2d.AddPoint (newp, layer);
-		searchtree.Insert (newp, npi);
+            if (!npi.IsValid())
+              {
+                npi = mesh2d.AddPoint (newp, layer);
+                searchtree.Insert (newp, npi);
                 mesh2d.AddLockedPoint(npi);
                 Element0d el(npi, npi.Nr1());
                 el.name = "";
                 mesh2d.SetCD2Name(npi.Nr1(), "");
                 mesh2d.pointelements.Append (el);
-	      }
+              }
           }
     }
     
     for (int i = 0; i < splines.Size(); i++)
       if (GetSpline(i).copyfrom == -1)
-	{
-	  // astrid - set boundary meshsize to  domain meshsize h
-	  // if no domain mesh size is given, the max h value from the bounding box is used
-	  double hl = GetDomainMaxh ( GetSpline(i).leftdom );
-	  double hr = GetDomainMaxh ( GetSpline(i).rightdom );
+        {
+          // astrid - set boundary meshsize to  domain meshsize h
+          // if no domain mesh size is given, the max h value from the bounding box is used
+          double hl = GetDomainMaxh ( GetSpline(i).leftdom );
+          double hr = GetDomainMaxh ( GetSpline(i).rightdom );
 
-	  double useh = h;
-	  if (hl > 0) useh = min2 (h, hl);
-	  if (hr > 0) useh = min2 (h, hr);
-	  Partition(GetSpline(i), mp, useh, elto0, mesh2d, searchtree, i+1);	    
-	}
+          double useh = h;
+          if (hl > 0) useh = min2 (h, hl);
+          if (hr > 0) useh = min2 (h, hr);
+          Partition(GetSpline(i), mp, useh, elto0, mesh2d, searchtree, i+1);        
+        }
       else
-	{
-	  CopyEdgeMesh (GetSpline(i).copyfrom, i+1, mesh2d, searchtree);
-	}
+        {
+          CopyEdgeMesh (GetSpline(i).copyfrom, i+1, mesh2d, searchtree);
+        }
   }
 
 
@@ -356,41 +356,41 @@ namespace netgen
   
     for (const auto& seg : mesh.LineSegments())
       {
-	if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
-	  {
-	    mappoints[seg[0]] = seg[0];   // mark as to be mapped
-	    param[seg[0]] = seg.EPGeomInfo(0).dist;
+        if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
+          {
+            mappoints[seg[0]] = seg[0];   // mark as to be mapped
+            param[seg[0]] = seg.EPGeomInfo(0).dist;
 
-	    mappoints[seg[1]] = seg[1];
-	    param[seg[1]] = seg.EPGeomInfo(1).dist;
-	  }
+            mappoints[seg[1]] = seg[1];
+            param[seg[1]] = seg.EPGeomInfo(1).dist;
+          }
       }
 
     bool mapped = false;
     for (auto i : Range(mappoints))
       {
-	if (mappoints[i].IsValid())
-	  {
-	    Point<2> newp = splines[to-1]->GetPoint (param[i]);
-	    Point<3> newp3 (newp(0), newp(1), 0);
-	  
-	    PointIndex npi = PointIndex::INVALID;
-	  
-	    for (auto pi : Range(mesh.Points()))
-	      if (Dist2 (mesh.Point(pi), newp3) < 1e-12 * diam2)
-		npi = pi;
-	  
-	    if (!npi.IsValid())
-	      {
-		npi = mesh.AddPoint (newp3);
-		searchtree.Insert (newp3, npi);
-	      }
+        if (mappoints[i].IsValid())
+          {
+            Point<2> newp = splines[to-1]->GetPoint (param[i]);
+            Point<3> newp3 (newp(0), newp(1), 0);
+          
+            PointIndex npi = PointIndex::INVALID;
+          
+            for (auto pi : Range(mesh.Points()))
+              if (Dist2 (mesh.Point(pi), newp3) < 1e-12 * diam2)
+                npi = pi;
+          
+            if (!npi.IsValid())
+              {
+                npi = mesh.AddPoint (newp3);
+                searchtree.Insert (newp3, npi);
+              }
 
-	    mappoints[i] = npi;
+            mappoints[i] = npi;
 
-	    mesh.GetIdentifications().Add (i, npi, to);
-	    mapped = true;
-	  }
+            mesh.GetIdentifications().Add (i, npi, to);
+            mapped = true;
+          }
       }
     if(mapped)
       mesh.GetIdentifications().SetType(to,Identifications::PERIODIC);
@@ -410,18 +410,18 @@ namespace netgen
     // copy segments
     for (SegmentIndex i : mesh.LineSegments().Range())
       {
-	const Segment & seg = mesh[i];
-	if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
-	  {
-	    Segment nseg;
-	    nseg[0] = mappoints[seg[0]];
-	    nseg[1] = mappoints[seg[1]];
-	  
-	    nseg.EPGeomInfo(0).dist = param[seg[0]];
-	    nseg.EPGeomInfo(1).dist = param[seg[1]];
-	    nseg.SetIndex(copy_edsi);
-	    mesh.AddSegment (nseg);
-	  }
+        const Segment & seg = mesh[i];
+        if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
+          {
+            Segment nseg;
+            nseg[0] = mappoints[seg[0]];
+            nseg[1] = mappoints[seg[1]];
+          
+            nseg.EPGeomInfo(0).dist = param[seg[0]];
+            nseg.EPGeomInfo(1).dist = param[seg[1]];
+            nseg.SetIndex(copy_edsi);
+            mesh.AddSegment (nseg);
+          }
       }
   }
 
@@ -430,8 +430,8 @@ namespace netgen
 
 
   void MeshFromSpline2D (SplineGeometry2d & geometry,
-			 shared_ptr<Mesh> & mesh, 
-			 MeshingParameters & mp)
+                         shared_ptr<Mesh> & mesh, 
+                         MeshingParameters & mp)
   {
     static Timer tall("MeshFromSpline2D"); RegionTimer rtall(tall);
     static Timer t_h("SetH");
@@ -476,29 +476,29 @@ namespace netgen
     // marks mesh points for hp-refinement
     for (int i = 0; i < geometry.GetNP(); i++)
       if (geometry.GetPoint(i).hpref)
-	{
-	  double mindist = 1e99;
-	  PointIndex mpi = PointIndex::INVALID;
-	  Point<2> gp = geometry.GetPoint(i);
-	  Point<3> gp3(gp(0), gp(1), 0);
-	  for (PointIndex pi = IndexBASE<PointIndex>(); 
-	       pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
-	    if (Dist2(gp3, (*mesh)[pi]) < mindist)
-	      {
-		mpi = pi;
-		mindist = Dist2(gp3, (*mesh)[pi]);
-	      }
-	  (*mesh)[mpi].Singularity(geometry.GetPoint(i).hpref);
-	}
+        {
+          double mindist = 1e99;
+          PointIndex mpi = PointIndex::INVALID;
+          Point<2> gp = geometry.GetPoint(i);
+          Point<3> gp3(gp(0), gp(1), 0);
+          for (PointIndex pi = IndexBASE<PointIndex>(); 
+               pi < mesh->GetNP()+IndexBASE<PointIndex>(); pi++)
+            if (Dist2(gp3, (*mesh)[pi]) < mindist)
+              {
+                mpi = pi;
+                mindist = Dist2(gp3, (*mesh)[pi]);
+              }
+          (*mesh)[mpi].Singularity(geometry.GetPoint(i).hpref);
+        }
     t_hpref.Stop();
 
 
     int maxdomnr = 0;
     for (auto & seg : mesh->LineSegments())
       {
-	const auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
-	if ( ed.DomainIn() > maxdomnr) maxdomnr = ed.DomainIn();
-	if ( ed.DomainOut() > maxdomnr) maxdomnr = ed.DomainOut();
+        const auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
+        if ( ed.DomainIn() > maxdomnr) maxdomnr = ed.DomainIn();
+        if ( ed.DomainOut() > maxdomnr) maxdomnr = ed.DomainOut();
       }
 
     is_layer_domain = BitArray(maxdomnr+1);
@@ -656,21 +656,21 @@ namespace netgen
         if (geometry.GetDomainTensorMeshing (domnr)) continue;
         
         double h = mp.maxh;
-	if ( geometry.GetDomainMaxh ( domnr ) > 0 )
-	  h = geometry.GetDomainMaxh(domnr);
+        if ( geometry.GetDomainMaxh ( domnr ) > 0 )
+          h = geometry.GetDomainMaxh(domnr);
 
 
-	PrintMessage (3, "Meshing domain ", domnr, " / ", maxdomnr);
+        PrintMessage (3, "Meshing domain ", domnr, " / ", maxdomnr);
 
-	int oldnf = mesh->GetNSE();
+        int oldnf = mesh->GetNSE();
 
         mp.quad = hquad || geometry.GetDomainQuadMeshing (domnr);
 
-	Meshing2 meshing (geometry, mp, Box<3> (pmin, pmax));
+        Meshing2 meshing (geometry, mp, Box<3> (pmin, pmax));
 
-	Array<int, PointIndex> compress(mesh->GetNP());
-	compress = -1;
-	int cnt = 0;
+        Array<int, PointIndex> compress(mesh->GetNP());
+        compress = -1;
+        int cnt = 0;
 
         t_points.Start();
         /*
@@ -704,33 +704,33 @@ namespace netgen
         }
 
 
-	PointGeomInfo gi;
-	gi.trignum = 1;
+        PointGeomInfo gi;
+        gi.trignum = 1;
         /*
-	for (auto & seg : mesh->LineSegments())
-	  {
-	    if ( seg.domin == domnr)
-	      {
-		meshing.AddBoundaryElement (compress[seg[0]], 
+        for (auto & seg : mesh->LineSegments())
+          {
+            if ( seg.domin == domnr)
+              {
+                meshing.AddBoundaryElement (compress[seg[0]], 
                                             compress[seg[1]], gi, gi);
-	      }
-	    if ( seg.domout == domnr)
-	      {
-		meshing.AddBoundaryElement (compress[seg[1]],
+              }
+            if ( seg.domout == domnr)
+              {
+                meshing.AddBoundaryElement (compress[seg[1]],
                                             compress[seg[0]], gi, gi);
-	      }
-	  }
+              }
+          }
         */
 
-	for (const Segment * seg : dom2seg[domnr])
-	  {
-	    const auto & ed = mesh->GetEdgeDescriptor(seg->GetIndex());
-	    if (ed.DomainIn() == domnr)
+        for (const Segment * seg : dom2seg[domnr])
+          {
+            const auto & ed = mesh->GetEdgeDescriptor(seg->GetIndex());
+            if (ed.DomainIn() == domnr)
               meshing.AddBoundaryElement ((*seg)[0], (*seg)[1], gi, gi);
             
-	    if (ed.DomainOut() == domnr)
+            if (ed.DomainOut() == domnr)
               meshing.AddBoundaryElement ((*seg)[1], (*seg)[0], gi, gi);
-	  }
+          }
 
         
         t_points.Stop();
@@ -745,13 +745,13 @@ namespace netgen
             throw NgException("meshing failed");
         }
         
-	for (SurfaceElementIndex sei : mesh->SurfaceElements().Range().Modify(oldnf, 0))
-	  (*mesh)[sei].SetIndex (domnr);
+        for (SurfaceElementIndex sei : mesh->SurfaceElements().Range().Modify(oldnf, 0))
+          (*mesh)[sei].SetIndex (domnr);
 
-	// astrid
-	char * material;
-	geometry.GetMaterial (domnr, material);
-	if (material)
+        // astrid
+        char * material;
+        geometry.GetMaterial (domnr, material);
+        if (material)
           mesh->SetMaterial (domnr, material);
       }
     // SetBCName overwrites the facedescriptor names, so correct it here again:

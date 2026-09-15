@@ -104,7 +104,7 @@ public:
   }
 
   FlatVector & Set2 (double scal1, const FlatVector & v1,
-		 double scal2, const FlatVector & v2)
+                 double scal2, const FlatVector & v2)
   {
     for (int i = 0; i < s; i++) 
       data[i] = scal1 * v1[i] + scal2 * v2[i];
@@ -161,9 +161,9 @@ public:
   {
     if (s != as)
       {
-	s = as;
-	if (ownmem) delete [] data;
-	data = new double [s];
+        s = as;
+        if (ownmem) delete [] data;
+        data = new double [s];
         ownmem = true;
       }
   }

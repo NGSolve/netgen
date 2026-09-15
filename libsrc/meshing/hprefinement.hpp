@@ -293,20 +293,20 @@ public:
   HPRefElement (); 
   HPRefElement(Element & el);
   HPRefElement(Element2d & el);
-  HPRefElement(Segment & el, const Mesh & mesh);	
+  HPRefElement(Segment & el, const Mesh & mesh);        
   HPRefElement(HPRefElement & el);
 
   void SetType( HPREF_ELEMENT_TYPE t);
   // HPRefElement(HPRefElement & el, HPREF_ELEMENT_TYPE t); 
-	       
+               
   /* HPRefElement(HPRefElement & el, HPREF_ELEMENT_TYPE t)
   { 
     type = t; 
     HPRef_Struct * hprs = Get_HPRef_Struct(t);
     for (int i=0; i<np ; i++) 
       {
-	pnums[i] = el[i];
-	for(int l=0; l<np; l++) param[i][l] = el.param[i][l]; 
+        pnums[i] = el[i];
+        for(int l=0; l<np; l++) param[i][l] = el.param[i][l]; 
       }
     switch(hprs->geom)
       {
@@ -358,10 +358,10 @@ public:
 enum SplittingType { SPLIT_HP, SPLIT_ALFELD, SPLIT_POWELL};
 
 DLL_HEADER extern void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split, int levels,
-			  double fac1=0.125, bool setorders=true, bool ref_level = false);
+                          double fac1=0.125, bool setorders=true, bool ref_level = false);
 
 inline void HPRefinement (Mesh & mesh, Refinement * ref, int levels,
-			  double fac1=0.125, bool setorders=true, bool ref_level = false)
+                          double fac1=0.125, bool setorders=true, bool ref_level = false)
 {
   HPRefinement (mesh, ref, SPLIT_HP, levels, fac1, setorders, ref_level);
 }

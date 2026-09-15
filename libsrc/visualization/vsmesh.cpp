@@ -51,8 +51,8 @@ namespace netgen
 
     if (!mesh)
       {
-	VisualScene::DrawScene();
-	return;
+        VisualScene::DrawScene();
+        return;
       }
 
     lock = NULL;
@@ -124,11 +124,11 @@ namespace netgen
 
 
 #ifdef PARALLELGL
-	if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
-	  glCallList (par_filledlists[vispar.drawtetsdomain]);
-	else
+        if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
+          glCallList (par_filledlists[vispar.drawtetsdomain]);
+        else
 #endif
-	  glCallList (filledlist);
+          glCallList (filledlist);
       }
 
     if (vispar.drawbadels)
@@ -137,50 +137,50 @@ namespace netgen
     TBitArray<PointIndex> shownode(mesh->GetNP());
     if (vispar.clipping.enable)
       {
-	shownode.Clear();
-	for (PointIndex pi : mesh->Points().Range())
-	  {
+        shownode.Clear();
+        for (PointIndex pi : mesh->Points().Range())
+          {
             Point<3> p = (*mesh)[pi];
 
             double val =
-	      p[0] * clipplane[0] +
-	      p[1] * clipplane[1] +
-	      p[2] * clipplane[2] +
-	      clipplane[3];
+              p[0] * clipplane[0] +
+              p[1] * clipplane[1] +
+              p[2] * clipplane[2] +
+              clipplane[3];
 
             if (val > 0) shownode.SetBit (pi);
-	  }
+          }
       }
     else
       shownode.Set();
     if (vispar.drawprisms)
       {
-	BuildPrismList (shownode);
-	glCallList (prismlist);
+        BuildPrismList (shownode);
+        glCallList (prismlist);
       }
 
     if (vispar.drawpyramids)
       {
-	BuildPyramidList (shownode);
-	glCallList (pyramidlist);
+        BuildPyramidList (shownode);
+        glCallList (pyramidlist);
       }
 
     if (vispar.drawhexes)
       {
-	BuildHexList (shownode);
-	glCallList (hexlist);
+        BuildHexList (shownode);
+        glCallList (hexlist);
       }
 
     if (vispar.drawtets)
       {
-	BuildTetList (shownode);
-	glCallList (tetlist);
+        BuildTetList (shownode);
+        glCallList (tetlist);
       }
 
     if (vispar.drawdomainsurf)
       {
-	BuildDomainSurfList();
-	glCallList (domainsurflist);
+        BuildDomainSurfList();
+        glCallList (domainsurflist);
       }
 
     glDisable (GL_POLYGON_OFFSET_FILL);
@@ -203,36 +203,36 @@ namespace netgen
 
     if (vispar.drawoutline)
       {
-	glPolygonOffset (1, 1);
-	glEnable (GL_POLYGON_OFFSET_LINE);
+        glPolygonOffset (1, 1);
+        glEnable (GL_POLYGON_OFFSET_LINE);
 
         BuildLineList ();
 
 #ifdef PARALLELGL
-	if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
-	  glCallList (par_linelists[vispar.drawtetsdomain]);
-	else
+        if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
+          glCallList (par_linelists[vispar.drawtetsdomain]);
+        else
 #endif
-	  glCallList (linelist);
+          glCallList (linelist);
 
 
-	glDisable (GL_POLYGON_OFFSET_LINE);
+        glDisable (GL_POLYGON_OFFSET_LINE);
       }
 
     if (vispar.drawidentified)
       {
-	glPolygonOffset (1, -1);
-	glEnable (GL_POLYGON_OFFSET_LINE);
-	glCallList (identifiedlist);
-	glDisable (GL_POLYGON_OFFSET_LINE);
+        glPolygonOffset (1, -1);
+        glEnable (GL_POLYGON_OFFSET_LINE);
+        glCallList (identifiedlist);
+        glDisable (GL_POLYGON_OFFSET_LINE);
       }
 
     if (vispar.drawpointnumbers ||
-	vispar.drawedgenumbers ||
-	vispar.drawfacenumbers ||
+        vispar.drawedgenumbers ||
+        vispar.drawfacenumbers ||
         vispar.drawsegmentnumbers ||
         vispar.drawsurfaceelementnumbers ||
-	vispar.drawelementnumbers)
+        vispar.drawelementnumbers)
       glCallList (pointnumberlist);
 
 
@@ -240,8 +240,8 @@ namespace netgen
 
     if (vispar.drawedges)
       {
-	BuildEdgeList();
-	glCallList (edgelist);
+        BuildEdgeList();
+        glCallList (edgelist);
       }
 
     DrawMarker();
@@ -259,9 +259,9 @@ namespace netgen
 
     if (lock)
       {
-	lock -> UnLock();
-	delete lock;
-	lock = NULL;
+        lock -> UnLock();
+        delete lock;
+        lock = NULL;
       }
     
     glFinish();
@@ -325,14 +325,14 @@ namespace netgen
         if (!mesh)
       {
         PrintMessage (3, "vsmesh::buildscene: don't have a mesh to visualize");
-	VisualScene::BuildScene (zoomall);
-	return;
+        VisualScene::BuildScene (zoomall);
+        return;
       }
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     static Timer timer("VSMesh::BuildScene");
@@ -348,14 +348,14 @@ namespace netgen
 
     if (pointnumberlist)
       {
-	glDeleteLists (pointnumberlist, 1);
-	pointnumberlist = 0;
+        glDeleteLists (pointnumberlist, 1);
+        pointnumberlist = 0;
       }
 
     if (badellist)
       {
-	glDeleteLists (badellist, 1);
-	badellist = 0;
+        glDeleteLists (badellist, 1);
+        badellist = 0;
       }
     /*
       if (prismlist)
@@ -378,114 +378,114 @@ namespace netgen
     */
     if (identifiedlist)
       {
-	glDeleteLists (identifiedlist, 1);
-	identifiedlist = 0;
+        glDeleteLists (identifiedlist, 1);
+        identifiedlist = 0;
       }
 
     pointnumberlist = glGenLists (1);
     glNewList (pointnumberlist, GL_COMPILE);
 
     if (vispar.drawpointnumbers ||
-	vispar.drawedgenumbers ||
-	vispar.drawfacenumbers ||
+        vispar.drawedgenumbers ||
+        vispar.drawfacenumbers ||
         vispar.drawsegmentnumbers ||
         vispar.drawsurfaceelementnumbers ||
-	vispar.drawelementnumbers)
+        vispar.drawelementnumbers)
       {
-	//     	glEnable (GL_COLOR_MATERIAL);
-	GLfloat textcol[3] = { float(1-backcolor),
+        //      glEnable (GL_COLOR_MATERIAL);
+        GLfloat textcol[3] = { float(1-backcolor),
                                float(1-backcolor),
                                float(1-backcolor) };
-	glColor3fv (textcol);
-	glNormal3d (0, 0, 1);
-	glPushAttrib (GL_LIST_BIT);
-	// glListBase (fontbase);
+        glColor3fv (textcol);
+        glNormal3d (0, 0, 1);
+        glPushAttrib (GL_LIST_BIT);
+        // glListBase (fontbase);
 
-	char buf[30];
+        char buf[30];
 
-	if (vispar.drawpointnumbers)
-	  for (PointIndex pi : mesh->Points().Range())
+        if (vispar.drawpointnumbers)
+          for (PointIndex pi : mesh->Points().Range())
             {
-	      const Point<3> & p = mesh->Point(pi);
-	      glRasterPos3d (p(0), p(1), p(2));
+              const Point<3> & p = mesh->Point(pi);
+              glRasterPos3d (p(0), p(1), p(2));
 
-	      snprintf (buf, size(buf),  "%d", pi.Nr1());
+              snprintf (buf, size(buf),  "%d", pi.Nr1());
 
-	      // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
-	      MyOpenGLText (buf);
+              // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
+              MyOpenGLText (buf);
             }
 
-	if (vispar.drawedgenumbers)
-	  {
-	    /*
-	      for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
-	      {
-	      const Segment & seg = (*mesh)[i];
+        if (vispar.drawedgenumbers)
+          {
+            /*
+              for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
+              {
+              const Segment & seg = (*mesh)[i];
 
-	      const Point<3> & p1 = mesh->Point(seg[0]);
-	      const Point<3> & p2 = mesh->Point(seg[1]);
-	      const Point<3> p = Center (p1, p2);
-	      glRasterPos3d (p.X(), p.Y(), p.Z());
+              const Point<3> & p1 = mesh->Point(seg[0]);
+              const Point<3> & p2 = mesh->Point(seg[1]);
+              const Point<3> p = Center (p1, p2);
+              glRasterPos3d (p.X(), p.Y(), p.Z());
 
-	      snprintf (buf, size(buf),  "%d", seg.edgenr);
-	      glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
-	      }
-	    */
+              snprintf (buf, size(buf),  "%d", seg.edgenr);
+              glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
+              }
+            */
 
-	    const MeshTopology & top = mesh->GetTopology();
-	    for (int i = 1; i <= top.GetNEdges(); i++)
-	      {
-		// int v1, v2;
-		// top.GetEdgeVertices (i, v1, v2);
+            const MeshTopology & top = mesh->GetTopology();
+            for (int i = 1; i <= top.GetNEdges(); i++)
+              {
+                // int v1, v2;
+                // top.GetEdgeVertices (i, v1, v2);
                 auto [v1,v2] = top.GetEdgeVertices(i-1);
-		const Point<3> & p1 = mesh->Point(v1);
-		const Point<3> & p2 = mesh->Point(v2);
-		const Point<3> p = Center (p1, p2);
-		glRasterPos3d (p(0), p(1), p(2));
+                const Point<3> & p1 = mesh->Point(v1);
+                const Point<3> & p2 = mesh->Point(v2);
+                const Point<3> p = Center (p1, p2);
+                glRasterPos3d (p(0), p(1), p(2));
 
-		snprintf (buf, size(buf),  "%d", i);
-		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
-		MyOpenGLText (buf);
+                snprintf (buf, size(buf),  "%d", i);
+                // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
+                MyOpenGLText (buf);
 
-	      }
+              }
 
-	  }
+          }
 
           if (vispar.drawsegmentnumbers)
             {
               for (auto si : Range(mesh->LineSegments())) {
                 const auto& seg = (*mesh)[si];
                 Point<3> c = Center((*mesh)[seg[0]], (*mesh)[seg[1]]);
-		glRasterPos3d (c[0], c[1], c[2]);
-		snprintf (buf, size(buf),  "%d", si.Nr0());
-		MyOpenGLText (buf);
+                glRasterPos3d (c[0], c[1], c[2]);
+                snprintf (buf, size(buf),  "%d", si.Nr0());
+                MyOpenGLText (buf);
               }
             }
 
           if (vispar.drawfacenumbers)
-	  {
-	    const MeshTopology & top = mesh->GetTopology();
-	    Array<int> v;
-	    for (int i = 1; i <= top.GetNFaces(); i++)
-	      {
-		top.GetFaceVertices (i, v);
-		auto P = [&] (int j) -> const Point<3> & { return mesh->Point(PointIndex::FromNr1(v[j])); };
-		Point<3> p;
-		if (v.Size() == 3)
+          {
+            const MeshTopology & top = mesh->GetTopology();
+            Array<int> v;
+            for (int i = 1; i <= top.GetNFaces(); i++)
+              {
+                top.GetFaceVertices (i, v);
+                auto P = [&] (int j) -> const Point<3> & { return mesh->Point(PointIndex::FromNr1(v[j])); };
+                Point<3> p;
+                if (v.Size() == 3)
                   {
-		    p = Center (P(0), P(1), P(2));
+                    p = Center (P(0), P(1), P(2));
                   }
-		else
+                else
                   {
-		    p = Center (Center (P(0), P(1)), Center (P(2), P(3)));
+                    p = Center (Center (P(0), P(1)), Center (P(2), P(3)));
                   }
 
-		glRasterPos3d (p(0), p(1), p(2));
-		snprintf (buf, size(buf),  "%d", i);
-		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
-		MyOpenGLText (buf);
-	      }
-	  }
+                glRasterPos3d (p(0), p(1), p(2));
+                snprintf (buf, size(buf),  "%d", i);
+                // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
+                MyOpenGLText (buf);
+              }
+          }
 
           if (vispar.drawsurfaceelementnumbers)
             {
@@ -509,48 +509,48 @@ namespace netgen
             }
 
         if (vispar.drawelementnumbers)
-	  {
-	    Array<int> v;
-	    // for (int i = 1; i <= mesh->GetNE(); i++)
+          {
+            Array<int> v;
+            // for (int i = 1; i <= mesh->GetNE(); i++)
             for (ElementIndex ei : Range(mesh->VolumeElements()))
-	      {
-		netgen::Point<3> p;
-		const Element & el = mesh->VolumeElement (ei);
-		auto P = [&] (int j) -> const netgen::Point<3> & { return mesh->Point(el.PNum(j)); };
+              {
+                netgen::Point<3> p;
+                const Element & el = mesh->VolumeElement (ei);
+                auto P = [&] (int j) -> const netgen::Point<3> & { return mesh->Point(el.PNum(j)); };
 
-		switch (el.GetNV())
-		  {
-		  case 4:
-		    p = Center (P(1), P(2), P(3), P(4));
-		    break;
-		  case 5:
-		    {
-		      auto c = Center (Center(P(1),P(3)), Center(P(2),P(4)));
-		      const auto & p5 = P(5);
-		      for (int j = 0; j < 3; j++)
-			p(j) = 0.3 * p5(j) + 0.7 * c(j);
-		      break;
-		    }
-		  case 6:
-		    p = Center (Center(P(1),P(2),P(3)), Center(P(4),P(5),P(6)));
-		    break;
-		  case 8:
-		    p = Center (Center(Center(P(1),P(3)), Center(P(2),P(4))),
-				Center(Center(P(5),P(7)), Center(P(6),P(8))));
-		    break;
-		  }
+                switch (el.GetNV())
+                  {
+                  case 4:
+                    p = Center (P(1), P(2), P(3), P(4));
+                    break;
+                  case 5:
+                    {
+                      auto c = Center (Center(P(1),P(3)), Center(P(2),P(4)));
+                      const auto & p5 = P(5);
+                      for (int j = 0; j < 3; j++)
+                        p(j) = 0.3 * p5(j) + 0.7 * c(j);
+                      break;
+                    }
+                  case 6:
+                    p = Center (Center(P(1),P(2),P(3)), Center(P(4),P(5),P(6)));
+                    break;
+                  case 8:
+                    p = Center (Center(Center(P(1),P(3)), Center(P(2),P(4))),
+                                Center(Center(P(5),P(7)), Center(P(6),P(8))));
+                    break;
+                  }
 
-		glRasterPos3d (p(0), p(1), p(2));
-		snprintf (buf, size(buf),  "%d", ei-IndexBASE(ei));
-		// glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
-		MyOpenGLText (buf);
+                glRasterPos3d (p(0), p(1), p(2));
+                snprintf (buf, size(buf),  "%d", ei-IndexBASE(ei));
+                // glCallLists (strlen (buf), GL_UNSIGNED_BYTE, buf);
+                MyOpenGLText (buf);
 
-	      }
-	  }
+              }
+          }
 
 
-	glPopAttrib ();
-	//      	glDisable (GL_COLOR_MATERIAL);
+        glPopAttrib ();
+        //              glDisable (GL_COLOR_MATERIAL);
       }
     glEndList ();
 
@@ -564,156 +564,156 @@ namespace netgen
 
     if (vispar.drawbadels)
       {
-	//  SetClippingPlane ();
+        //  SetClippingPlane ();
 
-	static float badelcol[] = { 1.0f, 0.0f, 1.0f, 1.0f };
-	glLineWidth (1.0f);
+        static float badelcol[] = { 1.0f, 0.0f, 1.0f, 1.0f };
+        glLineWidth (1.0f);
 
-	//for (int i = 1; i <= mesh->GetNE(); i++)
+        //for (int i = 1; i <= mesh->GetNE(); i++)
         for (ElementIndex ei : Range(mesh->VolumeElements()))
-	  {
+          {
             if (mesh->VolumeElement(ei).Flags().badel ||
-		mesh->VolumeElement(ei).Flags().illegal ||
-		(ei-IndexBASE(ei) == vispar.drawelement))
-	      {
-		// copy to be thread-safe
-		Element el = mesh->VolumeElement (ei);
-		el.GetSurfaceTriangles (faces);
+                mesh->VolumeElement(ei).Flags().illegal ||
+                (ei-IndexBASE(ei) == vispar.drawelement))
+              {
+                // copy to be thread-safe
+                Element el = mesh->VolumeElement (ei);
+                el.GetSurfaceTriangles (faces);
 
-		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, badelcol);
-
-
-		//	  if ( (el.GetNP() == 4) || (el.GetNP() == 10))
-		if (el.PNum(1).IsValid())
-		  {
-		    glBegin (GL_TRIANGLES);
-
-		    for (int j = 1; j <= faces.Size(); j++)
-		      {
-			ElementFace & face = faces[j-1];
-			const Point<3> & lp1 = mesh->Point (el.PNum(face.PNum(1)));
-			const Point<3> & lp2 = mesh->Point (el.PNum(face.PNum(2)));
-			const Point<3> & lp3 = mesh->Point (el.PNum(face.PNum(3)));
-			Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
-			n /= (n.Length()+1e-12);
-			glNormal3d (n(0), n(1), n(2));
-			glVertex3d (lp1(0), lp1(1), lp1(2));
-			glVertex3d (lp2(0), lp2(1), lp2(2));
-			glVertex3d (lp3(0), lp3(1), lp3(2));
-		      }
-
-		    glEnd();
-		  }
-	      }
-	  }
+                glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, badelcol);
 
 
+                //        if ( (el.GetNP() == 4) || (el.GetNP() == 10))
+                if (el.PNum(1).IsValid())
+                  {
+                    glBegin (GL_TRIANGLES);
 
-	for (auto & el2 : mesh->VolumeElements())
-	  {
+                    for (int j = 1; j <= faces.Size(); j++)
+                      {
+                        ElementFace & face = faces[j-1];
+                        const Point<3> & lp1 = mesh->Point (el.PNum(face.PNum(1)));
+                        const Point<3> & lp2 = mesh->Point (el.PNum(face.PNum(2)));
+                        const Point<3> & lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                        Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
+                        n /= (n.Length()+1e-12);
+                        glNormal3d (n(0), n(1), n(2));
+                        glVertex3d (lp1(0), lp1(1), lp1(2));
+                        glVertex3d (lp2(0), lp2(1), lp2(2));
+                        glVertex3d (lp3(0), lp3(1), lp3(2));
+                      }
+
+                    glEnd();
+                  }
+              }
+          }
+
+
+
+        for (auto & el2 : mesh->VolumeElements())
+          {
             if (el2.Flags().badel)
-	      {
-		// copy to be thread-safe
-		Element el = el2;
-		if ( (el.GetNP() == 4) || (el.GetNP() == 10))
-		  {
-		    glBegin (GL_LINES);
-		    glVertex3d (0,0,0);
-		    const Point<3> & p = mesh->Point(el.PNum(1));
-		    glVertex3d (p(0), p(1), p(2));
-		    glEnd();
-		  }
-	      }
-	  }
+              {
+                // copy to be thread-safe
+                Element el = el2;
+                if ( (el.GetNP() == 4) || (el.GetNP() == 10))
+                  {
+                    glBegin (GL_LINES);
+                    glVertex3d (0,0,0);
+                    const Point<3> & p = mesh->Point(el.PNum(1));
+                    glVertex3d (p(0), p(1), p(2));
+                    glEnd();
+                  }
+              }
+          }
 
 
         for (ElementIndex ei : Range(mesh->VolumeElements()))
-	  {
+          {
             Element el = mesh->VolumeElement (ei);
             int hascp = 0;
             for (int j = 1; j <= el.GetNP(); j++)
-	      if (el.PNum(j) == vispar.centerpoint)
-		hascp = 1;
+              if (el.PNum(j) == vispar.centerpoint)
+                hascp = 1;
 
             if (hascp)
-	      {
-		(*testout) << "draw el " << ei << " : ";
-		for (int j = 1; j <= el.GetNP(); j++)
+              {
+                (*testout) << "draw el " << ei << " : ";
+                for (int j = 1; j <= el.GetNP(); j++)
                   (*testout) << el.PNum(j) << " ";
-		(*testout) << endl;
+                (*testout) << endl;
 
-		if (el.GetNP() == 4)
-		  {
-		    int et[6][2] =
-		      { { 1, 2 },
-			{ 1, 3 },
-			{ 1, 4 },
-			{ 2, 3 },
-			{ 2, 4 },
-			{ 3, 4 } } ;
+                if (el.GetNP() == 4)
+                  {
+                    int et[6][2] =
+                      { { 1, 2 },
+                        { 1, 3 },
+                        { 1, 4 },
+                        { 2, 3 },
+                        { 2, 4 },
+                        { 3, 4 } } ;
 
-		    for (int j = 0; j < 6; j++)
-		      {
-			glBegin (GL_LINES);
-			const Point<3> & p1 = mesh->Point (el.PNum(et[j][0]));
-			const Point<3> & p2 = mesh->Point (el.PNum(et[j][1]));
-			glVertex3d (p1(0), p1(1), p1(2));
-			glVertex3d (p2(0), p2(1), p2(2));
-			glEnd ();
-		      }
-		  }
+                    for (int j = 0; j < 6; j++)
+                      {
+                        glBegin (GL_LINES);
+                        const Point<3> & p1 = mesh->Point (el.PNum(et[j][0]));
+                        const Point<3> & p2 = mesh->Point (el.PNum(et[j][1]));
+                        glVertex3d (p1(0), p1(1), p1(2));
+                        glVertex3d (p2(0), p2(1), p2(2));
+                        glEnd ();
+                      }
+                  }
 
 
-		if (el.GetNP() == 10)
-		  {
-		    int et[12][2] =
-		      { { 1, 5 },
-			{ 2, 5 },
-			{ 1, 6 },
-			{ 3, 6 },
-			{ 1, 7 },
-			{ 4, 7 },
-			{ 2, 8 },
-			{ 3, 8 },
-			{ 2, 9 },
-			{ 4, 9 },
-			{ 3, 10 },
-			{ 4, 10 } };
+                if (el.GetNP() == 10)
+                  {
+                    int et[12][2] =
+                      { { 1, 5 },
+                        { 2, 5 },
+                        { 1, 6 },
+                        { 3, 6 },
+                        { 1, 7 },
+                        { 4, 7 },
+                        { 2, 8 },
+                        { 3, 8 },
+                        { 2, 9 },
+                        { 4, 9 },
+                        { 3, 10 },
+                        { 4, 10 } };
 
-		    for (int j = 0; j < 12; j++)
-		      {
-			glBegin (GL_LINES);
-			const Point<3> & p1 = mesh->Point (el.PNum(et[j][0]));
-			const Point<3> & p2 = mesh->Point (el.PNum(et[j][1]));
-			glVertex3d (p1(0), p1(1), p1(2));
-			glVertex3d (p2(0), p2(1), p2(2));
-			glEnd ();
-		      }
-		  }
-	      }
-	  }
+                    for (int j = 0; j < 12; j++)
+                      {
+                        glBegin (GL_LINES);
+                        const Point<3> & p1 = mesh->Point (el.PNum(et[j][0]));
+                        const Point<3> & p2 = mesh->Point (el.PNum(et[j][1]));
+                        glVertex3d (p1(0), p1(1), p1(2));
+                        glVertex3d (p2(0), p2(1), p2(2));
+                        glEnd ();
+                      }
+                  }
+              }
+          }
 
         for (auto & sel : mesh->SurfaceElements())
-	  {
+          {
             Element2d el = sel; // copy to be thread-safe
             if (!el.BadElement())
-	      continue;
+              continue;
 
             if (el.IsDeleted()) continue;
             
             bool drawel = true;
             for (int j = 1; j <= el.GetNP(); j++)
-	      if (!el.PNum(j).IsValid())
-		drawel = false;
+              if (!el.PNum(j).IsValid())
+                drawel = false;
 
             if (!drawel)
-	      continue;
+              continue;
 
             // cout << int (el.GetType()) << " " << flush;
             switch (el.GetType())
-	      {
-	      case TRIG:
-		{
+              {
+              case TRIG:
+                {
                   glBegin (GL_TRIANGLES);
 
                   Point<3> lp1 = mesh->Point (el.PNum(1));
@@ -727,9 +727,9 @@ namespace netgen
                   glVertex3dv (&lp3(0));
                   glEnd();
                   break;
-		}
-	      case QUAD:
-		{
+                }
+              case QUAD:
+                {
                   glBegin (GL_QUADS);
 
                   const Point<3> & lp1 = mesh->Point (el.PNum(1));
@@ -737,7 +737,7 @@ namespace netgen
                   const Point<3> & lp3 = mesh->Point (el.PNum(4));
                   const Point<3> & lp4 = mesh->Point (el.PNum(3));
                   Vec<3> n = Cross (Vec<3> (lp1, lp2),
-				   Vec<3> (lp1, Center (lp3, lp4)));
+                                   Vec<3> (lp1, Center (lp3, lp4)));
                   n /= (n.Length() + 1e-12);
                   glNormal3d (n(0), n(1), n(2));
                   glVertex3d (lp1(0), lp1(1), lp1(2));
@@ -746,50 +746,50 @@ namespace netgen
                   glVertex3d (lp3(0), lp3(1), lp3(2));
                   glEnd();
                   break;
-		}
-	      case TRIG6:
-		{
+                }
+              case TRIG6:
+                {
                   int lines[6][2] = {
-		    { 1, 6 }, { 2, 6 },
-		    { 1, 5 }, { 3, 5 },
-		    { 2, 4 }, { 3, 4 } };
+                    { 1, 6 }, { 2, 6 },
+                    { 1, 5 }, { 3, 5 },
+                    { 2, 4 }, { 3, 4 } };
 
-		  glBegin (GL_LINES);
-		  for (int j = 0; j < 6; j++)
-		    {
-		      glVertex3dv ( mesh->Point (el.PNum(lines[j][0])) );
-		      glVertex3dv ( mesh->Point (el.PNum(lines[j][0])) );
-		    }
-		  glEnd();
-		  break;
-		}
+                  glBegin (GL_LINES);
+                  for (int j = 0; j < 6; j++)
+                    {
+                      glVertex3dv ( mesh->Point (el.PNum(lines[j][0])) );
+                      glVertex3dv ( mesh->Point (el.PNum(lines[j][0])) );
+                    }
+                  glEnd();
+                  break;
+                }
 
-	      case QUAD6:
-		{
+              case QUAD6:
+                {
                   int lines[6][2] = {
-		    { 1, 5 }, { 2, 5 },
-		    { 3, 6 }, { 4, 6 },
-		    { 1, 4 }, { 2, 3 } };
+                    { 1, 5 }, { 2, 5 },
+                    { 3, 6 }, { 4, 6 },
+                    { 1, 4 }, { 2, 3 } };
 
-		  glBegin (GL_LINES);
+                  glBegin (GL_LINES);
 
-		  for (int j = 0; j < 6; j++)
-		    {
-		      const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
-		      const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
+                  for (int j = 0; j < 6; j++)
+                    {
+                      const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+                      const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
 
-		      glVertex3d (lp1(0), lp1(1), lp1(2));
-		      glVertex3d (lp2(0), lp2(1), lp2(2));
-		    }
-		  glEnd ();
-		  break;
-		}
-	      default:
-		PrintSysError ("Cannot draw surface element of type ",
-			       int(el.GetType()));
-	      }
-	  }
-	glLoadName (0);
+                      glVertex3d (lp1(0), lp1(1), lp1(2));
+                      glVertex3d (lp2(0), lp2(1), lp2(2));
+                    }
+                  glEnd ();
+                  break;
+                }
+              default:
+                PrintSysError ("Cannot draw surface element of type ",
+                               int(el.GetType()));
+              }
+          }
+        glLoadName (0);
 
       }
     glEndList ();
@@ -798,18 +798,18 @@ namespace netgen
     if (1)
       {
 
-	identifiedlist = glGenLists (1);
-	glNewList (identifiedlist, GL_COMPILE);
+        identifiedlist = glGenLists (1);
+        glNewList (identifiedlist, GL_COMPILE);
 
-	GLfloat identifiedcol[] = { 1, 0, 1, 1 };
+        GLfloat identifiedcol[] = { 1, 0, 1, 1 };
 
-	glLineWidth (3);
+        glLineWidth (3);
         glEnable (GL_COLOR_MATERIAL);
         glDisable (GL_LIGHTING);
 
-	if (mesh -> HasIdentifications() )
-	  {
-	      {
+        if (mesh -> HasIdentifications() )
+          {
+              {
                 auto & idpts =
                   mesh->GetIdentifications().GetIdentifiedPoints();
                 for (auto [hash, val] : idpts)
@@ -817,8 +817,8 @@ namespace netgen
                     auto [hash_pts, hash_nr] = hash;
                     auto [pi1, pi2] = hash_pts;
                       // val = pts[2];   
-		      Point<3> p1 = mesh->Point(pi1);
-		      Point<3> p2 = mesh->Point(pi2);
+                      Point<3> p1 = mesh->Point(pi1);
+                      Point<3> p2 = mesh->Point(pi2);
                       Point<3> c = Center(p1, p2);
                       if (vispar.shrink < 1)
                         {
@@ -827,27 +827,27 @@ namespace netgen
                         }
 
                       glColor3fv (identifiedcol);
-		      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
-				    identifiedcol);
+                      glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
+                                    identifiedcol);
 
-		      glBegin (GL_LINES);
-		      glVertex3dv(p1);
-		      glVertex3dv(p2);
-		      glEnd();
-		    }
-	      }
-	  }
+                      glBegin (GL_LINES);
+                      glVertex3dv(p1);
+                      glVertex3dv(p2);
+                      glEnd();
+                    }
+              }
+          }
 
         glDisable (GL_COLOR_MATERIAL);
         glEnable (GL_LIGHTING);
-	glEndList ();
+        glEndList ();
       }
 
     if (lock)
       {
-	lock -> UnLock();
-	delete lock;
-	lock = NULL;
+        lock -> UnLock();
+        delete lock;
+        lock = NULL;
       }
 
     vstimestamp = meshtimestamp;
@@ -901,258 +901,258 @@ namespace netgen
         if(!face_init(faceindex-1))
           continue;
 
-	mesh->GetSurfaceElementsOfFace (faceindex, seia);
+        mesh->GetSurfaceElementsOfFace (faceindex, seia);
 
         static Point<3> xa[129];
         static Vec<3> na[129];
         
-	for (int hi = 0; hi < seia.Size(); hi++)
-	  {
-	    SurfaceElementIndex sei = seia[hi];
+        for (int hi = 0; hi < seia.Size(); hi++)
+          {
+            SurfaceElementIndex sei = seia[hi];
             const Element2d & el = (*mesh)[sei];
 
             bool drawel = (!el.IsDeleted() && el.IsVisible());
 
 #ifdef STLGEOM
             if (checkvicinity)
-	      for (int j = 0; j < el.GetNP(); j++)
-		if (!stlgeometry->Vicinity(el.GeomInfoPi(j+1).trignum))
-		  drawel = 0;
+              for (int j = 0; j < el.GetNP(); j++)
+                if (!stlgeometry->Vicinity(el.GeomInfoPi(j+1).trignum))
+                  drawel = 0;
 #endif
 
             if (!drawel)
-	      continue;
-	    
+              continue;
+            
             if (!sel_init(sei))
               continue;
 
             switch (el.GetType())
-	      {
-	      case TRIG:
-		{
+              {
+              case TRIG:
+                {
                   if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
-		    {
-		      if (hoplotn > 128) hoplotn = 128;
+                    {
+                      if (hoplotn > 128) hoplotn = 128;
 
-		      for (int i = 0; i < hoplotn; i++)
-			{
-			  glBegin (GL_TRIANGLE_STRIP);
+                      for (int i = 0; i < hoplotn; i++)
+                        {
+                          glBegin (GL_TRIANGLE_STRIP);
 
-			  for (int j = 0; j <= hoplotn-i; j++)
-			    for (int k = 0; k < 2; k++)
-			      {
-				if (j == hoplotn-i && k == 1) continue;
+                          for (int j = 0; j <= hoplotn-i; j++)
+                            for (int k = 0; k < 2; k++)
+                              {
+                                if (j == hoplotn-i && k == 1) continue;
 
-				if (i > 0 && k == 0)
-				  {
-				    glNormal3dv (na[j]);
-				    glVertex3dv (xa[j]);
-				    continue;
-				  }
+                                if (i > 0 && k == 0)
+                                  {
+                                    glNormal3dv (na[j]);
+                                    glVertex3dv (xa[j]);
+                                    continue;
+                                  }
 
-				Point<2> xref (double(j) / hoplotn, double(i+k) / hoplotn);
-				Point<3> xglob;
-				Mat<3,2> dxdxi;
-				Vec<3> dx, dy, n;
+                                Point<2> xref (double(j) / hoplotn, double(i+k) / hoplotn);
+                                Point<3> xglob;
+                                Mat<3,2> dxdxi;
+                                Vec<3> dx, dy, n;
 
-				curv.CalcSurfaceTransformation (xref, sei, xglob, dxdxi);
-				for (int i = 0; i < 3; i++)
-				  {
-				    dx(i) = dxdxi(i,0);
-				    dy(i) = dxdxi(i,1);
-				  }
-				n = Cross (dx, dy);
-				glNormal3dv (n);
-				glVertex3dv (xglob);
+                                curv.CalcSurfaceTransformation (xref, sei, xglob, dxdxi);
+                                for (int i = 0; i < 3; i++)
+                                  {
+                                    dx(i) = dxdxi(i,0);
+                                    dy(i) = dxdxi(i,1);
+                                  }
+                                n = Cross (dx, dy);
+                                glNormal3dv (n);
+                                glVertex3dv (xglob);
 
-				if (k == 1)
-				  {
-				    na[j] = n;
-				    xa[j] = xglob;
-				  }
-			      }
-			  glEnd();
-			}
-		    }
+                                if (k == 1)
+                                  {
+                                    na[j] = n;
+                                    xa[j] = xglob;
+                                  }
+                              }
+                          glEnd();
+                        }
+                    }
                   else // not high order
-		    {
-		      glBegin (GL_TRIANGLES);
-		      
-		      const Point<3> & lp0 = (*mesh) [el[0]];
-		      const Point<3> & lp1 = (*mesh) [el[1]];
-		      const Point<3> & lp2 = (*mesh) [el[2]];
+                    {
+                      glBegin (GL_TRIANGLES);
+                      
+                      const Point<3> & lp0 = (*mesh) [el[0]];
+                      const Point<3> & lp1 = (*mesh) [el[1]];
+                      const Point<3> & lp2 = (*mesh) [el[2]];
 
-		      Vec<3> n = Cross (lp1-lp0, lp2-lp0).Normalize();
-		      glNormal3dv (n);
+                      Vec<3> n = Cross (lp1-lp0, lp2-lp0).Normalize();
+                      glNormal3dv (n);
 
-		      for (int j = 0; j < 3; j++)
-			  glVertex3dv ( (*mesh)[el[j]] );
-		      
-		      glEnd();
-		    }
-		  
+                      for (int j = 0; j < 3; j++)
+                          glVertex3dv ( (*mesh)[el[j]] );
+                      
+                      glEnd();
+                    }
+                  
                   break;
-		}
-	      case QUAD:
-		{
+                }
+              case QUAD:
+                {
                   if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
-		    {
-		      Point<2> xr[4];
-		      Point<3> xg;
-		      Vec<3> dx, dy, n;
+                    {
+                      Point<2> xr[4];
+                      Point<3> xg;
+                      Vec<3> dx, dy, n;
 
-		      glBegin (GL_QUADS);
+                      glBegin (GL_QUADS);
 
-		      for (int i = 0; i < hoplotn; i++)
+                      for (int i = 0; i < hoplotn; i++)
                         for (int j = 0; j < hoplotn; j++)
-			  {
-			    xr[0](0) = (double)    i/hoplotn; xr[0](1) = (double)    j/hoplotn;
-			    xr[1](0) = (double)(i+1)/hoplotn; xr[1](1) = (double)    j/hoplotn;
-			    xr[2](0) = (double)(i+1)/hoplotn; xr[2](1) = (double)(j+1)/hoplotn;
-			    xr[3](0) = (double)    i/hoplotn; xr[3](1) = (double)(j+1)/hoplotn;
+                          {
+                            xr[0](0) = (double)    i/hoplotn; xr[0](1) = (double)    j/hoplotn;
+                            xr[1](0) = (double)(i+1)/hoplotn; xr[1](1) = (double)    j/hoplotn;
+                            xr[2](0) = (double)(i+1)/hoplotn; xr[2](1) = (double)(j+1)/hoplotn;
+                            xr[3](0) = (double)    i/hoplotn; xr[3](1) = (double)(j+1)/hoplotn;
 
-			    for (int l=0; l<4; l++)
-			      {
-				Mat<3,2> dxdxi;
+                            for (int l=0; l<4; l++)
+                              {
+                                Mat<3,2> dxdxi;
 
-				curv.CalcSurfaceTransformation (xr[l], sei, xg, dxdxi);
-				for (int i = 0; i < 3; i++)
-				  {
-				    dx(i) = dxdxi(i,0);
-				    dy(i) = dxdxi(i,1);
-				  }
+                                curv.CalcSurfaceTransformation (xr[l], sei, xg, dxdxi);
+                                for (int i = 0; i < 3; i++)
+                                  {
+                                    dx(i) = dxdxi(i,0);
+                                    dy(i) = dxdxi(i,1);
+                                  }
 
-				n = Cross (dx, dy);
-				n.Normalize();
-				glNormal3d (n(0), n(1), n(2));
-				glVertex3d (xg(0), xg(1), xg(2));
-			      }
+                                n = Cross (dx, dy);
+                                n.Normalize();
+                                glNormal3d (n(0), n(1), n(2));
+                                glVertex3d (xg(0), xg(1), xg(2));
+                              }
 
-			  }
+                          }
 
-		      glEnd();
-		    }
+                      glEnd();
+                    }
 
                   else // not high order
 
-		    {
-		      glBegin (GL_QUADS);
+                    {
+                      glBegin (GL_QUADS);
 
-		      const Point<3> & lp1 = mesh->Point (el.PNum(1));
-		      const Point<3> & lp2 = mesh->Point (el.PNum(2));
-		      const Point<3> & lp3 = mesh->Point (el.PNum(4));
-		      const Point<3> & lp4 = mesh->Point (el.PNum(3));
+                      const Point<3> & lp1 = mesh->Point (el.PNum(1));
+                      const Point<3> & lp2 = mesh->Point (el.PNum(2));
+                      const Point<3> & lp3 = mesh->Point (el.PNum(4));
+                      const Point<3> & lp4 = mesh->Point (el.PNum(3));
 
-		      Vec<3> n = Cross (lp2-lp1,  Center (lp3, lp4)-lp1);
-		      n.Normalize();
-		      glNormal3dv (n);
+                      Vec<3> n = Cross (lp2-lp1,  Center (lp3, lp4)-lp1);
+                      n.Normalize();
+                      glNormal3dv (n);
 
-		      glVertex3dv (lp1);
-		      glVertex3dv (lp2);
-		      glVertex3dv (lp4);
-		      glVertex3dv (lp3);
+                      glVertex3dv (lp1);
+                      glVertex3dv (lp2);
+                      glVertex3dv (lp4);
+                      glVertex3dv (lp3);
 
-		      glEnd ();
-		    }
+                      glEnd ();
+                    }
                   break;
-		}
+                }
 
-	      case TRIG6:
-		{
+              case TRIG6:
+                {
                   glBegin (GL_TRIANGLES);
 
                   static int trigs[4][3] = {
-		    { 1, 6, 5 },
-		    { 2, 4, 6 },
-		    { 3, 5, 4 },
-		    { 4, 5, 6 } };
+                    { 1, 6, 5 },
+                    { 2, 4, 6 },
+                    { 3, 5, 4 },
+                    { 4, 5, 6 } };
 
-		  for (int j = 0; j < 4; j++)
-		    {
-		      const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
-		      const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
-		      const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
-		      // Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
-		      Vec<3> n = Cross (lp2-lp1, lp3-lp1);
-		      glNormal3dv (n);
+                  for (int j = 0; j < 4; j++)
+                    {
+                      const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
+                      const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
+                      const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
+                      // Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
+                      Vec<3> n = Cross (lp2-lp1, lp3-lp1);
+                      glNormal3dv (n);
 
-		      glVertex3dv (lp1);
-		      glVertex3dv (lp2);
-		      glVertex3dv (lp3);
-		    }
-		  glEnd();
-		  break;
-		}
+                      glVertex3dv (lp1);
+                      glVertex3dv (lp2);
+                      glVertex3dv (lp3);
+                    }
+                  glEnd();
+                  break;
+                }
 
-	      case QUAD6:
-		{
+              case QUAD6:
+                {
                   glBegin (GL_QUADS);
                   static int quads[2][4] = {
-		    { 1, 5, 6, 4 },
-		    { 5, 2, 3, 6 } };
+                    { 1, 5, 6, 4 },
+                    { 5, 2, 3, 6 } };
 
-		  for (int j = 0; j < 2; j++)
-		    {
-		      Point<3> lp1 = mesh->Point (el.PNum(quads[j][0]));
-		      Point<3> lp2 = mesh->Point (el.PNum(quads[j][1]));
-		      Point<3> lp3 = mesh->Point (el.PNum(quads[j][2]));
-		      Point<3> lp4 = mesh->Point (el.PNum(quads[j][3]));
-		      Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
-		      n /= (n.Length() + 1e-12);
-		      glNormal3dv (&n(0));
-		      glVertex3dv (&lp1(0));
-		      glVertex3dv (&lp2(0));
-		      glVertex3dv (&lp3(0));
-		      glVertex3dv (&lp4(0));
-		    }
-		  glEnd();
-		  break;
-		}
+                  for (int j = 0; j < 2; j++)
+                    {
+                      Point<3> lp1 = mesh->Point (el.PNum(quads[j][0]));
+                      Point<3> lp2 = mesh->Point (el.PNum(quads[j][1]));
+                      Point<3> lp3 = mesh->Point (el.PNum(quads[j][2]));
+                      Point<3> lp4 = mesh->Point (el.PNum(quads[j][3]));
+                      Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
+                      n /= (n.Length() + 1e-12);
+                      glNormal3dv (&n(0));
+                      glVertex3dv (&lp1(0));
+                      glVertex3dv (&lp2(0));
+                      glVertex3dv (&lp3(0));
+                      glVertex3dv (&lp4(0));
+                    }
+                  glEnd();
+                  break;
+                }
 
-	      case QUAD8:
-		{
+              case QUAD8:
+                {
                   glBegin (GL_TRIANGLES);
                   static int boundary[] =
-		    { 1, 5, 2, 8, 3, 6, 4, 7, 1 };
+                    { 1, 5, 2, 8, 3, 6, 4, 7, 1 };
 
                   Point<3> c(0,0,0);
                   for (int j = 0; j < 4; j++)
-		    {
-		      const Point<3> & hp = mesh->Point (el[j]);
-		      c(0) -= 0.25 * hp(0);
-		      c(1) -= 0.25 * hp(1);
-		      c(2) -= 0.25 * hp(2);
-		    }
+                    {
+                      const Point<3> & hp = mesh->Point (el[j]);
+                      c(0) -= 0.25 * hp(0);
+                      c(1) -= 0.25 * hp(1);
+                      c(2) -= 0.25 * hp(2);
+                    }
                   for (int j = 4; j < 8; j++)
-		    {
-		      const Point<3> & hp = mesh->Point (el[j]);
-		      c(0) += 0.5 * hp(0);
-		      c(1) += 0.5 * hp(1);
-		      c(2) += 0.5 * hp(2);
-		    }
+                    {
+                      const Point<3> & hp = mesh->Point (el[j]);
+                      c(0) += 0.5 * hp(0);
+                      c(1) += 0.5 * hp(1);
+                      c(2) += 0.5 * hp(2);
+                    }
 
                   for (int j = 0; j < 8; j++)
-		    {
-		      Point<3> lp1 = mesh->Point (el.PNum(boundary[j]));
-		      Point<3> lp2 = mesh->Point (el.PNum(boundary[j+1]));
+                    {
+                      Point<3> lp1 = mesh->Point (el.PNum(boundary[j]));
+                      Point<3> lp2 = mesh->Point (el.PNum(boundary[j+1]));
 
-		      Vec<3> n = Cross (Vec<3> (c, lp1), Vec<3> (c, lp2));
-		      n /= (n.Length() + 1e-12);
-		      glNormal3dv (&n(0));
-		      glVertex3dv (&lp1(0));
-		      glVertex3dv (&lp2(0));
-		      glVertex3dv (&c(0));
-		    }
+                      Vec<3> n = Cross (Vec<3> (c, lp1), Vec<3> (c, lp2));
+                      n /= (n.Length() + 1e-12);
+                      glNormal3dv (&n(0));
+                      glVertex3dv (&lp1(0));
+                      glVertex3dv (&lp2(0));
+                      glVertex3dv (&c(0));
+                    }
                   glEnd();
                   break;
-		}
+                }
 
 
-	      default:
-		PrintSysError ("Cannot draw (2) surface element of type ",
-			       int(el.GetType()));
-	      }
-	  }
+              default:
+                PrintSysError ("Cannot draw (2) surface element of type ",
+                               int(el.GetType()));
+              }
+          }
       }
   }
 
@@ -1171,27 +1171,27 @@ namespace netgen
 #ifdef PARALLELGL
     if (id == 0 && ntasks > 1)
       {
-	InitParallelGL();
-	par_filledlists.SetSize (ntasks);
+        InitParallelGL();
+        par_filledlists.SetSize (ntasks);
 
-	MyMPI_SendCmd ("redraw");
-	MyMPI_SendCmd ("filledlist");
-	for ( int dest = 1; dest < ntasks; dest++ )
-	  MyMPI_Recv (par_filledlists[dest], dest, MPI_TAG_VIS);
+        MyMPI_SendCmd ("redraw");
+        MyMPI_SendCmd ("filledlist");
+        for ( int dest = 1; dest < ntasks; dest++ )
+          MyMPI_Recv (par_filledlists[dest], dest, MPI_TAG_VIS);
 
-	if (list)
-	  glDeleteLists (list, 1);
+        if (list)
+          glDeleteLists (list, 1);
 
-	list = glGenLists (1);
-	glNewList (list, GL_COMPILE);
+        list = glGenLists (1);
+        glNewList (list, GL_COMPILE);
 
-	for ( int dest = 1; dest < ntasks; dest++ )
-	  glCallList (par_filledlists[dest]);
+        for ( int dest = 1; dest < ntasks; dest++ )
+          glCallList (par_filledlists[dest]);
 
-	glEndList();
+        glEndList();
 
-	timestamp = NextTimeStamp();
-	return;
+        timestamp = NextTimeStamp();
+        return;
       }
 
 #endif
@@ -1199,8 +1199,8 @@ namespace netgen
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     timestamp = NextTimeStamp();
@@ -1228,22 +1228,22 @@ namespace netgen
 
     if (vispar.colormeshsize)
       {
-	glEnable (GL_COLOR_MATERIAL);
-	glShadeModel (GL_SMOOTH);
-	locms.SetSize (mesh->GetNP());
-	maxh = -1;
-	minh = 1e99;
-	for (PointIndex pi : mesh->Points().Range())
-	  {
+        glEnable (GL_COLOR_MATERIAL);
+        glShadeModel (GL_SMOOTH);
+        locms.SetSize (mesh->GetNP());
+        maxh = -1;
+        minh = 1e99;
+        for (PointIndex pi : mesh->Points().Range())
+          {
             locms[pi] = mesh->GetH (mesh->Point(pi));
             if (locms[pi] > maxh) maxh = locms[pi];
             if (locms[pi] < minh) minh = locms[pi];
-	  }
-	if (!locms.Size())
-	  { 
+          }
+        if (!locms.Size())
+          { 
             minh = 1; 
             maxh = 10; 
-	  }
+          }
       }
     else if (build_select)
     {
@@ -1337,38 +1337,38 @@ namespace netgen
 
     if (id == 0 && ntasks > 1)
       {
-	InitParallelGL();
+        InitParallelGL();
 
-	par_linelists.SetSize (ntasks);
+        par_linelists.SetSize (ntasks);
 
-	MyMPI_SendCmd ("redraw");
-	MyMPI_SendCmd ("linelist");
+        MyMPI_SendCmd ("redraw");
+        MyMPI_SendCmd ("linelist");
 
-	for ( int dest = 1; dest < ntasks; dest++ )
-	  MyMPI_Recv (par_linelists[dest], dest, MPI_TAG_VIS);
+        for ( int dest = 1; dest < ntasks; dest++ )
+          MyMPI_Recv (par_linelists[dest], dest, MPI_TAG_VIS);
 
-	if (linelist)
-	  glDeleteLists (linelist, 1);
+        if (linelist)
+          glDeleteLists (linelist, 1);
 
-	linelist = glGenLists (1);
-	glNewList (linelist, GL_COMPILE);
+        linelist = glGenLists (1);
+        glNewList (linelist, GL_COMPILE);
 
-	for ( int dest = 1; dest < ntasks; dest++ )
-	  glCallList (par_linelists[dest]);
+        for ( int dest = 1; dest < ntasks; dest++ )
+          glCallList (par_linelists[dest]);
 
-	glEndList();
+        glEndList();
 
 
-	linetimestamp = NextTimeStamp();
-	return;
+        linetimestamp = NextTimeStamp();
+        return;
       }
 
 #endif
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     linetimestamp = NextTimeStamp();
@@ -1394,57 +1394,57 @@ namespace netgen
     // PrintMessage (3, "nse = ", mesh->GetNSE());
     for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
       {
-	const Element2d & el = (*mesh)[sei];
+        const Element2d & el = (*mesh)[sei];
 
-	bool drawel = (!el.IsDeleted() && el.IsVisible());
+        bool drawel = (!el.IsDeleted() && el.IsVisible());
 
 #ifdef STLGEOM
-	if (checkvicinity)
-	  for (int j = 0; j < el.GetNP(); j++)
-	    if (!stlgeometry->Vicinity(el.GeomInfoPi(j+1).trignum))
-	      drawel = 0;
+        if (checkvicinity)
+          for (int j = 0; j < el.GetNP(); j++)
+            if (!stlgeometry->Vicinity(el.GeomInfoPi(j+1).trignum))
+              drawel = 0;
 #endif
 
-	if (!drawel)
-	  continue;
+        if (!drawel)
+          continue;
 
-	switch (el.GetType())
-	  {
-	  case TRIG:
+        switch (el.GetType())
+          {
+          case TRIG:
             {
-	      CurvedElements & curv = mesh->GetCurvedElements();
-	      if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
-		{
+              CurvedElements & curv = mesh->GetCurvedElements();
+              if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
+                {
                   Point<3> xg;
                   glBegin (GL_LINE_LOOP);
                   for (int i = 0; i < hoplotn; i++)
-		    {
-		      Point<2> xr (double(i) / hoplotn, 0);
-		      curv.CalcSurfaceTransformation (xr, sei, xg);
-		      glVertex3dv (xg);
-		    }
+                    {
+                      Point<2> xr (double(i) / hoplotn, 0);
+                      curv.CalcSurfaceTransformation (xr, sei, xg);
+                      glVertex3dv (xg);
+                    }
                   for (int i = 0; i < hoplotn; i++)
-		    {
-		      Point<2> xr (double(hoplotn-i) / hoplotn, double(i)/hoplotn);
-		      curv.CalcSurfaceTransformation (xr, sei, xg);
-		      glVertex3dv (xg);
-		    }
+                    {
+                      Point<2> xr (double(hoplotn-i) / hoplotn, double(i)/hoplotn);
+                      curv.CalcSurfaceTransformation (xr, sei, xg);
+                      glVertex3dv (xg);
+                    }
                   for (int i = 0; i < hoplotn; i++)
-		    {
-		      Point<2> xr (0, double(hoplotn-i) / hoplotn);
-		      curv.CalcSurfaceTransformation (xr, sei, xg);
-		      glVertex3dv (xg);
-		    }
+                    {
+                      Point<2> xr (0, double(hoplotn-i) / hoplotn);
+                      curv.CalcSurfaceTransformation (xr, sei, xg);
+                      glVertex3dv (xg);
+                    }
 
                   glEnd();
-		}
-	      else
-		{
+                }
+              else
+                {
                   glBegin (GL_TRIANGLES);
 
-		  for (int j = 0; j < 3; j++)
-		    glVertex3dv ( (*mesh) [el[j]] );
-		  /*
+                  for (int j = 0; j < 3; j++)
+                    glVertex3dv ( (*mesh) [el[j]] );
+                  /*
                   const Point<3> & lp0 = (*mesh) [el[0]];
                   const Point<3> & lp1 = (*mesh) [el[1]];
                   const Point<3> & lp2 = (*mesh) [el[2]];
@@ -1452,148 +1452,148 @@ namespace netgen
                   glVertex3dv (lp0);
                   glVertex3dv (lp1);
                   glVertex3dv (lp2);
-		  */
+                  */
                   glEnd();
-		}
+                }
 
-	      break;
+              break;
 
             }
 
-	  case QUAD:
+          case QUAD:
             {
-	      CurvedElements & curv = mesh->GetCurvedElements();
-	      if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
-		{
+              CurvedElements & curv = mesh->GetCurvedElements();
+              if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
+                {
                   Point<2> xr;
                   Point<3> xg;
 
                   glBegin (GL_LINE_STRIP);
 
                   for (int side = 0; side < 4; side++)
-		    {
-		      for (int i = 0; i <= hoplotn; i++)
-			{
-			  switch (side)
-			    {
-			    case 0:
-			      xr(0) = (double) i/hoplotn;
-			      xr(1) = 0.;
-			      break;
-			    case 1:
-			      xr(0) = 1.;
-			      xr(1) = (double) i/hoplotn;
-			      break;
-			    case 2:
-			      xr(0) = (double) (hoplotn-i)/hoplotn;
-			      xr(1) = 1.;
-			      break;
-			    case 3:
-			      xr(0) = 0.;
-			      xr(1) = (double) (hoplotn-i)/hoplotn;
-			      break;
-			    }
+                    {
+                      for (int i = 0; i <= hoplotn; i++)
+                        {
+                          switch (side)
+                            {
+                            case 0:
+                              xr(0) = (double) i/hoplotn;
+                              xr(1) = 0.;
+                              break;
+                            case 1:
+                              xr(0) = 1.;
+                              xr(1) = (double) i/hoplotn;
+                              break;
+                            case 2:
+                              xr(0) = (double) (hoplotn-i)/hoplotn;
+                              xr(1) = 1.;
+                              break;
+                            case 3:
+                              xr(0) = 0.;
+                              xr(1) = (double) (hoplotn-i)/hoplotn;
+                              break;
+                            }
 
-			  curv.CalcSurfaceTransformation (xr, sei, xg);
-			  glVertex3d (xg(0), xg(1), xg(2));
+                          curv.CalcSurfaceTransformation (xr, sei, xg);
+                          glVertex3d (xg(0), xg(1), xg(2));
 
-			}
+                        }
 
-		    }
+                    }
                   glEnd();
 
-		} else {
+                } else {
 
-		glBegin (GL_QUADS);
+                glBegin (GL_QUADS);
 
-		const Point<3> & lp1 = mesh->Point (el.PNum(1));
-		const Point<3> & lp2 = mesh->Point (el.PNum(2));
-		const Point<3> & lp3 = mesh->Point (el.PNum(4));
-		const Point<3> & lp4 = mesh->Point (el.PNum(3));
-		Vec<3> n = Cross (Vec<3> (lp1, lp2),
-				 Vec<3> (lp1, Center (lp3, lp4)));
-		glNormal3d (n(0), n(1), n(2));
-		glVertex3d (lp1(0), lp1(1), lp1(2));
-		glVertex3d (lp2(0), lp2(1), lp2(2));
-		glVertex3d (lp4(0), lp4(1), lp4(2));
-		glVertex3d (lp3(0), lp3(1), lp3(2));
-		glEnd();
+                const Point<3> & lp1 = mesh->Point (el.PNum(1));
+                const Point<3> & lp2 = mesh->Point (el.PNum(2));
+                const Point<3> & lp3 = mesh->Point (el.PNum(4));
+                const Point<3> & lp4 = mesh->Point (el.PNum(3));
+                Vec<3> n = Cross (Vec<3> (lp1, lp2),
+                                 Vec<3> (lp1, Center (lp3, lp4)));
+                glNormal3d (n(0), n(1), n(2));
+                glVertex3d (lp1(0), lp1(1), lp1(2));
+                glVertex3d (lp2(0), lp2(1), lp2(2));
+                glVertex3d (lp4(0), lp4(1), lp4(2));
+                glVertex3d (lp3(0), lp3(1), lp3(2));
+                glEnd();
 
-	      }
+              }
 
-	      break;
+              break;
 
             }
 
-	  case TRIG6:
+          case TRIG6:
             {
-	      int lines[6][2] = {
-		{ 1, 6 }, { 2, 6 },
-		{ 1, 5 }, { 3, 5 },
-		{ 2, 4 }, { 3, 4 } };
+              int lines[6][2] = {
+                { 1, 6 }, { 2, 6 },
+                { 1, 5 }, { 3, 5 },
+                { 2, 4 }, { 3, 4 } };
 
-	      glBegin (GL_LINES);
-	      for (int j = 0; j < 6; j++)
-		{
-		  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
-		  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
-
-		  glVertex3d (lp1(0), lp1(1), lp1(2));
-		  glVertex3d (lp2(0), lp2(1), lp2(2));
-		}
-
-	      glEnd();
-	      break;
-            }
-
-	  case QUAD6:
-            {
-	      int lines[6][2] = {
-		{ 1, 5 }, { 2, 5 },
-		{ 3, 6 }, { 4, 6 },
-		{ 1, 4 }, { 2, 3 } };
-
-	      glBegin (GL_LINES);
-
-	      for (int j = 0; j < 6; j++)
-		{
-		  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
-		  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
-
-		  glVertex3d (lp1(0), lp1(1), lp1(2));
-		  glVertex3d (lp2(0), lp2(1), lp2(2));
-		}
-	      glEnd ();
-	      break;
-            }
-
-	  case QUAD8:
-            {
-	      int lines[8][2] = {
-		{ 1, 5 }, { 2, 5 }, { 3, 6 }, { 4, 6 },
-		{ 1, 7 }, { 4, 7 }, { 2, 8 }, { 3, 8 }
-	      };
-
-	      glBegin (GL_LINES);
-
-	      for (int j = 0; j < 8; j++)
-		{
+              glBegin (GL_LINES);
+              for (int j = 0; j < 6; j++)
+                {
                   const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
                   const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
 
                   glVertex3d (lp1(0), lp1(1), lp1(2));
                   glVertex3d (lp2(0), lp2(1), lp2(2));
-		}
-	      glEnd ();
-	      break;
+                }
+
+              glEnd();
+              break;
+            }
+
+          case QUAD6:
+            {
+              int lines[6][2] = {
+                { 1, 5 }, { 2, 5 },
+                { 3, 6 }, { 4, 6 },
+                { 1, 4 }, { 2, 3 } };
+
+              glBegin (GL_LINES);
+
+              for (int j = 0; j < 6; j++)
+                {
+                  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+                  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
+
+                  glVertex3d (lp1(0), lp1(1), lp1(2));
+                  glVertex3d (lp2(0), lp2(1), lp2(2));
+                }
+              glEnd ();
+              break;
+            }
+
+          case QUAD8:
+            {
+              int lines[8][2] = {
+                { 1, 5 }, { 2, 5 }, { 3, 6 }, { 4, 6 },
+                { 1, 7 }, { 4, 7 }, { 2, 8 }, { 3, 8 }
+              };
+
+              glBegin (GL_LINES);
+
+              for (int j = 0; j < 8; j++)
+                {
+                  const Point<3> & lp1 = mesh->Point (el.PNum(lines[j][0]));
+                  const Point<3> & lp2 = mesh->Point (el.PNum(lines[j][1]));
+
+                  glVertex3d (lp1(0), lp1(1), lp1(2));
+                  glVertex3d (lp2(0), lp2(1), lp2(2));
+                }
+              glEnd ();
+              break;
             }
 
 
 
-	  default:
+          default:
             PrintSysError ("Cannot draw (4) surface element of type ",
-			   int(el.GetType()));
-	  }
+                           int(el.GetType()));
+          }
       }
 
     glEndList ();
@@ -1614,12 +1614,12 @@ namespace netgen
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     if (edgetimestamp > max(mesh->GetTimeStamp(), subdivision_timestamp) && vispar.drawtetsdomain == 0
-	&& vispar.shrink == 1)
+        && vispar.shrink == 1)
       return;
 
     edgetimestamp = NextTimeStamp();
@@ -1642,40 +1642,40 @@ namespace netgen
 
     for (SegmentIndex i : mesh->LineSegments().Range())
       {
-	const Segment & seg = (*mesh)[i];
+        const Segment & seg = (*mesh)[i];
 
         /*
 #ifdef PARALLEL
-	if (ntasks > 1 && 
-	    vispar.drawtetsdomain && 
-	    // (vispar.drawtetsdomain != seg.GetPartition())) continue;
+        if (ntasks > 1 && 
+            vispar.drawtetsdomain && 
+            // (vispar.drawtetsdomain != seg.GetPartition())) continue;
             (vispar.drawtetsdomain != mesh->seg_partition[i-1]) continue;
 #endif
         */
         
-	const Point<3> & p1 = (*mesh)[seg[0]];
-	const Point<3> & p2 = (*mesh)[seg[1]];
+        const Point<3> & p1 = (*mesh)[seg[0]];
+        const Point<3> & p2 = (*mesh)[seg[1]];
 
-	auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
-	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
-			matcolsingedge);
-	else
-	  glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
-			matcoledge);
+        auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
+        if (ed.SingEdgeLeft() || ed.SingEdgeRight())
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
+                        matcolsingedge);
+        else
+          glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE,
+                        matcoledge);
 
-	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
-	  glColor3fv (matcolsingedge);
-	else
-	  glColor3fv (matcoledge);
+        if (ed.SingEdgeLeft() || ed.SingEdgeRight())
+          glColor3fv (matcolsingedge);
+        else
+          glColor3fv (matcoledge);
 
-	if (mesh->GetEdgeDescriptor(seg).EdgeNr() == seledge)
-	  glLineWidth(5);
-	else
-	  glLineWidth(2);
+        if (mesh->GetEdgeDescriptor(seg).EdgeNr() == seledge)
+          glLineWidth(5);
+        else
+          glLineWidth(2);
 
-	if (mesh->GetCurvedElements().IsHighOrder())
-	  {
+        if (mesh->GetCurvedElements().IsHighOrder())
+          {
             int hoplotn = 1 << subdivisions;
             // mesh->GetCurvedElements().GetNVisualSubsecs();
 
@@ -1683,34 +1683,34 @@ namespace netgen
             glBegin (GL_LINE_STRIP);
 
             for (int j = 0; j <= hoplotn; j++)
-	      {
-		mesh->GetCurvedElements().CalcSegmentTransformation ((double) j/hoplotn, i, x);
-		glVertex3d (x(0), x(1), x(2));
-		/*
-		  cout << "x = " << x(0) << ", " << x(1) << ", " << x(2)
-		  << ", norm = 1+" << sqrt(x(0)*x(0)+x(1)*x(1))-1
-		  << ", phi = " << atan2(x(1), x(0))/M_PI << endl;
-		*/
-	      }
+              {
+                mesh->GetCurvedElements().CalcSegmentTransformation ((double) j/hoplotn, i, x);
+                glVertex3d (x(0), x(1), x(2));
+                /*
+                  cout << "x = " << x(0) << ", " << x(1) << ", " << x(2)
+                  << ", norm = 1+" << sqrt(x(0)*x(0)+x(1)*x(1))-1
+                  << ", phi = " << atan2(x(1), x(0))/M_PI << endl;
+                */
+              }
 
             glEnd();
 
-	  }
-	else
-	  {
+          }
+        else
+          {
             glBegin (GL_LINES);
             Point<3> hp1 = p1;
             Point<3> hp2 = p2;
             Point<3> c = Center(p1, p2);
             if (vispar.shrink < 1)
-	      {
-		hp1 = c + vispar.shrink * (hp1 - c);
-		hp2 = c + vispar.shrink * (hp2 - c);
-	      }
+              {
+                hp1 = c + vispar.shrink * (hp1 - c);
+                hp2 = c + vispar.shrink * (hp2 - c);
+              }
             glVertex3dv (hp1);
             glVertex3dv (hp2); // p2.X(), p2.Y(), p2.Z());
             glEnd();
-	  }
+          }
       }
 
     glLineWidth (2);
@@ -1750,29 +1750,29 @@ namespace netgen
 
     if (mat.Height () != order+1)
       {
-	mat.SetSize (order+1);
-	inv.SetSize (order+1);
-	vec1.SetSize (order+1);
-	vec2.SetSize (order+1);
-	for (int i = 0; i <= order; i++)
-	  {
+        mat.SetSize (order+1);
+        inv.SetSize (order+1);
+        vec1.SetSize (order+1);
+        vec2.SetSize (order+1);
+        for (int i = 0; i <= order; i++)
+          {
             double x = double(i) / order;
             for (int j = 0; j <= order; j++)
-	      mat(i,j) = Bernstein (order, j, x);
-	  }
+              mat(i,j) = Bernstein (order, j, x);
+          }
 
-	CalcInverse (mat, inv);
+        CalcInverse (mat, inv);
       }
 
     for (int i = 0; i < 3; i++)
       {
-	for (int j = 0; j <= order; j++)
-	  vec1(j) = pts[j*stride](i);
+        for (int j = 0; j <= order; j++)
+          vec1(j) = pts[j*stride](i);
 
-	inv.Mult (vec1, vec2);
+        inv.Mult (vec1, vec2);
 
-	for (int j = 0; j <= order; j++)
-	  pts[j*stride](i) = vec2(j);
+        for (int j = 0; j <= order; j++)
+          pts[j*stride](i) = vec2(j);
       }
   }
 
@@ -1794,13 +1794,13 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
 
     if (tettimestamp > mesh->GetTimeStamp () &&
-	tettimestamp > vispar.clipping.timestamp )
+        tettimestamp > vispar.clipping.timestamp )
       return;
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     tettimestamp = NextTimeStamp();
@@ -1820,21 +1820,21 @@ namespace netgen
     // meshes also for the volume elements
     if (vispar.colormeshsize)
       {
-	glEnable (GL_COLOR_MATERIAL);
-	locms.SetSize (mesh->GetNP());
-	maxh = -1;
-	minh = 1e99;
-	for (PointIndex pi : mesh->Points().Range())
-	  {
+        glEnable (GL_COLOR_MATERIAL);
+        locms.SetSize (mesh->GetNP());
+        maxh = -1;
+        minh = 1e99;
+        for (PointIndex pi : mesh->Points().Range())
+          {
             locms[pi] = mesh->GetH (mesh->Point(pi));
             if (locms[pi] > maxh) maxh = locms[pi];
             if (locms[pi] < minh) minh = locms[pi];
-	  }
-	if (!locms.Size())
-	  { 
+          }
+        if (!locms.Size())
+          { 
             minh = 1; 
             maxh = 10; 
-	  }
+          }
       }
     else
       glDisable (GL_COLOR_MATERIAL);
@@ -1845,16 +1845,16 @@ namespace netgen
 
     static float tetcols[][4] =
       {
-	{ 1.0f, 1.0f, 0.0f, 1.0f },
-	{ 1.0f, 0.0f, 0.0f, 1.0f },
-	{ 0.0f, 1.0f, 0.0f, 1.0f },
-	{ 0.0f, 0.0f, 1.0f, 1.0f }
-	/*
-	{ 1.0f, 1.0f, 0.0f, 0.3f },
-	{ 1.0f, 0.0f, 0.0f, 0.3f },
-	{ 0.0f, 1.0f, 0.0f, 0.3f },
-	{ 0.0f, 0.0f, 1.0f, 0.3f }
-	*/
+        { 1.0f, 1.0f, 0.0f, 1.0f },
+        { 1.0f, 0.0f, 0.0f, 1.0f },
+        { 0.0f, 1.0f, 0.0f, 1.0f },
+        { 0.0f, 0.0f, 1.0f, 1.0f }
+        /*
+        { 1.0f, 1.0f, 0.0f, 0.3f },
+        { 1.0f, 0.0f, 0.0f, 0.3f },
+        { 0.0f, 1.0f, 0.0f, 0.3f },
+        { 0.0f, 0.0f, 1.0f, 0.3f }
+        */
       };
 
     CurvedElements & curv = mesh->GetCurvedElements();
@@ -1871,20 +1871,20 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-	if (vispar.drawtetsdomain > 0)
-	  {
+        if (vispar.drawtetsdomain > 0)
+          {
             /*
-	    int tetid = vispar.drawmetispartition ? 
+            int tetid = vispar.drawmetispartition ? 
               (*mesh)[ei].GetPartition() : (*mesh)[ei].GetIndex();
             */
             int tetid =  (*mesh)[ei].GetIndex();
-	    if (vispar.drawtetsdomain != tetid) continue;
-	  }
+            if (vispar.drawtetsdomain != tetid) continue;
+          }
 
-	const Element & el = (*mesh)[ei];
+        const Element & el = (*mesh)[ei];
 
-	if ((el.GetType() == TET || el.GetType() == TET10) && !el.IsDeleted())
-	  {
+        if ((el.GetType() == TET || el.GetType() == TET10) && !el.IsDeleted())
+          {
             bool visible = true;
             for (auto pi: el.PNums())
               if (!shownode[pi])
@@ -1896,220 +1896,220 @@ namespace netgen
             // if (vispar.drawmetispartition && el.GetPartition()!=-1)
             // ind = el.GetPartition() % 4;
 
-	    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, tetcols[ind]);
+            glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, tetcols[ind]);
 
 
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
-	      {
-		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (TET);
-		const Point<3> * vertices = MeshTopology :: GetVertices (TET);
+              {
+                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (TET);
+                const Point<3> * vertices = MeshTopology :: GetVertices (TET);
 
-		/*
-		  Point<3> grid[11][11];
-		  Point<3> fpts[3];
-		  int order = vispar.subdivisions+1;
+                /*
+                  Point<3> grid[11][11];
+                  Point<3> fpts[3];
+                  int order = vispar.subdivisions+1;
 
-		  for (int trig = 0; trig < 4; trig++)
-		  {
-		  for (int j = 0; j < 3; j++)
-		  fpts[j] = vertices[faces[trig][j]-1];
+                  for (int trig = 0; trig < 4; trig++)
+                  {
+                  for (int j = 0; j < 3; j++)
+                  fpts[j] = vertices[faces[trig][j]-1];
 
-		  static Point<3> c(0.25, 0.25, 0.25);
-		  if (vispar.shrink < 1)
-		  for (int j = 0; j < 3; j++)
-		  fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
+                  static Point<3> c(0.25, 0.25, 0.25);
+                  if (vispar.shrink < 1)
+                  for (int j = 0; j < 3; j++)
+                  fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		  for (int ix = 0; ix <= order; ix++)
-		  for (int iy = 0; iy <= order; iy++)
-		  {
-		  double lami[3] =
-		  { (1-double(ix)/order) * (1-double(iy)/order),
-		  (  double(ix)/order) * (1-double(iy)/order),
-		  double(iy)/order };
+                  for (int ix = 0; ix <= order; ix++)
+                  for (int iy = 0; iy <= order; iy++)
+                  {
+                  double lami[3] =
+                  { (1-double(ix)/order) * (1-double(iy)/order),
+                  (  double(ix)/order) * (1-double(iy)/order),
+                  double(iy)/order };
 
-		  Point<3> xl;
-		  for (int l = 0; l < 3; l++)
-		  xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-		  lami[2] * fpts[2](l);
+                  Point<3> xl;
+                  for (int l = 0; l < 3; l++)
+                  xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                  lami[2] * fpts[2](l);
 
-		  curv.CalcElementTransformation (xl, i-1, grid[ix][iy]);
-		  }
+                  curv.CalcElementTransformation (xl, i-1, grid[ix][iy]);
+                  }
 
-		  for (int j = 0; j <= order; j++)
-		  ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		  for (int j = 0; j <= order; j++)
-		  ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                  for (int j = 0; j <= order; j++)
+                  ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                  for (int j = 0; j <= order; j++)
+                  ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		  glMap2d(GL_MAP2_VERTEX_3,
-		  0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-		  0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-		  &grid[0][0](0));
-		  glEnable(GL_MAP2_VERTEX_3);
-		  glEnable(GL_AUTO_NORMAL);
+                  glMap2d(GL_MAP2_VERTEX_3,
+                  0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                  0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                  &grid[0][0](0));
+                  glEnable(GL_MAP2_VERTEX_3);
+                  glEnable(GL_AUTO_NORMAL);
 
-		  glMapGrid2f(8, 0.0, 0.999, 8, 0.0, 1.0);
-		  glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                  glMapGrid2f(8, 0.0, 0.999, 8, 0.0, 1.0);
+                  glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		  glDisable (GL_AUTO_NORMAL);
-		  glDisable (GL_MAP2_VERTEX_3);
-		  }
-		*/
+                  glDisable (GL_AUTO_NORMAL);
+                  glDisable (GL_MAP2_VERTEX_3);
+                  }
+                */
 
 
 
-		int order = curv.GetOrder();
+                int order = curv.GetOrder();
 
-		Array<Point<3> > ploc ( (order+1)*(order+1) );
-		Array<Point<3> > pglob ( (order+1)*(order+1) );
-		Point<3> fpts[3];
+                Array<Point<3> > ploc ( (order+1)*(order+1) );
+                Array<Point<3> > pglob ( (order+1)*(order+1) );
+                Point<3> fpts[3];
 
-		for (int trig = 0; trig < 4; trig++)
-		  {
-		    for (int j = 0; j < 3; j++)
-		      fpts[j] = vertices[faces[trig][j]-1];
+                for (int trig = 0; trig < 4; trig++)
+                  {
+                    for (int j = 0; j < 3; j++)
+                      fpts[j] = vertices[faces[trig][j]-1];
 
-		    static Point<3> c(0.25, 0.25, 0.25);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 3; j++)
+                    static Point<3> c(0.25, 0.25, 0.25);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 3; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0, ii = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++, ii++)
-			{
-			  double lami[3] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      double(iy)/order };
+                    for (int ix = 0, ii = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++, ii++)
+                        {
+                          double lami[3] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              double(iy)/order };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l);
 
-			  ploc[ii] = xl;
-			}
+                          ploc[ii] = xl;
+                        }
 
-		    curv.CalcMultiPointElementTransformation (&ploc, ei, &pglob, 0);
+                    curv.CalcMultiPointElementTransformation (&ploc, ei, &pglob, 0);
 
-		    Point<3> grid[11][11];
-		    for (int ix = 0, ii = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++, ii++)
-			grid[ix][iy] = pglob[ii];
+                    Point<3> grid[11][11];
+                    for (int ix = 0, ii = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++, ii++)
+                        grid[ix][iy] = pglob[ii];
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(hoplotn, 0.0, 0.9999f, hoplotn, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, hoplotn, 0, hoplotn);
+                    glMapGrid2f(hoplotn, 0.0, 0.9999f, hoplotn, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, hoplotn, 0, hoplotn);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
-	      }
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
+              }
 
             else // Not High Order
 
-	      {
-		Point<3> pts[4];
-		for (int j = 0; j < 4; j++)
+              {
+                Point<3> pts[4];
+                for (int j = 0; j < 4; j++)
                   pts[j] = (*mesh)[el[j]];
 
-		if (vispar.shrink < 1)
-		  {
-		    Point<3> c = Center (pts[0], pts[1], pts[2], pts[3]);
-		    for (int j = 0; j < 4; j++)
-		      pts[j] = c + vispar.shrink * (pts[j]-c);
-		  }
+                if (vispar.shrink < 1)
+                  {
+                    Point<3> c = Center (pts[0], pts[1], pts[2], pts[3]);
+                    for (int j = 0; j < 4; j++)
+                      pts[j] = c + vispar.shrink * (pts[j]-c);
+                  }
 
 
-		Vec<3> n;
+                Vec<3> n;
 
 
-		// Philippose - 16/02/2010
-		// Add Mesh size based coloring of 
-		// meshes also for the volume elements
-		if(vispar.colormeshsize)
-		  {
-		    glBegin (GL_TRIANGLE_STRIP);
-		    n = Cross (pts[1]-pts[0], pts[2]-pts[0]);
-		    glNormal3dv (n);
+                // Philippose - 16/02/2010
+                // Add Mesh size based coloring of 
+                // meshes also for the volume elements
+                if(vispar.colormeshsize)
+                  {
+                    glBegin (GL_TRIANGLE_STRIP);
+                    n = Cross (pts[1]-pts[0], pts[2]-pts[0]);
+                    glNormal3dv (n);
 
-		    SetOpenGlColor (locms[el[0]], minh, maxh, 0);
-		    glVertex3dv (pts[0]);
+                    SetOpenGlColor (locms[el[0]], minh, maxh, 0);
+                    glVertex3dv (pts[0]);
 
-		    SetOpenGlColor (locms[el[1]], minh, maxh, 0);
-		    glVertex3dv (pts[1]);
+                    SetOpenGlColor (locms[el[1]], minh, maxh, 0);
+                    glVertex3dv (pts[1]);
 
-		    SetOpenGlColor (locms[el[2]], minh, maxh, 0);
-		    glVertex3dv (pts[2]);
+                    SetOpenGlColor (locms[el[2]], minh, maxh, 0);
+                    glVertex3dv (pts[2]);
 
-		    n = Cross (pts[3]-pts[1], pts[2]-pts[1]);
-		    glNormal3dv (n);
+                    n = Cross (pts[3]-pts[1], pts[2]-pts[1]);
+                    glNormal3dv (n);
 
-		    SetOpenGlColor (locms[el[3]], minh, maxh, 0);
-		    glVertex3dv (pts[3]);
+                    SetOpenGlColor (locms[el[3]], minh, maxh, 0);
+                    glVertex3dv (pts[3]);
 
-		    n = Cross (pts[3]-pts[2], pts[0]-pts[2]);
-		    glNormal3dv (n);
+                    n = Cross (pts[3]-pts[2], pts[0]-pts[2]);
+                    glNormal3dv (n);
 
-		    SetOpenGlColor (locms[el[0]], minh, maxh, 0);
-		    glVertex3dv (pts[0]);
+                    SetOpenGlColor (locms[el[0]], minh, maxh, 0);
+                    glVertex3dv (pts[0]);
 
-		    n = Cross (pts[1]-pts[3], pts[0]-pts[3]);
-		    glNormal3dv (n);
+                    n = Cross (pts[1]-pts[3], pts[0]-pts[3]);
+                    glNormal3dv (n);
 
-		    SetOpenGlColor (locms[el[1]], minh, maxh, 0);
-		    glVertex3dv (pts[1]);
-		    glEnd();
-		  }
-		else // Do not color mesh based on mesh size
-		  {
-		    GLubyte ind[4][3] = { { 0,1,2 }, { 3,1,0 },
-					  { 1,3,2 }, { 2,3,0 } };
-		    
-		    glEnableClientState(GL_VERTEX_ARRAY);
-		    glVertexPointer(3, GL_DOUBLE, 0, &pts[0](0));
+                    SetOpenGlColor (locms[el[1]], minh, maxh, 0);
+                    glVertex3dv (pts[1]);
+                    glEnd();
+                  }
+                else // Do not color mesh based on mesh size
+                  {
+                    GLubyte ind[4][3] = { { 0,1,2 }, { 3,1,0 },
+                                          { 1,3,2 }, { 2,3,0 } };
+                    
+                    glEnableClientState(GL_VERTEX_ARRAY);
+                    glVertexPointer(3, GL_DOUBLE, 0, &pts[0](0));
 
-		    for (int j = 0; j < 4; j++)
-		      { 
-			glNormal3dv (Cross (pts[ind[j][1]]-pts[ind[j][0]],
-					    pts[ind[j][2]]-pts[ind[j][0]]));
+                    for (int j = 0; j < 4; j++)
+                      { 
+                        glNormal3dv (Cross (pts[ind[j][1]]-pts[ind[j][0]],
+                                            pts[ind[j][2]]-pts[ind[j][0]]));
 
-			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, &ind[j][0]);
-		      }
-		    glDisableClientState(GL_VERTEX_ARRAY);
+                        glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_BYTE, &ind[j][0]);
+                      }
+                    glDisableClientState(GL_VERTEX_ARRAY);
 
-		    /*
-		    glBegin (GL_TRIANGLE_STRIP);
-		    glNormal3dv (Cross (pts[1]-pts[0], pts[2]-pts[0]));
+                    /*
+                    glBegin (GL_TRIANGLE_STRIP);
+                    glNormal3dv (Cross (pts[1]-pts[0], pts[2]-pts[0]));
 
-		    glVertex3dv (pts[0]);
-		    glVertex3dv (pts[1]);
-		    glVertex3dv (pts[2]);
+                    glVertex3dv (pts[0]);
+                    glVertex3dv (pts[1]);
+                    glVertex3dv (pts[2]);
 
-		    glNormal3dv (Cross (pts[3]-pts[1], pts[2]-pts[1]));
-		    glVertex3dv (pts[3]);
+                    glNormal3dv (Cross (pts[3]-pts[1], pts[2]-pts[1]));
+                    glVertex3dv (pts[3]);
 
-		    glNormal3dv (Cross (pts[3]-pts[2], pts[0]-pts[2]));
-		    glVertex3dv (pts[0]);
+                    glNormal3dv (Cross (pts[3]-pts[2], pts[0]-pts[2]));
+                    glVertex3dv (pts[0]);
 
-		    glNormal3dv (Cross (pts[1]-pts[3], pts[0]-pts[3]));
-		    glVertex3dv (pts[1]);
-		    glEnd();
-		    */
-		  }
+                    glNormal3dv (Cross (pts[1]-pts[3], pts[0]-pts[3]));
+                    glVertex3dv (pts[1]);
+                    glEnd();
+                    */
+                  }
 
-	      }
-	  }
+              }
+          }
       }
 
     glEndList ();
@@ -2123,13 +2123,13 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
     
     if (prismtimestamp > mesh->GetTimeStamp () &&
-	prismtimestamp > vispar.clipping.timestamp )
+        prismtimestamp > vispar.clipping.timestamp )
       return;
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     prismtimestamp = NextTimeStamp();
@@ -2153,9 +2153,9 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-	const Element & el = (*mesh)[ei];
-	if (el.GetType() == PRISM && !el.IsDeleted())
-	  {
+        const Element & el = (*mesh)[ei];
+        if (el.GetType() == PRISM && !el.IsDeleted())
+          {
             bool visible = true;
             for (auto pi: el.PNums())
               if (!shownode[pi])
@@ -2166,287 +2166,287 @@ namespace netgen
 
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
-	      {
-		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PRISM);
-		const Point<3> * vertices = MeshTopology :: GetVertices (PRISM);
+              {
+                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PRISM);
+                const Point<3> * vertices = MeshTopology :: GetVertices (PRISM);
 
-		Point<3> grid[11][11];
-		Point<3> fpts[4];
-		int order = subdivisions+1;
+                Point<3> grid[11][11];
+                Point<3> fpts[4];
+                int order = subdivisions+1;
 
-		for (int trig = 0; trig < 2; trig++)
-		  {
-		    for (int j = 0; j < 3; j++)
-		      fpts[j] = vertices[faces[trig][j]-1];
+                for (int trig = 0; trig < 2; trig++)
+                  {
+                    for (int j = 0; j < 3; j++)
+                      fpts[j] = vertices[faces[trig][j]-1];
 
-		    static Point<3> c(1.0/3.0, 1.0/3.0, 0.5);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 3; j++)
+                    static Point<3> c(1.0/3.0, 1.0/3.0, 0.5);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 3; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++)
-			{
-			  double lami[3] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      double(iy)/order };
+                    for (int ix = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++)
+                        {
+                          double lami[3] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              double(iy)/order };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l);
 
-			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
-			}
+                          curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+                        }
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(8, 0.0, 0.999f, 8, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                    glMapGrid2f(8, 0.0, 0.999f, 8, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
 
-		for (int quad = 2; quad < 5; quad++)
-		  {
-		    for (int j = 0; j < 4; j++)
-		      fpts[j] = vertices[faces[quad][j]-1];
+                for (int quad = 2; quad < 5; quad++)
+                  {
+                    for (int j = 0; j < 4; j++)
+                      fpts[j] = vertices[faces[quad][j]-1];
 
-		    static Point<3> c(1.0/3.0, 1.0/3.0, 0.5);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 4; j++)
+                    static Point<3> c(1.0/3.0, 1.0/3.0, 0.5);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 4; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++)
-			{
-			  double lami[4] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (  double(iy)/order),
-			      (1-double(ix)/order) * (  double(iy)/order) };
+                    for (int ix = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++)
+                        {
+                          double lami[4] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (  double(iy)/order),
+                              (1-double(ix)/order) * (  double(iy)/order) };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) =
-			      lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) =
+                              lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
 
-			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
-			}
+                          curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+                        }
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
-
-
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
 
 
 
-		/*
-		  int hoplotn = 1 << subdivisions;
-		  // int hoplotn = curv.GetNVisualSubsecs();
 
-		  const Point<3> * facepoint = MeshTopology :: GetVertices (TRIG);
-		  const ELEMENT_FACE * elface = MeshTopology :: GetFaces(TRIG);
 
-		  glBegin (GL_TRIANGLES);
+                /*
+                  int hoplotn = 1 << subdivisions;
+                  // int hoplotn = curv.GetNVisualSubsecs();
 
-		  for (int trig = 0; trig<2; trig++)
-		  {
+                  const Point<3> * facepoint = MeshTopology :: GetVertices (TRIG);
+                  const ELEMENT_FACE * elface = MeshTopology :: GetFaces(TRIG);
 
-		  Vec<3> x0,x1,d0,d1;
-		  x0 = facepoint[1] - facepoint[2];
-		  x1 = facepoint[0] - facepoint[2];
-		  x0.Normalize();
-		  x1.Normalize();
-		  if (trig == 1) swap (x0,x1);
+                  glBegin (GL_TRIANGLES);
 
-		  Point<3> xr[3];
-		  Point<3> xg;
-		  Vec<3> dx, dy, dz, n;
+                  for (int trig = 0; trig<2; trig++)
+                  {
 
-		  for (int i1 = 0; i1 < hoplotn; i1++)
-		  for (int j1 = 0; j1 < hoplotn-i1; j1++)
-		  for (int k = 0; k < 2; k++)
-		  {
-		  if (k == 0)
-		  {
-		  xr[0](0) = (double)    i1/hoplotn; xr[0](1) = (double)    j1/hoplotn;
-		  xr[1](0) = (double)(i1+1)/hoplotn; xr[1](1) = (double)    j1/hoplotn;
-		  xr[2](0) = (double)    i1/hoplotn; xr[2](1) = (double)(j1+1)/hoplotn;
-		  } else
-		  {
-		  if (j1 == hoplotn-i1-1) continue;
-		  xr[0](0) = (double)(i1+1)/hoplotn; xr[0](1) = (double)    j1/hoplotn;
-		  xr[1](0) = (double)(i1+1)/hoplotn; xr[1](1) = (double)(j1+1)/hoplotn;
-		  xr[2](0) = (double)    i1/hoplotn; xr[2](1) = (double)(j1+1)/hoplotn;
-		  };
+                  Vec<3> x0,x1,d0,d1;
+                  x0 = facepoint[1] - facepoint[2];
+                  x1 = facepoint[0] - facepoint[2];
+                  x0.Normalize();
+                  x1.Normalize();
+                  if (trig == 1) swap (x0,x1);
 
-		  for (int l=0; l<3; l++)
-		  {
-		  Mat<3,3> dxdxi;
-		  xr[l](2) = (double) trig;
-		  curv.CalcElementTransformation (xr[l], i-1, xg, dxdxi);
-		  for (int i = 0; i < 3; i++)
-		  {
-		  dx(i) = dxdxi(i,0);
-		  dy(i) = dxdxi(i,1);
-		  dz(i) = dxdxi(i,2);
-		  }
+                  Point<3> xr[3];
+                  Point<3> xg;
+                  Vec<3> dx, dy, dz, n;
 
-		  Vec<3> d0 = x0(0)*dx + x0(1)*dy + x0(2)*dz;
-		  Vec<3> d1 = x1(0)*dx + x1(1)*dy + x1(2)*dz;
-		  n = Cross (d1, d0);
-		  glNormal3d (n(0), n(1), n(2));
-		  glVertex3d (xg(0), xg(1), xg(2));
-		  }
-		  }
+                  for (int i1 = 0; i1 < hoplotn; i1++)
+                  for (int j1 = 0; j1 < hoplotn-i1; j1++)
+                  for (int k = 0; k < 2; k++)
+                  {
+                  if (k == 0)
+                  {
+                  xr[0](0) = (double)    i1/hoplotn; xr[0](1) = (double)    j1/hoplotn;
+                  xr[1](0) = (double)(i1+1)/hoplotn; xr[1](1) = (double)    j1/hoplotn;
+                  xr[2](0) = (double)    i1/hoplotn; xr[2](1) = (double)(j1+1)/hoplotn;
+                  } else
+                  {
+                  if (j1 == hoplotn-i1-1) continue;
+                  xr[0](0) = (double)(i1+1)/hoplotn; xr[0](1) = (double)    j1/hoplotn;
+                  xr[1](0) = (double)(i1+1)/hoplotn; xr[1](1) = (double)(j1+1)/hoplotn;
+                  xr[2](0) = (double)    i1/hoplotn; xr[2](1) = (double)(j1+1)/hoplotn;
+                  };
 
-		  }
+                  for (int l=0; l<3; l++)
+                  {
+                  Mat<3,3> dxdxi;
+                  xr[l](2) = (double) trig;
+                  curv.CalcElementTransformation (xr[l], i-1, xg, dxdxi);
+                  for (int i = 0; i < 3; i++)
+                  {
+                  dx(i) = dxdxi(i,0);
+                  dy(i) = dxdxi(i,1);
+                  dz(i) = dxdxi(i,2);
+                  }
 
-		  glEnd ();
+                  Vec<3> d0 = x0(0)*dx + x0(1)*dy + x0(2)*dz;
+                  Vec<3> d1 = x1(0)*dx + x1(1)*dy + x1(2)*dz;
+                  n = Cross (d1, d0);
+                  glNormal3d (n(0), n(1), n(2));
+                  glVertex3d (xg(0), xg(1), xg(2));
+                  }
+                  }
 
-		  glBegin (GL_QUADS);
+                  }
 
-		  for (int quad = 0; quad<3; quad++)
-		  {
-		  const Point<3> * facepoint = MeshTopology :: GetVertices (PRISM);
+                  glEnd ();
 
-		  Vec<3> x0,x1;
-		  int xyz;
+                  glBegin (GL_QUADS);
 
-		  switch (quad)
-		  {
-		  case 0:
-		  x0 = facepoint[5] - facepoint[2];
-		  x1 = facepoint[0] - facepoint[2];
-		  xyz = 0;
-		  break;
-		  case 1:
-		  x0 = facepoint[4] - facepoint[0];
-		  x1 = facepoint[1] - facepoint[0];
-		  xyz = 0;
-		  break;
-		  case 2:
-		  x0 = facepoint[1] - facepoint[2];
-		  x1 = facepoint[5] - facepoint[2];
-		  xyz = 1;
-		  break;
-		  }
+                  for (int quad = 0; quad<3; quad++)
+                  {
+                  const Point<3> * facepoint = MeshTopology :: GetVertices (PRISM);
 
-		  x0.Normalize();
-		  x1.Normalize();
+                  Vec<3> x0,x1;
+                  int xyz;
 
-		  swap (x0,x1);
+                  switch (quad)
+                  {
+                  case 0:
+                  x0 = facepoint[5] - facepoint[2];
+                  x1 = facepoint[0] - facepoint[2];
+                  xyz = 0;
+                  break;
+                  case 1:
+                  x0 = facepoint[4] - facepoint[0];
+                  x1 = facepoint[1] - facepoint[0];
+                  xyz = 0;
+                  break;
+                  case 2:
+                  x0 = facepoint[1] - facepoint[2];
+                  x1 = facepoint[5] - facepoint[2];
+                  xyz = 1;
+                  break;
+                  }
 
-		  Point<3> xr[4];
-		  Point<3> xg;
-		  Vec<3> dx, dy, dz, n;
+                  x0.Normalize();
+                  x1.Normalize();
 
-		  for (int i1 = 0; i1 < hoplotn; i1++)
-		  for (int j1 = 0; j1 < hoplotn; j1++)
-		  {
-		  xr[0](xyz) = (double)    i1/hoplotn; xr[0](2) = (double)    j1/hoplotn;
-		  xr[1](xyz) = (double)(i1+1)/hoplotn; xr[1](2) = (double)    j1/hoplotn;
-		  xr[2](xyz) = (double)(i1+1)/hoplotn; xr[2](2) = (double)(j1+1)/hoplotn;
-		  xr[3](xyz) = (double)    i1/hoplotn; xr[3](2) = (double)(j1+1)/hoplotn;
+                  swap (x0,x1);
 
-		  for (int l=0; l<4; l++)
-		  {
-		  switch (quad)
-		  {
-		  case 0: xr[l](1) = 0; break;
-		  case 1: xr[l](1) = 1-xr[l](0); break;
-		  case 2: xr[l](0) = 0; break;
-		  }
+                  Point<3> xr[4];
+                  Point<3> xg;
+                  Vec<3> dx, dy, dz, n;
 
-		  Mat<3,3> dxdxi;
-		  curv.CalcElementTransformation (xr[l], i-1, xg, dxdxi);
-		  for (int i = 0; i < 3; i++)
-		  {
-		  dx(i) = dxdxi(i,0);
-		  dy(i) = dxdxi(i,1);
-		  dz(i) = dxdxi(i,2);
-		  }
+                  for (int i1 = 0; i1 < hoplotn; i1++)
+                  for (int j1 = 0; j1 < hoplotn; j1++)
+                  {
+                  xr[0](xyz) = (double)    i1/hoplotn; xr[0](2) = (double)    j1/hoplotn;
+                  xr[1](xyz) = (double)(i1+1)/hoplotn; xr[1](2) = (double)    j1/hoplotn;
+                  xr[2](xyz) = (double)(i1+1)/hoplotn; xr[2](2) = (double)(j1+1)/hoplotn;
+                  xr[3](xyz) = (double)    i1/hoplotn; xr[3](2) = (double)(j1+1)/hoplotn;
 
-		  Vec<3> d0 = x0(0)*dx + x0(1)*dy + x0(2)*dz;
-		  Vec<3> d1 = x1(0)*dx + x1(1)*dy + x1(2)*dz;
-		  n = Cross (d1, d0);
-		  glNormal3d (n(0), n(1), n(2));
-		  glVertex3d (xg(0), xg(1), xg(2));
-		  }
-		  }
-		  }
-		  glEnd ();
-		*/
-	      }
+                  for (int l=0; l<4; l++)
+                  {
+                  switch (quad)
+                  {
+                  case 0: xr[l](1) = 0; break;
+                  case 1: xr[l](1) = 1-xr[l](0); break;
+                  case 2: xr[l](0) = 0; break;
+                  }
+
+                  Mat<3,3> dxdxi;
+                  curv.CalcElementTransformation (xr[l], i-1, xg, dxdxi);
+                  for (int i = 0; i < 3; i++)
+                  {
+                  dx(i) = dxdxi(i,0);
+                  dy(i) = dxdxi(i,1);
+                  dz(i) = dxdxi(i,2);
+                  }
+
+                  Vec<3> d0 = x0(0)*dx + x0(1)*dy + x0(2)*dz;
+                  Vec<3> d1 = x1(0)*dx + x1(1)*dy + x1(2)*dz;
+                  n = Cross (d1, d0);
+                  glNormal3d (n(0), n(1), n(2));
+                  glVertex3d (xg(0), xg(1), xg(2));
+                  }
+                  }
+                  }
+                  glEnd ();
+                */
+              }
             else
-	      {
-		Point<3> c(0,0,0);
-		if (vispar.shrink < 1)
-		  {
-		    for (j = 1; j <= 6; j++)
-		      {
-			Point<3> p = mesh->Point(el.PNum(j));
-			c(0) += p(0) / 6;
-			c(1) += p(1) / 6;
-			c(2) += p(2) / 6;
-		      }
-		  }
+              {
+                Point<3> c(0,0,0);
+                if (vispar.shrink < 1)
+                  {
+                    for (j = 1; j <= 6; j++)
+                      {
+                        Point<3> p = mesh->Point(el.PNum(j));
+                        c(0) += p(0) / 6;
+                        c(1) += p(1) / 6;
+                        c(2) += p(2) / 6;
+                      }
+                  }
 
-		el.GetSurfaceTriangles (faces);
-		glBegin (GL_TRIANGLES);
-		for (j = 1; j <= faces.Size(); j++)
-		  {
-		    ElementFace & face = faces[j-1];
-		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
-		    Vec<3> n = Cross (Vec<3> (lp1, lp3), Vec<3> (lp1, lp2));
-		    n /= (n.Length()+1e-12);
-		    glNormal3d (n(0), n(1), n(2));
-		    if (vispar.shrink < 1)
-		      {
-			lp1 = c + vispar.shrink * (lp1 - c);
-			lp2 = c + vispar.shrink * (lp2 - c);
-			lp3 = c + vispar.shrink * (lp3 - c);
-		      }
-		    glVertex3d (lp1(0), lp1(1), lp1(2));
-		    glVertex3d (lp2(0), lp2(1), lp2(2));
-		    glVertex3d (lp3(0), lp3(1), lp3(2));
-		  }
+                el.GetSurfaceTriangles (faces);
+                glBegin (GL_TRIANGLES);
+                for (j = 1; j <= faces.Size(); j++)
+                  {
+                    ElementFace & face = faces[j-1];
+                    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+                    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+                    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                    Vec<3> n = Cross (Vec<3> (lp1, lp3), Vec<3> (lp1, lp2));
+                    n /= (n.Length()+1e-12);
+                    glNormal3d (n(0), n(1), n(2));
+                    if (vispar.shrink < 1)
+                      {
+                        lp1 = c + vispar.shrink * (lp1 - c);
+                        lp2 = c + vispar.shrink * (lp2 - c);
+                        lp3 = c + vispar.shrink * (lp3 - c);
+                      }
+                    glVertex3d (lp1(0), lp1(1), lp1(2));
+                    glVertex3d (lp2(0), lp2(1), lp2(2));
+                    glVertex3d (lp3(0), lp3(1), lp3(2));
+                  }
 
-		glEnd();
-	      }
-	  }
+                glEnd();
+              }
+          }
       }
     glEndList ();
   }
@@ -2459,13 +2459,13 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
     
     if (hextimestamp > mesh->GetTimeStamp () &&
-	hextimestamp > vispar.clipping.timestamp )
+        hextimestamp > vispar.clipping.timestamp )
       return;
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     hextimestamp = NextTimeStamp();
@@ -2486,9 +2486,9 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-	const Element & el = (*mesh)[ei];
-	if (el.GetType() == HEX && !el.IsDeleted())
-	  {
+        const Element & el = (*mesh)[ei];
+        if (el.GetType() == HEX && !el.IsDeleted())
+          {
             bool visible = true;
             for (auto pi: el.PNums())
               if (!shownode[pi])
@@ -2496,168 +2496,168 @@ namespace netgen
             if(!visible) continue;
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
-	      {
-		/* // classical
-		   glBegin (GL_QUADS);
+              {
+                /* // classical
+                   glBegin (GL_QUADS);
 
-		   const ELEMENT_FACE * faces = MeshTopology :: GetFaces (HEX);
-		   const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
+                   const ELEMENT_FACE * faces = MeshTopology :: GetFaces (HEX);
+                   const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
-		   Point<3> grid[33][33];
-		   Vec<3> gridn[33][33];
-		   Point<3> fpts[4];
-		   for (int quad = 0; quad<6; quad++)
-		   {
-		   for (int j = 0; j < 4; j++)
-		   fpts[j] = vertices[faces[quad][j]-1];
+                   Point<3> grid[33][33];
+                   Vec<3> gridn[33][33];
+                   Point<3> fpts[4];
+                   for (int quad = 0; quad<6; quad++)
+                   {
+                   for (int j = 0; j < 4; j++)
+                   fpts[j] = vertices[faces[quad][j]-1];
 
-		   static Point<3> c(0.5, 0.5, 0.5);
-		   if (vispar.shrink < 1)
-		   for (int j = 0; j < 4; j++)
-		   fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
+                   static Point<3> c(0.5, 0.5, 0.5);
+                   if (vispar.shrink < 1)
+                   for (int j = 0; j < 4; j++)
+                   fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		   Vec<3> taux = fpts[1]-fpts[0];
-		   Vec<3> tauy = fpts[3]-fpts[0];
+                   Vec<3> taux = fpts[1]-fpts[0];
+                   Vec<3> tauy = fpts[3]-fpts[0];
 
-		   for (int ix = 0; ix <= hoplotn; ix++)
-		   for (int iy = 0; iy <= hoplotn; iy++)
-		   {
-		   Point<3> xl;
-		   Mat<3,3> dxdxi;
-		   double lami[4] =
-		   { (1-double(ix)/hoplotn) * (1-double(iy)/hoplotn),
-		   (  double(ix)/hoplotn) * (1-double(iy)/hoplotn),
-		   (  double(ix)/hoplotn) * (  double(iy)/hoplotn),
-		   (1-double(ix)/hoplotn) * (  double(iy)/hoplotn) };
-		   for (int l = 0; l < 3; l++)
-		   xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-		   lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+                   for (int ix = 0; ix <= hoplotn; ix++)
+                   for (int iy = 0; iy <= hoplotn; iy++)
+                   {
+                   Point<3> xl;
+                   Mat<3,3> dxdxi;
+                   double lami[4] =
+                   { (1-double(ix)/hoplotn) * (1-double(iy)/hoplotn),
+                   (  double(ix)/hoplotn) * (1-double(iy)/hoplotn),
+                   (  double(ix)/hoplotn) * (  double(iy)/hoplotn),
+                   (1-double(ix)/hoplotn) * (  double(iy)/hoplotn) };
+                   for (int l = 0; l < 3; l++)
+                   xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                   lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
 
-		   curv.CalcElementTransformation (xl, ei, grid[ix][iy], dxdxi);
+                   curv.CalcElementTransformation (xl, ei, grid[ix][iy], dxdxi);
 
-		   Vec<3> gtaux = dxdxi * taux;
-		   Vec<3> gtauy = dxdxi * tauy;
-		   gridn[ix][iy] = Cross (gtauy, gtaux).Normalize();
-		   }
+                   Vec<3> gtaux = dxdxi * taux;
+                   Vec<3> gtauy = dxdxi * tauy;
+                   gridn[ix][iy] = Cross (gtauy, gtaux).Normalize();
+                   }
 
-		   for (int ix = 0; ix < hoplotn; ix++)
-		   for (int iy = 0; iy < hoplotn; iy++)
-		   {
-		   glNormal3dv (gridn[ix][iy]);
-		   glVertex3dv (grid[ix][iy]);
+                   for (int ix = 0; ix < hoplotn; ix++)
+                   for (int iy = 0; iy < hoplotn; iy++)
+                   {
+                   glNormal3dv (gridn[ix][iy]);
+                   glVertex3dv (grid[ix][iy]);
 
-		   glNormal3dv (gridn[ix+1][iy]);
-		   glVertex3dv (grid[ix+1][iy]);
+                   glNormal3dv (gridn[ix+1][iy]);
+                   glVertex3dv (grid[ix+1][iy]);
 
-		   glNormal3dv (gridn[ix+1][iy+1]);
-		   glVertex3dv (grid[ix+1][iy+1]);
+                   glNormal3dv (gridn[ix+1][iy+1]);
+                   glVertex3dv (grid[ix+1][iy+1]);
 
-		   glNormal3dv (gridn[ix][iy+1]);
-		   glVertex3dv (grid[ix][iy+1]);
-		   }
-		   }
+                   glNormal3dv (gridn[ix][iy+1]);
+                   glVertex3dv (grid[ix][iy+1]);
+                   }
+                   }
 
-		   glEnd ();
-		*/
+                   glEnd ();
+                */
 
-		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
-		const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
+                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
+                const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
-		Point<3> grid[11][11];
-		Point<3> fpts[4];
-		int order = subdivisions+1;
+                Point<3> grid[11][11];
+                Point<3> fpts[4];
+                int order = subdivisions+1;
 
-		for (int quad = 0; quad<6; quad++)
-		  {
-		    for (int j = 0; j < 4; j++)
-		      fpts[j] = vertices[faces[quad][j]-1];
+                for (int quad = 0; quad<6; quad++)
+                  {
+                    for (int j = 0; j < 4; j++)
+                      fpts[j] = vertices[faces[quad][j]-1];
 
-		    static Point<3> c(0.5, 0.5, 0.5);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 4; j++)
+                    static Point<3> c(0.5, 0.5, 0.5);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 4; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++)
-			{
-			  double lami[4] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (  double(iy)/order),
-			      (1-double(ix)/order) * (  double(iy)/order) };
+                    for (int ix = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++)
+                        {
+                          double lami[4] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (  double(iy)/order),
+                              (1-double(ix)/order) * (  double(iy)/order) };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
 
-			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
-			}
+                          curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+                        }
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
-	      }
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
+              }
             else
-	      {
-		Point<3> c(0,0,0);
-		if (vispar.shrink < 1)
-		  {
-		    for (int j = 1; j <= 8; j++)
-		      {
-			Point<3> p = mesh->Point(el.PNum(j));
-			c(0) += p(0);
-			c(1) += p(1);
-			c(2) += p(2);
-		      }
-		    c(0) /= 8;
-		    c(1) /= 8;
-		    c(2) /= 8;
-		  }
+              {
+                Point<3> c(0,0,0);
+                if (vispar.shrink < 1)
+                  {
+                    for (int j = 1; j <= 8; j++)
+                      {
+                        Point<3> p = mesh->Point(el.PNum(j));
+                        c(0) += p(0);
+                        c(1) += p(1);
+                        c(2) += p(2);
+                      }
+                    c(0) /= 8;
+                    c(1) /= 8;
+                    c(2) /= 8;
+                  }
 
-		glBegin (GL_TRIANGLES);
+                glBegin (GL_TRIANGLES);
 
-		el.GetSurfaceTriangles (faces);
-		for (int j = 1; j <= faces.Size(); j++)
-		  {
-		    ElementFace & face = faces[j-1];
-		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
-		    Vec<3> n = Cross (lp3-lp1, lp2-lp1);
-		    n.Normalize();
-		    glNormal3dv (n);
+                el.GetSurfaceTriangles (faces);
+                for (int j = 1; j <= faces.Size(); j++)
+                  {
+                    ElementFace & face = faces[j-1];
+                    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+                    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+                    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                    Vec<3> n = Cross (lp3-lp1, lp2-lp1);
+                    n.Normalize();
+                    glNormal3dv (n);
 
-		    if (vispar.shrink < 1)
-		      {
-			lp1 = c + vispar.shrink * (lp1 - c);
-			lp2 = c + vispar.shrink * (lp2 - c);
-			lp3 = c + vispar.shrink * (lp3 - c);
-		      }
+                    if (vispar.shrink < 1)
+                      {
+                        lp1 = c + vispar.shrink * (lp1 - c);
+                        lp2 = c + vispar.shrink * (lp2 - c);
+                        lp3 = c + vispar.shrink * (lp3 - c);
+                      }
 
-		    glVertex3dv (lp1);
-		    glVertex3dv (lp2);
-		    glVertex3dv (lp3);
-		  }
+                    glVertex3dv (lp1);
+                    glVertex3dv (lp2);
+                    glVertex3dv (lp3);
+                  }
 
-		glEnd();
-	      }
-	  }
+                glEnd();
+              }
+          }
       }
 
     static float hex7col[] = { 1.0f, 0.65f, 0.0f, 1.0f };
@@ -2665,111 +2665,111 @@ namespace netgen
 
     for (auto & el : mesh->VolumeElements())
       {
-	if (el.GetType() == HEX7 && !el.IsDeleted())
-	  {
+        if (el.GetType() == HEX7 && !el.IsDeleted())
+          {
             /*
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) 
-	      {
-		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
-		const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
+              {
+                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
+                const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
-		Point<3> grid[11][11];
-		Point<3> fpts[4];
-		int order = subdivisions+1;
+                Point<3> grid[11][11];
+                Point<3> fpts[4];
+                int order = subdivisions+1;
 
-		for (int quad = 0; quad<6; quad++)
-		  {
-		    for (int j = 0; j < 4; j++)
-		      fpts[j] = vertices[faces[quad][j]-1];
+                for (int quad = 0; quad<6; quad++)
+                  {
+                    for (int j = 0; j < 4; j++)
+                      fpts[j] = vertices[faces[quad][j]-1];
 
-		    static Point<3> c(0.5, 0.5, 0.5);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 4; j++)
+                    static Point<3> c(0.5, 0.5, 0.5);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 4; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++)
-			{
-			  double lami[4] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (  double(iy)/order),
-			      (1-double(ix)/order) * (  double(iy)/order) };
+                    for (int ix = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++)
+                        {
+                          double lami[4] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (  double(iy)/order),
+                              (1-double(ix)/order) * (  double(iy)/order) };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
 
-			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
-			}
+                          curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+                        }
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
-	      }
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
+              }
             else
             */
-	      {
-		Point<3> c(0,0,0);
-		if (vispar.shrink < 1)
-		  {
-		    for (int j = 1; j <= 7; j++)
-		      {
-			Point<3> p = mesh->Point(el.PNum(j));
-			c(0) += p(0);
-			c(1) += p(1);
-			c(2) += p(2);
-		      }
-		    c(0) /= 7;
-		    c(1) /= 7;
-		    c(2) /= 7;
-		  }
+              {
+                Point<3> c(0,0,0);
+                if (vispar.shrink < 1)
+                  {
+                    for (int j = 1; j <= 7; j++)
+                      {
+                        Point<3> p = mesh->Point(el.PNum(j));
+                        c(0) += p(0);
+                        c(1) += p(1);
+                        c(2) += p(2);
+                      }
+                    c(0) /= 7;
+                    c(1) /= 7;
+                    c(2) /= 7;
+                  }
 
-		glBegin (GL_TRIANGLES);
+                glBegin (GL_TRIANGLES);
 
-		el.GetSurfaceTriangles (faces);
-		for (int j = 1; j <= faces.Size(); j++)
-		  {
-		    ElementFace & face = faces[j-1];
-		    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-		    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-		    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
-		    Vec<3> n = Cross (lp3-lp1, lp2-lp1);
-		    n.Normalize();
-		    glNormal3dv (n);
+                el.GetSurfaceTriangles (faces);
+                for (int j = 1; j <= faces.Size(); j++)
+                  {
+                    ElementFace & face = faces[j-1];
+                    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+                    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+                    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                    Vec<3> n = Cross (lp3-lp1, lp2-lp1);
+                    n.Normalize();
+                    glNormal3dv (n);
 
-		    if (vispar.shrink < 1)
-		      {
-			lp1 = c + vispar.shrink * (lp1 - c);
-			lp2 = c + vispar.shrink * (lp2 - c);
-			lp3 = c + vispar.shrink * (lp3 - c);
-		      }
+                    if (vispar.shrink < 1)
+                      {
+                        lp1 = c + vispar.shrink * (lp1 - c);
+                        lp2 = c + vispar.shrink * (lp2 - c);
+                        lp3 = c + vispar.shrink * (lp3 - c);
+                      }
 
-		    glVertex3dv (lp1);
-		    glVertex3dv (lp2);
-		    glVertex3dv (lp3);
-		  }
+                    glVertex3dv (lp1);
+                    glVertex3dv (lp2);
+                    glVertex3dv (lp3);
+                  }
 
-		glEnd();
-	      }
-	  }
+                glEnd();
+              }
+          }
       }
 
     
@@ -2789,13 +2789,13 @@ namespace netgen
     shared_ptr<Mesh> mesh = GetMesh();
     
     if (pyramidtimestamp > mesh->GetTimeStamp () &&
-	pyramidtimestamp > vispar.clipping.timestamp )
+        pyramidtimestamp > vispar.clipping.timestamp )
       return;
 
     if (!lock)
       {
-	lock = new NgLock (mesh->Mutex());
-	lock -> Lock();
+        lock = new NgLock (mesh->Mutex());
+        lock -> Lock();
       }
 
     pyramidtimestamp = NextTimeStamp();
@@ -2817,9 +2817,9 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-	const Element & el = (*mesh)[ei];
-	if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
-	  {
+        const Element & el = (*mesh)[ei];
+        if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
+          {
             bool visible = true;
             for (auto pi: el.PNums())
               if (!shownode[pi])
@@ -2828,309 +2828,309 @@ namespace netgen
 
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
-	      {
+              {
 
-		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PYRAMID);
-		const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
+                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PYRAMID);
+                const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
 
-		Point<3> grid[11][11];
-		Point<3> fpts[4];
-		int order = subdivisions+1;
+                Point<3> grid[11][11];
+                Point<3> fpts[4];
+                int order = subdivisions+1;
 
-		for (int trig = 0; trig < 4; trig++)
-		  {
-		    for (int j = 0; j < 3; j++)
-		      fpts[j] = vertices[faces[trig][j]-1];
+                for (int trig = 0; trig < 4; trig++)
+                  {
+                    for (int j = 0; j < 3; j++)
+                      fpts[j] = vertices[faces[trig][j]-1];
 
-		    static Point<3> c(0.375, 0.375, 0.25);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 3; j++)
+                    static Point<3> c(0.375, 0.375, 0.25);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 3; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++)
-			{
-			  double lami[3] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      double(iy)/order };
+                    for (int ix = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++)
+                        {
+                          double lami[3] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              double(iy)/order };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l);
 
-			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
-			}
+                          curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+                        }
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(8, 0.0, 0.999f, 8, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                    glMapGrid2f(8, 0.0, 0.999f, 8, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
 
-		for (int quad = 4; quad < 5; quad++)
-		  {
-		    for (int j = 0; j < 4; j++)
-		      fpts[j] = vertices[faces[quad][j]-1];
+                for (int quad = 4; quad < 5; quad++)
+                  {
+                    for (int j = 0; j < 4; j++)
+                      fpts[j] = vertices[faces[quad][j]-1];
 
-		    static Point<3> c(0.375, 0.375, 0.25);
-		    if (vispar.shrink < 1)
-		      for (int j = 0; j < 4; j++)
+                    static Point<3> c(0.375, 0.375, 0.25);
+                    if (vispar.shrink < 1)
+                      for (int j = 0; j < 4; j++)
                         fpts[j] += (1-vispar.shrink) * (c-fpts[j]);
 
-		    for (int ix = 0; ix <= order; ix++)
-		      for (int iy = 0; iy <= order; iy++)
-			{
-			  double lami[4] =
-			    { (1-double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (1-double(iy)/order),
-			      (  double(ix)/order) * (  double(iy)/order),
-			      (1-double(ix)/order) * (  double(iy)/order) };
+                    for (int ix = 0; ix <= order; ix++)
+                      for (int iy = 0; iy <= order; iy++)
+                        {
+                          double lami[4] =
+                            { (1-double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (1-double(iy)/order),
+                              (  double(ix)/order) * (  double(iy)/order),
+                              (1-double(ix)/order) * (  double(iy)/order) };
 
-			  Point<3> xl;
-			  for (int l = 0; l < 3; l++)
-			    xl(l) =
-			      lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
-			      lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
+                          Point<3> xl;
+                          for (int l = 0; l < 3; l++)
+                            xl(l) =
+                              lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
+                              lami[2] * fpts[2](l) + lami[3] * fpts[3](l);
 
-			  curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
-			}
+                          curv.CalcElementTransformation (xl, ei, grid[ix][iy]);
+                        }
 
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
-		    for (int j = 0; j <= order; j++)
-		      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[j][0], &grid[0][1]-&grid[0][0]);
+                    for (int j = 0; j <= order; j++)
+                      ToBernstein (order, &grid[0][j], &grid[1][0]-&grid[0][0]);
 
-		    glMap2d(GL_MAP2_VERTEX_3,
-			    0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
-			    0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
-			    &grid[0][0](0));
-		    glEnable(GL_MAP2_VERTEX_3);
-		    glEnable(GL_AUTO_NORMAL);
+                    glMap2d(GL_MAP2_VERTEX_3,
+                            0.0, 1.0, &grid[0][1](0)-&grid[0][0](0), order+1,
+                            0.0, 1.0, &grid[1][0](0)-&grid[0][0](0), order+1,
+                            &grid[0][0](0));
+                    glEnable(GL_MAP2_VERTEX_3);
+                    glEnable(GL_AUTO_NORMAL);
 
-		    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
-		    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
+                    glMapGrid2f(8, 0.0, 1.0, 8, 0.0, 1.0);
+                    glEvalMesh2(GL_FILL, 0, 8, 0, 8);
 
-		    glDisable (GL_AUTO_NORMAL);
-		    glDisable (GL_MAP2_VERTEX_3);
-		  }
-
-
+                    glDisable (GL_AUTO_NORMAL);
+                    glDisable (GL_MAP2_VERTEX_3);
+                  }
 
 
 
 
-		/*
-		  int hoplotn = 1 << vispar.subdivisions;
-
-		  const ELEMENT_FACE * faces = MeshTopology :: GetFaces (PYRAMID);
-		  const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
-
-		  Point<3> grid[33][33];
-		  Vec<3> gridn[33][33];
 
 
-		  glBegin (GL_TRIANGLES);
+                /*
+                  int hoplotn = 1 << vispar.subdivisions;
 
-		  for (int trig = 0; trig < 4; trig++)
-		  {
-		  Point<3> p0 = vertices[faces[trig][0]-1];
-		  Point<3> p1 = vertices[faces[trig][1]-1];
-		  Point<3> p2 = vertices[faces[trig][2]-1];
+                  const ELEMENT_FACE * faces = MeshTopology :: GetFaces (PYRAMID);
+                  const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
 
-		  if (vispar.shrink < 1)
-		  {
-		  static Point<3> c(0.375, 0.375, 0.25);
-		  p0 = c + vispar.shrink * (p0 - c);
-		  p1 = c + vispar.shrink * (p1 - c);
-		  p2 = c + vispar.shrink * (p2 - c);
-		  }
+                  Point<3> grid[33][33];
+                  Vec<3> gridn[33][33];
 
 
-		  Vec<3> taux = p0-p2;
-		  Vec<3> tauy = p1-p2;
-		  Vec<3> gtaux, gtauy;
+                  glBegin (GL_TRIANGLES);
 
-		  Point<3> xl;
-		  Mat<3,3> dxdxi;
+                  for (int trig = 0; trig < 4; trig++)
+                  {
+                  Point<3> p0 = vertices[faces[trig][0]-1];
+                  Point<3> p1 = vertices[faces[trig][1]-1];
+                  Point<3> p2 = vertices[faces[trig][2]-1];
 
-		  for (int ix = 0; ix <= hoplotn; ix++)
-		  for (int iy = 0; iy <= hoplotn-ix; iy++)
-		  {
-		  for (int l = 0; l < 3; l++)
-		  xl(l) =
-		  (1-double(ix+iy)/hoplotn) * p2(l) +
-		  (double(ix)/hoplotn) * p0(l) +
-		  (double(iy)/hoplotn) * p1(l);
-
-		  curv.CalcElementTransformation (xl, i-1, grid[ix][iy], dxdxi);
-
-		  gtaux = dxdxi * taux;
-		  gtauy = dxdxi * tauy;
-		  gridn[ix][iy] = Cross (gtauy, gtaux).Normalize();
-		  }
-
-		  for (int ix = 0; ix < hoplotn; ix++)
-		  for (int iy = 0; iy < hoplotn-ix; iy++)
-		  {
-		  glNormal3dv (gridn[ix][iy]);
-		  glVertex3dv (grid[ix][iy]);
-
-		  glNormal3dv (gridn[ix+1][iy]);
-		  glVertex3dv (grid[ix+1][iy]);
-
-		  glNormal3dv (gridn[ix][iy+1]);
-		  glVertex3dv (grid[ix][iy+1]);
-
-		  if (iy < hoplotn-ix-1)
-		  {
-		  glNormal3dv (gridn[ix][iy+1]);
-		  glVertex3dv (grid[ix][iy+1]);
-
-		  glNormal3dv (gridn[ix+1][iy]);
-		  glVertex3dv (grid[ix+1][iy]);
-
-		  glNormal3dv (gridn[ix+1][iy+1]);
-		  glVertex3dv (grid[ix+1][iy+1]);
-		  }
-		  }
-		  }
-
-		  glEnd ();
+                  if (vispar.shrink < 1)
+                  {
+                  static Point<3> c(0.375, 0.375, 0.25);
+                  p0 = c + vispar.shrink * (p0 - c);
+                  p1 = c + vispar.shrink * (p1 - c);
+                  p2 = c + vispar.shrink * (p2 - c);
+                  }
 
 
+                  Vec<3> taux = p0-p2;
+                  Vec<3> tauy = p1-p2;
+                  Vec<3> gtaux, gtauy;
+
+                  Point<3> xl;
+                  Mat<3,3> dxdxi;
+
+                  for (int ix = 0; ix <= hoplotn; ix++)
+                  for (int iy = 0; iy <= hoplotn-ix; iy++)
+                  {
+                  for (int l = 0; l < 3; l++)
+                  xl(l) =
+                  (1-double(ix+iy)/hoplotn) * p2(l) +
+                  (double(ix)/hoplotn) * p0(l) +
+                  (double(iy)/hoplotn) * p1(l);
+
+                  curv.CalcElementTransformation (xl, i-1, grid[ix][iy], dxdxi);
+
+                  gtaux = dxdxi * taux;
+                  gtauy = dxdxi * tauy;
+                  gridn[ix][iy] = Cross (gtauy, gtaux).Normalize();
+                  }
+
+                  for (int ix = 0; ix < hoplotn; ix++)
+                  for (int iy = 0; iy < hoplotn-ix; iy++)
+                  {
+                  glNormal3dv (gridn[ix][iy]);
+                  glVertex3dv (grid[ix][iy]);
+
+                  glNormal3dv (gridn[ix+1][iy]);
+                  glVertex3dv (grid[ix+1][iy]);
+
+                  glNormal3dv (gridn[ix][iy+1]);
+                  glVertex3dv (grid[ix][iy+1]);
+
+                  if (iy < hoplotn-ix-1)
+                  {
+                  glNormal3dv (gridn[ix][iy+1]);
+                  glVertex3dv (grid[ix][iy+1]);
+
+                  glNormal3dv (gridn[ix+1][iy]);
+                  glVertex3dv (grid[ix+1][iy]);
+
+                  glNormal3dv (gridn[ix+1][iy+1]);
+                  glVertex3dv (grid[ix+1][iy+1]);
+                  }
+                  }
+                  }
+
+                  glEnd ();
 
 
-		  glBegin (GL_QUADS);
-
-		  for (int quad = 4; quad < 5; quad++)
-		  {
-		  Point<3> p0 = vertices[faces[quad][0]-1];
-		  Point<3> p1 = vertices[faces[quad][1]-1];
-		  Point<3> p2 = vertices[faces[quad][2]-1];
-		  Point<3> p3 = vertices[faces[quad][3]-1];
-
-		  if (vispar.shrink < 1)
-		  {
-		  static Point<3> c(0.375, 0.375, 0.25);
-		  p0 = c + vispar.shrink * (p0 - c);
-		  p1 = c + vispar.shrink * (p1 - c);
-		  p2 = c + vispar.shrink * (p2 - c);
-		  p3 = c + vispar.shrink * (p3 - c);
-		  }
-
-		  Vec<3> taux = p1-p0;
-		  Vec<3> tauy = p3-p0;
-		  Vec<3> gtaux, gtauy;
-
-		  Point<3> xl, xg;
-		  Mat<3,3> dxdxi;
-
-		  for (int ix = 0; ix <= hoplotn; ix++)
-		  for (int iy = 0; iy <= hoplotn; iy++)
-		  {
-		  Point<3> xl;
-		  for (int l = 0; l < 3; l++)
-		  xl(l) =
-		  (1-double(ix)/hoplotn)*(1-double(iy)/hoplotn) * p0(l) +
-		  (  double(ix)/hoplotn)*(1-double(iy)/hoplotn) * p1(l) +
-		  (  double(ix)/hoplotn)*(  double(iy)/hoplotn) * p2(l) +
-		  (1-double(ix)/hoplotn)*(  double(iy)/hoplotn) * p3(l);
-
-		  curv.CalcElementTransformation (xl, i-1, grid[ix][iy], dxdxi);
-
-		  gtaux = dxdxi * taux;
-		  gtauy = dxdxi * tauy;
-		  gridn[ix][iy] = Cross (gtauy, gtaux).Normalize();
-		  }
-
-		  for (int ix = 0; ix < hoplotn; ix++)
-		  for (int iy = 0; iy < hoplotn; iy++)
-		  {
-		  glNormal3dv (gridn[ix][iy]);
-		  glVertex3dv (grid[ix][iy]);
-
-		  glNormal3dv (gridn[ix+1][iy]);
-		  glVertex3dv (grid[ix+1][iy]);
-
-		  glNormal3dv (gridn[ix+1][iy+1]);
-		  glVertex3dv (grid[ix+1][iy+1]);
-
-		  glNormal3dv (gridn[ix][iy+1]);
-		  glVertex3dv (grid[ix][iy+1]);
-		  }
-		  }
-
-		  glEnd ();
-		*/
 
 
-	      }
+                  glBegin (GL_QUADS);
+
+                  for (int quad = 4; quad < 5; quad++)
+                  {
+                  Point<3> p0 = vertices[faces[quad][0]-1];
+                  Point<3> p1 = vertices[faces[quad][1]-1];
+                  Point<3> p2 = vertices[faces[quad][2]-1];
+                  Point<3> p3 = vertices[faces[quad][3]-1];
+
+                  if (vispar.shrink < 1)
+                  {
+                  static Point<3> c(0.375, 0.375, 0.25);
+                  p0 = c + vispar.shrink * (p0 - c);
+                  p1 = c + vispar.shrink * (p1 - c);
+                  p2 = c + vispar.shrink * (p2 - c);
+                  p3 = c + vispar.shrink * (p3 - c);
+                  }
+
+                  Vec<3> taux = p1-p0;
+                  Vec<3> tauy = p3-p0;
+                  Vec<3> gtaux, gtauy;
+
+                  Point<3> xl, xg;
+                  Mat<3,3> dxdxi;
+
+                  for (int ix = 0; ix <= hoplotn; ix++)
+                  for (int iy = 0; iy <= hoplotn; iy++)
+                  {
+                  Point<3> xl;
+                  for (int l = 0; l < 3; l++)
+                  xl(l) =
+                  (1-double(ix)/hoplotn)*(1-double(iy)/hoplotn) * p0(l) +
+                  (  double(ix)/hoplotn)*(1-double(iy)/hoplotn) * p1(l) +
+                  (  double(ix)/hoplotn)*(  double(iy)/hoplotn) * p2(l) +
+                  (1-double(ix)/hoplotn)*(  double(iy)/hoplotn) * p3(l);
+
+                  curv.CalcElementTransformation (xl, i-1, grid[ix][iy], dxdxi);
+
+                  gtaux = dxdxi * taux;
+                  gtauy = dxdxi * tauy;
+                  gridn[ix][iy] = Cross (gtauy, gtaux).Normalize();
+                  }
+
+                  for (int ix = 0; ix < hoplotn; ix++)
+                  for (int iy = 0; iy < hoplotn; iy++)
+                  {
+                  glNormal3dv (gridn[ix][iy]);
+                  glVertex3dv (grid[ix][iy]);
+
+                  glNormal3dv (gridn[ix+1][iy]);
+                  glVertex3dv (grid[ix+1][iy]);
+
+                  glNormal3dv (gridn[ix+1][iy+1]);
+                  glVertex3dv (grid[ix+1][iy+1]);
+
+                  glNormal3dv (gridn[ix][iy+1]);
+                  glVertex3dv (grid[ix][iy+1]);
+                  }
+                  }
+
+                  glEnd ();
+                */
+
+
+              }
             else
-	      {
+              {
 
 
 
-		Point<3> c(0,0,0);
-		if (vispar.shrink < 1)
-		  {
-		    for (int j = 1; j <= 5; j++)
-		      {
-			Point<3> p = mesh->Point(el.PNum(j));
-			c(0) += p(0) / 5;
-			c(1) += p(1) / 5;
-			c(2) += p(2) / 5;
-		      }
-		  }
+                Point<3> c(0,0,0);
+                if (vispar.shrink < 1)
+                  {
+                    for (int j = 1; j <= 5; j++)
+                      {
+                        Point<3> p = mesh->Point(el.PNum(j));
+                        c(0) += p(0) / 5;
+                        c(1) += p(1) / 5;
+                        c(2) += p(2) / 5;
+                      }
+                  }
 
 
-		el.GetSurfaceTriangles (faces);
+                el.GetSurfaceTriangles (faces);
 
-		if (el.PNum(1).IsValid())
-		  {
-		    glBegin (GL_TRIANGLES);
+                if (el.PNum(1).IsValid())
+                  {
+                    glBegin (GL_TRIANGLES);
 
-		    for (int j = 1; j <= faces.Size(); j++)
-		      {
-			ElementFace & face = faces[j-1];
-			Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-			Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-			Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
-			Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
-			n /= (n.Length()+1e-12);
-			n *= -1;
-			glNormal3d (n(0), n(1), n(2));
+                    for (int j = 1; j <= faces.Size(); j++)
+                      {
+                        ElementFace & face = faces[j-1];
+                        Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
+                        Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
+                        Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                        Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
+                        n /= (n.Length()+1e-12);
+                        n *= -1;
+                        glNormal3d (n(0), n(1), n(2));
 
-			if (vispar.shrink < 1)
-			  {
-			    lp1 = c + vispar.shrink * (lp1 - c);
-			    lp2 = c + vispar.shrink * (lp2 - c);
-			    lp3 = c + vispar.shrink * (lp3 - c);
-			  }
+                        if (vispar.shrink < 1)
+                          {
+                            lp1 = c + vispar.shrink * (lp1 - c);
+                            lp2 = c + vispar.shrink * (lp2 - c);
+                            lp3 = c + vispar.shrink * (lp3 - c);
+                          }
 
-			glVertex3d (lp1(0), lp1(1), lp1(2));
-			glVertex3d (lp2(0), lp2(1), lp2(2));
-			glVertex3d (lp3(0), lp3(1), lp3(2));
-		      }
+                        glVertex3d (lp1(0), lp1(1), lp1(2));
+                        glVertex3d (lp2(0), lp2(1), lp2(2));
+                        glVertex3d (lp3(0), lp3(1), lp3(2));
+                      }
 
-		    glEnd();
-		  }
-	      }
-	  }
+                    glEnd();
+                  }
+              }
+          }
       }
     glEndList ();
   }
@@ -3162,38 +3162,38 @@ namespace netgen
 
     for (auto & sel : mesh->SurfaceElements())
       {
-	Element2d el = sel;
+        Element2d el = sel;
 
-	int drawel = 1;
-	for (j = 1; j <= el.GetNP(); j++)
-	  {
+        int drawel = 1;
+        for (j = 1; j <= el.GetNP(); j++)
+          {
             if (!el.PNum(j).IsValid())
-	      drawel = 0;
-	  }
+              drawel = 0;
+          }
 
-	if (!drawel)
-	  continue;
+        if (!drawel)
+          continue;
 
-	if (el.GetIndex() < 1 || el.GetIndex() > mesh->GetNFD())
-	  continue;
-	int domin = mesh->GetFaceDescriptor(el.GetIndex()).DomainIn();
-	int domout = mesh->GetFaceDescriptor(el.GetIndex()).DomainOut();
+        if (el.GetIndex() < 1 || el.GetIndex() > mesh->GetNFD())
+          continue;
+        int domin = mesh->GetFaceDescriptor(el.GetIndex()).DomainIn();
+        int domout = mesh->GetFaceDescriptor(el.GetIndex()).DomainOut();
 
-	int fac;
-	if (domin == vispar.drawdomainsurf)
-	  fac = 1;
-	else if (domout == vispar.drawdomainsurf)
-	  fac = -1;
-	else
-	  continue;
-
-
-	GLfloat matcol[] = { 1, 0, 0, 1 };
-	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, matcol);
+        int fac;
+        if (domin == vispar.drawdomainsurf)
+          fac = 1;
+        else if (domout == vispar.drawdomainsurf)
+          fac = -1;
+        else
+          continue;
 
 
-	if (el.GetNP() == 3)
-	  {
+        GLfloat matcol[] = { 1, 0, 0, 1 };
+        glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, matcol);
+
+
+        if (el.GetNP() == 3)
+          {
             glBegin (GL_TRIANGLES);
 
             const Point<3> & lp1 = mesh->Point (el.PNum(1));
@@ -3204,15 +3204,15 @@ namespace netgen
             glNormal3d (n(0), n(1), n(2));
 
             if (!vispar.colormeshsize)
-	      {
-		glVertex3d (lp1(0), lp1(1), lp1(2));
-		glVertex3d (lp2(0), lp2(1), lp2(2));
-		glVertex3d (lp3(0), lp3(1), lp3(2));
-	      }
+              {
+                glVertex3d (lp1(0), lp1(1), lp1(2));
+                glVertex3d (lp2(0), lp2(1), lp2(2));
+                glVertex3d (lp3(0), lp3(1), lp3(2));
+              }
             glEnd();
-	  }
-	else if (el.GetNP() == 4)
-	  {
+          }
+        else if (el.GetNP() == 4)
+          {
             glBegin (GL_QUADS);
 
             const Point<3> & lp1 = mesh->Point (el.PNum(1));
@@ -3220,7 +3220,7 @@ namespace netgen
             const Point<3> & lp3 = mesh->Point (el.PNum(4));
             const Point<3> & lp4 = mesh->Point (el.PNum(3));
             Vec<3> n = Cross (Vec<3> (lp1, lp2),
-			     Vec<3> (lp1, Center (lp3, lp4)));
+                             Vec<3> (lp1, Center (lp3, lp4)));
             n /= (fac * (n.Length()+1e-12));
             glNormal3d (n(0), n(1), n(2));
             glVertex3d (lp1(0), lp1(1), lp1(2));
@@ -3228,30 +3228,30 @@ namespace netgen
             glVertex3d (lp4(0), lp4(1), lp4(2));
             glVertex3d (lp3(0), lp3(1), lp3(2));
             glEnd();
-	  }
-	else if (el.GetNP() == 6)
-	  {
+          }
+        else if (el.GetNP() == 6)
+          {
             glBegin (GL_TRIANGLES);
             static int trigs[4][3] = {
-	      { 1, 6, 5 },
-	      { 2, 4, 6 },
-	      { 3, 5, 4 },
-	      { 4, 5, 6 } };
+              { 1, 6, 5 },
+              { 2, 4, 6 },
+              { 3, 5, 4 },
+              { 4, 5, 6 } };
 
-	    for (j = 0; j < 4; j++)
-	      {
-		const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
-		const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
-		const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
-		Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
-		n /= (fac * (n.Length() + 1e-12));
-		glNormal3d (n(0), n(1), n(2));
-		glVertex3d (lp1(0), lp1(1), lp1(2));
-		glVertex3d (lp2(0), lp2(1), lp2(2));
-		glVertex3d (lp3(0), lp3(1), lp3(2));
-	      }
-	    glEnd();
-	  }
+            for (j = 0; j < 4; j++)
+              {
+                const Point<3> & lp1 = mesh->Point (el.PNum(trigs[j][0]));
+                const Point<3> & lp2 = mesh->Point (el.PNum(trigs[j][1]));
+                const Point<3> & lp3 = mesh->Point (el.PNum(trigs[j][2]));
+                Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
+                n /= (fac * (n.Length() + 1e-12));
+                glNormal3d (n(0), n(1), n(2));
+                glVertex3d (lp1(0), lp1(1), lp1(2));
+                glVertex3d (lp2(0), lp2(1), lp2(2));
+                glVertex3d (lp3(0), lp3(1), lp3(2));
+              }
+            glEnd();
+          }
       }
     glEndList ();
   }
@@ -3452,9 +3452,9 @@ namespace netgen
 
     if(lock)
       {
-	lock->UnLock();
-	delete lock;
-	lock = NULL;
+        lock->UnLock();
+        delete lock;
+        lock = NULL;
       }
   }
 

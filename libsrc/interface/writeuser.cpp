@@ -41,8 +41,8 @@ namespace netgen
   extern MeshingParameters mparam;
 
   void RegisterUserFormats (Array<const char*> & names,
-			    Array<const char*> & extensions)
-			    
+                            Array<const char*> & extensions)
+                            
 {
   for (const auto & entry : UserFormatRegister::getFormats())
     {
@@ -52,8 +52,8 @@ namespace netgen
 }
   
 bool WriteUserFormat (const string & format,
-		      const Mesh & mesh,
-		      const filesystem::path & filename)
+                      const Mesh & mesh,
+                      const filesystem::path & filename)
 {
   if(!UserFormatRegister::HaveFormat(format))
     return true;
@@ -74,7 +74,7 @@ bool WriteUserFormat (const string & format,
  */
 
 void WriteNeutralFormat (const Mesh & mesh,
-			 const filesystem::path & filename)
+                         const filesystem::path & filename)
 {
   cout << "write neutral, new" << endl;
   int np = mesh.GetNP();
@@ -103,10 +103,10 @@ void WriteNeutralFormat (const Mesh & mesh,
       outfile.width(9);
       outfile << p(1) << " ";
       if (mesh.GetDimension() == 3)
-	{
-	  outfile.width(9);
-	  outfile << p(2);
-	  }
+        {
+          outfile.width(9);
+          outfile << p(2);
+          }
       outfile << "\n";
     }
 
@@ -115,23 +115,23 @@ void WriteNeutralFormat (const Mesh & mesh,
       outfile << ne << "\n";
       /*
       for (int i = 1; i <= ne; i++)
-	{
-	  Element el = mesh.VolumeElement(i);
+        {
+          Element el = mesh.VolumeElement(i);
       */
       for (Element el : mesh.VolumeElements())
         {
-	  if (inverttets)
-	    el.Invert();
-	  outfile.width(4);
-	  outfile << el.GetIndex() << "  ";
-	  for (int j = 1; j <= el.GetNP(); j++)
-	    {
-	      outfile << " ";
-	      outfile.width(8);
-	      outfile << el.PNum(j);
-	    }
-	  outfile << "\n";
-	}
+          if (inverttets)
+            el.Invert();
+          outfile.width(4);
+          outfile << el.GetIndex() << "  ";
+          for (int j = 1; j <= el.GetNP(); j++)
+            {
+              outfile << " ";
+              outfile.width(8);
+              outfile << el.PNum(j);
+            }
+          outfile << "\n";
+        }
     }
 
   outfile << nse << "\n";
@@ -143,15 +143,15 @@ void WriteNeutralFormat (const Mesh & mesh,
   for (Element2d el : mesh.SurfaceElements())
     {
       if (invertsurf)
-	el.Invert();
+        el.Invert();
       outfile.width(4);
       outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "    ";
       for (int j = 1; j <= el.GetNP(); j++)
-	{
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << el.PNum(j);
-	}
+        {
+          outfile << " ";
+          outfile.width(8);
+          outfile << el.PNum(j);
+        }
       outfile << "\n";
     }
 
@@ -160,10 +160,10 @@ void WriteNeutralFormat (const Mesh & mesh,
     {
       outfile << nseg << "\n";
       for (SegmentIndex i : T_Range<SegmentIndex>(nseg))
-	{
-	  const Segment & seg = mesh[i];
-	  outfile.width(4);
-	outfile << seg.GetIndex() << "    ";
+        {
+          const Segment & seg = mesh[i];
+          outfile.width(4);
+        outfile << seg.GetIndex() << "    ";
 
           for (int j = 0; j < seg.GetNP(); j++)
             {
@@ -172,20 +172,20 @@ void WriteNeutralFormat (const Mesh & mesh,
               outfile << seg[j];
             }
           /*
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << seg[0];
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << seg[1];
+          outfile << " ";
+          outfile.width(8);
+          outfile << seg[0];
+          outfile << " ";
+          outfile.width(8);
+          outfile << seg[1];
           if (seg[2] != -1)
             {
               outfile.width(8);
               outfile << seg[2];
             }
           */
-	  outfile << "\n";
-	}
+          outfile << "\n";
+        }
     }
 }
 
@@ -198,7 +198,7 @@ void WriteNeutralFormat (const Mesh & mesh,
 
 
 void WriteSurfaceFormat (const Mesh & mesh,
-			 const filesystem::path & filename)
+                         const filesystem::path & filename)
 {
   // surface mesh
   int j;
@@ -213,20 +213,20 @@ void WriteSurfaceFormat (const Mesh & mesh,
   for (PointIndex pi : mesh.Points().Range())
     {
       for (j = 0; j < 3; j++)
-	{
-	  outfile.width(10);
-	  outfile << mesh[pi](j) << " ";
-	}
+        {
+          outfile.width(10);
+          outfile << mesh[pi](j) << " ";
+        }
       outfile << endl;
     }
   outfile << mesh.GetNSE() << endl;
   for (auto & sel : mesh.SurfaceElements())
     {
       for (j = 1; j <= 3; j++)
-	{
-	  outfile.width(8);
-	  outfile << sel.PNum(j);
-	}
+        {
+          outfile.width(8);
+          outfile << sel.PNum(j);
+        }
       outfile << endl;
     }
 }
@@ -240,7 +240,7 @@ void WriteSurfaceFormat (const Mesh & mesh,
  */
 
 void WriteSTLFormat (const Mesh & mesh,
-		     const filesystem::path & filename)
+                     const filesystem::path & filename)
 {
   cout << "\nWrite STL Surface Mesh" << endl;
 
@@ -248,9 +248,9 @@ void WriteSTLFormat (const Mesh & mesh,
   unique_ptr<ostream> outfile;
 
   if(ext == ".gz")
-	  outfile = make_unique<ogzstream>(filename);
+          outfile = make_unique<ogzstream>(filename);
   else
-	  outfile = make_unique<ofstream>(filename);
+          outfile = make_unique<ofstream>(filename);
 
 
   outfile->precision(10);
@@ -266,9 +266,9 @@ void WriteSTLFormat (const Mesh & mesh,
 
       Vec<3> normal = Cross(p2-p1,p3-p1);
       if (normal.Length() != 0)
-	{
-	  normal /= (normal.Length());
-	}
+        {
+          normal /= (normal.Length());
+        }
 
       *outfile << normal(0) << " " << normal(1) << " " << normal(2) << "\n";
       *outfile << "outer loop\n";
@@ -297,7 +297,7 @@ void WriteSTLFormat (const Mesh & mesh,
  *    when using a third-party mesher
  */
 void WriteSTLExtFormat (const Mesh & mesh,
-		     const filesystem::path & filename)
+                     const filesystem::path & filename)
 {
   cout << "\nWrite STL Surface Mesh (with separated boundary faces)" << endl;
 
@@ -305,9 +305,9 @@ void WriteSTLExtFormat (const Mesh & mesh,
   unique_ptr<ostream> outfile;
 
   if(ext == ".gz")
-	  outfile = make_unique<ogzstream>(filename);
+          outfile = make_unique<ogzstream>(filename);
   else
-	  outfile = make_unique<ofstream>(filename);
+          outfile = make_unique<ofstream>(filename);
 
   outfile->precision(10);
 
@@ -324,14 +324,14 @@ void WriteSTLExtFormat (const Mesh & mesh,
   // Collect the BC numbers used in the mesh
   for(int faceNr = 1; faceNr <= mesh.GetNFD(); faceNr++)
   {
-	  int bcNum = mesh.GetFaceDescriptor(faceNr).BCProperty();
+          int bcNum = mesh.GetFaceDescriptor(faceNr).BCProperty();
 
-	  if(!faceBCs.Contains(bcNum))
-	  {
+          if(!faceBCs.Contains(bcNum))
+          {
         numBCs++;
-		  faceBCs[numBCs-1] = bcNum;
+                  faceBCs[numBCs-1] = bcNum;
         faceBCMapping.Add1(numBCs,faceNr);        
-	  }
+          }
      else
      {
         faceBCMapping.Add1(faceBCs.Pos(bcNum)+1,faceNr);
@@ -353,26 +353,26 @@ void WriteSTLExtFormat (const Mesh & mesh,
 
           for (int i = 0; i < faceSei.Size(); i++)
           {
-        	  *outfile << "facet normal ";
-        	  const Point<3>& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
-        	  const Point<3>& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
-        	  const Point<3>& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
+                  *outfile << "facet normal ";
+                  const Point<3>& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
+                  const Point<3>& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
+                  const Point<3>& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
 
-        	  Vec<3> normal = Cross(p2-p1,p3-p1);
-        	  if (normal.Length() != 0)
-        	  {
-        		  normal /= (normal.Length());
-        	  }
+                  Vec<3> normal = Cross(p2-p1,p3-p1);
+                  if (normal.Length() != 0)
+                  {
+                          normal /= (normal.Length());
+                  }
 
-        	  *outfile << normal(0) << " " << normal(1) << " " << normal(2) << "\n";
-        	  *outfile << "outer loop\n";
+                  *outfile << normal(0) << " " << normal(1) << " " << normal(2) << "\n";
+                  *outfile << "outer loop\n";
 
-        	  *outfile << "vertex " << p1(0) << " " << p1(1) << " " << p1(2) << "\n";
-        	  *outfile << "vertex " << p2(0) << " " << p2(1) << " " << p2(2) << "\n";
-        	  *outfile << "vertex " << p3(0) << " " << p3(1) << " " << p3(2) << "\n";
+                  *outfile << "vertex " << p1(0) << " " << p1(1) << " " << p1(2) << "\n";
+                  *outfile << "vertex " << p2(0) << " " << p2(1) << " " << p2(2) << "\n";
+                  *outfile << "vertex " << p3(0) << " " << p3(1) << " " << p3(2) << "\n";
 
-        	  *outfile << "endloop\n";
-        	  *outfile << "endfacet\n";
+                  *outfile << "endloop\n";
+                  *outfile << "endfacet\n";
           }
       }
       *outfile << "endsolid Boundary_" << faceBCs[bcInd-1] << "\n";
@@ -389,8 +389,8 @@ void WriteSTLExtFormat (const Mesh & mesh,
  */
 
 void WriteVRMLFormat (const Mesh & mesh,
-		      bool faces,
-		      const filesystem::path & filename)
+                      bool faces,
+                      const filesystem::path & filename)
 {
 
   if (faces)
@@ -410,13 +410,13 @@ void WriteVRMLFormat (const Mesh & mesh,
       outfile.setf (ios::showpoint);
 
       outfile << "#VRML V2.0 utf8 \n"
-	         "Background {\n"
-		 "    skyColor [1 1 1]\n"
-     		 "    groundColor [1 1 1]\n"
-		 "}\n"
-		 "Group{ children [\n"
-		 "Shape{ \n"
-		 "appearance Appearance { material Material { }} \n"
+                 "Background {\n"
+                 "    skyColor [1 1 1]\n"
+                 "    groundColor [1 1 1]\n"
+                 "}\n"
+                 "Group{ children [\n"
+                 "Shape{ \n"
+                 "appearance Appearance { material Material { }} \n"
                  "geometry IndexedFaceSet { \n"
                  "coord Coordinate { point [ \n";
 
@@ -428,22 +428,22 @@ void WriteVRMLFormat (const Mesh & mesh,
           outfile << p(0) << " ";
           outfile << p(1) << " ";
           outfile << p(2) << " \n";
-	}
+        }
 
       outfile << "  ] } \n"
                  "coordIndex [ \n";
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
-	{
-	  const Element2d & el = mesh[i];
+        {
+          const Element2d & el = mesh[i];
 
-	  for (j = 1; j <= 3; j++)
-	    {
-	      outfile.width(8);
-	      outfile << el.PNum(j)-1;
-	    }
-	  outfile << " -1 \n";
-	}
+          for (j = 1; j <= 3; j++)
+            {
+              outfile.width(8);
+              outfile << el.PNum(j)-1;
+            }
+          outfile << " -1 \n";
+        }
 
       outfile << "  ] \n";
 
@@ -452,19 +452,19 @@ void WriteVRMLFormat (const Mesh & mesh,
                  "colorIndex [\n";
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
-	{
-	  outfile << mesh.GetFaceDescriptor(mesh[i].GetIndex ()).BCProperty();
+        {
+          outfile << mesh.GetFaceDescriptor(mesh[i].GetIndex ()).BCProperty();
           outfile << endl;
-	}
+        }
 
       outfile << " ] \n"
                  "colorPerVertex FALSE \n"
                  "creaseAngle 0 \n"
-		 "solid FALSE \n"
+                 "solid FALSE \n"
                  "ccw FALSE \n"
-		 "convex TRUE \n"
+                 "convex TRUE \n"
                  "} } # end of Shape\n"
-		 "] }\n";
+                 "] }\n";
 
     } /* end of VRMLFACES */
 
@@ -473,7 +473,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
     {
         // Output in VRML, IndexedLineSet is used
-	// Bartosz Sawicki <sawickib@ee.pw.edu.pl>
+        // Bartosz Sawicki <sawickib@ee.pw.edu.pl>
 
       int np = mesh.GetNP();
       int nse = mesh.GetNSE();
@@ -486,13 +486,13 @@ void WriteVRMLFormat (const Mesh & mesh,
       outfile.setf (ios::showpoint);
 
       outfile << "#VRML V2.0 utf8 \n"
-	         "Background {\n"
-		 "    skyColor [1 1 1]\n"
-     		 "    groundColor [1 1 1]\n"
-		 "}\n"
-		 "Group{ children [\n"
-	         "Shape{ \n"
-		 "appearance Appearance { material Material { }} \n"
+                 "Background {\n"
+                 "    skyColor [1 1 1]\n"
+                 "    groundColor [1 1 1]\n"
+                 "}\n"
+                 "Group{ children [\n"
+                 "Shape{ \n"
+                 "appearance Appearance { material Material { }} \n"
                  "geometry IndexedLineSet { \n"
                  "coord Coordinate { point [ \n";
 
@@ -504,24 +504,24 @@ void WriteVRMLFormat (const Mesh & mesh,
           outfile << p(0) << " ";
           outfile << p(1) << " ";
           outfile << p(2) << " \n";
-	}
+        }
 
       outfile << "  ] } \n"
                  "coordIndex [ \n";
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
-	{
-	  const Element2d & el = mesh[i];
+        {
+          const Element2d & el = mesh[i];
 
-	  for (j = 1; j <= 3; j++)
-	    {
-	      outfile.width(8);
-	      outfile << el.PNum(j)-1;
-	    }
-	  outfile.width(8);
-	  outfile << el.PNum(1)-1;
-	  outfile << " -1 \n";
-	}
+          for (j = 1; j <= 3; j++)
+            {
+              outfile.width(8);
+              outfile << el.PNum(j)-1;
+            }
+          outfile.width(8);
+          outfile << el.PNum(1)-1;
+          outfile << " -1 \n";
+        }
 
       outfile << "  ] \n";
 
@@ -530,16 +530,16 @@ void WriteVRMLFormat (const Mesh & mesh,
                  "colorIndex [\n";
 
       for (i = 1; i <= nse; i++)
-	{
-	  outfile << mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex ()).BCProperty();
+        {
+          outfile << mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex ()).BCProperty();
           outfile << endl;
-	}
+        }
 
       outfile << " ] \n"
 */
       outfile << "colorPerVertex FALSE \n"
                  "} } #end of Shape\n"
-		 "] } \n";
+                 "] } \n";
 
     }
 
@@ -564,7 +564,7 @@ void WriteVRMLFormatFaceset (const Mesh & mesh, const filesystem::path & filenam
  * FEPP .. a finite element package developed at University Linz, Austria
  */
 void WriteFEPPFormat (const Mesh & mesh,
-		      const filesystem::path & filename)
+                      const filesystem::path & filename)
 {
 
   ofstream outfile (filename);
@@ -588,87 +588,87 @@ void WriteFEPPFormat (const Mesh & mesh,
       outfile << "volumemesh4" << endl;
       outfile << nse << endl;
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
-	{
-	  const Element2d & el = mesh[i];
+        {
+          const Element2d & el = mesh[i];
 
-	  //	  int facenr = mesh.facedecoding.Get(el.GetIndex()).surfnr;
-	  outfile.width(4);
-	  outfile << el.GetIndex() << " ";
-	  outfile.width(4);
-	  //	  outfile << mesh.GetFaceDescriptor(el.GetIndex()).BCProperty() << " ";
-	  outfile << mesh.GetFaceDescriptor(el.GetIndex()).BCProperty() << " ";
-	  outfile.width(4);
-	  outfile << el.GetNP() << "    ";
-	  for (j = 1; j <= el.GetNP(); j++)
-	    {
-	      outfile.width(8);
-	      outfile << el.PNum(j);
-	    }
-	  outfile << "\n";
-	}
+          //      int facenr = mesh.facedecoding.Get(el.GetIndex()).surfnr;
+          outfile.width(4);
+          outfile << el.GetIndex() << " ";
+          outfile.width(4);
+          //      outfile << mesh.GetFaceDescriptor(el.GetIndex()).BCProperty() << " ";
+          outfile << mesh.GetFaceDescriptor(el.GetIndex()).BCProperty() << " ";
+          outfile.width(4);
+          outfile << el.GetNP() << "    ";
+          for (j = 1; j <= el.GetNP(); j++)
+            {
+              outfile.width(8);
+              outfile << el.PNum(j);
+            }
+          outfile << "\n";
+        }
 
 
       outfile << ne << "\n";
       /*
       for (i = 1; i <= ne; i++)
-	{
-	  const Element & el = mesh.VolumeElement(i);
+        {
+          const Element & el = mesh.VolumeElement(i);
       */
       for (const Element & el : mesh.VolumeElements())
         {
-	  outfile.width(4);
-	  outfile << el.GetIndex() << " ";
-	  outfile.width(4);
-	  outfile << el.GetNP() << " ";
-	  for (j = 1; j <= el.GetNP(); j++)
-	    {
-	      outfile.width(8);
-	      outfile << el.PNum(j);
-	    }
-	  outfile << "\n";
-	}
+          outfile.width(4);
+          outfile << el.GetIndex() << " ";
+          outfile.width(4);
+          outfile << el.GetNP() << " ";
+          for (j = 1; j <= el.GetNP(); j++)
+            {
+              outfile.width(8);
+              outfile << el.PNum(j);
+            }
+          outfile << "\n";
+        }
 
       outfile << np << "\n";
       for (PointIndex pi : mesh.Points().Range())
-	{
-	  const Point<3> & p = mesh[pi];
+        {
+          const Point<3> & p = mesh[pi];
 
-	  outfile.width(10);
-	  outfile << p(0) << " ";
-	  outfile.width(9);
-	  outfile << p(1) << " ";
-	  outfile.width(9);
-	  outfile << p(2) << "\n";
-	}
+          outfile.width(10);
+          outfile << p(0) << " ";
+          outfile.width(9);
+          outfile << p(1) << " ";
+          outfile.width(9);
+          outfile << p(2) << "\n";
+        }
 
       /*
       if (typ == WRITE_FEPPML)
-	{
-	  int nbn =  mesh.mlbetweennodes.Size();
-	  outfile << nbn << "\n";
-	  for (i = 1; i <= nbn; i++)
-	    outfile << mesh.mlbetweennodes.Get(i).I1() << " "
-		    << mesh.mlbetweennodes.Get(i).I2() << "\n";
+        {
+          int nbn =  mesh.mlbetweennodes.Size();
+          outfile << nbn << "\n";
+          for (i = 1; i <= nbn; i++)
+            outfile << mesh.mlbetweennodes.Get(i).I1() << " "
+                    << mesh.mlbetweennodes.Get(i).I2() << "\n";
 
 
-	  //	  int ncon = mesh.connectedtonode.Size();
-	  //	  outfile << ncon << "\n";
-	  //	  for (i = 1; i <= ncon; i++)
-	  //	    outfile << i << " " << mesh.connectedtonode.Get(i) << endl;
-	}
+          //      int ncon = mesh.connectedtonode.Size();
+          //      outfile << ncon << "\n";
+          //      for (i = 1; i <= ncon; i++)
+          //        outfile << i << " " << mesh.connectedtonode.Get(i) << endl;
+        }
       */
 
       /*
       // write CSG surfaces
       if (&geom && geom.GetNSurf() >= ns)
-	{
-	  outfile << ns << endl;
-	  for (i = 1; i <= ns; i++)
-	    geom.GetSurface(mesh.GetFaceDescriptor(i).SurfNr())->Print(outfile);
-	}
+        {
+          outfile << ns << endl;
+          for (i = 1; i <= ns; i++)
+            geom.GetSurface(mesh.GetFaceDescriptor(i).SurfNr())->Print(outfile);
+        }
       else
       */
-	outfile << "0" << endl;
+        outfile << "0" << endl;
     }
 
 
@@ -680,9 +680,9 @@ void WriteFEPPFormat (const Mesh & mesh,
       /*
       extern SplineGeometry2d * geometry2d;
       if (geometry2d)
-	Save2DMesh (mesh, &geometry2d->GetSplines(), outfile);
+        Save2DMesh (mesh, &geometry2d->GetSplines(), outfile);
       else
-	Save2DMesh (mesh, 0, outfile);
+        Save2DMesh (mesh, 0, outfile);
       */
     }
 }
@@ -698,7 +698,7 @@ void WriteFEPPFormat (const Mesh & mesh,
  */
 
 void WriteEdgeElementFormat (const Mesh & mesh,
-			     const filesystem::path & filename)
+                             const filesystem::path & filename)
 {
   cout << "write edge element format" << endl;
 
@@ -747,17 +747,17 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       Element el = mesh.VolumeElement(ei);
 
       if (inverttets)
-      	el.Invert();
+        el.Invert();
       outfile.width(4);
       outfile << el.GetIndex() << "  ";
       outfile.width(8);
       outfile << el.GetNP();
       for (int j = 1; j <= el.GetNP(); j++)
-	{
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << el.PNum(j);
-	}
+        {
+          outfile << " ";
+          outfile.width(8);
+          outfile << el.PNum(j);
+        }
 
       // top->GetElementEdges(i,edges);
       auto eledges = top->GetEdges(ei);
@@ -765,22 +765,22 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile.width(8);
       outfile << eledges.Size();
       for (int j=1; j <= eledges.Size(); j++)
-	{
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << eledges[j-1]+1;
-	}
+        {
+          outfile << " ";
+          outfile.width(8);
+          outfile << eledges[j-1]+1;
+        }
       outfile << "\n";
 
       // orientation:
       top->GetElementEdgeOrientations(i,edges);
       outfile << "              ";
       for (int j=1; j <= edges.Size(); j++)
-	{
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << edges[j-1];
-	}
+        {
+          outfile << " ";
+          outfile.width(8);
+          outfile << edges[j-1];
+        }
       outfile << "\n";
     }
 
@@ -791,17 +791,17 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       SurfaceElementIndex sei = i;
       Element2d el = mesh[sei];
       if (invertsurf)
-	el.Invert();
+        el.Invert();
       outfile.width(4);
       outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "  ";
       outfile.width(8);
       outfile << el.GetNP();
       for (int j = 1; j <= el.GetNP(); j++)
-	{
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << el.PNum(j);
-	}
+        {
+          outfile << " ";
+          outfile.width(8);
+          outfile << el.PNum(j);
+        }
 
       // top->GetSurfaceElementEdges(i,edges);
       auto edges = top->GetEdges(sei);
@@ -809,11 +809,11 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile.width(8);
       outfile << edges.Size();
       for (int j=0; j < edges.Size(); j++)
-	{
-	  outfile << " ";
-	  outfile.width(8);
-	  outfile << edges[j]+1;
-	}
+        {
+          outfile << " ";
+          outfile.width(8);
+          outfile << edges[j]+1;
+        }
       outfile << "\n";
     }
 

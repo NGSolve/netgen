@@ -216,37 +216,37 @@ DLL_HEADER void ExportCSG(py::module &m)
   py::class_<SplineSurface, shared_ptr<SplineSurface>> (m, "SplineSurface",
                         "A surface for co dim 2 integrals on the splines")
     .def(py::init([](shared_ptr<SPSolid> base, py::list cuts)
-	     {
-	       auto primitive = dynamic_cast<OneSurfacePrimitive*> (base->GetSolid()->GetPrimitive());
-	       auto acuts = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
-	       for(int i = 0; i<py::len(cuts);i++)
-		 {
-		   py::extract<shared_ptr<SPSolid>> sps(cuts[i]);
-		   if(!sps.check())
-		     throw NgException("Cut must be SurfacePrimitive in constructor of SplineSurface!");
-		   auto sp = dynamic_cast<OneSurfacePrimitive*>(sps()->GetSolid()->GetPrimitive());
-		   if(sp)
-		     acuts->Append(shared_ptr<OneSurfacePrimitive>(sp));
-		   else
-		     throw Exception("Cut must be SurfacePrimitive in constructor of SplineSurface!");
-		 }
-	       if(!primitive)
-		 throw Exception("Base is not a SurfacePrimitive in constructor of SplineSurface!");
-	       return make_shared<SplineSurface>(shared_ptr<OneSurfacePrimitive>(primitive),acuts);
-	     }),py::arg("base"), py::arg("cuts")=py::list())
+             {
+               auto primitive = dynamic_cast<OneSurfacePrimitive*> (base->GetSolid()->GetPrimitive());
+               auto acuts = make_shared<Array<shared_ptr<OneSurfacePrimitive>>>();
+               for(int i = 0; i<py::len(cuts);i++)
+                 {
+                   py::extract<shared_ptr<SPSolid>> sps(cuts[i]);
+                   if(!sps.check())
+                     throw NgException("Cut must be SurfacePrimitive in constructor of SplineSurface!");
+                   auto sp = dynamic_cast<OneSurfacePrimitive*>(sps()->GetSolid()->GetPrimitive());
+                   if(sp)
+                     acuts->Append(shared_ptr<OneSurfacePrimitive>(sp));
+                   else
+                     throw Exception("Cut must be SurfacePrimitive in constructor of SplineSurface!");
+                 }
+               if(!primitive)
+                 throw Exception("Base is not a SurfacePrimitive in constructor of SplineSurface!");
+               return make_shared<SplineSurface>(shared_ptr<OneSurfacePrimitive>(primitive),acuts);
+             }),py::arg("base"), py::arg("cuts")=py::list())
     .def("AddPoint", FunctionPointer
-	 ([] (SplineSurface & self, double x, double y, double z, bool hpref)
-	  {
-	    self.AppendPoint(Point<3>(x,y,z),hpref);
-	    return self.GetNP()-1;
-	  }),
-	 py::arg("x"),py::arg("y"),py::arg("z"),py::arg("hpref")=false)
+         ([] (SplineSurface & self, double x, double y, double z, bool hpref)
+          {
+            self.AppendPoint(Point<3>(x,y,z),hpref);
+            return self.GetNP()-1;
+          }),
+         py::arg("x"),py::arg("y"),py::arg("z"),py::arg("hpref")=false)
     .def("AddSegment", [] (SplineSurface & self, int i1, int i2, string bcname, double maxh)
-	  {
+          {
             auto seg = make_shared<LineSeg<3>>(self.GetPoint(i1),self.GetPoint(i2));
-	    self.AppendSegment(seg,bcname,maxh);
-	  },
-	 py::arg("pnt1"),py::arg("pnt2"),py::arg("bcname")="default", py::arg("maxh")=-1.)
+            self.AppendSegment(seg,bcname,maxh);
+          },
+         py::arg("pnt1"),py::arg("pnt2"),py::arg("bcname")="default", py::arg("maxh")=-1.)
     .def("AddSegment", [] (SplineSurface& self, int i1, int i2, int i3, string bcname, double maxh)
          {
            auto seg = make_shared<SplineSeg3<3>>(self.GetPoint(i1), self.GetPoint(i2), self.GetPoint(i3));
@@ -471,8 +471,8 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
                     bcm.bcname = bcname ? new string (*bcname) : nullptr;
                     bcm.tlonr = tlonr;
                     bcm.si = si[j];
-		    bcm.bcnr = mod_nr;
-		    self.bcmodifications.Append (bcm);
+                    bcm.bcnr = mod_nr;
+                    self.bcmodifications.Append (bcm);
                   }
                 delete bcname;
               }
@@ -499,28 +499,28 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
          py::arg("surface"), py::arg("solid")
          )
     .def("AddSplineSurface", FunctionPointer
-	 ([] (CSGeometry & self, shared_ptr<SplineSurface> surf)
-	  {
-	    auto cuttings = surf->CreateCuttingSurfaces();
-	    auto spsol = make_shared<SPSolid>(new Solid(surf.get()));
-	    for(auto cut : (*cuttings)){
-	      spsol = make_shared<SPSolid>(SPSolid::SECTION,spsol,make_shared<SPSolid>(new Solid(cut.get())));
-	    }
-	    spsol->AddSurfaces(self);
-	    int tlonr = self.SetTopLevelObject(spsol->GetSolid(), surf.get());
-	    self.GetTopLevelObject(tlonr) -> SetBCProp(surf->GetBase()->GetBCProperty());
-	    self.GetTopLevelObject(tlonr) -> SetBCName(surf->GetBase()->GetBCName());
-	    self.GetTopLevelObject(tlonr) -> SetMaxH(surf->GetBase()->GetMaxH());
+         ([] (CSGeometry & self, shared_ptr<SplineSurface> surf)
+          {
+            auto cuttings = surf->CreateCuttingSurfaces();
+            auto spsol = make_shared<SPSolid>(new Solid(surf.get()));
+            for(auto cut : (*cuttings)){
+              spsol = make_shared<SPSolid>(SPSolid::SECTION,spsol,make_shared<SPSolid>(new Solid(cut.get())));
+            }
+            spsol->AddSurfaces(self);
+            int tlonr = self.SetTopLevelObject(spsol->GetSolid(), surf.get());
+            self.GetTopLevelObject(tlonr) -> SetBCProp(surf->GetBase()->GetBCProperty());
+            self.GetTopLevelObject(tlonr) -> SetBCName(surf->GetBase()->GetBCName());
+            self.GetTopLevelObject(tlonr) -> SetMaxH(surf->GetBase()->GetMaxH());
             Array<Point<3>> non_midpoints;
             for(auto spline : surf->GetSplines())
               {
                 non_midpoints.Append(spline->GetPoint(0));
               }
-	    for(auto p : non_midpoints)
-		self.AddUserPoint(p);
+            for(auto p : non_midpoints)
+                self.AddUserPoint(p);
             self.AddSplineSurface(surf);
-	  }),
-	  py::arg("SplineSurface"))
+          }),
+          py::arg("SplineSurface"))
     .def("SingularFace", [] (CSGeometry & self, shared_ptr<SPSolid> sol, shared_ptr<SPSolid> surfaces, double factor)
          {
            int tlonum = -1;
@@ -761,7 +761,7 @@ However, when r = 0, the top part becomes a point(tip) and meshing fails!
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
-	     ng_geometry = geo;
+             ng_geometry = geo;
              geo->FindIdenticSurfaces(1e-8 * geo->MaxSize());
              auto result = geo->GenerateMesh (mesh, mp);
              if(result != 0)

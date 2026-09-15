@@ -48,7 +48,7 @@ int main (int argc, char ** argv)
    if(!occ_geom)
    {
       cout << "Error reading in STEP File: " << argv[1] << endl;
-	  return 1;
+          return 1;
    }
    cout << "Successfully loaded STEP File: " << argv[1] << endl;
 
@@ -57,11 +57,11 @@ int main (int argc, char ** argv)
    ng_res = Ng_OCC_GetFMap(occ_geom,occ_fmap);
 
    cout << "ng_res = " << ng_res << endl;
-	  
+          
    if(!FMap.Extent())
    {
       cout << "Error retrieving Face map...." << endl;
-	  return 1;
+          return 1;
    }
 
    cout << "Successfully extracted the Face Map....:" << FMap.Extent() << endl;
@@ -69,16 +69,16 @@ int main (int argc, char ** argv)
    for(int i = 1; i <= FMap.Extent(); i++)
    {
       TopoDS_Face OCCface;
-	  OCCface = TopoDS::Face(FMap.FindKey(i));
-	  
-	  GProp_GProps faceProps;
-	  BRepGProp::SurfaceProperties(OCCface,faceProps);
-	  
+          OCCface = TopoDS::Face(FMap.FindKey(i));
+          
+          GProp_GProps faceProps;
+          BRepGProp::SurfaceProperties(OCCface,faceProps);
+          
       cout << "Index: " << i 
-	       << " :: Area: " << faceProps.Mass() 
-		   << " :: Hash: " << OCCface.HashCode(1e+6) 
-		   << endl;
-   }	 
+               << " :: Area: " << faceProps.Mass() 
+                   << " :: Hash: " << OCCface.HashCode(1e+6) 
+                   << endl;
+   }     
    
    mp.uselocalh = 1;
    mp.elementsperedge = 2.0;
@@ -101,13 +101,13 @@ int main (int argc, char ** argv)
    if(ng_res != NG_OK)
    {
       Ng_DeleteMesh(occ_mesh);
-	  cout << "Error creating Edge Mesh.... Aborting!!" << endl;
-	  return 1;
+          cout << "Error creating Edge Mesh.... Aborting!!" << endl;
+          return 1;
    }
    else
    {
       cout << "Edge Mesh successfully created....." << endl;
-	  cout << "Number of points = " << Ng_GetNP(occ_mesh) << endl;
+          cout << "Number of points = " << Ng_GetNP(occ_mesh) << endl;
    }
 
    cout << "Creating Surface Mesh....." << endl;
@@ -116,14 +116,14 @@ int main (int argc, char ** argv)
    if(ng_res != NG_OK)
    {
       Ng_DeleteMesh(occ_mesh);
-	  cout << "Error creating Surface Mesh..... Aborting!!" << endl;
-	  return 1;
+          cout << "Error creating Surface Mesh..... Aborting!!" << endl;
+          return 1;
    }
    else
    {
       cout << "Surface Mesh successfully created....." << endl;
-	  cout << "Number of points = " << Ng_GetNP(occ_mesh) << endl;
-	  cout << "Number of surface elements = " << Ng_GetNSE(occ_mesh) << endl;
+          cout << "Number of points = " << Ng_GetNP(occ_mesh) << endl;
+          cout << "Number of surface elements = " << Ng_GetNSE(occ_mesh) << endl;
    }
 
    cout << "Creating Volume Mesh....." << endl;

@@ -21,8 +21,8 @@ namespace netgen
   {
     if (maxind > flags.Size())
       {
-	flags.SetSize (2 * maxind);
-	flags.Clear();
+        flags.SetSize (2 * maxind);
+        flags.Clear();
       }
   }
 
@@ -54,10 +54,10 @@ namespace netgen
   {
     for (int i = 1; i <= set.Size(); i++)
       if (set[i-1] == ind)
-	{
-	  set.DeleteElement(ind-1);
-	  break;
-	}
+        {
+          set.DeleteElement(ind-1);
+          break;
+        }
     flags.Clear (ind);
   }
 

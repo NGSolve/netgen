@@ -16,8 +16,8 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 
 
   PrintMessage (1, "other mesh has ",
-		othermesh.GetNP(), " points, ",
-		othermesh.GetNSE(), " surface elements.");
+                othermesh.GetNP(), " points, ",
+                othermesh.GetNSE(), " surface elements.");
 
   Array<Box3d> otherbounds(nse);  
   Box3d otherbox;
@@ -47,17 +47,17 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
       el.GetBox(mesh.Points(), box);
 
       if (i.Nr1() % 10000 == 0)
-	cout << "+" << flush;
+        cout << "+" << flush;
 
       if (box.Intersect(otherbox))
-	{
-	  for (j = 1; j <= nse && !remove; j++)
-	    if (box.Intersect(otherbounds[j-1]))
-	      remove = 1;
-	}
+        {
+          for (j = 1; j <= nse && !remove; j++)
+            if (box.Intersect(otherbounds[j-1]))
+              remove = 1;
+        }
 
       if (remove)
-	mesh[i].Delete();
+        mesh[i].Delete();
     }
   cout << endl;
 
@@ -66,7 +66,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   for (auto & el : mesh.SurfaceElements())
     {
       for (j = 1; j <= 3; j++)
-	connected.SetBit(el.PNum(j));
+        connected.SetBit(el.PNum(j));
     }
   
   bool changed;
@@ -74,25 +74,25 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     {
       changed = 0;
       for (auto & el : mesh.VolumeElements())
-	{
-	  int has = 0, hasnot = 0;
-	  if (el[0].IsValid())
-	    {
-	      for (j = 0; j < 4; j++)
-		{
-		  if (connected.Test(el[j]))
-		    has = 1;
-		  else
-		    hasnot = 1;
-		}
-	      if (has && hasnot)
-		{
-		  changed = 1;
-		  for (j = 0; j < 4; j++)
-		    connected.SetBit (el[j]);
-		}
-	    }
-	}
+        {
+          int has = 0, hasnot = 0;
+          if (el[0].IsValid())
+            {
+              for (j = 0; j < 4; j++)
+                {
+                  if (connected.Test(el[j]))
+                    has = 1;
+                  else
+                    hasnot = 1;
+                }
+              if (has && hasnot)
+                {
+                  changed = 1;
+                  for (j = 0; j < 4; j++)
+                    connected.SetBit (el[j]);
+                }
+            }
+        }
       cout << "." << flush;
     }
   while (changed);
@@ -102,15 +102,15 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     {
       int hasnot = 0;
       if (el[0].IsValid())
-	{
-	  for (j = 0; j < 4; j++)
-	    {
-	      if (!connected.Test(el[j]))
-		hasnot = 1;
-	    }
-	  if (hasnot)
-	    el.Delete();
-	}
+        {
+          for (j = 0; j < 4; j++)
+            {
+              if (!connected.Test(el[j]))
+                hasnot = 1;
+            }
+          if (hasnot)
+            el.Delete();
+        }
     }
 
   mesh.Compress();
@@ -126,7 +126,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   for (PointIndex i : locked.Range())
     if (locked.Test(i))
       {
-	mesh.AddLockedPoint (i);
+        mesh.AddLockedPoint (i);
       }
 
 
@@ -143,7 +143,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     {
       Element2d tri = sel;
       for (j = 1; j <= 3; j++)
-	tri.PNum(j) = pmat[tri.PNum(j)];
+        tri.PNum(j) = pmat[tri.PNum(j)];
       tri.SetIndex(fnum);
       mesh.AddSurfaceElement (tri);
     }

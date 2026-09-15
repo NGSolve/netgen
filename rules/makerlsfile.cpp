@@ -39,26 +39,26 @@ int main (int argc, char ** argv)
 
       inf.get(ch);
       while (ch != '\n' && inf.good() && i < maxlen)
-	{
-	  if (ch == '\"')
-	    {
-	      line[i] = '\\';
-	      line[i+1] = '\"';
-	      i+= 2;
-	    }
-	  else if (ch == '\\')
-	    {
-	      line[i] = '\\';
-	      line[i+1] = '\\';
-	      i+= 2;
-	    }
-	  else
-	    {
-	      line[i] = ch;
-	      i++;
-	    }
-	  inf.get(ch);
-	}
+        {
+          if (ch == '\"')
+            {
+              line[i] = '\\';
+              line[i+1] = '\"';
+              i+= 2;
+            }
+          else if (ch == '\\')
+            {
+              line[i] = '\\';
+              line[i+1] = '\\';
+              i+= 2;
+            }
+          else
+            {
+              line[i] = ch;
+              i++;
+            }
+          inf.get(ch);
+        }
       line[i] = 0;
       // cout << line << endl;
       outf << "\"" << line << "\\n\",\\" << endl;

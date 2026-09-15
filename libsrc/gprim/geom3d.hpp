@@ -27,23 +27,23 @@ namespace netgen
   ostream & operator<<(ostream  & s, const Vec<3> & v);
   void Transpose (Vec<3> & v1, Vec<3> & v2, Vec<3> & v3);
   int SolveLinearSystem (const Vec<3> & col1,
-			 const Vec<3> & col2,
-			 const Vec<3> & col3,
-			 const Vec<3> & rhs,
-			 Vec<3> & sol);
+                         const Vec<3> & col2,
+                         const Vec<3> & col3,
+                         const Vec<3> & rhs,
+                         Vec<3> & sol);
   int SolveLinearSystemLS (const Vec<3> & col1,
-			   const Vec<3> & col2,
-			   const Vec<2> & rhs,
-			   Vec<3> & sol);
+                           const Vec<3> & col2,
+                           const Vec<2> & rhs,
+                           Vec<3> & sol);
   int SolveLinearSystemLS2 (const Vec<3> & col1,
-			    const Vec<3> & col2,
-			    const Vec<2> & rhs, 
-			    Vec<3> & sol,
-			    double & x, double & y);
+                            const Vec<3> & col2,
+                            const Vec<2> & rhs, 
+                            Vec<3> & sol,
+                            double & x, double & y);
   int PseudoInverse (const Vec<3> & col1,
-		     const Vec<3> & col2,
-		     Vec<3> & inv1,
-		     Vec<3> & inv2);
+                     const Vec<3> & col2,
+                     Vec<3> & inv1,
+                     Vec<3> & inv2);
 
 
 
@@ -61,10 +61,10 @@ namespace netgen
     double Eval (const Point<3> & p)
     {
       return 
-	c0 
-	+ p(0) * (cx + cxx * p(0) + cxy * p(1) + cxz * p(2))
-	+ p(1) * (cy + cyy * p(1) + cyz * p(2))
-	+ p(2) * (cz + czz * p(2));
+        c0 
+        + p(0) * (cx + cxx * p(0) + cxy * p(1) + cxz * p(2))
+        + p(1) * (cy + cyy * p(1) + cyz * p(2))
+        + p(2) * (cz + czz * p(2));
     }
   };
 
@@ -83,8 +83,8 @@ namespace netgen
     Box3d () { };
     ///
     DLL_HEADER Box3d ( double aminx, double amaxx,
-	    double aminy, double amaxy,
-	    double aminz, double amaxz );
+            double aminy, double amaxy,
+            double aminz, double amaxz );
     ///
     DLL_HEADER Box3d ( const Box3d & b2 );
     ///
@@ -124,18 +124,18 @@ namespace netgen
     int Intersect (const Box3d & box2) const
     {
       if (minx[0] > box2.maxx[0] || maxx[0] < box2.minx[0] ||
-	  minx[1] > box2.maxx[1] || maxx[1] < box2.minx[1] ||
-	  minx[2] > box2.maxx[2] || maxx[2] < box2.minx[2])
-	return 0;
+          minx[1] > box2.maxx[1] || maxx[1] < box2.minx[1] ||
+          minx[2] > box2.maxx[2] || maxx[2] < box2.minx[2])
+        return 0;
       return 1;
     }
     /// return 1 if point p in closure
     int IsIn (const Point<3> & p) const
     {
       if (minx[0] <= p(0) && maxx[0] >= p(0) &&
-	  minx[1] <= p(1) && maxx[1] >= p(1) &&
-	  minx[2] <= p(2) && maxx[2] >= p(2))
-	return 1;
+          minx[1] <= p(1) && maxx[1] >= p(1) &&
+          minx[2] <= p(2) && maxx[2] >= p(2))
+        return 1;
       return 0;
     }
     ///
@@ -170,12 +170,12 @@ namespace netgen
   
     ///
     Point<3> CalcCenter () const { return Point<3>(0.5*(minx[0] + maxx[0]),
-						 0.5*(minx[1] + maxx[1]),
-						 0.5*(minx[2] + maxx[2])); }
+                                                 0.5*(minx[1] + maxx[1]),
+                                                 0.5*(minx[2] + maxx[2])); }
     ///
     double CalcDiam () const { return sqrt(sqr(maxx[0]-minx[0])+
-					   sqr(maxx[1]-minx[1])+
-					   sqr(maxx[2]-minx[2])); }
+                                           sqr(maxx[1]-minx[1])+
+                                           sqr(maxx[2]-minx[2])); }
 
     ///
     void WriteData(ofstream& fout) const;
@@ -196,8 +196,8 @@ namespace netgen
     Box3dSphere () { };
     ///
     Box3dSphere ( double aminx, double amaxx,
-		  double aminy, double amaxy,
-		  double aminz, double amaxz);
+                  double aminy, double amaxy,
+                  double aminz, double amaxz);
     ///
     const Point<3> & Center () const { return c; }
 
@@ -234,7 +234,7 @@ namespace netgen
 
     ///
     void Set (const Point<3> & p1, const Point<3> & p2,
-	      const Point<3> & p3, double ah);
+              const Point<3> & p3, double ah);
 
     ///
     void ToPlain (const Point<3> & p, Point<3> & pp) const;

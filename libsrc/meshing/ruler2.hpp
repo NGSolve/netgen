@@ -123,13 +123,13 @@ public:
   bool IsInFreeZone (const Point<2> & p) const
   {
     if (p[0] < fzminx || p[0] > fzmaxx ||
-	p[1] < fzminy || p[1] > fzmaxy) return 0;
+        p[1] < fzminy || p[1] > fzmaxy) return 0;
 
     for (int i = 0; i < transfreezone.Size(); i++)
       {
-	if (freesetinequ(i, 0) * p[0] + 
-	    freesetinequ(i, 1) * p[1] +
-	    freesetinequ(i, 2) > 0) return 0;
+        if (freesetinequ(i, 0) * p[0] + 
+            freesetinequ(i, 1) * p[1] +
+            freesetinequ(i, 2) > 0) return 0;
       }
     return 1;
   }

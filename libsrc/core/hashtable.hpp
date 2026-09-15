@@ -134,7 +134,7 @@ namespace ngcore
     NETGEN_INLINE bool operator== (const IVec & in2) const
     { 
       for (int j = 0; j < N; j++) 
-	if (i[j] != in2.i[j]) return 0;
+        if (i[j] != in2.i[j]) return 0;
       return 1; 
     }
 
@@ -150,18 +150,18 @@ namespace ngcore
     NETGEN_INLINE IVec & Sort () & 
     {
       for (int k = 0; k < N; k++)
-	for (int l = k+1; l < N; l++)
-	  if (i[k] > i[l]) 
-	    Swap (i[k], i[l]);
+        for (int l = k+1; l < N; l++)
+          if (i[k] > i[l]) 
+            Swap (i[k], i[l]);
       return *this;
     }
 
     NETGEN_INLINE IVec Sort () &&
     {
       for (int k = 0; k < N; k++)
-	for (int l = k+1; l < N; l++)
-	  if (i[k] > i[l]) 
-	    Swap (i[k], i[l]);
+        for (int l = k+1; l < N; l++)
+          if (i[k] > i[l]) 
+            Swap (i[k], i[l]);
       return *this;
     }
 
@@ -181,7 +181,7 @@ namespace ngcore
     NETGEN_INLINE IVec<N,T> & operator= (T value)
     {
       for (int j = 0; j < N; j++)
-	i[j] = value;
+        i[j] = value;
       return *this;
     }
 
@@ -189,7 +189,7 @@ namespace ngcore
     NETGEN_INLINE IVec<N,T> & operator= (IVec<N,T2> v2)
     {
       for (int j = 0; j < N; j++)
-	i[j] = v2[j];
+        i[j] = v2[j];
       return *this;
     }
 
@@ -441,14 +441,14 @@ namespace ngcore
       int bnr = HashValue (ahash, Size());
       int pos = CheckPosition (bnr, ahash);
       if (pos != -1)
-	// cont.Set (bnr, pos, acont);
+        // cont.Set (bnr, pos, acont);
         table[bnr][pos].second = acont;
       else
-	{
-	  // hash.Add (bnr, ahash);
-	  // cont.Add (bnr, acont);
+        {
+          // hash.Add (bnr, ahash);
+          // cont.Add (bnr, acont);
           table.Add (bnr, std::make_pair(ahash, acont));
-	}        
+        }        
     }
 
     /// get value of identifier ahash, exception if unused
@@ -520,12 +520,12 @@ namespace ngcore
     {
       /*
       for (int i = 0; i < hash[bnr].Size(); i++)
-	if (hash[bnr][i] == ind)
-	  return i;
+        if (hash[bnr][i] == ind)
+          return i;
       */
       for (int i = 0; i < table[bnr].Size(); i++)
-	if (table[bnr][i].first == ind)
-	  return i;
+        if (table[bnr][i].first == ind)
+          return i;
       return -1;
     }
 
@@ -533,8 +533,8 @@ namespace ngcore
     int Position (int bnr, const T_HASH & ind) const
     {
       for (int i = 0; i < table[bnr].Size(); i++)
-	if (table[bnr][i].first == ind)
-	  return i;
+        if (table[bnr][i].first == ind)
+          return i;
       throw Exception ("Ask for unused hash-value");
     }
 
@@ -545,8 +545,8 @@ namespace ngcore
         return table[bnr][pos].second;
       else
         {
-	  // hash.Add (bnr, ahash);
-	  // cont.Add (bnr, T(0));
+          // hash.Add (bnr, ahash);
+          // cont.Add (bnr, T(0));
           table.Add (bnr, std::make_pair(ahash, T(0)));
           // return cont[bnr][cont[bnr].Size()-1];
           return table[bnr][table[bnr].Size()-1].second;
@@ -699,11 +699,11 @@ namespace ngcore
       // size_t i = HashValue2(ind, mask);
       size_t i = CHT_trait<T_HASH>::HashValue(ind, mask);
       while (true)
-	{
-	  if (hash[i] == ind) return i;
-	  if (hash[i] == invalid) return size_t(-1);
+        {
+          if (hash[i] == ind) return i;
+          if (hash[i] == invalid) return size_t(-1);
           i = (i+1) & mask;          
-	}
+        }
     }
 
     void DoubleSize()
@@ -723,21 +723,21 @@ namespace ngcore
       size_t i = CHT_trait<T_HASH>::HashValue (ind, mask);
 
       while (true)
-	{
-	  if (hash[i] == invalid)
-	    { 
-	      hash[i] = ind; 
-	      apos = i;
+        {
+          if (hash[i] == invalid)
+            { 
+              hash[i] = ind; 
+              apos = i;
               used++;
-	      return true;
-	    }
-	  if (hash[i] == ind) 
-	    { 
-	      apos = i; 
-	      return false; 
-	    }
+              return true;
+            }
+          if (hash[i] == ind) 
+            { 
+              apos = i; 
+              return false; 
+            }
           i = (i+1) & mask;
-	}
+        }
     }
 
 
@@ -1202,36 +1202,36 @@ namespace ngcore
     {
       mode = amode;
       if (mode == 2)
-	{
+        {
           cnt.SetSize(nd);  
           cnt = 0;
-	}
+        }
       if (mode == 3)
-	{
+        {
           table = Table<T,size_t> (cnt);
           cnt = 0;
-	}
+        }
     }
 
     void Add (IndexType blocknr, const T & data)
     {
       switch (mode)
-	{
-	case 1:
+        {
+        case 1:
           {
             if (!idmap.Used (blocknr))
               idmap[blocknr] = nd++;
             break;
           }
-	case 2:
-	  cnt[idmap.Get(blocknr)]++;
-	  break;
-	case 3:
+        case 2:
+          cnt[idmap.Get(blocknr)]++;
+          break;
+        case 3:
           size_t cblock = idmap.Get(blocknr);
           int ci = cnt[cblock]++;
           table[cblock][ci] = data;
-	  break;
-	}
+          break;
+        }
     }
   };
 
@@ -1262,10 +1262,10 @@ namespace ngcore {
     { 
       static MPI_Datatype MPI_T = 0;
       if (!MPI_T)
-	{
-	  MPI_Type_contiguous ( S, MPI_typetrait<T>::MPIType(), &MPI_T);
-	  MPI_Type_commit ( &MPI_T );
-	}
+        {
+          MPI_Type_contiguous ( S, MPI_typetrait<T>::MPIType(), &MPI_T);
+          MPI_Type_commit ( &MPI_T );
+        }
       return MPI_T;
     }
   };

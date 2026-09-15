@@ -24,23 +24,23 @@ double Fastatan2 (double x, double y)
   if (y > 0)
     {
       if (x > 0)
-	return y / (x+y);
+        return y / (x+y);
       else
-	return 1 - x / (y-x);
+        return 1 - x / (y-x);
     }
   else if (y < 0)
     {
       if (x < 0)
-	return 2 + y / (x+y);
+        return 2 + y / (x+y);
       else
-	return 3 - x / (y-x);
+        return 3 - x / (y-x);
     }
   else 
     {
       if (x >= 0)
-	return 0;
+        return 0;
       else
-	return 2;
+        return 2;
     }
 }
 
@@ -118,7 +118,7 @@ Point<2> CrossPoint (const Line2d & l1, const Line2d & l2)
 
 
 int CrossPointBarycentric (const Line2d & l1, const Line2d & l2,
-			   double & lam1, double & lam2, double eps)
+                           double & lam1, double & lam2, double eps)
 {
   // p = l1.1 + lam1 (l1.2-l1.1) = l2.1 + lam2 (l2.2-l2.1)
   double a11 = l1.p2(0) - l1.p1(0);
@@ -188,16 +188,16 @@ int Hit (const Line2d & l1, const Line2d & l2, double heps)
   den = fabs (den);
 
   int ch = (-den * heps <= num1 && num1 <= den * (1 + heps) &&
-	    -den * heps <= num2 && num2 <= den * (1 + heps));
+            -den * heps <= num2 && num2 <= den * (1 + heps));
   return ch;
 }
 
 
 void Line2d :: GetNormal (Line2d & n) const
 {
-  double 	ax  = P2().X()-P1().X(),
+  double        ax  = P2().X()-P1().X(),
     ay  = P2().Y()-P1().Y();
-  Point<2> 	mid(P1().X()+.5*ax, P1().Y()+.5*ay);
+  Point<2>      mid(P1().X()+.5*ax, P1().Y()+.5*ay);
  
  n=Line2d(mid,Point<2>(mid.X()+ay,mid.Y()-ax)) ;
 }

@@ -65,12 +65,12 @@ class ADTree
 
 public:
   ADTree (int adim, const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree ();
 
   void Insert (const float * p, int pi);
   // void GetIntersecting (const float * bmin, const float * bmax,
-  //			Array<int> & pis) const;
+  //                    Array<int> & pis) const;
   void SetCriterion (ADTreeCriterion & acriterion);
   void Reset ();
   int Next ();
@@ -110,15 +110,15 @@ public:
   {
     if (left)
       {
-	left->DeleteChilds();
-	delete left;
-	left = nullptr;
+        left->DeleteChilds();
+        delete left;
+        left = nullptr;
       }
     if (right)
       {
-	right->DeleteChilds();
-	delete right;
-	right = nullptr;
+        right->DeleteChilds();
+        delete right;
+        right = nullptr;
       }
   }
 
@@ -143,8 +143,8 @@ public:
   {
     for (int i = 0; i < 3; i++)
       {
-	cmin[i] = pmin(i);
-	cmax[i] = pmax(i);
+        cmin[i] = pmin(i);
+        cmax[i] = pmax(i);
       }
 
     root = new ADTreeNode3<T>;
@@ -176,36 +176,36 @@ public:
     dir = 0;
     while (next)
       {
-	node = next;
+        node = next;
 
-	if (IsInvalid(node->pi))
-	  {
-	    memcpy (node->data, p, 3 * sizeof(float));
-	    node->pi = pi;
+        if (IsInvalid(node->pi))
+          {
+            memcpy (node->data, p, 3 * sizeof(float));
+            node->pi = pi;
 
-	    if (ela.Size() < nr0+1)
-	      ela.SetSize (nr0+1);
-	    ela[pi] = node;
+            if (ela.Size() < nr0+1)
+              ela.SetSize (nr0+1);
+            ela[pi] = node;
 
-	    return;
-	  }
+            return;
+          }
 
-	if (node->sep > p[dir])
-	  {
-	    next = node->left;
-	    bmax[dir] = node->sep;
-	    lr = 0;
-	  }
-	else
-	  {
-	    next = node->right;
-	    bmin[dir] = node->sep;
-	    lr = 1;
-	  }
+        if (node->sep > p[dir])
+          {
+            next = node->left;
+            bmax[dir] = node->sep;
+            lr = 0;
+          }
+        else
+          {
+            next = node->right;
+            bmin[dir] = node->sep;
+            lr = 1;
+          }
 
-	dir++;
-	if (dir == 3)
-	  dir = 0;
+        dir++;
+        if (dir == 3)
+          dir = 0;
       }
 
 
@@ -226,13 +226,13 @@ public:
 
     while (node)
       {
-	node->nchilds++;
-	node = node->father;
+        node->nchilds++;
+        node = node->father;
       }
   }
 
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<T> & pis) const
+                        Array<T> & pis) const
   {
     ArrayMem<ADTreeNode3<T>*, 1000> stack(1000);
     ArrayMem<int, 1000> stackdir(1000);
@@ -247,36 +247,36 @@ public:
 
     while (stacks >= 0)
       {
-	node = stack[stacks];
-	dir = stackdir[stacks];
-	stacks--;
+        node = stack[stacks];
+        dir = stackdir[stacks];
+        stacks--;
 
-	if (!IsInvalid(node->pi))
-	  {
-	    if (node->data[0] >= bmin[0] && node->data[0] <= bmax[0] &&
-		node->data[1] >= bmin[1] && node->data[1] <= bmax[1] &&
-		node->data[2] >= bmin[2] && node->data[2] <= bmax[2])
+        if (!IsInvalid(node->pi))
+          {
+            if (node->data[0] >= bmin[0] && node->data[0] <= bmax[0] &&
+                node->data[1] >= bmin[1] && node->data[1] <= bmax[1] &&
+                node->data[2] >= bmin[2] && node->data[2] <= bmax[2])
 
-	      pis.Append (node->pi);
-	  }
+              pis.Append (node->pi);
+          }
 
 
-	int ndir = dir+1;
-	if (ndir == 3)
-	  ndir = 0;
+        int ndir = dir+1;
+        if (ndir == 3)
+          ndir = 0;
 
-	if (node->left && bmin[dir] <= node->sep)
-	  {
-	    stacks++;
-	    stack[stacks] = node->left;
-	    stackdir[stacks] = ndir;
-	  }
-	if (node->right && bmax[dir] >= node->sep)
-	  {
-	    stacks++;
-	    stack[stacks] = node->right;
-	    stackdir[stacks] = ndir;
-	  }
+        if (node->left && bmin[dir] <= node->sep)
+          {
+            stacks++;
+            stack[stacks] = node->left;
+            stackdir[stacks] = ndir;
+          }
+        if (node->right && bmax[dir] >= node->sep)
+          {
+            stacks++;
+            stack[stacks] = node->right;
+            stackdir[stacks] = ndir;
+          }
       }
   }
 
@@ -289,8 +289,8 @@ public:
     node = node->father;
     while (node)
       {
-	node->nchilds--;
-	node = node->father;
+        node->nchilds--;
+        node = node->father;
       }
   }
 
@@ -346,12 +346,12 @@ class ADTree3Div
 
 public:
   ADTree3Div (const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree3Div ();
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+                        Array<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -395,12 +395,12 @@ class ADTree3M
 
 public:
   ADTree3M (const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree3M ();
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+                        Array<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -444,12 +444,12 @@ class ADTree3F
 
 public:
   ADTree3F (const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree3F ();
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+                        Array<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -491,12 +491,12 @@ class ADTree3FM
 
 public:
   ADTree3FM (const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree3FM ();
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+                        Array<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -542,12 +542,12 @@ class ADTree6
 
 public:
   ADTree6 (const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree6 ();
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+                        Array<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -595,15 +595,15 @@ public:
   {
     if (left)
       {
-	left->DeleteChilds(ball);
+        left->DeleteChilds(ball);
         ball.Free(left);
-	left = NULL;
+        left = NULL;
       }
     if (right)
       {
-	right->DeleteChilds(ball);
+        right->DeleteChilds(ball);
         ball.Free(right);
-	right = NULL;
+        right = NULL;
       }
   }
 };
@@ -662,7 +662,7 @@ public:
               // ela.SetSize (pi+1);
               ela[pi] = node;
               
-	    return;
+            return;
             }
           
           if (node->sep > p[dir])
@@ -724,12 +724,12 @@ public:
 
     while (stacks >= 0)
       {
-	T_ADTreeNode<dim,T> * node = stack[stacks].node;
-	int dir = stack[stacks].dir; 
+        T_ADTreeNode<dim,T> * node = stack[stacks].node;
+        int dir = stack[stacks].dir; 
 
-	stacks--;
-	if (!IsInvalid(node->pi)) //  != -1)
-	  {
+        stacks--;
+        if (!IsInvalid(node->pi)) //  != -1)
+          {
             bool found = true;
             for (int i = 0; i < dim/2; i++)
               if (node->data[i] > bmax[i])
@@ -740,34 +740,34 @@ public:
             if (found)
               pis.Append (node->pi);            
             /*
-	    if (node->data[0] > bmax[0] || 
-		node->data[1] > bmax[1] || 
-		node->data[2] > bmax[2] || 
-		node->data[3] < bmin[3] || 
-		node->data[4] < bmin[4] || 
-		node->data[5] < bmin[5])
-	      ;
-	    else
+            if (node->data[0] > bmax[0] || 
+                node->data[1] > bmax[1] || 
+                node->data[2] > bmax[2] || 
+                node->data[3] < bmin[3] || 
+                node->data[4] < bmin[4] || 
+                node->data[5] < bmin[5])
+              ;
+            else
               {
                 pis.Append (node->pi);
               }
             */
-	  }
+          }
 
-	int ndir = (dir+1) % dim;
+        int ndir = (dir+1) % dim;
 
-	if (node->left && bmin[dir] <= node->sep)
-	  {
-	    stacks++;
-	    stack[stacks].node = node->left;
-	    stack[stacks].dir = ndir;
-	  }
-	if (node->right && bmax[dir] >= node->sep)
-	  {
-	    stacks++;
-	    stack[stacks].node = node->right;
-	    stack[stacks].dir = ndir;
-	  }
+        if (node->left && bmin[dir] <= node->sep)
+          {
+            stacks++;
+            stack[stacks].node = node->left;
+            stack[stacks].dir = ndir;
+          }
+        if (node->right && bmax[dir] >= node->sep)
+          {
+            stacks++;
+            stack[stacks].node = node->right;
+            stack[stacks].dir = ndir;
+          }
       }
   }
     
@@ -801,11 +801,11 @@ public:
       
       // if (node->data)     // true anyway
       {
-	ost << node->pi << ": ";
-	ost << node->nchilds << " childs, ";
-	for (int i = 0; i < dim; i++)
-	  ost << node->data[i] << " ";
-	ost << endl;
+        ost << node->pi << ": ";
+        ost << node->nchilds << " childs, ";
+        for (int i = 0; i < dim; i++)
+          ost << node->data[i] << " ";
+        ost << endl;
       }
       if (node->left)
         PrintRec (ost, node->left);
@@ -882,12 +882,12 @@ class ADTree6F
 
 public:
   ADTree6F (const float * acmin, 
-	   const float * acmax);
+           const float * acmax);
   ~ADTree6F ();
 
   void Insert (const float * p, int pi);
   void GetIntersecting (const float * bmin, const float * bmax,
-			Array<int> & pis) const;
+                        Array<int> & pis) const;
   
   void DeleteElement (int pi);
 
@@ -939,7 +939,7 @@ public:
     { tree.DeleteElement(pi); }
 
   void GetIntersecting (const Point<3> & pmin, const Point<3> & pmax,
-			Array<T> & pis) const
+                        Array<T> & pis) const
   {
     float pmi[3], pma[3];
     ToFloat (pmin, pmi);

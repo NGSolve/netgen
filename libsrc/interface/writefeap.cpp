@@ -23,7 +23,7 @@ namespace netgen
 
 
 void WriteFEAPFormat (const Mesh & mesh,
-		      const filesystem::path & filename)
+                      const filesystem::path & filename)
   
 {
   // Feap format by A. Rieger 
@@ -75,7 +75,7 @@ void WriteFEAPFormat (const Mesh & mesh,
     {
       Element el = mesh[i];
       if (inverttets)
-	el.Invert();
+        el.Invert();
 
 
       outfile.width(5);
@@ -86,10 +86,10 @@ void WriteFEAPFormat (const Mesh & mesh,
 
 
       for (j = 1; j <= el.NP(); j++)
-	{
-	  outfile.width(8);
-	  outfile << el.PNum(j);
-	}
+        {
+          outfile.width(8);
+          outfile << el.PNum(j);
+        }
       outfile << "\n";
     }
       
@@ -108,9 +108,9 @@ void WriteFEAPFormat (const Mesh & mesh,
   {
   outfile.width(8);
   outfile << facedecoding.Get(SurfaceElement(i).GetIndex ()).surfnr;
-  //outfile.width(8);	  
+  //outfile.width(8);     
   //outfile << facedecoding.Get(SurfaceElement(i).GetIndex ()).domin;
-  //outfile.width(8);	  
+  //outfile.width(8);     
   //outfile << facedecoding.Get(SurfaceElement(i).GetIndex ()).domout;
   }
   else
@@ -126,14 +126,14 @@ void WriteFEAPFormat (const Mesh & mesh,
   //{
   for (j = 1; j <= sel.GetNP(); j++)
   {
-  outfile.width(8);	  
+  outfile.width(8);       
   outfile << sel.PNum(j);
   }
-  //outfile.width(8);	
+  //outfile.width(8);   
   //outfile << "0.0";
-  //outfile.width(8);	
+  //outfile.width(8);   
   //outfile << "0.0";
-  //outfile.width(8);	
+  //outfile.width(8);   
   //outfile << "1.0" << "\n";
   //}
   outfile << "\n";
@@ -145,75 +145,75 @@ void WriteFEAPFormat (const Mesh & mesh,
 
   // BEGIN CONTACT OUTPUT
   /*      
-	  int masterindex, minionindex;
-	  cout << "Master Surface index = ";
-	  cin >> masterindex;
-	  cout << "Minion Surface index  = ";
-	  cin >> minionindex;
+          int masterindex, minionindex;
+          cout << "Master Surface index = ";
+          cin >> masterindex;
+          cout << "Minion Surface index  = ";
+          cin >> minionindex;
 
 
-	  // CONTACT SURFACE 1
-	  outfile << "\n";
-	  outfile << "\n";
-	  outfile << "surface,1" << "\n";;
-	  outfile.width(6);
-	  outfile << "tria" << "\n";;
-	  outfile.width(13);
-	  outfile << "facet" << "\n";;
-	  zz = 0;
-	  for (i = 1; i <= mesh.GetNSE(); i++)
-	  {
-	  Element2d sel = mesh.SurfaceElement(i);
-	  if (invertsurf)
-	  sel.Invert();
-	  if (mesh.GetFaceDescriptor(sel.GetIndex ()).BCProperty() == masterindex)
-	  {
-	  zz++;
-	  outfile.width(14);
-	  outfile << zz;
-	  outfile << ",,";
-	  for (j = 1; j <= sel.GetNP(); j++)
-	  {
-	  outfile << sel.PNum(j);
-	  outfile << ",";
-	  }
-	  outfile << "\n";
-	  }
-	  }
+          // CONTACT SURFACE 1
+          outfile << "\n";
+          outfile << "\n";
+          outfile << "surface,1" << "\n";;
+          outfile.width(6);
+          outfile << "tria" << "\n";;
+          outfile.width(13);
+          outfile << "facet" << "\n";;
+          zz = 0;
+          for (i = 1; i <= mesh.GetNSE(); i++)
+          {
+          Element2d sel = mesh.SurfaceElement(i);
+          if (invertsurf)
+          sel.Invert();
+          if (mesh.GetFaceDescriptor(sel.GetIndex ()).BCProperty() == masterindex)
+          {
+          zz++;
+          outfile.width(14);
+          outfile << zz;
+          outfile << ",,";
+          for (j = 1; j <= sel.GetNP(); j++)
+          {
+          outfile << sel.PNum(j);
+          outfile << ",";
+          }
+          outfile << "\n";
+          }
+          }
 
 
-	  // CONTACT SURFACE 2
-	  outfile << "\n";
-	  outfile << "\n";
-	  outfile << "surface,2" << "\n";;
-	  outfile.width(6);
-	  outfile << "tria" << "\n";;
-	  outfile.width(13);
-	  outfile << "facet" << "\n";;
-	  zz = 0;
-	  for (i = 1; i <= mesh.GetNSE(); i++)
-	  {
-	  
-	  Element2d sel = mesh.SurfaceElement(i);
-	  if (invertsurf)
-	  sel.Invert();
-	  if (mesh.GetFaceDescriptor(sel.GetIndex ()).BCProperty() == minionindex)
-	  {
-	  zz++;
-	  outfile.width(14);
-	  outfile << zz;
-	  outfile << ",,";
-	  for (j = 1; j <= sel.GetNP(); j++)
-	  {
-	  outfile << sel.PNum(j);
-	  outfile << ",";
-	  }
-	  outfile << "\n";
-	  }
-	  }
+          // CONTACT SURFACE 2
+          outfile << "\n";
+          outfile << "\n";
+          outfile << "surface,2" << "\n";;
+          outfile.width(6);
+          outfile << "tria" << "\n";;
+          outfile.width(13);
+          outfile << "facet" << "\n";;
+          zz = 0;
+          for (i = 1; i <= mesh.GetNSE(); i++)
+          {
+          
+          Element2d sel = mesh.SurfaceElement(i);
+          if (invertsurf)
+          sel.Invert();
+          if (mesh.GetFaceDescriptor(sel.GetIndex ()).BCProperty() == minionindex)
+          {
+          zz++;
+          outfile.width(14);
+          outfile << zz;
+          outfile << ",,";
+          for (j = 1; j <= sel.GetNP(); j++)
+          {
+          outfile << sel.PNum(j);
+          outfile << ",";
+          }
+          outfile << "\n";
+          }
+          }
       
-	  outfile << "\n";
-	  outfile << "\n";
+          outfile << "\n";
+          outfile << "\n";
   */      
       
   // END CONTACT OUTPUT

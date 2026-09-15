@@ -9,7 +9,7 @@ namespace netgen
   {
     for (auto & pgi : mgi)
       if (pgi.trignum == gi.trignum)
-	return 0;
+        return 0;
   
     mgi.Append(gi);
     return 0;
@@ -82,27 +82,27 @@ namespace netgen
     static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
     if (type == NG_MPI_DATATYPE_NULL)
       {
-	MeshPoint hp;
+        MeshPoint hp;
         
         int blocklen[] = { 3, 1, 1 };
 
-	NG_MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
+        NG_MPI_Aint displ[] = { (char*)&hp.x[0] - (char*)&hp,
                                 (char*)&hp.layer - (char*)&hp,
                                 (char*)&hp.singular - (char*)&hp };
         
         NG_MPI_Datatype types[] = { NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_DOUBLE };
 
-	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
-	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	NG_MPI_Type_create_struct (3, blocklen, displ, types, &htype);
-	NG_MPI_Type_commit ( &htype );
-	NG_MPI_Aint lb, ext;
-	NG_MPI_Type_get_extent (htype, &lb, &ext);
-	// *testout << "lb = " << lb << endl;
-	// *testout << "ext = " << ext << endl;
-	ext = sizeof (MeshPoint);
-	NG_MPI_Type_create_resized (htype, lb, ext, &type);
-	NG_MPI_Type_commit ( &type );
+        // *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+        // *testout << "sizeof = " << sizeof (MeshPoint) << endl;
+        NG_MPI_Type_create_struct (3, blocklen, displ, types, &htype);
+        NG_MPI_Type_commit ( &htype );
+        NG_MPI_Aint lb, ext;
+        NG_MPI_Type_get_extent (htype, &lb, &ext);
+        // *testout << "lb = " << lb << endl;
+        // *testout << "ext = " << ext << endl;
+        ext = sizeof (MeshPoint);
+        NG_MPI_Type_create_resized (htype, lb, ext, &type);
+        NG_MPI_Type_commit ( &type );
       }
     return type;
   }
@@ -115,27 +115,27 @@ namespace netgen
     static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
     if (type == NG_MPI_DATATYPE_NULL)
       {
-	Element2d hel;
-	int blocklen[] = { ELEMENT2D_MAXPOINTS, 1, 1, 1 };
-	NG_MPI_Aint displ[] =
+        Element2d hel;
+        int blocklen[] = { ELEMENT2D_MAXPOINTS, 1, 1, 1 };
+        NG_MPI_Aint displ[] =
           { (char*)&hel.pnum[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
             (char*)&hel.typ - (char*)&hel,
             (char*)&hel.np - (char*)&hel
           };
-	NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+        NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
                                  GetMPIType(hel.typ), GetMPIType(hel.np) };
-	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
-	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	NG_MPI_Type_commit ( &htype );
-	NG_MPI_Aint lb, ext;
-	NG_MPI_Type_get_extent (htype, &lb, &ext);
-	// *testout << "lb = " << lb << endl;
-	// *testout << "ext = " << ext << endl;
-	ext = sizeof (Element2d);
-	NG_MPI_Type_create_resized (htype, lb, ext, &type);
-	NG_MPI_Type_commit ( &type );
+        // *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+        // *testout << "sizeof = " << sizeof (MeshPoint) << endl;
+        NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+        NG_MPI_Type_commit ( &htype );
+        NG_MPI_Aint lb, ext;
+        NG_MPI_Type_get_extent (htype, &lb, &ext);
+        // *testout << "lb = " << lb << endl;
+        // *testout << "ext = " << ext << endl;
+        ext = sizeof (Element2d);
+        NG_MPI_Type_create_resized (htype, lb, ext, &type);
+        NG_MPI_Type_commit ( &type );
       }
     return type;
   }
@@ -146,27 +146,27 @@ namespace netgen
     static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
     if (type == NG_MPI_DATATYPE_NULL)
       {
-	Element hel;
-	int blocklen[] = { ELEMENT_MAXPOINTS, 1, 1, 1 };
-	NG_MPI_Aint displ[] =
+        Element hel;
+        int blocklen[] = { ELEMENT_MAXPOINTS, 1, 1, 1 };
+        NG_MPI_Aint displ[] =
           { (char*)&hel.pnum[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
             (char*)&hel.typ - (char*)&hel,
             (char*)&hel.np - (char*)&hel
           };
-	NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
+        NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
                                  GetMPIType(hel.typ), GetMPIType(hel.np) };
-	// *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
-	// *testout << "sizeof = " << sizeof (MeshPoint) << endl;
-	NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
-	NG_MPI_Type_commit ( &htype );
-	NG_MPI_Aint lb, ext;
-	NG_MPI_Type_get_extent (htype, &lb, &ext);
-	// *testout << "lb = " << lb << endl;
-	// *testout << "ext = " << ext << endl;
-	ext = sizeof (Element);
-	NG_MPI_Type_create_resized (htype, lb, ext, &type);
-	NG_MPI_Type_commit ( &type );
+        // *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
+        // *testout << "sizeof = " << sizeof (MeshPoint) << endl;
+        NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
+        NG_MPI_Type_commit ( &htype );
+        NG_MPI_Aint lb, ext;
+        NG_MPI_Type_get_extent (htype, &lb, &ext);
+        // *testout << "lb = " << lb << endl;
+        // *testout << "ext = " << ext << endl;
+        ext = sizeof (Element);
+        NG_MPI_Type_create_resized (htype, lb, ext, &type);
+        NG_MPI_Type_commit ( &type );
       }
     return type;
   }
@@ -177,24 +177,24 @@ namespace netgen
     static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
     if (type == NG_MPI_DATATYPE_NULL)
       {
-	Segment hel;
-	int blocklen[] = { 3, 1 };
-	NG_MPI_Aint displ[] =
+        Segment hel;
+        int blocklen[] = { 3, 1 };
+        NG_MPI_Aint displ[] =
           { (char*)&hel.pnums[0] - (char*)&hel,
             (char*)&hel.index - (char*)&hel
           };
-	NG_MPI_Datatype types[] = {
+        NG_MPI_Datatype types[] = {
           GetMPIType<PointIndex>(), GetMPIType(hel.index)
         };
-	NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
-	NG_MPI_Type_commit ( &htype );
-	NG_MPI_Aint lb, ext;
-	NG_MPI_Type_get_extent (htype, &lb, &ext);
-	// *testout << "lb = " << lb << endl;
-	// *testout << "ext = " << ext << endl;
-	ext = sizeof (Segment);
-	NG_MPI_Type_create_resized (htype, lb, ext, &type);
-	NG_MPI_Type_commit ( &type );
+        NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
+        NG_MPI_Type_commit ( &htype );
+        NG_MPI_Aint lb, ext;
+        NG_MPI_Type_get_extent (htype, &lb, &ext);
+        // *testout << "lb = " << lb << endl;
+        // *testout << "ext = " << ext << endl;
+        ext = sizeof (Segment);
+        NG_MPI_Type_create_resized (htype, lb, ext, &type);
+        NG_MPI_Type_commit ( &type );
       }
     return type;
   }
@@ -209,24 +209,24 @@ namespace netgen
     static NG_MPI_Datatype htype = NG_MPI_DATATYPE_NULL;
     if (type == NG_MPI_DATATYPE_NULL)
       {
-	Element0d hel;
-	int blocklen[] = { 1, 1 };
-	NG_MPI_Aint displ[] =
+        Element0d hel;
+        int blocklen[] = { 1, 1 };
+        NG_MPI_Aint displ[] =
           { (char*)&hel.pnum - (char*)&hel,
             (char*)&hel.index - (char*)&hel,
           };
-	NG_MPI_Datatype types[] = {
+        NG_MPI_Datatype types[] = {
           GetMPIType(hel.pnum), GetMPIType(hel.index)
         };
-	NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
-	NG_MPI_Type_commit ( &htype );
-	NG_MPI_Aint lb, ext;
-	NG_MPI_Type_get_extent (htype, &lb, &ext);
-	// *testout << "lb = " << lb << endl;
-	// *testout << "ext = " << ext << endl;
-	ext = sizeof (Element0d);
-	NG_MPI_Type_create_resized (htype, lb, ext, &type);
-	NG_MPI_Type_commit ( &type );
+        NG_MPI_Type_create_struct (2, blocklen, displ, types, &htype);
+        NG_MPI_Type_commit ( &htype );
+        NG_MPI_Aint lb, ext;
+        NG_MPI_Type_get_extent (htype, &lb, &ext);
+        // *testout << "lb = " << lb << endl;
+        // *testout << "ext = " << ext << endl;
+        ext = sizeof (Element0d);
+        NG_MPI_Type_create_resized (htype, lb, ext, &type);
+        NG_MPI_Type_commit ( &type );
       }
     return type;
   }
@@ -283,8 +283,8 @@ namespace netgen
   {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-	pnum[i].Invalidate();
-	geominfo[i].trignum = 0;
+        pnum[i].Invalidate();
+        geominfo[i].trignum = 0;
       }
     np = 3;
     index = 0;
@@ -303,7 +303,7 @@ namespace netgen
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
         pnum[i].Invalidate();
-	geominfo[i].trignum = 0;
+        geominfo[i].trignum = 0;
       }
     np = anp;
     index = 0;
@@ -328,7 +328,7 @@ namespace netgen
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
         pnum[i].Invalidate();
-	geominfo[i].trignum = 0;
+        geominfo[i].trignum = 0;
       }
 
     SetType (atyp);
@@ -862,7 +862,7 @@ namespace netgen
             int ix2 = qip_table[i][1];
             int iy1 = qip_table[i][2];
             int iy2 = qip_table[i][3];
-	      
+              
             trans(0,0) = pmat(0, ix2) - pmat(0,ix1);
             trans(1,0) = pmat(1, ix2) - pmat(1,ix1);
             trans(0,1) = pmat(0, iy2) - pmat(0,iy1);
@@ -875,7 +875,7 @@ namespace netgen
                 dd = 0;
                 return 1e12;
               }
-	  
+          
             dtrans(0,0) = vmat(0, ix2) - vmat(0,ix1);
             dtrans(1,0) = vmat(1, ix2) - vmat(1,ix1);
             dtrans(0,1) = vmat(0, iy2) - vmat(0,iy1);
@@ -887,21 +887,21 @@ namespace netgen
             for (int j = 0; j < 4; j++) 
               frob += sqr (trans(j));
             frob = sqrt (frob);
-	  
+          
             double dfrob = 0;
             for (int j = 0; j < 4; j++)
               dfrob += trans(j) * dtrans(j);
             dfrob = dfrob / frob;
-	  
+          
             frob /= 2;      
             dfrob /= 2;
-	  
-	  
+          
+          
             // ddet = \sum_j det (m_j)   with m_j = trans, except col j = dtrans
             double ddet 
               = dtrans(0,0) * trans(1,1) - trans(0,1) * dtrans(1,0)
               + trans(0,0) * dtrans(1,1) - dtrans(0,1) * trans(1,0);
-	  
+          
             err += frob * frob / det;
             dd += (2 * frob * dfrob * det - frob * frob * ddet) / (det * det);
           }
@@ -1294,7 +1294,7 @@ namespace netgen
     Vec<3> v2 = points[PNum(3)] - points[PNum(1)];
     Vec<3> v3 = points[PNum(4)] - points[PNum(1)]; 
   
-    return -(Cross (v1, v2) * v3) / 6;	 
+    return -(Cross (v1, v2) * v3) / 6;   
   }  
 
 
@@ -1376,7 +1376,7 @@ namespace netgen
         }
       case 6: // prism
         {
-          //	face.SetNP(prismfaces[i-1][0]);
+          //    face.SetNP(prismfaces[i-1][0]);
           face.SetType ( (i >= 3) ? QUAD : TRIG);
           for (int j = 1; j <= face.GetNP(); j++)
             face.PNum(j) = PNum(prismfaces[i-1][j]);
@@ -1384,7 +1384,7 @@ namespace netgen
         }
       case 7: // hex7
         {
-          //	face.SetNP(prismfaces[i-1][0]);
+          //    face.SetNP(prismfaces[i-1][0]);
           face.SetType ( ((i == 3) || (i==6)) ? TRIG : QUAD);
           for (int j = 1; j <= face.GetNP(); j++)
             face.PNum(j) = PNum(hex7faces[i-1][j]);
@@ -1715,7 +1715,7 @@ namespace netgen
         {
           cout << "GetNodesLocal not implemented for element " << GetType() << endl;
           np = 0;
-	  pp = NULL;
+          pp = NULL;
         }
       }
   
@@ -2002,14 +2002,14 @@ namespace netgen
           double lam2 = hp[0];
           double lam3 = hp[1];
           double lam4 = hp[2];
-	
+        
           shape(4) = 4 * lam1 * lam2;
           shape(5) = 4 * lam1 * lam3;
           shape(6) = 4 * lam1 * lam4;
           shape(7) = 4 * lam2 * lam3;
           shape(8) = 4 * lam2 * lam4;
           shape(9) = 4 * lam3 * lam4;
-	
+        
           shape(0) = lam1 - 0.5 * (shape(4) + shape(5) + shape(6));
           shape(1) = lam2 - 0.5 * (shape(4) + shape(7) + shape(8));
           shape(2) = lam3 - 0.5 * (shape(5) + shape(7) + shape(9));
@@ -2073,7 +2073,7 @@ namespace netgen
           T lam2 = p(1);
           T lam3 = p(2);
           T lam4 = 1-p(0)-p(1)-p(2);
-	
+        
           shape(0) = 2 * lam1 * (lam1-0.5);
           shape(1) = 2 * lam2 * (lam2-0.5);
           shape(2) = 2 * lam3 * (lam3-0.5);
@@ -2085,7 +2085,7 @@ namespace netgen
           shape(7) = 4 * lam2 * lam3;
           shape(8) = 4 * lam2 * lam4;
           shape(9) = 4 * lam3 * lam4;
-	
+        
           break;
         }
 
@@ -2107,9 +2107,9 @@ namespace netgen
         }
       case PYRAMID13:
         {
-	  T x = p(0);
-	  T y = p(1);
-	  T z = p(2);
+          T x = p(0);
+          T y = p(1);
+          T z = p(2);
           z *= 1-1e-12;
           shape[0] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (-2*x - z + 2)*(-2*y - z + 2))*(-0.5*x - 0.5*y - 0.5*z + 0.25);
           shape[1] = (0.5*x - 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(-2*y - z + 2));
@@ -2138,9 +2138,9 @@ namespace netgen
         }
       case PRISM15:
         {
-	  T x = p(0);
-	  T y = p(1);
-	  T z = p(2);
+          T x = p(0);
+          T y = p(1);
+          T z = p(2);
           T lam = 1-x-y;
           T lamz = 1-z;
           shape[0] = (2*x*x-x) * (2*lamz*lamz-lamz);
@@ -2193,18 +2193,18 @@ namespace netgen
           break;
         }
       case HEX20:
-	{
-	  T x = p(0);
-	  T y = p(1);
-	  T z = p(2);
-	  shape[0] = (1-x)*(1-y)*(1-z);
-	  shape[1] =    x *(1-y)*(1-z);
-	  shape[2] =    x *   y *(1-z);
-	  shape[3] = (1-x)*   y *(1-z);
-	  shape[4] = (1-x)*(1-y)*(z);
-	  shape[5] =    x *(1-y)*(z);
-	  shape[6] =    x *   y *(z);
-	  shape[7] = (1-x)*   y *(z);
+        {
+          T x = p(0);
+          T y = p(1);
+          T z = p(2);
+          shape[0] = (1-x)*(1-y)*(1-z);
+          shape[1] =    x *(1-y)*(1-z);
+          shape[2] =    x *   y *(1-z);
+          shape[3] = (1-x)*   y *(1-z);
+          shape[4] = (1-x)*(1-y)*(z);
+          shape[5] =    x *(1-y)*(z);
+          shape[6] =    x *   y *(z);
+          shape[7] = (1-x)*   y *(z);
 
           T sigma[8]={(1-x)+(1-y)+(1-z),x+(1-y)+(1-z),x+y+(1-z),(1-x)+y+(1-z),
                       (1-x)+(1-y)+z,x+(1-y)+z,x+y+z,(1-x)+y+z};
@@ -2228,7 +2228,7 @@ namespace netgen
               shape[e[i][1]] -= 0.5 * shape[8+i];
             }
           break;
-	}
+        }
       default:
         throw NgException("Element :: GetNewShape not implemented for that element");
       }
@@ -2309,13 +2309,13 @@ namespace netgen
           TFlatVector<T> shaper(np, &mem[0]);
           TFlatVector<T> shapel(np, &mem[np]);
           // Vector shaper(np), shapel(np);
-	
+        
           for (int i = 0; i < 3; i++)
             {
               Point<3,T> pr(p), pl(p);
               pr(i) += eps;
               pl(i) -= eps;
-	    
+            
               GetShapeNew (pr, shaper);
               GetShapeNew (pl, shapel);
               for (int j = 0; j < np; j++)
@@ -2536,7 +2536,7 @@ namespace netgen
               {
                 int jm1 = (j > 1) ? (j-1) : 3;
                 int jp1 = (j < 3) ? (j+1) : 1;
-	      
+              
                 ddet[k-1] += (-1.)* dtrans.Get(k,j) * ( trans.Get(km1,jm1)*trans.Get(kp1,jp1) - 
                                                         trans.Get(km1,jp1)*trans.Get(kp1,jm1) );
               }
@@ -2919,7 +2919,7 @@ namespace netgen
             INDEX_3 i3;
             int dummy;
             identifiedpoints_nr.GetData (i, j, i3 , dummy);
-	  
+          
             if (i3.I3() == identnr)
               identpairs.Append (INDEX_2(i3.I1(), i3.I2()));
           }
@@ -2943,11 +2943,11 @@ namespace netgen
           INDEX_2 i2;
           int nr;
           identifiedpoints.GetData (i, j, i2, nr);
-	
+        
           if (i2.I1() > maxpnum || i2.I2() > maxpnum)
             {
               i2.I1() = i2.I2() = -1;
-              identifiedpoints.SetData (i, j, i2, -1);	    
+              identifiedpoints.SetData (i, j, i2, -1);      
             }
         }
     */

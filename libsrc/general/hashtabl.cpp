@@ -47,7 +47,7 @@ namespace netgen
   {
     for (int i = 1; i <= hash.EntrySize (bnr); i++)
       if (hash.Get(bnr, i) == ind)
-	return i;
+        return i;
     return 0;
   }
 
@@ -59,7 +59,7 @@ namespace netgen
     int i;
     for (i = 1; i <= hash.EntrySize (bnr); i++)
       if (hash.Get(bnr, i) == ind)
-	return i;
+        return i;
     return 0;
   }
   */  
@@ -72,15 +72,15 @@ namespace netgen
 
     for (i = 1; i <= n; i++)
       {
-	sumn += hash.EntrySize(i);
-	sumnn += sqr (hash.EntrySize(i));
+        sumn += hash.EntrySize(i);
+        sumnn += sqr (hash.EntrySize(i));
       }
 
     ost << "Hashtable: " << endl
-	<< "size             : " << n << endl
-	<< "elements per row : " << (double(sumn) / double(n)) << endl
-	<< "av. access time  : " 
-	<< (sumn ? (double (sumnn) / double(sumn)) : 0) << endl;
+        << "size             : " << n << endl
+        << "elements per row : " << (double(sumn) / double(n)) << endl
+        << "av. access time  : " 
+        << (sumn ? (double (sumnn) / double(sumn)) : 0) << endl;
   }
 
 
@@ -161,10 +161,10 @@ namespace netgen
     int i = HashValue(ind);
     while (1)
       {
-	i++;
-	if (i > hash.Size()) i = 1;
-	if (hash[i-1] == ind) return i;
-	if (hash[i-1].I1() == invalid) return 0;
+        i++;
+        if (i > hash.Size()) i = 1;
+        if (hash[i-1] == ind) return i;
+        if (hash[i-1].I1() == invalid) return 0;
       }
   }
 
@@ -176,23 +176,23 @@ namespace netgen
     while (1)
       {
         /*
-	i++;
-	if (i > hash.Size()) i = 1;
+        i++;
+        if (i > hash.Size()) i = 1;
         */
         i = (i+1) % hash.Size();
-	if (hash[i] == ind) 
-	  {
-	    apos = i;
-	    return false;
-	  }
-	if (hash[i].I1() == invalid) 
-	  {
-	    hash[i] = ind;
-	    apos = i;
-	    return true;
-	  }
-	if (i == startpos)
-	  throw NgException ("Try to set new element in full closed hashtable");
+        if (hash[i] == ind) 
+          {
+            apos = i;
+            return false;
+          }
+        if (hash[i].I1() == invalid) 
+          {
+            hash[i] = ind;
+            apos = i;
+            return true;
+          }
+        if (i == startpos)
+          throw NgException ("Try to set new element in full closed hashtable");
       }
   }
 
@@ -202,7 +202,7 @@ namespace netgen
     int cnt = 0;
     for (int i = 1; i <= n; i++)
       if (hash[i-1].I1() != invalid)
-	cnt++;
+        cnt++;
     return cnt;
   }
 
@@ -244,23 +244,23 @@ namespace netgen
     while (1)
       {
         /*
-	i++;
-	if (i >= hash.Size()) i = 0;
+        i++;
+        if (i >= hash.Size()) i = 0;
         */
         i = (i+1) % hash.Size();
-	if (hash[i] == ind) 
-	  {
-	    apos = i;
-	    return false;
-	  }
-	if (hash[i].I1() == invalid) 
-	  {
-	    hash[i] = ind;
-	    apos = i;
-	    return true;
-	  }
-	if (i == startpos)
-	  throw NgException ("Try to set new element in full closed hashtable");
+        if (hash[i] == ind) 
+          {
+            apos = i;
+            return false;
+          }
+        if (hash[i].I1() == invalid) 
+          {
+            hash[i] = ind;
+            apos = i;
+            return true;
+          }
+        if (i == startpos)
+          throw NgException ("Try to set new element in full closed hashtable");
       }
   }
 }

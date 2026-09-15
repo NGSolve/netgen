@@ -102,41 +102,41 @@ namespace netgen
 
     ///
     void CalcSpecialPoints (const CSGeometry & ageometry, 
-			    Array<MeshPoint> & points);
+                            Array<MeshPoint> & points);
     ///
     void AnalyzeSpecialPoints (const CSGeometry & geometry, 
-			       Array<MeshPoint> & points, 
-			       Array<SpecialPoint> & specpoints);
+                               Array<MeshPoint> & points, 
+                               Array<SpecialPoint> & specpoints);
 
   protected:
     ///
     void CalcSpecialPointsRec (const Solid * sol, int layer,
-			       const BoxSphere<3> & box, 
-			       int level, 
-			       bool calccp, bool calcep);
+                               const BoxSphere<3> & box, 
+                               int level, 
+                               bool calccp, bool calcep);
 
 
     ///
     bool CrossPointNewtonConvergence (const Surface * f1, const Surface * f2, 
-				      const Surface * f3, const BoxSphere<3> & box);  
+                                      const Surface * f3, const BoxSphere<3> & box);  
     ///
     bool CrossPointDegenerated (const Surface * f1, const Surface * f2,
-				const Surface * f3, const BoxSphere<3> & box) const;
+                                const Surface * f3, const BoxSphere<3> & box) const;
     ///
     void CrossPointNewton (const Surface * f1, const Surface * f2, 
-			   const Surface * f3, Point<3> & p);
+                           const Surface * f3, Point<3> & p);
   
     bool EdgeNewtonConvergence (const Surface * f1, const Surface * f2, 
-				const Point<3> & p);  
+                                const Point<3> & p);  
     ///
     bool EdgeDegenerated (const Surface * f1, const Surface * f2,
-			  const BoxSphere<3> & box) const;
+                          const BoxSphere<3> & box) const;
     ///
     void EdgeNewton (const Surface * f1, const Surface * f2, 
-		     Point<3> & p);
+                     Point<3> & p);
     ///
     bool IsEdgeExtremalPoint (const Surface * f1, const Surface * f2, 
-			      const Point<3> & p, Point<3> & pp, double rad);
+                              const Point<3> & p, Point<3> & pp, double rad);
 
 
 
@@ -153,38 +153,38 @@ namespace netgen
     */
     ///
     void ExtremalPointNewton (const Surface * f1, const Surface * f2, 
-			      int dir, Point<3> & p);
+                              int dir, Point<3> & p);
 
 
     ///
     bool AddPoint (const Point<3> & p, int layer);
 
     void ComputeExtremalPoints (const Plane * plane, 
-				const QuadraticSurface * quadric, 
-				Array<Point<3> > & pts);
+                                const QuadraticSurface * quadric, 
+                                Array<Point<3> > & pts);
 
     void ComputeExtremalPoints (const Sphere * sphere1, 
-				const Sphere * sphere2, 
-				Array<Point<3> > & pts);
+                                const Sphere * sphere2, 
+                                Array<Point<3> > & pts);
 
     bool ComputeExtremalPoints (const RevolutionFace * rev1, 
-				const RevolutionFace * rev2, 
-				Array<Point<3> > & pts);
+                                const RevolutionFace * rev2, 
+                                Array<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
-			     const Plane * plane2, 
-			     const Plane * plane3, 
-			     Array<Point<3> > & pts);
+                             const Plane * plane2, 
+                             const Plane * plane3, 
+                             Array<Point<3> > & pts);
 
     void ComputeCrossPoints (const Plane * plane1, 
-			     const Plane * plane2, 
-			     const QuadraticSurface * quadratic, 
-			     Array<Point<3> > & pts);
+                             const Plane * plane2, 
+                             const QuadraticSurface * quadratic, 
+                             Array<Point<3> > & pts);
 
     void ComputeCrossPoints (const Sphere * sphere1, 
-			     const Sphere * sphere2, 
-			     const Sphere * sphere3, 
-			     Array<Point<3> > & pts);
+                             const Sphere * sphere2, 
+                             const Sphere * sphere3, 
+                             Array<Point<3> > & pts);
   };
 
 }

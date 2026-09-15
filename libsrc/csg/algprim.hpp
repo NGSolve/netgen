@@ -80,7 +80,7 @@ namespace netgen
     Point<3> P() const { return p; }
     Vec<3> N() const { return n; }
     virtual void GetPrimitiveData (const char *& classname, 
-				   Array<double> & coeffs) const;
+                                   Array<double> & coeffs) const;
     virtual void SetPrimitiveData (Array<double> & coeffs);
     static Primitive * CreateDefault ();
 
@@ -94,15 +94,15 @@ namespace netgen
 
     ///
     virtual void DefineTangentialPlane (const Point<3> & ap1, 
-					const Point<3> & ap2);
+                                        const Point<3> & ap2);
     ///
     virtual void ToPlane (const Point<3> & p3d, 
-			  Point<2> & pplane, double h,
-			  int & zone) const;
+                          Point<2> & pplane, double h,
+                          int & zone) const;
     ///
     virtual void FromPlane (const Point<2> & pplane, 
-			    Point<3> & p3d, 
-			    double h) const;
+                            Point<3> & p3d, 
+                            double h) const;
     ///
     virtual void Project (Point<3> & p) const;
 
@@ -114,10 +114,10 @@ namespace netgen
     {return cx * p3d(0) + cy * p3d(1) + cz * p3d(2) + c1;}
     ///
     virtual void CalcGradient (const Point<3> & point, 
-			       Vec<3> & grad) const;
+                               Vec<3> & grad) const;
     ///
     virtual void CalcHesse (const Point<3> & point, 
-			    Mat<3> & hesse) const;
+                            Mat<3> & hesse) const;
     ///
     virtual double HesseNorm () const;
     ///
@@ -153,7 +153,7 @@ namespace netgen
     }
 
     virtual void GetPrimitiveData (const char *& classname, 
-				   Array<double> & coeffs) const;
+                                   Array<double> & coeffs) const;
     virtual void SetPrimitiveData (Array<double> & coeffs);
     static Primitive * CreateDefault ();
 
@@ -167,14 +167,14 @@ namespace netgen
 
     ///
     virtual void DefineTangentialPlane (const Point<3> & ap1, 
-					const Point<3> & ap2);
+                                        const Point<3> & ap2);
     ///
     virtual void ToPlane (const Point<3> & p3d, 
-			  Point<2> & pplane, double h,
-			  int & zone) const;
+                          Point<2> & pplane, double h,
+                          int & zone) const;
     ///
     virtual void FromPlane (const Point<2> & pplane, 
-			    Point<3> & p, double h) const;
+                            Point<3> & p, double h) const;
     ///
     virtual void Project (Point<3> & p) const;
 
@@ -191,8 +191,8 @@ namespace netgen
 
     ///
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
-					   const Box<3> & bbox, 
-					   double facets) const;
+                                           const Box<3> & bbox, 
+                                           double facets) const;
   };
 
 
@@ -233,16 +233,16 @@ namespace netgen
     virtual int IsIdentic (const Surface & s2, int & inv, double eps) const;
     ///
     virtual void DefineTangentialPlane (const Point<3> & ap1, 
-					const Point<3> & ap2);
+                                        const Point<3> & ap2);
     ///
     virtual void ToPlane (const Point<3> & p, 
-			  Point<2> & pplane, 
-			  double h,
-			  int & zone) const;
+                          Point<2> & pplane, 
+                          double h,
+                          int & zone) const;
     ///
     virtual void FromPlane (const Point<2> & pplane, 
-			    Point<3> & p, 
-			    double h) const;
+                            Point<3> & p, 
+                            double h) const;
     ///
     virtual void Project (Point<3> & p) const;
 
@@ -254,8 +254,8 @@ namespace netgen
     virtual Point<3> GetSurfacePoint () const;
     ///
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
-					   const Box<3> & bbox, 
-					   double facets) const;
+                                           const Box<3> & bbox, 
+                                           double facets) const;
   };
 
 
@@ -277,7 +277,7 @@ namespace netgen
   public:
     ///
     EllipticCylinder (const Point<3> & aa,
-		      const Vec<3> & avl, const Vec<3> & avs);
+                      const Vec<3> & avl, const Vec<3> & avs);
     EllipticCylinder (Array<double> & coeffs);
     // default constructor for archive
     EllipticCylinder() {}
@@ -300,15 +300,15 @@ namespace netgen
     virtual Point<3> GetSurfacePoint () const;
 
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
-					   const Box<3> & bbox, 
-					   double facets) const;
+                                           const Box<3> & bbox, 
+                                           double facets) const;
 
     virtual int IsIdentic (const Surface & s2, int & inv, double eps) const;
 
     virtual double MaxCurvature () const;
 
     virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
-				    double /* rad */) const;
+                                    double /* rad */) const;
 
 
   private:
@@ -333,9 +333,9 @@ namespace netgen
   public:
     ///
     Ellipsoid (const Point<3> & aa,
-	       const Vec<3> & av1, 
-	       const Vec<3> & av2,
-	       const Vec<3> & av3);
+               const Vec<3> & av1, 
+               const Vec<3> & av2,
+               const Vec<3> & av3);
     // default constructor for archive
     Ellipsoid() {}
 
@@ -354,8 +354,8 @@ namespace netgen
     Point<3> GetSurfacePoint () const override;
 
     void GetTriangleApproximation (TriangleApproximation & tas,
-					   const Box<3> & bbox, 
-					   double facets) const override;
+                                           const Box<3> & bbox, 
+                                           double facets) const override;
 
     void GetPrimitiveData (const char *& classname, Array<double> & coeffs) const override;
     void SetPrimitiveData (Array<double> & coeffs) override;
@@ -405,7 +405,7 @@ namespace netgen
     virtual double HesseNorm () const;
 
     virtual double LocH (const Point<3> & p, double x, 
-			 double c,                          
+                         double c,                          
                          const MeshingParameters & mparam,
                          double hmax) const;
 
@@ -413,8 +413,8 @@ namespace netgen
     virtual Point<3> GetSurfacePoint () const;
 
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
-					   const Box<3> & bbox, 
-					   double facets) const;
+                                           const Box<3> & bbox, 
+                                           double facets) const;
 
   private:
     void CalcData();
@@ -431,14 +431,14 @@ namespace netgen
   ///
   class EllipticCone : public QuadraticSurface
   {
-	Point<3> a;
-	Vec<3> vl, vs;
-	double h, vlr;
+        Point<3> a;
+        Vec<3> vl, vs;
+        double h, vlr;
 
   public:
   ///
   EllipticCone (const Point<3> & aa, const Vec<3> & avl,
-	      const Vec<3> & avs, double ah, double avlr);
+              const Vec<3> & avs, double ah, double avlr);
     // default constructor for archive
     EllipticCone() {}
 
@@ -457,13 +457,13 @@ namespace netgen
   virtual double HesseNorm () const;
   virtual double MaxCurvature () const;
   virtual double MaxCurvatureLoc (const Point<3> & /* c */ ,
-				  double /* rad */) const;
+                                  double /* rad */) const;
   ///
   virtual Point<3> GetSurfacePoint () const;
 
   virtual void GetTriangleApproximation (TriangleApproximation & tas,
-					 const Box<3> & bbox,
-					 double facets) const;
+                                         const Box<3> & bbox,
+                                         double facets) const;
 
   private:
   void CalcData();
@@ -516,8 +516,8 @@ namespace netgen
     virtual Point<3> GetSurfacePoint () const;
     /// OK
     virtual void GetPrimitiveData (const char *& classname, 
-				   Array<double> & coeffs) const;
-    /// OK			 
+                                   Array<double> & coeffs) const;
+    /// OK                       
     virtual void SetPrimitiveData (Array<double> & coeffs);
     /// OK
     static Primitive * CreateDefault ();
@@ -529,23 +529,23 @@ namespace netgen
     virtual int IsIdentic (const Surface & s2, int & inv, double eps) const;
     /// OK
     /// virtual void DefineTangentialPlane (const Point<3> & ap1, 
-    //				      const Point<3> & ap2);
+    //                                const Point<3> & ap2);
     /// OK
     /// virtual void ToPlane (const Point<3> & p3d, 
-    ///			Point<2> & pplane, 
-    ///			double h, int & zone) const;
+    ///                 Point<2> & pplane, 
+    ///                 double h, int & zone) const;
     /// OK
     /// virtual void FromPlane (const Point<2> & pplane, 
-    //			  Point<3> & p, double h) const;
+    //                    Point<3> & p, double h) const;
     /// OK
     /// virtual void Project (Point<3> & p) const;
     /// OK
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
     /// OK
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
-					   const Box<3> & bbox, 
-					   double facets) const;
-    /// OK		 
+                                           const Box<3> & bbox, 
+                                           double facets) const;
+    /// OK               
     virtual void Print (ostream & ist) const;
     /// OK
     virtual void Read (istream & ist);

@@ -62,12 +62,12 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
             gp.name = name;
             self.geompoints.Append(gp);
             return self.geompoints.Size()-1;
-	  }),
+          }),
          py::arg("x"), py::arg("y"), py::arg("maxh") = 1e99, py::arg("hpref")=0, py::arg("name")="")
     .def("Append", FunctionPointer([](SplineGeometry2d &self, py::list segment, int leftdomain, int rightdomain,
                                       optional<variant<int, string>> bc, optional<int> copy, double maxh,
                                       double hpref, double hprefleft, double hprefright)
-	  {
+          {
             SplineSegExt * seg;
             if(py::isinstance<py::str>(segment[0]))
               {
@@ -132,36 +132,36 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
               seg->bc = self.GetNSplines()+1;
             self.AppendSegment(seg);
             return self.GetNSplines()-1;
-	  }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
+          }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0),
          py::arg("bc")=nullopt, py::arg("copy")=nullopt, py::arg("maxh")=1e99,
          py::arg("hpref")=0,py::arg("hprefleft")=0,py::arg("hprefright")=0)
 
     
     .def("AppendSegment", FunctionPointer([](SplineGeometry2d &self, py::list point_indices, int leftdomain, int rightdomain)
                                           {
-		  int npts = py::len(point_indices);
-		  SplineSegExt * seg;
-		  //int a = py::extract<int>(point_indices[0]);
-		  if (npts == 2)
-		  {
-			  LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::extract<int>(point_indices[0])()), self.GetPoint(py::extract<int>(point_indices[1])()));
-			  seg = new SplineSegExt(*l);
-			  
-		  }
-		  else if (npts == 3)
-		  {
-			  SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::extract<int>(point_indices[0])()), self.GetPoint(py::extract<int>(point_indices[1])()), self.GetPoint(py::extract<int>(point_indices[2])()));
-			  seg = new SplineSegExt(*seg3);
+                  int npts = py::len(point_indices);
+                  SplineSegExt * seg;
+                  //int a = py::extract<int>(point_indices[0]);
+                  if (npts == 2)
+                  {
+                          LineSeg<2> * l = new LineSeg<2>(self.GetPoint(py::extract<int>(point_indices[0])()), self.GetPoint(py::extract<int>(point_indices[1])()));
+                          seg = new SplineSegExt(*l);
+                          
+                  }
+                  else if (npts == 3)
+                  {
+                          SplineSeg3<2> * seg3 = new SplineSeg3<2>(self.GetPoint(py::extract<int>(point_indices[0])()), self.GetPoint(py::extract<int>(point_indices[1])()), self.GetPoint(py::extract<int>(point_indices[2])()));
+                          seg = new SplineSegExt(*seg3);
 
-		  }
+                  }
                   else
                     throw Exception("Can only append segments with 2 or 3 points!");
-		  seg->leftdom = leftdomain;
-		  seg->rightdom = rightdomain;
-		  seg->hmax = 1e99;
-		  seg->reffak = 1;
-		  seg->copyfrom = -1;
-		  self.AppendSegment(seg);
+                  seg->leftdom = leftdomain;
+                  seg->rightdom = rightdomain;
+                  seg->hmax = 1e99;
+                  seg->reffak = 1;
+                  seg->copyfrom = -1;
+                  self.AppendSegment(seg);
                   }), py::arg("point_indices"), py::arg("leftdomain") = 1, py::arg("rightdomain") = py::int_(0))
 
 
@@ -219,51 +219,51 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
     .def("GetNPoints", [](SplineGeometry2d& self) { return self.GetNP(); })
     .def("GetPoint", [](SplineGeometry2d& self, size_t index) { return Point<2>(self.GetPoint(index)); })
 
-	.def("PlotData", FunctionPointer([](SplineGeometry2d &self)
-	  {
-		  Box<2> box(self.GetBoundingBox());
-		  double xdist = box.PMax()(0) - box.PMin()(0);
-		  double ydist = box.PMax()(1) - box.PMin()(1);
-		  py::tuple xlim = py::make_tuple(box.PMin()(0) - 0.1*xdist, box.PMax()(0) + 0.1*xdist);
-		  py::tuple ylim = py::make_tuple(box.PMin()(1) - 0.1*ydist, box.PMax()(1) + 0.1*ydist);
+        .def("PlotData", FunctionPointer([](SplineGeometry2d &self)
+          {
+                  Box<2> box(self.GetBoundingBox());
+                  double xdist = box.PMax()(0) - box.PMin()(0);
+                  double ydist = box.PMax()(1) - box.PMin()(1);
+                  py::tuple xlim = py::make_tuple(box.PMin()(0) - 0.1*xdist, box.PMax()(0) + 0.1*xdist);
+                  py::tuple ylim = py::make_tuple(box.PMin()(1) - 0.1*ydist, box.PMax()(1) + 0.1*ydist);
 
-		  py::list xpoints, ypoints;
+                  py::list xpoints, ypoints;
 
-		  for (int i = 0; i < self.splines.Size(); i++)
-		  {
-			  py::list xp, yp;
-			  if (self.splines[i]->GetType().compare("line")==0)
-			  {
-				  GeomPoint<2> p1 = self.splines[i]->StartPI();
-				  GeomPoint<2> p2 = self.splines[i]->EndPI();
-				  xp.append(py::cast(p1(0)));
-				  xp.append(py::cast(p2(0)));
-				  yp.append(py::cast(p1(1)));
-				  yp.append(py::cast(p2(1)));
-			  }
-			  else if (self.splines[i]->GetType().compare("spline3")==0)
-			  {
-				  double len = self.splines[i]->Length();
-				  int n = floor(len/(0.05*min(xdist,ydist)));
-				  
-				  for (int j = 0; j <= n; j++)
-				  {
-					  GeomPoint<2> point = self.splines[i]->GetPoint(j*1./n);
-					  xp.append(py::cast(point(0)));
-					  yp.append(py::cast(point(1)));
-				  }
-			  }
-			  else
-			  {
-				  cout << "spline is neither line nor spline3" << endl;
-			  }
-			  xpoints.append(xp);
-			  ypoints.append(yp);
-				  
-		  }
-		  return py::tuple(py::make_tuple(xlim, ylim, xpoints, ypoints));
+                  for (int i = 0; i < self.splines.Size(); i++)
+                  {
+                          py::list xp, yp;
+                          if (self.splines[i]->GetType().compare("line")==0)
+                          {
+                                  GeomPoint<2> p1 = self.splines[i]->StartPI();
+                                  GeomPoint<2> p2 = self.splines[i]->EndPI();
+                                  xp.append(py::cast(p1(0)));
+                                  xp.append(py::cast(p2(0)));
+                                  yp.append(py::cast(p1(1)));
+                                  yp.append(py::cast(p2(1)));
+                          }
+                          else if (self.splines[i]->GetType().compare("spline3")==0)
+                          {
+                                  double len = self.splines[i]->Length();
+                                  int n = floor(len/(0.05*min(xdist,ydist)));
+                                  
+                                  for (int j = 0; j <= n; j++)
+                                  {
+                                          GeomPoint<2> point = self.splines[i]->GetPoint(j*1./n);
+                                          xp.append(py::cast(point(0)));
+                                          yp.append(py::cast(point(1)));
+                                  }
+                          }
+                          else
+                          {
+                                  cout << "spline is neither line nor spline3" << endl;
+                          }
+                          xpoints.append(xp);
+                          ypoints.append(yp);
+                                  
+                  }
+                  return py::tuple(py::make_tuple(xlim, ylim, xpoints, ypoints));
 
-	  }))
+          }))
     .def("_visualizationData", [](SplineGeometry2d &self)
          {
            Box<2> box(self.GetBoundingBox());
@@ -338,56 +338,56 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
            data["bcnames"] = bcnames;
            return data;
          })
-	.def("PointData", FunctionPointer([](SplineGeometry2d &self)
-	  {
-		  py::list xpoints, ypoints, pointindex;
-		  
-		  for (int i = 0; i < self.geompoints.Size(); i++)
-		  {
-			  pointindex.append(py::cast(i));
-			  xpoints.append(py::cast(self.geompoints[i][0]));
-			  ypoints.append(py::cast(self.geompoints[i][1]));
-		  }
-		  return py::tuple(py::make_tuple(xpoints, ypoints, pointindex));
-		  
-	  }))
-	.def("SegmentData", FunctionPointer([](SplineGeometry2d &self)
-	  {
-		  py::list leftpoints, rightpoints, leftdom, rightdom;
+        .def("PointData", FunctionPointer([](SplineGeometry2d &self)
+          {
+                  py::list xpoints, ypoints, pointindex;
+                  
+                  for (int i = 0; i < self.geompoints.Size(); i++)
+                  {
+                          pointindex.append(py::cast(i));
+                          xpoints.append(py::cast(self.geompoints[i][0]));
+                          ypoints.append(py::cast(self.geompoints[i][1]));
+                  }
+                  return py::tuple(py::make_tuple(xpoints, ypoints, pointindex));
+                  
+          }))
+        .def("SegmentData", FunctionPointer([](SplineGeometry2d &self)
+          {
+                  py::list leftpoints, rightpoints, leftdom, rightdom;
 
-		  for (int i = 0; i < self.splines.Size(); i++)
-		  {
-			  GeomPoint<2> point = self.splines[i]->GetPoint(0.5);
-			  Vec<2> normal = self.GetSpline(i).GetTangent(0.5);
-			  double temp = normal(0);
-			  normal(0) = normal(1);
-			  normal(1) = -temp;
+                  for (int i = 0; i < self.splines.Size(); i++)
+                  {
+                          GeomPoint<2> point = self.splines[i]->GetPoint(0.5);
+                          Vec<2> normal = self.GetSpline(i).GetTangent(0.5);
+                          double temp = normal(0);
+                          normal(0) = normal(1);
+                          normal(1) = -temp;
 
-			  leftdom.append(py::cast(self.GetSpline(i).leftdom));
-			  rightdom.append(py::cast(self.GetSpline(i).rightdom));
+                          leftdom.append(py::cast(self.GetSpline(i).leftdom));
+                          rightdom.append(py::cast(self.GetSpline(i).rightdom));
 
-			  rightpoints.append(py::make_tuple(point(0), point(1), normal(0)<0, normal(1)<0));
-			  leftpoints.append(py::make_tuple(point(0), point(1), normal(0)<0, normal(1)<0));
-		  }
-		  return py::tuple(py::make_tuple(leftpoints, rightpoints, leftdom, rightdom));
+                          rightpoints.append(py::make_tuple(point(0), point(1), normal(0)<0, normal(1)<0));
+                          leftpoints.append(py::make_tuple(point(0), point(1), normal(0)<0, normal(1)<0));
+                  }
+                  return py::tuple(py::make_tuple(leftpoints, rightpoints, leftdom, rightdom));
 
-	  }))
-	.def("Print", FunctionPointer([](SplineGeometry2d &self)
-	  {
-		  for (int i = 0; i < self.geompoints.Size(); i++)
-		  {
-			  cout << i << " : " << self.geompoints[i][0] << " , " << self.geompoints[i][1] << endl;
-		  }
-		  //Box<2> box(self.GetBoundingBox());
-		  //cout << box.PMin() << endl;
-		  //cout << box.PMax() << endl;
-		  cout << self.splines.Size() << endl;
-		  for (int i = 0; i < self.splines.Size(); i++)
-		  {
-			  cout << self.splines[i]->GetType() << endl;
-			  //cout << i << " : " << self.splines[i]->GetPoint(0.1) << " , " << self.splines[i]->GetPoint(0.5) << endl;
-		  }
-	  }))
+          }))
+        .def("Print", FunctionPointer([](SplineGeometry2d &self)
+          {
+                  for (int i = 0; i < self.geompoints.Size(); i++)
+                  {
+                          cout << i << " : " << self.geompoints[i][0] << " , " << self.geompoints[i][1] << endl;
+                  }
+                  //Box<2> box(self.GetBoundingBox());
+                  //cout << box.PMin() << endl;
+                  //cout << box.PMax() << endl;
+                  cout << self.splines.Size() << endl;
+                  for (int i = 0; i < self.splines.Size(); i++)
+                  {
+                          cout << self.splines[i]->GetType() << endl;
+                          //cout << i << " : " << self.splines[i]->GetPoint(0.1) << " , " << self.splines[i]->GetPoint(0.5) << endl;
+                  }
+          }))
     .def("Draw", FunctionPointer
          ([] (shared_ptr<SplineGeometry2d> self)
           {
@@ -398,19 +398,19 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
     
     .def("GenerateMesh", [](shared_ptr<SplineGeometry2d> self,
                             optional<MeshingParameters> pars, py::kwargs kwargs)
-		{
+                {
                   MeshingParameters mp;
                   if(pars) mp = *pars;
                   CreateMPfromKwargs(mp, kwargs);
                   py::gil_scoped_release gil_release;
-		  auto mesh = make_shared<Mesh>();
+                  auto mesh = make_shared<Mesh>();
                   mesh->SetGeometry(self);
                   SetGlobalMesh (mesh);
                   ng_geometry = self;
-		  auto result = self->GenerateMesh(mesh, mp);
+                  auto result = self->GenerateMesh(mesh, mp);
                   if(result != 0)
                     throw Exception("Meshing failed!");
-		  return mesh;
+                  return mesh;
                 }, py::arg("mp") = nullopt,
       meshingparameter_description.c_str())
     .def("_SetDomainTensorMeshing", &SplineGeometry2d::SetDomainTensorMeshing)
@@ -442,7 +442,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
   
 
   m.def("Rectangle", [](Point<2> p0, Point<2> p1, string mat, string bc, optional<string> bottom, optional<string> right, optional<string> top, optional<string> left) -> Solid2d
-		  {
+                  {
                       using P = Point<2>;
                       return { {
                               p0,    EdgeInfo{bottom ? *bottom : bc},
@@ -451,7 +451,7 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
                               P{p0[0],p1[1]}, EdgeInfo {left   ? *left   : bc},
                              }, mat};
                   },
-		  "pmin"_a, "pmax"_a, "mat"_a=MAT_DEFAULT, "bc"_a=BC_DEFAULT,
+                  "pmin"_a, "pmax"_a, "mat"_a=MAT_DEFAULT, "bc"_a=BC_DEFAULT,
                   "bottom"_a=nullopt, "right"_a=nullopt, "top"_a=nullopt, "left"_a=nullopt
        );
   m.def("Circle", Circle, py::arg("center"), py::arg("radius"), py::arg("mat")=MAT_DEFAULT, py::arg("bc")=BC_DEFAULT);
@@ -461,20 +461,20 @@ NGCORE_API_EXPORT void ExportGeom2d(py::module &m)
     .def("GenerateSplineGeometry", &CSG2d::GenerateSplineGeometry)
     .def("Add", &CSG2d::Add)
     .def("GenerateMesh", [](CSG2d & self, optional<MeshingParameters> pars, py::kwargs kwargs)
-		{
+                {
                   MeshingParameters mp;
                   if(pars) mp = *pars;
                     CreateMPfromKwargs(mp, kwargs);
                   py::gil_scoped_release gil_release;
-		  auto mesh = make_shared<Mesh>();
+                  auto mesh = make_shared<Mesh>();
                   auto geo = self.GenerateSplineGeometry();
                   mesh->SetGeometry(geo);
                   SetGlobalMesh (mesh);
                   ng_geometry = geo;
-		  auto result = geo->GenerateMesh(mesh, mp);
+                  auto result = geo->GenerateMesh(mesh, mp);
                   if(result != 0)
                     throw Exception("Meshing failed!");
-		  return mesh;
+                  return mesh;
                 }, py::arg("mp") = nullopt,
       meshingparameter_description.c_str())
     ;

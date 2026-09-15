@@ -192,7 +192,7 @@ public:
 
 #ifndef FULLSPEED
       if (likely(p >= next))
-	ThrowException();
+        ThrowException();
 #endif
 
       return reinterpret_cast<T*> (oldp);

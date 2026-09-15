@@ -62,11 +62,11 @@ namespace netgen
                 {
                 case 1:
                     nelp = 3;
-                    outfile << "$ELEMENT TYPE = TRIA3  ESET = ALLQUAD" << endl;		  
+                    outfile << "$ELEMENT TYPE = TRIA3  ESET = ALLQUAD" << endl;           
                     break;
                 case 2:
                     nelp = 4;
-                    outfile << "$ELEMENT TYPE = QUAD4  ESET = ALLQUAD" << endl;		  
+                    outfile << "$ELEMENT TYPE = QUAD4  ESET = ALLQUAD" << endl;           
                     break;
                 }
                 

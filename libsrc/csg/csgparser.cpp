@@ -78,35 +78,35 @@ namespace netgen
     // scan whitespaces
     do
       { 
-	scanin->get(ch);
+        scanin->get(ch);
 
-	//if (ch == '\n') 
-	//  linenum++;
+        //if (ch == '\n') 
+        //  linenum++;
 
-	// end of file reached
-	if (scanin->eof())
-	  {
-	    token = TOK_END;
-	    return;
-	  }
-	if (ch == '\n') 
-	  linenum++;
+        // end of file reached
+        if (scanin->eof())
+          {
+            token = TOK_END;
+            return;
+          }
+        if (ch == '\n') 
+          linenum++;
 
 
-	// skip comment line
-	if (ch == '#')
-	  {
-	    while (ch != '\n')
-	      {
-		scanin->get(ch);
-		if (scanin->eof())
-		  {
-		    token = TOK_END;
-		    return;
-		  }
-	      }
-	    linenum++;
-	  }	
+        // skip comment line
+        if (ch == '#')
+          {
+            while (ch != '\n')
+              {
+                scanin->get(ch);
+                if (scanin->eof())
+                  {
+                    token = TOK_END;
+                    return;
+                  }
+              }
+            linenum++;
+          }     
       }
     while (isspace(ch));
   
@@ -116,58 +116,58 @@ namespace netgen
       case '[': case ']': 
       case '-':
       case '=': case ',': case ';':
-	{
-	  token = TOKEN_TYPE (ch);
-	  break;
-	}
+        {
+          token = TOKEN_TYPE (ch);
+          break;
+        }
   
       default:
-	{
-	  if (isdigit (ch) || ch == '.')
-	    {
-	      scanin->putback (ch);
-	      (*scanin) >> num_value;
-	      token = TOK_NUM;
-	      return;
-	    }
+        {
+          if (isdigit (ch) || ch == '.')
+            {
+              scanin->putback (ch);
+              (*scanin) >> num_value;
+              token = TOK_NUM;
+              return;
+            }
 
-	  if (isalpha (ch))
-	    {
-	      string_value = string (1, ch);
-	      scanin->get(ch);
-	      while (isalnum(ch) || ch == '_')
-		{
-		  string_value += ch;
-		  scanin->get(ch);
-		}
-	      scanin->putback (ch);
-	    }
+          if (isalpha (ch))
+            {
+              string_value = string (1, ch);
+              scanin->get(ch);
+              while (isalnum(ch) || ch == '_')
+                {
+                  string_value += ch;
+                  scanin->get(ch);
+                }
+              scanin->putback (ch);
+            }
 
-	  int nr = 0;
-	  while (defkw[nr].kw)
-	    {
-	      if (string_value == defkw[nr].name)
-		{
-		  token = defkw[nr].kw;
-		  return;
-		}
-	      nr++;
-	    }
+          int nr = 0;
+          while (defkw[nr].kw)
+            {
+              if (string_value == defkw[nr].name)
+                {
+                  token = defkw[nr].kw;
+                  return;
+                }
+              nr++;
+            }
 
-	  nr = 0;
-	  while (defprim[nr].kw)
-	    {
-	      if (string_value == defprim[nr].name)
-		{
-		  token = TOK_PRIMITIVE;
-		  prim_token = defprim[nr].kw;
-		  return;
-		}
-	      nr++;
-	    }
+          nr = 0;
+          while (defprim[nr].kw)
+            {
+              if (string_value == defprim[nr].name)
+                {
+                  token = TOK_PRIMITIVE;
+                  prim_token = defprim[nr].kw;
+                  return;
+                }
+              nr++;
+            }
 
-	  token = TOK_STRING;
-	}
+          token = TOK_STRING;
+        }
       }
   }
 
@@ -196,8 +196,8 @@ namespace netgen
   {
     if (scan.GetToken() == '-')
       {
-	scan.ReadNext();
-	return -ParseNumber (scan);
+        scan.ReadNext();
+        return -ParseNumber (scan);
       }
     if (scan.GetToken() != TOK_NUM) scan.Error ("number expected");
     double val = scan.GetNumValue();
@@ -259,421 +259,421 @@ namespace netgen
   {
     if (scan.GetToken() == TOK_PRIMITIVE)
       {
-	switch (scan.GetPrimitiveToken())
-	  {
-	  case TOK_PLANE:
-	    {
-	      Point<3> p;
-	      Vec<3> v;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> p >> ';' >> v >> ')';
+        switch (scan.GetPrimitiveToken())
+          {
+          case TOK_PLANE:
+            {
+              Point<3> p;
+              Vec<3> v;
+              
+              scan.ReadNext();
+              scan >> '(' >> p >> ';' >> v >> ')';
 
-	      OneSurfacePrimitive * surf = new Plane ( p, v );
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
+              OneSurfacePrimitive * surf = new Plane ( p, v );
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
 
-	  case TOK_CYLINDER:
-	    {
-	      Point<3> pa, pb;
-	      double r;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> pa >> ';' >> pb >> ';' >> r >> ')';
+          case TOK_CYLINDER:
+            {
+              Point<3> pa, pb;
+              double r;
+              
+              scan.ReadNext();
+              scan >> '(' >> pa >> ';' >> pb >> ';' >> r >> ')';
 
-	      OneSurfacePrimitive * surf = new Cylinder ( pa, pb, r );
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
+              OneSurfacePrimitive * surf = new Cylinder ( pa, pb, r );
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
 
-	  case TOK_ELLIPTICCYLINDER:
-	    {
-	      Point<3> pa;
-	      Vec<3> vl, vs;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> pa >> ';' >> vl >> ';' >> vs >> ')';
+          case TOK_ELLIPTICCYLINDER:
+            {
+              Point<3> pa;
+              Vec<3> vl, vs;
+              
+              scan.ReadNext();
+              scan >> '(' >> pa >> ';' >> vl >> ';' >> vs >> ')';
 
-	      OneSurfacePrimitive * surf = new EllipticCylinder ( pa, vl, vs);
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
-
-
-	  case TOK_ELLIPSOID:
-	    {
-	      Point<3> pa;
-	      Vec<3> v1, v2, v3;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> pa >> ';' >> v1 >> ';' >> v2 >> ';' >> v3 >> ')';
-
-	      OneSurfacePrimitive * surf = new Ellipsoid ( pa, v1, v2, v3);
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
+              OneSurfacePrimitive * surf = new EllipticCylinder ( pa, vl, vs);
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
 
 
-	  case TOK_CONE:
-	    {
-	      Point<3> pa, pb;
-	      double ra, rb;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> pa >> ';' >> ra >> ';' >> pb >> ';' >> rb >> ')';
+          case TOK_ELLIPSOID:
+            {
+              Point<3> pa;
+              Vec<3> v1, v2, v3;
+              
+              scan.ReadNext();
+              scan >> '(' >> pa >> ';' >> v1 >> ';' >> v2 >> ';' >> v3 >> ')';
 
-	      OneSurfacePrimitive * surf = new Cone ( pa, pb, ra, rb );
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
+              OneSurfacePrimitive * surf = new Ellipsoid ( pa, v1, v2, v3);
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
 
-	  case TOK_ELLIPTICCONE:
-	    {
+
+          case TOK_CONE:
+            {
+              Point<3> pa, pb;
+              double ra, rb;
+              
+              scan.ReadNext();
+              scan >> '(' >> pa >> ';' >> ra >> ';' >> pb >> ';' >> rb >> ')';
+
+              OneSurfacePrimitive * surf = new Cone ( pa, pb, ra, rb );
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
+
+          case TOK_ELLIPTICCONE:
+            {
               Point<3> a;
-	      Vec<3> vl, vs;
-	      double h, vlr;
+              Vec<3> vl, vs;
+              double h, vlr;
 
-	      scan.ReadNext();
-	      scan >> '(' >> a >> ';' >> vl >> ';' >> vs >> ';' >> h >>';' >> vlr >>  ')';
+              scan.ReadNext();
+              scan >> '(' >> a >> ';' >> vl >> ';' >> vs >> ';' >> h >>';' >> vlr >>  ')';
 
-	      OneSurfacePrimitive * surf = new EllipticCone ( a, vl, vs, h, vlr );
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
+              OneSurfacePrimitive * surf = new EllipticCone ( a, vl, vs, h, vlr );
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
 
-	  case TOK_SPHERE:
-	    {
-	      Point<3> p;
-	      double r;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> p >> ';' >> r >> ')';
+          case TOK_SPHERE:
+            {
+              Point<3> p;
+              double r;
+              
+              scan.ReadNext();
+              scan >> '(' >> p >> ';' >> r >> ')';
 
-	      OneSurfacePrimitive * surf = new Sphere ( p, r );
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
+              OneSurfacePrimitive * surf = new Sphere ( p, r );
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
 
-	  case TOK_ORTHOBRICK:
-	    {
-	      Point<3> pa, pb;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> pa >> ';' >> pb >> ')';
-	      
+          case TOK_ORTHOBRICK:
+            {
+              Point<3> pa, pb;
+              
+              scan.ReadNext();
+              scan >> '(' >> pa >> ';' >> pb >> ')';
+              
 
-	      Primitive * nprim = new OrthoBrick (pa, pb);
-	      geom->AddSurfaces (nprim);
-	      return new Solid (nprim);
-	    } 
+              Primitive * nprim = new OrthoBrick (pa, pb);
+              geom->AddSurfaces (nprim);
+              return new Solid (nprim);
+            } 
 
-	  case TOK_POLYHEDRON:
-	    {
-	      // Added by Dalibor Lukas, October 15, 2003
+          case TOK_POLYHEDRON:
+            {
+              // Added by Dalibor Lukas, October 15, 2003
 
-	      Point<3> p;
-	      //int pi1, pi2, pi3, pi4;
-	      
-	      scan.ReadNext();
-	      ParseChar (scan, '(');
-	      
-	      Polyhedra * polyhedron = new Polyhedra;
+              Point<3> p;
+              //int pi1, pi2, pi3, pi4;
+              
+              scan.ReadNext();
+              ParseChar (scan, '(');
+              
+              Polyhedra * polyhedron = new Polyhedra;
 
-	      // scanning the points
-	      while (1)
-		{
-		  p = Point<3> (ParseVector (scan));
-		  ParseChar (scan, ';');
+              // scanning the points
+              while (1)
+                {
+                  p = Point<3> (ParseVector (scan));
+                  ParseChar (scan, ';');
 
-		  polyhedron->AddPoint(p);
+                  polyhedron->AddPoint(p);
 
-		  if (scan.GetToken() == ';')
-		    {
-		      scan.ReadNext();
-		      break;
-		    }
-		}
+                  if (scan.GetToken() == ';')
+                    {
+                      scan.ReadNext();
+                      break;
+                    }
+                }
 
-	      // scanning the faces
-	      int inputface = 0;
-	      while (1)
-		{
-		  Array<int> pnums,cleaned_pnums;
-		  for(int i=0; i<3; i++)
-		    {
-		      pnums.Append((int) (ParseNumber (scan)));
-		      if(i<2) 
-			ParseChar (scan, ',');
-		    }
+              // scanning the faces
+              int inputface = 0;
+              while (1)
+                {
+                  Array<int> pnums,cleaned_pnums;
+                  for(int i=0; i<3; i++)
+                    {
+                      pnums.Append((int) (ParseNumber (scan)));
+                      if(i<2) 
+                        ParseChar (scan, ',');
+                    }
 
-		  if (scan.GetToken() == TOK_COMMA)
-		    {
-		      ParseChar (scan, ',');
-		      pnums.Append((int) (ParseNumber (scan)));	
-		    }
+                  if (scan.GetToken() == TOK_COMMA)
+                    {
+                      ParseChar (scan, ',');
+                      pnums.Append((int) (ParseNumber (scan))); 
+                    }
 
-		  for(int i=0; i<pnums.Size(); i++)
-		    if(!cleaned_pnums.Contains(pnums[i]))
-		      cleaned_pnums.Append(pnums[i]);
+                  for(int i=0; i<pnums.Size(); i++)
+                    if(!cleaned_pnums.Contains(pnums[i]))
+                      cleaned_pnums.Append(pnums[i]);
 
-		  if(cleaned_pnums.Size() == 3)
-		    {
-		      polyhedron->AddFace(cleaned_pnums[0]-1,
-					  cleaned_pnums[1]-1,
-					  cleaned_pnums[2]-1,
-					  inputface);
-		    }
-		  else if(cleaned_pnums.Size() == 4)
-		    {
-		      polyhedron->AddFace(cleaned_pnums[0]-1,
-					  cleaned_pnums[1]-1,
-					  cleaned_pnums[2]-1,
-					  inputface);
-		      polyhedron->AddFace(cleaned_pnums[0]-1,
-					  cleaned_pnums[2]-1,
-					  cleaned_pnums[3]-1,
-					  inputface);
-		    }
-		  else
-		    {
-		      ostringstream msg;
-		      msg << "Something wrong with polyhedron face:";
-		      for(int i=0; i<pnums.Size(); i++)
-			msg << " " << pnums[i];
-		      throw NgException(msg.str());
-		    }
-		  
-		      
+                  if(cleaned_pnums.Size() == 3)
+                    {
+                      polyhedron->AddFace(cleaned_pnums[0]-1,
+                                          cleaned_pnums[1]-1,
+                                          cleaned_pnums[2]-1,
+                                          inputface);
+                    }
+                  else if(cleaned_pnums.Size() == 4)
+                    {
+                      polyhedron->AddFace(cleaned_pnums[0]-1,
+                                          cleaned_pnums[1]-1,
+                                          cleaned_pnums[2]-1,
+                                          inputface);
+                      polyhedron->AddFace(cleaned_pnums[0]-1,
+                                          cleaned_pnums[2]-1,
+                                          cleaned_pnums[3]-1,
+                                          inputface);
+                    }
+                  else
+                    {
+                      ostringstream msg;
+                      msg << "Something wrong with polyhedron face:";
+                      for(int i=0; i<pnums.Size(); i++)
+                        msg << " " << pnums[i];
+                      throw NgException(msg.str());
+                    }
+                  
+                      
 
-		  if (scan.GetToken() == ')')
-		    {
-		      scan.ReadNext();
-		      break;
-		    }
-		  scan.ReadNext();
-		  inputface++;
-		}
+                  if (scan.GetToken() == ')')
+                    {
+                      scan.ReadNext();
+                      break;
+                    }
+                  scan.ReadNext();
+                  inputface++;
+                }
 
-	      geom->AddSurfaces (polyhedron);
-	      return new Solid (polyhedron);
-	    }
-
-
-	  case TOK_REVOLUTION:
-	    {
-	      Point<3> p0,p1;
-
-	      scan.ReadNext();
-	      scan >> '(' >> p0 >> ';' >> p1 >> ';';
-
-	      string spline = scan.GetStringValue();
-	      
-	      scan.ReadNext();
-	      scan >> ')';
-	      
-	      if(!geom->GetSplineCurve2d(spline))
-		{
-		  scan.Error ( string("2D Spline curve not found: ") + spline );
-		  break;
-		}
-
-	      Primitive * nprim = new Revolution(p0,p1,
-						 geom->GetSplineCurve2d(spline));
-
-	      geom->AddSurfaces (nprim);
-	      return new Solid(nprim);
-	    }
+              geom->AddSurfaces (polyhedron);
+              return new Solid (polyhedron);
+            }
 
 
-	  case TOK_EXTRUSION: 
-	    {   
-	      scan.ReadNext();
-	      scan >> '(';
-	      string epath = scan.GetStringValue();
-	      scan.ReadNext();
-	      scan >> ';';
-	      string profile = scan.GetStringValue();
+          case TOK_REVOLUTION:
+            {
+              Point<3> p0,p1;
 
-	      
-	      scan.ReadNext();
-	      Vec<3> z_dir;
-	      scan >> ';' >> z_dir(0) >> ',' >> z_dir(1) >> ',' >> z_dir(2) >> ')';
-	      
-	      if(!geom->GetSplineCurve2d(profile))
-		{
-		  scan.Error ( string("2D Spline curve not found: ") + profile );
-		  break;
-		}
-	      if(!geom->GetSplineCurve3d(epath))
-		{
-		  scan.Error ( string("2D Spline curve not found: ") + epath );
-		  break;
-		}
-	      
-	      Primitive * nprim = new Extrusion(geom->GetSplineCurve3d(epath),
-						geom->GetSplineCurve2d(profile),
-						z_dir);
-	      geom->AddSurfaces (nprim);
-	      return new Solid(nprim);
-	    }
+              scan.ReadNext();
+              scan >> '(' >> p0 >> ';' >> p1 >> ';';
+
+              string spline = scan.GetStringValue();
+              
+              scan.ReadNext();
+              scan >> ')';
+              
+              if(!geom->GetSplineCurve2d(spline))
+                {
+                  scan.Error ( string("2D Spline curve not found: ") + spline );
+                  break;
+                }
+
+              Primitive * nprim = new Revolution(p0,p1,
+                                                 geom->GetSplineCurve2d(spline));
+
+              geom->AddSurfaces (nprim);
+              return new Solid(nprim);
+            }
 
 
-	  /// Torus 
-    	  /// Lorenzo Codecasa (codecasa@elet.polimi.it)
-    	  /// April 27th, 2005 
-	  ///
-	  /// begin...
-	  case TOK_TORUS:
-	    {     
-	      Point<3> pc; 
-	      Vec<3> vn;
-	      double R, r;
-	      
-	      scan.ReadNext();
-	      scan >> '(' >> pc >> ';' >> vn >> ';' >> R >> ';' >> r >> ')';
+          case TOK_EXTRUSION: 
+            {   
+              scan.ReadNext();
+              scan >> '(';
+              string epath = scan.GetStringValue();
+              scan.ReadNext();
+              scan >> ';';
+              string profile = scan.GetStringValue();
 
-	      OneSurfacePrimitive * surf = new Torus ( pc, vn, R, r );
-	      geom->AddSurfaces (surf);
-	      return new Solid (surf);
-	    }
-	  /// ..end
-
-
-
-
-	  case TOK_TRANSLATE: 
-	    {
-	      Vec<3> v;
-	      scan.ReadNext();
-
-	      ParseChar (scan, '(');
-	      v = ParseVector (scan);
-	      ParseChar (scan, ';');
-	      
-	      Solid * sol1 = ParseSolid (scan);
-
-	      ParseChar (scan, ')');
-
-	      Solid * nsol = sol1 -> Copy(*geom);
-	      Transformation<3> trans(v);
-	      nsol -> Transform (trans);
-	      return nsol;
-	    }
+              
+              scan.ReadNext();
+              Vec<3> z_dir;
+              scan >> ';' >> z_dir(0) >> ',' >> z_dir(1) >> ',' >> z_dir(2) >> ')';
+              
+              if(!geom->GetSplineCurve2d(profile))
+                {
+                  scan.Error ( string("2D Spline curve not found: ") + profile );
+                  break;
+                }
+              if(!geom->GetSplineCurve3d(epath))
+                {
+                  scan.Error ( string("2D Spline curve not found: ") + epath );
+                  break;
+                }
+              
+              Primitive * nprim = new Extrusion(geom->GetSplineCurve3d(epath),
+                                                geom->GetSplineCurve2d(profile),
+                                                z_dir);
+              geom->AddSurfaces (nprim);
+              return new Solid(nprim);
+            }
 
 
-	  case TOK_ROTATE: 
-	    {
-	      Point<3> c;
-	      Vec<3> v;
-	      scan.ReadNext();
+          /// Torus 
+          /// Lorenzo Codecasa (codecasa@elet.polimi.it)
+          /// April 27th, 2005 
+          ///
+          /// begin...
+          case TOK_TORUS:
+            {     
+              Point<3> pc; 
+              Vec<3> vn;
+              double R, r;
+              
+              scan.ReadNext();
+              scan >> '(' >> pc >> ';' >> vn >> ';' >> R >> ';' >> r >> ')';
 
-	      scan >> '(' >> c >> ';' >> v >> ';';
-
-	      Solid * sol1 = ParseSolid (scan);
-
-	      ParseChar (scan, ')');
-
-	      Solid * nsol = sol1 -> Copy(*geom);
-	      Transformation<3> trans(c,v(0),v(1),v(2));
-	      nsol -> Transform (trans);
-	      return nsol;
-	    }
-
-
-	  case TOK_MULTITRANSLATE: 
-	    {
-	      Vec<3> v;
-	      int n;
-	      
-	      scan.ReadNext();
-
-	      scan >> '(' >> v >> ';' >> n >> ';';
-
-	      Solid * sol1 = ParseSolid (scan);
-	      
-	      scan >> ')';
-	      
-	      Solid * hsol = sol1;
-	      for (int i = 1; i <= n; i++)
-		{
-		  Solid * nsol = sol1 -> Copy(*geom);
-		  Transformation<3> trans(double(i) * v);
-		  
-		  nsol -> Transform (trans);
-		  hsol = new Solid (Solid::UNION, hsol, nsol); 
-		}
-	      return hsol;
-	    }
+              OneSurfacePrimitive * surf = new Torus ( pc, vn, R, r );
+              geom->AddSurfaces (surf);
+              return new Solid (surf);
+            }
+          /// ..end
 
 
-	  case TOK_MULTIROTATE: 
-	    {
-	      Point<3> c;
-	      Vec<3> v;
-	      int n;
-	      
-	      scan.ReadNext();
-
-	      scan >> '(' >> c >> ';' >> v >> ';' >> n >> ';';
-	      Solid * sol1 = ParseSolid (scan);
-	      scan >> ')';
-
-	      Transformation<3> trans(c, v(0), v(1), v(2));
-	      Transformation<3> multi(Vec<3>(0,0,0));
-	      Transformation<3> ht;
-
-	      Solid * hsol = sol1;
-	      for (int i = 1; i <= n; i++)
-		{
-		  Solid * nsol = sol1 -> Copy(*geom);
-
-		  nsol -> Transform (multi);
-		  hsol = new Solid (Solid::UNION, hsol, nsol); 
-
-		  ht=multi;
-		  multi.Combine (trans, ht);
-		}
-	      return hsol;
-	    }
 
 
-	  default:
-	    {
-	      scan.Error (string ("unknown primary ") + scan.GetStringValue());
-	    }
+          case TOK_TRANSLATE: 
+            {
+              Vec<3> v;
+              scan.ReadNext();
 
-	  }
+              ParseChar (scan, '(');
+              v = ParseVector (scan);
+              ParseChar (scan, ';');
+              
+              Solid * sol1 = ParseSolid (scan);
+
+              ParseChar (scan, ')');
+
+              Solid * nsol = sol1 -> Copy(*geom);
+              Transformation<3> trans(v);
+              nsol -> Transform (trans);
+              return nsol;
+            }
+
+
+          case TOK_ROTATE: 
+            {
+              Point<3> c;
+              Vec<3> v;
+              scan.ReadNext();
+
+              scan >> '(' >> c >> ';' >> v >> ';';
+
+              Solid * sol1 = ParseSolid (scan);
+
+              ParseChar (scan, ')');
+
+              Solid * nsol = sol1 -> Copy(*geom);
+              Transformation<3> trans(c,v(0),v(1),v(2));
+              nsol -> Transform (trans);
+              return nsol;
+            }
+
+
+          case TOK_MULTITRANSLATE: 
+            {
+              Vec<3> v;
+              int n;
+              
+              scan.ReadNext();
+
+              scan >> '(' >> v >> ';' >> n >> ';';
+
+              Solid * sol1 = ParseSolid (scan);
+              
+              scan >> ')';
+              
+              Solid * hsol = sol1;
+              for (int i = 1; i <= n; i++)
+                {
+                  Solid * nsol = sol1 -> Copy(*geom);
+                  Transformation<3> trans(double(i) * v);
+                  
+                  nsol -> Transform (trans);
+                  hsol = new Solid (Solid::UNION, hsol, nsol); 
+                }
+              return hsol;
+            }
+
+
+          case TOK_MULTIROTATE: 
+            {
+              Point<3> c;
+              Vec<3> v;
+              int n;
+              
+              scan.ReadNext();
+
+              scan >> '(' >> c >> ';' >> v >> ';' >> n >> ';';
+              Solid * sol1 = ParseSolid (scan);
+              scan >> ')';
+
+              Transformation<3> trans(c, v(0), v(1), v(2));
+              Transformation<3> multi(Vec<3>(0,0,0));
+              Transformation<3> ht;
+
+              Solid * hsol = sol1;
+              for (int i = 1; i <= n; i++)
+                {
+                  Solid * nsol = sol1 -> Copy(*geom);
+
+                  nsol -> Transform (multi);
+                  hsol = new Solid (Solid::UNION, hsol, nsol); 
+
+                  ht=multi;
+                  multi.Combine (trans, ht);
+                }
+              return hsol;
+            }
+
+
+          default:
+            {
+              scan.Error (string ("unknown primary ") + scan.GetStringValue());
+            }
+
+          }
       }
 
     else if (scan.GetToken() == TOK_STRING &&
-	     geom->GetSolid(scan.GetStringValue()))
+             geom->GetSolid(scan.GetStringValue()))
 
       {
-	Solid * sol = const_cast<Solid*> (geom->GetSolid(scan.GetStringValue()));
-	scan.ReadNext();
-	return sol;
+        Solid * sol = const_cast<Solid*> (geom->GetSolid(scan.GetStringValue()));
+        scan.ReadNext();
+        return sol;
       }
 
     else if (scan.GetToken() == TOK_NOT)
 
       {
-	scan.ReadNext();
-	Solid * sol1 = ParsePrimary (scan);
-	return new Solid (Solid::SUB, sol1);
+        scan.ReadNext();
+        Solid * sol1 = ParsePrimary (scan);
+        return new Solid (Solid::SUB, sol1);
       }
 
     else if (scan.GetToken() == '(')
 
       {
-	scan.ReadNext();
-	Solid * sol1 = ParseSolid (scan);
-	scan.ReadNext();
-	return sol1;
+        scan.ReadNext();
+        Solid * sol1 = ParseSolid (scan);
+        scan.ReadNext();
+        return sol1;
       }
 
     scan.Error (string ("not a primary, name = ")+
-		scan.GetStringValue());
+                scan.GetStringValue());
     return 0;
   }
 
@@ -684,9 +684,9 @@ namespace netgen
     Solid * sol = ParsePrimary(scan);
     while (scan.GetToken() == TOK_AND)
       {
-	scan.ReadNext();
-	Solid * sol2 = ParsePrimary(scan);
-	sol = new Solid (Solid::SECTION, sol, sol2);
+        scan.ReadNext();
+        Solid * sol2 = ParsePrimary(scan);
+        sol = new Solid (Solid::SECTION, sol, sol2);
       }
     return sol;
   }
@@ -697,9 +697,9 @@ namespace netgen
     Solid * sol = ParseTerm(scan);
     while (scan.GetToken() == TOK_OR)
       {
-	scan.ReadNext();
-	Solid * sol2 = ParseTerm(scan);
-	sol = new Solid (Solid::UNION, sol, sol2);
+        scan.ReadNext();
+        Solid * sol2 = ParseTerm(scan);
+        sol = new Solid (Solid::UNION, sol, sol2);
       }
     return sol;
   }
@@ -719,12 +719,12 @@ namespace netgen
     spline.geompoints.SetSize(nump);
     for(int i = 0; i<nump; i++)
       {
-	if(D==2)
-	  scan >> x(0) >> ',' >> x(1) >> ';';
-	else if(D==3)
-	  scan >> x(0) >> ',' >> x(1) >> ',' >> x(2) >> ';';
-	
-	spline.geompoints[i] = GeomPoint<D>(x,hd);
+        if(D==2)
+          scan >> x(0) >> ',' >> x(1) >> ';';
+        else if(D==3)
+          scan >> x(0) >> ',' >> x(1) >> ',' >> x(2) >> ';';
+        
+        spline.geompoints[i] = GeomPoint<D>(x,hd);
       }
     
     scan >> numseg;// >> ';';
@@ -738,27 +738,27 @@ namespace netgen
     {
       scan >> ';' >> pnums >> ',';
       if (pnums == 2)
-	{
-	  scan >> pnum1 >> ',' >> pnum2;// >> ';';
-	  spline.splines[i] = new LineSeg<D>(spline.geompoints[pnum1-1],
-					     spline.geompoints[pnum2-1]);
-	}
+        {
+          scan >> pnum1 >> ',' >> pnum2;// >> ';';
+          spline.splines[i] = new LineSeg<D>(spline.geompoints[pnum1-1],
+                                             spline.geompoints[pnum2-1]);
+        }
       else if (pnums == 3)
-	{
-	  scan >> pnum1 >> ',' >> pnum2 >> ',' 
-	       >> pnum3;// >> ';';
-	  spline.splines[i] = new SplineSeg3<D>(spline.geompoints[pnum1-1],
-						spline.geompoints[pnum2-1],
-						spline.geompoints[pnum3-1]);
-	}
+        {
+          scan >> pnum1 >> ',' >> pnum2 >> ',' 
+               >> pnum3;// >> ';';
+          spline.splines[i] = new SplineSeg3<D>(spline.geompoints[pnum1-1],
+                                                spline.geompoints[pnum2-1],
+                                                spline.geompoints[pnum3-1]);
+        }
       else if (pnums == 4)
-	{
-	  scan >> pnum1 >> ',' >> pnum2 >> ',' 
-	       >> pnum3;// >> ';';
-	  spline.splines[i] = new CircleSeg<D>(spline.geompoints[pnum1-1],
-					       spline.geompoints[pnum2-1],
-					       spline.geompoints[pnum3-1]);
-	}
+        {
+          scan >> pnum1 >> ',' >> pnum2 >> ',' 
+               >> pnum3;// >> ';';
+          spline.splines[i] = new CircleSeg<D>(spline.geompoints[pnum1-1],
+                                               spline.geompoints[pnum2-1],
+                                               spline.geompoints[pnum3-1]);
+        }
     }
   }
 
@@ -769,59 +769,59 @@ namespace netgen
   {
     while (scan.GetToken() == '-')
       {
-	scan.ReadNext();
-	string name = scan.GetStringValue();
-	scan.ReadNext();
-	if (scan.GetToken() == '=')
-	  {
-	    scan.ReadNext();
-	    if (scan.GetToken() == TOK_STRING)
-	      {
-		flags.SetFlag (name.c_str(), scan.GetStringValue().c_str());
-		scan.ReadNext();
-	      }
-	    else if (scan.GetToken() == '[')
-	      {
-		scan.ReadNext();
+        scan.ReadNext();
+        string name = scan.GetStringValue();
+        scan.ReadNext();
+        if (scan.GetToken() == '=')
+          {
+            scan.ReadNext();
+            if (scan.GetToken() == TOK_STRING)
+              {
+                flags.SetFlag (name.c_str(), scan.GetStringValue().c_str());
+                scan.ReadNext();
+              }
+            else if (scan.GetToken() == '[')
+              {
+                scan.ReadNext();
 
-		if(scan.GetToken() == '-' || scan.GetToken() == TOK_NUM)
-		  {
-		    Array<double> vals;
-		    vals.Append (ParseNumber(scan));
-		    while (scan.GetToken() == ',')
-		      {
-			scan.ReadNext();
-			vals.Append (ParseNumber(scan));
-		      }
-		    ParseChar (scan, ']');
-		    flags.SetFlag (name, vals);
-		  }
-		else
-		  { // string list
-		    Array<string> vals;
+                if(scan.GetToken() == '-' || scan.GetToken() == TOK_NUM)
+                  {
+                    Array<double> vals;
+                    vals.Append (ParseNumber(scan));
+                    while (scan.GetToken() == ',')
+                      {
+                        scan.ReadNext();
+                        vals.Append (ParseNumber(scan));
+                      }
+                    ParseChar (scan, ']');
+                    flags.SetFlag (name, vals);
+                  }
+                else
+                  { // string list
+                    Array<string> vals;
                     vals.Append(scan.GetStringValue());
-		    scan.ReadNext();
+                    scan.ReadNext();
 
-		    while (scan.GetToken() == ',')
-		      {
-			scan.ReadNext();
+                    while (scan.GetToken() == ',')
+                      {
+                        scan.ReadNext();
                         vals.Append(scan.GetStringValue());
-			scan.ReadNext();
-		      }
-		    ParseChar (scan, ']');
-		    flags.SetFlag (name, vals);
-		  }
-	      }
-	    else if (scan.GetToken() == TOK_NUM)
-	      {
-		flags.SetFlag (name.c_str(), scan.GetNumValue());
-		scan.ReadNext();
-	      }
-	  }     
-	else
-	  {
-	    flags.SetFlag (name.c_str());
-	  }
+                        scan.ReadNext();
+                      }
+                    ParseChar (scan, ']');
+                    flags.SetFlag (name, vals);
+                  }
+              }
+            else if (scan.GetToken() == TOK_NUM)
+              {
+                flags.SetFlag (name.c_str(), scan.GetNumValue());
+                scan.ReadNext();
+              }
+          }     
+        else
+          {
+            flags.SetFlag (name.c_str());
+          }
       }
   }
 
@@ -849,525 +849,525 @@ namespace netgen
 
     try
       {
-	while (1)
-	  {
-	    if (scan.GetToken() == TOK_END) break;
-	    
-	    if (scan.GetToken() == TOK_SOLID)
-	      {
-		scan.ReadNext();
-		if (scan.GetToken() != TOK_STRING)
-		  scan.Error ("name identifier expected");
-		string solidname = scan.GetStringValue();
-
-		scan.ReadNext();
-
-		ParseChar (scan, '=');
-		Solid * solid = ParseSolid (scan);
-
-		Flags flags;
-		ParseFlags (scan, flags);
-
-		geom->SetSolid (solidname.c_str(), new Solid (Solid::ROOT, solid)); 
-		geom->SetFlags (solidname.c_str(), flags); 
-		
-		ParseChar (scan, ';');
-		
-		PrintMessage (4, "define solid ", solidname);
-	      }
-
-	    else if (scan.GetToken() == TOK_TLO)
-
-	      { // a TopLevelObject definition
-
-		scan.ReadNext();
-		
-		string name = scan.GetStringValue();
-		scan.ReadNext();
-
-		if (scan.GetToken() != TOK_STRING)
-
-		  { // a solid TLO
-
-		    Flags flags;
-		    ParseFlags (scan, flags);
-		    
-		    ParseChar (scan, ';');
-		    if (!geom->GetSolid (name))
-		      scan.Error ("Top-Level-Object "+name+" not defined");
-
-		    int tlonr = 
-		      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name));
-		    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
-
-		    if (flags.NumListFlagDefined ("col"))
-		      {
-			const Array<double> & col =
-			  flags.GetNumListFlag ("col");
-			tlo->SetRGB (col[0], col[1], col[2]);
-		      }
-
-		    if (flags.GetDefineFlag ("transparent"))
-		      tlo->SetTransparent (1);
-
-		    tlo->SetMaterial (flags.GetStringFlag ("material", ""));
-		    tlo->SetLayer (int(flags.GetNumFlag ("layer", 1)));
-		    if (flags.NumFlagDefined ("maxh"))
-		      tlo->SetMaxH (flags.GetNumFlag("maxh", 1e10));
-		  }
-
-		else
-		  
-		  { // a surface TLO
-
-		    string surfname = scan.GetStringValue();
-		    scan.ReadNext();
-
-		    Flags flags;
-		    ParseFlags (scan, flags);
-		    
-		    ParseChar (scan, ';');
-
-		    Array<int> si;
-		    geom->GetSolid(surfname)->GetSurfaceIndices(si);
-		    int tlonr = 
-		      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name),
-					       (Surface*)geom->GetSurface(si[0]));
-		    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
-		    if (flags.NumListFlagDefined ("col"))
-		      {
-			const auto& col = flags.GetNumListFlag ("col");
-			tlo->SetRGB (col[0], col[1], col[2]);
-		      }
-		    if (flags.GetDefineFlag ("transparent"))
-		      tlo->SetTransparent (1);
-
-		    if (flags.NumFlagDefined ("maxh"))
-		      tlo->SetMaxH (flags.GetNumFlag("maxh", 1e10));
-		    tlo->SetLayer (int(flags.GetNumFlag ("layer", 1)));
-		    tlo->SetBCProp (int(flags.GetNumFlag ("bc", -1)));
-		    if ( flags.StringFlagDefined("bcname") )
-		      tlo->SetBCName ( flags.GetStringFlag ("bcname", "default") );
-		  }
-	      }
-	    
-	    else if (scan.GetToken() == TOK_IDENTIFY)
-
-	      {
-		
-		scan.ReadNext();
-		switch (scan.GetToken())
-		  {
-		  case TOK_CLOSESURFACES:
-		    {
-		      scan.ReadNext();
-		      
-		      string name1 = scan.GetStringValue();
-		      scan.ReadNext();
-		      
-		      string name2 = scan.GetStringValue();
-		      scan.ReadNext();
-
-		      Flags flags;
-		      ParseFlags (scan, flags);
-		      
-		      ParseChar (scan, ';');
-		      
-		      
-		      Array<int> si1, si2;
-		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
-		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
-
-		      const TopLevelObject * domain = 0;
-		      if (flags.StringFlagDefined ("tlo"))
-			{
-			  domain = 
-			    geom->GetTopLevelObject (geom->GetSolid(flags.GetStringFlag ("tlo","")));
-			  if (!domain) 
-			    scan.Error ("identification needs undefined tlo");
-			}
-
-		      geom->AddIdentification 
-			(new CloseSurfaceIdentification 
-			 (geom->GetNIdentifications()+1, *geom, 
-			  geom->GetSurface (si1[0]), geom->GetSurface (si2[0]),
-			  domain,
-			  flags));
-
-		      break;
-		    }
-		    
-		  case TOK_PERIODIC:
-		    {
-		      scan.ReadNext();
-		      
-		      string name1 = scan.GetStringValue();
-		      scan.ReadNext();
-
-		      string name2 = scan.GetStringValue();
-		      scan.ReadNext();
-
-		      ParseChar (scan, ';');
-
-		      
-		      Array<int> si1, si2;
-		      geom->GetSolid(name1)->GetSurfaceIndices(si1);
-		      geom->GetSolid(name2)->GetSurfaceIndices(si2);
-		      
-		      geom->AddIdentification 
-			(new PeriodicIdentification 
-			 (geom->GetNIdentifications()+1,
-			  *geom,
-			  geom->GetSurface (si1[0]),
-			  geom->GetSurface (si2[0])));
-		      break;
-		    }
-
-		  default:
-		    scan.Error ("keyword 'closesurfaces' or 'periodic' expected");
-		  }
-		
-	      }
-
-	    else if (scan.GetToken() == TOK_SINGULAR)
-
-	      {
-		
-		scan.ReadNext();
-		switch (scan.GetToken())
-		  {
-		  case TOK_FACE:
-		    {
-		      scan.ReadNext();
-		      
-		      string name1 = scan.GetStringValue();  // tlo
-		      scan.ReadNext();
-		      
-		      string name2 = scan.GetStringValue();
-		      scan.ReadNext();
-		      
-		      Flags flags;
-		      ParseFlags (scan, flags);
-		      int factor = int(flags.GetNumFlag("factor",1)); 
-		      // cout << "Singular Face with factor " << factor << endl; 
-		      PrintMessageCR (3, "Singular Face  with factor ", factor);
-
-		      ParseChar (scan, ';');
-		      
-		      const Solid * sol = geom->GetSolid(name2);
-
-		      if(!sol)
-			scan.Error ("unknown solid in singular face definition");
-		      else
-			for (int i = 0; i < geom->GetNTopLevelObjects(); i++)
-			  if (name1 == geom->GetTopLevelObject (i)->GetSolid()->Name())
-			    geom->singfaces.Append (new SingularFace (i+1, sol,factor));
-
-		      break;
-		    }
-
-		  case TOK_EDGE:
-		    {
-		      scan.ReadNext();
-		      
-		      string name1 = scan.GetStringValue();
-		      scan.ReadNext();
-		      
-		      string name2 = scan.GetStringValue();
-		      scan.ReadNext();
-		      
-		      Flags flags;
-		      ParseFlags (scan, flags);
-		      int factor = int(flags.GetNumFlag("factor",1));
-		      double maxhinit = flags.GetNumFlag("maxh",-1);
-		      ParseChar (scan, ';');
-		      
-		      const Solid * s1 = geom->GetSolid(name1);
-		      const Solid * s2 = geom->GetSolid(name2);
-		      PrintMessageCR (3, "Singular Edge  with factor ", factor);
-
-		      int domnr = -1;
-		      if (flags.StringFlagDefined ("tlo"))
-			{
-			  const Solid * sol =
-			    geom->GetSolid(flags.GetStringFlag ("tlo",""));
-			  
-			  for (int i = 0; i < geom->GetNTopLevelObjects(); i++)
-			    if (geom->GetTopLevelObject(i)->GetSolid() == sol)
-			      domnr = i;
-			  
-			  // cout << "domnr = " << domnr;
-			}
-
-		      if(!s1 || !s2)
-			scan.Error ("unknown solid ins singular edge definition");
-		      else
-			geom->singedges.Append (new SingularEdge (1, domnr, 
-								  *geom, s1, s2, factor,
-								  maxhinit));
-		      break;
-		    }
-
-		  case TOK_POINT:
-		    {
-		      scan.ReadNext();
-		      
-		      string name1 = scan.GetStringValue();
-		      scan.ReadNext();
-		      string name2 = scan.GetStringValue();
-		      scan.ReadNext();
-		      string name3 = scan.GetStringValue();
-		      scan.ReadNext();
-		      
-		      Flags flags;
-		      ParseFlags (scan, flags);
-		      int factor = int(flags.GetNumFlag("factor",1)); 
-		      ParseChar (scan, ';');
-		      
-		      const Solid * s1 = geom->GetSolid(name1);
-		      const Solid * s2 = geom->GetSolid(name2);
-		      const Solid * s3 = geom->GetSolid(name3);
-		      // cout << "Singular Point with factor " << factor << endl; 
-		      PrintMessageCR (3, "Singular Point  with factor ", factor);
-		      geom->singpoints.Append (new SingularPoint (1, s1, s2, s3, factor));
-		      break;
-		    }
-		  default:
-		    scan.Error ("keyword 'face' or 'edge' or 'point' expected");
-		  }
-	      }
-
-	    
-	    else if (scan.GetToken() == TOK_POINT)
-	      {
-		Point<3> p;
-
-		scan.ReadNext();
-		ParseChar (scan, '(');
-		p = Point<3> (ParseVector (scan));
-		ParseChar (scan, ')');
-
-
-		Flags flags;
-		ParseFlags (scan, flags);
-		int factor = int(flags.GetNumFlag("factor",0)); 
-
-		ParseChar (scan, ';');
-
-		geom->AddUserPoint (p, factor);
-	      }
-
-	    else if (scan.GetToken() == TOK_BOUNDINGBOX)
-	      {
-		Point<3> p1, p2;
-		
-		scan.ReadNext();
-		ParseChar (scan, '(');
-		p1 = Point<3> (ParseVector (scan));
-		ParseChar (scan, ';');
-		p2 = Point<3> (ParseVector (scan));
-		ParseChar (scan, ')');
-		ParseChar (scan, ';');
-
-		geom->SetBoundingBox (Box<3> (p1, p2));
-	      }
-
-	    else if (scan.GetToken() == TOK_CURVE2D)
-	      {
-		scan.ReadNext();
-
-		
-		if (scan.GetToken() != TOK_STRING)
-		  scan.Error ("name identifier expected");
-		string curvename = scan.GetStringValue();
-
-		scan.ReadNext();
-
-		ParseChar (scan, '=');
-		ParseChar (scan, '(');
-		
-		auto newspline = make_shared<SplineGeometry<2>>();
-		// newspline->CSGLoad(scan);
-		LoadSpline (*newspline, scan);
-
-		ParseChar (scan, ')');
-		ParseChar (scan, ';');
-
-		geom->SetSplineCurve(curvename.c_str(),newspline);
-
-		PrintMessage (4, "define 2d curve ", curvename);
-	      }
-
-	    else if (scan.GetToken() == TOK_CURVE3D)
-	      {
-		scan.ReadNext();
-
-		
-		if (scan.GetToken() != TOK_STRING)
-		  scan.Error ("name identifier expected");
-		string curvename = scan.GetStringValue();
-
-		scan.ReadNext();
-
-		ParseChar (scan, '=');
-		ParseChar (scan, '(');
-		
-		auto newspline = make_shared<SplineGeometry<3>>();
-		// newspline->CSGLoad(scan);
-		LoadSpline (*newspline, scan);
-
-		ParseChar (scan, ')');
-		ParseChar (scan, ';');
-
-		geom->SetSplineCurve(curvename.c_str(),newspline);
-
-		PrintMessage (4, "define 3d curve ", curvename);
-	      }
-
-	    else if (scan.GetToken() == TOK_BOUNDARYCONDITION)
-	      {
-		scan.ReadNext();
-		
-		string name1 = scan.GetStringValue();
-		scan.ReadNext();
-		
-		string name2 = scan.GetStringValue();
-		scan.ReadNext();
-		
-		int num = int (ParseNumber (scan));
-		ParseChar (scan, ';');
-
-
-		CSGeometry::BCModification bcm;
-		bcm.bcname = NULL;
-		Array<int> si;
-		
-		geom->GetSolid(name1)->GetSurfaceIndices(si);
-		if(si.Size() == 0)
-		  {
-		    string errstring = "solid \""; errstring += name1; errstring += "\" has no surfaces";
-		    scan.Error (errstring);
-		  }
-	
-		bcm.tlonr = -1;
-		int i;	
-		for (i = 0; i < geom->GetNTopLevelObjects(); i++)
-		  if (string (geom->GetTopLevelObject(i)->GetSolid()->Name())
-		      == name2)
-		    {
-		      bcm.tlonr = i;
-		      break;
-		    }
-		if(bcm.tlonr == -1)
-		  {
-		    string errstring = "tlo \""; errstring += name2; errstring += "\" not found";
-		    scan.Error(errstring);
-		  }
-		
-		
-		bcm.bcnr = num;
-		for (i = 0; i < si.Size(); i++)
-		  {
-		    bcm.si = si[i];
-		    geom->bcmodifications.Append (bcm);
-		  }
-	      }
-	    
-	    else if (scan.GetToken() == TOK_BOUNDARYCONDITIONNAME)
-	      {
-		scan.ReadNext();
-		
-		string name1 = scan.GetStringValue();
-		scan.ReadNext();
-		
-		string name2 = scan.GetStringValue();
-		scan.ReadNext();
-
-		string bcname = scan.GetStringValue();
-		scan.ReadNext();
-		ParseChar(scan, ';');
-		
-
-		CSGeometry::BCModification bcm;
-		bcm.bcname = NULL;
-
-
-		Array<int> si;
-		
-		geom->GetSolid(name1)->GetSurfaceIndices(si);
-		if(si.Size() == 0)
-		  {
-		    string errstring = "solid \""; errstring += name1; errstring += "\" has no surfaces";
-		    scan.Error (errstring);
-		  }
-	
-		bcm.tlonr = -1;
-		int i;	
-		for (i = 0; i < geom->GetNTopLevelObjects(); i++)
-		  if (string (geom->GetTopLevelObject(i)->GetSolid()->Name())
-		      == name2)
-		    {
-		      bcm.tlonr = i;
-		      break;
-		    }
-		if(bcm.tlonr == -1)
-		  {
-		    string errstring = "tlo \""; errstring += name2; errstring += "\" not found";
-		    scan.Error(errstring);
-		  }
-		
-		
-		bcm.bcnr = -1;
-		for (i = 0; i < si.Size(); i++)
-		  {
-		    bcm.si = si[i];
-		    geom->bcmodifications.Append (bcm);
-		    geom->bcmodifications.Last().bcname = new string(bcname);
-		  }
-	      }
-	    
-	    else if (scan.GetToken() == TOK_DEFINE)
-	      {
-		scan.ReadNext();
-		string name;
-		double val;
-		
-		switch (scan.GetToken())
-		  {
-		  case TOK_CONSTANT:
-		    scan.ReadNext();
-		      
-		    name = scan.GetStringValue();
-		    scan.ReadNext();
-
-		    ParseChar(scan, '=');
-		    val = ParseNumber(scan);
-
-		    if(name == "identprec")
-		      geom->SetIdEps(val);
-		    
-		    
-
-		    break;
-		  default:
-		    scan.Error ("keyword 'constant' expected");
-		  }
-	      }
-
-
-	    else
-	      {
-		cout << "read unidentified token " << scan.GetToken() 
-		     << " (as char: \"" << char(scan.GetToken()) << "\")"
-		     << " string = " << scan.GetStringValue() << endl;
-		scan.ReadNext();
-	      }
-	  }
+        while (1)
+          {
+            if (scan.GetToken() == TOK_END) break;
+            
+            if (scan.GetToken() == TOK_SOLID)
+              {
+                scan.ReadNext();
+                if (scan.GetToken() != TOK_STRING)
+                  scan.Error ("name identifier expected");
+                string solidname = scan.GetStringValue();
+
+                scan.ReadNext();
+
+                ParseChar (scan, '=');
+                Solid * solid = ParseSolid (scan);
+
+                Flags flags;
+                ParseFlags (scan, flags);
+
+                geom->SetSolid (solidname.c_str(), new Solid (Solid::ROOT, solid)); 
+                geom->SetFlags (solidname.c_str(), flags); 
+                
+                ParseChar (scan, ';');
+                
+                PrintMessage (4, "define solid ", solidname);
+              }
+
+            else if (scan.GetToken() == TOK_TLO)
+
+              { // a TopLevelObject definition
+
+                scan.ReadNext();
+                
+                string name = scan.GetStringValue();
+                scan.ReadNext();
+
+                if (scan.GetToken() != TOK_STRING)
+
+                  { // a solid TLO
+
+                    Flags flags;
+                    ParseFlags (scan, flags);
+                    
+                    ParseChar (scan, ';');
+                    if (!geom->GetSolid (name))
+                      scan.Error ("Top-Level-Object "+name+" not defined");
+
+                    int tlonr = 
+                      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name));
+                    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
+
+                    if (flags.NumListFlagDefined ("col"))
+                      {
+                        const Array<double> & col =
+                          flags.GetNumListFlag ("col");
+                        tlo->SetRGB (col[0], col[1], col[2]);
+                      }
+
+                    if (flags.GetDefineFlag ("transparent"))
+                      tlo->SetTransparent (1);
+
+                    tlo->SetMaterial (flags.GetStringFlag ("material", ""));
+                    tlo->SetLayer (int(flags.GetNumFlag ("layer", 1)));
+                    if (flags.NumFlagDefined ("maxh"))
+                      tlo->SetMaxH (flags.GetNumFlag("maxh", 1e10));
+                  }
+
+                else
+                  
+                  { // a surface TLO
+
+                    string surfname = scan.GetStringValue();
+                    scan.ReadNext();
+
+                    Flags flags;
+                    ParseFlags (scan, flags);
+                    
+                    ParseChar (scan, ';');
+
+                    Array<int> si;
+                    geom->GetSolid(surfname)->GetSurfaceIndices(si);
+                    int tlonr = 
+                      geom->SetTopLevelObject ((Solid*)geom->GetSolid(name),
+                                               (Surface*)geom->GetSurface(si[0]));
+                    TopLevelObject * tlo = geom->GetTopLevelObject (tlonr);
+                    if (flags.NumListFlagDefined ("col"))
+                      {
+                        const auto& col = flags.GetNumListFlag ("col");
+                        tlo->SetRGB (col[0], col[1], col[2]);
+                      }
+                    if (flags.GetDefineFlag ("transparent"))
+                      tlo->SetTransparent (1);
+
+                    if (flags.NumFlagDefined ("maxh"))
+                      tlo->SetMaxH (flags.GetNumFlag("maxh", 1e10));
+                    tlo->SetLayer (int(flags.GetNumFlag ("layer", 1)));
+                    tlo->SetBCProp (int(flags.GetNumFlag ("bc", -1)));
+                    if ( flags.StringFlagDefined("bcname") )
+                      tlo->SetBCName ( flags.GetStringFlag ("bcname", "default") );
+                  }
+              }
+            
+            else if (scan.GetToken() == TOK_IDENTIFY)
+
+              {
+                
+                scan.ReadNext();
+                switch (scan.GetToken())
+                  {
+                  case TOK_CLOSESURFACES:
+                    {
+                      scan.ReadNext();
+                      
+                      string name1 = scan.GetStringValue();
+                      scan.ReadNext();
+                      
+                      string name2 = scan.GetStringValue();
+                      scan.ReadNext();
+
+                      Flags flags;
+                      ParseFlags (scan, flags);
+                      
+                      ParseChar (scan, ';');
+                      
+                      
+                      Array<int> si1, si2;
+                      geom->GetSolid(name1)->GetSurfaceIndices(si1);
+                      geom->GetSolid(name2)->GetSurfaceIndices(si2);
+
+                      const TopLevelObject * domain = 0;
+                      if (flags.StringFlagDefined ("tlo"))
+                        {
+                          domain = 
+                            geom->GetTopLevelObject (geom->GetSolid(flags.GetStringFlag ("tlo","")));
+                          if (!domain) 
+                            scan.Error ("identification needs undefined tlo");
+                        }
+
+                      geom->AddIdentification 
+                        (new CloseSurfaceIdentification 
+                         (geom->GetNIdentifications()+1, *geom, 
+                          geom->GetSurface (si1[0]), geom->GetSurface (si2[0]),
+                          domain,
+                          flags));
+
+                      break;
+                    }
+                    
+                  case TOK_PERIODIC:
+                    {
+                      scan.ReadNext();
+                      
+                      string name1 = scan.GetStringValue();
+                      scan.ReadNext();
+
+                      string name2 = scan.GetStringValue();
+                      scan.ReadNext();
+
+                      ParseChar (scan, ';');
+
+                      
+                      Array<int> si1, si2;
+                      geom->GetSolid(name1)->GetSurfaceIndices(si1);
+                      geom->GetSolid(name2)->GetSurfaceIndices(si2);
+                      
+                      geom->AddIdentification 
+                        (new PeriodicIdentification 
+                         (geom->GetNIdentifications()+1,
+                          *geom,
+                          geom->GetSurface (si1[0]),
+                          geom->GetSurface (si2[0])));
+                      break;
+                    }
+
+                  default:
+                    scan.Error ("keyword 'closesurfaces' or 'periodic' expected");
+                  }
+                
+              }
+
+            else if (scan.GetToken() == TOK_SINGULAR)
+
+              {
+                
+                scan.ReadNext();
+                switch (scan.GetToken())
+                  {
+                  case TOK_FACE:
+                    {
+                      scan.ReadNext();
+                      
+                      string name1 = scan.GetStringValue();  // tlo
+                      scan.ReadNext();
+                      
+                      string name2 = scan.GetStringValue();
+                      scan.ReadNext();
+                      
+                      Flags flags;
+                      ParseFlags (scan, flags);
+                      int factor = int(flags.GetNumFlag("factor",1)); 
+                      // cout << "Singular Face with factor " << factor << endl; 
+                      PrintMessageCR (3, "Singular Face  with factor ", factor);
+
+                      ParseChar (scan, ';');
+                      
+                      const Solid * sol = geom->GetSolid(name2);
+
+                      if(!sol)
+                        scan.Error ("unknown solid in singular face definition");
+                      else
+                        for (int i = 0; i < geom->GetNTopLevelObjects(); i++)
+                          if (name1 == geom->GetTopLevelObject (i)->GetSolid()->Name())
+                            geom->singfaces.Append (new SingularFace (i+1, sol,factor));
+
+                      break;
+                    }
+
+                  case TOK_EDGE:
+                    {
+                      scan.ReadNext();
+                      
+                      string name1 = scan.GetStringValue();
+                      scan.ReadNext();
+                      
+                      string name2 = scan.GetStringValue();
+                      scan.ReadNext();
+                      
+                      Flags flags;
+                      ParseFlags (scan, flags);
+                      int factor = int(flags.GetNumFlag("factor",1));
+                      double maxhinit = flags.GetNumFlag("maxh",-1);
+                      ParseChar (scan, ';');
+                      
+                      const Solid * s1 = geom->GetSolid(name1);
+                      const Solid * s2 = geom->GetSolid(name2);
+                      PrintMessageCR (3, "Singular Edge  with factor ", factor);
+
+                      int domnr = -1;
+                      if (flags.StringFlagDefined ("tlo"))
+                        {
+                          const Solid * sol =
+                            geom->GetSolid(flags.GetStringFlag ("tlo",""));
+                          
+                          for (int i = 0; i < geom->GetNTopLevelObjects(); i++)
+                            if (geom->GetTopLevelObject(i)->GetSolid() == sol)
+                              domnr = i;
+                          
+                          // cout << "domnr = " << domnr;
+                        }
+
+                      if(!s1 || !s2)
+                        scan.Error ("unknown solid ins singular edge definition");
+                      else
+                        geom->singedges.Append (new SingularEdge (1, domnr, 
+                                                                  *geom, s1, s2, factor,
+                                                                  maxhinit));
+                      break;
+                    }
+
+                  case TOK_POINT:
+                    {
+                      scan.ReadNext();
+                      
+                      string name1 = scan.GetStringValue();
+                      scan.ReadNext();
+                      string name2 = scan.GetStringValue();
+                      scan.ReadNext();
+                      string name3 = scan.GetStringValue();
+                      scan.ReadNext();
+                      
+                      Flags flags;
+                      ParseFlags (scan, flags);
+                      int factor = int(flags.GetNumFlag("factor",1)); 
+                      ParseChar (scan, ';');
+                      
+                      const Solid * s1 = geom->GetSolid(name1);
+                      const Solid * s2 = geom->GetSolid(name2);
+                      const Solid * s3 = geom->GetSolid(name3);
+                      // cout << "Singular Point with factor " << factor << endl; 
+                      PrintMessageCR (3, "Singular Point  with factor ", factor);
+                      geom->singpoints.Append (new SingularPoint (1, s1, s2, s3, factor));
+                      break;
+                    }
+                  default:
+                    scan.Error ("keyword 'face' or 'edge' or 'point' expected");
+                  }
+              }
+
+            
+            else if (scan.GetToken() == TOK_POINT)
+              {
+                Point<3> p;
+
+                scan.ReadNext();
+                ParseChar (scan, '(');
+                p = Point<3> (ParseVector (scan));
+                ParseChar (scan, ')');
+
+
+                Flags flags;
+                ParseFlags (scan, flags);
+                int factor = int(flags.GetNumFlag("factor",0)); 
+
+                ParseChar (scan, ';');
+
+                geom->AddUserPoint (p, factor);
+              }
+
+            else if (scan.GetToken() == TOK_BOUNDINGBOX)
+              {
+                Point<3> p1, p2;
+                
+                scan.ReadNext();
+                ParseChar (scan, '(');
+                p1 = Point<3> (ParseVector (scan));
+                ParseChar (scan, ';');
+                p2 = Point<3> (ParseVector (scan));
+                ParseChar (scan, ')');
+                ParseChar (scan, ';');
+
+                geom->SetBoundingBox (Box<3> (p1, p2));
+              }
+
+            else if (scan.GetToken() == TOK_CURVE2D)
+              {
+                scan.ReadNext();
+
+                
+                if (scan.GetToken() != TOK_STRING)
+                  scan.Error ("name identifier expected");
+                string curvename = scan.GetStringValue();
+
+                scan.ReadNext();
+
+                ParseChar (scan, '=');
+                ParseChar (scan, '(');
+                
+                auto newspline = make_shared<SplineGeometry<2>>();
+                // newspline->CSGLoad(scan);
+                LoadSpline (*newspline, scan);
+
+                ParseChar (scan, ')');
+                ParseChar (scan, ';');
+
+                geom->SetSplineCurve(curvename.c_str(),newspline);
+
+                PrintMessage (4, "define 2d curve ", curvename);
+              }
+
+            else if (scan.GetToken() == TOK_CURVE3D)
+              {
+                scan.ReadNext();
+
+                
+                if (scan.GetToken() != TOK_STRING)
+                  scan.Error ("name identifier expected");
+                string curvename = scan.GetStringValue();
+
+                scan.ReadNext();
+
+                ParseChar (scan, '=');
+                ParseChar (scan, '(');
+                
+                auto newspline = make_shared<SplineGeometry<3>>();
+                // newspline->CSGLoad(scan);
+                LoadSpline (*newspline, scan);
+
+                ParseChar (scan, ')');
+                ParseChar (scan, ';');
+
+                geom->SetSplineCurve(curvename.c_str(),newspline);
+
+                PrintMessage (4, "define 3d curve ", curvename);
+              }
+
+            else if (scan.GetToken() == TOK_BOUNDARYCONDITION)
+              {
+                scan.ReadNext();
+                
+                string name1 = scan.GetStringValue();
+                scan.ReadNext();
+                
+                string name2 = scan.GetStringValue();
+                scan.ReadNext();
+                
+                int num = int (ParseNumber (scan));
+                ParseChar (scan, ';');
+
+
+                CSGeometry::BCModification bcm;
+                bcm.bcname = NULL;
+                Array<int> si;
+                
+                geom->GetSolid(name1)->GetSurfaceIndices(si);
+                if(si.Size() == 0)
+                  {
+                    string errstring = "solid \""; errstring += name1; errstring += "\" has no surfaces";
+                    scan.Error (errstring);
+                  }
+        
+                bcm.tlonr = -1;
+                int i;  
+                for (i = 0; i < geom->GetNTopLevelObjects(); i++)
+                  if (string (geom->GetTopLevelObject(i)->GetSolid()->Name())
+                      == name2)
+                    {
+                      bcm.tlonr = i;
+                      break;
+                    }
+                if(bcm.tlonr == -1)
+                  {
+                    string errstring = "tlo \""; errstring += name2; errstring += "\" not found";
+                    scan.Error(errstring);
+                  }
+                
+                
+                bcm.bcnr = num;
+                for (i = 0; i < si.Size(); i++)
+                  {
+                    bcm.si = si[i];
+                    geom->bcmodifications.Append (bcm);
+                  }
+              }
+            
+            else if (scan.GetToken() == TOK_BOUNDARYCONDITIONNAME)
+              {
+                scan.ReadNext();
+                
+                string name1 = scan.GetStringValue();
+                scan.ReadNext();
+                
+                string name2 = scan.GetStringValue();
+                scan.ReadNext();
+
+                string bcname = scan.GetStringValue();
+                scan.ReadNext();
+                ParseChar(scan, ';');
+                
+
+                CSGeometry::BCModification bcm;
+                bcm.bcname = NULL;
+
+
+                Array<int> si;
+                
+                geom->GetSolid(name1)->GetSurfaceIndices(si);
+                if(si.Size() == 0)
+                  {
+                    string errstring = "solid \""; errstring += name1; errstring += "\" has no surfaces";
+                    scan.Error (errstring);
+                  }
+        
+                bcm.tlonr = -1;
+                int i;  
+                for (i = 0; i < geom->GetNTopLevelObjects(); i++)
+                  if (string (geom->GetTopLevelObject(i)->GetSolid()->Name())
+                      == name2)
+                    {
+                      bcm.tlonr = i;
+                      break;
+                    }
+                if(bcm.tlonr == -1)
+                  {
+                    string errstring = "tlo \""; errstring += name2; errstring += "\" not found";
+                    scan.Error(errstring);
+                  }
+                
+                
+                bcm.bcnr = -1;
+                for (i = 0; i < si.Size(); i++)
+                  {
+                    bcm.si = si[i];
+                    geom->bcmodifications.Append (bcm);
+                    geom->bcmodifications.Last().bcname = new string(bcname);
+                  }
+              }
+            
+            else if (scan.GetToken() == TOK_DEFINE)
+              {
+                scan.ReadNext();
+                string name;
+                double val;
+                
+                switch (scan.GetToken())
+                  {
+                  case TOK_CONSTANT:
+                    scan.ReadNext();
+                      
+                    name = scan.GetStringValue();
+                    scan.ReadNext();
+
+                    ParseChar(scan, '=');
+                    val = ParseNumber(scan);
+
+                    if(name == "identprec")
+                      geom->SetIdEps(val);
+                    
+                    
+
+                    break;
+                  default:
+                    scan.Error ("keyword 'constant' expected");
+                  }
+              }
+
+
+            else
+              {
+                cout << "read unidentified token " << scan.GetToken() 
+                     << " (as char: \"" << char(scan.GetToken()) << "\")"
+                     << " string = " << scan.GetStringValue() << endl;
+                scan.ReadNext();
+              }
+          }
       }
     catch (string errstr)
       {
-	cout << "caught error " << errstr << endl;
-	throw NgException (errstr);
+        cout << "caught error " << errstr << endl;
+        throw NgException (errstr);
       }
 
 
@@ -1375,9 +1375,9 @@ namespace netgen
     (*testout) << geom->GetNTopLevelObjects() << " TLOs:" << endl;
     for (int i = 0; i < geom->GetNTopLevelObjects(); i++)
       {
-	const TopLevelObject * tlo = geom->GetTopLevelObject(i);
-	if (tlo->GetSolid())
-	  (*testout) << i << ": " << *tlo->GetSolid() << endl;
+        const TopLevelObject * tlo = geom->GetTopLevelObject(i);
+        if (tlo->GetSolid())
+          (*testout) << i << ": " << *tlo->GetSolid() << endl;
       }
 
     (*testout) << geom->GetNSurf() << " Surfaces" << endl;

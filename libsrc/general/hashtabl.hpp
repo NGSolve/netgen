@@ -102,7 +102,7 @@ public:
   {
     for (int i = 1; i <= hash.EntrySize (bnr); i++)
       if (hash.Get(bnr, i) == ind)
-	return i;
+        return i;
     return 0;
   }
 };
@@ -136,12 +136,12 @@ public:
     int bnr = HashValue (ahash);
       int pos = Position (bnr, ahash);
       if (pos)
-	cont.Set (bnr, pos, acont);
+        cont.Set (bnr, pos, acont);
       else
-	{
-	  hash.Add1 (bnr, ahash);
-	  cont.Add1 (bnr, acont);
-	}    
+        {
+          hash.Add1 (bnr, ahash);
+          cont.Add1 (bnr, acont);
+        }    
   }
   
   ///
@@ -178,7 +178,7 @@ public:
     
   ///
   void GetData (int bnr, int colnr, 
-		INDEX_2 & ahash, T & acont) const
+                INDEX_2 & ahash, T & acont) const
   {
     ahash = hash.Get(bnr, colnr);
     acont = cont.Get(bnr, colnr);
@@ -186,7 +186,7 @@ public:
 
   ///
   void SetData (int bnr, int colnr, 
-		const INDEX_2 & ahash, const T & acont) 
+                const INDEX_2 & ahash, const T & acont) 
   {
     hash.Set(bnr, colnr, ahash);
     cont.Set(bnr, colnr, acont);
@@ -216,7 +216,7 @@ public:
     int bagnr, pos;
   public:
     Iterator (const INDEX_2_HASHTABLE & aht,
-	      int abagnr, int apos)
+              int abagnr, int apos)
       : ht(aht), bagnr(abagnr), pos(apos)
     { ; }
 
@@ -233,11 +233,11 @@ public:
     {
       pos++;
       while (bagnr < ht.GetNBags() && 
-	     pos == ht.GetBagSize(bagnr+1))
-	{
-	  pos = 0;
-	  bagnr++;
-	}
+             pos == ht.GetBagSize(bagnr+1))
+        {
+          pos = 0;
+          bagnr++;
+        }
       return *this;
     }
 
@@ -278,7 +278,7 @@ public:
   }
 
   void GetData (const Iterator & it,
-		INDEX_2 & ahash, T & acont) const
+                INDEX_2 & ahash, T & acont) const
   {
     ahash = hash[it.BagNr()][it.Pos()];
     acont = cont[it.BagNr()][it.Pos()];
@@ -342,8 +342,8 @@ protected:
     int n = hash.EntrySize(bnr);
     for (int i = 1; i <= n; ++i, ++pi)
       {
-	if (*pi == ind)
-	return i;
+        if (*pi == ind)
+        return i;
       }
     
     return 0;
@@ -407,7 +407,7 @@ public:
     int bagnr, pos;
   public:
     Iterator (const INDEX_3_HASHTABLE & aht,
-	      int abagnr, int apos)
+              int abagnr, int apos)
       : ht(aht), bagnr(abagnr), pos(apos)
     { ; }
 
@@ -424,11 +424,11 @@ public:
     {
       pos++;
       while (bagnr < ht.GetNBags() && 
-	     pos == ht.GetBagSize(bagnr+1))
-	{
-	  pos = 0;
-	  bagnr++;
-	}
+             pos == ht.GetBagSize(bagnr+1))
+        {
+          pos = 0;
+          bagnr++;
+        }
       return *this;
     }
 
@@ -469,7 +469,7 @@ public:
   }
 
   void GetData (const Iterator & it,
-		INDEX_3 & ahash, T & acont) const
+                INDEX_3 & ahash, T & acont) const
   {
     ahash = hash[it.BagNr()][it.Pos()];
     acont = cont[it.BagNr()][it.Pos()];
@@ -567,12 +567,12 @@ public:
     int i = HashValue(ind);
     while (1)
       {
-	if (hash[i] == ind) return i;
-	if (hash[i].I1() == invalid) return -1;
+        if (hash[i] == ind) return i;
+        if (hash[i].I1() == invalid) return -1;
         i = (i+1) & mask;        
         /*
-	i++;
-	if (i > hash.Size()) i = 1;
+        i++;
+        if (i > hash.Size()) i = 1;
         */
       }
   }
@@ -583,14 +583,14 @@ public:
     int i = HashValue (ind);
     if (hash[i] == ind) 
       {
-	apos = i;
-	return false;
+        apos = i;
+        return false;
       }
     if (hash[i].I1() == invalid)
       {
-	hash[i] = ind; 
-	apos = i;
-	return true;
+        hash[i] = ind; 
+        apos = i;
+        return true;
       }
     return PositionCreate2 (ind, apos);    
   }
@@ -697,11 +697,11 @@ inline ostream & operator<< (ostream & ost, const INDEX_2_CLOSED_HASHTABLE<T> & 
   for (int i = 0; i < ht.Size(); i++)
     if (ht.UsedPos(i))
       {
-	// INDEX_2 hash;
-	// T data;
-	// ht.GetData0 (i, hash, data);
+        // INDEX_2 hash;
+        // T data;
+        // ht.GetData0 (i, hash, data);
         auto [hash,data] = ht.GetBoth(i);
-	ost << "hash = " << hash << ", data = " << data << endl;
+        ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
 }
@@ -749,7 +749,7 @@ public:
     int cnt = 0;
     for (int i = 0; i < n; i++)
       if (hash[i].I1() != invalid)
-	cnt++;
+        cnt++;
     return cnt;
   }
 
@@ -764,8 +764,8 @@ public:
     int i = HashValue(ind);
     while (1)
       {
-	if (hash[i] == ind) return i;
-	if (hash[i].I1() == invalid) return -1;
+        if (hash[i] == ind) return i;
+        if (hash[i].I1() == invalid) return -1;
         // i = (i+1) % hash.Size();
         i = (i+1) & mask;
       }
@@ -777,8 +777,8 @@ public:
     int c = 1;
     while (1)
       {
-	if (hash[i] == ind) return c;
-	if (hash[i].I1() == invalid) return c;
+        if (hash[i] == ind) return c;
+        if (hash[i].I1() == invalid) return c;
         // i = (i+1) % hash.Size();
         i = (i+1) & mask;
         c++;
@@ -793,14 +793,14 @@ public:
     int i = HashValue (ind);
     if (hash[i] == ind) 
       {
-	apos = i;
-	return false;
+        apos = i;
+        return false;
       }
     if (hash[i].I1() == invalid)
       {
-	hash[i] = ind; 
-	apos = i;
-	return true;
+        hash[i] = ind; 
+        apos = i;
+        return true;
       }
     return PositionCreate2 (ind, apos);    
   }
@@ -913,12 +913,12 @@ inline ostream & operator<< (ostream & ost, const INDEX_3_CLOSED_HASHTABLE<T> & 
     if (ht.UsedPos(i))
       {
         /*
-	INDEX_3 hash;
-	T data;
+        INDEX_3 hash;
+        T data;
         ht.GetData (i, hash, data);
         */
         auto [hash, data] = ht.GetBoth();
-	ost << "hash = " << hash << ", data = " << data << endl;
+        ost << "hash = " << hash << ", data = " << data << endl;
       }
   return ost;
 }
@@ -944,7 +944,7 @@ inline INDEX_3_HASHTABLE<T> :: INDEX_3_HASHTABLE (int size)
   ;
 }
 
-template<class T>	
+template<class T>       
 inline int INDEX_3_HASHTABLE<T> :: PositionCreate (const INDEX_3 & ahash, int & bnr, int & colnr)
 {
   bnr = HashValue (ahash);
@@ -1066,7 +1066,7 @@ inline INDEX_HASHTABLE<T> :: INDEX_HASHTABLE (int size)
   {
     ;
   }
-	
+        
 template<class T>
 inline void INDEX_HASHTABLE<T> :: Set (const INDEX & ahash, const T & acont)
     {
@@ -1330,12 +1330,12 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
     {
       size_t i = HashValue(ind, size);
       while (1)
-	{
-	  if (hash[i] == ind) return i;
-	  if (IsInvalid(hash[i])) return size_t(-1);
-	  i++;
-	  if (i >= size) i = 0;
-	}
+        {
+          if (hash[i] == ind) return i;
+          if (IsInvalid(hash[i])) return size_t(-1);
+          i++;
+          if (i >= size) i = 0;
+        }
     }
 
     void DoubleSize()
@@ -1354,22 +1354,22 @@ inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1
       size_t i = HashValue (ind, size);
 
       while (1)
-	{
-	  if (IsInvalid(hash[i]))
-	    { 
-	      hash[i] = ind; 
-	      apos = i;
+        {
+          if (IsInvalid(hash[i]))
+            { 
+              hash[i] = ind; 
+              apos = i;
               used++;
-	      return true;
-	    }
-	  if (hash[i] == ind) 
-	    { 
-	      apos = i; 
-	      return false; 
-	    }
-	  i++;
-	  if (i >= size) i = 0;
-	}
+              return true;
+            }
+          if (hash[i] == ind) 
+            { 
+              apos = i; 
+              return false; 
+            }
+          i++;
+          if (i >= size) i = 0;
+        }
     }
 
 

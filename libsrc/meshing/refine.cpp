@@ -48,7 +48,7 @@ namespace netgen
     Array<PointIndices<2>> parents;
     for (auto & el : mesh.LineSegments())
       {
-		PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
+                PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
         if (!between.Used(i2))
           {
             between.Set (i2, PointIndex::INVALID);          
@@ -57,15 +57,15 @@ namespace netgen
       }
     for (const Element2d & el : mesh.SurfaceElements())
       {
-	switch (el.GetType())
-	  {
-	  case TRIG:
-	  case TRIG6:
-	    {
+        switch (el.GetType())
+          {
+          case TRIG:
+          case TRIG6:
+            {
               static int betw[3][3] =
-		{ { 1, 2, 3 },
-		  { 0, 2, 4 },
-		  { 0, 1, 5 } };
+                { { 1, 2, 3 },
+                  { 0, 2, 4 },
+                  { 0, 1, 5 } };
               for (int j = 0; j < 3; j++)
                 {
                   auto i2 = PointIndices<2>(el[betw[j][0]],el[betw[j][1]]).Sort();
@@ -77,14 +77,14 @@ namespace netgen
                 }
               break;
             }
-	  case QUAD:
-	    {
+          case QUAD:
+            {
               static int betw[5][3] =
-		{ { 0, 1, 4 },
-		  { 1, 2, 5 },
-		  { 2, 3, 6 },
-		  { 0, 3, 7 },
-		  { 0, 2, 8 } };   // one diagonal of the quad. should change later to mid-point of edge mid-points
+                { { 0, 1, 4 },
+                  { 1, 2, 5 },
+                  { 2, 3, 6 },
+                  { 0, 3, 7 },
+                  { 0, 2, 8 } };   // one diagonal of the quad. should change later to mid-point of edge mid-points
               for (int j = 0; j < 5; j++)
                 {
                   auto i2 = PointIndices<2>(el[betw[j][0]],el[betw[j][1]]).Sort();
@@ -109,12 +109,12 @@ namespace netgen
       }
     for (auto & el : mesh.VolumeElements())
       {
-	switch (el.GetType())
-	  {
-	  case TET:
-	  case TET10:
-	    {
-	      static int betw[6][3] =
+        switch (el.GetType())
+          {
+          case TET:
+          case TET10:
+            {
+              static int betw[6][3] =
                 { { 1, 2, 5 },
                   { 1, 3, 6 },
                   { 1, 4, 7 },
@@ -163,46 +163,46 @@ namespace netgen
 
     for (SegmentIndex si : mesh.LineSegments().Range())
       {
-	const Segment & el = mesh.LineSegment(si);
+        const Segment & el = mesh.LineSegment(si);
 
-	PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
-	PointIndex pinew = between.Get(i2);
-	EdgePointGeomInfo ngi;
+        PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
+        PointIndex pinew = between.Get(i2);
+        EdgePointGeomInfo ngi;
 
-	if (pointset[pinew])
-	  {
-	    // pinew = between.Get(i2);
-	    ngi = epgi[pinew]; 
-	  }
-	else
-	  {
+        if (pointset[pinew])
+          {
+            // pinew = between.Get(i2);
+            ngi = epgi[pinew]; 
+          }
+        else
+          {
             pointset[pinew] = true;
-	    Point<3> pnew;
-	    geo.PointBetweenEdge(mesh.Point (el[0]),
+            Point<3> pnew;
+            geo.PointBetweenEdge(mesh.Point (el[0]),
                                  mesh.Point (el[1]), 0.5,
                                  mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(0),
                                  mesh.GetEdgeDescriptor(el.GetIndex()).SurfNr(1),
                                  el.EPGeomInfo(0), el.EPGeomInfo(1),
                                  pnew, ngi, mesh.GetEdgeDescriptor(el.GetIndex()).EdgeNr());
 
-	    // pinew = mesh.AddPoint (pnew);
+            // pinew = mesh.AddPoint (pnew);
             mesh.Point(pinew) = pnew;
-	    // between.Set (i2, pinew);
+            // between.Set (i2, pinew);
 
-	    if (pinew >= epgi.Size()+IndexBASE<PointIndex>())
-	      epgi.SetSize (pinew+1-IndexBASE<PointIndex>());
-	    epgi[pinew] = ngi;
-	  }
+            if (pinew >= epgi.Size()+IndexBASE<PointIndex>())
+              epgi.SetSize (pinew+1-IndexBASE<PointIndex>());
+            epgi[pinew] = ngi;
+          }
 
-	Segment ns1 = el;
-	Segment ns2 = el;
-	ns1[1] = pinew;
-	ns1.EPGeomInfo(1) = ngi;
-	ns2[0] = pinew;
-	ns2.EPGeomInfo(0) = ngi;
+        Segment ns1 = el;
+        Segment ns2 = el;
+        ns1[1] = pinew;
+        ns1.EPGeomInfo(1) = ngi;
+        ns2[0] = pinew;
+        ns2.EPGeomInfo(0) = ngi;
 
-	mesh.LineSegment(si) = ns1;
-	mesh.AddSegment (ns2);
+        mesh.LineSegment(si) = ns1;
+        mesh.AddSegment (ns2);
       }
 
     PrintMessage (5, "have 1d elements");
@@ -215,38 +215,38 @@ namespace netgen
 
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
       {
-	const Element2d & el = mesh[sei];
+        const Element2d & el = mesh[sei];
 
-	switch (el.GetType())
-	  {
-	  case TRIG:
-	  case TRIG6:
-	    {
-	      ArrayMem<PointIndex,6> pnums(6);
-	      ArrayMem<PointGeomInfo,6> pgis(6);
+        switch (el.GetType())
+          {
+          case TRIG:
+          case TRIG6:
+            {
+              ArrayMem<PointIndex,6> pnums(6);
+              ArrayMem<PointGeomInfo,6> pgis(6);
 
-	      static int betw[3][3] =
-		{ { 2, 3, 4 },
-		  { 1, 3, 5 },
-		  { 1, 2, 6 } };
+              static int betw[3][3] =
+                { { 2, 3, 4 },
+                  { 1, 3, 5 },
+                  { 1, 2, 6 } };
 
-	      for (int j = 1; j <= 3; j++)
-		{
-		  pnums[j-1] = el.PNum(j);
-		  pgis[j-1] = el.GeomInfoPi(j);
-		}
+              for (int j = 1; j <= 3; j++)
+                {
+                  pnums[j-1] = el.PNum(j);
+                  pgis[j-1] = el.GeomInfoPi(j);
+                }
 
-	      for (int j = 0; j < 3; j++)
-		{
-		  PointIndex pi1 = pnums[betw[j][0]-1];
-		  PointIndex pi2 = pnums[betw[j][1]-1];
+              for (int j = 0; j < 3; j++)
+                {
+                  PointIndex pi1 = pnums[betw[j][0]-1];
+                  PointIndex pi2 = pnums[betw[j][1]-1];
 
-		  PointIndices<2> i2 (pi1, pi2);
-		  i2.Sort();
+                  PointIndices<2> i2 (pi1, pi2);
+                  i2.Sort();
 
-		  Point<3> pb;
-		  PointGeomInfo pgi;
-		  geo.PointBetween(mesh.Point (pi1),
+                  Point<3> pb;
+                  PointGeomInfo pgi;
+                  geo.PointBetween(mesh.Point (pi1),
                                    mesh.Point (pi2), 0.5,
                                    mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
                                    el.GeomInfoPi (betw[j][0]),
@@ -254,7 +254,7 @@ namespace netgen
                                    pb, pgi);
 
 
-		  pgis[j+3] = pgi;
+                  pgis[j+3] = pgi;
                   PointIndex pinew = between.Get(i2); 
                   pnums[j+3] = pinew;
                   if (!pointset[pinew])
@@ -263,71 +263,71 @@ namespace netgen
                       mesh.Point(pinew) = pb;                      
                     }
                   /*
-		  if (between.Used(i2))
-		    pnums.Elem(4+j) = between.Get(i2);
-		  else
-		    {
-		      pnums.Elem(4+j) = mesh.AddPoint (pb);
-		      between.Set (i2, pnums.Get(4+j));
-		    }
+                  if (between.Used(i2))
+                    pnums.Elem(4+j) = between.Get(i2);
+                  else
+                    {
+                      pnums.Elem(4+j) = mesh.AddPoint (pb);
+                      between.Set (i2, pnums.Get(4+j));
+                    }
                   */
-		  if (surfgi.Size() < pnums[j+3].Nr1())
-		    surfgi.SetSize (pnums[j+3].Nr1());
-		  surfgi[pnums[j+3]] = pgis[j+3];
-		}
+                  if (surfgi.Size() < pnums[j+3].Nr1())
+                    surfgi.SetSize (pnums[j+3].Nr1());
+                  surfgi[pnums[j+3]] = pgis[j+3];
+                }
 
 
-	      static int reftab[4][3] =
-		{ { 1, 6, 5 },
-		  { 2, 4, 6 },
-		  { 3, 5, 4 },
-		  { 6, 4, 5 } };
+              static int reftab[4][3] =
+                { { 1, 6, 5 },
+                  { 2, 4, 6 },
+                  { 3, 5, 4 },
+                  { 6, 4, 5 } };
 
-	      int ind = el.GetIndex();
-	      for (int j = 0; j < 4; j++)
-		{
-		  Element2d nel(TRIG);
-		  for (int k = 1; k <= 3; k++)
-		    {
-		      nel.PNum(k) = pnums[reftab[j][k-1]-1];
-		      nel.GeomInfoPi(k) = pgis[reftab[j][k-1]-1];
-		    }
-		  nel.SetIndex(ind);
+              int ind = el.GetIndex();
+              for (int j = 0; j < 4; j++)
+                {
+                  Element2d nel(TRIG);
+                  for (int k = 1; k <= 3; k++)
+                    {
+                      nel.PNum(k) = pnums[reftab[j][k-1]-1];
+                      nel.GeomInfoPi(k) = pgis[reftab[j][k-1]-1];
+                    }
+                  nel.SetIndex(ind);
 
-		  if (j == 0)
-		    mesh[sei] = nel;
-		  else
-		    mesh.AddSurfaceElement(nel);
-		}
-	      break;
-	    }
-	  case QUAD:
-	  case QUAD6:
-	  case QUAD8:
-	    {
-	      PointIndex pnums[9];
+                  if (j == 0)
+                    mesh[sei] = nel;
+                  else
+                    mesh.AddSurfaceElement(nel);
+                }
+              break;
+            }
+          case QUAD:
+          case QUAD6:
+          case QUAD8:
+            {
+              PointIndex pnums[9];
               PointGeomInfo pgis[9];
 
-	      static int betw[5][3] =
-		{ { 0, 1, 4 },
-		  { 1, 2, 5 },
-		  { 2, 3, 6 },
-		  { 0, 3, 7 },
-		  { 0, 2, 8 } };
+              static int betw[5][3] =
+                { { 0, 1, 4 },
+                  { 1, 2, 5 },
+                  { 2, 3, 6 },
+                  { 0, 3, 7 },
+                  { 0, 2, 8 } };
               
-	      for (int j = 0; j < 4; j++)
-		{
-		  pnums[j] = el[j];
-		  pgis[j] = el.GeomInfoPi(j+1);
-		}
+              for (int j = 0; j < 4; j++)
+                {
+                  pnums[j] = el[j];
+                  pgis[j] = el.GeomInfoPi(j+1);
+                }
 
-	      for (int j = 0; j < 5; j++)
-		{
-		  PointIndex pi1 = pnums[betw[j][0]];
-		  PointIndex pi2 = pnums[betw[j][1]];
+              for (int j = 0; j < 5; j++)
+                {
+                  PointIndex pi1 = pnums[betw[j][0]];
+                  PointIndex pi2 = pnums[betw[j][1]];
 
-		  PointIndices<2> i2 (pi1, pi2);
-		  i2.Sort();
+                  PointIndices<2> i2 (pi1, pi2);
+                  i2.Sort();
                   
                   if (j == 4)
                     {
@@ -337,14 +337,14 @@ namespace netgen
                     }
 
                   Point<3> pb;
-		  PointGeomInfo pgi;                  
+                  PointGeomInfo pgi;                  
                   geo.PointBetween(mesh.Point (pi1), mesh.Point (pi2), 0.5,
                                    mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr(),
                                    el.GeomInfoPi (betw[j][0]+1 ),
                                    el.GeomInfoPi (betw[j][1]+1 ),
                                    pb, pgi); 
 
-		  pgis[4+j] = pgi;
+                  pgis[4+j] = pgi;
                   PointIndex pinew = between.Get(i2); 
                   pnums[4+j] = pinew; 
 
@@ -359,35 +359,35 @@ namespace netgen
                   surfgi[pnums[4+j]] = pgis[4+j];
                 }
 
-	      static int reftab[4][4] =
-		{
-		  { 0, 4, 8, 7 },
-		  { 4, 1, 5, 8 },
-		  { 7, 8, 6, 3 },
-		  { 8, 5, 2, 6 } };
+              static int reftab[4][4] =
+                {
+                  { 0, 4, 8, 7 },
+                  { 4, 1, 5, 8 },
+                  { 7, 8, 6, 3 },
+                  { 8, 5, 2, 6 } };
 
               
-	      int ind = el.GetIndex();
-	      for (int j = 0; j < 4; j++)
-		{
-		  Element2d nel(QUAD);
-		  for (int k = 0; k < 4; k++)
-		    {
-		      nel[k] = pnums[reftab[j][k]];
-		      nel.GeomInfoPi(k+1) = pgis[reftab[j][k]];
-		    }
-		  nel.SetIndex(ind);
+              int ind = el.GetIndex();
+              for (int j = 0; j < 4; j++)
+                {
+                  Element2d nel(QUAD);
+                  for (int k = 0; k < 4; k++)
+                    {
+                      nel[k] = pnums[reftab[j][k]];
+                      nel.GeomInfoPi(k+1) = pgis[reftab[j][k]];
+                    }
+                  nel.SetIndex(ind);
 
-		  if (j == 0)
-		    mesh[sei] = nel;
-		  else
-		    mesh.AddSurfaceElement(nel);
-		}
-	      break;
-	    }
-	  default:
-	    PrintSysError ("Refine: undefined surface element type ", int(el.GetType()));
-	  }
+                  if (j == 0)
+                    mesh[sei] = nel;
+                  else
+                    mesh.AddSurfaceElement(nel);
+                }
+              break;
+            }
+          default:
+            PrintSysError ("Refine: undefined surface element type ", int(el.GetType()));
+          }
       }
 
     PrintMessage (5, "have 2d elements");
@@ -397,134 +397,134 @@ namespace netgen
     mesh.VolumeElements().SetAllocSize(8*oldne);
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-	const Element & el = mesh[ei];
-	switch (el.GetType())
-	  {
-	  case TET:
-	  case TET10:
-	    {
-	     ArrayMem<PointIndex,10> pnums(10);
-	     static int betw[6][3] =
-	     { { 1, 2, 5 },
-	       { 1, 3, 6 },
-	       { 1, 4, 7 },
-	       { 2, 3, 8 },
-	       { 2, 4, 9 },
-	       { 3, 4, 10 } };
+        const Element & el = mesh[ei];
+        switch (el.GetType())
+          {
+          case TET:
+          case TET10:
+            {
+             ArrayMem<PointIndex,10> pnums(10);
+             static int betw[6][3] =
+             { { 1, 2, 5 },
+               { 1, 3, 6 },
+               { 1, 4, 7 },
+               { 2, 3, 8 },
+               { 2, 4, 9 },
+               { 3, 4, 10 } };
 
-	     int elrev = el.Flags().reverse;
+             int elrev = el.Flags().reverse;
 
-	     for (int j = 1; j <= 4; j++)
+             for (int j = 1; j <= 4; j++)
                pnums[j-1] = el.PNum(j);
-	     if (elrev)
-	     swap (pnums[2], pnums[3]);
+             if (elrev)
+             swap (pnums[2], pnums[3]);
 
-	     for (int j = 0; j < 6; j++)
+             for (int j = 0; j < 6; j++)
                {
                  PointIndex pi1 = pnums[betw[j][0]-1];
                  PointIndex pi2 = pnums[betw[j][1]-1];
                  PointIndices<2> i2 (pi1, pi2);
                  i2.Sort();
 
-	       /*
-	       if (between.Used(i2))
-	          pnums.Elem(5+j) = between.Get(i2);
-	       else
-	       {
-		  pnums.Elem(5+j) = mesh.AddPoint
-		  (Center (mesh[i2.I1()], mesh[i2.I2()]));
-		  between.Set (i2, pnums.Elem(5+j));
-	       }
-	       */
-	       PointIndex pinew = between.Get(i2);
-	       pnums[j+4] = pinew;
-	       if (!pointset[pinew])
-		 {
-		   pointset[pinew] = true;
-		   mesh.Point(pinew) = Center(mesh.Point(pi1),
-					      mesh.Point(pi2));
-		 }
-	    }
+               /*
+               if (between.Used(i2))
+                  pnums.Elem(5+j) = between.Get(i2);
+               else
+               {
+                  pnums.Elem(5+j) = mesh.AddPoint
+                  (Center (mesh[i2.I1()], mesh[i2.I2()]));
+                  between.Set (i2, pnums.Elem(5+j));
+               }
+               */
+               PointIndex pinew = between.Get(i2);
+               pnums[j+4] = pinew;
+               if (!pointset[pinew])
+                 {
+                   pointset[pinew] = true;
+                   mesh.Point(pinew) = Center(mesh.Point(pi1),
+                                              mesh.Point(pi2));
+                 }
+            }
 
-	    static int reftab[8][4] =
-	    { { 1, 5, 6, 7 },
-	      { 5, 2, 8, 9 },
-	      { 6, 8, 3, 10 },
-	      { 7, 9, 10, 4 },
-	      { 5, 6, 7, 9 },
-	      { 5, 6, 9, 8 },
-	      { 6, 7, 9, 10 },
-	      { 6, 8, 10, 9 } };
-	/*
-	  { { 1, 5, 6, 7 },
-	  { 5, 2, 8, 9 },
-	  { 6, 8, 3, 10 },
-	  { 7, 9, 10, 4 },
-	  { 5, 6, 7, 9 },
-	  { 5, 6, 8, 9 },
-	  { 6, 7, 9, 10 },
-	  { 6, 8, 9, 10 } };
-	*/
-	   static bool reverse[8] =
-	   {
-	      false, false, false, false, false, true, false, true
-	   };
+            static int reftab[8][4] =
+            { { 1, 5, 6, 7 },
+              { 5, 2, 8, 9 },
+              { 6, 8, 3, 10 },
+              { 7, 9, 10, 4 },
+              { 5, 6, 7, 9 },
+              { 5, 6, 9, 8 },
+              { 6, 7, 9, 10 },
+              { 6, 8, 10, 9 } };
+        /*
+          { { 1, 5, 6, 7 },
+          { 5, 2, 8, 9 },
+          { 6, 8, 3, 10 },
+          { 7, 9, 10, 4 },
+          { 5, 6, 7, 9 },
+          { 5, 6, 8, 9 },
+          { 6, 7, 9, 10 },
+          { 6, 8, 9, 10 } };
+        */
+           static bool reverse[8] =
+           {
+              false, false, false, false, false, true, false, true
+           };
 
-	   int ind = el.GetIndex();
-	   for (int j = 0; j < 8; j++)
-	   {
+           int ind = el.GetIndex();
+           for (int j = 0; j < 8; j++)
+           {
              Element nel(TET);
-	      for (int k = 1; k <= 4; k++)
-	        nel.PNum(k) = pnums[reftab[j][k-1]-1];
-	      nel.SetIndex(ind);
-	      nel.Flags().reverse = reverse[j];
-	      if (elrev)
-	      {
-		nel.Flags().reverse = !nel.Flags().reverse;
-		swap (nel.PNum(3), nel.PNum(4));
-	      }
+              for (int k = 1; k <= 4; k++)
+                nel.PNum(k) = pnums[reftab[j][k-1]-1];
+              nel.SetIndex(ind);
+              nel.Flags().reverse = reverse[j];
+              if (elrev)
+              {
+                nel.Flags().reverse = !nel.Flags().reverse;
+                swap (nel.PNum(3), nel.PNum(4));
+              }
 
-	      if (j == 0)
-	        mesh.VolumeElement(ei) = nel;
-	      else
-	        mesh.AddVolumeElement (nel);
-	    }
-	    break;
+              if (j == 0)
+                mesh.VolumeElement(ei) = nel;
+              else
+                mesh.AddVolumeElement (nel);
+            }
+            break;
           }
           case HEX:
           {
-	     ArrayMem<PointIndex,27> pnums(27);
-	     static int betw[13][3] =
-	     { { 1, 2, 9 },
-	       { 3, 4, 10 },
-	       { 4, 1, 11 },
+             ArrayMem<PointIndex,27> pnums(27);
+             static int betw[13][3] =
+             { { 1, 2, 9 },
+               { 3, 4, 10 },
+               { 4, 1, 11 },
                { 2, 3, 12 },
-	       { 5, 6, 13 },
-	       { 7, 8, 14 },
-	       { 8, 5, 15 },
-	       { 6, 7, 16 },
-	       { 1, 5, 17 },
-	       { 2, 6, 18 },
-	       { 3, 7, 19 },
-	       { 4, 8, 20 },
-	       { 2, 8, 21 },
-	       };
+               { 5, 6, 13 },
+               { 7, 8, 14 },
+               { 8, 5, 15 },
+               { 6, 7, 16 },
+               { 1, 5, 17 },
+               { 2, 6, 18 },
+               { 3, 7, 19 },
+               { 4, 8, 20 },
+               { 2, 8, 21 },
+               };
 
              /*
-	     static int fbetw[12][3] =
-	     { { 1, 3, 22 },
-	       { 2, 4, 22 },
-	       { 5, 7, 23 },
+             static int fbetw[12][3] =
+             { { 1, 3, 22 },
+               { 2, 4, 22 },
+               { 5, 7, 23 },
                { 6, 8, 23 },
-	       { 1, 6, 24 },
-	       { 2, 5, 24 },
-	       { 2, 7, 25 },
-	       { 3, 6, 25 },
-	       { 3, 8, 26 },
-	       { 4, 7, 26 },
-	       { 1, 8, 27 },
-	       { 4, 5, 27 },
-	       };
+               { 1, 6, 24 },
+               { 2, 5, 24 },
+               { 2, 7, 25 },
+               { 3, 6, 25 },
+               { 3, 8, 26 },
+               { 4, 7, 26 },
+               { 1, 8, 27 },
+               { 4, 5, 27 },
+               };
              */
              
              // updated by anonymous supporter, donations please to Karo W.
@@ -543,95 +543,95 @@ namespace netgen
                  { 17, 20, 27 },
                };
 
-	     pnums = PointIndex::INVALID;
+             pnums = PointIndex::INVALID;
 
-	     for (int j = 1; j <= 8; j++)
+             for (int j = 1; j <= 8; j++)
                pnums[j-1] = el.PNum(j);
 
 
-	     for (int j = 0; j < 13; j++)
-	     {
-	       SortedPointIndices<2> i2 (pnums[betw[j][0]-1], pnums[betw[j][1]-1]);
+             for (int j = 0; j < 13; j++)
+             {
+               SortedPointIndices<2> i2 (pnums[betw[j][0]-1], pnums[betw[j][1]-1]);
 
-	       if (between.Used(i2))
-	          pnums[j+8] = between.Get(i2);
-	       else
-	       {
+               if (between.Used(i2))
+                  pnums[j+8] = between.Get(i2);
+               else
+               {
                   auto [pi1, pi2] = i2;
-		  pnums[j+8] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
-		  between.Set (i2, pnums[j+8]);
-	       }
-	    }
+                  pnums[j+8] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+                  between.Set (i2, pnums[j+8]);
+               }
+            }
 
-	    for (int j = 0; j < 6; j++)
-	    {
-	       SortedPointIndices<2> i2a (pnums[fbetw[2*j][0]-1], pnums[fbetw[2*j][1]-1]);
-	       SortedPointIndices<2> i2b (pnums[fbetw[2*j+1][0]-1], pnums[fbetw[2*j+1][1]-1]);
+            for (int j = 0; j < 6; j++)
+            {
+               SortedPointIndices<2> i2a (pnums[fbetw[2*j][0]-1], pnums[fbetw[2*j][1]-1]);
+               SortedPointIndices<2> i2b (pnums[fbetw[2*j+1][0]-1], pnums[fbetw[2*j+1][1]-1]);
 
-	       if (between.Used(i2a))
-		 pnums[j+21] = between.Get(i2a);
-	       else if (between.Used(i2b))
-		 pnums[j+21] = between.Get(i2b);
-	       else
-		 {
+               if (between.Used(i2a))
+                 pnums[j+21] = between.Get(i2a);
+               else if (between.Used(i2b))
+                 pnums[j+21] = between.Get(i2b);
+               else
+                 {
                    auto [pi1, pi2] = i2a;
-		   pnums[j+21] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+                   pnums[j+21] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
 
-		   between.Set (i2a, pnums[j+21]);
-		 }
-	    }
+                   between.Set (i2a, pnums[j+21]);
+                 }
+            }
 
-	    static int reftab[8][8] =
-	    { { 1, 9, 22, 11, 17, 24, 21, 27 },
-	      { 9, 2, 12, 22, 24, 18, 25, 21 },
-	      { 11, 22, 10, 4, 27, 21, 26, 20},
-	      { 22, 12, 3, 10, 21, 25, 19, 26},
-	      { 17, 24, 21, 27, 5, 13, 23, 15},
-	      { 24, 18, 25, 21, 13, 6, 16, 23},
-	      { 27, 21, 26, 20, 15, 23, 14, 8},
-	      { 21, 25, 19, 26, 23, 16, 7, 14} };
+            static int reftab[8][8] =
+            { { 1, 9, 22, 11, 17, 24, 21, 27 },
+              { 9, 2, 12, 22, 24, 18, 25, 21 },
+              { 11, 22, 10, 4, 27, 21, 26, 20},
+              { 22, 12, 3, 10, 21, 25, 19, 26},
+              { 17, 24, 21, 27, 5, 13, 23, 15},
+              { 24, 18, 25, 21, 13, 6, 16, 23},
+              { 27, 21, 26, 20, 15, 23, 14, 8},
+              { 21, 25, 19, 26, 23, 16, 7, 14} };
 
 
-	   int ind = el.GetIndex();
-	   for (int j = 0; j < 8; j++)
-	   {
-	      Element nel(HEX);
-	      for (int k = 1; k <= 8; k++)
-	        nel.PNum(k) = pnums[reftab[j][k-1]-1];
-	      nel.SetIndex(ind);
+           int ind = el.GetIndex();
+           for (int j = 0; j < 8; j++)
+           {
+              Element nel(HEX);
+              for (int k = 1; k <= 8; k++)
+                nel.PNum(k) = pnums[reftab[j][k-1]-1];
+              nel.SetIndex(ind);
 
               if (j == 0)
-	        mesh.VolumeElement(ei) = nel;
-	      else
-	        mesh.AddVolumeElement (nel);
+                mesh.VolumeElement(ei) = nel;
+              else
+                mesh.AddVolumeElement (nel);
            }
            break;
-	  }
-	  case PRISM:
+          }
+          case PRISM:
           {
-	     ArrayMem<PointIndex,18> pnums(18);
-	     static int betw[9][3] =
-	     { { 3, 1, 7 },
-	       { 1, 2, 8 },
-	       { 3, 2, 9 },
+             ArrayMem<PointIndex,18> pnums(18);
+             static int betw[9][3] =
+             { { 3, 1, 7 },
+               { 1, 2, 8 },
+               { 3, 2, 9 },
                { 6, 4, 10 },
-	       { 4, 5, 11 },
-	       { 6, 5, 12 },
-	       { 1, 4, 13 },
-	       { 3, 6, 14 },
-	       { 2, 5, 15 },
-	       };
+               { 4, 5, 11 },
+               { 6, 5, 12 },
+               { 1, 4, 13 },
+               { 3, 6, 14 },
+               { 2, 5, 15 },
+               };
 
 // he: 15.jul 08, old version is wrong
 //                produces double points ad quad faces and inconsistent mesh
-// 	     static int fbetw[6][3] =
-// 	     { { 1, 6, 16 },
-// 	       { 3, 4, 16 },
-// 	       { 1, 5, 17 },
+//           static int fbetw[6][3] =
+//           { { 1, 6, 16 },
+//             { 3, 4, 16 },
+//             { 1, 5, 17 },
 //                { 2, 4, 17 },
-// 	       { 2, 6, 18 },
-// 	       { 3, 5, 18 },
-// 	       };
+//             { 2, 6, 18 },
+//             { 3, 5, 18 },
+//             };
            
            static int fbetw[6][3] =
            { { 7, 10, 16 },
@@ -642,83 +642,83 @@ namespace netgen
            { 14, 15, 18 },
            };
 
-	     //int elrev = el.flags.reverse;
+             //int elrev = el.flags.reverse;
            pnums = PointIndex::INVALID;
            
            for (int j = 1; j <= 6; j++)
-	     pnums[j-1] = el.PNum(j);
-	    // if (elrev)
-	    // swap (pnums.Elem(3), pnums.Elem(4));
+             pnums[j-1] = el.PNum(j);
+            // if (elrev)
+            // swap (pnums.Elem(3), pnums.Elem(4));
 
-	   for (int j = 0; j < 9; j++)
+           for (int j = 0; j < 9; j++)
            {
-	       SortedPointIndices<2> i2 (pnums[betw[j][0]-1], pnums[betw[j][1]-1]);
+               SortedPointIndices<2> i2 (pnums[betw[j][0]-1], pnums[betw[j][1]-1]);
 
-	       if (between.Used(i2))
-	          pnums[j+6] = between.Get(i2);
-	       else
-	       {
+               if (between.Used(i2))
+                  pnums[j+6] = between.Get(i2);
+               else
+               {
                   auto [pi1, pi2] = i2;
-		  pnums[j+6] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
-		  between.Set (i2, pnums[j+6]);
-	       }
+                  pnums[j+6] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+                  between.Set (i2, pnums[j+6]);
+               }
            }
 
            for (int j = 0; j < 3; j++)
-	   {
-	       SortedPointIndices<2> i2a (pnums[fbetw[2*j][0]-1], pnums[fbetw[2*j][1]-1]);
-	       SortedPointIndices<2> i2b (pnums[fbetw[2*j+1][0]-1], pnums[fbetw[2*j+1][1]-1]);
+           {
+               SortedPointIndices<2> i2a (pnums[fbetw[2*j][0]-1], pnums[fbetw[2*j][1]-1]);
+               SortedPointIndices<2> i2b (pnums[fbetw[2*j+1][0]-1], pnums[fbetw[2*j+1][1]-1]);
 
-	       if (between.Used(i2a))
-		 pnums[j+15] = between.Get(i2a);
-	       else if (between.Used(i2b))
-		 pnums[j+15] = between.Get(i2b);
-	       else
-		 {
+               if (between.Used(i2a))
+                 pnums[j+15] = between.Get(i2a);
+               else if (between.Used(i2b))
+                 pnums[j+15] = between.Get(i2b);
+               else
+                 {
                    auto [pi1, pi2] = i2a;
-		   pnums[j+15] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
+                   pnums[j+15] = mesh.AddPoint (Center (mesh[pi1], mesh[pi2]));
 
-		   between.Set (i2a, pnums[j+15]);
-		 }
-	    }
-
-
-	    static int reftab[8][6] =
-	    { { 1, 8, 7, 13, 17, 16 },
-	      { 7, 8, 9, 16, 17, 18 },
-	      { 7, 9, 3, 16, 18, 14 },
-	      { 8, 2, 9, 17, 15, 18 },
-	      { 13, 17, 16, 4, 11, 10 },
-	      { 16, 17, 18, 10, 11, 12 },
-	      { 16, 18, 14, 10, 12, 6 },
-	      { 17, 15, 18, 11, 5, 12 } };
+                   between.Set (i2a, pnums[j+15]);
+                 }
+            }
 
 
-	   int ind = el.GetIndex();
-	   for (int j = 0; j < 8; j++)
-	   {
-	      Element nel(PRISM);
-	      for (int k = 1; k <= 6; k++)
-	        nel.PNum(k) = pnums[reftab[j][k-1]-1];
-	      nel.SetIndex(ind);
+            static int reftab[8][6] =
+            { { 1, 8, 7, 13, 17, 16 },
+              { 7, 8, 9, 16, 17, 18 },
+              { 7, 9, 3, 16, 18, 14 },
+              { 8, 2, 9, 17, 15, 18 },
+              { 13, 17, 16, 4, 11, 10 },
+              { 16, 17, 18, 10, 11, 12 },
+              { 16, 18, 14, 10, 12, 6 },
+              { 17, 15, 18, 11, 5, 12 } };
 
 
-	      //nel.flags.reverse = reverse[j];
-	      //if (elrev)
-	     // {
-		//nel.flags.reverse = 1 - nel.flags.reverse;
-		//swap (nel.PNum(3), nel.PNum(4));
+           int ind = el.GetIndex();
+           for (int j = 0; j < 8; j++)
+           {
+              Element nel(PRISM);
+              for (int k = 1; k <= 6; k++)
+                nel.PNum(k) = pnums[reftab[j][k-1]-1];
+              nel.SetIndex(ind);
 
 
-	      if (j == 0)
-	        mesh.VolumeElement(ei) = nel;
-	      else
-	        mesh.AddVolumeElement (nel);
+              //nel.flags.reverse = reverse[j];
+              //if (elrev)
+             // {
+                //nel.flags.reverse = 1 - nel.flags.reverse;
+                //swap (nel.PNum(3), nel.PNum(4));
+
+
+              if (j == 0)
+                mesh.VolumeElement(ei) = nel;
+              else
+                mesh.AddVolumeElement (nel);
            }
            break;
-	  }
-	  default:
-	    PrintSysError ("Refine: undefined volume element type ", int(el.GetType()));
+          }
+          default:
+            PrintSysError ("Refine: undefined volume element type ", int(el.GetType()));
         }
       }
 
@@ -726,21 +726,21 @@ namespace netgen
     // update identification tables
     for (int i = 1; i <= mesh.GetIdentifications().GetMaxNr(); i++)
       {
-	idmap_type identmap;
-	mesh.GetIdentifications().GetMap (i, identmap);
+        idmap_type identmap;
+        mesh.GetIdentifications().GetMap (i, identmap);
 
-	for (auto [i2, newpi] : between)
-	    {
-	      if (!identmap[i2[0]].IsValid() || !identmap[i2[1]].IsValid()) continue;
-	      PointIndices<2> oi2(identmap[i2[0]], 
+        for (auto [i2, newpi] : between)
+            {
+              if (!identmap[i2[0]].IsValid() || !identmap[i2[1]].IsValid()) continue;
+              PointIndices<2> oi2(identmap[i2[0]], 
                                   identmap[i2[1]]);
-	      oi2.Sort();
-	      if (between.Used (oi2))
-		{
-		  PointIndex onewpi = between.Get(oi2);
-		  mesh.GetIdentifications().Add (newpi, onewpi, i);
-		}
-	    }
+              oi2.Sort();
+              if (between.Used (oi2))
+                {
+                  PointIndex onewpi = between.Get(oi2);
+                  mesh.GetIdentifications().Add (newpi, onewpi, i);
+                }
+            }
 
       }
 
@@ -767,131 +767,131 @@ namespace netgen
 
     for (auto & el : mesh.VolumeElements())
       if (el.Volume(mesh.Points()) < 0)
-	{
-	  wrongels++;
-	  el.Flags().badel = 1;
-	}
+        {
+          wrongels++;
+          el.Flags().badel = 1;
+        }
       else
-	el.Flags().badel = 0;
+        el.Flags().badel = 0;
 
     if (wrongels)
       {
-	cout << "WARNING: " << wrongels << " with wrong orientation found" << endl;
+        cout << "WARNING: " << wrongels << " with wrong orientation found" << endl;
 
-	int np = mesh.GetNP();
-	Array<Point<3>, PointIndex> should(np);
-	Array<Point<3>, PointIndex> can(np);
-	for (PointIndex pi : mesh.Points().Range())
-	  should[pi] = can[pi] = mesh[pi];
-	for (auto [parent, child] : between)
-	    {
+        int np = mesh.GetNP();
+        Array<Point<3>, PointIndex> should(np);
+        Array<Point<3>, PointIndex> can(np);
+        for (PointIndex pi : mesh.Points().Range())
+          should[pi] = can[pi] = mesh[pi];
+        for (auto [parent, child] : between)
+            {
               auto [pa1, pa2] = parent;
-	      can[child] = Center (can[pa1], can[pa2]);
-	    }
+              can[child] = Center (can[pa1], can[pa2]);
+            }
 
-	TBitArray<PointIndex> boundp(np);
-	boundp.Clear();
-	for (auto & sel : mesh.SurfaceElements())
+        TBitArray<PointIndex> boundp(np);
+        boundp.Clear();
+        for (auto & sel : mesh.SurfaceElements())
           for (auto pi : sel.PNums())
             boundp.SetBit(pi);
 
 
-	double lam = 0.5;
+        double lam = 0.5;
 
-	while (lam < 0.9 && cnttrials > 0)
-	  {
-	    lam = 2;
-	    do
-	      {
-		lam *= 0.5;
-		cnttrials--;
+        while (lam < 0.9 && cnttrials > 0)
+          {
+            lam = 2;
+            do
+              {
+                lam *= 0.5;
+                cnttrials--;
 
-		cout << "lam = " << lam << endl;
+                cout << "lam = " << lam << endl;
 
-		for (PointIndex pi : mesh.Points().Range())
-		  if (boundp.Test(pi))
-		    {
-		      for (int j = 0; j < 3; j++)
-			mesh[pi](j) = 
-			  lam * should[pi](j) +
-			  (1-lam) * can[pi](j);
-		    }
-		  else
-		    mesh[pi] = can[pi];
-	      
+                for (PointIndex pi : mesh.Points().Range())
+                  if (boundp.Test(pi))
+                    {
+                      for (int j = 0; j < 3; j++)
+                        mesh[pi](j) = 
+                          lam * should[pi](j) +
+                          (1-lam) * can[pi](j);
+                    }
+                  else
+                    mesh[pi] = can[pi];
+              
 
-		TBitArray<PointIndex> free (mesh.GetNP()), fhelp(mesh.GetNP());
-		free.Clear();
-		// for (int i = 1; i <= mesh.GetNE(); i++)
+                TBitArray<PointIndex> free (mesh.GetNP()), fhelp(mesh.GetNP());
+                free.Clear();
+                // for (int i = 1; i <= mesh.GetNE(); i++)
                 for (ElementIndex ei : mesh.VolumeElements().Range())
-		  {
-		    const Element & el = mesh.VolumeElement(ei);
-		    if (el.Volume(mesh.Points()) < 0)
-		      for (int j = 1; j <= el.GetNP(); j++)
-			free.SetBit (el.PNum(j));
-		  }
-		for (int k = 1; k <= 3; k++)
-		  {
-		    fhelp.Clear();
-		    // for (int i = 1; i <= mesh.GetNE(); i++) 
+                  {
+                    const Element & el = mesh.VolumeElement(ei);
+                    if (el.Volume(mesh.Points()) < 0)
+                      for (int j = 1; j <= el.GetNP(); j++)
+                        free.SetBit (el.PNum(j));
+                  }
+                for (int k = 1; k <= 3; k++)
+                  {
+                    fhelp.Clear();
+                    // for (int i = 1; i <= mesh.GetNE(); i++) 
                     for (const Element & el : mesh.VolumeElements())
-		      {
-			// const Element & el = mesh.VolumeElement(i);
-			int freeel = 0;
-			for (int j = 1; j <= el.GetNP(); j++)
-			  if (free.Test(el.PNum(j)))
-			    freeel = 1;
-			if (freeel)
-			  for (int j = 1; j <= el.GetNP(); j++)
-			    fhelp.SetBit (el.PNum(j));
-		      }
-		    free.Or (fhelp);
-		  }
+                      {
+                        // const Element & el = mesh.VolumeElement(i);
+                        int freeel = 0;
+                        for (int j = 1; j <= el.GetNP(); j++)
+                          if (free.Test(el.PNum(j)))
+                            freeel = 1;
+                        if (freeel)
+                          for (int j = 1; j <= el.GetNP(); j++)
+                            fhelp.SetBit (el.PNum(j));
+                      }
+                    free.Or (fhelp);
+                  }
 
-		(*testout) << "smooth points: " << endl;
-		for (PointIndex pi : mesh.Points().Range())
-		  if (free.Test(pi))
-		    (*testout) << "p " << pi << endl;
+                (*testout) << "smooth points: " << endl;
+                for (PointIndex pi : mesh.Points().Range())
+                  if (free.Test(pi))
+                    (*testout) << "p " << pi << endl;
 
-		(*testout) << "surf points: " << endl;
-		for (auto & sel : mesh.SurfaceElements())
-		  for (auto pi : sel.PNums())
-		    (*testout) << pi << endl;
+                (*testout) << "surf points: " << endl;
+                for (auto & sel : mesh.SurfaceElements())
+                  for (auto pi : sel.PNums())
+                    (*testout) << pi << endl;
 
-		mesh.CalcSurfacesOfNode();
-		free.Invert();
-		mesh.FixPoints (free);
-		MeshingParameters dummymp;
-		mesh.ImproveMesh (dummymp, OPT_REST);
+                mesh.CalcSurfacesOfNode();
+                free.Invert();
+                mesh.FixPoints (free);
+                MeshingParameters dummymp;
+                mesh.ImproveMesh (dummymp, OPT_REST);
 
 
-		wrongels = 0;
+                wrongels = 0;
                 for (ElementIndex ei : mesh.VolumeElements().Range())
-		  {
-		    if (mesh.VolumeElement(ei).Volume(mesh.Points()) < 0)
-		      {
-			wrongels++;
-			mesh.VolumeElement(ei).Flags().badel = 1;
-			(*testout) << "wrong el: ";
-			for (int j = 1; j <= 4; j++)
-			  (*testout) << mesh.VolumeElement(ei).PNum(j) << " ";
-			(*testout) << endl;
-		      }
-		    else
-		      mesh.VolumeElement(ei).Flags().badel = 0;
-		  }
-		cout << "wrongels = " << wrongels << endl;
-	      }
-	    while (wrongels && cnttrials > 0);
-	  
-	    for (PointIndex pi : mesh.Points().Range())
-	      can[pi] = mesh[pi];
-	  }
+                  {
+                    if (mesh.VolumeElement(ei).Volume(mesh.Points()) < 0)
+                      {
+                        wrongels++;
+                        mesh.VolumeElement(ei).Flags().badel = 1;
+                        (*testout) << "wrong el: ";
+                        for (int j = 1; j <= 4; j++)
+                          (*testout) << mesh.VolumeElement(ei).PNum(j) << " ";
+                        (*testout) << endl;
+                      }
+                    else
+                      mesh.VolumeElement(ei).Flags().badel = 0;
+                  }
+                cout << "wrongels = " << wrongels << endl;
+              }
+            while (wrongels && cnttrials > 0);
+          
+            for (PointIndex pi : mesh.Points().Range())
+              can[pi] = mesh[pi];
+          }
       }
 
     if (cnttrials <= 0)
       {
-	cerr << "ERROR: Sorry, reverted elements" << endl;
+        cerr << "ERROR: Sorry, reverted elements" << endl;
       }
  
     mesh.ComputeNVertices();

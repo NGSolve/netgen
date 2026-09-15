@@ -508,7 +508,7 @@ namespace netgen
                case 's': optmesh.SwapImprove(); break;
                case 't': optmesh.SwapImprove2(); break;
                case 'm': optmesh.ImproveMesh(); break;
-               }	  
+               }          
 
             }
 
@@ -693,8 +693,8 @@ namespace netgen
 
 
   MESHING3_RESULT OptimizeVolume (const MeshingParameters & mp, 
-				  Mesh & mesh3d)
-    //				  const CSGeometry * geometry)
+                                  Mesh & mesh3d)
+    //                            const CSGeometry * geometry)
   {
     static Timer t("OptimizeVolume"); RegionTimer reg(t);
   #ifndef EMSCRIPTEN
@@ -741,41 +741,41 @@ namespace netgen
 
     for (auto i : Range(mp.optsteps3d))
       {
-	if (multithread.terminate)
-	  break;
+        if (multithread.terminate)
+          break;
 
-	// teterrpow = mp.opterrpow;
-	// for (size_t j = 1; j <= strlen(mp.optimize3d); j++)
+        // teterrpow = mp.opterrpow;
+        // for (size_t j = 1; j <= strlen(mp.optimize3d); j++)
         for (auto j : Range(mp.optimize3d.size()))
-	  {
+          {
             multithread.percent = 100.* (double(j)/mp.optimize3d.size() + i)/mp.optsteps3d;
-	    if (multithread.terminate)
-	      break;
+            if (multithread.terminate)
+              break;
 
-	    switch (mp.optimize3d[j])
-	      {
-	      case 'c': 
+            switch (mp.optimize3d[j])
+              {
+              case 'c': 
           optmesh.SetGoal(OPT_REST);
           optmesh.CombineImprove();
           optmesh.SetGoal(OPT_QUALITY);
           break;
-	      case 'd': optmesh.SplitImprove(); break;
-	      case 'D': optmesh.SplitImprove2(); break;
-	      case 's': optmesh.SwapImprove(); break;
+              case 'd': optmesh.SplitImprove(); break;
+              case 'D': optmesh.SplitImprove2(); break;
+              case 's': optmesh.SwapImprove(); break;
                 // case 'u': optmesh.SwapImproveSurface(mesh3d); break;
-	      case 't': optmesh.SwapImprove2(); break;
+              case 't': optmesh.SwapImprove2(); break;
 #ifdef SOLIDGEOM
-	      case 'm': mesh3d.ImproveMesh(*geometry); break;
-	      case 'M': mesh3d.ImproveMesh(*geometry); break;
+              case 'm': mesh3d.ImproveMesh(*geometry); break;
+              case 'M': mesh3d.ImproveMesh(*geometry); break;
 #else
-	      case 'm': mesh3d.ImproveMesh(mp); break;
-	      case 'M': mesh3d.ImproveMesh(mp); break;
+              case 'm': mesh3d.ImproveMesh(mp); break;
+              case 'M': mesh3d.ImproveMesh(mp); break;
 #endif
-	      case 'j': mesh3d.ImproveMeshJacobian(mp); break;
-	      }
-	  }
-	// mesh3d.mglevels = 1;
-	MeshQuality3d (mesh3d);
+              case 'j': mesh3d.ImproveMeshJacobian(mp); break;
+              }
+          }
+        // mesh3d.mglevels = 1;
+        MeshQuality3d (mesh3d);
       }
   
     multithread.task = savetask;
@@ -970,25 +970,25 @@ namespace netgen
     int it = 10;
     while (nillegal && (it--) > 0)
       {
-	if (multithread.terminate)
-	  break;
+        if (multithread.terminate)
+          break;
 
-	PrintMessage (5, nillegal, " illegal tets");
+        PrintMessage (5, nillegal, " illegal tets");
         optmesh.SplitImprove ();
 
-	mesh3d.MarkIllegalElements();  // test
-	optmesh.SwapImprove ();
-	mesh3d.MarkIllegalElements();  // test
-	optmesh.SwapImprove2 ();
+        mesh3d.MarkIllegalElements();  // test
+        optmesh.SwapImprove ();
+        mesh3d.MarkIllegalElements();  // test
+        optmesh.SwapImprove2 ();
 
-	oldn = nillegal;
-	nillegal = mesh3d.MarkIllegalElements();
+        oldn = nillegal;
+        nillegal = mesh3d.MarkIllegalElements();
         nillegal_min = min(nillegal_min, nillegal);
         if(nillegal > nillegal_min)
           break;
 
-	if (oldn != nillegal)
-	  it = 10;
+        if (oldn != nillegal)
+          it = 10;
       }
     PrintMessage (5, nillegal, " illegal tets");
   }

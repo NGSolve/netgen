@@ -47,11 +47,11 @@ namespace netgen
   {
     for (int i = 0; i < 8; i++)
       if (childs[i])
-	{
-	  childs[i]->DeleteChilds();
-	  delete childs[i];
-	  childs[i] = NULL;
-	}
+        {
+          childs[i]->DeleteChilds();
+          delete childs[i];
+          childs[i] = NULL;
+        }
   }
   
 
@@ -68,8 +68,8 @@ namespace netgen
     double val = 0.0879;
     for (int i = 0; i < dimension; i++)
       {
-	x1[i] = (1 + val * (i+1)) * pmin(i) - val * (i+1) * pmax(i);
-	x2[i] = 1.1 * pmax(i) - 0.1 * pmin(i);
+        x1[i] = (1 + val * (i+1)) * pmin(i) - val * (i+1) * pmax(i);
+        x2[i] = 1.1 * pmax(i) - 0.1 * pmin(i);
       }
     for (int i = dimension; i < 3; i++)
       x1[i] = x2[i] = 0;
@@ -348,16 +348,16 @@ namespace netgen
     Point<3> pmin2, pmax2;
     for (int j = 0; j < 3; j++)
       if (pmin(j) < pmax(j))
-	{ pmin2(j) = pmin(j); pmax2(j) = pmax(j); }
+        { pmin2(j) = pmin(j); pmax2(j) = pmax(j); }
       else
-	{ pmin2(j) = pmax(j); pmax2(j) = pmin(j); }
+        { pmin2(j) = pmax(j); pmax2(j) = pmin(j); }
 
     return GetMinHRec (pmin2, pmax2, root); 
   }
 
 
   double LocalH :: GetMinHRec (const Point<3> & pmin, const Point<3> & pmax,
-			       const GradingBox * box) const
+                               const GradingBox * box) const
   {
     if (dimension == 2)
       {
@@ -401,7 +401,7 @@ namespace netgen
 
 
   void LocalH :: CutBoundaryRec (const Point<3> & pmin, const Point<3> & pmax,
-				 GradingBox * box)
+                                 GradingBox * box)
   {
     double h2 = box->h2;
     if (dimension == 2)
@@ -426,7 +426,7 @@ namespace netgen
     box->flags.cutboundary = true;
     for (int i = 0; i < 8; i++)
       if (box->childs[i])
-	CutBoundaryRec (pmin, pmax, box->childs[i]);
+        CutBoundaryRec (pmin, pmax, box->childs[i]);
   }
 
 
@@ -467,7 +467,7 @@ namespace netgen
 
 
   void LocalH :: FindInnerBoxes (const AdFront3 & adfront,
-				 int (*testinner)(const Point<3> & p1))
+                                 int (*testinner)(const Point<3> & p1))
   {
     static Timer timer("LocalH::FindInnerBoxes");
     RegionTimer reg (timer);
@@ -490,15 +490,15 @@ namespace netgen
     
     if (testinner)
       (*testout) << "inner = " << root->flags.pinner << " =?= " 
-		 << testinner(Point<3>(root->xmid[0], root->xmid[1], root->xmid[2])) << endl;
+                 << testinner(Point<3>(root->xmid[0], root->xmid[1], root->xmid[2])) << endl;
 
     Array<int> faceinds(nf);
     Array<Box3d> faceboxes(nf);
 
     for (int i = 1; i <= nf; i++)
       {
-	faceinds[i-1] = i;
-	adfront.GetFaceBoundingBox(i, faceboxes[i-1]);
+        faceinds[i-1] = i;
+        adfront.GetFaceBoundingBox(i, faceboxes[i-1]);
       }
   
     for (int i = 0; i < 8; i++)
@@ -508,9 +508,9 @@ namespace netgen
 
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
-		      const AdFront3 & adfront, 
-		      Array<Box3d> & faceboxes,
-		      Array<int> & faceinds, int nfinbox)
+                      const AdFront3 & adfront, 
+                      Array<Box3d> & faceboxes,
+                      Array<int> & faceinds, int nfinbox)
   {
     if (!box) return;
   
@@ -538,16 +538,16 @@ namespace netgen
 
     for (int j = 1; j <= nfinbox; j++)
       {
-	//      adfront->GetFaceBoundingBox (faceinds.Get(j), facebox);
-	const Box3d & facebox = faceboxes[faceinds[j-1]-1];
+        //      adfront->GetFaceBoundingBox (faceinds.Get(j), facebox);
+        const Box3d & facebox = faceboxes[faceinds[j-1]-1];
   
-	if (boxc.Intersect (facebox))
-	  faceused.Append(faceinds[j-1]);
-	else
-	  facenotused.Append(faceinds[j-1]);
+        if (boxc.Intersect (facebox))
+          faceused.Append(faceinds[j-1]);
+        else
+          facenotused.Append(faceinds[j-1]);
 
-	if (boxcfc.Intersect (facebox))
-	  faceused2.Append (faceinds[j-1]);
+        if (boxcfc.Intersect (facebox))
+          faceused2.Append (faceinds[j-1]);
       }
   
     for (int j = 1; j <= faceused.Size(); j++)
@@ -558,27 +558,27 @@ namespace netgen
   
     if (!father->flags.cutboundary)
       {
-	box->flags.isinner = father->flags.isinner;
-	box->flags.pinner = father->flags.pinner;
+        box->flags.isinner = father->flags.isinner;
+        box->flags.pinner = father->flags.pinner;
       }
     else
       {
-	Point<3> cf(father->xmid[0], father->xmid[1], father->xmid[2]);
+        Point<3> cf(father->xmid[0], father->xmid[1], father->xmid[2]);
       
-	if (father->flags.isinner)
-	  box->flags.pinner = 1;
-	else
-	  {
-	    if (adfront.SameSide (c, cf, &faceused2))
-	      box->flags.pinner = father->flags.pinner;
-	    else
-	      box->flags.pinner = 1 - father->flags.pinner;
-	  }
+        if (father->flags.isinner)
+          box->flags.pinner = 1;
+        else
+          {
+            if (adfront.SameSide (c, cf, &faceused2))
+              box->flags.pinner = father->flags.pinner;
+            else
+              box->flags.pinner = 1 - father->flags.pinner;
+          }
       
-	if (box->flags.cutboundary)
-	  box->flags.isinner = 0;
-	else
-	  box->flags.isinner = box->flags.pinner;
+        if (box->flags.cutboundary)
+          box->flags.isinner = 0;
+        else
+          box->flags.isinner = box->flags.pinner;
       }
 
     // cout << "faceused: " << faceused.Size() << ", " << faceused2.Size() << ", " << facenotused.Size() << endl;
@@ -591,18 +591,18 @@ namespace netgen
 
 
   void LocalH :: FindInnerBoxesRec ( int (*inner)(const Point<3> & p),
-				     GradingBox * box)
+                                     GradingBox * box)
   {
     if (box->flags.cutboundary)
       {
-	for (int i = 0; i < 8; i++)
-	  if (box->childs[i])
-	    FindInnerBoxesRec (inner, box->childs[i]);
+        for (int i = 0; i < 8; i++)
+          if (box->childs[i])
+            FindInnerBoxesRec (inner, box->childs[i]);
       }
     else
       {
-	if (inner (box->PMid()))
-	  SetInnerBoxesRec (box);
+        if (inner (box->PMid()))
+          SetInnerBoxesRec (box);
       }
   }
 
@@ -622,7 +622,7 @@ namespace netgen
 
 
   void LocalH :: FindInnerBoxes (const AdFront2 & adfront,
-				 int (*testinner)(const Point<2> & p1))
+                                 int (*testinner)(const Point<2> & p1))
   {
     static Timer t("LocalH::FindInnerBoxes 2d"); RegionTimer reg (t);
     static Timer trec("LocalH::FindInnerBoxes 2d - rec");
@@ -648,7 +648,7 @@ namespace netgen
   
     if (testinner)
       (*testout) << "inner = " << root->flags.pinner << " =?= "
-		 << testinner(rpmid) << endl;
+                 << testinner(rpmid) << endl;
 
 
     int nf = adfront.GetNFL();
@@ -657,13 +657,13 @@ namespace netgen
 
     for (int i = 0; i < nf; i++)
       {
-	faceinds[i] = i;
-	const FrontLine & line = adfront.GetLine(i);
+        faceinds[i] = i;
+        const FrontLine & line = adfront.GetLine(i);
         Point<3> p1 = adfront.GetPoint (line.L()[0]);
         Point<3> p2 = adfront.GetPoint (line.L()[1]);
         
-	faceboxes[i].Set (Point<2> (p1(0), p1(1)));
-	faceboxes[i].Add (Point<2> (p2(0), p2(1)));
+        faceboxes[i].Set (Point<2> (p1(0), p1(1)));
+        faceboxes[i].Add (Point<2> (p2(0), p2(1)));
       }
 
     RegionTimer regrc(trec);
@@ -674,9 +674,9 @@ namespace netgen
 
   void LocalH :: 
   FindInnerBoxesRec2 (GradingBox * box,
-		      const class AdFront2 & adfront, 
-		      FlatArray<Box<2>> faceboxes,
-		      FlatArray<int> faceinds) // , int nfinbox)
+                      const class AdFront2 & adfront, 
+                      FlatArray<Box<2>> faceboxes,
+                      FlatArray<int> faceinds) // , int nfinbox)
   {
     if (!box) return;
 
@@ -684,19 +684,19 @@ namespace netgen
     
     if (!father->flags.cutboundary)
       {
-	box->flags.isinner = father->flags.isinner;
-	box->flags.pinner = father->flags.pinner;
+        box->flags.isinner = father->flags.isinner;
+        box->flags.pinner = father->flags.pinner;
         box->flags.cutboundary = false;
       }
     else
       {        
-	if (father->flags.isinner)
+        if (father->flags.isinner)
           {
             cout << "how is this possible ???" << endl;
             box->flags.pinner = 1;
           }
-	else
-	  {
+        else
+          {
             Point<2> c(box->xmid[0], box->xmid[1]); 
             Point<2> fc(father->xmid[0], father->xmid[1]); 
             Box<2> boxcfc(c,fc);
@@ -722,15 +722,15 @@ namespace netgen
             auto sub = faceinds.Range(0, iused);
             bool sameside = adfront.SameSide (c, fc, &sub);
             if (sameside)
-	      box->flags.pinner = father->flags.pinner;
-	    else
-	      box->flags.pinner = 1 - father->flags.pinner;
-	  }
+              box->flags.pinner = father->flags.pinner;
+            else
+              box->flags.pinner = 1 - father->flags.pinner;
+          }
       
-	if (box->flags.cutboundary)
-	  box->flags.isinner = 0;
-	else
-	  box->flags.isinner = box->flags.pinner;
+        if (box->flags.cutboundary)
+          box->flags.isinner = 0;
+        else
+          box->flags.isinner = box->flags.pinner;
       }
 
 
@@ -768,19 +768,19 @@ namespace netgen
 
 
   void LocalH :: FindInnerBoxesRec ( int (*inner)(const Point<2> & p),
-				     GradingBox * box)
+                                     GradingBox * box)
   {
     if (box->flags.cutboundary)
       {
-	for (int i = 0; i < 8; i++)
-	  if (box->childs[i])
-	    FindInnerBoxesRec (inner, box->childs[i]);
+        for (int i = 0; i < 8; i++)
+          if (box->childs[i])
+            FindInnerBoxesRec (inner, box->childs[i]);
       }
     else
       {
-	Point<2> p2d(box->PMid()(0), box->PMid()(1)); 
-	if (inner (p2d))
-	  SetInnerBoxesRec (box);
+        Point<2> p2d(box->PMid()(0), box->PMid()(1)); 
+        if (inner (p2d))
+          SetInnerBoxesRec (box);
       }
   }
 
@@ -805,7 +805,7 @@ namespace netgen
     box->flags.isinner = 1;
     for (int i = 0; i < 8; i++)
       if (box->childs[i])
-	ClearFlagsRec (box->childs[i]);
+        ClearFlagsRec (box->childs[i]);
   }
 
   void LocalH :: ClearRootFlags ()
@@ -821,7 +821,7 @@ namespace netgen
     box->flags.isinner = 0;
     for (int i = 0; i < 8; i++)
       if (box->childs[i])
-	ClearFlagsRec (box->childs[i]);
+        ClearFlagsRec (box->childs[i]);
   }
 
 
@@ -829,15 +829,15 @@ namespace netgen
   {
     for (int i = 0; i < boxes.Size(); i++)
       {
-	double h = boxes[i]->hopt;
-	Point<3> c = boxes[i]->PMid();
+        double h = boxes[i]->hopt;
+        Point<3> c = boxes[i]->PMid();
       
-	for (int i1 = -1; i1 <= 1; i1++)
-	  for (int i2 = -1; i2 <= 1; i2++)
-	    for (int i3 = -1; i3 <= 1; i3++)
-	      SetH (Point<3> (c(0) + i1 * h, 
-			     c(1) + i2 * h,
-			     c(2) + i3 * h), 1.001 * h);     
+        for (int i1 = -1; i1 <= 1; i1++)
+          for (int i2 = -1; i2 <= 1; i2++)
+            for (int i3 = -1; i3 <= 1; i3++)
+              SetH (Point<3> (c(0) + i1 * h, 
+                             c(1) + i2 * h,
+                             c(2) + i3 * h), 1.001 * h);     
       }
   }
 
@@ -879,7 +879,7 @@ namespace netgen
     static Timer t("LocalH::GetOuterPoints"); RegionTimer rt(t);
     for (int i = 0; i < boxes.Size(); i++)
       if (!boxes[i]->flags.isinner && !boxes[i]->flags.cutboundary)
-	points.Append ( boxes[i] -> PMid());
+        points.Append ( boxes[i] -> PMid());
   }
 
 
@@ -899,11 +899,11 @@ namespace netgen
   
     for (int i = 0; i < 3; i++)
       {
-	Point<3> hp = center;
-	hp(i) += dx;
-	maxh = max2 (maxh, GetH(hp));
-	hp(i) = center(i)-dx;
-	maxh = max2 (maxh, GetH(hp));
+        Point<3> hp = center;
+        hp(i) += dx;
+        maxh = max2 (maxh, GetH(hp));
+        hp(i) = center(i)-dx;
+        maxh = max2 (maxh, GetH(hp));
       }
 
     if (maxh < 0.95 * box->hopt)
@@ -911,12 +911,12 @@ namespace netgen
 
     for (int i = 0; i < 8; i++)
       if (box->childs[i])
-	ConvexifyRec (box->childs[i]);  
+        ConvexifyRec (box->childs[i]);  
   }
 
   void LocalH :: PrintMemInfo (ostream & ost) const
   {
     ost << "LocalH: " << boxes.Size() << " boxes of " << sizeof(GradingBox)
-	<< " bytes = " << boxes.Size()*sizeof(GradingBox) << " bytes" << endl;
+        << " bytes = " << boxes.Size()*sizeof(GradingBox) << " bytes" << endl;
   }
 }

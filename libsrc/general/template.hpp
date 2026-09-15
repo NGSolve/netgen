@@ -18,7 +18,7 @@ namespace netgen
 
   DLL_HEADER extern const std::string netgen_version;
 
-///	The following value may be adapted to the hardware !
+///     The following value may be adapted to the hardware !
 #ifndef CLOCKS_PER_SEC
 #define CLOCKS_PER_SEC 1000000
 #endif
@@ -144,9 +144,9 @@ public:
   {
     if (i[0] > i[1]) 
       {
-	INDEX hi = i[0];
-	i[0] = i[1];
-	i[1] = hi;
+        INDEX hi = i[0];
+        i[0] = i[1];
+        i[1] = hi;
       }
     return *this;
   }
@@ -294,8 +294,8 @@ public:
   ///
   int operator== (const INDEX_4 & in2) const
     { return 
-	i[0] == in2.i[0] && i[1] == in2.i[1] && 
-	i[2] == in2.i[2] && i[3] == in2.i[3]; }
+        i[0] == in2.i[0] && i[1] == in2.i[1] && 
+        i[2] == in2.i[2] && i[3] == in2.i[3]; }
 
   ///
   INDEX & I1 () { return i[0]; }

@@ -222,13 +222,13 @@ namespace ngcore
     void AddFlops (double aflops) const
     {
       if constexpr(do_timing)
-	NgProfiler::AddFlops (timernr, aflops);
+        NgProfiler::AddFlops (timernr, aflops);
     }
     
     void AddFlops (double aflops, int tid) const
     {
       if constexpr(do_timing)
-	NgProfiler::AddFlops (timernr, aflops, tid);
+        NgProfiler::AddFlops (timernr, aflops, tid);
     }
 
     double GetTime () { return NgProfiler::GetTime(timernr); }
@@ -288,7 +288,7 @@ namespace ngcore
       RegionTracer (int athread_id, int region_id, int id_type = ID_NONE, int additional_value = -1 )
         : thread_id(athread_id)
         {
-	  if (trace)
+          if (trace)
           trace->StartTask (athread_id, region_id, id_type, additional_value);
           type = id_type;
           nr = region_id;
@@ -300,14 +300,14 @@ namespace ngcore
         {
           nr = timer;
           type = ID_TIMER;
-	  if (trace)
+          if (trace)
             trace->StartTask (athread_id, nr, type, additional_value);
         }
 
       /// stop trace
       ~RegionTracer ()
         {
-	  if (trace)
+          if (trace)
             trace->StopTask (thread_id, nr, type);
         }
     };

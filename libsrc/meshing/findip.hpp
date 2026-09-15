@@ -7,10 +7,10 @@ namespace netgen
 {
 
 inline void Minimize (const Array<Vec<3>> & a,
-		      const Array<double> & c,
-		      int * act, 
-		      Vec<3> & x, double & f,
-		      int * sol)
+                      const Array<double> & c,
+                      int * act, 
+                      Vec<3> & x, double & f,
+                      int * sol)
 {
   int act1[4];
   Mat<3> m, inv;
@@ -21,50 +21,50 @@ inline void Minimize (const Array<Vec<3>> & a,
   for (int j = 0; j < 5; j++)
     {
       for (int hk = 0, k = 0; hk < 4; hk++)
-	{
-	  if (hk == j) k++;
-	  act1[hk] = act[k];
-	  k++;
-	}
+        {
+          if (hk == j) k++;
+          act1[hk] = act[k];
+          k++;
+        }
 
       for (int k = 0; k < 3; k++)
-	{
-	  m(k, 0) = a[act1[0]](0) - a[act1[k+1]](0);
-	  m(k, 1) = a[act1[0]](1) - a[act1[k+1]](1);
-	  m(k, 2) = a[act1[0]](2) - a[act1[k+1]](2);
-	  rs(k) = c[act1[k+1]] - c[act1[0]];
-	}
+        {
+          m(k, 0) = a[act1[0]](0) - a[act1[k+1]](0);
+          m(k, 1) = a[act1[0]](1) - a[act1[k+1]](1);
+          m(k, 2) = a[act1[0]](2) - a[act1[k+1]](2);
+          rs(k) = c[act1[k+1]] - c[act1[0]];
+        }
 
       /*
       (*testout) << "act1 = "
-		 << act1[0] << " "
-		 << act1[1] << " "
-		 << act1[2] << " "
-		 << act1[3] << endl;
+                 << act1[0] << " "
+                 << act1[1] << " "
+                 << act1[2] << " "
+                 << act1[3] << endl;
       (*testout) << "Det = " << Det(m) << endl;
       */
 
       if (fabs (Det (m)) > 1e-10)
-	{
-	  CalcInverse (m, inv);
-	  xmax = inv * rs;
-	  
-	  double fmax = -1e10;
-	  for (int k = 0; k < 5; k++)
-	    {
-	      double hd = 
-		xmax(0) * a[act[k]](0) + xmax(1) * a[act[k]](1) + xmax(2) * a[act[k]](2) + c[act[k]];
-	      if (hd > fmax) fmax = hd;
-	    }
+        {
+          CalcInverse (m, inv);
+          xmax = inv * rs;
+          
+          double fmax = -1e10;
+          for (int k = 0; k < 5; k++)
+            {
+              double hd = 
+                xmax(0) * a[act[k]](0) + xmax(1) * a[act[k]](1) + xmax(2) * a[act[k]](2) + c[act[k]];
+              if (hd > fmax) fmax = hd;
+            }
 
-	  if (fmax < f)
-	    {
-	      f = fmax;
-	      x = xmax;
-	      for (int k = 0; k < 4; k++)
-		sol[k] = act1[k];
-	    }
-	}
+          if (fmax < f)
+            {
+              f = fmax;
+              x = xmax;
+              for (int k = 0; k < 4; k++)
+                sol[k] = act1[k];
+            }
+        }
     }
 }
 
@@ -73,8 +73,8 @@ inline void Minimize (const Array<Vec<3>> & a,
 
 template <typename POINTArray, typename FACEArray>
 inline int FindInnerPoint (POINTArray & points,
-			   FACEArray & faces,
-			   Point<3> & p)
+                           FACEArray & faces,
+                           Point<3> & p)
 {
   static Timer timer("FindInnerPoint");
   RegionTimer reg (timer);
@@ -96,7 +96,7 @@ inline int FindInnerPoint (POINTArray & points,
     {
       Point<3> p1 = points[faces[i][0]];
       a[i] = Cross (points[faces[i][1]] - p1,
-		    points[faces[i][2]] - p1);
+                    points[faces[i][2]] - p1);
       a[i] /= a[i].Length();
       c[i] = - (a[i](0) * p1(0) + a[i](1) * p1(1) + a[i](2) * p1(2));
     }
@@ -123,11 +123,11 @@ inline int FindInnerPoint (POINTArray & points,
       // const Element2d & el = faces[i];
       // (*testout) << "el[" << i << "] = " << el << endl;
       for (int j : Range(3))
-	{
-	  double hi = Dist (points[faces[i][j%3]],
-			    points[faces[i][(j+1)%3]]);
-	  if (hi > hmax) hmax = hi;
-	}
+        {
+          double hi = Dist (points[faces[i][j%3]],
+                            points[faces[i][(j+1)%3]]);
+          if (hi > hmax) hmax = hi;
+        }
     }
   
   // (*testout) << "hmax = " << hmax << endl;
@@ -154,7 +154,7 @@ inline int FindInnerPoint (POINTArray & points,
       /*
       (*testout) << "try ";
       for (int j = 0; j < 5; j++)
-	(*testout)  << act[j] << " ";
+        (*testout)  << act[j] << " ";
       */
 
       Minimize (a, c, act, x, f, sol);
@@ -162,7 +162,7 @@ inline int FindInnerPoint (POINTArray & points,
       /*
       (*testout) << endl << "sol = ";
       for (int j = 0; j < 4; j++)
-	(*testout)  << sol[j] << " ";
+        (*testout)  << sol[j] << " ";
 
       (*testout) << " fmin = " << f << endl;
       */
@@ -171,15 +171,15 @@ inline int FindInnerPoint (POINTArray & points,
       bool found = 0;
       double maxval = f;
       for (int j = 0; j < nf; j++)
-	{
-	  double val = x(0) * a[j](0) + x(1) * a[j](1) + x(2) * a[j](2) + c[j];
-	  if (val > maxval + hmax * 1e-6)
-	    {
-	      found = 1;
-	      maxval = val;
-	      act[4] = j;
-	    }
-	}
+        {
+          double val = x(0) * a[j](0) + x(1) * a[j](1) + x(2) * a[j](2) + c[j];
+          if (val > maxval + hmax * 1e-6)
+            {
+              found = 1;
+              maxval = val;
+              act[4] = j;
+            }
+        }
       
       // (*testout) << "maxval = " << maxval << endl;
       if (!found) break;

@@ -25,16 +25,16 @@ inline void BubbleSort (int size, T * data)
   for (int i = 0; i < size; i++)
     for (int j = i+1; j < size; j++)
       if (data[i] > data[j])
-	{
-	  hv = data[i];
-	  data[i] = data[j];
-	  data[j] = hv;
-	}
+        {
+          hv = data[i];
+          data[i] = data[j];
+          data[j] = hv;
+        }
 }
 
 template <class T, class S>
 inline void QuickSortPairRec (FlatArray<T> data, FlatArray<S> index,
-			  int left, int right)
+                          int left, int right)
 {
   int i = left;
   int j = right;
@@ -46,11 +46,11 @@ inline void QuickSortPairRec (FlatArray<T> data, FlatArray<S> index,
       while (midval < data[j]) j--;
 
       if (i <= j)
-	{
-	  ngcore::Swap (data[i], data[j]);
-	  ngcore::Swap (index[i], index[j]);
-	  i++; j--;
-	}
+        {
+          ngcore::Swap (data[i], data[j]);
+          ngcore::Swap (index[i], index[j]);
+          i++; j--;
+        }
     }
   while (i <= j);
   if (left < j) QuickSortPairRec (data, index, left, j);
@@ -66,21 +66,21 @@ inline void QuickSortPair (FlatArray<T> data, FlatArray<S> index)
 
   template <class T> 
   void Intersection (FlatArray<T> in1, FlatArray<T> in2,
-		     Array<T> & out)
+                     Array<T> & out)
   {
     out.SetSize(0);
     for(int i=0; i<in1.Size(); i++)
       if(in2.Contains(in1[i]))
-	out.Append(in1[i]);
+        out.Append(in1[i]);
   }
   template <class T> 
   void Intersection (FlatArray<T> in1, FlatArray<T> in2, FlatArray<T> in3,
-		     Array<T> & out)
+                     Array<T> & out)
   {
     out.SetSize(0);
     for(int i=0; i<in1.Size(); i++)
       if(in2.Contains(in1[i]) && in3.Contains(in1[i]))
-	out.Append(in1[i]);
+        out.Append(in1[i]);
   }
 
 }

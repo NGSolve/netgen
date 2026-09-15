@@ -389,8 +389,8 @@ namespace ngcore
     
     SIMD (double const * p, SIMD<mask64,2> mask)
       {
-	data[0] = mask[0] ? p[0] : 0;
-	data[1] = mask[1] ? p[1] : 0;
+        data[0] = mask[0] ? p[0] : 0;
+        data[1] = mask[1] ? p[1] : 0;
       }
     SIMD (float64x2_t _data) { data = _data; }
     

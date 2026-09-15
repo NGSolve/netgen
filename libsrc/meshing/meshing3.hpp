@@ -50,12 +50,12 @@ public:
   ///
   int ApplyRules (Array<Point<3>, LocalPointIndex> & lpoints,
                   Array<int, LocalPointIndex> & allowpoint,
-		  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
-		  INDEX_2_HASHTABLE<int> & connectedpairs,
-		  Array<LocalElement> & elements,
-		  Array<INDEX> & delfaces, int tolerance, 
-		  double sloppy, int rotind1,
-		  float & retminerr);
+                  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
+                  INDEX_2_HASHTABLE<int> & connectedpairs,
+                  Array<LocalElement> & elements,
+                  Array<INDEX> & delfaces, int tolerance, 
+                  double sloppy, int rotind1,
+                  float & retminerr);
   
   ///
   Front3PointIndex AddPoint (const Point<3> & p, PointIndex globind);
@@ -113,8 +113,8 @@ public:
 /*
 template <typename POINTArray, typename FACEArray>
 extern int FindInnerPoint (POINTArray & grouppoints,
-			   FACEArray & groupfaces,
-			   Point<3> & p);
+                           FACEArray & groupfaces,
+                           Point<3> & p);
 
 */
 

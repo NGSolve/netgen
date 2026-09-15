@@ -233,11 +233,11 @@ public:
   {
     int els = AllocatedElements(); 
     ost << "table: allocated " << els 
-	<< " a " << sizeof(T) << " Byts = " 
-	<< els * sizeof(T) 
-	<< " bytes in " << Size() << " bags."
-	<< " used: " << UsedElements()
-	<< endl;
+        << " a " << sizeof(T) << " Byts = " 
+        << els * sizeof(T) 
+        << " bytes in " << Size() << " bags."
+        << " used: " << UsedElements()
+        << endl;
   }
 
   /// Access entry.
@@ -267,7 +267,7 @@ inline ostream & operator<< (ostream & ost, const TABLE<T,BASE> & table)
       FlatArray<T> row = table[i];
       ost << "(" << row.Size() << ") ";
       for (int j = 0; j < row.Size(); j++)
-	ost << row[j] << " ";
+        ost << row[j] << " ";
       ost << endl;
     }
   return ost;

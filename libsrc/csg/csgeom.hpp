@@ -37,7 +37,7 @@ namespace netgen
 
   public:
     TopLevelObject (Solid * asolid,
-		    Surface * asurface = NULL);
+                    Surface * asurface = NULL);
     // default constructor for archive
     TopLevelObject() {}
 
@@ -304,17 +304,17 @@ namespace netgen
     void FindIdenticSurfaces (double eps);
     ///
     void GetSurfaceIndices (const Solid * sol, 
-			    const BoxSphere<3> & box, 
-			    Array<int> & locsurf) const;
+                            const BoxSphere<3> & box, 
+                            Array<int> & locsurf) const;
     ///
     void GetIndependentSurfaceIndices (const Solid * sol, 
-				       const BoxSphere<3> & box, 
-				       Array<int> & locsurf) const;
+                                       const BoxSphere<3> & box, 
+                                       Array<int> & locsurf) const;
     ///
     /*
     void GetIndependentSurfaceIndices (const Solid * sol, 
-				       const Point<3> & p, Vec<3> & v,
-				       Array<int> & locsurf) const;
+                                       const Point<3> & p, Vec<3> & v,
+                                       Array<int> & locsurf) const;
     */
     ///
     void GetIndependentSurfaceIndices (Array<int> & locsurf) const;
@@ -327,7 +327,7 @@ namespace netgen
     const TriangleApproximation * GetTriApprox (int msnr)
     {
       if (msnr < triapprox.Size())
-	return triapprox[msnr];
+        return triapprox[msnr];
       return 0;
     }
   
@@ -335,13 +335,13 @@ namespace netgen
     void IterateAllSolids (SolidIterator & it, bool only_once = false) const;
 
     void RefineTriangleApprox (Solid * locsol, 
-			       int surfind,
-			       const BoxSphere<3> & box, 
-			       double detail,
-			       const TATriangle & tria, 
-			       TriangleApproximation & tams,
-			       IndexSet & iset,
-			       int level);
+                               int surfind,
+                               const BoxSphere<3> & box, 
+                               double detail,
+                               const TATriangle & tria, 
+                               TriangleApproximation & tams,
+                               IndexSet & iset,
+                               int level);
 
     const Box<3> & BoundingBox () const { return boundingbox; }
 

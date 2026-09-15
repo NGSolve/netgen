@@ -118,9 +118,9 @@ namespace netgen
     
     if (data)
       {
-	p = data;
-	q = m2.data;
-	for (i = Width() * Height(); i > 0; i--)
+        p = data;
+        q = m2.data;
+        for (i = Width() * Height(); i > 0; i--)
           {
             *p += *q;
             p++;
@@ -313,7 +313,7 @@ namespace netgen
 
                 for (k = i-2; k >= 0; --k, ++pik, ++pjk)
                   x -= (*pik) * (*pjk);
-		  
+                  
                 // for (k = i-1; k >= 1; --k)
                 //   x -= m2.Get(j, k) * m2.Get(i, k);
 
@@ -324,7 +324,7 @@ namespace netgen
                         cerr << "Matrix indefinite 1" << endl;
                         return;
                       }
-		  
+                  
                     p.Elem(i) = 1 / sqrt(x);
                   }
                 else
@@ -340,13 +340,13 @@ namespace netgen
         // check: A = L L^t
 
         //       for (i = 1; i <= n; i++)
-        // 	for (j = 1; j <= n; j++)
-        // 	  {
-        // 	    x = 0;
-        // 	    for (k = 1; k <= i && k <= j; k++)
-        // 	      x += m2.Get(i, k) * m2.Get(j, k);
-        // 	    (*testout) << "err " << i << "," << j << " = " << (m1.Get(i, j) - x) << endl;
-        // 	  }
+        //      for (j = 1; j <= n; j++)
+        //        {
+        //          x = 0;
+        //          for (k = 1; k <= i && k <= j; k++)
+        //            x += m2.Get(i, k) * m2.Get(j, k);
+        //          (*testout) << "err " << i << "," << j << " = " << (m1.Get(i, j) - x) << endl;
+        //        }
 
 
       
@@ -379,13 +379,13 @@ namespace netgen
       
         //      (*testout) << "check L^-1" << endl;
         //      for (i = 1; i <= n; i++)
-        // 	for (j = 1; j <= n; j++)
-        // 	  {
-        // 	    x = 0;
-        // 	    for (k = j; k <= i; k++)
-        // 	      x += hm.Get(i, k) * m2.Get(j, k);
-        // 	    (*testout) << "i, j = " << i << "," << j << " x = " << x << endl;
-        // 	  }
+        //      for (j = 1; j <= n; j++)
+        //        {
+        //          x = 0;
+        //          for (k = j; k <= i; k++)
+        //            x += hm.Get(i, k) * m2.Get(j, k);
+        //          (*testout) << "i, j = " << i << "," << j << " x = " << x << endl;
+        //        }
 
 
         // calc A^-1 = L^-T * L^-1
@@ -408,11 +408,11 @@ namespace netgen
                   x += *pik * *pjk;
                 // for (  ; k <= n; k++)
                 //   x += m2.Get(i, k) * m2.Get(j, k);
-	      
+              
                 m2.Elem(i, j) = x;
               }
           }
-	  
+          
         for (i = 1; i <= n; i++)
           for (j = 1; j < i; j++)
             m2.Elem(j, i) = m2.Get(i, j);
@@ -449,26 +449,26 @@ namespace netgen
         for (j = 1; j <= n; j++)
           {
             // pivot search
-	  
+          
             max = fabs(m2.Get(j, j));
             r = j;
-	  
+          
             for (i = j+1; i <= n ;i++)
               if (fabs (m2.Get(i, j)) > max)
                 {
                   r = i;
                   max = fabs (m2.Get(i, j));
                 }
-	  
+          
             if (max < 1e-20)
               {
                 cerr << "Inverse matrix: matrix singular" << endl;
                 *testout << "Inverse matrix: matrix singular" << endl;
                 return;
               }
-	  
+          
             r = j;
-	  
+          
             // exchange rows
             if (r > j)
               {
@@ -482,15 +482,15 @@ namespace netgen
                 p[j-1] = p[r-1];
                 p[r-1] = hi;
               }
-	  
-	  
+          
+          
             // transformation
-	  
+          
             hr = 1 / m2.Get(j, j);
             for (i = 1; i <= n; i++)
               m2.Elem(i, j) *= hr;
             m2.Elem(j, j) = hr;
-	  
+          
             for (k = 1; k <= n; k++)
               if (k != j)
                 {
@@ -517,7 +517,7 @@ namespace netgen
           if (m1.Symmetric())
           for (i = 1; i <= n; i++)
           for (j = 1; j < i; j++)
-	  m1.Elem(j, i) = m1.Get(i, j);
+          m1.Elem(j, i) = m1.Get(i, j);
 
           m2 = 0;
     
@@ -526,7 +526,7 @@ namespace netgen
       
           for (i = 1; i <= n; i++)
           {
-          //	(*mycout) << '.' << flush;
+          //    (*mycout) << '.' << flush;
           q = m1.Get(i, i);
           for (k = 1; k <= n; k++)
           {
@@ -555,36 +555,36 @@ namespace netgen
           //          m1.Elem(j, k) -= q * m1.Elem(i, k);
           //          m2.Elem(j, k) -= q * m2.Elem(i, k);
           //          }
-	  
+          
           }
           }  
             
           for (i = n; i >= 1; i--)
           {
-          //	(*mycout) << "+" << flush;
+          //    (*mycout) << "+" << flush;
           for (j = 1; j < i; j++)
-	  {
+          {
           q = m1.Elem(j, i);
 
           double * m2pi = &m2.Elem(i, 1);
           double * m2pj = &m2.Elem(j, 1);
 
           for (k = n; k > 0; --k, ++m2pi, ++m2pj)
-          *m2pj -= q * (*m2pi);	    
+          *m2pj -= q * (*m2pi);     
 
-	    
-          //	    for (k = 1; k <= n; k++)
-          //	      {
-          //		m1.Elem(j, k) -= q * m1.Elem(i, k);
-          //		m2.Elem(j, k) -= q * m2.Elem(i, k);
-          //	      }    
-	  }         
+            
+          //        for (k = 1; k <= n; k++)
+          //          {
+          //            m1.Elem(j, k) -= q * m1.Elem(i, k);
+          //            m2.Elem(j, k) -= q * m2.Elem(i, k);
+          //          }    
+          }         
           }
 
           if (m2.Symmetric())
           {
           for (i = 1; i <= n; i++)
-	  for (j = 1; j < i; j++)
+          for (j = 1; j < i; j++)
           m2.Elem(i, j) = m2.Elem(j, i);
           }
         */
@@ -687,13 +687,13 @@ namespace netgen
           {
             sum = 0;
             const double * pa = pa1;
-	  
+          
             for (k = 1; k <= n2; k++)
               {
                 sum += *pa * *pb;
                 pa++; pb++;
               }
-	  
+          
             *pm2 = sum;
             pm2++;
           }
@@ -727,8 +727,8 @@ namespace netgen
 
           for (k = 1; k <= n3; ++k, ++pm2, ++pb)
             *pm2 += va * *pb;
-          //	for (k = 1; k <= n3; k++)
-          //	  m2.Elem(j, k) += va * b.Get(i, k);
+          //    for (k = 1; k <= n3; k++)
+          //      m2.Elem(j, k) += va * b.Get(i, k);
         }
     /*
       for (i = 1; i <= n2; i++)
@@ -803,16 +803,16 @@ namespace netgen
           const double * pm1 = &m1.Get(1, 1);
           for (i = 1; i <= n1; i++)
           {
-	  const double * pm2 = &m2.Get(1, 1);
-	  double * pm3i = &m3.Elem(i, 1);
+          const double * pm2 = &m2.Get(1, 1);
+          double * pm3i = &m3.Elem(i, 1);
 
-	  for (j = 1; j <= n3; j++)
+          for (j = 1; j <= n3; j++)
           {
           const double vm1 = *pm1;
           ++pm1;
-          //	      const double vm1 = m1.Get(i, j);
+          //          const double vm1 = m1.Get(i, j);
           double * pm3 = pm3i;
-          //	      const double * pm2 = &m2.Get(j, 1);
+          //          const double * pm2 = &m2.Get(j, 1);
 
           for (k = 0; k < n2; k++)
           {
@@ -821,31 +821,31 @@ namespace netgen
           ++pm3;
           }
 
-          //	    for (k = 1; k <= n2; k++)
-          //	      m3.Elem(i, k) += m1.Get(i, j) * m2.Get(j, k);
+          //        for (k = 1; k <= n2; k++)
+          //          m3.Elem(i, k) += m1.Get(i, j) * m2.Get(j, k);
           }
           }
-	*/
+        */
 
         /*
           for (i = 1; i <= n1; i++)
           for (j = 1; j <= n2; j++)
-	  {
+          {
           sum = 0;
           for (k = 1; k <= n3; k++)
           sum += m1.Get(i, k) * m2.Get(k, j);
           m3.Set(i, j, sum);
-	  }
+          }
         */
 
 
         /*
           for (i = 1; i <= n1; i++)
           {
-	  const double pm1i = &m1.Get(i, 1);
-	  const double pm2j = &m2.Get(1, 1);
+          const double pm1i = &m1.Get(i, 1);
+          const double pm2j = &m2.Get(1, 1);
 
-	  for (j = 1; j <= n2; j++)
+          for (j = 1; j <= n2; j++)
           {
           double sum = 0;
           const double * pm1 = pm1i;
@@ -858,11 +858,11 @@ namespace netgen
           ++pm1;
           pm2 += n2;
           }
-	      
+              
           m3.Set (i, j, sum);
           }
           }
-	*/
+        */
 
 
         p3 = m3.data;
@@ -874,7 +874,7 @@ namespace netgen
           {
             p1sn = p1s + n3;
             p2s = m2.data;
-	  
+          
             while (p2s != p2sn)
               {
                 sum = 0;
@@ -1014,7 +1014,7 @@ namespace netgen
     {
     sum = 0;
     sp = &v.Get(1);
-	      
+              
     for (int j = 1; j <= m; j++)
     {
     //        sum += Get(i,j) * v.Get(j);
@@ -1022,7 +1022,7 @@ namespace netgen
     mp++;
     sp++;
     }
-	      
+              
     //      prod.Set (i, sum);
     *dp = sum;
     dp++;
@@ -1052,7 +1052,7 @@ namespace netgen
       int i, j;
       int w = Width(), h = Height();
       if (prod.Size() != w)
-	prod.SetSize (w);
+        prod.SetSize (w);
 
       const double * pmat = &Get(1, 1);
       const double * pv = &v(0);
@@ -1060,30 +1060,30 @@ namespace netgen
       prod = 0;
 
       for (i = 1; i <= h; i++)
-	{
-	  double val = *pv;
-	  ++pv;
+        {
+          double val = *pv;
+          ++pv;
 
-	  double * pprod = &prod(0);
+          double * pprod = &prod(0);
 
-	  for (j = w-1; j >= 0; --j, ++pmat, ++pprod)
-	    {
-	      *pprod += val * *pmat;
-	    }
-	}
-	
+          for (j = w-1; j >= 0; --j, ++pmat, ++pprod)
+            {
+              *pprod += val * *pmat;
+            }
+        }
+        
       /*
         double sum;
 
         for (i = 1; i <= Width(); i++)
-	{
+        {
         sum = 0;
-	  
+          
         for (int j = 1; j <= Height(); j++)
         sum += Get(j, i) * v.Get(j);
-	  
+          
         prod.Set (i, sum);
-	}
+        }
       */
     }
   }
@@ -1120,7 +1120,7 @@ namespace netgen
 
             for (int j = 1; j <= w; ++j, ++mp, ++xp)
               sum -= *mp * *xp;
-	  
+          
             res(i-1) = sum;
           }
       }
@@ -1171,7 +1171,7 @@ namespace netgen
                 hy.Elem(pnum.Get(i)) += Get(i, j) * hx.Get(pnum.Get(j));
                 hy.Elem(pnum.Get(j)) += Get(i, j) * hx.Get(pnum.Get(i));
               }
-            hy.Elem(pnum.Get(j)) += Get(i, i) * hx.Get(pnum.Get(i));	
+            hy.Elem(pnum.Get(j)) += Get(i, i) * hx.Get(pnum.Get(i));    
           }
       }
     else
@@ -1257,7 +1257,7 @@ namespace netgen
 
                 for (k = i-2; k >= 0; --k, ++pik, ++pjk)
                   x -= (*pik) * (*pjk);
-		  
+                  
                 // for (k = i-1; k >= 1; --k)
                 //   x -= Get(j, k) * Get(i, k);
 
@@ -1268,7 +1268,7 @@ namespace netgen
                         cerr << "Matrix indefinite" << endl;
                         return;
                       }
-		  
+                  
                     p(i-1) = 1 / sqrt(x);
                   }
                 else
@@ -1298,8 +1298,8 @@ namespace netgen
 
             for (int j = 1; j < i; j++, ++pij, ++solj)
               val -= *pij * *solj;
-            //	  for (j = 1; j < i; j++)
-            //	    val -= Get(i, j) * sol.Get(j);
+            //    for (j = 1; j < i; j++)
+            //      val -= Get(i, j) * sol.Get(j);
 
             sol(i-1) = val / Get(i, i);
           }
@@ -1316,8 +1316,8 @@ namespace netgen
 
             for (j = 1; j < i; ++j, ++pij, ++solj)
               *solj -= val * *pij;
-            //	  for (j = 1; j < i; j++)
-            //	    sol.Elem(j) -= Get(i, j) * val;
+            //    for (j = 1; j < i; j++)
+            //      sol.Elem(j) -= Get(i, j) * val;
           }
 
 
@@ -1338,9 +1338,9 @@ namespace netgen
 
                     for (int k = i+1; k <= n; ++k, ++pik, ++pjk)
                       *pjk -= q * *pik;
-		  
+                  
                     //  for (k = i+1; k <= Height(); k++)
-                    //	Elem(j, k) -= q * Get(i,k);
+                    //  Elem(j, k) -= q * Get(i,k);
 
 
                     sol(j-1) -= q * sol(i-1);
@@ -1352,7 +1352,7 @@ namespace netgen
           {
             q = sol(i-1);
             for (int j = i+1; j <= n; j++)
-	      q -= Get(i,j) * sol(j-1);
+              q -= Get(i,j) * sol(j-1);
 
             sol(i-1) = q / Get(i,i);
           }

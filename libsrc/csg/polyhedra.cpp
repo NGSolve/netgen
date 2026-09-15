@@ -87,8 +87,8 @@ namespace netgen
 
         double dist2 = MinDistTP2 (p1, p2, p3, box.Center());
         //(*testout) << "p1 " << p1 << " p2 " << p2 << " p3 " << p3 << endl
-        //		 << " box.Center " << box.Center() << " box.Diam() " << box.Diam() << endl
-        //	 << " dist2 " << dist2 << " sqr(box.Diam()/2) " << sqr(box.Diam()/2) << endl;
+        //               << " box.Center " << box.Center() << " box.Diam() " << box.Diam() << endl
+        //       << " dist2 " << dist2 << " sqr(box.Diam()/2) " << sqr(box.Diam()/2) << endl;
         if (dist2 < sqr (box.Diam()/2))
           {
             //(*testout) << "DOES_INTERSECT" << endl;
@@ -131,7 +131,7 @@ namespace netgen
             if (lam3 < 0) continue;    // ray goes not in direction of face
 
             Vec<3> rs = v0 + lam3 * n;
-	  
+          
             double lam1 = face.w1 * rs;
             double lam2 = face.w2 * rs;
             if (lam1 >= 0 && lam2 >= 0 && lam1+lam2 <= 1)
@@ -196,7 +196,7 @@ namespace netgen
             point_on_faces.Append(i);
 
             double scal = vn * faces[i].nn; // n->nn
-	
+        
             res = DOES_INTERSECT;
             if (scal > eps_base1) res = IS_OUTSIDE;
             if (scal < -eps_base1) res = IS_INSIDE;
@@ -204,7 +204,7 @@ namespace netgen
       }
   
     //(*testout) << "point_on_faces.Size() " << point_on_faces.Size() 
-    //	     << " res " << res << endl;
+    //       << " res " << res << endl;
 
     if (point_on_faces.Size() == 0)
       return PointInSolid (p, 0);
@@ -334,7 +334,7 @@ namespace netgen
             if (lamn < 0) continue;    // ray goes not in direction of face
 
             Vec<3> rs = v0 + lamn * n;
-	  
+          
             double lam1 = face.w1 * rs;
             double lam2 = face.w2 * rs;
             double lam3 = 1-lam1-lam2;
@@ -623,7 +623,7 @@ namespace netgen
             if (lamn < 0) continue;    // ray goes not in direction of face
 
             Vec<3> rs = v0 + lamn * n;
-	  
+          
             double lam1 = face.w1 * rs;
             double lam2 = face.w2 * rs;
             double lam3 = 1-lam1-lam2;
@@ -812,8 +812,8 @@ namespace netgen
     //   for (int i = 0; i < planes.Size(); i++)
     //     if (pl.IsIdentic (*planes[i], inverse, 1e-9*max3(v1.Length(),v2.Length(),Dist(p2,p3))))
     //       {
-    // 	if (!inverse)
-    // 	  identicto = i;
+    //  if (!inverse)
+    //    identicto = i;
     //       }
     //   //  cout << "is identic = " << identicto << endl;
     //   identicto = -1;    // changed April 10, JS
@@ -915,7 +915,7 @@ namespace netgen
           if (surfaceids[si1] != s1 || surfaceids[si2] != s2) continue;
 
           //(*testout) << "check pair fi1/fi2 " << fi1 << "/" << fi2 << endl;
-	
+        
           Vec<3> n1 = GetSurface(si1) . GetNormalVector (p);
           Vec<3> n2 = GetSurface(si2) . GetNormalVector (p);
           Vec<3> t = Cross (n1, n2);
@@ -927,7 +927,7 @@ namespace netgen
             int samepts = 0;
             for (int j = 0; j < 3; j++)
             for (int k = 0; k < 3; k++)
-	    if (Dist(points[faces[fi1].pnums[j]],
+            if (Dist(points[faces[fi1].pnums[j]],
             points[faces[fi2].pnums[k]]) < eps)
             samepts++;
             if (samepts < 2) continue;
@@ -939,7 +939,7 @@ namespace netgen
               Vec<3> v1 = points[faces[fi1].pnums[(j+1)%3]] - points[faces[fi1].pnums[j]];
               double smax = v1.Length();
               v1 *= 1./smax;
-	    
+            
               int pospos;
               if(fabs(v1(0)) > 0.5)
                 pospos = 0;
@@ -960,7 +960,7 @@ namespace netgen
                     v2 -= v1;
                   else
                     v2 += v1;
-		 
+                 
                   //(*testout) << "v2.Length2() " << v2.Length2() << endl;
 
                   if(v2.Length2() > 1e-18)
@@ -970,7 +970,7 @@ namespace netgen
 
                   sa = (points[faces[fi2].pnums[k]](pospos) - points[faces[fi1].pnums[j]](pospos)) / v1(pospos);
                   sb = (points[faces[fi2].pnums[(k+1)%3]](pospos) - points[faces[fi1].pnums[j]](pospos)) / v1(pospos);
-		 
+                 
 
                   if(Dist(points[faces[fi1].pnums[j]] + sa*v1, points[faces[fi2].pnums[k]]) > eps)
                     continue;
@@ -999,14 +999,14 @@ namespace netgen
                     shareedge = (t * v1 > 0);
                   else if (sp > sb-eps)
                     shareedge = (t * v1 < 0);
-		   
+                   
                 }
             }
           if (!shareedge) continue;
 
           t.Normalize();
-	  
-	
+          
+        
           return t;
         }
 

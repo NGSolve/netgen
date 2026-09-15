@@ -39,8 +39,8 @@ namespace netgen
     /// can identify both special points (fixed direction)
     /// (identified points, same tangent)
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-			      const TABLE<int> & specpoint2solid,			  
-			      const TABLE<int> & specpoint2surface) const;
+                              const TABLE<int> & specpoint2solid,                         
+                              const TABLE<int> & specpoint2surface) const;
     ///
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     /// is it possible to identify sp1 with some other ?
@@ -60,12 +60,12 @@ namespace netgen
 
     /// copy surfaces, or fill rectangles
     virtual void BuildSurfaceElements (Array<class Segment> & segs,
-				       class Mesh & mesh,
-				       const Surface * surf);
+                                       class Mesh & mesh,
+                                       const Surface * surf);
 
     /// insert volume elements in thin layers
     virtual void BuildVolumeElements (Array<class Element2d> & surfels,
-				      class Mesh & mesh);
+                                      class Mesh & mesh);
 
     /// get list of identified faces
     virtual void GetIdentifiedFaces (Array<INDEX_2> & idfaces) const;
@@ -82,9 +82,9 @@ namespace netgen
     Transformation<3> inv_trafo; // from s2 to s1
   public:
     PeriodicIdentification (int anr,
-			    const CSGeometry & ageom,
-			    const Surface * as1,
-			    const Surface * as2,
+                            const CSGeometry & ageom,
+                            const Surface * as1,
+                            const Surface * as2,
                             Transformation<3> atrafo = Vec<3>(0,0,0));
     virtual ~PeriodicIdentification () override;
     virtual void Print (ostream & ost) const override;
@@ -93,16 +93,16 @@ namespace netgen
 
     //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-			      const TABLE<int> & specpoint2solid,
-			      const TABLE<int> & specpoint2surface) const override;
+                              const TABLE<int> & specpoint2solid,
+                              const TABLE<int> & specpoint2surface) const override;
 
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const override;
     virtual PointIndex GetIdentifiedPoint (class Mesh & mesh, PointIndex pi1) override;
     virtual void IdentifyPoints (class Mesh & mesh) override;
     virtual void IdentifyFaces (class Mesh & mesh) override;
     virtual void BuildSurfaceElements (Array<class Segment> & segs,
-				       class Mesh & mesh,
-				       const Surface * surf) override;
+                                       class Mesh & mesh,
+                                       const Surface * surf) override;
   };
 
 
@@ -135,11 +135,11 @@ namespace netgen
     bool usedirection;
   public:
     CloseSurfaceIdentification (int anr, 
-				const CSGeometry & ageom,
-				const Surface * as1,
-				const Surface * as2,
-				const TopLevelObject * adomain,
-				const Flags & flags);
+                                const CSGeometry & ageom,
+                                const Surface * as1,
+                                const Surface * as2,
+                                const TopLevelObject * adomain,
+                                const Flags & flags);
     virtual ~CloseSurfaceIdentification ();
 
     virtual void Print (ostream & ost) const;
@@ -148,8 +148,8 @@ namespace netgen
 
     //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-			      const TABLE<int> & specpoint2solid,
-			      const TABLE<int> & specpoint2surface) const;
+                              const TABLE<int> & specpoint2solid,
+                              const TABLE<int> & specpoint2surface) const;
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
@@ -158,14 +158,14 @@ namespace netgen
     virtual void IdentifyPoints (class Mesh & mesh);
     virtual void IdentifyFaces (class Mesh & mesh);
     virtual void BuildSurfaceElements (Array<class Segment> & segs,
-				       class Mesh & mesh,
-				       const Surface * surf);
+                                       class Mesh & mesh,
+                                       const Surface * surf);
     void BuildSurfaceElements2 (Array<class Segment> & segs,
-				class Mesh & mesh,
-				const Surface * surf);
+                                class Mesh & mesh,
+                                const Surface * surf);
 
     virtual void BuildVolumeElements (Array<class Element2d> & surfels,
-				      class Mesh & mesh);
+                                      class Mesh & mesh);
 
     int RefLevels () const { return ref_levels; }
     int RefLevels1 () const { return ref_levels_s1; }
@@ -188,24 +188,24 @@ namespace netgen
     const Surface * s2;
   public:
     CloseEdgesIdentification (int anr,
-			      const CSGeometry & ageom,
-			      const Surface * afacet,
-			      const Surface * as1,
-			      const Surface * as2);
+                              const CSGeometry & ageom,
+                              const Surface * afacet,
+                              const Surface * as1,
+                              const Surface * as2);
     virtual ~CloseEdgesIdentification ();
     virtual void Print (ostream & ost) const;
     virtual void GetData (ostream & ost) const;
 
     //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-			      const TABLE<int> & specpoint2solid,
-			      const TABLE<int> & specpoint2surface) const;
+                              const TABLE<int> & specpoint2solid,
+                              const TABLE<int> & specpoint2surface) const;
 
 
     virtual void IdentifyPoints (class Mesh & mesh);
     virtual void BuildSurfaceElements (Array<class Segment> & segs,
-				       class Mesh & mesh,
-				       const Surface * surf);
+                                       class Mesh & mesh,
+                                       const Surface * surf);
   };
 
 }

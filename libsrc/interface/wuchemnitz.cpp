@@ -242,7 +242,7 @@ namespace netgen
     for (int i = 1; i <= points.Size(); i++)
       outfile << "  " << i << "  " << points[i-1].x << "  " << points[i-1].y 
               << "  " << points[i-1].z << endl;
-    	
+        
     outfile << "#EDGE:  " << edges.Size() << endl;
     for (int i = 1; i <= edges.Size(); i++)
       outfile << "  " << i << "  1  " 
@@ -256,7 +256,7 @@ namespace netgen
               << faces[i-1].edges[0] << "  " 
               << faces[i-1].edges[1] << "  " 
               << faces[i-1].edges[2] << endl;
-    	
+        
     outfile << "#SOLID:  " << volelements.Size() << endl;
     for (int i = 1; i <= volelements.Size(); i++)
       outfile << "  " << i << "  1  4  " 
@@ -264,7 +264,7 @@ namespace netgen
               << volelements[i-1].faces[1] << "  "
               << volelements[i-1].faces[2] << "  "
               << volelements[i-1].faces[3] << endl;
-    	
+        
     outfile << "#END_OF_DATA" << endl;
   }
     

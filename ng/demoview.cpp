@@ -61,32 +61,32 @@ namespace netgen {
     // whitespaces ueberspringen
     do
       { 
-	scanin->get(ch);
+        scanin->get(ch);
 
-	if (ch == '\n') 
-	  linenum++;
+        if (ch == '\n') 
+          linenum++;
 
-	// end of file reached
-	if (scanin->eof())
-	  {
-	    token = DTOK_END;
-	    return;
-	  }
+        // end of file reached
+        if (scanin->eof())
+          {
+            token = DTOK_END;
+            return;
+          }
 
-	// skip comment line
-	if (ch == '#')
-	  {
-	    while (ch != '\n')
-	      {
-		scanin->get(ch);
-		if (scanin->eof())
-		  {
-		    token = DTOK_END;
-		    return;
-		  }
-	      }
-	    linenum++;
-	  }	
+        // skip comment line
+        if (ch == '#')
+          {
+            while (ch != '\n')
+              {
+                scanin->get(ch);
+                if (scanin->eof())
+                  {
+                    token = DTOK_END;
+                    return;
+                  }
+              }
+            linenum++;
+          }     
       }
     while (isspace(ch));
   
@@ -97,46 +97,46 @@ namespace netgen {
       case '-': case ':':
       case '=': case ',':
       case ';': case '+':
-	{
-	  token = DEMOVIEW_TOKEN_TYPE (ch);
-	  break;
-	}
+        {
+          token = DEMOVIEW_TOKEN_TYPE (ch);
+          break;
+        }
   
       default:
-	{
-	  if (isdigit (ch) || ch == '.')
-	    {
-	      scanin->putback (ch);
-	      (*scanin) >> num_value;
-	      token = DTOK_NUM;
-	      return;
-	    }
+        {
+          if (isdigit (ch) || ch == '.')
+            {
+              scanin->putback (ch);
+              (*scanin) >> num_value;
+              token = DTOK_NUM;
+              return;
+            }
 
-	  if (isalpha (ch))
-	    {
-	      string_value = string (1, ch);
-	      scanin->get(ch);
-	      while (isalnum(ch))
-		{
-		  string_value += ch;
-		  scanin->get(ch);
-		}
-	      scanin->putback (ch);
-	    }
+          if (isalpha (ch))
+            {
+              string_value = string (1, ch);
+              scanin->get(ch);
+              while (isalnum(ch))
+                {
+                  string_value += ch;
+                  scanin->get(ch);
+                }
+              scanin->putback (ch);
+            }
 
-	  int nr = 0;
-	  while (demoview_defkw[nr].kw)
-	    {
-	      if (string_value == demoview_defkw[nr].name)
-		{
-		  token = demoview_defkw[nr].kw;
-		  return;
-		}
-	      nr++;
-	    }
+          int nr = 0;
+          while (demoview_defkw[nr].kw)
+            {
+              if (string_value == demoview_defkw[nr].name)
+                {
+                  token = demoview_defkw[nr].kw;
+                  return;
+                }
+              nr++;
+            }
 
-	  token = DTOK_STRING;
-	}
+          token = DTOK_STRING;
+        }
       }
   }
 
@@ -167,13 +167,13 @@ namespace netgen {
   {
     if (scan.GetToken() == '-')
       {
-	scan.ReadNext();
-	return -ParseNumber (scan);
+        scan.ReadNext();
+        return -ParseNumber (scan);
       }
     if (scan.GetToken() != DTOK_NUM) scan.Error ("number expected");
     double val = scan.GetNumValue();
     scan.ReadNext();
-    return val;	
+    return val; 
   }
 
 
@@ -206,59 +206,59 @@ namespace netgen {
     s[0] = ParseVector (scan);
   
     if (scan.GetToken() != DTOK_RP && 
-	scan.GetToken() != DTOK_SEMICOLON)
-      scan.Error (") or ; expected");	   
+        scan.GetToken() != DTOK_SEMICOLON)
+      scan.Error (") or ; expected");      
   
     if (scan.GetToken() == DTOK_SEMICOLON)
       {
-	np++;
+        np++;
       
-	scan.ReadNext();
+        scan.ReadNext();
 
-	t[1] = ParseNumber (scan)*1000;
-	ParseChar (scan, ':');
+        t[1] = ParseNumber (scan)*1000;
+        ParseChar (scan, ':');
       
-	s[1] = ParseVector (scan);
+        s[1] = ParseVector (scan);
       
-	if (scan.GetToken() != DTOK_RP && 
-	    scan.GetToken() != DTOK_SEMICOLON)
-	  scan.Error (") or ; expected");	   
+        if (scan.GetToken() != DTOK_RP && 
+            scan.GetToken() != DTOK_SEMICOLON)
+          scan.Error (") or ; expected");          
       
-	if (scan.GetToken() == DTOK_SEMICOLON)
-	  {
-	    np++;
-	  
-	    scan.ReadNext();
-	  
-	    t[2] = ParseNumber (scan)*1000;
-	    ParseChar (scan, ':');
-	  
-	    s[2] = ParseVector (scan);
-	  
-	    ParseChar (scan, ')');
-	    ParseChar (scan, ';');
-	  }
-	else if (scan.GetToken() == DTOK_RP)
-	  {
-	    scan.ReadNext();
-	    ParseChar (scan, ';');
-	  }
+        if (scan.GetToken() == DTOK_SEMICOLON)
+          {
+            np++;
+          
+            scan.ReadNext();
+          
+            t[2] = ParseNumber (scan)*1000;
+            ParseChar (scan, ':');
+          
+            s[2] = ParseVector (scan);
+          
+            ParseChar (scan, ')');
+            ParseChar (scan, ';');
+          }
+        else if (scan.GetToken() == DTOK_RP)
+          {
+            scan.ReadNext();
+            ParseChar (scan, ';');
+          }
       }
     else if (scan.GetToken() == DTOK_RP)
       {
-	scan.ReadNext();
-	ParseChar (scan, ';');
+        scan.ReadNext();
+        ParseChar (scan, ';');
       }
   
     if (np == 1) // constant spline
       {
-	t[1] = t[2] = t[0];
-	s[1] = s[2] = s[0];
+        t[1] = t[2] = t[0];
+        s[1] = s[2] = s[0];
       }
     if (np == 2) // linear spline
       {
-	t[2] = t[1]; t[1] = 0.5*(t[0] + t[2]);
-	s[2] = s[1]; s[1] = 0.5*(s[0] + s[2]);
+        t[2] = t[1]; t[1] = 0.5*(t[0] + t[2]);
+        s[2] = s[1]; s[1] = 0.5*(s[0] + s[2]);
       }
   }
 
@@ -275,7 +275,7 @@ namespace netgen {
     ip.SetSize( ip.Size()+1 );
     for (i = ip.Size()-2; i >= pos; i--)
       for (j = 0; j < 3; j++)
-	ip[i+1][j] = ip[i][j];
+        ip[i+1][j] = ip[i][j];
 
     ip[pos][0].SetTS (t1, s1);
     ip[pos][1].SetTS (t2, s2);
@@ -292,8 +292,8 @@ namespace netgen {
     
     if (t > ip[ip.Size()-1][2].GetT())
       {
-	finished = 1;
-	return (ip[ip.Size()-1][2].GetS());
+        finished = 1;
+        return (ip[ip.Size()-1][2].GetS());
       }
 
     int pos;
@@ -302,21 +302,21 @@ namespace netgen {
   
     if (t >= ip[pos][0].GetT() && t <= ip[pos][2].GetT())
       {
-	double t0 = ip[pos][0].GetT();
-	double t1 = ip[pos][2].GetT();
+        double t0 = ip[pos][0].GetT();
+        double t1 = ip[pos][2].GetT();
 
-	double t01 = (t-t0)/(t1-t0);
+        double t01 = (t-t0)/(t1-t0);
 
-	double b1, b2, b3, w;
+        double b1, b2, b3, w;
 
-	b1 = (1-t01)*(1-t01);
-	b2 = sqrt(2.0) * t01 * (1-t01);
-	b3 = t01 * t01;
-	w = b1 + b2 + b3;
+        b1 = (1-t01)*(1-t01);
+        b2 = sqrt(2.0) * t01 * (1-t01);
+        b3 = t01 * t01;
+        w = b1 + b2 + b3;
  
-	return ( (1/w) * (b1 * ip[pos][0].GetS() +
-			  b2 * ip[pos][1].GetS() +
-			  b3 * ip[pos][2].GetS()) );
+        return ( (1/w) * (b1 * ip[pos][0].GetS() +
+                          b2 * ip[pos][1].GetS() +
+                          b3 * ip[pos][2].GetS()) );
       }
     else
       return (ip[pos][2].GetS());
@@ -343,62 +343,62 @@ namespace netgen {
 
     try
       {
-	while (1)
-	  {
-	    if (scan.GetToken() == DTOK_END) break;
-	    
-	    if (scan.GetToken() == DTOK_CAMPOS)
-	      {
-		ParseConstLineOrSpline (scan, &t[0], &s[0]);
-		campos.AddSpline (time+t[0], time+t[1], time+t[2], s[0], s[1], s[2]);
-	      }
-	    
-	    else if (scan.GetToken() == DTOK_CAMUP)
-	      {
-		ParseConstLineOrSpline (scan, &t[0], &s[0]);
-		camup.AddSpline (time+t[0], time+t[1], time+t[2], s[0], s[1], s[2]);
-	      }
-	    
-	    else if (scan.GetToken() == DTOK_CAMPOINT)
-	      {
-		ParseConstLineOrSpline (scan, &t[0], &s[0]);
-		campoint.AddSpline (time+t[0], time+t[1], time+t[2], s[0], s[1], s[2]);
-	      }
-	    
-	    else if (scan.GetToken() == DTOK_TIME)
-	      {
-		scan.ReadNext();
+        while (1)
+          {
+            if (scan.GetToken() == DTOK_END) break;
+            
+            if (scan.GetToken() == DTOK_CAMPOS)
+              {
+                ParseConstLineOrSpline (scan, &t[0], &s[0]);
+                campos.AddSpline (time+t[0], time+t[1], time+t[2], s[0], s[1], s[2]);
+              }
+            
+            else if (scan.GetToken() == DTOK_CAMUP)
+              {
+                ParseConstLineOrSpline (scan, &t[0], &s[0]);
+                camup.AddSpline (time+t[0], time+t[1], time+t[2], s[0], s[1], s[2]);
+              }
+            
+            else if (scan.GetToken() == DTOK_CAMPOINT)
+              {
+                ParseConstLineOrSpline (scan, &t[0], &s[0]);
+                campoint.AddSpline (time+t[0], time+t[1], time+t[2], s[0], s[1], s[2]);
+              }
+            
+            else if (scan.GetToken() == DTOK_TIME)
+              {
+                scan.ReadNext();
 
-		if (scan.GetToken() != DTOK_EQU && 
-		    scan.GetToken() != DTOK_PLUS)
-		  scan.Error ("= or += expected");	   
+                if (scan.GetToken() != DTOK_EQU && 
+                    scan.GetToken() != DTOK_PLUS)
+                  scan.Error ("= or += expected");         
       
-		if (scan.GetToken() == DTOK_EQU)
-		  {
-		    scan.ReadNext();
-		    time = ParseNumber (scan)*1000;
-		    ParseChar (scan, ';');
-		  }
-		else if (scan.GetToken() == DTOK_PLUS)
-		  {
-		    scan.ReadNext();
-		    ParseChar (scan, '=');
-		    time += ParseNumber (scan)*1000;
-		    ParseChar (scan, ';');
-		  }
-	      }
-	    
-	    else
-	      {
-		cout << "read unidentified token " << scan.GetToken() 
-		     << " string = " << scan.GetStringValue() << endl;
-		scan.ReadNext();
-	      }
-	  }
+                if (scan.GetToken() == DTOK_EQU)
+                  {
+                    scan.ReadNext();
+                    time = ParseNumber (scan)*1000;
+                    ParseChar (scan, ';');
+                  }
+                else if (scan.GetToken() == DTOK_PLUS)
+                  {
+                    scan.ReadNext();
+                    ParseChar (scan, '=');
+                    time += ParseNumber (scan)*1000;
+                    ParseChar (scan, ';');
+                  }
+              }
+            
+            else
+              {
+                cout << "read unidentified token " << scan.GetToken() 
+                     << " string = " << scan.GetStringValue() << endl;
+                scan.ReadNext();
+              }
+          }
       }
     catch (string errstr)
       {
-	cout << "caught error " << errstr << endl;
+        cout << "caught error " << errstr << endl;
       }
 
 
@@ -422,14 +422,14 @@ namespace netgen {
 
 
     visual_scene -> LookAt ( Point<3>(  campos.Evaluate (time)),
-		   Point<3>(campoint.Evaluate (time)),
-		   Point<3>(   camup.Evaluate (time)) );
+                   Point<3>(campoint.Evaluate (time)),
+                   Point<3>(   camup.Evaluate (time)) );
 
     if (campos.IsFinished() &&
-	campoint.IsFinished() &&
-	camup.IsFinished())
+        campoint.IsFinished() &&
+        camup.IsFinished())
       {
-	return -1;
+        return -1;
       }
 
     return 0;

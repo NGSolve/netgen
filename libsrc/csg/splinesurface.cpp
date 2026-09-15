@@ -24,15 +24,15 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
     
     for(int i=0; i<splines.Size(); i++)
       {
-	auto pp1 = Point<3>(splines[i]->GetPoint(0));
-	Project(pp1);
-	auto pp2 = Point<3>(splines[i]->GetPoint(1));
-	Project(pp2);
+        auto pp1 = Point<3>(splines[i]->GetPoint(0));
+        Project(pp1);
+        auto pp2 = Point<3>(splines[i]->GetPoint(1));
+        Project(pp2);
         double eps = (p1-p2).Length() * 1e-4;
-	if (((pp1-p1).Length()<eps && (pp2-p2).Length() < eps) || ((pp1-p2).Length() < eps && (pp2-p1).Length() < eps))
-	  {
-	    return bcnames[i];
-	  }
+        if (((pp1-p1).Length()<eps && (pp2-p2).Length() < eps) || ((pp1-p2).Length() < eps && (pp2-p1).Length() < eps))
+          {
+            return bcnames[i];
+          }
       }
     return "default";
   }
@@ -46,8 +46,8 @@ void SplineSurface :: AppendPoint(const Point<3> & p, const double reffac, const
       cuttings->Append(cut);
     for(int i = 0; i<splines.Size(); i++)
       {
-	auto spline = splines[i];
-	auto lineseg = dynamic_cast<LineSeg<3>*>(spline.get());
+        auto spline = splines[i];
+        auto lineseg = dynamic_cast<LineSeg<3>*>(spline.get());
         if(lineseg)
           {
             auto p1 = Point<3>(spline->GetPoint(0));

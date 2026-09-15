@@ -44,7 +44,7 @@ NGLIB_API Ng_Result Ng_OCC_GetFMap(Ng_OCC_Geometry * geom,
                                     Ng_OCC_TopTools_IndexedMapOfShape * FMap);
 
 NGLIB_API void Ng_OCC_Uniform_Refinement (Ng_OCC_Geometry * geom,
-					   Ng_Mesh * mesh);
+                                           Ng_Mesh * mesh);
 NGLIB_API void Ng_OCC_Generate_SecondOrder (Ng_OCC_Geometry * geom,
-					   Ng_Mesh * mesh);
+                                           Ng_Mesh * mesh);
 #endif // NGLIB_OCC_HPP_INCLUDED

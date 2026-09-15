@@ -33,9 +33,9 @@ namespace netgen
     for (int i = 0; i < geom.GetNUserPoints(); i++)
       {
         auto up = geom.GetUserPoint(i);
-	auto pnum = mesh.AddPoint(up);
-	mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
-	mesh.AddLockedPoint (pnum);
+        auto pnum = mesh.AddPoint(up);
+        mesh.Points().Last().Singularity (geom.GetUserPointRefFactor(i));
+        mesh.AddLockedPoint (pnum);
         int index = up.GetIndex();
         if (index == -1)
           index = mesh.AddCD3Name (up.GetName())+1;
@@ -89,57 +89,57 @@ namespace netgen
 
     for (int i = 0; i < geom.singedges.Size(); i++)
       {
-	geom.singedges[i]->FindPointsOnEdge (mesh);
-	if(setmeshsize)
-	  geom.singedges[i]->SetMeshSize(mesh,10.*geom.BoundingBox().Diam());
+        geom.singedges[i]->FindPointsOnEdge (mesh);
+        if(setmeshsize)
+          geom.singedges[i]->SetMeshSize(mesh,10.*geom.BoundingBox().Diam());
       }
     for (int i = 0; i < geom.singpoints.Size(); i++)
       geom.singpoints[i]->FindPoints (mesh);
 
     for (int edi = 1; edi <= mesh.GetNED(); edi++)
       {
-	auto & ed = mesh.GetEdgeDescriptor(edi);
-	int surf_rep = ed.GetIndex();  // staged surface representant from CalcEdges1
-	if (surf_rep < 0) continue;
-	int ok = 0;
-	for (int k = 1; k <= mesh.GetNFD(); k++)
-	  {
-	    const auto & fd = mesh.GetFaceDescriptor(k);
-	    if (fd.SurfNr() == surf_rep &&
-	        fd.DomainIn() == ed.DomainIn()+1 &&
-	        fd.DomainOut() == ed.DomainOut()+1 &&
-	        fd.TLOSurface() == ed.TLOSurface()+1)
-	      {
-	        ok = k;
-	      }
-	  }
+        auto & ed = mesh.GetEdgeDescriptor(edi);
+        int surf_rep = ed.GetIndex();  // staged surface representant from CalcEdges1
+        if (surf_rep < 0) continue;
+        int ok = 0;
+        for (int k = 1; k <= mesh.GetNFD(); k++)
+          {
+            const auto & fd = mesh.GetFaceDescriptor(k);
+            if (fd.SurfNr() == surf_rep &&
+                fd.DomainIn() == ed.DomainIn()+1 &&
+                fd.DomainOut() == ed.DomainOut()+1 &&
+                fd.TLOSurface() == ed.TLOSurface()+1)
+              {
+                ok = k;
+              }
+          }
 
-	if (!ok)
-	  {
-	    ok = mesh.AddFaceDescriptor (FaceDescriptor (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1));
-	  }
+        if (!ok)
+          {
+            ok = mesh.AddFaceDescriptor (FaceDescriptor (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1));
+          }
 
-	ed.SetIndex(ok);
+        ed.SetIndex(ok);
       }
 
     for(int k = 1; k<=mesh.GetNFD(); k++)
       {
-	*testout << "face: " << k << endl
-		 << "FD: " << mesh.GetFaceDescriptor(k) << endl;
+        *testout << "face: " << k << endl
+                 << "FD: " << mesh.GetFaceDescriptor(k) << endl;
       }
 
     if (geom.identifications.Size())
       {
-	PrintMessage (3, "Find Identifications");
-	for (int i = 0; i < geom.identifications.Size(); i++)
-	  {
-	    geom.identifications[i]->IdentifyPoints (mesh);
-	    //(*testout) << "identification " << i << " is " 
-	    //	       << *geom.identifications[i] << endl;
-	    
-	  }
-	for (int i = 0; i < geom.identifications.Size(); i++)
-	  geom.identifications[i]->IdentifyFaces (mesh);
+        PrintMessage (3, "Find Identifications");
+        for (int i = 0; i < geom.identifications.Size(); i++)
+          {
+            geom.identifications[i]->IdentifyPoints (mesh);
+            //(*testout) << "identification " << i << " is " 
+            //         << *geom.identifications[i] << endl;
+            
+          }
+        for (int i = 0; i < geom.identifications.Size(); i++)
+          geom.identifications[i]->IdentifyFaces (mesh);
       }
 
 
@@ -152,97 +152,97 @@ namespace netgen
     
     for (SegmentIndex si : mesh.LineSegments().Range())
       {
-	if (ec.seg_seginfo[si])
-	  {
-	    Box<3> hbox;
-	    hbox.Set (mesh[mesh[si][0]]);
-	    hbox.Add (mesh[mesh[si][1]]);
-	    segtree.Insert (hbox.PMin(), hbox.PMax(), si);
-	  }
+        if (ec.seg_seginfo[si])
+          {
+            Box<3> hbox;
+            hbox.Set (mesh[mesh[si][0]]);
+            hbox.Add (mesh[mesh[si][1]]);
+            segtree.Insert (hbox.PMin(), hbox.PMax(), si);
+          }
       }
 
     Array<SegmentIndex> loc;
     if (!ec.point_on_edge_problem)
       for (SegmentIndex si : mesh.LineSegments().Range())
-	{
-	  if (!ec.seg_seginfo[si]) continue;
+        {
+          if (!ec.seg_seginfo[si]) continue;
 
-	  Box<3> hbox;
-	  hbox.Set (mesh[mesh[si][0]]);
-	  hbox.Add (mesh[mesh[si][1]]);
-	  hbox.Increase (1e-6);
-	  segtree.GetIntersecting (hbox.PMin(), hbox.PMax(), loc);
-	  	  
-	  // for (SegmentIndex sj = 0; sj < si; sj++)
-	  for (int j = 0; j < loc.Size(); j++)
-	    {
-	      SegmentIndex sj = loc[j];
-	      if (sj >= si) continue;
-	      if (!ec.seg_seginfo[si] || !ec.seg_seginfo[sj]) continue;
-	      if (mesh[mesh[si][0]].GetLayer() != mesh[mesh[sj][1]].GetLayer()) continue;
-	      
-	      Point<3> pi1 = mesh[mesh[si][0]];
-	      Point<3> pi2 = mesh[mesh[si][1]];
-	      Point<3> pj1 = mesh[mesh[sj][0]];
-	      Point<3> pj2 = mesh[mesh[sj][1]];
-	      Vec<3> vi = pi2 - pi1;
-	      Vec<3> vj = pj2 - pj1;
-	      
-	      if (sqr (vi * vj) > (1.-1e-6) * Abs2 (vi) * Abs2 (vj)) continue;
-	      
-	      // pi1 + vi t = pj1 + vj s
-	      Mat<3,2> mat;
-	      Vec<3> rhs;
-	      Vec<2> sol;
-	      
-	      for (int jj = 0; jj < 3; jj++)
-		{ 
-		  mat(jj,0) = vi(jj); 
-		  mat(jj,1) = -vj(jj); 
-		  rhs(jj) = pj1(jj)-pi1(jj); 
-		}
-	      
-	      mat.Solve (rhs, sol);
+          Box<3> hbox;
+          hbox.Set (mesh[mesh[si][0]]);
+          hbox.Add (mesh[mesh[si][1]]);
+          hbox.Increase (1e-6);
+          segtree.GetIntersecting (hbox.PMin(), hbox.PMax(), loc);
+                  
+          // for (SegmentIndex sj = 0; sj < si; sj++)
+          for (int j = 0; j < loc.Size(); j++)
+            {
+              SegmentIndex sj = loc[j];
+              if (sj >= si) continue;
+              if (!ec.seg_seginfo[si] || !ec.seg_seginfo[sj]) continue;
+              if (mesh[mesh[si][0]].GetLayer() != mesh[mesh[sj][1]].GetLayer()) continue;
+              
+              Point<3> pi1 = mesh[mesh[si][0]];
+              Point<3> pi2 = mesh[mesh[si][1]];
+              Point<3> pj1 = mesh[mesh[sj][0]];
+              Point<3> pj2 = mesh[mesh[sj][1]];
+              Vec<3> vi = pi2 - pi1;
+              Vec<3> vj = pj2 - pj1;
+              
+              if (sqr (vi * vj) > (1.-1e-6) * Abs2 (vi) * Abs2 (vj)) continue;
+              
+              // pi1 + vi t = pj1 + vj s
+              Mat<3,2> mat;
+              Vec<3> rhs;
+              Vec<2> sol;
+              
+              for (int jj = 0; jj < 3; jj++)
+                { 
+                  mat(jj,0) = vi(jj); 
+                  mat(jj,1) = -vj(jj); 
+                  rhs(jj) = pj1(jj)-pi1(jj); 
+                }
+              
+              mat.Solve (rhs, sol);
 
-	      //(*testout) << "mat " << mat << endl << "rhs " << rhs << endl << "sol " << sol << endl;
-	      
-	      if (sol(0) > 1e-6 && sol(0) < 1-1e-6 &&
-		  sol(1) > 1e-6 && sol(1) < 1-1e-6 &&
-		  Abs (rhs - mat*sol) < 1e-6)
-		{
-		  Point<3> ip = pi1 + sol(0) * vi;
-		  
-		  //(*testout) << "ip " << ip << endl;
+              //(*testout) << "mat " << mat << endl << "rhs " << rhs << endl << "sol " << sol << endl;
+              
+              if (sol(0) > 1e-6 && sol(0) < 1-1e-6 &&
+                  sol(1) > 1e-6 && sol(1) < 1-1e-6 &&
+                  Abs (rhs - mat*sol) < 1e-6)
+                {
+                  Point<3> ip = pi1 + sol(0) * vi;
+                  
+                  //(*testout) << "ip " << ip << endl;
 
-		  Point<3> pip = ip;
-		  ProjectToEdge (geom.GetSurface (mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(0)),
-				 geom.GetSurface (mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(1)), pip);
-		  
-		  //(*testout) << "Dist (ip, pip_si) " << Dist (ip, pip) << endl;
-		  if (Dist (ip, pip) > 1e-6*geom.MaxSize()) continue;
-		  pip = ip;
-		  ProjectToEdge (geom.GetSurface (mesh.GetEdgeDescriptor(mesh[sj].GetIndex()).SurfNr(0)),
-				 geom.GetSurface (mesh.GetEdgeDescriptor(mesh[sj].GetIndex()).SurfNr(1)), pip);
+                  Point<3> pip = ip;
+                  ProjectToEdge (geom.GetSurface (mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(0)),
+                                 geom.GetSurface (mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(1)), pip);
+                  
+                  //(*testout) << "Dist (ip, pip_si) " << Dist (ip, pip) << endl;
+                  if (Dist (ip, pip) > 1e-6*geom.MaxSize()) continue;
+                  pip = ip;
+                  ProjectToEdge (geom.GetSurface (mesh.GetEdgeDescriptor(mesh[sj].GetIndex()).SurfNr(0)),
+                                 geom.GetSurface (mesh.GetEdgeDescriptor(mesh[sj].GetIndex()).SurfNr(1)), pip);
 
-		  //(*testout) << "Dist (ip, pip_sj) " << Dist (ip, pip) << endl;
-		  if (Dist (ip, pip) > 1e-6*geom.MaxSize()) continue;
-		  
-		  
-		  
-		  cout << "Intersection at " << ip << endl;
-		  
-		  geom.AddUserPoint (ip);
-		  spoints.Append (MeshPoint (ip, mesh[mesh[si][0]].GetLayer()));
-		  mesh.AddPoint (ip);
-		  
-		  (*testout) << "found intersection at " << ip << endl;
-		  (*testout) << "sol = " << sol << endl;
-		  (*testout) << "res = " << (rhs - mat*sol) << endl;
-		  (*testout) << "segs = " << pi1 << " - " << pi2 << endl;
-		  (*testout) << "and = " << pj1 << " - " << pj2 << endl << endl;
-		}
-	    }
-	}  
+                  //(*testout) << "Dist (ip, pip_sj) " << Dist (ip, pip) << endl;
+                  if (Dist (ip, pip) > 1e-6*geom.MaxSize()) continue;
+                  
+                  
+                  
+                  cout << "Intersection at " << ip << endl;
+                  
+                  geom.AddUserPoint (ip);
+                  spoints.Append (MeshPoint (ip, mesh[mesh[si][0]].GetLayer()));
+                  mesh.AddPoint (ip);
+                  
+                  (*testout) << "found intersection at " << ip << endl;
+                  (*testout) << "sol = " << sol << endl;
+                  (*testout) << "res = " << (rhs - mat*sol) << endl;
+                  (*testout) << "segs = " << pi1 << " - " << pi2 << endl;
+                  (*testout) << "and = " << pj1 << " - " << pj2 << endl << endl;
+                }
+            }
+        }  
   }
 
 
@@ -269,29 +269,29 @@ namespace netgen
     bool changed;
     do
       {
-	changed = 0;
-	for (int i = 0; i < geom.identifications.Size(); i++)
-	  {
-	    geom.identifications[i]->GetIdentifiedFaces (fpairs);
+        changed = 0;
+        for (int i = 0; i < geom.identifications.Size(); i++)
+          {
+            geom.identifications[i]->GetIdentifiedFaces (fpairs);
 
-	    for (int j = 0; j < fpairs.Size(); j++)
-	      {
-		if (masterface[fpairs[j].I1()-1] <
-		    masterface[fpairs[j].I2()-1])
-		  {
-		    changed = 1;
-		    masterface[fpairs[j].I2()-1] =
-		      masterface[fpairs[j].I1()-1];
-		  }
-		if (masterface[fpairs[j].I2()-1] <
-		    masterface[fpairs[j].I1()-1])
-		  {
-		    changed = 1;
-		    masterface[fpairs[j].I1()-1] =
-		      masterface[fpairs[j].I2()-1];
-		  }
-	      }
-	  }
+            for (int j = 0; j < fpairs.Size(); j++)
+              {
+                if (masterface[fpairs[j].I1()-1] <
+                    masterface[fpairs[j].I2()-1])
+                  {
+                    changed = 1;
+                    masterface[fpairs[j].I2()-1] =
+                      masterface[fpairs[j].I1()-1];
+                  }
+                if (masterface[fpairs[j].I2()-1] <
+                    masterface[fpairs[j].I1()-1])
+                  {
+                    changed = 1;
+                    masterface[fpairs[j].I1()-1] =
+                      masterface[fpairs[j].I2()-1];
+                  }
+              }
+          }
       }
     while (changed);
 
@@ -302,100 +302,100 @@ namespace netgen
 
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-	bool increased = false;
+        bool increased = false;
 
-	FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-	const Surface * surf = geom.GetSurface(fd.SurfNr());
+        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        const Surface * surf = geom.GetSurface(fd.SurfNr());
 
-	if (fd.TLOSurface() && 
-	    geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCProp() > 0)
-	  fd.SetBCProperty (geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCProp());
-	else if (surf -> GetBCProperty() != -1)
-	  fd.SetBCProperty (surf->GetBCProperty());
-	else
-	  {
-	    bccnt++;
-	    fd.SetBCProperty (bccnt);
-	    increased = true;
-	  }      
+        if (fd.TLOSurface() && 
+            geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCProp() > 0)
+          fd.SetBCProperty (geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCProp());
+        else if (surf -> GetBCProperty() != -1)
+          fd.SetBCProperty (surf->GetBCProperty());
+        else
+          {
+            bccnt++;
+            fd.SetBCProperty (bccnt);
+            increased = true;
+          }      
 
-	for (int l = 0; l < geom.bcmodifications.Size(); l++)
-	  {
-	    if (geom.GetSurfaceClassRepresentant (fd.SurfNr()) == 
-		geom.GetSurfaceClassRepresentant (geom.bcmodifications[l].si) &&
-		(fd.DomainIn() == geom.bcmodifications[l].tlonr+1 ||
-		 fd.DomainOut() == geom.bcmodifications[l].tlonr+1))
-	      {
-		if(geom.bcmodifications[l].bcname == NULL)
-		  fd.SetBCProperty (geom.bcmodifications[l].bcnr);
-		else
-		  {
-		    if(!increased)
-		      {
-			bccnt++;
-			fd.SetBCProperty (bccnt);
-			increased = true;
-		      }
-		  }
-	      }
-	  }
+        for (int l = 0; l < geom.bcmodifications.Size(); l++)
+          {
+            if (geom.GetSurfaceClassRepresentant (fd.SurfNr()) == 
+                geom.GetSurfaceClassRepresentant (geom.bcmodifications[l].si) &&
+                (fd.DomainIn() == geom.bcmodifications[l].tlonr+1 ||
+                 fd.DomainOut() == geom.bcmodifications[l].tlonr+1))
+              {
+                if(geom.bcmodifications[l].bcname == NULL)
+                  fd.SetBCProperty (geom.bcmodifications[l].bcnr);
+                else
+                  {
+                    if(!increased)
+                      {
+                        bccnt++;
+                        fd.SetBCProperty (bccnt);
+                        increased = true;
+                      }
+                  }
+              }
+          }
       }
 
     mesh.SetNBCNames( bccnt );
 
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-	FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-	const Surface * surf = geom.GetSurface(fd.SurfNr());
-	if (fd.TLOSurface() )
-	  {
-	    int bcp = fd.BCProperty();
-	    string nextbcname = geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCName();
-	    if ( nextbcname != "default" )
-	      mesh.SetBCName ( bcp - 1 , nextbcname );
-	  }
-	else // if (surf -> GetBCProperty() != -1)
-	  {
-	    int bcp = fd.BCProperty();
-	    string nextbcname = surf->GetBCName();
-	    if ( nextbcname != "default" )
-	      mesh.SetBCName ( bcp - 1, nextbcname );
-	  }
+        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        const Surface * surf = geom.GetSurface(fd.SurfNr());
+        if (fd.TLOSurface() )
+          {
+            int bcp = fd.BCProperty();
+            string nextbcname = geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCName();
+            if ( nextbcname != "default" )
+              mesh.SetBCName ( bcp - 1 , nextbcname );
+          }
+        else // if (surf -> GetBCProperty() != -1)
+          {
+            int bcp = fd.BCProperty();
+            string nextbcname = surf->GetBCName();
+            if ( nextbcname != "default" )
+              mesh.SetBCName ( bcp - 1, nextbcname );
+          }
       }
     
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-	FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-	fd.SetBCName ( mesh.GetBCNamePtr ( fd.BCProperty() - 1 ) );
+        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        fd.SetBCName ( mesh.GetBCNamePtr ( fd.BCProperty() - 1 ) );
       }
 
     //!!
     
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-	FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-	//const Surface * surf = geom.GetSurface(fd.SurfNr());
+        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        //const Surface * surf = geom.GetSurface(fd.SurfNr());
 
-	for (int l = 0; l < geom.bcmodifications.Size(); l++)
-	  {
-	    if (geom.GetSurfaceClassRepresentant (fd.SurfNr()) == 
-		geom.GetSurfaceClassRepresentant (geom.bcmodifications[l].si) &&
-		(fd.DomainIn() == geom.bcmodifications[l].tlonr+1 ||
-		 fd.DomainOut() == geom.bcmodifications[l].tlonr+1) &&
-		geom.bcmodifications[l].bcname != NULL
-		)
-	      {
-		int bcp = fd.BCProperty();
-		mesh.SetBCName ( bcp - 1, *(geom.bcmodifications[l].bcname) );
-		fd.SetBCName ( mesh.GetBCNamePtr ( bcp - 1) );
-	      }
-	  }
+        for (int l = 0; l < geom.bcmodifications.Size(); l++)
+          {
+            if (geom.GetSurfaceClassRepresentant (fd.SurfNr()) == 
+                geom.GetSurfaceClassRepresentant (geom.bcmodifications[l].si) &&
+                (fd.DomainIn() == geom.bcmodifications[l].tlonr+1 ||
+                 fd.DomainOut() == geom.bcmodifications[l].tlonr+1) &&
+                geom.bcmodifications[l].bcname != NULL
+                )
+              {
+                int bcp = fd.BCProperty();
+                mesh.SetBCName ( bcp - 1, *(geom.bcmodifications[l].bcname) );
+                fd.SetBCName ( mesh.GetBCNamePtr ( bcp - 1) );
+              }
+          }
       }
 
     for(int k = 0; k<geom.bcmodifications.Size(); k++)
       {
-	delete geom.bcmodifications[k].bcname;
-	geom.bcmodifications[k].bcname = NULL;
+        delete geom.bcmodifications[k].bcname;
+        geom.bcmodifications[k].bcname = NULL;
       }
 
     //!!
@@ -403,21 +403,21 @@ namespace netgen
 
     for (int j = 0; j < geom.singfaces.Size(); j++)
       {
-	Array<int> surfs;
-	geom.GetIndependentSurfaceIndices (geom.singfaces[j]->GetSolid(),
-					   geom.BoundingBox(), surfs);
-	for (int k = 1; k <= mesh.GetNFD(); k++)
-	  {
-	    FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-	    for (int l = 0; l < surfs.Size(); l++)
-	      if (surfs[l] == fd.SurfNr())
-		{
-		  if (geom.singfaces[j]->GetDomainNr() == fd.DomainIn())
-		    fd.SetDomainInSingular (1);
-		  if (geom.singfaces[j]->GetDomainNr() == fd.DomainOut())
-		    fd.SetDomainOutSingular (1);
-		}
-	  }
+        Array<int> surfs;
+        geom.GetIndependentSurfaceIndices (geom.singfaces[j]->GetSolid(),
+                                           geom.BoundingBox(), surfs);
+        for (int k = 1; k <= mesh.GetNFD(); k++)
+          {
+            FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+            for (int l = 0; l < surfs.Size(); l++)
+              if (surfs[l] == fd.SurfNr())
+                {
+                  if (geom.singfaces[j]->GetDomainNr() == fd.DomainIn())
+                    fd.SetDomainInSingular (1);
+                  if (geom.singfaces[j]->GetDomainNr() == fd.DomainOut())
+                    fd.SetDomainOutSingular (1);
+                }
+          }
       }
     
 
@@ -426,254 +426,254 @@ namespace netgen
 
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-	multithread.percent = 100.0 * k / (mesh.GetNFD()+1e-10);
+        multithread.percent = 100.0 * k / (mesh.GetNFD()+1e-10);
 
-	if (masterface[k-1] != k)
-	  continue;
+        if (masterface[k-1] != k)
+          continue;
 
-	FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
 
-	(*testout) << "Surface " << k << endl;
-	(*testout) << "Face Descriptor: " << fd << endl;
-	PrintMessage (1, "Surface ", k, " / ", mesh.GetNFD());
+        (*testout) << "Surface " << k << endl;
+        (*testout) << "Face Descriptor: " << fd << endl;
+        PrintMessage (1, "Surface ", k, " / ", mesh.GetNFD());
 
-	int oldnf = mesh.GetNSE();
+        int oldnf = mesh.GetNSE();
       
-	const Surface * surf =
-	  geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
+        const Surface * surf =
+          geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
 
 
-	Meshing2Surfaces meshing(geom, *surf, mparam, geom.BoundingBox());
-	meshing.SetStartTime (starttime);
+        Meshing2Surfaces meshing(geom, *surf, mparam, geom.BoundingBox());
+        meshing.SetStartTime (starttime);
 
         double eps = 1e-8 * geom.MaxSize();
-	for (PointIndex pi = IndexBASE<PointIndex>(); pi < noldp+IndexBASE<PointIndex>(); pi++)
-	  { 
-	    // if(surf->PointOnSurface(mesh[pi]))
-	    meshing.AddPoint (mesh[pi], pi, NULL,
-			      (surf->PointOnSurface(mesh[pi], eps) != 0));
-	  }
+        for (PointIndex pi = IndexBASE<PointIndex>(); pi < noldp+IndexBASE<PointIndex>(); pi++)
+          { 
+            // if(surf->PointOnSurface(mesh[pi]))
+            meshing.AddPoint (mesh[pi], pi, NULL,
+                              (surf->PointOnSurface(mesh[pi], eps) != 0));
+          }
 
-	segments.SetSize (0);
+        segments.SetSize (0);
 
-	for (auto & seg_i : mesh.LineSegments())
-	  {
-	    int fdi = (seg_i.GetIndex() >= 1 && seg_i.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg_i.GetIndex()).GetIndex() : -1;
-	    if (fdi == k)
-	    {
-	      segments.Append (seg_i);
-	      (*testout) << "appending segment " << seg_i << endl;
-	      //<< " from " << mesh[seg_i[0]]
-	      //	 << " to " <<mesh[seg_i[1]]<< endl;
-	    }
-	  }
+        for (auto & seg_i : mesh.LineSegments())
+          {
+            int fdi = (seg_i.GetIndex() >= 1 && seg_i.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg_i.GetIndex()).GetIndex() : -1;
+            if (fdi == k)
+            {
+              segments.Append (seg_i);
+              (*testout) << "appending segment " << seg_i << endl;
+              //<< " from " << mesh[seg_i[0]]
+              //         << " to " <<mesh[seg_i[1]]<< endl;
+            }
+          }
 
-	(*testout) << "num-segments " << segments.Size() << endl;
+        (*testout) << "num-segments " << segments.Size() << endl;
 
-	for (int i = 1; i <= geom.identifications.Size(); i++)
-	  {
-	    geom.identifications[i-1]->
-	      BuildSurfaceElements(segments, mesh, surf);
-	  }
+        for (int i = 1; i <= geom.identifications.Size(); i++)
+          {
+            geom.identifications[i-1]->
+              BuildSurfaceElements(segments, mesh, surf);
+          }
 
-	for (int si = 0; si < segments.Size(); si++)
-	  {
-	    PointGeomInfo gi;
-	    gi.trignum = k;
-	    meshing.AddBoundaryElement (segments[si][0], segments[si][1], gi, gi);
-	  }
+        for (int si = 0; si < segments.Size(); si++)
+          {
+            PointGeomInfo gi;
+            gi.trignum = k;
+            meshing.AddBoundaryElement (segments[si][0], segments[si][1], gi, gi);
+          }
 
-	double maxh = mparam.maxh;
-	if (fd.DomainIn() != 0)
-	  {
-	    const Solid * s1 = 
-	      geom.GetTopLevelObject(fd.DomainIn()-1) -> GetSolid();
-	    if (s1->GetMaxH() < maxh)
-	      maxh = s1->GetMaxH();
-	    maxh = min2(maxh, geom.GetTopLevelObject(fd.DomainIn()-1)->GetMaxH());
-	  }
-	if (fd.DomainOut() != 0)
-	  {
-	    const Solid * s1 = 
-	      geom.GetTopLevelObject(fd.DomainOut()-1) -> GetSolid();
-	    if (s1->GetMaxH() < maxh)
-	      maxh = s1->GetMaxH();
-	    maxh = min2(maxh, geom.GetTopLevelObject(fd.DomainOut()-1)->GetMaxH());
-	  }
-	if (fd.TLOSurface() != 0)
-	  {
-	    double hi = geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetMaxH();
-	    if (hi < maxh) maxh = hi;
-	  }
+        double maxh = mparam.maxh;
+        if (fd.DomainIn() != 0)
+          {
+            const Solid * s1 = 
+              geom.GetTopLevelObject(fd.DomainIn()-1) -> GetSolid();
+            if (s1->GetMaxH() < maxh)
+              maxh = s1->GetMaxH();
+            maxh = min2(maxh, geom.GetTopLevelObject(fd.DomainIn()-1)->GetMaxH());
+          }
+        if (fd.DomainOut() != 0)
+          {
+            const Solid * s1 = 
+              geom.GetTopLevelObject(fd.DomainOut()-1) -> GetSolid();
+            if (s1->GetMaxH() < maxh)
+              maxh = s1->GetMaxH();
+            maxh = min2(maxh, geom.GetTopLevelObject(fd.DomainOut()-1)->GetMaxH());
+          }
+        if (fd.TLOSurface() != 0)
+          {
+            double hi = geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetMaxH();
+            if (hi < maxh) maxh = hi;
+          }
 
-	(*testout) << "domin = " << fd.DomainIn() << ", domout = " << fd.DomainOut()
-		   << ", tlo-surf = " << fd.TLOSurface()
-		   << " mpram.maxh = " << mparam.maxh << ", maxh = " << maxh << endl;
+        (*testout) << "domin = " << fd.DomainIn() << ", domout = " << fd.DomainOut()
+                   << ", tlo-surf = " << fd.TLOSurface()
+                   << " mpram.maxh = " << mparam.maxh << ", maxh = " << maxh << endl;
 
-	mparam.checkoverlap = 0;
+        mparam.checkoverlap = 0;
 
-	MESHING2_RESULT res =
-	  meshing.GenerateMesh (mesh, mparam, maxh, k);
+        MESHING2_RESULT res =
+          meshing.GenerateMesh (mesh, mparam, maxh, k);
 
-	if (res != MESHING2_OK)
-	  {
-	    PrintError ("Problem in Surface mesh generation");
-	    throw NgException ("Problem in Surface mesh generation");
-	  }
+        if (res != MESHING2_OK)
+          {
+            PrintError ("Problem in Surface mesh generation");
+            throw NgException ("Problem in Surface mesh generation");
+          }
 
-	if (multithread.terminate) return;
+        if (multithread.terminate) return;
         
-	for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
-	  mesh[sei].SetIndex (k);
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
+          mesh[sei].SetIndex (k);
 
         auto n_illegal_trigs = mesh.FindIllegalTrigs();
         PrintMessage (3, n_illegal_trigs, " illegal triangles");
 
-	//      mesh.CalcSurfacesOfNode();
+        //      mesh.CalcSurfacesOfNode();
 
-	if (segments.Size())   
-	  { 
-	    // surface was meshed, not copied
+        if (segments.Size())   
+          { 
+            // surface was meshed, not copied
 
-	    static Timer timer("total surface mesh optimization");
-	    RegionTimer reg (timer);
-
-
-	    PrintMessage (2, "Optimize Surface");
-	    for (int i = 1; i <= mparam.optsteps2d; i++)
-	      {
-		if (multithread.terminate) return;
-		
-		{
-		  MeshOptimize2d meshopt(mesh);
-		  meshopt.SetFaceIndex (k);
-		  meshopt.SetImproveEdges (0);
-		  meshopt.SetMetricWeight (mparam.elsizeweight);
-		  meshopt.SetWriteStatus (0);
-		  
-		  meshopt.EdgeSwapping (i > mparam.optsteps2d/2);
-		}
-		
-		if (multithread.terminate) return;
-		{
-		  //		mesh.CalcSurfacesOfNode();
-		
-		  MeshOptimize2d meshopt(mesh);
-		  meshopt.SetFaceIndex (k);
-		  meshopt.SetImproveEdges (0);
-		  meshopt.SetMetricWeight (mparam.elsizeweight);
-		  meshopt.SetWriteStatus (0);
-
-		  meshopt.ImproveMesh(mparam);
-		}
-		
-		{
-		  MeshOptimize2d meshopt(mesh);
-		  meshopt.SetFaceIndex (k);
-		  meshopt.SetImproveEdges (0);
-		  meshopt.SetMetricWeight (mparam.elsizeweight);
-		  meshopt.SetWriteStatus (0);
-
-		  meshopt.CombineImprove();
-		  //		mesh.CalcSurfacesOfNode();
-		}
-		
-		if (multithread.terminate) return;
-		{
-		  MeshOptimize2d meshopt(mesh);
-		  meshopt.SetFaceIndex (k);
-		  meshopt.SetImproveEdges (0);
-		  meshopt.SetMetricWeight (mparam.elsizeweight);
-		  meshopt.SetWriteStatus (0);
-
-		  meshopt.ImproveMesh(mparam);
-		}
-	      }
-	  }
+            static Timer timer("total surface mesh optimization");
+            RegionTimer reg (timer);
 
 
-	PrintMessage (3, (mesh.GetNSE() - oldnf), " elements, ", mesh.GetNP(), " points");
+            PrintMessage (2, "Optimize Surface");
+            for (int i = 1; i <= mparam.optsteps2d; i++)
+              {
+                if (multithread.terminate) return;
+                
+                {
+                  MeshOptimize2d meshopt(mesh);
+                  meshopt.SetFaceIndex (k);
+                  meshopt.SetImproveEdges (0);
+                  meshopt.SetMetricWeight (mparam.elsizeweight);
+                  meshopt.SetWriteStatus (0);
+                  
+                  meshopt.EdgeSwapping (i > mparam.optsteps2d/2);
+                }
+                
+                if (multithread.terminate) return;
+                {
+                  //            mesh.CalcSurfacesOfNode();
+                
+                  MeshOptimize2d meshopt(mesh);
+                  meshopt.SetFaceIndex (k);
+                  meshopt.SetImproveEdges (0);
+                  meshopt.SetMetricWeight (mparam.elsizeweight);
+                  meshopt.SetWriteStatus (0);
 
-	mparam.Render();
+                  meshopt.ImproveMesh(mparam);
+                }
+                
+                {
+                  MeshOptimize2d meshopt(mesh);
+                  meshopt.SetFaceIndex (k);
+                  meshopt.SetImproveEdges (0);
+                  meshopt.SetMetricWeight (mparam.elsizeweight);
+                  meshopt.SetWriteStatus (0);
+
+                  meshopt.CombineImprove();
+                  //            mesh.CalcSurfacesOfNode();
+                }
+                
+                if (multithread.terminate) return;
+                {
+                  MeshOptimize2d meshopt(mesh);
+                  meshopt.SetFaceIndex (k);
+                  meshopt.SetImproveEdges (0);
+                  meshopt.SetMetricWeight (mparam.elsizeweight);
+                  meshopt.SetWriteStatus (0);
+
+                  meshopt.ImproveMesh(mparam);
+                }
+              }
+          }
+
+
+        PrintMessage (3, (mesh.GetNSE() - oldnf), " elements, ", mesh.GetNP(), " points");
+
+        mparam.Render();
       }
     
     mesh.Compress();
 
     do
       {
-	changed = 0;
-	for (int k = 1; k <= mesh.GetNFD(); k++)
-	  {
-	    multithread.percent = 100.0 * k / (mesh.GetNFD()+1e-10);
-	  
-	    if (masterface[k-1] == k)
-	      continue;
+        changed = 0;
+        for (int k = 1; k <= mesh.GetNFD(); k++)
+          {
+            multithread.percent = 100.0 * k / (mesh.GetNFD()+1e-10);
+          
+            if (masterface[k-1] == k)
+              continue;
 
-	    FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+            FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
 
-	    (*testout) << "Surface " << k << endl;
-	    (*testout) << "Face Descriptor: " << fd << endl;
-	    PrintMessage (2, "Surface ", k);
+            (*testout) << "Surface " << k << endl;
+            (*testout) << "Face Descriptor: " << fd << endl;
+            PrintMessage (2, "Surface ", k);
 
-	    int oldnf = mesh.GetNSE();
+            int oldnf = mesh.GetNSE();
       
-	    const Surface * surf =
-	      geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
+            const Surface * surf =
+              geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
 
-	    /*
-	      if (surf -> GetBCProperty() != -1)
-	      fd.SetBCProperty (surf->GetBCProperty());
-	      else
-	      {
-	      bccnt++;
-	      fd.SetBCProperty (bccnt);
-	      }
-	    */
+            /*
+              if (surf -> GetBCProperty() != -1)
+              fd.SetBCProperty (surf->GetBCProperty());
+              else
+              {
+              bccnt++;
+              fd.SetBCProperty (bccnt);
+              }
+            */
   
-	    segments.SetSize (0);
-	    for (auto & seg2 : mesh.LineSegments())
-	      {
-		Segment * seg = &seg2;
-		{
-		  int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED())
-		                 ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
-		  if (seg_face == k)
-		    segments.Append (*seg);
-		}
-	      }
+            segments.SetSize (0);
+            for (auto & seg2 : mesh.LineSegments())
+              {
+                Segment * seg = &seg2;
+                {
+                  int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED())
+                                 ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
+                  if (seg_face == k)
+                    segments.Append (*seg);
+                }
+              }
 
-	    for (int i = 1; i <= geom.identifications.Size(); i++)
-	      {
-		geom.identifications[i-1]->GetIdentifiedFaces (fpairs);
-		int found = 0;
-		for (int j = 1; j <= fpairs.Size(); j++)
-		  if (fpairs[j-1].I1() == k || fpairs[j-1].I2() == k)
-		    found = 1;
+            for (int i = 1; i <= geom.identifications.Size(); i++)
+              {
+                geom.identifications[i-1]->GetIdentifiedFaces (fpairs);
+                int found = 0;
+                for (int j = 1; j <= fpairs.Size(); j++)
+                  if (fpairs[j-1].I1() == k || fpairs[j-1].I2() == k)
+                    found = 1;
 
-		if (!found)
-		  continue;
+                if (!found)
+                  continue;
 
-		geom.identifications[i-1]->
-		  BuildSurfaceElements(segments, mesh, surf);
-		if (!segments.Size())
-		  break;
-	      }
+                geom.identifications[i-1]->
+                  BuildSurfaceElements(segments, mesh, surf);
+                if (!segments.Size())
+                  break;
+              }
 
-	  
-	    if (multithread.terminate) return;
+          
+            if (multithread.terminate) return;
 
-	    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
-	      mesh[sei].SetIndex (k);
+            for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
+              mesh[sei].SetIndex (k);
 
 
-	    if (!segments.Size())
-	      {
-		masterface[k-1] = k;
-		changed = 1; 
-	      }
+            if (!segments.Size())
+              {
+                masterface[k-1] = k;
+                changed = 1; 
+              }
 
-	    PrintMessage (3, (mesh.GetNSE() - oldnf), " elements, ", mesh.GetNP(), " points");
-	  }
+            PrintMessage (3, (mesh.GetNSE() - oldnf), " elements, ", mesh.GetNP(), " points");
+          }
       
         mparam.Render();
       }
@@ -689,17 +689,17 @@ namespace netgen
 
 
   int CSGGenerateMesh (CSGeometry & geom, 
-		       shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
+                       shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
   {
     Array<SpecialPoint> specpoints;
     Array<MeshPoint> spoints;
 
     
     if (mesh && mesh->GetNSE() &&
-	!geom.GetNSolids())
+        !geom.GetNSolids())
       {
-	if (mparam.perfstepsstart < MESHCONST_MESHVOLUME)
-	  mparam.perfstepsstart = MESHCONST_MESHVOLUME;
+        if (mparam.perfstepsstart < MESHCONST_MESHVOLUME)
+          mparam.perfstepsstart = MESHCONST_MESHVOLUME;
       }
 
     if (mparam.perfstepsstart <= MESHCONST_ANALYSE)
@@ -709,36 +709,36 @@ namespace netgen
         else
           mesh = make_shared<Mesh>();
 
-	mesh->SetGlobalH (mparam.maxh);
-	mesh->SetMinimalH (mparam.minh);
+        mesh->SetGlobalH (mparam.maxh);
+        mesh->SetMinimalH (mparam.minh);
 
-	Array<double> maxhdom(geom.GetNTopLevelObjects());
-	for (int i = 0; i < maxhdom.Size(); i++)
-	  maxhdom[i] = geom.GetTopLevelObject(i)->GetMaxH();
+        Array<double> maxhdom(geom.GetNTopLevelObjects());
+        for (int i = 0; i < maxhdom.Size(); i++)
+          maxhdom[i] = geom.GetTopLevelObject(i)->GetMaxH();
 
-	mesh->SetMaxHDomain (maxhdom);
+        mesh->SetMaxHDomain (maxhdom);
 
-	if (mparam.uselocalh)
-	  {
-	    double maxsize = geom.MaxSize(); 
-	    mesh->SetLocalH (Point<3>(-maxsize, -maxsize, -maxsize),
-			     Point<3>(maxsize, maxsize, maxsize),
-			     mparam.grading);
+        if (mparam.uselocalh)
+          {
+            double maxsize = geom.MaxSize(); 
+            mesh->SetLocalH (Point<3>(-maxsize, -maxsize, -maxsize),
+                             Point<3>(maxsize, maxsize, maxsize),
+                             mparam.grading);
 
-	    mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
+            mesh -> LoadLocalMeshSize (mparam.meshsizefilename);
             for (auto mspnt : mparam.meshsize_points)
               mesh -> RestrictLocalH (mspnt.pnt, mspnt.h, mspnt.layer);
-	  }
+          }
 
-	spoints.SetSize(0);
-	FindPoints (geom, specpoints, spoints, *mesh);
+        spoints.SetSize(0);
+        FindPoints (geom, specpoints, spoints, *mesh);
       
-	PrintMessage (5, "find points done");
+        PrintMessage (5, "find points done");
 
 #ifdef LOG_STREAM
-	(*logout) << "Special points found" << endl
-		  << "time = " << GetTime() << " sec" << endl
-		  << "points: " << mesh->GetNP() << endl << endl;
+        (*logout) << "Special points found" << endl
+                  << "time = " << GetTime() << " sec" << endl
+                  << "points: " << mesh->GetNP() << endl << endl;
 #endif
       }
 
@@ -749,35 +749,35 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_MESHEDGES)
       {
-	FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
-	if (multithread.terminate) return TCL_OK;
+        FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
+        if (multithread.terminate) return TCL_OK;
 #ifdef LOG_STREAM      
-	(*logout) << "Edges meshed" << endl
-		  << "time = " << GetTime() << " sec" << endl
-		  << "points: " << mesh->GetNP() << endl;
+        (*logout) << "Edges meshed" << endl
+                  << "time = " << GetTime() << " sec" << endl
+                  << "points: " << mesh->GetNP() << endl;
 #endif
       
       
-	if (multithread.terminate)
-	  return TCL_OK;
+        if (multithread.terminate)
+          return TCL_OK;
   
-	if (mparam.uselocalh)
-	  {
-	    mesh->CalcLocalH(mparam.grading);
-	    mesh->DeleteMesh();
-	    
-	    FindPoints (geom, specpoints, spoints, *mesh);
-	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
-	    if (multithread.terminate) return TCL_OK;
-	    
-	    mesh->DeleteMesh();
-	  
-	    FindPoints (geom, specpoints, spoints, *mesh);
-	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, specpoints, spoints, mparam);
-	    if (multithread.terminate) return TCL_OK;
-	  }
+        if (mparam.uselocalh)
+          {
+            mesh->CalcLocalH(mparam.grading);
+            mesh->DeleteMesh();
+            
+            FindPoints (geom, specpoints, spoints, *mesh);
+            if (multithread.terminate) return TCL_OK;
+            FindEdges (geom, *mesh, specpoints, spoints, mparam, true);
+            if (multithread.terminate) return TCL_OK;
+            
+            mesh->DeleteMesh();
+          
+            FindPoints (geom, specpoints, spoints, *mesh);
+            if (multithread.terminate) return TCL_OK;
+            FindEdges (geom, *mesh, specpoints, spoints, mparam);
+            if (multithread.terminate) return TCL_OK;
+          }
       }
   
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_MESHEDGES)
@@ -786,45 +786,45 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_MESHSURFACE)
       {
-	MeshSurface (geom, *mesh, mparam);  
-	if (multithread.terminate) return TCL_OK;
+        MeshSurface (geom, *mesh, mparam);  
+        if (multithread.terminate) return TCL_OK;
       
 #ifdef LOG_STREAM
-	(*logout) << "Surfaces meshed" << endl
-		  << "time = " << GetTime() << " sec" << endl
-		  << "points: " << mesh->GetNP() << endl;
+        (*logout) << "Surfaces meshed" << endl
+                  << "time = " << GetTime() << " sec" << endl
+                  << "points: " << mesh->GetNP() << endl;
 #endif      
 
         /*
-	if (mparam.uselocalh)
-	  {
-	    mesh->CalcLocalH(mparam.grading);      
-	    mesh->DeleteMesh();
+        if (mparam.uselocalh)
+          {
+            mesh->CalcLocalH(mparam.grading);      
+            mesh->DeleteMesh();
 
-	    FindPoints (geom, *mesh);
-	    if (multithread.terminate) return TCL_OK;
-	    FindEdges (geom, *mesh, mparam);
-	    if (multithread.terminate) return TCL_OK;
+            FindPoints (geom, *mesh);
+            if (multithread.terminate) return TCL_OK;
+            FindEdges (geom, *mesh, mparam);
+            if (multithread.terminate) return TCL_OK;
 
-	    MeshSurface (geom, *mesh, mparam);  
-	    if (multithread.terminate) return TCL_OK;
-	  }
+            MeshSurface (geom, *mesh, mparam);  
+            if (multithread.terminate) return TCL_OK;
+          }
         */
 
 #ifdef LOG_STREAM      
-	(*logout) << "Surfaces remeshed" << endl
-		  << "time = " << GetTime() << " sec" << endl
-		  << "points: " << mesh->GetNP() << endl;
+        (*logout) << "Surfaces remeshed" << endl
+                  << "time = " << GetTime() << " sec" << endl
+                  << "points: " << mesh->GetNP() << endl;
 #endif      
       
 #ifdef STAT_STREAM
-	(*statout) << mesh->GetNSeg() << " & "
-		   << mesh->GetNSE() << " & - &" 
-		   << GetTime() << " & " << endl;
+        (*statout) << mesh->GetNSeg() << " & "
+                   << mesh->GetNSE() << " & - &" 
+                   << GetTime() << " & " << endl;
 #endif  
 
-	MeshQuality2d (*mesh);
-	mesh->CalcSurfacesOfNode();
+        MeshQuality2d (*mesh);
+        mesh->CalcSurfacesOfNode();
       }
   
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)
@@ -833,31 +833,31 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_MESHVOLUME)
       {
-	multithread.task = "Volume meshing";
+        multithread.task = "Volume meshing";
 
-	for (int i = 0; i < geom.GetNTopLevelObjects(); i++)
-	  mesh->SetMaterial (i+1, geom.GetTopLevelObject(i)->GetMaterial().c_str());
+        for (int i = 0; i < geom.GetNTopLevelObjects(); i++)
+          mesh->SetMaterial (i+1, geom.GetTopLevelObject(i)->GetMaterial().c_str());
 
-	MESHING3_RESULT res =
-	  MeshVolume (mparam, *mesh);
+        MESHING3_RESULT res =
+          MeshVolume (mparam, *mesh);
 
-	if (res != MESHING3_OK) return TCL_ERROR;
+        if (res != MESHING3_OK) return TCL_ERROR;
       
-	if (multithread.terminate) return TCL_OK;
+        if (multithread.terminate) return TCL_OK;
       
-	RemoveIllegalElements (*mesh);
-	if (multithread.terminate) return TCL_OK;
+        RemoveIllegalElements (*mesh);
+        if (multithread.terminate) return TCL_OK;
 
-	MeshQuality3d (*mesh);
+        MeshQuality3d (*mesh);
       
 #ifdef STAT_STREAM
-	(*statout) << GetTime() << " & ";
+        (*statout) << GetTime() << " & ";
 #endif      
       
 #ifdef LOG_STREAM
-	(*logout) << "Volume meshed" << endl
-		  << "time = " << GetTime() << " sec" << endl
-		  << "points: " << mesh->GetNP() << endl;
+        (*logout) << "Volume meshed" << endl
+                  << "time = " << GetTime() << " sec" << endl
+                  << "points: " << mesh->GetNP() << endl;
 #endif
       }
 
@@ -867,21 +867,21 @@ namespace netgen
 
     if (mparam.perfstepsstart <= MESHCONST_OPTVOLUME)
       {
-	multithread.task = "Volume optimization";
+        multithread.task = "Volume optimization";
       
-	OptimizeVolume (mparam, *mesh);
-	if (multithread.terminate) return TCL_OK;
+        OptimizeVolume (mparam, *mesh);
+        if (multithread.terminate) return TCL_OK;
       
 #ifdef STAT_STREAM
-	(*statout) << GetTime() << " & "
-		   << mesh->GetNE() << " & "
-		   << mesh->GetNP() << " " << '\\' << '\\' << " \\" << "hline" << endl;
+        (*statout) << GetTime() << " & "
+                   << mesh->GetNE() << " & "
+                   << mesh->GetNP() << " " << '\\' << '\\' << " \\" << "hline" << endl;
 #endif      
 
 #ifdef LOG_STREAM      
-	(*logout) << "Volume optimized" << endl
-		  << "time = " << GetTime() << " sec" << endl
-		  << "points: " << mesh->GetNP() << endl;
+        (*logout) << "Volume optimized" << endl
+                  << "time = " << GetTime() << " sec" << endl
+                  << "points: " << mesh->GetNP() << endl;
 #endif
       }
 

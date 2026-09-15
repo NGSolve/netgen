@@ -139,12 +139,12 @@ void WriteElmerFormat (const Mesh &mesh,
       linear_el.SetNP(el.GetNV()); // GetNV returns 8 for HEX20 for instance
 
       for (auto j : Range(1,el.GetNFaces()+1))
-	{
+        {
           Element2d face;
           linear_el.GetFace(j, face);
-	  face2volelement.Set (get3FacePoints(face), i.Nr1());
+          face2volelement.Set (get3FacePoints(face), i.Nr1());
           cout << "set " << get3FacePoints(face) << "\tto " << i.Nr1() << endl;
-	}
+        }
     }
 
 //  outfile.precision(6);
@@ -173,10 +173,10 @@ void WriteElmerFormat (const Mesh &mesh,
 
       auto & map = pmap[eltype];
       for (j = 1; j <= el.GetNP(); j++)
-	{
-	  outfile_e << " ";
-	  outfile_e << el.PNum(map[j-1]);
-	}
+        {
+          outfile_e << " ";
+          outfile_e << el.PNum(map[j-1]);
+        }
       outfile_e << "\n";
     }
 
@@ -195,10 +195,10 @@ void WriteElmerFormat (const Mesh &mesh,
 
       auto & map = pmap[el.GetType()];
       for (j = 1; j <= el.GetNP(); j++)
-	{
-	  outfile_b << " ";
-	  outfile_b << el.PNum(map[j-1]);
-	}
+        {
+          outfile_b << " ";
+          outfile_b << el.PNum(map[j-1]);
+        }
       outfile_b << "\n";
     }
 

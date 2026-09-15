@@ -68,7 +68,7 @@ int Meshing3 :: ApplyRules
  Array<Point<3>, LocalPointIndex> & lpoints,     // in: local points, out: old+new local points
  Array<int, LocalPointIndex> & allowpoint,     // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
  Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
- INDEX lfacesplit,	       // for local faces in outer radius
+ INDEX lfacesplit,             // for local faces in outer radius
  INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
  Array<LocalElement> & elements,    // out: new elements
  Array<INDEX> & delfaces,      // out: face indices of faces to delete
@@ -137,37 +137,37 @@ int Meshing3 :: ApplyRules
     {
 
       for (int i = 0; i < lfacesplit; i++)
-	{
-	  const MiniElement2d & hface = lfaces[i];
+        {
+          const MiniElement2d & hface = lfaces[i];
 
-	  int minn = INT_MAX-1;
-	  for (LocalPointIndex pi : hface.PNums())
-	    {
-	      int hi = pnearness[pi];
-	      if (hi < minn) minn = hi;
-	    }
-	  if (minn < INT_MAX/10)
-	    for (LocalPointIndex pi : hface.PNums())
-	      if (pnearness[pi] > minn+1)
-		pnearness[pi] = minn+1;
-	}
+          int minn = INT_MAX-1;
+          for (LocalPointIndex pi : hface.PNums())
+            {
+              int hi = pnearness[pi];
+              if (hi < minn) minn = hi;
+            }
+          if (minn < INT_MAX/10)
+            for (LocalPointIndex pi : hface.PNums())
+              if (pnearness[pi] > minn+1)
+                pnearness[pi] = minn+1;
+        }
 
       for (int i = 1; i <= connectedpairs.GetNBags(); i++)
-	for (int j = 1; j <= connectedpairs.GetBagSize(i); j++)
-	  {
-	    INDEX_2 edge;
-	    int val;
-	    connectedpairs.GetData (i, j, edge, val);
+        for (int j = 1; j <= connectedpairs.GetBagSize(i); j++)
+          {
+            INDEX_2 edge;
+            int val;
+            connectedpairs.GetData (i, j, edge, val);
 
-	    LocalPointIndex e1 = LocalPointIndex::FromNr0(edge.I1());
-	    LocalPointIndex e2 = LocalPointIndex::FromNr0(edge.I2());
+            LocalPointIndex e1 = LocalPointIndex::FromNr0(edge.I1());
+            LocalPointIndex e2 = LocalPointIndex::FromNr0(edge.I2());
 
-	    if (pnearness[e1] > pnearness[e2] + 1)
-	      pnearness[e1] = pnearness[e2] + 1;
+            if (pnearness[e1] > pnearness[e2] + 1)
+              pnearness[e1] = pnearness[e2] + 1;
 
-	    if (pnearness[e2] > pnearness[e1] + 1)
-	      pnearness[e2] = pnearness[e1] + 1;
-	  }
+            if (pnearness[e2] > pnearness[e1] + 1)
+              pnearness[e2] = pnearness[e1] + 1;
+          }
     }
 
   for (int i : fnearness.Range())
@@ -191,7 +191,7 @@ int Meshing3 :: ApplyRules
       const MiniElement2d & face = lfaces[i];
       triboxes[i].SetPoint (lpoints[face[0]]);
       for (int j = 1; j < face.GetNP(); j++)
-	triboxes[i].AddPoint (lpoints[face[j]]);
+        triboxes[i].AddPoint (lpoints[face[j]]);
     }
 
   // NgProfiler::StopTimer (91);
@@ -207,18 +207,18 @@ int Meshing3 :: ApplyRules
       ledges.SetSize (5 * lfacesplit);
       
       for (int j = 0; j < lfacesplit; j++)
-	// if (fnearness[j] <= 5) 
-	  {
-	    const MiniElement2d & face = lfaces[j];
-	    LocalPointIndex newp = face[face.GetNP()-1];
-	    for (int k = 0; k < face.GetNP(); k++)
-	      {
-		LocalPointIndex oldp = newp;
-		newp = face[k];
-		ledges.Set (INDEX_2::Sort(oldp.Nr0(),
-					  newp.Nr0()), 1);
-	      }
-	  }
+        // if (fnearness[j] <= 5) 
+          {
+            const MiniElement2d & face = lfaces[j];
+            LocalPointIndex newp = face[face.GetNP()-1];
+            for (int k = 0; k < face.GetNP(); k++)
+              {
+                LocalPointIndex oldp = newp;
+                newp = face[k];
+                ledges.Set (INDEX_2::Sort(oldp.Nr0(),
+                                          newp.Nr0()), 1);
+              }
+          }
     }
 
   // NgProfiler::StopTimer (92);
@@ -257,24 +257,24 @@ int Meshing3 :: ApplyRules
       vnetrule * rule = rules[rim].get();
       
       if (rule->GetNP(1) != lfaces[0].GetNP())
-	continue;
+        continue;
 
       if (rule->GetQuality() > tolerance)
-	{
-	  if (rule->GetQuality() < 100) impossible = 0;
+        {
+          if (rule->GetQuality() < 100) impossible = 0;
 
-	  if (testmode)
-	    problems[rim] = "Quality not ok";
-	  continue;
-	}
+          if (testmode)
+            problems[rim] = "Quality not ok";
+          continue;
+        }
       
       if (testmode)
-	problems[rim] = "no mapping found";
+        problems[rim] = "no mapping found";
       
       loktestmode = testmode || rule->TestFlag ('t') || tolerance > 5;
 
       if (loktestmode)
-	(*testout) << "Rule " << rim+1 << " = " << rule->Name() << endl;
+        (*testout) << "Rule " << rim+1 << " = " << rule->Name() << endl;
       
       pmap.SetSize (rule->GetNP());
       fmapi.SetSize (rule->GetNF());
@@ -293,854 +293,854 @@ int Meshing3 :: ApplyRules
       fmapr[0] = rotind1;
 
       for (int j = 1; j <= lfaces[0].GetNP(); j++)
-	{
-	  LocalPointIndex locpi = lfaces[0].PNumMod (j+rotind1);
-	  pmap[rule->GetPointNr (1, j)] = locpi;
-	  pused[locpi]++;
-	}
+        {
+          LocalPointIndex locpi = lfaces[0].PNumMod (j+rotind1);
+          pmap[rule->GetPointNr (1, j)] = locpi;
+          pused[locpi]++;
+        }
 
       /*
-	map all faces
-	nfok .. first nfok-1 faces are mapped properly
-	*/
+        map all faces
+        nfok .. first nfok-1 faces are mapped properly
+        */
 
       int nfok = 2;
       // NgProfiler::RegionTimer regfa(300);
       // NgProfiler::RegionTimer regx2(base+50+rim+1);
       while (nfok >= 2)
-	{
-	  
-	  if (nfok <= rule->GetNOldF())
-	    {
-	      // not all faces mapped
+        {
+          
+          if (nfok <= rule->GetNOldF())
+            {
+              // not all faces mapped
 
-	      ok = 0;
-	      int locfi = fmapi[nfok-1];
-	      int locfr = fmapr[nfok-1];
+              ok = 0;
+              int locfi = fmapi[nfok-1];
+              int locfr = fmapr[nfok-1];
 
-	      int actfnp = rule->GetNP(nfok);
+              int actfnp = rule->GetNP(nfok);
 
-	      while (!ok)
-		{
-		  locfr++;
-		  if (locfr == actfnp + 1)
-		    {
-		      locfr = 1;
-		      locfi++;
-		      if (locfi > lfacesplit) break;
-		    }
-		  
-		  
-		  if (fnearness[locfi-1] > rule->GetFNearness (nfok) ||
-		      fused[locfi-1] ||
-		      actfnp != lfaces[locfi-1].GetNP() )
-		    {
-		      // face not feasible in any rotation
+              while (!ok)
+                {
+                  locfr++;
+                  if (locfr == actfnp + 1)
+                    {
+                      locfr = 1;
+                      locfi++;
+                      if (locfi > lfacesplit) break;
+                    }
+                  
+                  
+                  if (fnearness[locfi-1] > rule->GetFNearness (nfok) ||
+                      fused[locfi-1] ||
+                      actfnp != lfaces[locfi-1].GetNP() )
+                    {
+                      // face not feasible in any rotation
 
-		      locfr = actfnp;
-		    }
-		  else
-		    {
-		      
-		      ok = 1;
-		      
-		      locface = &lfaces[locfi-1];
-
-		      
-		      // reference point already mapped differently ?
-		      for (int j = 1; j <= actfnp && ok; j++)
-			{
-			  LocalPointIndex locpi = pmap[rule->GetPointNr (nfok, j)];
-			  if (locpi.IsValid() && locpi != locface->PNumMod(j+locfr))
-			    ok = 0;
-			}
-		      
-		      // local point already used or point outside tolerance ?
-		      for (int j = 1; j <= actfnp && ok; j++)
-			{
-			  RulePointIndex refpi = rule->GetPointNr (nfok, j);
-			  
-			  if (!pmap[refpi].IsValid())
-			    {
-			      LocalPointIndex locpi = locface->PNumMod (j + locfr);
-
-			      if (pused[locpi])
-				ok = 0;
-			      else
-				{
-				  const Point<3> & lp = lpoints[locpi];
-				  const Point<3> & rp = rule->GetPoint(refpi);
-
-				  if ( Dist2 (lp, rp) * rule->PointDistFactor(refpi) > minerr)
-				    {
-				      impossible = 0;
-				      ok = 0;
-				    }
-				}
-			    }
-			}
-		    }
-		}
-	      
-	      
-	      if (ok)
-		{
-		  // map face nfok
-
-		  fmapi[nfok-1] = locfi;
-		  fmapr[nfok-1] = locfr;
-		  fused[locfi-1] = 1;
-		  
-		  for (int j = 1; j <= rule->GetNP (nfok); j++)
-		    {
-		      LocalPointIndex locpi = locface->PNumMod(j+locfr);
-		      
-		      if (rule->GetPointNr (nfok, j) < IndexBASE<RulePointIndex>()+3 &&
-			  pmap[rule->GetPointNr(nfok, j)] != locpi)
-			(*testout) << "change face1 point, mark1" << endl;
-		      
-		      pmap[rule->GetPointNr (nfok, j)] = locpi;
-		      pused[locpi]++;
-		    }
-		  
-		  nfok++;
-		}
-	      else
-		{
-		  // backtrack one face
-		  fmapi[nfok-1] = 0;
-		  fmapr[nfok-1] = rule->GetNP(nfok);
-		  nfok--;
-		  
-		  fused[fmapi[nfok-1]-1] = 0;
-		  for (int j = 1; j <= rule->GetNP (nfok); j++)
-		    {
-		      RulePointIndex refpi = rule->GetPointNr (nfok, j);
-		      pused[pmap[refpi]]--;
+                      locfr = actfnp;
+                    }
+                  else
+                    {
                       
-		      if (pused[pmap[refpi]] == 0)
-			{
-			  // pmap[refpi] = 0;
+                      ok = 1;
+                      
+                      locface = &lfaces[locfi-1];
+
+                      
+                      // reference point already mapped differently ?
+                      for (int j = 1; j <= actfnp && ok; j++)
+                        {
+                          LocalPointIndex locpi = pmap[rule->GetPointNr (nfok, j)];
+                          if (locpi.IsValid() && locpi != locface->PNumMod(j+locfr))
+                            ok = 0;
+                        }
+                      
+                      // local point already used or point outside tolerance ?
+                      for (int j = 1; j <= actfnp && ok; j++)
+                        {
+                          RulePointIndex refpi = rule->GetPointNr (nfok, j);
+                          
+                          if (!pmap[refpi].IsValid())
+                            {
+                              LocalPointIndex locpi = locface->PNumMod (j + locfr);
+
+                              if (pused[locpi])
+                                ok = 0;
+                              else
+                                {
+                                  const Point<3> & lp = lpoints[locpi];
+                                  const Point<3> & rp = rule->GetPoint(refpi);
+
+                                  if ( Dist2 (lp, rp) * rule->PointDistFactor(refpi) > minerr)
+                                    {
+                                      impossible = 0;
+                                      ok = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+              
+              
+              if (ok)
+                {
+                  // map face nfok
+
+                  fmapi[nfok-1] = locfi;
+                  fmapr[nfok-1] = locfr;
+                  fused[locfi-1] = 1;
+                  
+                  for (int j = 1; j <= rule->GetNP (nfok); j++)
+                    {
+                      LocalPointIndex locpi = locface->PNumMod(j+locfr);
+                      
+                      if (rule->GetPointNr (nfok, j) < IndexBASE<RulePointIndex>()+3 &&
+                          pmap[rule->GetPointNr(nfok, j)] != locpi)
+                        (*testout) << "change face1 point, mark1" << endl;
+                      
+                      pmap[rule->GetPointNr (nfok, j)] = locpi;
+                      pused[locpi]++;
+                    }
+                  
+                  nfok++;
+                }
+              else
+                {
+                  // backtrack one face
+                  fmapi[nfok-1] = 0;
+                  fmapr[nfok-1] = rule->GetNP(nfok);
+                  nfok--;
+                  
+                  fused[fmapi[nfok-1]-1] = 0;
+                  for (int j = 1; j <= rule->GetNP (nfok); j++)
+                    {
+                      RulePointIndex refpi = rule->GetPointNr (nfok, j);
+                      pused[pmap[refpi]]--;
+                      
+                      if (pused[pmap[refpi]] == 0)
+                        {
+                          // pmap[refpi] = 0;
                           pmap[refpi].Invalidate();
-			}
-		    }
-		}
-	    }
-	  
-	  else
-	    
-	    { 
-	      // NgProfiler::RegionTimer regfb(301);
+                        }
+                    }
+                }
+            }
+          
+          else
+            
+            { 
+              // NgProfiler::RegionTimer regfb(301);
 
-	      // all faces are mapped
-	      // now map all isolated points:
-	      
-	      if (loktestmode)
-		{
-		  (*testout) << "Faces Ok" << endl;
-		  problems[rim] = "Faces Ok";
-		}
+              // all faces are mapped
+              // now map all isolated points:
+              
+              if (loktestmode)
+                {
+                  (*testout) << "Faces Ok" << endl;
+                  problems[rim] = "Faces Ok";
+                }
 
-	      RulePointIndex npok = IndexBASE<RulePointIndex>();
-	      int incnpok = 1;
-	      
-	      pfixed.SetSize (pmap.Size());
+              RulePointIndex npok = IndexBASE<RulePointIndex>();
+              int incnpok = 1;
+              
+              pfixed.SetSize (pmap.Size());
               for (auto i : pmap.Range())
                 pfixed[i] = pmap[i].IsValid();
                   
-	      while (npok >= IndexBASE<RulePointIndex>())
-		{
-		  
-		  if (npok <= RuleP(rule->GetNOldP()))
-		    {
-		      
-		      if (pfixed[npok])
-			
-			{
-			  if (incnpok)
-			    npok++;
-			  else
-			    npok--;
-			}
-		      
-		      else
-			
-			{
-			  LocalPointIndex locpi = pmap[npok];
-			  ok = 0;
-			  
-			  if (locpi.IsValid())
-			    pused[locpi]--;
-			  
-			  while (!ok && locpi < lpoints.Size()-1+IndexBASE<LocalPointIndex>())
-			    {
-			      ok = 1;
-			      locpi++;
-			      
-			      if (pused[locpi] || 
-				  pnearness[locpi] > rule->GetPNearness(npok))
-				{
-				  ok = 0;
-				}
-			      else if (allowpoint[locpi] != 2)
-				{
-				  ok = 0;
-				  if (allowpoint[locpi] == 1)
-				    impossible = 0;
-				}
-			      else
-				{
-				  const Point<3> & lp = lpoints[locpi];
-				  const Point<3> & rp = rule->GetPoint(npok);
+              while (npok >= IndexBASE<RulePointIndex>())
+                {
+                  
+                  if (npok <= RuleP(rule->GetNOldP()))
+                    {
+                      
+                      if (pfixed[npok])
+                        
+                        {
+                          if (incnpok)
+                            npok++;
+                          else
+                            npok--;
+                        }
+                      
+                      else
+                        
+                        {
+                          LocalPointIndex locpi = pmap[npok];
+                          ok = 0;
+                          
+                          if (locpi.IsValid())
+                            pused[locpi]--;
+                          
+                          while (!ok && locpi < lpoints.Size()-1+IndexBASE<LocalPointIndex>())
+                            {
+                              ok = 1;
+                              locpi++;
+                              
+                              if (pused[locpi] || 
+                                  pnearness[locpi] > rule->GetPNearness(npok))
+                                {
+                                  ok = 0;
+                                }
+                              else if (allowpoint[locpi] != 2)
+                                {
+                                  ok = 0;
+                                  if (allowpoint[locpi] == 1)
+                                    impossible = 0;
+                                }
+                              else
+                                {
+                                  const Point<3> & lp = lpoints[locpi];
+                                  const Point<3> & rp = rule->GetPoint(npok);
 
-				  if ( Dist2 (lp, rp) * rule->PointDistFactor(npok) > minerr)
-				    {
-				      ok = 0;
-				      impossible = 0;
-				    }
-				}
-			    }
-			  
-			  
-			  if (ok)
-			    {
-			      pmap[npok] = locpi;
-			      
-			      if (npok < IndexBASE<RulePointIndex>()+3)
-				(*testout) << "set face1 point, mark3" << endl;
-			      
-			      pused[locpi]++;
-			      npok++;
-			      incnpok = 1;
-			    }
-			  
-			  else
-			    
-			    {
-			      // pmap[npok] = 0;
+                                  if ( Dist2 (lp, rp) * rule->PointDistFactor(npok) > minerr)
+                                    {
+                                      ok = 0;
+                                      impossible = 0;
+                                    }
+                                }
+                            }
+                          
+                          
+                          if (ok)
+                            {
+                              pmap[npok] = locpi;
+                              
+                              if (npok < IndexBASE<RulePointIndex>()+3)
+                                (*testout) << "set face1 point, mark3" << endl;
+                              
+                              pused[locpi]++;
+                              npok++;
+                              incnpok = 1;
+                            }
+                          
+                          else
+                            
+                            {
+                              // pmap[npok] = 0;
                               pmap[npok].Invalidate();
-			      
-			      if (npok < IndexBASE<RulePointIndex>()+3)
-				(*testout) << "set face1 point, mark4" << endl;
-			      
-			      npok--;
-			      incnpok = 0;
-			    }
-			}
-		    }
-		  
-		  else
-		    
-		    {
-		      // NgProfiler::RegionTimer regfa2(302);		      
+                              
+                              if (npok < IndexBASE<RulePointIndex>()+3)
+                                (*testout) << "set face1 point, mark4" << endl;
+                              
+                              npok--;
+                              incnpok = 0;
+                            }
+                        }
+                    }
+                  
+                  else
+                    
+                    {
+                      // NgProfiler::RegionTimer regfa2(302);                 
 
-		      // all points are mapped
-		      
-		      if (loktestmode)
-			{
-			  (*testout) << "Mapping found!!: Rule " << rule->Name() << endl;
-			  for (auto pi : pmap)
-			    (*testout) << pi << " ";
-			  (*testout) << endl;
-			  problems[rim] = "mapping found";
-			  (*testout) << rule->GetNP(1) << " = " << lfaces[0].GetNP() << endl;
-			}
-		      
-		      ok = 1;
-		      
-		      
-		      // check mapedges:
-		      for (int i = 1; i <= rule->GetNEd(); i++)
-			{
-			  INDEX_2 in2(pmap[RuleP(rule->GetEdge(i).i1)].Nr0(),
-				      pmap[RuleP(rule->GetEdge(i).i2)].Nr0());
-			  in2.Sort();
-			  if (!ledges.Used (in2)) ok = 0;
-			}
+                      // all points are mapped
+                      
+                      if (loktestmode)
+                        {
+                          (*testout) << "Mapping found!!: Rule " << rule->Name() << endl;
+                          for (auto pi : pmap)
+                            (*testout) << pi << " ";
+                          (*testout) << endl;
+                          problems[rim] = "mapping found";
+                          (*testout) << rule->GetNP(1) << " = " << lfaces[0].GetNP() << endl;
+                        }
+                      
+                      ok = 1;
+                      
+                      
+                      // check mapedges:
+                      for (int i = 1; i <= rule->GetNEd(); i++)
+                        {
+                          INDEX_2 in2(pmap[RuleP(rule->GetEdge(i).i1)].Nr0(),
+                                      pmap[RuleP(rule->GetEdge(i).i2)].Nr0());
+                          in2.Sort();
+                          if (!ledges.Used (in2)) ok = 0;
+                        }
 
 
-		      // check prism edges:
-		      for (int i = 1; i <= rule->GetNE(); i++)
-			{
-			  const RuleElement & el = rule->GetElement (i);
-			  if (el.GetType() == PRISM) 
-			    { 
-			      for (int j = 1; j <= 3; j++)
-				{
-				  INDEX_2 in2(pmap[el.PNum(j)].Nr0(),
-					      pmap[el.PNum(j+3)].Nr0());      
-				  in2.Sort();
-				  if (!connectedpairs.Used (in2)) ok = 0;
-				}
-			    }
-			  if (el.GetType() == PYRAMID) 
-			    { 
-			      if (loktestmode)
-				(*testout) << "map pyramid, rule = " << rule->Name() << endl;
-			      for (int j = 1; j <= 2; j++)
-				{
-				  INDEX_2 in2;
-				  if (j == 1)
-				    {
-				      in2.I1() = pmap[el.PNum(2)].Nr0();
-				      in2.I2() = pmap[el.PNum(3)].Nr0();
-				    }
-				  else
-				    {
-				      in2.I1() = pmap[el.PNum(1)].Nr0();
-				      in2.I2() = pmap[el.PNum(4)].Nr0();
-				    }
-				  in2.Sort();
-				  if (!connectedpairs.Used (in2)) 
-				    {
-				      ok = 0;
-				      if (loktestmode)
-					(*testout) << "no pair" << endl;
-				    }
-				}
-			    }
+                      // check prism edges:
+                      for (int i = 1; i <= rule->GetNE(); i++)
+                        {
+                          const RuleElement & el = rule->GetElement (i);
+                          if (el.GetType() == PRISM) 
+                            { 
+                              for (int j = 1; j <= 3; j++)
+                                {
+                                  INDEX_2 in2(pmap[el.PNum(j)].Nr0(),
+                                              pmap[el.PNum(j+3)].Nr0());      
+                                  in2.Sort();
+                                  if (!connectedpairs.Used (in2)) ok = 0;
+                                }
+                            }
+                          if (el.GetType() == PYRAMID) 
+                            { 
+                              if (loktestmode)
+                                (*testout) << "map pyramid, rule = " << rule->Name() << endl;
+                              for (int j = 1; j <= 2; j++)
+                                {
+                                  INDEX_2 in2;
+                                  if (j == 1)
+                                    {
+                                      in2.I1() = pmap[el.PNum(2)].Nr0();
+                                      in2.I2() = pmap[el.PNum(3)].Nr0();
+                                    }
+                                  else
+                                    {
+                                      in2.I1() = pmap[el.PNum(1)].Nr0();
+                                      in2.I2() = pmap[el.PNum(4)].Nr0();
+                                    }
+                                  in2.Sort();
+                                  if (!connectedpairs.Used (in2)) 
+                                    {
+                                      ok = 0;
+                                      if (loktestmode)
+                                        (*testout) << "no pair" << endl;
+                                    }
+                                }
+                            }
 
-			}
-		      
+                        }
+                      
 
-		      
-		      for (int i = rule->GetNOldF() + 1; i <= rule->GetNF(); i++)
-			fmapi[i-1] = 0;
-		      
+                      
+                      for (int i = rule->GetNOldF() + 1; i <= rule->GetNF(); i++)
+                        fmapi[i-1] = 0;
+                      
 
-		      if (ok)
+                      if (ok)
                         foundmap[rim]++;
-		      
+                      
 
 
-		      // deviation of existing points
+                      // deviation of existing points
 
-		      oldu.SetSize (3 * rule->GetNOldP());
-		      newu.SetSize (3 * (rule->GetNP() - rule->GetNOldP()));
-		      allp.SetSize (3 * rule->GetNP());
-		      
-		      for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
-			{
-			  const Point<3> & lp = lpoints[pmap[pi]];
-			  const Point<3> & rp = rule->GetPoint(pi);
-			  int i = pi.Nr1();
-			  oldu (3*i-3) = lp(0)-rp(0);
+                      oldu.SetSize (3 * rule->GetNOldP());
+                      newu.SetSize (3 * (rule->GetNP() - rule->GetNOldP()));
+                      allp.SetSize (3 * rule->GetNP());
+                      
+                      for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
+                        {
+                          const Point<3> & lp = lpoints[pmap[pi]];
+                          const Point<3> & rp = rule->GetPoint(pi);
+                          int i = pi.Nr1();
+                          oldu (3*i-3) = lp(0)-rp(0);
                           oldu (3*i-2) = lp(1)-rp(1);
-			  oldu (3*i-1) = lp(2)-rp(2);
-			  
-			  allp (3*i-3) = lp(0);
+                          oldu (3*i-1) = lp(2)-rp(2);
+                          
+                          allp (3*i-3) = lp(0);
                           allp (3*i-2) = lp(1);
                           allp (3*i-1) = lp(2);
-			}
+                        }
 
-		      if (rule->GetNP() > rule->GetNOldP())
-			{
-			  newu.SetSize (rule->GetOldUToNewU().Height());
-			  rule->GetOldUToNewU().Mult (oldu, newu);
-			}
+                      if (rule->GetNP() > rule->GetNOldP())
+                        {
+                          newu.SetSize (rule->GetOldUToNewU().Height());
+                          rule->GetOldUToNewU().Mult (oldu, newu);
+                        }
 
-		      //		      int idiff = 3 * (rule->GetNP()-rule->GetNOldP());
-		      int idiff = 3 * rule->GetNOldP();
-		      for (auto pi : pmap.Range().Modify(rule->GetNOldP(), 0))
-			{
-			  const Point<3> & rp = rule->GetPoint(pi);
-			  int i = pi.Nr1();
-			  allp (3*i-3) = rp(0) + newu(3*i-3 - idiff);
+                      //                      int idiff = 3 * (rule->GetNP()-rule->GetNOldP());
+                      int idiff = 3 * rule->GetNOldP();
+                      for (auto pi : pmap.Range().Modify(rule->GetNOldP(), 0))
+                        {
+                          const Point<3> & rp = rule->GetPoint(pi);
+                          int i = pi.Nr1();
+                          allp (3*i-3) = rp(0) + newu(3*i-3 - idiff);
                           allp (3*i-2) = rp(1) + newu(3*i-2 - idiff);
                           allp (3*i-1) = rp(2) + newu(3*i-1 - idiff);
-			}
-		      
-		      rule->SetFreeZoneTransformation (allp, 
-						       tolerance + int(sloppy));
+                        }
+                      
+                      rule->SetFreeZoneTransformation (allp, 
+                                                       tolerance + int(sloppy));
 
-		      if (!rule->ConvexFreeZone())
-			{
-			  ok = 0;
-			  problems[rim] = "Freezone not convex";
+                      if (!rule->ConvexFreeZone())
+                        {
+                          ok = 0;
+                          problems[rim] = "Freezone not convex";
 
-			  if (loktestmode)
-			    (*testout) << "Freezone not convex" << endl;
-			}
+                          if (loktestmode)
+                            (*testout) << "Freezone not convex" << endl;
+                        }
 
-		      if (loktestmode)
-			{
-			  const Array<Point<3>> & fz = rule->GetTransFreeZone();
-			  (*testout) << "Freezone: " << endl;
-			  for (int i = 1; i <= fz.Size(); i++)
-			    (*testout) << fz[i-1] << endl;
-			}
-		      
+                      if (loktestmode)
+                        {
+                          const Array<Point<3>> & fz = rule->GetTransFreeZone();
+                          (*testout) << "Freezone: " << endl;
+                          for (int i = 1; i <= fz.Size(); i++)
+                            (*testout) << fz[i-1] << endl;
+                        }
+                      
 
-		      // check freezone:
-		      
-		      // for (int i = 1; i <= lpoints.Size(); i++)
+                      // check freezone:
+                      
+                      // for (int i = 1; i <= lpoints.Size(); i++)
                       for (auto i : lpoints.Range())
-			{
-			  if ( !pused[i] )
-			    {
-			      const Point<3> & lp = lpoints[i];
+                        {
+                          if ( !pused[i] )
+                            {
+                              const Point<3> & lp = lpoints[i];
 
-			      if (rule->fzbox.IsIn (lp))
-				{
-				  if (rule->IsInFreeZone(lp))
-				    {
-				      if (loktestmode)
-					{
-					  (*testout) << "Point " << i 
-						     << " in Freezone" << endl;
-					  problems[rim] = "locpoint " + ToString(i) + " in Freezone";
-					}
-				      ok = 0;
-				      break;
-				    }
-				}
-			    }
-			}
+                              if (rule->fzbox.IsIn (lp))
+                                {
+                                  if (rule->IsInFreeZone(lp))
+                                    {
+                                      if (loktestmode)
+                                        {
+                                          (*testout) << "Point " << i 
+                                                     << " in Freezone" << endl;
+                                          problems[rim] = "locpoint " + ToString(i) + " in Freezone";
+                                        }
+                                      ok = 0;
+                                      break;
+                                    }
+                                }
+                            }
+                        }
 
-		      for (int i = 1; i <= lfaces.Size() && ok; i++)
-			{
-			  ArrayMem<int, 10> lpi(4);
+                      for (int i = 1; i <= lfaces.Size() && ok; i++)
+                        {
+                          ArrayMem<int, 10> lpi(4);
 
-			  if (!fused[i-1])
-			    { 
-			      int triin;
-			      const MiniElement2d & lfacei = lfaces[i-1];
+                          if (!fused[i-1])
+                            { 
+                              int triin;
+                              const MiniElement2d & lfacei = lfaces[i-1];
 
-			      if (!triboxes[i-1].Intersect (rule->fzbox))
-				triin = 0;
-			      else
-				{
-				  for (int li = 1; li <= lfacei.GetNP(); li++)
-				    {
-				      int lpii = 0;
-				      LocalPointIndex pi = lfacei.PNum(li);
-				      for (auto pj : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
-					if (pmap[pj] == pi)
-					  lpii = pj.Nr1();
-				      lpi[li-1] = lpii;
-				    }
-
-
-				  if (lfacei.GetNP() == 3)
-				    {
-				      triin = rule->IsTriangleInFreeZone 
-					(
-					 lpoints[lfacei.PNum(1)],
-					 lpoints[lfacei.PNum(2)],
-					 lpoints[lfacei.PNum(3)], lpi, 1
-					 );
-				    }
-				  else
-				    {
-				      triin = rule->IsQuadInFreeZone 
-					(
-					 lpoints[lfacei.PNum(1)],
-					 lpoints[lfacei.PNum(2)],
-					 lpoints[lfacei.PNum(3)], 
-					 lpoints[lfacei.PNum(4)], 
-					 lpi, 1
-					 );
-				    }
-				}
+                              if (!triboxes[i-1].Intersect (rule->fzbox))
+                                triin = 0;
+                              else
+                                {
+                                  for (int li = 1; li <= lfacei.GetNP(); li++)
+                                    {
+                                      int lpii = 0;
+                                      LocalPointIndex pi = lfacei.PNum(li);
+                                      for (auto pj : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
+                                        if (pmap[pj] == pi)
+                                          lpii = pj.Nr1();
+                                      lpi[li-1] = lpii;
+                                    }
 
 
-			      if (triin == -1)
-				{
-				  ok = 0;
-				}
-			      
-			      if (triin == 1)
-				{
+                                  if (lfacei.GetNP() == 3)
+                                    {
+                                      triin = rule->IsTriangleInFreeZone 
+                                        (
+                                         lpoints[lfacei.PNum(1)],
+                                         lpoints[lfacei.PNum(2)],
+                                         lpoints[lfacei.PNum(3)], lpi, 1
+                                         );
+                                    }
+                                  else
+                                    {
+                                      triin = rule->IsQuadInFreeZone 
+                                        (
+                                         lpoints[lfacei.PNum(1)],
+                                         lpoints[lfacei.PNum(2)],
+                                         lpoints[lfacei.PNum(3)], 
+                                         lpoints[lfacei.PNum(4)], 
+                                         lpi, 1
+                                         );
+                                    }
+                                }
+
+
+                              if (triin == -1)
+                                {
+                                  ok = 0;
+                                }
+                              
+                              if (triin == 1)
+                                {
 #ifdef TEST_JS
-				  ok = 0;
+                                  ok = 0;
 
-				  if (loktestmode)
-				    {
-				      (*testout) << "El with " << lfaces[i-1].GetNP() << " points in freezone: "
-						 << lfaces[i-1].PNum(1) << " - " 
-						 << lfaces[i-1].PNum(2) << " - "
-						 << lfaces[i-1].PNum(3) << " - "
-						 << lfaces[i-1].PNum(4) << endl;
-				      for (int lj = 1; lj <= lfaces[i-1].GetNP(); lj++)
-					(*testout) << lpoints[lfaces[i-1].PNum(lj)] << " ";
+                                  if (loktestmode)
+                                    {
+                                      (*testout) << "El with " << lfaces[i-1].GetNP() << " points in freezone: "
+                                                 << lfaces[i-1].PNum(1) << " - " 
+                                                 << lfaces[i-1].PNum(2) << " - "
+                                                 << lfaces[i-1].PNum(3) << " - "
+                                                 << lfaces[i-1].PNum(4) << endl;
+                                      for (int lj = 1; lj <= lfaces[i-1].GetNP(); lj++)
+                                        (*testout) << lpoints[lfaces[i-1].PNum(lj)] << " ";
 
-				      (*testout) << endl;
+                                      (*testout) << endl;
 
-				      sprintf (problems.Elem(ri), "triangle (%d, %d, %d) in Freezone",
-					       lfaces[i-1].PNum(1), lfaces[i-1].PNum(2),
-					       lfaces[i-1].PNum(3));
-				    }
+                                      sprintf (problems.Elem(ri), "triangle (%d, %d, %d) in Freezone",
+                                               lfaces[i-1].PNum(1), lfaces[i-1].PNum(2),
+                                               lfaces[i-1].PNum(3));
+                                    }
 #else
-				  if (loktestmode)
-				    {
-				      if (lfacei.GetNP() == 3)
-					{
-					  (*testout) << "Triangle in freezone: "
-						     << lfacei.PNum(1) << " - " 
-						     << lfacei.PNum(2) << " - "
-						     << lfacei.PNum(3) 
-						     << ", or "
-						     << lpoints[lfacei.PNum(1)] << " - " 
-						     << lpoints[lfacei.PNum(2)] << " - "
-						     << lpoints[lfacei.PNum(3)] 
-						     << endl;
-					  (*testout) << "lpi = " << lpi[0] << ", " 
-						     << lpi[1] << ", " << lpi[2] << endl;
-					}
-				      else
-					  (*testout) << "Quad in freezone: "
-						     << lfacei.PNum(1) << " - " 
-						     << lfacei.PNum(2) << " - "
-						     << lfacei.PNum(3) << " - "
-						     << lfacei.PNum(4) 
-						     << ", or "
-						     << lpoints[lfacei.PNum(1)] << " - " 
-						     << lpoints[lfacei.PNum(2)] << " - "
-						     << lpoints[lfacei.PNum(3)] << " - "
-						     << lpoints[lfacei.PNum(4)] 
-						     << endl;
+                                  if (loktestmode)
+                                    {
+                                      if (lfacei.GetNP() == 3)
+                                        {
+                                          (*testout) << "Triangle in freezone: "
+                                                     << lfacei.PNum(1) << " - " 
+                                                     << lfacei.PNum(2) << " - "
+                                                     << lfacei.PNum(3) 
+                                                     << ", or "
+                                                     << lpoints[lfacei.PNum(1)] << " - " 
+                                                     << lpoints[lfacei.PNum(2)] << " - "
+                                                     << lpoints[lfacei.PNum(3)] 
+                                                     << endl;
+                                          (*testout) << "lpi = " << lpi[0] << ", " 
+                                                     << lpi[1] << ", " << lpi[2] << endl;
+                                        }
+                                      else
+                                          (*testout) << "Quad in freezone: "
+                                                     << lfacei.PNum(1) << " - " 
+                                                     << lfacei.PNum(2) << " - "
+                                                     << lfacei.PNum(3) << " - "
+                                                     << lfacei.PNum(4) 
+                                                     << ", or "
+                                                     << lpoints[lfacei.PNum(1)] << " - " 
+                                                     << lpoints[lfacei.PNum(2)] << " - "
+                                                     << lpoints[lfacei.PNum(3)] << " - "
+                                                     << lpoints[lfacei.PNum(4)] 
+                                                     << endl;
 
-				      problems[rim] = "triangle ("+ToString(lfaces[i-1].PNum(1))+", "
+                                      problems[rim] = "triangle ("+ToString(lfaces[i-1].PNum(1))+", "
                                         + ToString(lfaces[i-1].PNum(2)) + ", "
                                         + ToString(lfaces[i-1].PNum(3)) + ") in Freezone";
-				    }	
+                                    }   
 
-				  hc = 0;
-				  for (int k = rule->GetNOldF() + 1; k <= rule->GetNF(); k++)
-				    {
-				      if (rule->GetPointNr(k, 1) < RulePointIndex::FromNr0(rule->GetNOldP()) &&
-					  rule->GetPointNr(k, 2) < RulePointIndex::FromNr0(rule->GetNOldP()) &&
-					  rule->GetPointNr(k, 3) < RulePointIndex::FromNr0(rule->GetNOldP()))
-					{
-					  for (int j = 1; j <= 3; j++)
-					    if (lfaces[i-1].PNumMod(j  ) == pmap[rule->GetPointNr(k, 1)] &&
-						lfaces[i-1].PNumMod(j+1) == pmap[rule->GetPointNr(k, 3)] &&
-						lfaces[i-1].PNumMod(j+2) == pmap[rule->GetPointNr(k, 2)])
-					      {
-						fmapi[k-1] = i;
-						hc = 1;
+                                  hc = 0;
+                                  for (int k = rule->GetNOldF() + 1; k <= rule->GetNF(); k++)
+                                    {
+                                      if (rule->GetPointNr(k, 1) < RulePointIndex::FromNr0(rule->GetNOldP()) &&
+                                          rule->GetPointNr(k, 2) < RulePointIndex::FromNr0(rule->GetNOldP()) &&
+                                          rule->GetPointNr(k, 3) < RulePointIndex::FromNr0(rule->GetNOldP()))
+                                        {
+                                          for (int j = 1; j <= 3; j++)
+                                            if (lfaces[i-1].PNumMod(j  ) == pmap[rule->GetPointNr(k, 1)] &&
+                                                lfaces[i-1].PNumMod(j+1) == pmap[rule->GetPointNr(k, 3)] &&
+                                                lfaces[i-1].PNumMod(j+2) == pmap[rule->GetPointNr(k, 2)])
+                                              {
+                                                fmapi[k-1] = i;
+                                                hc = 1;
 
-						
- // 						(*testout) << "found from other side: " 
-//  							   << rule->Name() 
-//  							   << " ( " << pmap[rule->GetPointNr(k, 1)]
-//  							   << " - " << pmap[rule->GetPointNr(k, 2)]
-//  							   << " - " << pmap[rule->GetPointNr(k, 3)] << " ) "
-//  							   << endl;
+                                                
+ //                                             (*testout) << "found from other side: " 
+//                                                         << rule->Name() 
+//                                                         << " ( " << pmap[rule->GetPointNr(k, 1)]
+//                                                         << " - " << pmap[rule->GetPointNr(k, 2)]
+//                                                         << " - " << pmap[rule->GetPointNr(k, 3)] << " ) "
+//                                                         << endl;
 
-						problems[rim] = "other";
-					      }
-					}
-				    }
-				  
-				  if (!hc)
-				    {
-				      if (loktestmode)
-					{
-					  (*testout) << "Triangle in freezone: "
-						     << lfaces[i-1].PNum(1) << " - " 
-						     << lfaces[i-1].PNum(2) << " - "
-						     << lfaces[i-1].PNum(3) << endl;
+                                                problems[rim] = "other";
+                                              }
+                                        }
+                                    }
+                                  
+                                  if (!hc)
+                                    {
+                                      if (loktestmode)
+                                        {
+                                          (*testout) << "Triangle in freezone: "
+                                                     << lfaces[i-1].PNum(1) << " - " 
+                                                     << lfaces[i-1].PNum(2) << " - "
+                                                     << lfaces[i-1].PNum(3) << endl;
 
                                           /*
-					  snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
-						   int (lfaces[i-1].PNum(1)), 
-						   int (lfaces[i-1].PNum(2)),
-						   int (lfaces[i-1].PNum(3)));
+                                          snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
+                                                   int (lfaces[i-1].PNum(1)), 
+                                                   int (lfaces[i-1].PNum(2)),
+                                                   int (lfaces[i-1].PNum(3)));
                                           */
                                           problems[rim] = "triangle ("
                                             + ToString(lfaces[i-1].PNum(1))+", "
                                             + ToString(lfaces[i-1].PNum(2)) + ", "
                                             + ToString(lfaces[i-1].PNum(3)) + ") in Freezone";
                                           
-					}
-				      ok = 0;
-				    }
+                                        }
+                                      ok = 0;
+                                    }
 #endif
-				}
-			    }
-			   
-			}
+                                }
+                            }
+                           
+                        }
 
-		      
-		      if (ok)
-			{
-			  err = 0;
-			  for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
-			    {
-			      double hf = rule->CalcPointDist (pi, lpoints[pmap[pi]]);
-			      if (hf > err) err = hf;
-			    }
-			  
-			  
-			  if (loktestmode)
-			    {
-			      (*testout) << "Rule ok" << endl;
-			      problems[rim] = "Rule ok, err = "+ToString(err);
-			    }
+                      
+                      if (ok)
+                        {
+                          err = 0;
+                          for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
+                            {
+                              double hf = rule->CalcPointDist (pi, lpoints[pmap[pi]]);
+                              if (hf > err) err = hf;
+                            }
+                          
+                          
+                          if (loktestmode)
+                            {
+                              (*testout) << "Rule ok" << endl;
+                              problems[rim] = "Rule ok, err = "+ToString(err);
+                            }
 
 
-			  //			  newu = rule->GetOldUToNewU() * oldu;
+                          //                      newu = rule->GetOldUToNewU() * oldu;
 
-			  // set new points:
+                          // set new points:
                           int oldnp = rule->GetNOldP();
-			  int noldlp = lpoints.Size();
-			  int noldlf = lfaces.Size();
-			  
-			  for (auto pi : pmap.Range().Modify(oldnp, 0))
-			    {
-			      np = rule->GetPoint(pi);
-			      int i = pi.Nr1();
-			      np(0) += newu (3 * (i-oldnp) - 3);
-			      np(1) += newu (3 * (i-oldnp) - 2);
-			      np(2) += newu (3 * (i-oldnp) - 1);
-			      lpoints.Append (np);
+                          int noldlp = lpoints.Size();
+                          int noldlf = lfaces.Size();
+                          
+                          for (auto pi : pmap.Range().Modify(oldnp, 0))
+                            {
+                              np = rule->GetPoint(pi);
+                              int i = pi.Nr1();
+                              np(0) += newu (3 * (i-oldnp) - 3);
+                              np(1) += newu (3 * (i-oldnp) - 2);
+                              np(2) += newu (3 * (i-oldnp) - 1);
+                              lpoints.Append (np);
                               pmap[pi] = lpoints.Range().Next()-1;
-			    }
-			  
-			  // Set new Faces:
-			  
-			  for (int i = rule->GetNOldF() + 1; i <= rule->GetNF(); i++)
-			    if (!fmapi[i-1])
-			      {
-				MiniElement2d nface(rule->GetNP(i));
-				for (int j = 1; j <= nface.GetNP(); j++)
-				  nface.PNum(j) = pmap[rule->GetPointNr (i, j)];
-				
-				lfaces.Append (nface);
-			      }
-			  
-			  // Delete old Faces:
+                            }
+                          
+                          // Set new Faces:
+                          
+                          for (int i = rule->GetNOldF() + 1; i <= rule->GetNF(); i++)
+                            if (!fmapi[i-1])
+                              {
+                                MiniElement2d nface(rule->GetNP(i));
+                                for (int j = 1; j <= nface.GetNP(); j++)
+                                  nface.PNum(j) = pmap[rule->GetPointNr (i, j)];
+                                
+                                lfaces.Append (nface);
+                              }
+                          
+                          // Delete old Faces:
 
-			  for (int i = 1; i <= rule->GetNDelF(); i++)
-			    delfaces.Append (fmapi[(rule->GetDelFace(i))-1]);
-			  for (int i = rule->GetNOldF()+1; i <= rule->GetNF(); i++)
-			    if (fmapi[i-1])
-			      {
-				delfaces.Append (fmapi[i-1]);
-				fmapi[i-1] = 0;
-			      }
-			  
+                          for (int i = 1; i <= rule->GetNDelF(); i++)
+                            delfaces.Append (fmapi[(rule->GetDelFace(i))-1]);
+                          for (int i = rule->GetNOldF()+1; i <= rule->GetNF(); i++)
+                            if (fmapi[i-1])
+                              {
+                                delfaces.Append (fmapi[i-1]);
+                                fmapi[i-1] = 0;
+                              }
+                          
 
-			  // check orientation
-			  for (int i = 1; i <= rule->GetNO() && ok; i++)
-			    {
-			      const fourpoints * fouri;
-			      
-			      fouri = &rule->GetOrientation(i);
-			      Vec<3> v1 (lpoints[pmap[fouri->i1]], 
-					lpoints[pmap[fouri->i2]]);
-			      Vec<3> v2 (lpoints[pmap[fouri->i1]], 
-					lpoints[pmap[fouri->i3]]);
-			      Vec<3> v3 (lpoints[pmap[fouri->i1]], 
-					lpoints[pmap[fouri->i4]]);
+                          // check orientation
+                          for (int i = 1; i <= rule->GetNO() && ok; i++)
+                            {
+                              const fourpoints * fouri;
+                              
+                              fouri = &rule->GetOrientation(i);
+                              Vec<3> v1 (lpoints[pmap[fouri->i1]], 
+                                        lpoints[pmap[fouri->i2]]);
+                              Vec<3> v2 (lpoints[pmap[fouri->i1]], 
+                                        lpoints[pmap[fouri->i3]]);
+                              Vec<3> v3 (lpoints[pmap[fouri->i1]], 
+                                        lpoints[pmap[fouri->i4]]);
 
-			      Vec<3> n;
-			      Cross (v1, v2, n);
-			      //if (n * v3 >= -1e-7*n.Length()*v3.Length()) // OR -1e-7???
-			      if (n * v3 >= -1e-9)
-				{
-				  if (loktestmode)
-				    {
-				      problems[rim] = "Orientation wrong";
-				      (*testout) << "Orientation wrong ("<< n*v3 << ")" << endl;
-				    }
-				  ok = 0;
-				}
-			    }
+                              Vec<3> n;
+                              Cross (v1, v2, n);
+                              //if (n * v3 >= -1e-7*n.Length()*v3.Length()) // OR -1e-7???
+                              if (n * v3 >= -1e-9)
+                                {
+                                  if (loktestmode)
+                                    {
+                                      problems[rim] = "Orientation wrong";
+                                      (*testout) << "Orientation wrong ("<< n*v3 << ")" << endl;
+                                    }
+                                  ok = 0;
+                                }
+                            }
 
-			  
+                          
 
-			  // new points in free-zone ?
-			  for (auto pi : pmap.Range().Modify(rule->GetNOldP(), 0))
-			    if (ok && !rule->IsInFreeZone (lpoints[pmap[pi]]))
-			      {
-				if (loktestmode)
-				  {
-				    (*testout) << "Newpoint " << lpoints[pmap[pi]]
-					       << " outside convex hull" << endl;
-				    problems[rim] = "newpoint outside convex hull";
-				  }
-				ok = 0;
-				
-			      }
-			  
-			  // insert new elements
-			  
-			  for (int i = 1; i <= rule->GetNE(); i++)
-			    {
-			      const RuleElement & rel = rule->GetElement(i);
-			      LocalElement el;
-			      el.SetType (rel.GetType());
-			      for (int j = 1; j <= rel.GetNP(); j++)
-				el.PNum(j) = pmap[rel.PNum(j)];   // rule nr -> local nr
-			      elements.Append (el);
-			    }
-			  
+                          // new points in free-zone ?
+                          for (auto pi : pmap.Range().Modify(rule->GetNOldP(), 0))
+                            if (ok && !rule->IsInFreeZone (lpoints[pmap[pi]]))
+                              {
+                                if (loktestmode)
+                                  {
+                                    (*testout) << "Newpoint " << lpoints[pmap[pi]]
+                                               << " outside convex hull" << endl;
+                                    problems[rim] = "newpoint outside convex hull";
+                                  }
+                                ok = 0;
+                                
+                              }
+                          
+                          // insert new elements
+                          
+                          for (int i = 1; i <= rule->GetNE(); i++)
+                            {
+                              const RuleElement & rel = rule->GetElement(i);
+                              LocalElement el;
+                              el.SetType (rel.GetType());
+                              for (int j = 1; j <= rel.GetNP(); j++)
+                                el.PNum(j) = pmap[rel.PNum(j)];   // rule nr -> local nr
+                              elements.Append (el);
+                            }
+                          
 
-			  // Calculate Element badness
-			  
-			  teterr = 0;
-			  for (auto i : elements.Range())
-			    {
-			      double hf = CalcElementBadness (lpoints, elements[i]);
-			      if (hf > teterr) teterr = hf;
-			    }
+                          // Calculate Element badness
+                          
+                          teterr = 0;
+                          for (auto i : elements.Range())
+                            {
+                              double hf = CalcElementBadness (lpoints, elements[i]);
+                              if (hf > teterr) teterr = hf;
+                            }
 
-			  /*
-			    // keine gute Erfahrung am 25.1.2000, js
-			  if (ok && teterr < 100 &&
-			      (rule->TestFlag('b') || tolerance > 10) )
-			    {
-			      (*mycout) << "Reset teterr " 
-				   << rule->Name() 
-				   << " err = " << teterr 
-				   << endl;
-			      teterr = 1;
-			    }
-			  */
+                          /*
+                            // keine gute Erfahrung am 25.1.2000, js
+                          if (ok && teterr < 100 &&
+                              (rule->TestFlag('b') || tolerance > 10) )
+                            {
+                              (*mycout) << "Reset teterr " 
+                                   << rule->Name() 
+                                   << " err = " << teterr 
+                                   << endl;
+                              teterr = 1;
+                            }
+                          */
 
-			  // compare edgelength
-			  if (rule->TestFlag('l'))
-			    {
-			      double oldlen = 0;
-			      double newlen = 0;
+                          // compare edgelength
+                          if (rule->TestFlag('l'))
+                            {
+                              double oldlen = 0;
+                              double newlen = 0;
 
-			      for (int i = 1; i <= rule->GetNDelF(); i++)
-				{
-				  const RuleElement2d & face = 
-				    rule->GetFace (rule->GetDelFace(i));
-				  for (int j = 1; j <= 3; j++)
-				    {
-				      const Point<3> & p1 =
-					lpoints[pmap[face.PNumMod(j)]];
-				      const Point<3> & p2 =
-					lpoints[pmap[face.PNumMod(j+1)]];
-				      oldlen += Dist(p1, p2);
-				    }
-				}
+                              for (int i = 1; i <= rule->GetNDelF(); i++)
+                                {
+                                  const RuleElement2d & face = 
+                                    rule->GetFace (rule->GetDelFace(i));
+                                  for (int j = 1; j <= 3; j++)
+                                    {
+                                      const Point<3> & p1 =
+                                        lpoints[pmap[face.PNumMod(j)]];
+                                      const Point<3> & p2 =
+                                        lpoints[pmap[face.PNumMod(j+1)]];
+                                      oldlen += Dist(p1, p2);
+                                    }
+                                }
 
-			      for (int i = rule->GetNOldF()+1; i <= rule->GetNF(); i++)
-				{
-				  const RuleElement2d & face = rule->GetFace (i);
-				  for (int j = 1; j <= 3; j++)
-				    {
-				      const Point<3> & p1 =
-					lpoints[pmap[face.PNumMod(j)]];
-				      const Point<3> & p2 =
-					lpoints[pmap[face.PNumMod(j+1)]];
-				      newlen += Dist(p1, p2);
-				    }
-				}
+                              for (int i = rule->GetNOldF()+1; i <= rule->GetNF(); i++)
+                                {
+                                  const RuleElement2d & face = rule->GetFace (i);
+                                  for (int j = 1; j <= 3; j++)
+                                    {
+                                      const Point<3> & p1 =
+                                        lpoints[pmap[face.PNumMod(j)]];
+                                      const Point<3> & p2 =
+                                        lpoints[pmap[face.PNumMod(j+1)]];
+                                      newlen += Dist(p1, p2);
+                                    }
+                                }
 
-			      if (oldlen < newlen) 
-				{
-				  ok = 0;
-				  if (loktestmode)
-				    problems[rim] = "oldlen < newlen";
-				}
-			    }
-			  
+                              if (oldlen < newlen) 
+                                {
+                                  ok = 0;
+                                  if (loktestmode)
+                                    problems[rim] = "oldlen < newlen";
+                                }
+                            }
+                          
 
-			  if (loktestmode)
-			    (*testout) << "ok = " << int(ok) 
-				       << "teterr = " << teterr 
-				       << "minteterr = " << minteterr << endl;
-
-
-			  if (ok && teterr < tolerance)
-			    {
-			      canuse[rim] ++;
-			      /*
-			      (*testout) << "can use rule " << rule->Name() 
-					 << ", err = " << teterr << endl;
-			      for (i = 1; i <= pmap.Size(); i++)
-				(*testout) << pmap[i] << " ";
-			      (*testout) << endl;
-			      */
-
-			      if (problems[rim] == "other")
-				{
-				  if (teterr < minother)
-				    minother = teterr;
-				}
-			      else
-				{
-				  if (teterr < minwithoutother)
-				    minwithoutother = teterr;
-				}
-			    }
+                          if (loktestmode)
+                            (*testout) << "ok = " << int(ok) 
+                                       << "teterr = " << teterr 
+                                       << "minteterr = " << minteterr << endl;
 
 
-			  if (teterr > minteterr) impossible = 0;
+                          if (ok && teterr < tolerance)
+                            {
+                              canuse[rim] ++;
+                              /*
+                              (*testout) << "can use rule " << rule->Name() 
+                                         << ", err = " << teterr << endl;
+                              for (i = 1; i <= pmap.Size(); i++)
+                                (*testout) << pmap[i] << " ";
+                              (*testout) << endl;
+                              */
 
-			  if (ok && teterr < minteterr)
-			    {
+                              if (problems[rim] == "other")
+                                {
+                                  if (teterr < minother)
+                                    minother = teterr;
+                                }
+                              else
+                                {
+                                  if (teterr < minwithoutother)
+                                    minwithoutother = teterr;
+                                }
+                            }
 
-			      if (loktestmode)
-				(*testout) << "use rule" << endl;
 
-			      found = rim+1;
-			      minteterr = teterr;
-			      
-			      if (testmode)
-				{
-				  for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
-				    {
-				      (*testout) << "P" << pi << ": Ref: "
-						 << rule->GetPoint (pi) << "  is: "
-						 << lpoints[pmap[pi]] << endl;
-				    }
-				}
-			      
-			      tempnewpoints.SetSize (0);
-			      // for (int i = noldlp+1; i <= lpoints.Size(); i++)
+                          if (teterr > minteterr) impossible = 0;
+
+                          if (ok && teterr < minteterr)
+                            {
+
+                              if (loktestmode)
+                                (*testout) << "use rule" << endl;
+
+                              found = rim+1;
+                              minteterr = teterr;
+                              
+                              if (testmode)
+                                {
+                                  for (auto pi : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
+                                    {
+                                      (*testout) << "P" << pi << ": Ref: "
+                                                 << rule->GetPoint (pi) << "  is: "
+                                                 << lpoints[pmap[pi]] << endl;
+                                    }
+                                }
+                              
+                              tempnewpoints.SetSize (0);
+                              // for (int i = noldlp+1; i <= lpoints.Size(); i++)
                               for (auto i : lpoints.Range().Modify(noldlp, 0))
-				tempnewpoints.Append (lpoints[i]);
-			      
-			      tempnewfaces.SetSize (0);
-			      // for (int i = noldlf+1; i <= lfaces.Size(); i++)
+                                tempnewpoints.Append (lpoints[i]);
+                              
+                              tempnewfaces.SetSize (0);
+                              // for (int i = noldlf+1; i <= lfaces.Size(); i++)
                               for (auto i : lfaces.Range().Modify(noldlf,0))
-				tempnewfaces.Append (lfaces[i]);
+                                tempnewfaces.Append (lfaces[i]);
 
-			      tempdelfaces.SetSize (0);
-			      // for (int i = 1; i <= delfaces.Size(); i++)
+                              tempdelfaces.SetSize (0);
+                              // for (int i = 1; i <= delfaces.Size(); i++)
                               for (auto i : delfaces.Range())
-				tempdelfaces.Append (delfaces[i]);
-			      
-			      tempelements.SetSize (0);
-			      // for (int i = 1; i <= elements.Size(); i++)
+                                tempdelfaces.Append (delfaces[i]);
+                              
+                              tempelements.SetSize (0);
+                              // for (int i = 1; i <= elements.Size(); i++)
                               for (auto i : elements.Range())
-				tempelements.Append (elements[i]);
-			    }
-			  
+                                tempelements.Append (elements[i]);
+                            }
+                          
 
-			  lpoints.SetSize (noldlp);
-			  lfaces.SetSize (noldlf);
-			  delfaces.SetSize (0);
-			  elements.SetSize (0);
-			}
-		      
-		      npok = RuleP(rule->GetNOldP());
-		      incnpok = 0;
-		    }
-		}
-	      
-	      nfok = rule->GetNOldF();
-	      
-	      for (int j = 1; j <= rule->GetNP (nfok); j++)
-		{
-		  RulePointIndex refpi = rule->GetPointNr (nfok, j);
-		  pused[pmap[refpi]]--;
-		  
-		  if (pused[pmap[refpi]] == 0)
+                          lpoints.SetSize (noldlp);
+                          lfaces.SetSize (noldlf);
+                          delfaces.SetSize (0);
+                          elements.SetSize (0);
+                        }
+                      
+                      npok = RuleP(rule->GetNOldP());
+                      incnpok = 0;
+                    }
+                }
+              
+              nfok = rule->GetNOldF();
+              
+              for (int j = 1; j <= rule->GetNP (nfok); j++)
+                {
+                  RulePointIndex refpi = rule->GetPointNr (nfok, j);
+                  pused[pmap[refpi]]--;
+                  
+                  if (pused[pmap[refpi]] == 0)
                     pmap[refpi].Invalidate();
-		}
-	      
-	    }
-	}
+                }
+              
+            }
+        }
       if (loktestmode)
-	(*testout) << "end rule" << endl;
+        (*testout) << "end rule" << endl;
     }
   // tloop.Stop();
   
@@ -1148,27 +1148,27 @@ int Meshing3 :: ApplyRules
     {
       /*
       for (i = 1; i <= tempnewpoints.Size(); i++)
-	lpoints.Append (tempnewpoints.Get(i));
+        lpoints.Append (tempnewpoints.Get(i));
       */
       for (Point<3> p : tempnewpoints)
         lpoints.Append(p);
       /*
       for (i = 1; i <= tempnewfaces.Size(); i++)
-	if (tempnewfaces.Get(i).PNum(1))
-	  lfaces.Append (tempnewfaces.Get(i));
+        if (tempnewfaces.Get(i).PNum(1))
+          lfaces.Append (tempnewfaces.Get(i));
       */
       for (int i : tempnewfaces.Range())
-	if (tempnewfaces[i].PNum(1).IsValid())
-	  lfaces.Append (tempnewfaces[i]);
+        if (tempnewfaces[i].PNum(1).IsValid())
+          lfaces.Append (tempnewfaces[i]);
       /*
       for (i = 1; i <= tempdelfaces.Size(); i++)
-	delfaces.Append (tempdelfaces.Get(i));
+        delfaces.Append (tempdelfaces.Get(i));
       */
       for (int i : tempdelfaces.Range())
         delfaces.Append (tempdelfaces[i]);
       /*
       for (i = 1; i <= tempelements.Size(); i++)
-	elements.Append (tempelements.Get(i));
+        elements.Append (tempelements.Get(i));
       */
       for (int i : tempelements.Range())
         elements.Append (tempelements[i]);

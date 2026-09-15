@@ -430,7 +430,7 @@ namespace ngcore
     NETGEN_INLINE IndirectArray operator= (const BaseArrayObject<T2> & a2) 
     {
       for (auto i : Range(Size()))
-	(*this)[i] = a2[i];
+        (*this)[i] = a2[i];
       return IndirectArray (ba, ia);
     }
 
@@ -699,7 +699,7 @@ namespace ngcore
       if (a1[i] != a2[i]) return false;
     return true;
   }
-		 
+                 
   template <class T1, class T2>
   inline bool operator!= (const FlatArray<T1> & a1,
                           const FlatArray<T2> & a2)
@@ -1008,7 +1008,7 @@ namespace ngcore
     {
       NETGEN_CHECK_RANGE(i, BASE, BASE+size);
       for(size_t j = i-BASE; j+1 < this->size; j++)
-	this->data[j] = this->data[j+1];
+        this->data[j] = this->data[j+1];
       this->size--;
     }
 
@@ -1460,16 +1460,16 @@ namespace ngcore
   {
     for (size_t i = 0; i < data.Size(); i++)
       for (size_t j = i+1; j < data.Size(); j++)
-	if (data[i] > data[j])
-	  {
-	    T hv = data[i];
-	    data[i] = data[j];
-	    data[j] = hv;
+        if (data[i] > data[j])
+          {
+            T hv = data[i];
+            data[i] = data[j];
+            data[j] = hv;
 
-	    S hvs = index[i];
-	    index[i] = index[j];
-	    index[j] = hvs;
-	  }
+            S hvs = index[i];
+            index[i] = index[j];
+            index[j] = hvs;
+          }
   }
 
 
@@ -1508,7 +1508,7 @@ namespace ngcore
 
         if (i <= j)
           {
-	    Swap (data[i], data[j]);
+            Swap (data[i], data[j]);
             i++; j--;
           }
       }
@@ -1561,7 +1561,7 @@ namespace ngcore
 
         if (i <= j)
           {
-	    Swap (index[i], index[j]);
+            Swap (index[i], index[j]);
             i++; j--;
           }
       }

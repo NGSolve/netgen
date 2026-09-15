@@ -34,7 +34,7 @@ class QuadraticPolynomial2V
 public:
   QuadraticPolynomial2V ();
   QuadraticPolynomial2V (double ac, double acx, double acy,
-			 double acxx, double acxy, double acyy);
+                         double acxx, double acxy, double acyy);
   void Square (const LinearPolynomial2V & lp);
   void Add (double lam, const QuadraticPolynomial2V & qp);
 

@@ -17,7 +17,7 @@ namespace netgen
     static double transmat[16];
     static double rotmat[16];
     static double centermat[16];
-	
+        
     static NGGUI_API double transformationmat[16];
 
     GLdouble clipplane[4];
@@ -77,7 +77,7 @@ namespace netgen
     NGGUI_API void DrawMarker();
     NGGUI_API void DrawNetgenLogo ();
     NGGUI_API void SetOpenGlColor(double val, double valmin, double valmax, int logscale = 0);
-	
+        
 
 #ifdef PARALLELGL
     NGGUI_API void InitParallelGL ();
@@ -227,11 +227,11 @@ namespace netgen
 
   public:
     NGGUI_API VisualSceneMesh ();
-	NGGUI_API virtual ~VisualSceneMesh ();
+        NGGUI_API virtual ~VisualSceneMesh ();
 
-	NGGUI_API virtual void BuildScene (int zoomall = 0);
-	NGGUI_API virtual void DrawScene ();
-	NGGUI_API virtual void MouseDblClick (int px, int py);
+        NGGUI_API virtual void BuildScene (int zoomall = 0);
+        NGGUI_API virtual void DrawScene ();
+        NGGUI_API virtual void MouseDblClick (int px, int py);
 
     NGGUI_API void SetMesh (shared_ptr<Mesh> m) { mesh = m; }
     NGGUI_API shared_ptr<Mesh> GetMesh () const { return mesh; }
@@ -240,16 +240,16 @@ namespace netgen
     { user_me_handler = handler; }
 
 
-	NGGUI_API int SelectedFace () const
+        NGGUI_API int SelectedFace () const
     { return selface; }
-	NGGUI_API void SetSelectedFace (int asf);
+        NGGUI_API void SetSelectedFace (int asf);
     //    { selface = asf; selecttimestamp = GetTimeStamp(); }
 
-	NGGUI_API int SelectedEdge () const
+        NGGUI_API int SelectedEdge () const
     { return seledge; }
-	NGGUI_API int SelectedElement () const
+        NGGUI_API int SelectedElement () const
     { return selelement; }
-	NGGUI_API PointIndex SelectedPoint () const
+        NGGUI_API PointIndex SelectedPoint () const
     { return selpoint; }
     void BuildFilledList (bool select);
     void BuildColorTexture();

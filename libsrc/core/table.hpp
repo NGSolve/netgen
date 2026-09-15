@@ -312,18 +312,18 @@ namespace ngcore
     {
       mode = amode;
       if (mode == 2)
-	{
-	  // cnt.SetSize(nd);  // atomic has no copy
+        {
+          // cnt.SetSize(nd);  // atomic has no copy
           cnt = Array<std::atomic<int>,IndexType> (nd);
           for (auto & ci : cnt) ci.store (0, std::memory_order_relaxed);
-	}
+        }
       if (mode == 3)
-	{
+        {
           table = Table<T,IndexType> (cnt);
           // for (auto & ci : cnt) ci = 0;
           for (auto & ci : cnt) ci.store (0, std::memory_order_relaxed);
           // cnt = 0;
-	}
+        }
     }
 
     void SetSize (size_t _nd)
@@ -340,8 +340,8 @@ namespace ngcore
     void Add (IndexType blocknr, const T & data)
     {
       switch (mode)
-	{
-	case 1:
+        {
+        case 1:
           {
             size_t oldval = nd;
             while (blocknr-IndexBASE<IndexType>()+1>nd) {
@@ -350,22 +350,22 @@ namespace ngcore
             }
             break;
           }
-	case 2:
-	  cnt[blocknr]++;
-	  break;
-	case 3:
+        case 2:
+          cnt[blocknr]++;
+          break;
+        case 3:
           int ci = cnt[blocknr]++;
           table[blocknr][ci] = data;
-	  break;
-	}
+          break;
+        }
     }
 
 
     void Add (IndexType blocknr, IntRange range)
     {
       switch (mode)
-	{
-	case 1:
+        {
+        case 1:
           {
             size_t oldval = nd;
             while (blocknr+1>nd) {
@@ -374,22 +374,22 @@ namespace ngcore
             }
             break;
           }
-	case 2:
-	  cnt[blocknr] += range.Size();
-	  break;
-	case 3:
+        case 2:
+          cnt[blocknr] += range.Size();
+          break;
+        case 3:
           size_t ci = ( cnt[blocknr] += range.Size() ) - range.Size();
-	  for (size_t j = 0; j < range.Size(); j++)
+          for (size_t j = 0; j < range.Size(); j++)
             table[blocknr][ci+j] = range.First()+j;
-	  break;
-	}
+          break;
+        }
     }
 
     void Add (IndexType blocknr, const FlatArray<int> & dofs)
     {
       switch (mode)
-	{
-	case 1:
+        {
+        case 1:
           {
             size_t oldval = nd;
             while (blocknr+1>nd) {
@@ -398,15 +398,15 @@ namespace ngcore
             }
             break;
           }
-	case 2:
-	  cnt[blocknr] += dofs.Size();
-	  break;
-	case 3:
+        case 2:
+          cnt[blocknr] += dofs.Size();
+          break;
+        case 3:
           size_t ci = ( cnt[blocknr] += dofs.Size() ) - dofs.Size();
-	  for (size_t j = 0; j < dofs.Size(); j++)
+          for (size_t j = 0; j < dofs.Size(); j++)
             table[blocknr][ci+j] = dofs[j];
-	  break;
-	}
+          break;
+        }
     }
   };
 

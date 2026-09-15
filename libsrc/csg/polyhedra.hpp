@@ -35,8 +35,8 @@ namespace netgen
 
       Face () { ; }
       Face (int pi1, int pi2, int pi3, 
-	    const Array<Point<3> > & points,
-	    int ainputnr);
+            const Array<Point<3> > & points,
+            int ainputnr);
     };
 
     Array<Point<3> > points;
@@ -53,44 +53,44 @@ namespace netgen
 
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const override;
     virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
-				       double eps) const override;
+                                       double eps) const override;
     virtual INSOLID_TYPE VecInSolidNew (const Point<3> & p,
                                         const Vec<3> & v,
                                         double eps, bool printing = false) const;
     virtual INSOLID_TYPE VecInSolidOld (const Point<3> & p,
-				     const Vec<3> & v,
-				     double eps) const;
+                                     const Vec<3> & v,
+                                     double eps) const;
     
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
-				     const Vec<3> & v,
-				     double eps) const override;
+                                     const Vec<3> & v,
+                                     double eps) const override;
 
     virtual INSOLID_TYPE VecInSolid2 (const Point<3> & p,
-				      const Vec<3> & v1,
-				      const Vec<3> & v2,
-				      double eps) const override;
+                                      const Vec<3> & v1,
+                                      const Vec<3> & v2,
+                                      double eps) const override;
     
     virtual INSOLID_TYPE VecInSolid3 (const Point<3> & p,
-				      const Vec<3> & v1,
-				      const Vec<3> & v2,
-				      double eps) const override;
+                                      const Vec<3> & v1,
+                                      const Vec<3> & v2,
+                                      double eps) const override;
 
     virtual INSOLID_TYPE VecInSolid4 (const Point<3> & p,
-				      const Vec<3> & v,
-				      const Vec<3> & v2,
-				      const Vec<3> & m,
-				      double eps) const override;
+                                      const Vec<3> & v,
+                                      const Vec<3> & v2,
+                                      const Vec<3> & m,
+                                      double eps) const override;
     
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      Array<int> & surfind, double eps) const override;
+                                              Array<int> & surfind, double eps) const override;
 
 
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  Array<int> & surfind, double eps) const override;
+                                                  Array<int> & surfind, double eps) const override;
 
     virtual void CalcSpecialPoints (Array<Point<3> > & pts) const override;
     virtual void AnalyzeSpecialPoint (const Point<3> & pt, 
-				      Array<Point<3> > & specpts) const override;
+                                      Array<Point<3> > & specpts) const override;
     virtual Vec<3> SpecialPointTangentialVector (const Point<3> & p, int s1, int s2) const override;
 
     virtual int GetNSurfaces() const override

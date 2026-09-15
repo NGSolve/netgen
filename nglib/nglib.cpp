@@ -782,8 +782,8 @@ namespace nglib
       closeedgeenable = 0;
       closeedgefact = 2.0;
 
-	  minedgelenenable = 0;
-	  minedgelen = 1e-4;
+          minedgelenenable = 0;
+          minedgelen = 1e-4;
 
       second_order = 0;
       quad_dominated = 0;
@@ -823,8 +823,8 @@ namespace nglib
       closeedgeenable = 0;
       closeedgefact = 2.0;
 
-  	  minedgelenenable = 0;
-	  minedgelen = 1e-4;
+          minedgelenenable = 0;
+          minedgelen = 1e-4;
 
       second_order = 0;
       quad_dominated = 0;
@@ -891,7 +891,7 @@ namespace nglib
 
 
    NGLIB_API void Ng_2D_Generate_SecondOrder(Ng_Geometry_2D * geom,
-					  Ng_Mesh * mesh)
+                                          Ng_Mesh * mesh)
    {
       ( (SplineGeometry2d*)geom ) -> GetRefinement().MakeSecondOrder( * (Mesh*) mesh );
    }
@@ -900,7 +900,7 @@ namespace nglib
 
 
    NGLIB_API void Ng_STL_Generate_SecondOrder(Ng_STL_Geometry * geom,
-					   Ng_Mesh * mesh)
+                                           Ng_Mesh * mesh)
    {
       ((STLGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
    }
@@ -909,7 +909,7 @@ namespace nglib
 
 
    NGLIB_API void Ng_CSG_Generate_SecondOrder (Ng_CSG_Geometry * geom,
-					   Ng_Mesh * mesh)
+                                           Ng_Mesh * mesh)
    {
       ((CSGeometry*)geom)->GetRefinement().MakeSecondOrder(*(Mesh*) mesh);
    }

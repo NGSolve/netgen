@@ -44,15 +44,15 @@ namespace netgen
     mesh.GetTopology() = MeshTopology(mesh);
     for (int i = 1; i <= optsteps; i++)
       for (size_t j = 1; j <= strlen(optstr); j++)
-	{
-	  if (multithread.terminate) break;
+        {
+          if (multithread.terminate) break;
           MeshOptimize2d meshopt(mesh);
           meshopt.SetMetricWeight (mp.elsizeweight);
           meshopt.SetFaceIndex(faceindex);
-	  switch (optstr[j-1])
-	    {
-	    case 's': 
-	      {  // topological swap
+          switch (optstr[j-1])
+            {
+            case 's': 
+              {  // topological swap
 
                 if(optimize_swap_separate_faces)
                 {
@@ -66,10 +66,10 @@ namespace netgen
                 {
                   meshopt.EdgeSwapping (0);
                 }
-		break;
-	      }
-	    case 'S': 
-	      {  // metric swap
+                break;
+              }
+            case 'S': 
+              {  // metric swap
                 if(optimize_swap_separate_faces)
                 {
                   for(auto i : Range(1, mesh.GetNFD()+1))
@@ -82,22 +82,22 @@ namespace netgen
                 {
                   meshopt.EdgeSwapping (1);
                 }
-		break;
-	      }
-	    case 'm': 
-	      {
-		meshopt.ImproveMesh(mp);
-		break;
-	      }
-	    case 'c': 
-	      {
-		meshopt.CombineImprove();
-		break;
-	      }
-	    default:
-	      cerr << "Optimization code " << optstr[j-1] << " not defined" << endl;
-	    }  
-	}
+                break;
+              }
+            case 'm': 
+              {
+                meshopt.ImproveMesh(mp);
+                break;
+              }
+            case 'c': 
+              {
+                meshopt.CombineImprove();
+                break;
+              }
+            default:
+              cerr << "Optimization code " << optstr[j-1] << " not defined" << endl;
+            }  
+        }
     mesh.Compress(); // better: compress in individual steps, if necessary
     if (secondorder)
       {

@@ -78,8 +78,8 @@ private:
 
 public:
   DLL_HEADER FieldLineCalc(const Mesh & amesh, const VectorFunction & afunc,
-		const double rel_length, const int amaxpoints = -1,
-		const double rel_thickness = -1, const double rel_tolerance = -1, const int rk_type = 0, const int adirection = 0);
+                const double rel_length, const int amaxpoints = -1,
+                const double rel_thickness = -1, const double rel_tolerance = -1, const int rk_type = 0, const int adirection = 0);
 
   DLL_HEADER ~FieldLineCalc();
 

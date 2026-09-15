@@ -194,7 +194,7 @@ public:
 
   //project with a certain normal vector in plane
   void ProjectInPlain(const Array<Point<3>, STLPointId>& ap, 
-		      const Vec<3> & n, Point<3> & pp) const;
+                      const Vec<3> & n, Point<3> & pp) const;
   //project with the triangle's normal vector in plane
   void ProjectInPlain(const Array<Point<3>, STLPointId> & ap, Point<3> & pp) const;
 
@@ -212,14 +212,14 @@ public:
     pp(output) = P1 + lam1 v1 + lam2 v2
   */
   int ProjectInPlain (const Array<Point<3>,STLPointId>& ap, 
-		      const Vec<3> & nproj, 
-		      Point<3> & pp, Vec<3> & lam) const;
+                      const Vec<3> & nproj, 
+                      Point<3> & pp, Vec<3> & lam) const;
 
   bool PointInside(const Array<Point<3>,STLPointId>& ap, const Point<3> & pp) const;
 
   //get nearest point on triangle and distance to it
   double GetNearestPoint(const Array<Point<3>,STLPointId>& ap, 
-			 Point<3> & p3d) const;
+                         Point<3> & p3d) const;
 
   double Area(const Array<Point<3>,STLPointId>& ap) const;
 
@@ -345,7 +345,7 @@ public:
 
   
   void GetTrianglesInBox (const Box<3> & box,
-			  Array<int> & trias) const;
+                          Array<int> & trias) const;
 
 
   int GetNP() const { return points.Size(); }

@@ -73,9 +73,9 @@ namespace ngcore
   {
     for (int i = 0; i < size; i++)
       {
-	data[i].maxsize = 0;
-	data[i].size = 0;
-	data[i].col = NULL;
+        data[i].maxsize = 0;
+        data[i].size = 0;
+        data[i].col = NULL;
       }
     oneblock = NULL;
   }
@@ -93,11 +93,11 @@ namespace ngcore
     cnt = 0;
     for (int i = 0; i < n; i++)
       {
-	data[i].maxsize = entrysizes[i];
-	data[i].size = 0;
+        data[i].maxsize = entrysizes[i];
+        data[i].size = 0;
 
-	data[i].col = &oneblock[elemsize * cnt];
-	cnt += entrysizes[i];
+        data[i].col = &oneblock[elemsize * cnt];
+        cnt += entrysizes[i];
       }
   }
 
@@ -107,7 +107,7 @@ namespace ngcore
       delete [] oneblock;
     else
       for (int i = 0; i < data.Size(); i++)
-	delete [] static_cast<char*> (data[i].col);
+        delete [] static_cast<char*> (data[i].col);
   }
 
   void BaseDynamicTable :: SetSize (int size)
@@ -118,9 +118,9 @@ namespace ngcore
     data.SetSize(size);
     for (int i = 0; i < size; i++)
       {
-	data[i].maxsize = 0;
-	data[i].size = 0;
-	data[i].col = NULL;
+        data[i].maxsize = 0;
+        data[i].size = 0;
+        data[i].col = NULL;
       }
   }
 
@@ -129,19 +129,19 @@ namespace ngcore
     if (i < 0 || i >= data.Size())
       {
         std::cerr << "BaseDynamicTable::Inc: Out of range, i = " << i << ", size = " << data.Size() << std::endl;
-	return;
+        return;
       }
 
     linestruct & line = data[i];
 
     if (line.size == line.maxsize)
       {
-	void * p = new char [(2*line.maxsize+5) * elsize];
+        void * p = new char [(2*line.maxsize+5) * elsize];
 
-	memcpy (p, line.col, line.maxsize * elsize);
-	delete [] static_cast<char*> (line.col);
-	line.col = p;
-	line.maxsize = 2*line.maxsize+5;
+        memcpy (p, line.col, line.maxsize * elsize);
+        delete [] static_cast<char*> (line.col);
+        line.col = p;
+        line.maxsize = 2*line.maxsize+5;
       }
 
     line.size++;
@@ -152,7 +152,7 @@ namespace ngcore
     if (i < 0 || i >= data.Size())
       {
         std::cerr << "BaseDynamicTable::Dec: Out of range" << std::endl;
-	return;
+        return;
       }
 
     linestruct & line = data[i];
@@ -160,7 +160,7 @@ namespace ngcore
     if (line.size == 0)
       {
         std::cerr << "BaseDynamicTable::Dec: EntrySize < 0" << std::endl;
-	return;
+        return;
       }
 
     line.size--;
@@ -177,14 +177,14 @@ namespace ngcore
   {
     for (size_t i=range.First(); i<range.Next();i++)
       if (!takedofs||takedofs->Test(i))
-	TableCreator<int>::Add(blocknr,i);
+        TableCreator<int>::Add(blocknr,i);
   }  
   
   void FilteredTableCreator::Add (size_t blocknr, FlatArray<int> dofs)
   {
     for (size_t i = 0; i < dofs.Size(); i++)
       if (!takedofs||takedofs->Test(dofs[i]))
-	TableCreator<int>::Add(blocknr,dofs[i]);
+        TableCreator<int>::Add(blocknr,dofs[i]);
   }  
 
 } // namespace ngcore

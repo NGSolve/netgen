@@ -52,7 +52,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   //speedup for make atlas
   if (GetNT() > 50000)
     mesh.SetGlobalH(min2 (0.05*Dist (boundingbox.PMin(), boundingbox.PMax()),
-			  mparam.maxh));
+                          mparam.maxh));
 
   atlas.SetSize(0);
   ClearSpiralPoints();
@@ -121,7 +121,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
       // NgProfiler::StartTimer (timerb);      
       if (workedarea / atlasarea*100. >= nextshow) 
-      	{PrintDot(); nextshow+=showinc;}
+        {PrintDot(); nextshow+=showinc;}
 
       SetThreadPercent(100.0 * workedarea / atlasarea);
 
@@ -133,12 +133,12 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
       bool found = false;
       for (STLTrigId j = lastunmarked; j <= GetNT(); j++)
-	if (!GetMarker(j))
-	  {
-	    found = true;
-	    lastunmarked = j;
-	    break;
-	  }
+        if (!GetMarker(j))
+          {
+            found = true;
+            lastunmarked = j;
+            break;
+          }
 
       chartpoints.SetSize(0);  
       innerchartpoints.SetSize(0);
@@ -156,7 +156,7 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
       bool accepted;
       ChartId chartnum = GetNOCharts();
-	  
+          
       Vec<3> sn = GetTriangle(starttrig).Normal();
       chart.SetNormal (startp, sn);
       
@@ -170,13 +170,13 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       workedarea += GetTriangle(starttrig).Area(points);
 
       for (int i = 0; i < 3; i++)
-	{
+        {
           STLPointId pi = GetTriangle(starttrig)[i];
-	  innerpointstochart[pi] = chartnum;
-	  pointstochart[pi] = chartnum;
-	  chartpoints.Append(pi);
-	  innerchartpoints.Append(pi);
-	}
+          innerpointstochart[pi] = chartnum;
+          pointstochart[pi] = chartnum;
+          chartpoints.Append(pi);
+          innerchartpoints.Append(pi);
+        }
 
       bool changed = true;
       int oldstartic = 1;
@@ -186,80 +186,80 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
       tinner.Start();
       while (changed)
-	{   
-	  changed = false;
-	  oldstartic2 = oldstartic;
-	  oldstartic = chart.GetNT();
-	  //	      for (ic = oldstartic2; ic <= chart->GetNT(); ic++)
-	  for (int ic = oldstartic2; ic <= oldstartic; ic++)
-	    {
-	      STLTrigId i = chart.GetTrig1(ic);
-	      if (GetMarker(i) == chartnum)
-		{
-		  for (int j = 1; j <= NONeighbourTrigs(i); j++)
-		    {
-		      STLTrigId nt = NeighbourTrig(i,j);
+        {   
+          changed = false;
+          oldstartic2 = oldstartic;
+          oldstartic = chart.GetNT();
+          //          for (ic = oldstartic2; ic <= chart->GetNT(); ic++)
+          for (int ic = oldstartic2; ic <= oldstartic; ic++)
+            {
+              STLTrigId i = chart.GetTrig1(ic);
+              if (GetMarker(i) == chartnum)
+                {
+                  for (int j = 1; j <= NONeighbourTrigs(i); j++)
+                    {
+                      STLTrigId nt = NeighbourTrig(i,j);
                       // *testout << "check trig " << nt << endl;
-		      STLPointId np1, np2;
-		      GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
-		      if (GetMarker(nt) == 0 && !IsEdge(np1,np2))
-			{
-			  Vec<3> n2 = GetTriangle(nt).Normal();
+                      STLPointId np1, np2;
+                      GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
+                      if (GetMarker(nt) == 0 && !IsEdge(np1,np2))
+                        {
+                          Vec<3> n2 = GetTriangle(nt).Normal();
                           // *testout << "acos = " << 180/M_PI*acos (n2*sn) << endl;
-			  if ( (n2 * sn) >= coschartangle )
-			    {
+                          if ( (n2 * sn) >= coschartangle )
+                            {
                               // *testout << "good angle " << endl;
-			      accepted = true;
-			      /*
-				//alter spiralentest, schnell, aber ungenau
-			      for (k = 1; k <= 3; k++)
-				{
-				  //find overlapping charts:
-				  Point<3> pt = GetPoint(GetTriangle(nt).PNum(k));
-				  if (innerpointstochart.Get(GetTriangle(nt).PNum(k)) != chartnum)
-				    {
-				      for (l = 1; l <= chartpoints.Size(); l++)
-					{
-					  Vec<3> vptpl(GetPoint(chartpoints.Get(l)), pt);
-					  double vlen = vptpl.Length();
-					  if (vlen > 0)
-					    {
-					      vptpl /= vlen;
-					      if ( fabs( vptpl * sn) > sinchartangle )
-						{
-						  accepted = 0;
-						  break;
-						}
-					    } 
-					}
+                              accepted = true;
+                              /*
+                                //alter spiralentest, schnell, aber ungenau
+                              for (k = 1; k <= 3; k++)
+                                {
+                                  //find overlapping charts:
+                                  Point<3> pt = GetPoint(GetTriangle(nt).PNum(k));
+                                  if (innerpointstochart.Get(GetTriangle(nt).PNum(k)) != chartnum)
+                                    {
+                                      for (l = 1; l <= chartpoints.Size(); l++)
+                                        {
+                                          Vec<3> vptpl(GetPoint(chartpoints.Get(l)), pt);
+                                          double vlen = vptpl.Length();
+                                          if (vlen > 0)
+                                            {
+                                              vptpl /= vlen;
+                                              if ( fabs( vptpl * sn) > sinchartangle )
+                                                {
+                                                  accepted = 0;
+                                                  break;
+                                                }
+                                            } 
+                                        }
 
-				    }
-				}
-			      */
-			      
-			      //find overlapping charts exacter (fast, too): 
-			      for (int k = 1; k <= NONeighbourTrigs(nt); k++)
-				{ 
-				  int nnt = NeighbourTrig(nt,k);
-				  if (GetMarker(nnt) != chartnum)
-				    {
-				      STLPointId nnp1, nnp2; 
-				      GetTriangle(nt).GetNeighbourPoints(GetTriangle(nnt),nnp1,nnp2);
+                                    }
+                                }
+                              */
+                              
+                              //find overlapping charts exacter (fast, too): 
+                              for (int k = 1; k <= NONeighbourTrigs(nt); k++)
+                                { 
+                                  int nnt = NeighbourTrig(nt,k);
+                                  if (GetMarker(nnt) != chartnum)
+                                    {
+                                      STLPointId nnp1, nnp2; 
+                                      GetTriangle(nt).GetNeighbourPoints(GetTriangle(nnt),nnp1,nnp2);
 
-				      accepted = chartbound.TestSeg(GetPoint(nnp1),
-								    GetPoint(nnp2),
-								    sn,sinchartangle,1 /*chartboundarydivisions*/ ,points, eps);
+                                      accepted = chartbound.TestSeg(GetPoint(nnp1),
+                                                                    GetPoint(nnp2),
+                                                                    sn,sinchartangle,1 /*chartboundarydivisions*/ ,points, eps);
                                       
                                       // if (!accepted) *testout << "not acc due to testseg" << endl;
 
-				      Vec<3> n3 = GetTriangle(nnt).Normal();
-				      if ( (n3 * sn) >= coschartangle  &&
-					   IsSmoothEdge (nnp1, nnp2) )
-					accepted = true;
-				    }
-				  if (!accepted) 
+                                      Vec<3> n3 = GetTriangle(nnt).Normal();
+                                      if ( (n3 * sn) >= coschartangle  &&
+                                           IsSmoothEdge (nnp1, nnp2) )
+                                        accepted = true;
+                                    }
+                                  if (!accepted) 
                                     break;
-				}
+                                }
 
                               /*
                               // new check 2019-09-22 
@@ -288,35 +288,35 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
                               */
 
                               
-			      if (accepted)
-				{
+                              if (accepted)
+                                {
                                   // *testout << "trig accepted" << endl;
-				  SetMarker(nt, chartnum); 
-				  changed = true;
-				  markedtrigcnt++;
-				  workedarea += GetTriangle(nt).Area(points);
-				  chart.AddChartTrig(nt);
+                                  SetMarker(nt, chartnum); 
+                                  changed = true;
+                                  markedtrigcnt++;
+                                  workedarea += GetTriangle(nt).Area(points);
+                                  chart.AddChartTrig(nt);
 
-				  chartbound.AddTriangle(GetTriangle(nt));
+                                  chartbound.AddTriangle(GetTriangle(nt));
 
-				  for (int k = 1; k <= 3; k++)
-				    {
+                                  for (int k = 1; k <= 3; k++)
+                                    {
                                       STLPointId pi = GetTriangle(nt).PNum(k);
-				      if (innerpointstochart[pi] != chartnum) 
-					{
-					  innerpointstochart[pi] = chartnum;
-					  pointstochart[pi] = chartnum;
-					  chartpoints.Append(pi);
-					  innerchartpoints.Append(pi);
-					}
-				    }
-				}
-			    }	       
-			}
-		    }
-		}
-	    }
-	}
+                                      if (innerpointstochart[pi] != chartnum) 
+                                        {
+                                          innerpointstochart[pi] = chartnum;
+                                          pointstochart[pi] = chartnum;
+                                          chartpoints.Append(pi);
+                                          innerchartpoints.Append(pi);
+                                        }
+                                    }
+                                }
+                            }          
+                        }
+                    }
+                }
+            }
+        }
       tinner.Stop();
       
       innerchartpts.SetSize(innerchartpoints.Size());
@@ -337,170 +337,170 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       changed = true;
       oldstartic = 1;
       while (changed)
-	{   
-	  changed = false;
-	  oldstartic2 = oldstartic;
-	  oldstartic = chart.GetNT();
+        {   
+          changed = false;
+          oldstartic2 = oldstartic;
+          oldstartic = chart.GetNT();
 
-	  for (int ic = oldstartic2; ic <= oldstartic; ic++)
-	    {
-	      STLTrigId i = chart.GetTrig1(ic);
-	      if (outermark[i] != chartnum) continue;
-	      
-	      for (int j = 1; j <= NONeighbourTrigs(i); j++)
-		{
-		  STLTrigId nt = NeighbourTrig(i,j);
-		  if (outermark[nt] == chartnum) continue;
-		  
-		  const STLTriangle & ntrig = GetTriangle(nt);
-		  STLPointId np1, np2;
-		  GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
-		  
-		  if (IsEdge (np1, np2)) continue;
-		  
-		  
-		  /*
-		    if (outertested.Get(nt) == chartnum)
-		    continue;
-		  */
-		  outertested[nt] = chartnum;
-		  
-		  Vec<3> n2 = GetTriangle(nt).Normal();
+          for (int ic = oldstartic2; ic <= oldstartic; ic++)
+            {
+              STLTrigId i = chart.GetTrig1(ic);
+              if (outermark[i] != chartnum) continue;
+              
+              for (int j = 1; j <= NONeighbourTrigs(i); j++)
+                {
+                  STLTrigId nt = NeighbourTrig(i,j);
+                  if (outermark[nt] == chartnum) continue;
+                  
+                  const STLTriangle & ntrig = GetTriangle(nt);
+                  STLPointId np1, np2;
+                  GetTriangle(i).GetNeighbourPoints(GetTriangle(nt),np1,np2);
+                  
+                  if (IsEdge (np1, np2)) continue;
+                  
+                  
+                  /*
+                    if (outertested.Get(nt) == chartnum)
+                    continue;
+                  */
+                  outertested[nt] = chartnum;
+                  
+                  Vec<3> n2 = GetTriangle(nt).Normal();
 
-		  //abfragen, ob noch im tolerierten Winkel
-		  if ( (n2 * sn) >= cosouterchartangle )
-		    {
-		      accepted = true;
-		      
+                  //abfragen, ob noch im tolerierten Winkel
+                  if ( (n2 * sn) >= cosouterchartangle )
+                    {
+                      accepted = true;
+                      
                       // NgProfiler::StartTimer (timer4);
-		      bool isdirtytrig = false;
-		      Vec<3> gn = GetTriangle(nt).GeomNormal(points);
-		      double gnlen = gn.Length();
-		      
-		      if (n2 * gn <= cosouterchartanglehalf * gnlen)
-			isdirtytrig = true;
-		      
-		      //zurueckweisen, falls eine Spiralartige outerchart entsteht
-		      
-		      //find overlapping charts exacter: 
-		      //do not check dirty trigs!
+                      bool isdirtytrig = false;
+                      Vec<3> gn = GetTriangle(nt).GeomNormal(points);
+                      double gnlen = gn.Length();
+                      
+                      if (n2 * gn <= cosouterchartanglehalf * gnlen)
+                        isdirtytrig = true;
+                      
+                      //zurueckweisen, falls eine Spiralartige outerchart entsteht
+                      
+                      //find overlapping charts exacter: 
+                      //do not check dirty trigs!
                       // NgProfiler::StartTimer (timer4a);
                       
-		      if (spiralcheckon && !isdirtytrig)
-			for (int k = 1; k <= NONeighbourTrigs(nt); k++)
-			  {
+                      if (spiralcheckon && !isdirtytrig)
+                        for (int k = 1; k <= NONeighbourTrigs(nt); k++)
+                          {
                             // NgProfiler::StartTimer (timer4b);                            
-			    STLTrigId nnt = NeighbourTrig(nt,k);
-			    
-			    if (outermark[nnt] != chartnum)
-			      {
+                            STLTrigId nnt = NeighbourTrig(nt,k);
+                            
+                            if (outermark[nnt] != chartnum)
+                              {
                                 // NgProfiler::StartTimer (timer4c);
-				STLPointId nnp1, nnp2; 
-				GetTriangle(nt).GetNeighbourPoints(GetTriangle(nnt),nnp1,nnp2);
+                                STLPointId nnp1, nnp2; 
+                                GetTriangle(nt).GetNeighbourPoints(GetTriangle(nnt),nnp1,nnp2);
                                 // NgProfiler::StopTimer (timer4c);
-				
+                                
                                 // NgProfiler::StartTimer (timer4d);
 
-				accepted = 
-				  chartbound.TestSeg(GetPoint(nnp1),GetPoint(nnp2),
-						     sn,sinouterchartangle, 0 /*chartboundarydivisions*/ ,points, eps);
-				
-                                // NgProfiler::StopTimer (timer4d);				
+                                accepted = 
+                                  chartbound.TestSeg(GetPoint(nnp1),GetPoint(nnp2),
+                                                     sn,sinouterchartangle, 0 /*chartboundarydivisions*/ ,points, eps);
+                                
+                                // NgProfiler::StopTimer (timer4d);                             
 
                                 // NgProfiler::StartTimer (timer4e);
 
-				Vec<3> n3 = GetTriangle(nnt).Normal();
-				if ( (n3 * sn) >= cosouterchartangle  &&
-				     IsSmoothEdge (nnp1, nnp2) )
-				  accepted = true;
+                                Vec<3> n3 = GetTriangle(nnt).Normal();
+                                if ( (n3 * sn) >= cosouterchartangle  &&
+                                     IsSmoothEdge (nnp1, nnp2) )
+                                  accepted = true;
                                 // NgProfiler::StopTimer (timer4e);                                
-			      }
+                              }
                             // NgProfiler::StopTimer (timer4b);                            
-			    if (!accepted) break;
-			  }
+                            if (!accepted) break;
+                          }
                       // NgProfiler::StopTimer (timer4a);
-		      
-                      //  NgProfiler::StopTimer (timer4);		      
+                      
+                      //  NgProfiler::StopTimer (timer4);                     
 
-                      // NgProfiler::RegionTimer reg5(timer5);		      
+                      // NgProfiler::RegionTimer reg5(timer5);                
 
                       
-		      // outer chart is only small environment of
-		      //    inner chart:
-		      
-		      if (accepted)
-			{
+                      // outer chart is only small environment of
+                      //    inner chart:
+                      
+                      if (accepted)
+                        {
                           // NgProfiler::StartTimer (timer5a);
-			  accepted = false;
-			  
-			  for (int k = 1; k <= 3; k++)
-			    if (innerpointstochart[ntrig.PNum(k)] == chartnum)
-			      {
-				accepted = true; 
-				break;
-			      }
+                          accepted = false;
+                          
+                          for (int k = 1; k <= 3; k++)
+                            if (innerpointstochart[ntrig.PNum(k)] == chartnum)
+                              {
+                                accepted = true; 
+                                break;
+                              }
 
                           // NgProfiler::StopTimer (timer5a);
                           // int timer5csl = (innerchartpts.Size() < 100) ? timer5cs : timer5cl;
                           // NgProfiler::StartTimer (timer5csl);
-			  
-			  if (!accepted)
-			    for (int k = 1; k <= 3; k++)
-			      {
-				Point<3> pt = GetPoint(ntrig.PNum(k));					  
-				double h2 = sqr(mesh.GetH(pt));
+                          
+                          if (!accepted)
+                            for (int k = 1; k <= 3; k++)
+                              {
+                                Point<3> pt = GetPoint(ntrig.PNum(k));                                    
+                                double h2 = sqr(mesh.GetH(pt));
                                 /*
                                 for (int l = 1; l <= innerchartpoints.Size(); l++)
-				  {
-				    double tdist = Dist2(pt, GetPoint (innerchartpoints.Get(l)));
-				    if (tdist < 4 * h2)
-				      {
-					accepted = 1; 
-					break;
-				      }
-				  }
+                                  {
+                                    double tdist = Dist2(pt, GetPoint (innerchartpoints.Get(l)));
+                                    if (tdist < 4 * h2)
+                                      {
+                                        accepted = 1; 
+                                        break;
+                                      }
+                                  }
                                 */
                                 for (int l = 0; l < innerchartpts.Size(); l++)
-				  {
-				    double tdist = Dist2(pt, innerchartpts[l]);
-				    if (tdist < 4 * h2)
-				      {
-					accepted = true; 
-					break;
-				      }
-				  }
-				if (accepted) break;
-			      }
+                                  {
+                                    double tdist = Dist2(pt, innerchartpts[l]);
+                                    if (tdist < 4 * h2)
+                                      {
+                                        accepted = true; 
+                                        break;
+                                      }
+                                  }
+                                if (accepted) break;
+                              }
                           
                           // NgProfiler::StopTimer (timer5csl);
-			}
+                        }
                       // NgProfiler::StartTimer (timer5b);
-		      
-		      if (accepted)
-			{
-			  changed = true;
-			  outermark[nt] = chartnum;
-			  
-			  if (GetMarker(nt) != chartnum)
-			    {
-			      chartbound.AddTriangle(GetTriangle(nt));
-			      chart.AddOuterTrig(nt);
-			      for (int k = 1; k <= 3; k++)
-				{
-				  if (pointstochart[GetTriangle(nt).PNum(k)]
-				      != chartnum) 
-				    {
-				      pointstochart[GetTriangle(nt).PNum(k)] = chartnum;
-				      chartpoints.Append(GetTriangle(nt).PNum(k));
-				    }
-				}
-			    }
-			}
+                      
+                      if (accepted)
+                        {
+                          changed = true;
+                          outermark[nt] = chartnum;
+                          
+                          if (GetMarker(nt) != chartnum)
+                            {
+                              chartbound.AddTriangle(GetTriangle(nt));
+                              chart.AddOuterTrig(nt);
+                              for (int k = 1; k <= 3; k++)
+                                {
+                                  if (pointstochart[GetTriangle(nt).PNum(k)]
+                                      != chartnum) 
+                                    {
+                                      pointstochart[GetTriangle(nt).PNum(k)] = chartnum;
+                                      chartpoints.Append(GetTriangle(nt).PNum(k));
+                                    }
+                                }
+                            }
+                        }
                       // NgProfiler::StopTimer (timer5b);
-		    }	       
-		}
-	    }
-	}            
+                    }          
+                }
+            }
+        }            
       touter.Stop();
       // NgProfiler::StopTimer (timer3);
       // NgProfiler::StartTimer (timere);      
@@ -510,25 +510,25 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
       //dirtycharttrigs are local (chart) point numbers!!!!!!!!!!!!!!!!
 
       if (dirtycharttrigs.Size() != 0 && 
-	  (dirtycharttrigs.Size() != chart.GetNChartT() || dirtycharttrigs.Size() != 1))
-	{
-	  if (dirtycharttrigs.Size() == chart.GetNChartT() && dirtycharttrigs.Size() != 1)
-	    {
-	      //if all trigs would be eliminated -> leave 1 trig!
-	      dirtycharttrigs.SetSize(dirtycharttrigs.Size() - 1);
-	    }
-	  for (int k = 1; k <= dirtycharttrigs.Size(); k++)
-	    {
-	      STLTrigId tn = chart.GetChartTrig1(dirtycharttrigs[k-1]);
-	      outermark[tn] = 0; //not necessary, for later use
-	      SetMarker(tn, 0); 
-	      markedtrigcnt--;
-	      workedarea -= GetTriangle(tn).Area(points);
-	    }
-	  chart.MoveToOuterChart(dirtycharttrigs);
-	  lastunmarked = 1;
-	  lastunmarked = prelastunmarked;
-	}
+          (dirtycharttrigs.Size() != chart.GetNChartT() || dirtycharttrigs.Size() != 1))
+        {
+          if (dirtycharttrigs.Size() == chart.GetNChartT() && dirtycharttrigs.Size() != 1)
+            {
+              //if all trigs would be eliminated -> leave 1 trig!
+              dirtycharttrigs.SetSize(dirtycharttrigs.Size() - 1);
+            }
+          for (int k = 1; k <= dirtycharttrigs.Size(); k++)
+            {
+              STLTrigId tn = chart.GetChartTrig1(dirtycharttrigs[k-1]);
+              outermark[tn] = 0; //not necessary, for later use
+              SetMarker(tn, 0); 
+              markedtrigcnt--;
+              workedarea -= GetTriangle(tn).Area(points);
+            }
+          chart.MoveToOuterChart(dirtycharttrigs);
+          lastunmarked = 1;
+          lastunmarked = prelastunmarked;
+        }
 
       chartbound.DeleteSearchTree();
 
@@ -561,10 +561,10 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   for (ChartId i : atlas.Range())
     {
       for (int j = 1; j <= GetChart(i).GetNT(); j++)
-	{
-	  STLTrigId tn = GetChart(i).GetTrig1(j);
-	  AddOCPT(tn,i);
-	}
+        {
+          STLTrigId tn = GetChart(i).GetTrig1(j);
+          AddOCPT(tn,i);
+        }
       
       cnttrias += GetChart(i).GetNT();
     }
@@ -574,19 +574,19 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
   for (int i = 1; i <= GetNT(); i++)
     {
       for (int k = 1; k < GetNOCPT(i); k++)
-	for (int j = 1; j < GetNOCPT(i); j++)
-	  {
-	    int swap = GetOCPT(i,j);
-	    if (GetOCPT(i,j+1) < swap)
-	      {
-		SetOCPT(i,j,GetOCPT(i,j+1));
-		SetOCPT(i,j+1,swap);
-	      }
-	  }
+        for (int j = 1; j < GetNOCPT(i); j++)
+          {
+            int swap = GetOCPT(i,j);
+            if (GetOCPT(i,j+1) < swap)
+              {
+                SetOCPT(i,j,GetOCPT(i,j+1));
+                SetOCPT(i,j+1,swap);
+              }
+          }
       
       // check make atlas
       if (GetChartNr(i) <= 0 || GetChartNr(i) > GetNOCharts()) 
-	PrintSysError("Make Atlas: chartnr(", i, ")=0!!");
+        PrintSysError("Make Atlas: chartnr(", i, ")=0!!");
     }
 
   mesh.SetGlobalH(mparam.maxh);
@@ -696,55 +696,55 @@ void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum)
       STLTrigId t = chart.GetChartTrig1(j); 
       const STLTriangle& tt = GetTriangle(t);
       for (int k = 1; k <= NONeighbourTrigs(t); k++)
-	{
-	  STLTrigId nt = NeighbourTrig(t,k); 
-	  if (GetChartNr(nt) != chartnum)
-	    {	      
-	      tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
-	      if (!IsEdge(np1,np2))
-		{
-		  limes.Append(twoint(np1,np2));
-		  /*
-		  p3p1 = GetPoint(np1);
-		  p3p2 = GetPoint(np2);
-		  if (AddIfNotExists(limes,np1)) 
-		    {
-		      plimes1.Append(p3p1); 
-		      //plimes1trigs.Append(t);
-		      //plimes1origin.Append(np1);
-		    }
-		  if (AddIfNotExists(limes1,np2)) 
-		    {
-		      plimes1.Append(p3p2); 
-		      //plimes1trigs.Append(t);
-		      //plimes1origin.Append(np2); 			      
-		    }
-		  //chart.AddILimit(twoint(np1,np2));
-		  
-		  for (int di = 1; di <= divisions; di++)
-		    {
-		      double f1 = (double)di/(double)(divisions+1.);
-		      double f2 = (divisions+1.-(double)di)/(double)(divisions+1.);
-		      
-		      plimes1.Append(Point<3>(p3p1.X()*f1+p3p2.X()*f2,
-					     p3p1.Y()*f1+p3p2.Y()*f2,
-					     p3p1.Z()*f1+p3p2.Z()*f2));
-		      //plimes1trigs.Append(t);
-		      //plimes1origin.Append(0); 			      
-		    }
-		  */
-		}
-	    }
-	}
+        {
+          STLTrigId nt = NeighbourTrig(t,k); 
+          if (GetChartNr(nt) != chartnum)
+            {         
+              tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
+              if (!IsEdge(np1,np2))
+                {
+                  limes.Append(twoint(np1,np2));
+                  /*
+                  p3p1 = GetPoint(np1);
+                  p3p2 = GetPoint(np2);
+                  if (AddIfNotExists(limes,np1)) 
+                    {
+                      plimes1.Append(p3p1); 
+                      //plimes1trigs.Append(t);
+                      //plimes1origin.Append(np1);
+                    }
+                  if (AddIfNotExists(limes1,np2)) 
+                    {
+                      plimes1.Append(p3p2); 
+                      //plimes1trigs.Append(t);
+                      //plimes1origin.Append(np2);                            
+                    }
+                  //chart.AddILimit(twoint(np1,np2));
+                  
+                  for (int di = 1; di <= divisions; di++)
+                    {
+                      double f1 = (double)di/(double)(divisions+1.);
+                      double f2 = (divisions+1.-(double)di)/(double)(divisions+1.);
+                      
+                      plimes1.Append(Point<3>(p3p1.X()*f1+p3p2.X()*f2,
+                                             p3p1.Y()*f1+p3p2.Y()*f2,
+                                             p3p1.Z()*f1+p3p2.Z()*f2));
+                      //plimes1trigs.Append(t);
+                      //plimes1origin.Append(0);                              
+                    }
+                  */
+                }
+            }
+        }
     }
 }
-	 
+         
 
 
 void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
-				       const Array<ChartId,STLTrigId>& outercharttrigs,
-				       Array<ChartId>& chartpointchecked,
-				       Array<int>& dirtytrigs)
+                                       const Array<ChartId,STLTrigId>& outercharttrigs,
+                                       Array<ChartId>& chartpointchecked,
+                                       Array<int>& dirtytrigs)
 {
   dirtytrigs.SetSize(0);
 
@@ -757,20 +757,20 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
       const STLTriangle& tt = GetTriangle(t);
       
       for (int k = 1; k <= NONeighbourTrigs(t); k++)
-	{
-	  STLTrigId nt = NeighbourTrig(t,k); 
-	  if (GetChartNr(nt) != chartnum && outercharttrigs[nt] != chartnum)
-	    {
+        {
+          STLTrigId nt = NeighbourTrig(t,k); 
+          if (GetChartNr(nt) != chartnum && outercharttrigs[nt] != chartnum)
+            {
               STLPointId np1, np2;              
-	      tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
-	      if (!IsEdge(np1,np2))
-		{
-		  dirtytrigs.Append(j); //local numbers!!!
-		  // cnt++;
-		  break; //only once per trig!!!
-		}
-	    }
-	}
+              tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
+              if (!IsEdge(np1,np2))
+                {
+                  dirtytrigs.Append(j); //local numbers!!!
+                  // cnt++;
+                  break; //only once per trig!!!
+                }
+            }
+        }
     }
   // cnt = 0;
 
@@ -783,60 +783,60 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
       const STLTriangle& tt = GetTriangle(t);
       
       for (int k = 1; k <= 3; k++)
-	{
-	  pn = tt.PNum(k);
-	  //if (chartpointchecked.Get(pn) == chartnum)
-	  //{continue;}
-	  
-	  int checkpoint = 0;
-	  for (int n = 1; n <= trigsperpoint.EntrySize(pn); n++)
-	    {
-	      if (trigsperpoint.Get(pn,n) != t && //ueberfluessig???
-		  GetChartNr(trigsperpoint.Get(pn,n)) != chartnum &&
-		  outercharttrigs[trigsperpoint.Get(pn,n)] != chartnum) {checkpoint = 1;};
-	    }
-	  if (checkpoint)
-	    {
-	      chartpointchecked[pn-1] = chartnum;
+        {
+          pn = tt.PNum(k);
+          //if (chartpointchecked.Get(pn) == chartnum)
+          //{continue;}
+          
+          int checkpoint = 0;
+          for (int n = 1; n <= trigsperpoint.EntrySize(pn); n++)
+            {
+              if (trigsperpoint.Get(pn,n) != t && //ueberfluessig???
+                  GetChartNr(trigsperpoint.Get(pn,n)) != chartnum &&
+                  outercharttrigs[trigsperpoint.Get(pn,n)] != chartnum) {checkpoint = 1;};
+            }
+          if (checkpoint)
+            {
+              chartpointchecked[pn-1] = chartnum;
 
-	      GetSortedTrianglesAroundPoint(pn,t,trigsaroundp);
-	      trigsaroundp.Append(t); //ring
-	      
-	      bool problem = false;
-	      //forward:
-	      for (int l = 2; l <= trigsaroundp.Size()-1; l++)
-		{
-		  STLTrigId tn1 = trigsaroundp[l-2];
-		  STLTrigId tn2 = trigsaroundp[l-1];
-		  const STLTriangle& t1 = GetTriangle(tn1);
-		  const STLTriangle& t2 = GetTriangle(tn2);
-		  t1.GetNeighbourPoints(t2, ap1, ap2);
-		  if (IsEdge(ap1,ap2)) break;
-		  
-		  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = true;}
-		}
+              GetSortedTrianglesAroundPoint(pn,t,trigsaroundp);
+              trigsaroundp.Append(t); //ring
+              
+              bool problem = false;
+              //forward:
+              for (int l = 2; l <= trigsaroundp.Size()-1; l++)
+                {
+                  STLTrigId tn1 = trigsaroundp[l-2];
+                  STLTrigId tn2 = trigsaroundp[l-1];
+                  const STLTriangle& t1 = GetTriangle(tn1);
+                  const STLTriangle& t2 = GetTriangle(tn2);
+                  t1.GetNeighbourPoints(t2, ap1, ap2);
+                  if (IsEdge(ap1,ap2)) break;
+                  
+                  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = true;}
+                }
 
-	      //backwards:
-	      for (int l = trigsaroundp.Size()-1; l >= 2; l--)
-		{
-		  STLTrigId tn1 = trigsaroundp[l];
-		  STLTrigId tn2 = trigsaroundp[l-1];
-		  const STLTriangle& t1 = GetTriangle(tn1);
-		  const STLTriangle& t2 = GetTriangle(tn2);
-		  t1.GetNeighbourPoints(t2, ap1, ap2);
-		  if (IsEdge(ap1,ap2)) break;
-		  
-		  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = true;}
-		}
-	      // if (problem && !IsInArray(j,dirtytrigs))
+              //backwards:
+              for (int l = trigsaroundp.Size()-1; l >= 2; l--)
+                {
+                  STLTrigId tn1 = trigsaroundp[l];
+                  STLTrigId tn2 = trigsaroundp[l-1];
+                  const STLTriangle& t1 = GetTriangle(tn1);
+                  const STLTriangle& t2 = GetTriangle(tn2);
+                  t1.GetNeighbourPoints(t2, ap1, ap2);
+                  if (IsEdge(ap1,ap2)) break;
+                  
+                  if (GetChartNr(tn2) != chartnum && outercharttrigs[tn2] != chartnum) {problem = true;}
+                }
+              // if (problem && !IsInArray(j,dirtytrigs))
               if (problem && !dirtytrigs.Contains(j))
-		{
-		  dirtytrigs.Append(j);
-		  // cnt++;
-		  break; //only once per triangle
-		}
-	    }
-	}
+                {
+                  dirtytrigs.Append(j);
+                  // cnt++;
+                  break; //only once per triangle
+                }
+            }
+        }
     }
   
 }

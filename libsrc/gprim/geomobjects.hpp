@@ -150,7 +150,7 @@ namespace netgen
     {
       T l = 0;
       for (int i = 0; i < D; i++)
-	l += x[i] * x[i];
+        l += x[i] * x[i];
       return sqrt (l);
     }
 
@@ -158,7 +158,7 @@ namespace netgen
     {
       T l = 0;
       for (int i = 0; i < D; i++)
-	l += x[i] * x[i];
+        l += x[i] * x[i];
       return l;
     }
 
@@ -275,7 +275,7 @@ namespace netgen
     {
       Vec<H,T> hv; 
       for (int j = 0; j < H; j++)
-	hv(j) = x[j*W+i];
+        hv(j) = x[j*W+i];
       return hv; 
     }
 
@@ -283,7 +283,7 @@ namespace netgen
     {
       Vec<W,T> hv; 
       for (int j = 0; j < W; j++)
-	hv(j) = x[i*W+j];
+        hv(j) = x[i*W+j];
       return hv; 
     }
 
@@ -315,17 +315,17 @@ namespace netgen
     Box ( const Point<D> & p1)
     {
       for (int i = 0; i < D; i++)
-	pmin(i) = pmax(i) = p1(i);
+        pmin(i) = pmax(i) = p1(i);
     }
 
 
     Box ( const Point<D> & p1, const Point<D> & p2)
     {
       for (int i = 0; i < D; i++)
-	{
-	  pmin(i) = min2(p1(i), p2(i));
-	  pmax(i) = max2(p1(i), p2(i));
-	}
+        {
+          pmin(i) = min2(p1(i), p2(i));
+          pmax(i) = max2(p1(i), p2(i));
+        }
     }
 
     Box (const Point<D> & p1, const Point<D> & p2, const Point<D> & p3)
@@ -353,11 +353,11 @@ namespace netgen
     void Add (const Point<D> & p)
     { 
       for (int i = 0; i < D; i++)
-	{
-	  if (p(i) < pmin(i)) pmin(i) = p(i);
-	  /* else */ if (p(i) > pmax(i)) pmax(i) = p(i);
+        {
+          if (p(i) < pmin(i)) pmin(i) = p(i);
+          /* else */ if (p(i) > pmax(i)) pmax(i) = p(i);
           // optimization invalid for empty-box !
-	}
+        }
     }
 
     template <typename T1, typename T2, typename T3>
@@ -380,7 +380,7 @@ namespace netgen
     { 
       Point<D> c;
       for (int i = 0; i < D; i++)
-	c(i) = 0.5 * (pmin(i)+pmax(i)); 
+        c(i) = 0.5 * (pmin(i)+pmax(i)); 
       return c;
     }
     double Diam () const { return Abs (pmax-pmin); }
@@ -389,10 +389,10 @@ namespace netgen
     {
       Point<D> p;
       for (int i = 0; i < D; i++)
-	{
-	  p(i) = (nr & 1) ? pmax(i) : pmin(i);
-	  nr >>= 1;
-	}
+        {
+          p(i) = (nr & 1) ? pmax(i) : pmin(i);
+          nr >>= 1;
+        }
       return p;
     }
 
@@ -400,8 +400,8 @@ namespace netgen
     bool Intersect (const Box<D> & box2) const
     {
       for (int i = 0; i < D; i++)
-	if (pmin(i) > box2.pmax(i) ||
-	    pmax(i) < box2.pmin(i)) return 0;
+        if (pmin(i) > box2.pmax(i) ||
+            pmax(i) < box2.pmin(i)) return 0;
       return 1;
     }
 
@@ -409,7 +409,7 @@ namespace netgen
     bool IsIn (const Point<D> & p) const
     {
       for (int i = 0; i < D; i++)
-	if (p(i) < pmin(i) || p(i) > pmax(i)) return false;
+        if (p(i) < pmin(i) || p(i) > pmax(i)) return false;
       return true;
     }
 
@@ -417,7 +417,7 @@ namespace netgen
     bool IsIn (const Point<D> & p, double eps) const
     {
       for (int i = 0; i < D; i++)
-	if (p(i) < pmin(i)-eps || p(i) > pmax(i)+eps) return false;
+        if (p(i) < pmin(i)-eps || p(i) > pmax(i)+eps) return false;
       return true;
     }
 
@@ -425,10 +425,10 @@ namespace netgen
     void Increase (double dist)
     {
       for (int i = 0; i < D; i++)
-	{
-	  pmin(i) -= dist;
-	  pmax(i) += dist;
-	}
+        {
+          pmin(i) -= dist;
+          pmax(i) += dist;
+        }
     }
 
     void Scale (double factor)
@@ -485,20 +485,20 @@ namespace netgen
     void GetSubBox (int nr, BoxSphere & sbox) const
     {
       for (int i = 0; i < D; i++)
-	{
-	  if (nr & 1)
-	    {
-	      sbox.pmin(i) = c(i);
-	      sbox.pmax(i) = this->pmax(i);
-	    }
-	  else
-	    {
-	      sbox.pmin(i) = this->pmin(i);
-	      sbox.pmax(i) = c(i);
-	    }
-	  sbox.c(i) = 0.5 * (sbox.pmin(i) + sbox.pmax(i));
-	  nr >>= 1;
-	}
+        {
+          if (nr & 1)
+            {
+              sbox.pmin(i) = c(i);
+              sbox.pmax(i) = this->pmax(i);
+            }
+          else
+            {
+              sbox.pmin(i) = this->pmin(i);
+              sbox.pmax(i) = c(i);
+            }
+          sbox.c(i) = 0.5 * (sbox.pmin(i) + sbox.pmax(i));
+          nr >>= 1;
+        }
       sbox.diam = 0.5 * diam;
       sbox.inner = 0.5 * inner;
     }
@@ -512,8 +512,8 @@ namespace netgen
 
       inner = this->pmax(0) - this->pmin(0);
       for (int i = 1; i < D; i++)
-	if (this->pmax(i) - this->pmin(i) < inner)
-	  inner = this->pmax(i) - this->pmin(i);
+        if (this->pmax(i) - this->pmin(i) < inner)
+          inner = this->pmax(i) - this->pmin(i);
     }
 
   };
@@ -526,8 +526,8 @@ namespace netgen
     static MPI_Datatype MPI_T = 0;
     if (!MPI_T)
       {
-	MPI_Type_contiguous ( 3, MPI_DOUBLE, &MPI_T);
-	MPI_Type_commit ( &MPI_T );
+        MPI_Type_contiguous ( 3, MPI_DOUBLE, &MPI_T);
+        MPI_Type_commit ( &MPI_T );
       }
     return MPI_T;
   };

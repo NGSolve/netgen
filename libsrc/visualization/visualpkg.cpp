@@ -76,7 +76,7 @@ namespace netgen
             int pointpos; // SZ 
             const char * pch = strchr(scalname,':');
             pointpos = int(pch-scalname+1);
-	    
+            
             for (int i = 0; i < vssolution.soldata.Size(); i++)
               {
                 if ( (strlen (vssolution.soldata[i]->name.c_str()) == size_t(pointpos-1)) &&
@@ -84,23 +84,23 @@ namespace netgen
                   {
                     vssolution.SetScalfunction(i);
                     vssolution.scalcomp = atoi (scalname + pointpos);
-		    if ( vssolution.scalcomp > vssolution.soldata[i]->components )
+                    if ( vssolution.scalcomp > vssolution.soldata[i]->components )
                       vssolution.scalcomp = 1;
-		    char newscalname[100];
-		    for ( int ii = 0; ii < pointpos; ii++ )
-		      newscalname[ii] = scalname[ii];
-		    newscalname[pointpos] = ':';
-		    snprintf (newscalname+pointpos, sizeof(newscalname)-pointpos, "%i", vssolution.scalcomp);
+                    char newscalname[100];
+                    for ( int ii = 0; ii < pointpos; ii++ )
+                      newscalname[ii] = scalname[ii];
+                    newscalname[pointpos] = ':';
+                    snprintf (newscalname+pointpos, sizeof(newscalname)-pointpos, "%i", vssolution.scalcomp);
 
                     if (strcmp (scalname, newscalname) != 0)
                       Tcl_SetVar ( interp, "::visoptions.scalfunction", newscalname, TCL_GLOBAL_ONLY );
-		    scalname = Tcl_GetVar (interp, "::visoptions.scalfunction", TCL_GLOBAL_ONLY);
+                    scalname = Tcl_GetVar (interp, "::visoptions.scalfunction", TCL_GLOBAL_ONLY);
                   }
                 if (strcmp (vssolution.soldata[i]->name.c_str(), vecname) == 0)
-		  vssolution.SetVecfunction(i);
+                  vssolution.SetVecfunction(i);
 
                 if (strcmp (vssolution.soldata[i]->name.c_str(), fieldlines_vecname) == 0)
-		  vssolution.fieldlines_vecfunction = i;
+                  vssolution.fieldlines_vecfunction = i;
               }
 
             if(vssolution.fieldlines_vecfunction != -1 &&
@@ -110,10 +110,10 @@ namespace netgen
                 vssolution.vecfunction = vssolution.fieldlines_vecfunction;
               }
                
-	    // reset visoptions.scalfunction and visoptions.vecfunction if not available 
-	    if ( vssolution.scalfunction == -1 && strcmp (scalname, "none") != 0)
+            // reset visoptions.scalfunction and visoptions.vecfunction if not available 
+            if ( vssolution.scalfunction == -1 && strcmp (scalname, "none") != 0)
               Tcl_SetVar ( interp, "::visoptions.scalfunction", "none", TCL_GLOBAL_ONLY );
-	    if ( vssolution.vecfunction == -1  && strcmp (vecname, "none") != 0)
+            if ( vssolution.vecfunction == -1  && strcmp (vecname, "none") != 0)
               Tcl_SetVar ( interp, "::visoptions.vecfunction", "none", TCL_GLOBAL_ONLY );
 
             tcl_const char * evalname = 
@@ -163,11 +163,11 @@ namespace netgen
             vssolution.multidimcomponent = 
               atoi (Tcl_GetVar (interp, "::visoptions.multidimcomponent", TCL_GLOBAL_ONLY));
 
-	    vssolution.drawpointcurves = 
-	      atoi (Tcl_GetVar (interp, "::visoptions.drawpointcurves", TCL_GLOBAL_ONLY));	      
+            vssolution.drawpointcurves = 
+              atoi (Tcl_GetVar (interp, "::visoptions.drawpointcurves", TCL_GLOBAL_ONLY));            
 
             vssolution.draw_fieldlines = 
-	      atoi (Tcl_GetVar (interp, "::visoptions.drawfieldlines", TCL_GLOBAL_ONLY));
+              atoi (Tcl_GetVar (interp, "::visoptions.drawfieldlines", TCL_GLOBAL_ONLY));
             vssolution.num_fieldlines = 
               atoi (Tcl_GetVar (interp, "::visoptions.numfieldlines", TCL_GLOBAL_ONLY));
             vssolution.fieldlines_randomstart =
@@ -379,42 +379,42 @@ namespace netgen
   DLL_HEADER extern shared_ptr<Mesh> mesh;
 
   int Ng_MeshDoctor(ClientData clientData,
-	  Tcl_Interp * interp,
-	  int argc, tcl_const char *argv[])
+          Tcl_Interp * interp,
+          int argc, tcl_const char *argv[])
   {
-	  cout << "Mesh Doctor:" << endl;
-	  int i;
-	  for (i = 0; i < argc; i++)
-		  cout << argv[i] << " ";
-	  cout << endl;
+          cout << "Mesh Doctor:" << endl;
+          int i;
+          for (i = 0; i < argc; i++)
+                  cout << argv[i] << " ";
+          cout << endl;
 
-	  meshdoctor.active =
-		  atoi(Tcl_GetVar(interp, "::meshdoctor.active", 0));
-
-
-	  if (argc >= 2)
-	  {
-		  if (strcmp(argv[1], "markedgedist") == 0)
-		  {
-			  vsmeshdoc.SetMarkEdgeDist(atoi(argv[2]));
-		  }
-
-		  if (strcmp(argv[1], "deletemarkedsegments") == 0)
-		  {
-			  for (i = 1; i <= mesh->GetNSeg(); i++)
-				  if (vsmeshdoc.IsSegmentMarked(i))
-					  mesh->DeleteSegment(i);
-
-			  //	  for (i = 1; i <= mesh->GetNSE(); i++)
-			  //	    mesh->SurfaceElement(i).SetIndex (1);
-			  mesh->Compress();
-		  }
-	  }
+          meshdoctor.active =
+                  atoi(Tcl_GetVar(interp, "::meshdoctor.active", 0));
 
 
-	  vsmeshdoc.UpdateTables();
-	  vsmeshdoc.BuildScene();
-	  return TCL_OK;
+          if (argc >= 2)
+          {
+                  if (strcmp(argv[1], "markedgedist") == 0)
+                  {
+                          vsmeshdoc.SetMarkEdgeDist(atoi(argv[2]));
+                  }
+
+                  if (strcmp(argv[1], "deletemarkedsegments") == 0)
+                  {
+                          for (i = 1; i <= mesh->GetNSeg(); i++)
+                                  if (vsmeshdoc.IsSegmentMarked(i))
+                                          mesh->DeleteSegment(i);
+
+                          //      for (i = 1; i <= mesh->GetNSE(); i++)
+                          //        mesh->SurfaceElement(i).SetIndex (1);
+                          mesh->Compress();
+                  }
+          }
+
+
+          vsmeshdoc.UpdateTables();
+          vsmeshdoc.BuildScene();
+          return TCL_OK;
   }
 
 

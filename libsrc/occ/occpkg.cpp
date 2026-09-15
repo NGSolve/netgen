@@ -61,8 +61,8 @@ namespace netgen
 
 
   int Ng_SetOCCVisParameters  (ClientData clientData,
-			       Tcl_Interp * interp,
-			       int argc, tcl_const char *argv[])
+                               Tcl_Interp * interp,
+                               int argc, tcl_const char *argv[])
   {
 #ifdef OCCGEOMETRY
     int showvolume;
@@ -72,20 +72,20 @@ namespace netgen
 
     if (occgeometry)
       if (showvolume != vispar.occshowvolumenr)
-	{
-	  if (showvolume < 0 || showvolume > occgeometry->NrSolids())
-	    {
-	      char buf[20];
-	      snprintf (buf, size(buf),  "%5i", vispar.occshowvolumenr);
-	      Tcl_SetVar (interp, "::occoptions.showvolumenr", buf, 0);
-	    }
-	  else
-	    {
-	      vispar.occshowvolumenr = showvolume;
-	      if (occgeometry)
-		occgeometry -> changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	    }
-	}
+        {
+          if (showvolume < 0 || showvolume > occgeometry->NrSolids())
+            {
+              char buf[20];
+              snprintf (buf, size(buf),  "%5i", vispar.occshowvolumenr);
+              Tcl_SetVar (interp, "::occoptions.showvolumenr", buf, 0);
+            }
+          else
+            {
+              vispar.occshowvolumenr = showvolume;
+              if (occgeometry)
+                occgeometry -> changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+            }
+        }
     
     int temp;
 
@@ -93,9 +93,9 @@ namespace netgen
 
     if ((bool) temp != vispar.occvisproblemfaces)
       {
-	vispar.occvisproblemfaces = temp;
-	if (occgeometry)
-	  occgeometry -> changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+        vispar.occvisproblemfaces = temp;
+        if (occgeometry)
+          occgeometry -> changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
       }
 
     vispar.occshowsurfaces = atoi (Tcl_GetVar (interp, "::occoptions.showsurfaces", 0));
@@ -126,8 +126,8 @@ namespace netgen
 
 
   int Ng_GetOCCData (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
 #ifdef OCCGEOMETRY
     OCCGeometry * occgeometry = dynamic_cast<OCCGeometry*> (ng_geometry.get());
@@ -138,13 +138,13 @@ namespace netgen
 
     if (argc >= 2)
       {
-	if (strcmp (argv[1], "getentities") == 0)
-	  {
-	    if (occgeometry)
-	      {
-		occgeometry->GetTopologyTree(str);
-	      }
-	  }
+        if (strcmp (argv[1], "getentities") == 0)
+          {
+            if (occgeometry)
+              {
+                occgeometry->GetTopologyTree(str);
+              }
+          }
       }
 
     Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
@@ -156,8 +156,8 @@ namespace netgen
   
 
   int Ng_OCCCommand (ClientData clientData,
-		     Tcl_Interp * interp,
-		     int argc, tcl_const char *argv[])
+                     Tcl_Interp * interp,
+                     int argc, tcl_const char *argv[])
   {
 #ifdef OCCGEOMETRY
     OCCGeometry * occgeometry = dynamic_cast<OCCGeometry*> (ng_geometry.get());
@@ -165,378 +165,378 @@ namespace netgen
     stringstream str;
     if (argc >= 2)
       {
-	if (strcmp (argv[1], "isoccgeometryloaded") == 0)
-	  {
-	    if (occgeometry)
-	      str << "1 " << flush;
-	    else str << "0 " << flush;
+        if (strcmp (argv[1], "isoccgeometryloaded") == 0)
+          {
+            if (occgeometry)
+              str << "1 " << flush;
+            else str << "0 " << flush;
 
-	    Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
-	  }
-	if (occgeometry)
-	  {
-	    if (strcmp (argv[1], "buildvisualizationmesh") == 0)
-	      {
-		occgeometry->BuildVisualizationMesh(vispar.occdeflection);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	      }
-	    if (strcmp (argv[1], "mesherror") == 0)
-	      {
-		if (occgeometry->ErrorInSurfaceMeshing())
-		  str << 1;
-		else
-		  str << 0;
-	      }
-	    if (strcmp (argv[1], "sewfaces") == 0)
-	      {
-		cout << "Before operation:" << endl;
-		occgeometry->PrintNrShapes();
-		occgeometry->SewFaces();
-		occgeometry->BuildFMap();
-		cout << endl << "After operation:" << endl;
-		occgeometry->PrintNrShapes();
-		occgeometry->BuildVisualizationMesh(vispar.occdeflection);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	      }
-	    if (strcmp (argv[1], "makesolid") == 0)
-	      {
-		cout << "Before operation:" << endl;
-		occgeometry->PrintNrShapes();
-		occgeometry->MakeSolid();
-		occgeometry->BuildFMap();
-		cout << endl << "After operation:" << endl;
-		occgeometry->PrintNrShapes();
-		occgeometry->BuildVisualizationMesh(vispar.occdeflection);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	      }
-	    if (strcmp (argv[1], "upgradetopology") == 0)
-	      {
-		cout << "Before operation:" << endl;
-		occgeometry->PrintNrShapes();
-		occgeometry->SewFaces();
-		occgeometry->MakeSolid();
-		occgeometry->BuildFMap();
-		cout << endl << "After operation:" << endl;
-		occgeometry->PrintNrShapes();
-		occgeometry->BuildVisualizationMesh(vispar.occdeflection);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	      }
-	    if (strcmp (argv[1], "shapehealing") == 0)
-	      {
-		occgeometry->tolerance =
-		  atof (Tcl_GetVar (interp, "::occoptions.tolerance", 0));
-		occgeometry->fixsmalledges =
-		  atoi (Tcl_GetVar (interp, "::occoptions.fixsmalledges", 0));
-		occgeometry->fixspotstripfaces =
-		  atoi (Tcl_GetVar (interp, "::occoptions.fixspotstripfaces", 0));
-		occgeometry->sewfaces =
-		  atoi (Tcl_GetVar (interp, "::occoptions.sewfaces", 0));
-		occgeometry->makesolids =
-		  atoi (Tcl_GetVar (interp, "::occoptions.makesolids", 0));
-		occgeometry->splitpartitions =
-		  atoi (Tcl_GetVar (interp, "::occoptions.splitpartitions", 0));
+            Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
+          }
+        if (occgeometry)
+          {
+            if (strcmp (argv[1], "buildvisualizationmesh") == 0)
+              {
+                occgeometry->BuildVisualizationMesh(vispar.occdeflection);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+              }
+            if (strcmp (argv[1], "mesherror") == 0)
+              {
+                if (occgeometry->ErrorInSurfaceMeshing())
+                  str << 1;
+                else
+                  str << 0;
+              }
+            if (strcmp (argv[1], "sewfaces") == 0)
+              {
+                cout << "Before operation:" << endl;
+                occgeometry->PrintNrShapes();
+                occgeometry->SewFaces();
+                occgeometry->BuildFMap();
+                cout << endl << "After operation:" << endl;
+                occgeometry->PrintNrShapes();
+                occgeometry->BuildVisualizationMesh(vispar.occdeflection);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+              }
+            if (strcmp (argv[1], "makesolid") == 0)
+              {
+                cout << "Before operation:" << endl;
+                occgeometry->PrintNrShapes();
+                occgeometry->MakeSolid();
+                occgeometry->BuildFMap();
+                cout << endl << "After operation:" << endl;
+                occgeometry->PrintNrShapes();
+                occgeometry->BuildVisualizationMesh(vispar.occdeflection);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+              }
+            if (strcmp (argv[1], "upgradetopology") == 0)
+              {
+                cout << "Before operation:" << endl;
+                occgeometry->PrintNrShapes();
+                occgeometry->SewFaces();
+                occgeometry->MakeSolid();
+                occgeometry->BuildFMap();
+                cout << endl << "After operation:" << endl;
+                occgeometry->PrintNrShapes();
+                occgeometry->BuildVisualizationMesh(vispar.occdeflection);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+              }
+            if (strcmp (argv[1], "shapehealing") == 0)
+              {
+                occgeometry->tolerance =
+                  atof (Tcl_GetVar (interp, "::occoptions.tolerance", 0));
+                occgeometry->fixsmalledges =
+                  atoi (Tcl_GetVar (interp, "::occoptions.fixsmalledges", 0));
+                occgeometry->fixspotstripfaces =
+                  atoi (Tcl_GetVar (interp, "::occoptions.fixspotstripfaces", 0));
+                occgeometry->sewfaces =
+                  atoi (Tcl_GetVar (interp, "::occoptions.sewfaces", 0));
+                occgeometry->makesolids =
+                  atoi (Tcl_GetVar (interp, "::occoptions.makesolids", 0));
+                occgeometry->splitpartitions =
+                  atoi (Tcl_GetVar (interp, "::occoptions.splitpartitions", 0));
 
-		//	      cout << "Before operation:" << endl;
-		//	      occgeometry->PrintNrShapes();
-		occgeometry->HealGeometry();
-		occgeometry->BuildFMap();
-		//	      cout << endl << "After operation:" << endl;
-		//	      occgeometry->PrintNrShapes();
-		occgeometry->BuildVisualizationMesh(vispar.occdeflection);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	      }
-
-
-	    if (strcmp (argv[1], "highlightentity") == 0)
-	      {
-		if (strcmp (argv[2], "Face") == 0)
-		  {
-		    int nr = atoi (argv[3]);
-		    occgeometry->LowLightAll();
-
-		    occgeometry->fvispar[nr-1].Highlight();
-		    if (vispar.occzoomtohighlightedentity)
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
-		    else
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-		if (strcmp (argv[2], "Shell") == 0)
-		  {
-		    int nr = atoi (argv[3]);
-		    occgeometry->LowLightAll();
-
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->shmap(nr), TopAbs_FACE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-			occgeometry->fvispar[i-1].Highlight();
-		      }
-		    if (vispar.occzoomtohighlightedentity)
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
-		    else
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-		if (strcmp (argv[2], "Solid") == 0)
-		  {
-		    int nr = atoi (argv[3]);
-		    occgeometry->LowLightAll();
-
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->somap(nr), TopAbs_FACE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-			occgeometry->fvispar[i-1].Highlight();
-		      }
-		    if (vispar.occzoomtohighlightedentity)
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
-		    else
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-		/*
-		  if (strcmp (argv[2], "CompSolid") == 0)
-		  {
-		  int nr = atoi (argv[3]);
-		  occgeometry->LowLightAll();
-
-		  TopExp_Explorer exp;
-		  for (exp.Init (occgeometry->cmap(nr), TopAbs_FACE);
-		  exp.More(); exp.Next())
-		  {
-		  int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-		  occgeometry->fvispar[i-1].Highlight();
-		  }
-		  occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-		*/
-
-		if (strcmp (argv[2], "Edge") == 0)
-		  {
-		    int nr = atoi (argv[3]);
-		    occgeometry->LowLightAll();
-
-		    occgeometry->evispar[nr-1].Highlight();
-		    if (vispar.occzoomtohighlightedentity)
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
-		    else
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-		if (strcmp (argv[2], "Wire") == 0)
-		  {
-		    int nr = atoi (argv[3]);
-		    occgeometry->LowLightAll();
-
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->wmap(nr), TopAbs_EDGE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->emap.FindIndex (TopoDS::Edge(exp.Current()));
-			occgeometry->evispar[i-1].Highlight();
-		      }
-		    if (vispar.occzoomtohighlightedentity)
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
-		    else
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-
-		if (strcmp (argv[2], "Vertex") == 0)
-		  {
-		    int nr = atoi (argv[3]);
-		    occgeometry->LowLightAll();
-
-		    occgeometry->vvispar[nr-1].Highlight();
-		    if (vispar.occzoomtohighlightedentity)
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
-		    else
-		      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		  }
-
-	      }
+                //            cout << "Before operation:" << endl;
+                //            occgeometry->PrintNrShapes();
+                occgeometry->HealGeometry();
+                occgeometry->BuildFMap();
+                //            cout << endl << "After operation:" << endl;
+                //            occgeometry->PrintNrShapes();
+                occgeometry->BuildVisualizationMesh(vispar.occdeflection);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+              }
 
 
+            if (strcmp (argv[1], "highlightentity") == 0)
+              {
+                if (strcmp (argv[2], "Face") == 0)
+                  {
+                    int nr = atoi (argv[3]);
+                    occgeometry->LowLightAll();
 
-	    if (strcmp (argv[1], "show") == 0)
-	      {
-		int nr = atoi (argv[3]);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                    occgeometry->fvispar[nr-1].Highlight();
+                    if (vispar.occzoomtohighlightedentity)
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
+                    else
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+                if (strcmp (argv[2], "Shell") == 0)
+                  {
+                    int nr = atoi (argv[3]);
+                    occgeometry->LowLightAll();
 
-		if (strcmp (argv[2], "Face") == 0)
-		  {
-		    occgeometry->fvispar[nr-1].Show();
-		  }
-		if (strcmp (argv[2], "Shell") == 0)
-		  {
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->shmap(nr), TopAbs_FACE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-			occgeometry->fvispar[i-1].Show();
-		      }
-		  }
-		if (strcmp (argv[2], "Solid") == 0)
-		  {
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->somap(nr), TopAbs_FACE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-			occgeometry->fvispar[i-1].Show();
-		      }
-		  }
-		if (strcmp (argv[2], "Edge") == 0)
-		  {
-		    occgeometry->evispar[nr-1].Show();
-		  }
-		if (strcmp (argv[2], "Wire") == 0)
-		  {
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->wmap(nr), TopAbs_EDGE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->emap.FindIndex (TopoDS::Edge(exp.Current()));
-			occgeometry->evispar[i-1].Show();
-		      }
-		  }
-	      }
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->shmap(nr), TopAbs_FACE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                        occgeometry->fvispar[i-1].Highlight();
+                      }
+                    if (vispar.occzoomtohighlightedentity)
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
+                    else
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+                if (strcmp (argv[2], "Solid") == 0)
+                  {
+                    int nr = atoi (argv[3]);
+                    occgeometry->LowLightAll();
 
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->somap(nr), TopAbs_FACE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                        occgeometry->fvispar[i-1].Highlight();
+                      }
+                    if (vispar.occzoomtohighlightedentity)
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
+                    else
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+                /*
+                  if (strcmp (argv[2], "CompSolid") == 0)
+                  {
+                  int nr = atoi (argv[3]);
+                  occgeometry->LowLightAll();
 
-	    if (strcmp (argv[1], "hide") == 0)
-	      {
-		int nr = atoi (argv[3]);
-		occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  TopExp_Explorer exp;
+                  for (exp.Init (occgeometry->cmap(nr), TopAbs_FACE);
+                  exp.More(); exp.Next())
+                  {
+                  int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                  occgeometry->fvispar[i-1].Highlight();
+                  }
+                  occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+                */
 
-		if (strcmp (argv[2], "Face") == 0)
-		  {
-		    occgeometry->fvispar[nr-1].Hide();
-		  }
-		if (strcmp (argv[2], "Shell") == 0)
-		  {
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->shmap(nr), TopAbs_FACE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-			occgeometry->fvispar[i-1].Hide();
-		      }
-		  }
-		if (strcmp (argv[2], "Solid") == 0)
-		  {
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->somap(nr), TopAbs_FACE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
-			occgeometry->fvispar[i-1].Hide();
-		      }
-		  }
-		if (strcmp (argv[2], "Edge") == 0)
-		  {
-		    occgeometry->evispar[nr-1].Hide();
-		  }
-		if (strcmp (argv[2], "Wire") == 0)
-		  {
-		    TopExp_Explorer exp;
-		    for (exp.Init (occgeometry->wmap(nr), TopAbs_EDGE);
-			 exp.More(); exp.Next())
-		      {
-			int i = occgeometry->emap.FindIndex (TopoDS::Edge(exp.Current()));
-			occgeometry->evispar[i-1].Hide();
-		      }
-		  }
-	      }
+                if (strcmp (argv[2], "Edge") == 0)
+                  {
+                    int nr = atoi (argv[3]);
+                    occgeometry->LowLightAll();
+
+                    occgeometry->evispar[nr-1].Highlight();
+                    if (vispar.occzoomtohighlightedentity)
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
+                    else
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+                if (strcmp (argv[2], "Wire") == 0)
+                  {
+                    int nr = atoi (argv[3]);
+                    occgeometry->LowLightAll();
+
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->wmap(nr), TopAbs_EDGE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->emap.FindIndex (TopoDS::Edge(exp.Current()));
+                        occgeometry->evispar[i-1].Highlight();
+                      }
+                    if (vispar.occzoomtohighlightedentity)
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
+                    else
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+
+                if (strcmp (argv[2], "Vertex") == 0)
+                  {
+                    int nr = atoi (argv[3]);
+                    occgeometry->LowLightAll();
+
+                    occgeometry->vvispar[nr-1].Highlight();
+                    if (vispar.occzoomtohighlightedentity)
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONFULLCHANGE;
+                    else
+                      occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                  }
+
+              }
 
 
 
-	    if (strcmp (argv[1], "findsmallentities") == 0)
-	      {
-		stringstream str("");
-		occgeometry->CheckIrregularEntities(str);
-		Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
-	      }
-	    if (strcmp (argv[1], "getunmeshedfaceinfo") == 0)
-	      {
-		occgeometry->GetUnmeshedFaceInfo(str);
-		Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
-	      }
-	    if (strcmp (argv[1], "getnotdrawablefaces") == 0)
-	      {
-		occgeometry->GetNotDrawableFaces(str);
-		Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
-	      }
-	    if (strcmp (argv[1], "redrawstatus") == 0)
-	      {
-		int i = atoi (argv[2]);
-		occgeometry->changed = i;
-	      }
-	    if (strcmp (argv[1], "swaporientation") == 0)
-	      {
-		IGESControl_Writer writer("millimeters", 1);
-		writer.AddShape (occgeometry->shape);
-		writer.Write ("1.igs");
-		/*
-		  int nr = atoi (argv[3]);
+            if (strcmp (argv[1], "show") == 0)
+              {
+                int nr = atoi (argv[3]);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
 
-		  //	      const_cast<TopoDS_Shape&> (occgeometry->fmap(nr)).Reverse();
+                if (strcmp (argv[2], "Face") == 0)
+                  {
+                    occgeometry->fvispar[nr-1].Show();
+                  }
+                if (strcmp (argv[2], "Shell") == 0)
+                  {
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->shmap(nr), TopAbs_FACE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                        occgeometry->fvispar[i-1].Show();
+                      }
+                  }
+                if (strcmp (argv[2], "Solid") == 0)
+                  {
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->somap(nr), TopAbs_FACE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                        occgeometry->fvispar[i-1].Show();
+                      }
+                  }
+                if (strcmp (argv[2], "Edge") == 0)
+                  {
+                    occgeometry->evispar[nr-1].Show();
+                  }
+                if (strcmp (argv[2], "Wire") == 0)
+                  {
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->wmap(nr), TopAbs_EDGE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->emap.FindIndex (TopoDS::Edge(exp.Current()));
+                        occgeometry->evispar[i-1].Show();
+                      }
+                  }
+              }
 
-		  Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
-		  rebuild->Apply(occgeometry->shape);
 
-		  TopoDS_Shape sh;
+            if (strcmp (argv[1], "hide") == 0)
+              {
+                int nr = atoi (argv[3]);
+                occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
 
-		  //	      if (strcmp (argv[2], "CompSolid") == 0) sh = occgeometry->cmap(nr);
-		  if (strcmp (argv[2], "Solid") == 0) sh = occgeometry->somap(nr);
-		  if (strcmp (argv[2], "Shell") == 0) sh = occgeometry->shmap(nr);
-		  if (strcmp (argv[2], "Face") == 0) sh = occgeometry->fmap(nr);
-		  if (strcmp (argv[2], "Wire") == 0) sh = occgeometry->wmap(nr);
-		  if (strcmp (argv[2], "Edge") == 0) sh = occgeometry->emap(nr);
+                if (strcmp (argv[2], "Face") == 0)
+                  {
+                    occgeometry->fvispar[nr-1].Hide();
+                  }
+                if (strcmp (argv[2], "Shell") == 0)
+                  {
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->shmap(nr), TopAbs_FACE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                        occgeometry->fvispar[i-1].Hide();
+                      }
+                  }
+                if (strcmp (argv[2], "Solid") == 0)
+                  {
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->somap(nr), TopAbs_FACE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->fmap.FindIndex (TopoDS::Face(exp.Current()));
+                        occgeometry->fvispar[i-1].Hide();
+                      }
+                  }
+                if (strcmp (argv[2], "Edge") == 0)
+                  {
+                    occgeometry->evispar[nr-1].Hide();
+                  }
+                if (strcmp (argv[2], "Wire") == 0)
+                  {
+                    TopExp_Explorer exp;
+                    for (exp.Init (occgeometry->wmap(nr), TopAbs_EDGE);
+                         exp.More(); exp.Next())
+                      {
+                        int i = occgeometry->emap.FindIndex (TopoDS::Edge(exp.Current()));
+                        occgeometry->evispar[i-1].Hide();
+                      }
+                  }
+              }
 
-		  rebuild->Replace(sh, sh.Reversed(), Standard_False);
 
-		  TopoDS_Shape newshape = rebuild->Apply(occgeometry->shape, TopAbs_SHELL, 1);
-		  occgeometry->shape = newshape;
 
-		  occgeometry->BuildFMap();
-		  occgeometry->BuildVisualizationMesh();
-		  occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-		*/
-	      }
-	    if (strcmp (argv[1], "marksingular") == 0)
-	      {
-		int nr = atoi (argv[3]);
-		cout << "marking " << argv[2] << " " << nr << endl;
-		char buf[2]; buf[0] = '0'; buf[1] = 0;
-		bool sing = false;
-		if (strcmp (argv[2], "Face") == 0)
-		  sing = occgeometry->fsingular[nr-1] = !occgeometry->fsingular[nr-1];
-		if (strcmp (argv[2], "Edge") == 0)
-		  sing = occgeometry->esingular[nr-1] = !occgeometry->esingular[nr-1];
-		if (strcmp (argv[2], "Vertex") == 0)
-		  sing = occgeometry->vsingular[nr-1] = !occgeometry->vsingular[nr-1];
+            if (strcmp (argv[1], "findsmallentities") == 0)
+              {
+                stringstream str("");
+                occgeometry->CheckIrregularEntities(str);
+                Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
+              }
+            if (strcmp (argv[1], "getunmeshedfaceinfo") == 0)
+              {
+                occgeometry->GetUnmeshedFaceInfo(str);
+                Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
+              }
+            if (strcmp (argv[1], "getnotdrawablefaces") == 0)
+              {
+                occgeometry->GetNotDrawableFaces(str);
+                Tcl_SetResult (interp, (char*)str.str().c_str(), TCL_VOLATILE);
+              }
+            if (strcmp (argv[1], "redrawstatus") == 0)
+              {
+                int i = atoi (argv[2]);
+                occgeometry->changed = i;
+              }
+            if (strcmp (argv[1], "swaporientation") == 0)
+              {
+                IGESControl_Writer writer("millimeters", 1);
+                writer.AddShape (occgeometry->shape);
+                writer.Write ("1.igs");
+                /*
+                  int nr = atoi (argv[3]);
 
-		if (sing) buf[0] = '1';
+                  //          const_cast<TopoDS_Shape&> (occgeometry->fmap(nr)).Reverse();
+
+                  Handle_ShapeBuild_ReShape rebuild = new ShapeBuild_ReShape;
+                  rebuild->Apply(occgeometry->shape);
+
+                  TopoDS_Shape sh;
+
+                  //          if (strcmp (argv[2], "CompSolid") == 0) sh = occgeometry->cmap(nr);
+                  if (strcmp (argv[2], "Solid") == 0) sh = occgeometry->somap(nr);
+                  if (strcmp (argv[2], "Shell") == 0) sh = occgeometry->shmap(nr);
+                  if (strcmp (argv[2], "Face") == 0) sh = occgeometry->fmap(nr);
+                  if (strcmp (argv[2], "Wire") == 0) sh = occgeometry->wmap(nr);
+                  if (strcmp (argv[2], "Edge") == 0) sh = occgeometry->emap(nr);
+
+                  rebuild->Replace(sh, sh.Reversed(), Standard_False);
+
+                  TopoDS_Shape newshape = rebuild->Apply(occgeometry->shape, TopAbs_SHELL, 1);
+                  occgeometry->shape = newshape;
+
+                  occgeometry->BuildFMap();
+                  occgeometry->BuildVisualizationMesh();
+                  occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
+                */
+              }
+            if (strcmp (argv[1], "marksingular") == 0)
+              {
+                int nr = atoi (argv[3]);
+                cout << "marking " << argv[2] << " " << nr << endl;
+                char buf[2]; buf[0] = '0'; buf[1] = 0;
+                bool sing = false;
+                if (strcmp (argv[2], "Face") == 0)
+                  sing = occgeometry->fsingular[nr-1] = !occgeometry->fsingular[nr-1];
+                if (strcmp (argv[2], "Edge") == 0)
+                  sing = occgeometry->esingular[nr-1] = !occgeometry->esingular[nr-1];
+                if (strcmp (argv[2], "Vertex") == 0)
+                  sing = occgeometry->vsingular[nr-1] = !occgeometry->vsingular[nr-1];
+
+                if (sing) buf[0] = '1';
 
                 Tcl_SetVar (interp, "::ismarkedsingular", buf, 0);
 
-		stringstream str;
-		occgeometry->GetTopologyTree (str);
+                stringstream str;
+                occgeometry->GetTopologyTree (str);
 
                 auto txt = str.str();
-		char* cstr = (char*) txt.c_str();
+                char* cstr = (char*) txt.c_str();
 
-		(*testout) << cstr << endl;
+                (*testout) << cstr << endl;
 
-		char helpstr[1000];
+                char helpstr[1000];
 
-		while (strchr (cstr, '}'))
-		  {
-		    strncpy (helpstr, cstr+2, strlen(strchr(cstr+2, '}')));
-		    (*testout) << "***" << cstr << "***" << endl;
-		    cstr = strchr (cstr, '}');
-		  } 
-	      }
-	  }
+                while (strchr (cstr, '}'))
+                  {
+                    strncpy (helpstr, cstr+2, strlen(strchr(cstr+2, '}')));
+                    (*testout) << "***" << cstr << "***" << endl;
+                    cstr = strchr (cstr, '}');
+                  } 
+              }
+          }
       }
 
 #endif
@@ -550,8 +550,8 @@ namespace netgen
   void OCCConstructGeometry (OCCGeometry & geom);
 
   int Ng_OCCConstruction (ClientData clientData,
-			  Tcl_Interp * interp,
-			  int argc, tcl_const char *argv[])
+                          Tcl_Interp * interp,
+                          int argc, tcl_const char *argv[])
   {
     if (occgeometry)
       OCCConstructGeometry (*occgeometry);
@@ -567,8 +567,8 @@ namespace netgen
   // TCL interface function for the Local Face Mesh size
   // definition functionality
   int Ng_SurfaceMeshSize (ClientData clientData,
-		                    Tcl_Interp * interp,
-		                    int argc, tcl_const char *argv[])
+                                    Tcl_Interp * interp,
+                                    int argc, tcl_const char *argv[])
   {
 #ifdef OCCGEOMETRY
 
@@ -576,15 +576,15 @@ namespace netgen
 
     if (argc < 2)
     {
-	   Tcl_SetResult (interp, (char *)"Ng_SurfaceMeshSize needs arguments", TCL_STATIC);
-	   return TCL_ERROR;
+           Tcl_SetResult (interp, (char *)"Ng_SurfaceMeshSize needs arguments", TCL_STATIC);
+           return TCL_ERROR;
     }
 
     OCCGeometry * occgeometry = dynamic_cast<OCCGeometry*> (ng_geometry.get());
     if (!occgeometry)
     {
       Tcl_SetResult (interp, (char *)"Ng_SurfaceMeshSize currently supports only OCC (STEP/IGES) Files", TCL_STATIC);
-	   return TCL_ERROR;
+           return TCL_ERROR;
     }
 
     // Update the face mesh sizes to reflect the global maximum mesh size
@@ -598,64 +598,64 @@ namespace netgen
 
     if (strcmp (argv[1], "setsurfms") == 0)
     {
-	   int facenr = atoi (argv[2]);
-	   double surfms = atof (argv[3]);
-	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
-	     occgeometry->SetFaceMaxH(facenr, surfms, mparam);
+           int facenr = atoi (argv[2]);
+           double surfms = atof (argv[3]);
+           if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
+             occgeometry->SetFaceMaxH(facenr, surfms, mparam);
 
     }
 
     if (strcmp (argv[1], "setall") == 0)
     {
-	   double surfms = atof (argv[2]);
-	   if (occgeometry)
-	   {
-	     int nrFaces = occgeometry->NrFaces();
-	     for (int i = 1; i <= nrFaces; i++)
+           double surfms = atof (argv[2]);
+           if (occgeometry)
+           {
+             int nrFaces = occgeometry->NrFaces();
+             for (int i = 1; i <= nrFaces; i++)
                occgeometry->SetFaceMaxH(i, surfms, mparam);
-	   }
+           }
     }
 
     if (strcmp (argv[1], "getsurfms") == 0)
     {
-	   int facenr = atoi (argv[2]);
-	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
-	   {
-	     snprintf (buf, size(buf),  "%5.2f", occgeometry->GetFaceMaxH(facenr));
-	   }
-	   else
-	   {
-	     snprintf (buf, size(buf),  "%5.2f", mparam.maxh);
-	   }
-	   Tcl_SetResult (interp, buf, TCL_STATIC);
+           int facenr = atoi (argv[2]);
+           if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
+           {
+             snprintf (buf, size(buf),  "%5.2f", occgeometry->GetFaceMaxH(facenr));
+           }
+           else
+           {
+             snprintf (buf, size(buf),  "%5.2f", mparam.maxh);
+           }
+           Tcl_SetResult (interp, buf, TCL_STATIC);
     }
 
     if (strcmp (argv[1], "getactive") == 0)
     {
-	   snprintf (buf, size(buf),  "%d", occgeometry->SelectedFace());
-	   Tcl_SetResult (interp, buf, TCL_STATIC);
+           snprintf (buf, size(buf),  "%d", occgeometry->SelectedFace());
+           Tcl_SetResult (interp, buf, TCL_STATIC);
     }
 
     if (strcmp (argv[1], "setactive") == 0)
     {
-	   int facenr = atoi (argv[2]);
-	   if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
-	   {
-	     occgeometry->SetSelectedFace (facenr);
+           int facenr = atoi (argv[2]);
+           if (occgeometry && facenr >= 1 && facenr <= occgeometry->NrFaces())
+           {
+             occgeometry->SetSelectedFace (facenr);
 
         occgeometry->LowLightAll();
         occgeometry->fvispar[facenr-1].Highlight();
         occgeometry->changed = OCCGEOMETRYVISUALIZATIONHALFCHANGE;
-	   }
+           }
     }
 
     if (strcmp (argv[1], "getnfd") == 0)
     {
-	   if (occgeometry)
-	     snprintf (buf, size(buf),  "%d", occgeometry->NrFaces());
-	   else
-	     snprintf (buf, size(buf),  "0");
-	   Tcl_SetResult (interp, buf, TCL_STATIC);
+           if (occgeometry)
+             snprintf (buf, size(buf),  "%d", occgeometry->NrFaces());
+           else
+             snprintf (buf, size(buf),  "0");
+           Tcl_SetResult (interp, buf, TCL_STATIC);
     }
     return TCL_OK;
 #else // No OCCGEOMETRY 
@@ -684,7 +684,7 @@ namespace netgen
      if(!mesh)
      {
         Tcl_SetResult (interp, (char *)"Ng_GetCurrentFaceColours: Valid netgen mesh required...please mesh the Geometry first", TCL_STATIC);
-	     return TCL_ERROR;
+             return TCL_ERROR;
      }
 
      if(strcmp(argv[1], "getcolours") == 0)
@@ -853,8 +853,8 @@ namespace netgen
   // TCL interface function for the Automatic Colour-based
   // definition of boundary conditions for OCC Geometry
   int Ng_AutoColourBcProps (ClientData clientData,
-		                      Tcl_Interp * interp,
-		                      int argc, tcl_const char *argv[])
+                                      Tcl_Interp * interp,
+                                      int argc, tcl_const char *argv[])
   {
      if(argc < 1)
      {
@@ -865,7 +865,7 @@ namespace netgen
      if(!mesh)
      {
         Tcl_SetResult (interp, (char *)"Ng_AutoColourBcProps: Valid netgen mesh required...please mesh the Geometry first", TCL_STATIC);
-	     return TCL_ERROR;
+             return TCL_ERROR;
      }
 
      if(strcmp(argv[1], "auto") == 0)
@@ -883,8 +883,8 @@ namespace netgen
 
 
   int Ng_SetOCCParameters  (ClientData clientData,
-			    Tcl_Interp * interp,
-			    int argc, tcl_const char *argv[])
+                            Tcl_Interp * interp,
+                            int argc, tcl_const char *argv[])
   {
     OCCGeometryRegister reg;
     reg.SetParameters (interp);
@@ -907,22 +907,22 @@ namespace netgen
 
     if (ext == ".iges" || ext == ".igs")
       {
-	PrintMessage (1, "Load IGES geometry file ", filename);
-	OCCGeometry * occgeometry = LoadOCC_IGES (filename);
-	return occgeometry;
+        PrintMessage (1, "Load IGES geometry file ", filename);
+        OCCGeometry * occgeometry = LoadOCC_IGES (filename);
+        return occgeometry;
       }
 
     else if (ext == ".stp" || ext == ".step")
       {
-	PrintMessage (1, "Load STEP geometry file ", filename);
-	OCCGeometry * occgeometry = LoadOCC_STEP (filename);
-	return occgeometry;    
+        PrintMessage (1, "Load STEP geometry file ", filename);
+        OCCGeometry * occgeometry = LoadOCC_STEP (filename);
+        return occgeometry;    
       }
     else if (ext == ".brep")
       {
-	PrintMessage (1, "Load BREP geometry file ", filename);
-	OCCGeometry * occgeometry = LoadOCC_BREP (filename);
-	return occgeometry;
+        PrintMessage (1, "Load BREP geometry file ", filename);
+        OCCGeometry * occgeometry = LoadOCC_BREP (filename);
+        return occgeometry;
       }
     
     return NULL;
@@ -936,8 +936,8 @@ namespace netgen
     OCCGeometry * geometry = dynamic_cast<OCCGeometry*> (ng_geometry.get());
     if (geometry)
       {
-	vsoccgeom.SetGeometry (geometry);
-	return &vsoccgeom;
+        vsoccgeom.SetGeometry (geometry);
+        return &vsoccgeom;
       }
     return NULL;
   }
@@ -956,33 +956,33 @@ int Ng_occ_Init (Tcl_Interp * interp)
 
 
     Tcl_CreateCommand (interp, "Ng_SetOCCVisParameters",
-		       Ng_SetOCCVisParameters,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_SetOCCVisParameters,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_GetOCCData",
-		       Ng_GetOCCData,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_GetOCCData,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     /*
 #ifdef OCCGEOMETRY
     Tcl_CreateCommand (interp, "Ng_OCCConstruction",
-		       Ng_OCCConstruction,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_OCCConstruction,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 #endif
     */
 
     Tcl_CreateCommand (interp, "Ng_OCCCommand",
-		       Ng_OCCCommand,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       Ng_OCCCommand,
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
     Tcl_CreateCommand (interp, "Ng_SetOCCParameters", Ng_SetOCCParameters,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
 
 
@@ -990,12 +990,12 @@ int Ng_occ_Init (Tcl_Interp * interp)
     // Register the TCL Interface Command for local face mesh size
     // definition
     Tcl_CreateCommand (interp, "Ng_SurfaceMeshSize", Ng_SurfaceMeshSize,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     Tcl_CreateCommand (interp, "Ng_AutoColourBcProps", Ng_AutoColourBcProps,
-		       (ClientData)NULL,
-		       (Tcl_CmdDeleteProc*) NULL);
+                       (ClientData)NULL,
+                       (Tcl_CmdDeleteProc*) NULL);
 
     // Philippose - 25/07/2010
     // Register the TCL Interface Command for handling the face colours 

@@ -17,7 +17,7 @@ namespace netgen
 
   TopLevelObject ::  
   TopLevelObject (Solid * asolid,
-		  Surface * asurface)
+                  Surface * asurface)
   {
     solid = asolid;
     surface = asurface;
@@ -40,7 +40,7 @@ namespace netgen
   void TopLevelObject :: GetData (ostream & ost)
   {
     ost << red << " " << green << " " << blue << " " 
-	<< transp << " " << visible << " ";
+        << transp << " " << visible << " ";
   }
 
   void TopLevelObject :: SetData (istream & ist)
@@ -51,7 +51,7 @@ namespace netgen
 
  
   Box<3> CSGeometry::default_boundingbox (Point<3> (-1000, -1000, -1000),
-					  Point<3> ( 1000,  1000,  1000));
+                                          Point<3> ( 1000,  1000,  1000));
 
 
   CSGeometry :: CSGeometry ()
@@ -169,10 +169,10 @@ namespace netgen
     
     for (int i = 0; i < solids.Size(); i++)
       if(!to_delete.Contains(solids[i]->S1()))
-	to_delete.Append(solids[i]->S1());
+        to_delete.Append(solids[i]->S1());
     for (int i = 0; i < solids.Size(); i++)
       if(!to_delete.Contains(solids[i]))
-	to_delete.Append(solids[i]);
+        to_delete.Append(solids[i]);
 
     for(int i = 0; i < to_delete.Size(); i++)
       delete to_delete[i];    
@@ -218,7 +218,7 @@ namespace netgen
 
 
   extern int CSGGenerateMesh (CSGeometry & geom, 
-			      shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
+                              shared_ptr<Mesh> & mesh, MeshingParameters & mparam);
 
 
   int CSGeometry :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
@@ -250,18 +250,18 @@ namespace netgen
     Primitive * prim = sol->GetPrimitive();
     if (prim)
       {
-	const char * classname;
-	Array<double> coeffs;
+        const char * classname;
+        Array<double> coeffs;
 
-	prim -> GetPrimitiveData (classname, coeffs);
+        prim -> GetPrimitiveData (classname, coeffs);
 
-	if (sol->Name())
-	  ost << "primitive " 
-	      << sol->Name() << " "
-	      << classname << "  " << coeffs.Size();
-	for (int i = 0; i < coeffs.Size(); i++)
-	  ost << " " << coeffs[i];
-	ost << endl;
+        if (sol->Name())
+          ost << "primitive " 
+              << sol->Name() << " "
+              << classname << "  " << coeffs.Size();
+        for (int i = 0; i < coeffs.Size(); i++)
+          ost << " " << coeffs[i];
+        ost << endl;
       }
   }
 
@@ -275,12 +275,12 @@ namespace netgen
   void CSGeometry :: Save (ostream & ost) const
   {
     ost << "boundingbox "
-	<< boundingbox.PMin()(0) << " "
-	<< boundingbox.PMin()(1) << " "
-	<< boundingbox.PMin()(2) << " "
-	<< boundingbox.PMax()(0) << " "
-	<< boundingbox.PMax()(1) << " "
-	<< boundingbox.PMax()(2) << endl;
+        << boundingbox.PMin()(0) << " "
+        << boundingbox.PMin()(1) << " "
+        << boundingbox.PMin()(2) << " "
+        << boundingbox.PMax()(0) << " "
+        << boundingbox.PMax()(1) << " "
+        << boundingbox.PMax()(2) << endl;
 
 
     WritePrimitivesIt wpi(ost);
@@ -288,32 +288,32 @@ namespace netgen
 
     for (int i = 0; i < solids.Size(); i++)
       {
-	if (!solids[i]->GetPrimitive())
-	  {
-	    ost << "solid " << solids.GetName(i) << " ";
-	    solids[i] -> GetSolidData (ost);
-	    ost << endl;
-	  }
+        if (!solids[i]->GetPrimitive())
+          {
+            ost << "solid " << solids.GetName(i) << " ";
+            solids[i] -> GetSolidData (ost);
+            ost << endl;
+          }
       }
 
     for (int i = 0; i < GetNTopLevelObjects(); i++)
       {
-	TopLevelObject * tlo = GetTopLevelObject (i);
-	ost << "toplevel ";
-	if (tlo -> GetSurface())
-	  ost << "surface " << tlo->GetSolid()->Name() << " "
-	      << tlo->GetSurface()->Name() << " ";
-	else
-	  ost << "solid " << tlo->GetSolid()->Name() << " ";
-	tlo->GetData(ost);
-	ost << endl;
+        TopLevelObject * tlo = GetTopLevelObject (i);
+        ost << "toplevel ";
+        if (tlo -> GetSurface())
+          ost << "surface " << tlo->GetSolid()->Name() << " "
+              << tlo->GetSurface()->Name() << " ";
+        else
+          ost << "solid " << tlo->GetSolid()->Name() << " ";
+        tlo->GetData(ost);
+        ost << endl;
       }
 
     for (int i = 0; i < identifications.Size(); i++)
       {
-	ost << "identify ";
-	identifications[i] -> GetData (ost);
-	ost << endl;
+        ost << "identify ";
+        identifications[i] -> GetData (ost);
+        ost << endl;
       }
 
     ost << "end" << endl;
@@ -330,83 +330,83 @@ namespace netgen
 
     while (ist.good())
       {
-	ist >> key;
-	if (strcmp (key, "boundingbox") == 0)
-	  {
-	    Point<3> pmin, pmax;
-	    ist >> pmin(0) >> pmin(1) >> pmin(2);
-	    ist >> pmax(0) >> pmax(1) >> pmax(2);
-	    SetBoundingBox (Box<3> (pmin, pmax));
-	  }
-	if (strcmp (key, "primitive") == 0)
-	  {
-	    ist >> name >> classname >> ncoeff;
-	    coeff.SetSize (ncoeff);
-	    for (i = 0; i < ncoeff; i++)
-	      ist >> coeff[i];
+        ist >> key;
+        if (strcmp (key, "boundingbox") == 0)
+          {
+            Point<3> pmin, pmax;
+            ist >> pmin(0) >> pmin(1) >> pmin(2);
+            ist >> pmax(0) >> pmax(1) >> pmax(2);
+            SetBoundingBox (Box<3> (pmin, pmax));
+          }
+        if (strcmp (key, "primitive") == 0)
+          {
+            ist >> name >> classname >> ncoeff;
+            coeff.SetSize (ncoeff);
+            for (i = 0; i < ncoeff; i++)
+              ist >> coeff[i];
 
-	    Primitive * nprim = Primitive::CreatePrimitive (classname);
-	    nprim -> SetPrimitiveData (coeff);
-	    Solid * nsol = new Solid (nprim);
+            Primitive * nprim = Primitive::CreatePrimitive (classname);
+            nprim -> SetPrimitiveData (coeff);
+            Solid * nsol = new Solid (nprim);
 
-	    for (j = 0; j < nprim->GetNSurfaces(); j++)
-	      {
-		snprintf (sname, size(sname), "%s,%d", name, j);
-		AddSurface (sname, &nprim->GetSurface(j));
-		nprim -> SetSurfaceId (j, GetNSurf());
-	      }
-	    SetSolid (name, nsol);
-	  }
-	else if (strcmp (key, "solid") == 0)
-	  {
-	    ist >> name;
-	    Solid * nsol = Solid::CreateSolid (ist, solids);
+            for (j = 0; j < nprim->GetNSurfaces(); j++)
+              {
+                snprintf (sname, size(sname), "%s,%d", name, j);
+                AddSurface (sname, &nprim->GetSurface(j));
+                nprim -> SetSurfaceId (j, GetNSurf());
+              }
+            SetSolid (name, nsol);
+          }
+        else if (strcmp (key, "solid") == 0)
+          {
+            ist >> name;
+            Solid * nsol = Solid::CreateSolid (ist, solids);
 
-	    cout << " I have found solid " << name << " = ";
-	    nsol -> GetSolidData (cout);
-	    cout << endl;
+            cout << " I have found solid " << name << " = ";
+            nsol -> GetSolidData (cout);
+            cout << endl;
 
-	    SetSolid (name, nsol);
-	  }
-	else if (strcmp (key, "toplevel") == 0)
-	  {
-	    char type[20], solname[50], surfname[50];
-	    const Solid * sol = NULL;
-	    const Surface * surf = NULL;
-	    int nr;
+            SetSolid (name, nsol);
+          }
+        else if (strcmp (key, "toplevel") == 0)
+          {
+            char type[20], solname[50], surfname[50];
+            const Solid * sol = NULL;
+            const Surface * surf = NULL;
+            int nr;
 
-	    ist >> type;
-	    if (strcmp (type, "solid") == 0)
-	      {
-		ist >> solname;
-		sol = GetSolid (solname);
-	      }
-	    if (strcmp (type, "surface") == 0)
-	      {
-		ist >> solname >> surfname;
-		sol = GetSolid (solname);
-		surf = GetSurface (surfname);
-	      }
-	    nr = SetTopLevelObject ((Solid*)sol, (Surface*)surf);
-	    GetTopLevelObject (nr) -> SetData (ist);
-	  }
-	else if (strcmp (key, "identify") == 0)
-	  {
-	    char type[10], surfname1[50], surfname2[50];
-	    const Surface * surf1;
-	    const Surface * surf2;
+            ist >> type;
+            if (strcmp (type, "solid") == 0)
+              {
+                ist >> solname;
+                sol = GetSolid (solname);
+              }
+            if (strcmp (type, "surface") == 0)
+              {
+                ist >> solname >> surfname;
+                sol = GetSolid (solname);
+                surf = GetSurface (surfname);
+              }
+            nr = SetTopLevelObject ((Solid*)sol, (Surface*)surf);
+            GetTopLevelObject (nr) -> SetData (ist);
+          }
+        else if (strcmp (key, "identify") == 0)
+          {
+            char type[10], surfname1[50], surfname2[50];
+            const Surface * surf1;
+            const Surface * surf2;
 
 
-	    ist >> type >> surfname1 >> surfname2;
-	    surf1 = GetSurface(surfname1);
-	    surf2 = GetSurface(surfname2);
-	  
-	    AddIdentification (new PeriodicIdentification 
-			       (GetNIdentifications(),
-				*this, surf1, surf2));
-	  }
-	else if (strcmp (key, "end") == 0)
-	  break;
+            ist >> type >> surfname1 >> surfname2;
+            surf1 = GetSurface(surfname1);
+            surf2 = GetSurface(surfname2);
+          
+            AddIdentification (new PeriodicIdentification 
+                               (GetNIdentifications(),
+                                *this, surf1, surf2));
+          }
+        else if (strcmp (key, "end") == 0)
+          break;
       }
 
     changeval++;
@@ -426,8 +426,8 @@ namespace netgen
   {
     if(singfaces.Size() > 0 || singedges.Size() > 0 || singpoints.Size() > 0)
       {
-	PrintMessage(3,"Singular faces/edges/points => no csg-information in .vol file");
-	return;
+        PrintMessage(3,"Singular faces/edges/points => no csg-information in .vol file");
+        return;
       }
 
 
@@ -438,10 +438,10 @@ namespace netgen
     out << "csgsurfaces " << GetNSurf() << "\n";
     for(int i=0; i<GetNSurf(); i++)
       {
-	const OneSurfacePrimitive * sp = dynamic_cast< const OneSurfacePrimitive * > (GetSurface(i));
-	const ExtrusionFace * ef = dynamic_cast< const ExtrusionFace * > (GetSurface(i));
-	const RevolutionFace * rf = dynamic_cast< const RevolutionFace * > (GetSurface(i));
-	const DummySurface * dummyf = dynamic_cast< const DummySurface * > (GetSurface(i));
+        const OneSurfacePrimitive * sp = dynamic_cast< const OneSurfacePrimitive * > (GetSurface(i));
+        const ExtrusionFace * ef = dynamic_cast< const ExtrusionFace * > (GetSurface(i));
+        const RevolutionFace * rf = dynamic_cast< const RevolutionFace * > (GetSurface(i));
+        const DummySurface * dummyf = dynamic_cast< const DummySurface * > (GetSurface(i));
         const SplineSurface * splines = dynamic_cast<const SplineSurface *> (GetSurface(i));
 
         if (splines)
@@ -462,36 +462,36 @@ namespace netgen
             return;
           }
 
-	if(sp)
-	  {
-	    sp->GetPrimitiveData(classname,coeffs);
-	
-	    out << classname << " ";
-	  }
-	else if(ef)
-	  {
-	    out << "extrusionface ";
-	    ef->GetRawData(coeffs);
-	  }
-	else if(rf)
-	  {
-	    out << "revolutionface ";
-	    rf->GetRawData(coeffs);
-	  }
-	else if(dummyf)
-	  {
-	    out << "dummy ";
+        if(sp)
+          {
+            sp->GetPrimitiveData(classname,coeffs);
+        
+            out << classname << " ";
+          }
+        else if(ef)
+          {
+            out << "extrusionface ";
+            ef->GetRawData(coeffs);
+          }
+        else if(rf)
+          {
+            out << "revolutionface ";
+            rf->GetRawData(coeffs);
+          }
+        else if(dummyf)
+          {
+            out << "dummy ";
             coeffs.SetSize(0);
-	  }
-	else
-	  throw NgException ("Cannot write csg surface. Please, contact developers!");
+          }
+        else
+          throw NgException ("Cannot write csg surface. Please, contact developers!");
       
-	
-	out << coeffs.Size() << "\n";
-	for(int j=0; j<coeffs.Size(); j++)
-	  out << coeffs[j] << " ";
-	    
-	out << "\n";
+        
+        out << coeffs.Size() << "\n";
+        for(int j=0; j<coeffs.Size(); j++)
+          out << coeffs[j] << " ";
+            
+        out << "\n";
       }
   }
 
@@ -514,109 +514,109 @@ namespace netgen
 
     for(int i=0; i<nsurfaces; i++)
       {
-	in >> classname;
-	in >> size;
+        in >> classname;
+        in >> size;
 
-	coeffs.SetSize(size);
+        coeffs.SetSize(size);
 
-	for(int j=0; j<size; j++)
-	  in >> coeffs[j];
+        for(int j=0; j<size; j++)
+          in >> coeffs[j];
 
-	if(classname == "plane")
-	  {
-	    Plane * plane = new Plane(dummypoint,dummyvec);
-	    plane->SetPrimitiveData(coeffs);
+        if(classname == "plane")
+          {
+            Plane * plane = new Plane(dummypoint,dummyvec);
+            plane->SetPrimitiveData(coeffs);
 
-	    AddSurface(plane);
-	    delete_them.Append(plane);
-	  }
+            AddSurface(plane);
+            delete_them.Append(plane);
+          }
 
-	else if(classname == "sphere")
-	  {
-	    Sphere * sphere = new Sphere(dummypoint,dummydouble);
-	    sphere->SetPrimitiveData(coeffs);
+        else if(classname == "sphere")
+          {
+            Sphere * sphere = new Sphere(dummypoint,dummydouble);
+            sphere->SetPrimitiveData(coeffs);
 
-	    AddSurface(sphere);
-	    delete_them.Append(sphere);
-	  }
+            AddSurface(sphere);
+            delete_them.Append(sphere);
+          }
 
-	else if(classname == "cylinder")
-	  {
-	    Cylinder * cylinder = new Cylinder(coeffs);
+        else if(classname == "cylinder")
+          {
+            Cylinder * cylinder = new Cylinder(coeffs);
 
-	    AddSurface(cylinder);
-	    delete_them.Append(cylinder);
-	  }
+            AddSurface(cylinder);
+            delete_them.Append(cylinder);
+          }
 
-	else if(classname == "ellipticcylinder")
-	  {
-	    EllipticCylinder * cylinder = new EllipticCylinder(coeffs);
-	    AddSurface(cylinder);
-	    delete_them.Append(cylinder);
-	  }
-
-
-	else if(classname == "torus")
-	  {
-	    Torus * torus = new Torus(dummypoint,dummyvec,dummydouble, dummydouble);
-	    torus->SetPrimitiveData(coeffs);
-	    AddSurface(torus);
-	    delete_them.Append(torus);
-	  }
+        else if(classname == "ellipticcylinder")
+          {
+            EllipticCylinder * cylinder = new EllipticCylinder(coeffs);
+            AddSurface(cylinder);
+            delete_them.Append(cylinder);
+          }
 
 
-	else if(classname == "cone")
-	  {
-	    Cone * cone = new Cone(dummypoint,dummypoint,dummydouble,dummydouble);
-	    cone->SetPrimitiveData(coeffs);
+        else if(classname == "torus")
+          {
+            Torus * torus = new Torus(dummypoint,dummyvec,dummydouble, dummydouble);
+            torus->SetPrimitiveData(coeffs);
+            AddSurface(torus);
+            delete_them.Append(torus);
+          }
 
-	    AddSurface(cone);
-	    delete_them.Append(cone);
-	  }
 
-	else if(classname == "ellipsoid")
-	  {
-	    Ellipsoid * ellipsoid = new Ellipsoid(dummypoint,dummyvec,dummyvec,dummyvec);
-	    ellipsoid->SetPrimitiveData(coeffs);
+        else if(classname == "cone")
+          {
+            Cone * cone = new Cone(dummypoint,dummypoint,dummydouble,dummydouble);
+            cone->SetPrimitiveData(coeffs);
 
-	    AddSurface(ellipsoid);
-	    delete_them.Append(ellipsoid);
-	  }
+            AddSurface(cone);
+            delete_them.Append(cone);
+          }
+
+        else if(classname == "ellipsoid")
+          {
+            Ellipsoid * ellipsoid = new Ellipsoid(dummypoint,dummyvec,dummyvec,dummyvec);
+            ellipsoid->SetPrimitiveData(coeffs);
+
+            AddSurface(ellipsoid);
+            delete_them.Append(ellipsoid);
+          }
 
        else if(classname == "ellipticcone")
          {
-	    EllipticCone * ellipticcone = new EllipticCone(dummypoint,dummyvec,dummyvec,dummydouble,dummydouble);
+            EllipticCone * ellipticcone = new EllipticCone(dummypoint,dummyvec,dummyvec,dummydouble,dummydouble);
 
-	    ellipticcone->SetPrimitiveData(coeffs);
+            ellipticcone->SetPrimitiveData(coeffs);
 
-	    AddSurface(ellipticcone);
-	    delete_them.Append(ellipticcone);
-	  }
-	else if(classname == "extrusionface")
-	  {
-	    ExtrusionFace * ef =
-	      new ExtrusionFace(coeffs);
+            AddSurface(ellipticcone);
+            delete_them.Append(ellipticcone);
+          }
+        else if(classname == "extrusionface")
+          {
+            ExtrusionFace * ef =
+              new ExtrusionFace(coeffs);
 
-	    AddSurface(ef);
-	    delete_them.Append(ef);
-	  }
+            AddSurface(ef);
+            delete_them.Append(ef);
+          }
 
-	else if(classname == "revolutionface")
-	  {
-	    RevolutionFace * rf =
-	      new RevolutionFace(coeffs);
+        else if(classname == "revolutionface")
+          {
+            RevolutionFace * rf =
+              new RevolutionFace(coeffs);
 
-	    AddSurface(rf);
-	    delete_them.Append(rf);
-	  }
+            AddSurface(rf);
+            delete_them.Append(rf);
+          }
 
-	else if(classname == "dummy")
-	  {
-	    Surface * surf = new DummySurface();
+        else if(classname == "dummy")
+          {
+            Surface * surf = new DummySurface();
             
-	    AddSurface(surf);
-	    delete_them.Append(surf);
-	  }
+            AddSurface(surf);
+            delete_them.Append(surf);
+          }
 
       }    
   }
@@ -651,9 +651,9 @@ namespace netgen
   {
     for (int i = 0; i < prim->GetNSurfaces(); i++)
       {
-	AddSurface (&prim->GetSurface(i));
-	prim->SetSurfaceId (i, GetNSurf()-1);
-	surf2prim.Append (prim);
+        AddSurface (&prim->GetSurface(i));
+        prim->SetSurfaceId (i, GetNSurf()-1);
+        surf2prim.Append (prim);
       }
   }
 
@@ -690,12 +690,12 @@ namespace netgen
 
     if (oldsol)
       {
-	if (oldsol->op != Solid::ROOT ||
-	    sol->op != Solid::ROOT)
-	  {
-	    cerr << "Setsolid: old or new no root" << endl;
-	  }
-	oldsol -> s1 = sol -> s1;
+        if (oldsol->op != Solid::ROOT ||
+            sol->op != Solid::ROOT)
+          {
+            cerr << "Setsolid: old or new no root" << endl;
+          }
+        oldsol -> s1 = sol -> s1;
       }
     changeval++;
   }
@@ -765,11 +765,11 @@ namespace netgen
     cerr << "remove dummy iterator is obsolete" << endl;
 
     if ( (sol->op == Solid::SUB || sol->op == Solid::SECTION || 
-	  sol->op == Solid::UNION)
-	 && sol->s1->op == Solid::DUMMY)
+          sol->op == Solid::UNION)
+         && sol->s1->op == Solid::DUMMY)
       sol->s1 = sol->s1->s1;
     if ( (sol->op == Solid::SECTION || sol->op == Solid::UNION)
-	 && sol->s2->op == Solid::DUMMY)
+         && sol->s2->op == Solid::DUMMY)
       sol->s2 = sol->s2->s1;
   }
     */
@@ -790,9 +790,9 @@ namespace netgen
   {
     for (int i = 0; i < toplevelobjects.Size(); i++)
       {
-	if (toplevelobjects[i]->GetSolid() == sol &&
-	    toplevelobjects[i]->GetSurface() == surf)
-	  return (toplevelobjects[i]);
+        if (toplevelobjects[i]->GetSolid() == sol &&
+            toplevelobjects[i]->GetSurface() == surf)
+          return (toplevelobjects[i]);
       }
     return NULL;
   }
@@ -801,14 +801,14 @@ namespace netgen
   {
     for (int i = 0; i < toplevelobjects.Size(); i++)
       {
-	if (toplevelobjects[i]->GetSolid() == sol &&
-	    toplevelobjects[i]->GetSurface() == surf)
-	  {
-	    delete toplevelobjects[i];
-	    toplevelobjects.DeleteElement(i);
-	    changeval++;
-	    break;
-	  }
+        if (toplevelobjects[i]->GetSolid() == sol &&
+            toplevelobjects[i]->GetSurface() == surf)
+          {
+            delete toplevelobjects[i];
+            toplevelobjects.DeleteElement(i);
+            changeval++;
+            break;
+          }
       }
   }
 
@@ -826,123 +826,123 @@ namespace netgen
     double maxh = flags.GetNumFlag ("maxh", -1);
     if (maxh > 0 && solid)
       {
-	solid->GetSurfaceIndices (surfind);
+        solid->GetSurfaceIndices (surfind);
 
-	for (i = 0; i < surfind.Size(); i++)
-	  {
-	    if (surfaces[surfind[i]]->GetMaxH() > maxh)
-	      surfaces[surfind[i]] -> SetMaxH (maxh);
-	  }
+        for (i = 0; i < surfind.Size(); i++)
+          {
+            if (surfaces[surfind[i]]->GetMaxH() > maxh)
+              surfaces[surfind[i]] -> SetMaxH (maxh);
+          }
 
-	solid->SetMaxH (maxh);
+        solid->SetMaxH (maxh);
       }
 
     if ( flags.StringFlagDefined ("bcname") )
       {
-	solid->GetSurfaceIndices (surfind);
-	string bcn = flags.GetStringFlag("bcname", "default");
-	for (i = 0; i < surfind.Size(); i++)
-	  {
-	    if(surfaces[surfind[i]]->GetBCName() == "default")
-	      surfaces[surfind[i]]->SetBCName(bcn);
-	  }
+        solid->GetSurfaceIndices (surfind);
+        string bcn = flags.GetStringFlag("bcname", "default");
+        for (i = 0; i < surfind.Size(); i++)
+          {
+            if(surfaces[surfind[i]]->GetBCName() == "default")
+              surfaces[surfind[i]]->SetBCName(bcn);
+          }
       }
 
     if (flags.StringListFlagDefined ("bcname"))
       {
-	auto& bcname = flags.GetStringListFlag("bcname");
+        auto& bcname = flags.GetStringListFlag("bcname");
 
-	Polyhedra * polyh;
-	if(solid->S1())
-	  polyh = dynamic_cast<Polyhedra *>(solid->S1()->GetPrimitive());
-	else
-	  polyh = dynamic_cast<Polyhedra *>(solid->GetPrimitive());
+        Polyhedra * polyh;
+        if(solid->S1())
+          polyh = dynamic_cast<Polyhedra *>(solid->S1()->GetPrimitive());
+        else
+          polyh = dynamic_cast<Polyhedra *>(solid->GetPrimitive());
 
-	if(polyh)
-	  {
-	    Array < Array<int> * > polysurfs;
-	    polyh->GetPolySurfs(polysurfs);
-	    if(bcname.Size() != polysurfs.Size())
-	      cerr << "WARNING: solid \"" << solidname << "\" has " << polysurfs.Size()
-		   << " surfaces and should get " << bcname.Size() << " bc-names!" << endl;
-	    
-	    for ( i = 0; i < min2(polysurfs.Size(),bcname.Size()); i++)
-	      {
-		for (int j = 0; j < polysurfs[i]->Size(); j++)
-		  {
-		    if(surfaces[(*polysurfs[i])[j]]->GetBCName() == "default")
-		      surfaces[(*polysurfs[i])[j]]->SetBCName(bcname[i]);
-		  }
-		delete polysurfs[i];
-	      }
-	  }
-	else
-	  {
-	    solid->GetSurfaceIndices (surfind);
-	    if(bcname.Size() != surfind.Size())
-	      cerr << "WARNING: solid \"" << solidname << "\" has " << surfind.Size()
-		   << " surfaces and should get " << bcname.Size() << " bc-names!" << endl;
-	    
-	    for (i = 0; i < min2(surfind.Size(),bcname.Size()); i++)
-	      {
-		if(surfaces[surfind[i]]->GetBCName() == "default")
-		  surfaces[surfind[i]]->SetBCName(bcname[i]);
-	      }
-	  }
+        if(polyh)
+          {
+            Array < Array<int> * > polysurfs;
+            polyh->GetPolySurfs(polysurfs);
+            if(bcname.Size() != polysurfs.Size())
+              cerr << "WARNING: solid \"" << solidname << "\" has " << polysurfs.Size()
+                   << " surfaces and should get " << bcname.Size() << " bc-names!" << endl;
+            
+            for ( i = 0; i < min2(polysurfs.Size(),bcname.Size()); i++)
+              {
+                for (int j = 0; j < polysurfs[i]->Size(); j++)
+                  {
+                    if(surfaces[(*polysurfs[i])[j]]->GetBCName() == "default")
+                      surfaces[(*polysurfs[i])[j]]->SetBCName(bcname[i]);
+                  }
+                delete polysurfs[i];
+              }
+          }
+        else
+          {
+            solid->GetSurfaceIndices (surfind);
+            if(bcname.Size() != surfind.Size())
+              cerr << "WARNING: solid \"" << solidname << "\" has " << surfind.Size()
+                   << " surfaces and should get " << bcname.Size() << " bc-names!" << endl;
+            
+            for (i = 0; i < min2(surfind.Size(),bcname.Size()); i++)
+              {
+                if(surfaces[surfind[i]]->GetBCName() == "default")
+                  surfaces[surfind[i]]->SetBCName(bcname[i]);
+              }
+          }
       }
 
     if (flags.NumFlagDefined ("bc"))
       {
-	solid->GetSurfaceIndices (surfind);
-	int bc = int (flags.GetNumFlag("bc", -1));
-	for (i = 0; i < surfind.Size(); i++)
-	  {
-	    if (surfaces[surfind[i]]->GetBCProperty() == -1)
-	      surfaces[surfind[i]]->SetBCProperty(bc);
-	  }
+        solid->GetSurfaceIndices (surfind);
+        int bc = int (flags.GetNumFlag("bc", -1));
+        for (i = 0; i < surfind.Size(); i++)
+          {
+            if (surfaces[surfind[i]]->GetBCProperty() == -1)
+              surfaces[surfind[i]]->SetBCProperty(bc);
+          }
       }
    
     if (flags.NumListFlagDefined ("bc"))
       {
-	const auto& bcnum = flags.GetNumListFlag("bc");
+        const auto& bcnum = flags.GetNumListFlag("bc");
 
-	Polyhedra * polyh;
-	if(solid->S1())
-	  polyh = dynamic_cast<Polyhedra *>(solid->S1()->GetPrimitive());
-	else
-	  polyh = dynamic_cast<Polyhedra *>(solid->GetPrimitive());
+        Polyhedra * polyh;
+        if(solid->S1())
+          polyh = dynamic_cast<Polyhedra *>(solid->S1()->GetPrimitive());
+        else
+          polyh = dynamic_cast<Polyhedra *>(solid->GetPrimitive());
 
-	if(polyh)
-	  {
-	    Array < Array<int> * > polysurfs;
-	    polyh->GetPolySurfs(polysurfs);
-	    if(bcnum.Size() != polysurfs.Size())
-	      cerr << "WARNING: solid \"" << solidname << "\" has " << polysurfs.Size()
-		   << " surfaces and should get " << bcnum.Size() << " bc-numbers!" << endl;
-	    
-	    for ( i = 0; i < min2(polysurfs.Size(),bcnum.Size()); i++)
-	      {
-		for (int j = 0; j < polysurfs[i]->Size(); j++)
-		  {
-		    if ( surfaces[(*polysurfs[i])[j]]->GetBCProperty() == -1 )
-		      surfaces[(*polysurfs[i])[j]]->SetBCProperty(int(bcnum[i]));
-		  }
-		delete polysurfs[i];
-	      }
-	  }
-	else
-	  {
-	    solid->GetSurfaceIndices (surfind);
-	    if(bcnum.Size() != surfind.Size())
-	      cerr << "WARNING: solid \"" << solidname << "\" has " << surfind.Size()
-		   << " surfaces and should get " << bcnum.Size() << " bc-numbers!" << endl;
-	    
-	    for (i = 0; i < min2(surfind.Size(),bcnum.Size()); i++)
-	      {
-		if (surfaces[surfind[i]]->GetBCProperty() == -1)
-		  surfaces[surfind[i]]->SetBCProperty(int(bcnum[i]));
-	      }
-	  }
+        if(polyh)
+          {
+            Array < Array<int> * > polysurfs;
+            polyh->GetPolySurfs(polysurfs);
+            if(bcnum.Size() != polysurfs.Size())
+              cerr << "WARNING: solid \"" << solidname << "\" has " << polysurfs.Size()
+                   << " surfaces and should get " << bcnum.Size() << " bc-numbers!" << endl;
+            
+            for ( i = 0; i < min2(polysurfs.Size(),bcnum.Size()); i++)
+              {
+                for (int j = 0; j < polysurfs[i]->Size(); j++)
+                  {
+                    if ( surfaces[(*polysurfs[i])[j]]->GetBCProperty() == -1 )
+                      surfaces[(*polysurfs[i])[j]]->SetBCProperty(int(bcnum[i]));
+                  }
+                delete polysurfs[i];
+              }
+          }
+        else
+          {
+            solid->GetSurfaceIndices (surfind);
+            if(bcnum.Size() != surfind.Size())
+              cerr << "WARNING: solid \"" << solidname << "\" has " << surfind.Size()
+                   << " surfaces and should get " << bcnum.Size() << " bc-numbers!" << endl;
+            
+            for (i = 0; i < min2(surfind.Size(),bcnum.Size()); i++)
+              {
+                if (surfaces[surfind[i]]->GetBCProperty() == -1)
+                  surfaces[surfind[i]]->SetBCProperty(int(bcnum[i]));
+              }
+          }
       }
 
   }
@@ -960,14 +960,14 @@ namespace netgen
   
     for (int i = 0; i < nsurf; i++)
       for (int j = i+1; j < nsurf; j++)
-	{
-	  if (GetSurface(j) -> IsIdentic (*GetSurface(i), inv, eps))
-	    {
-	      IVec<2> i2(i, j);   // i < j, already sorted
-	      identicsurfaces.Set (i2, inv);
-	      isidenticto[j] = isidenticto[i];
-	    }
-	}
+        {
+          if (GetSurface(j) -> IsIdentic (*GetSurface(i), inv, eps))
+            {
+              IVec<2> i2(i, j);   // i < j, already sorted
+              identicsurfaces.Set (i2, inv);
+              isidenticto[j] = isidenticto[i];
+            }
+        }
 
     (*testout) << "identicmap:" << endl;
     for (int i = 0; i < isidenticto.Size(); i++)
@@ -978,8 +978,8 @@ namespace netgen
   
   void CSGeometry ::
   GetSurfaceIndices (const Solid * sol, 
-		     const BoxSphere<3> & box, 
-		     Array<int> & locsurf) const
+                     const BoxSphere<3> & box, 
+                     Array<int> & locsurf) const
   {
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;
@@ -990,15 +990,15 @@ namespace netgen
 
     for (int i = locsurf.Size()-1; i >= 0; i--)
       {
-	bool indep = 1;
-	for (int j = 0; j < i; j++)
-	  if (locsurf[i] == locsurf[j])
-	    {
-	      indep = 0;
-	      break;
-	    }
+        bool indep = 1;
+        for (int j = 0; j < i; j++)
+          if (locsurf[i] == locsurf[j])
+            {
+              indep = 0;
+              break;
+            }
 
-	if (!indep) locsurf.DeleteElement(i);
+        if (!indep) locsurf.DeleteElement(i);
       }
   }
 
@@ -1007,8 +1007,8 @@ namespace netgen
   
   void CSGeometry ::
   GetIndependentSurfaceIndices (const Solid * sol, 
-				const BoxSphere<3> & box, 
-				Array<int> & locsurf) const
+                                const BoxSphere<3> & box, 
+                                Array<int> & locsurf) const
   {
     ReducePrimitiveIterator rpi(box);
     UnReducePrimitiveIterator urpi;
@@ -1022,15 +1022,15 @@ namespace netgen
 
     for (int i = locsurf.Size()-1; i >= 0; i--)
       {
-	bool indep = 1;
-	for (int j = 0; j < i; j++)
-	  if (locsurf[i] == locsurf[j])
-	    {
-	      indep = 0;
-	      break;
-	    }
+        bool indep = 1;
+        for (int j = 0; j < i; j++)
+          if (locsurf[i] == locsurf[j])
+            {
+              indep = 0;
+              break;
+            }
 
-	if (!indep) locsurf.DeleteElement(i);
+        if (!indep) locsurf.DeleteElement(i);
       }
 
 
@@ -1038,24 +1038,24 @@ namespace netgen
     // delete identified
     for (int i = locsurf.Size()-1; i >= 0; i--)
       {
-	bool indep = 1;
-	for (int j = 0; j < i; j++)
-	  {
-	    if (identicsurfaces.Used (IVec<2>(locsurf[i], locsurf[j]).Sort()) !=
-		(isidenticto[locsurf[i]] == isidenticto[locsurf[j]]))
-	      {
-		cerr << "different result" << endl;
-		exit(1);
-	      }
+        bool indep = 1;
+        for (int j = 0; j < i; j++)
+          {
+            if (identicsurfaces.Used (IVec<2>(locsurf[i], locsurf[j]).Sort()) !=
+                (isidenticto[locsurf[i]] == isidenticto[locsurf[j]]))
+              {
+                cerr << "different result" << endl;
+                exit(1);
+              }
 
-	    if (isidenticto[locsurf[i]] == isidenticto[locsurf[j]])
-	      {
-		indep = 0;
-		break;
-	      }
-	  }
-	if (!indep)
-	  locsurf.Delete(i);
+            if (isidenticto[locsurf[i]] == isidenticto[locsurf[j]])
+              {
+                indep = 0;
+                break;
+              }
+          }
+        if (!indep)
+          locsurf.Delete(i);
       }
 
     for (int i = 0; i < locsurf.Size(); i++)
@@ -1066,8 +1066,8 @@ namespace netgen
   /*
   void CSGeometry ::
   GetIndependentSurfaceIndices (const Solid * sol, 
-				const Point<3> & p, Vec<3> & v,
-				Array<int> & locsurf) const
+                                const Point<3> & p, Vec<3> & v,
+                                Array<int> & locsurf) const
   {
     cout << "very dangerous" << endl;
     Point<3> p2 = p + 1e-2 * v;
@@ -1086,15 +1086,15 @@ namespace netgen
 
     for (int i = locsurf.Size()-1; i >= 0; i--)
       {
-	bool indep = 1;
-	for (int j = 0; j < i; j++)
-	  if (locsurf[i] == locsurf[j])
-	    {
-	      indep = 0;
-	      break;
-	    }
+        bool indep = 1;
+        for (int j = 0; j < i; j++)
+          if (locsurf[i] == locsurf[j])
+            {
+              indep = 0;
+              break;
+            }
 
-	if (!indep) locsurf.DeleteElement(i);
+        if (!indep) locsurf.DeleteElement(i);
       }
   }
 
@@ -1126,103 +1126,103 @@ namespace netgen
 
     for (int i = 0; i < ntlo; i++)
       {
-	Solid * sol;
-	Surface * surf;
-	GetTopLevelObject (i, sol, surf);
+        Solid * sol;
+        Surface * surf;
+        GetTopLevelObject (i, sol, surf);
 
-	sol -> CalcSurfaceInverse ();
+        sol -> CalcSurfaceInverse ();
 
-	TriangleApproximation * tams = new TriangleApproximation();
-	triapprox[i] = tams;
+        TriangleApproximation * tams = new TriangleApproximation();
+        triapprox[i] = tams;
 
-	// sol -> GetSurfaceIndices (surfind);
-	for (int j = 0; j < GetNSurf(); j++)
-	  // for (int jj = 0; jj < surfind.Size(); jj++)
-	  {
-	    // int j = surfind[jj];
+        // sol -> GetSurfaceIndices (surfind);
+        for (int j = 0; j < GetNSurf(); j++)
+          // for (int jj = 0; jj < surfind.Size(); jj++)
+          {
+            // int j = surfind[jj];
 
-	    PrintMessageCR (3, "Surface ", j, "/", GetNSurf());
-	    // PrintMessageCR (3, "Surface ", j, "/", surfind.Size());
+            PrintMessageCR (3, "Surface ", j, "/", GetNSurf());
+            // PrintMessageCR (3, "Surface ", j, "/", surfind.Size());
 
-	    if (surf && surf != GetSurface(j))
-	      continue;
+            if (surf && surf != GetSurface(j))
+              continue;
 
-	    TriangleApproximation tas;
-	    GetSurface (j) -> GetTriangleApproximation (tas, boundingbox, facets);
+            TriangleApproximation tas;
+            GetSurface (j) -> GetTriangleApproximation (tas, boundingbox, facets);
 
-	    int oldnp = tams -> GetNP();
+            int oldnp = tams -> GetNP();
 
-	    if (!tas.GetNP())
-	      continue;
+            if (!tas.GetNP())
+              continue;
 
-	    for (int k = 0; k < tas.GetNP(); k++)
-	      {
-		tams -> AddPoint (tas.GetPoint(k));
+            for (int k = 0; k < tas.GetNP(); k++)
+              {
+                tams -> AddPoint (tas.GetPoint(k));
                 Vec<3> n = GetSurface(j) -> GetNormalVector (tas.GetPoint(k)); 
-		n.Normalize();
-		if (GetSurface(j)->Inverse()) n *= -1;
-		tams -> AddNormal (n);
-	      }
-	  
-	    BoxSphere<3> surfbox;
+                n.Normalize();
+                if (GetSurface(j)->Inverse()) n *= -1;
+                tams -> AddNormal (n);
+              }
+          
+            BoxSphere<3> surfbox;
 
-	    if (tas.GetNP())
-	      surfbox.Set (tas.GetPoint(0));
-	    for (int k = 1; k < tas.GetNP(); k++)
-	      surfbox.Add (tas.GetPoint(k));
-	    surfbox.Increase (1e-6);
-	    surfbox.CalcDiamCenter();
+            if (tas.GetNP())
+              surfbox.Set (tas.GetPoint(0));
+            for (int k = 1; k < tas.GetNP(); k++)
+              surfbox.Add (tas.GetPoint(k));
+            surfbox.Increase (1e-6);
+            surfbox.CalcDiamCenter();
 
-	    Solid * surflocsol = sol -> GetReducedSolid (surfbox);
-	    if (!surflocsol)
-	      continue;
+            Solid * surflocsol = sol -> GetReducedSolid (surfbox);
+            if (!surflocsol)
+              continue;
 
-	    for (int k = 0; k < tas.GetNT(); k++)
-	      {
-		const TATriangle & tri = tas.GetTriangle (k);
+            for (int k = 0; k < tas.GetNT(); k++)
+              {
+                const TATriangle & tri = tas.GetTriangle (k);
 
-		// check triangle
-		BoxSphere<3> box;
-		box.Set (tas.GetPoint (tri[0]));
-		box.Add (tas.GetPoint (tri[1]));
-		box.Add (tas.GetPoint (tri[2]));
-		box.Increase (1e-6);
-		box.CalcDiamCenter();
+                // check triangle
+                BoxSphere<3> box;
+                box.Set (tas.GetPoint (tri[0]));
+                box.Add (tas.GetPoint (tri[1]));
+                box.Add (tas.GetPoint (tri[2]));
+                box.Increase (1e-6);
+                box.CalcDiamCenter();
 
 
-		Solid * locsol = surflocsol -> GetReducedSolid (box);
-		
-		if (locsol)
-		  {
-		    TATriangle tria(j, 
-				    tri[0] + oldnp,
-				    tri[1] + oldnp,
-				    tri[2] + oldnp);
+                Solid * locsol = surflocsol -> GetReducedSolid (box);
+                
+                if (locsol)
+                  {
+                    TATriangle tria(j, 
+                                    tri[0] + oldnp,
+                                    tri[1] + oldnp,
+                                    tri[2] + oldnp);
                     
                     // tams -> AddTriangle (tria);
 
-		    RefineTriangleApprox (locsol, j, box, detail, 
-					  tria, *tams, iset, 1);
+                    RefineTriangleApprox (locsol, j, box, detail, 
+                                          tria, *tams, iset, 1);
 
-		    delete locsol;
-		  }
-	      }
-	  }
+                    delete locsol;
+                  }
+              }
+          }
 
-	tams->RemoveUnusedPoints ();
-	PrintMessage (2, "Object ", i, " has ", tams->GetNT(), " triangles");
+        tams->RemoveUnusedPoints ();
+        PrintMessage (2, "Object ", i, " has ", tams->GetNT(), " triangles");
       }
       }
     catch (const std::exception &)
       {
-	cerr << "*************************************************************" << endl
-	     << "****   out of memory problem in CSG visualization        ****" << endl
-	     << "****   Restart netgen, and disable                       ****" << endl
-	     << "****   'Draw Geometry' in Geometry -> CSG Options        ****" << endl
-	     << "****   before loading the geometry                       ****" << endl
-	     << "****   meshing will still work !                         ****" << endl
-	     << "*************************************************************" << endl;
-	exit(1);
+        cerr << "*************************************************************" << endl
+             << "****   out of memory problem in CSG visualization        ****" << endl
+             << "****   Restart netgen, and disable                       ****" << endl
+             << "****   'Draw Geometry' in Geometry -> CSG Options        ****" << endl
+             << "****   before loading the geometry                       ****" << endl
+             << "****   meshing will still work !                         ****" << endl
+             << "*************************************************************" << endl;
+        exit(1);
       }
     Change();
   }
@@ -1231,12 +1231,12 @@ namespace netgen
 
   void CSGeometry ::
   RefineTriangleApprox (Solid * locsol, 
-			int surfind,
-			const BoxSphere<3> & box, 
-			double detail,
-			const TATriangle & tria, 
-			TriangleApproximation & tams,
-			IndexSet & iset,
+                        int surfind,
+                        const BoxSphere<3> & box, 
+                        double detail,
+                        const TATriangle & tria, 
+                        TriangleApproximation & tams,
+                        IndexSet & iset,
                         int level)
   {
     // if (level > 10) return;
@@ -1265,10 +1265,10 @@ namespace netgen
     int surfii = -1;
     for (int i = 0; i < lsurfi.Size(); i++)
       if (lsurfi[i] == surfind)
-	{
-	  surfii = i;
-	  break;
-	}
+        {
+          surfii = i;
+          break;
+        }
 
     if (surfii == -1)
       return;
@@ -1277,242 +1277,242 @@ namespace netgen
 
     for (int i = 0; i < lsurfi.Size(); i++)
       {
-	int linkto = isidenticto[lsurfi[i]];
-	surfused[linkto] = 0;
+        int linkto = isidenticto[lsurfi[i]];
+        surfused[linkto] = 0;
       }
 
     for (int i = 0; i < lsurfi.Size(); i++)
       {
-	int linkto = isidenticto[lsurfi[i]];
-	if (!surfused[linkto])
-	  {
-	    surfused[linkto] = 1;
-	    cntindep++;
-	  }
+        int linkto = isidenticto[lsurfi[i]];
+        if (!surfused[linkto])
+          {
+            surfused[linkto] = 1;
+            cntindep++;
+          }
       }
 
     int inverse = surfaces[surfind]->Inverse();
 
     if (cntindep == 1)
       {
-	tams.AddTriangle (tria);
-	//(*testout) << "pos1 " << tams.GetPoint(tria[0]) << " - " << tams.GetPoint(tria[1]) << " - " << tams.GetPoint(tria[2]) << endl;
-	return;
+        tams.AddTriangle (tria);
+        //(*testout) << "pos1 " << tams.GetPoint(tria[0]) << " - " << tams.GetPoint(tria[1]) << " - " << tams.GetPoint(tria[2]) << endl;
+        return;
       }
 
     if (cntindep == 2)
       {
-	// just 2 surfaces:
-	// if smooth, project inner points to edge and finish
+        // just 2 surfaces:
+        // if smooth, project inner points to edge and finish
 
-	int otherind = -1;
+        int otherind = -1;
 
-	for (int i = 0; i < lsurfi.Size(); i++)
-	  {
-	    IVec<2> i2 = IVec<2>(lsurfi[i], surfind).Sort();
-	  
-	    if (i != surfii && !identicsurfaces.Used(i2))
-	      otherind = lsurfi[i];
-	  }
+        for (int i = 0; i < lsurfi.Size(); i++)
+          {
+            IVec<2> i2 = IVec<2>(lsurfi[i], surfind).Sort();
+          
+            if (i != surfii && !identicsurfaces.Used(i2))
+              otherind = lsurfi[i];
+          }
 
-	double kappa = GetSurface(otherind)-> MaxCurvature ();
+        double kappa = GetSurface(otherind)-> MaxCurvature ();
 
-	if (kappa * box.Diam() < 0.1)
-	  {
-	    int pnums[6];
-	    static int between[3][3] =
-	      { { 1, 2, 3 },
-		{ 0, 2, 4 },
-		{ 0, 1, 5 } };
-	    int onsurface[3];
+        if (kappa * box.Diam() < 0.1)
+          {
+            int pnums[6];
+            static int between[3][3] =
+              { { 1, 2, 3 },
+                { 0, 2, 4 },
+                { 0, 1, 5 } };
+            int onsurface[3];
 
-	    for (int j = 0; j < 3; j++)
-	      {
-		int pi = tria[j];
-		pnums[j] = pi;
+            for (int j = 0; j < 3; j++)
+              {
+                int pi = tria[j];
+                pnums[j] = pi;
 
 
-		onsurface[j] =  
-		  !locsol->IsStrictIn (tams.GetPoint (pi), 1e-6) &&
-		  locsol->IsIn (tams.GetPoint (pi), 1e-6);
-		
-		//
-		/*
-		static int nos=0;
-		if(!onsurface[j])
-		  {
-		    nos++;
-		    cout << "NOT ON SURFACE!! "<< nos << endl;
-		  }
-		*/
-	      }
-	  
-	    for (int j = 0; j < 3; j++)
-	      {
-		int lpi1 = between[j][0];
-		int lpi2 = between[j][1];
-		int lpin = between[j][2];
-		if (onsurface[lpi1] == onsurface[lpi2])
-		  pnums[lpin] = -1;
-		else
-		  {
-		    const Point<3> & p1 = tams.GetPoint (pnums[lpi1]);
-		    const Point<3> & p2 = tams.GetPoint (pnums[lpi2]);
-		    double f1 = GetSurface(otherind)->CalcFunctionValue (p1);
-		    double f2 = GetSurface(otherind)->CalcFunctionValue (p2);
+                onsurface[j] =  
+                  !locsol->IsStrictIn (tams.GetPoint (pi), 1e-6) &&
+                  locsol->IsIn (tams.GetPoint (pi), 1e-6);
+                
+                //
+                /*
+                static int nos=0;
+                if(!onsurface[j])
+                  {
+                    nos++;
+                    cout << "NOT ON SURFACE!! "<< nos << endl;
+                  }
+                */
+              }
+          
+            for (int j = 0; j < 3; j++)
+              {
+                int lpi1 = between[j][0];
+                int lpi2 = between[j][1];
+                int lpin = between[j][2];
+                if (onsurface[lpi1] == onsurface[lpi2])
+                  pnums[lpin] = -1;
+                else
+                  {
+                    const Point<3> & p1 = tams.GetPoint (pnums[lpi1]);
+                    const Point<3> & p2 = tams.GetPoint (pnums[lpi2]);
+                    double f1 = GetSurface(otherind)->CalcFunctionValue (p1);
+                    double f2 = GetSurface(otherind)->CalcFunctionValue (p2);
 
-		    Point<3> pn;
+                    Point<3> pn;
 
-		    double l2(100),l1(100);
-		    if ( fabs (f1-f2) > 1e-20 )
-		      {
-			l2 = -f1/(f2-f1);
-			l1 = f2/(f2-f1);
-			pn = Point<3>(l1 * p1(0) + l2 * p2(0),
-				      l1 * p1(1) + l2 * p2(1),
-				      l1 * p1(2) + l2 * p2(2));
-		      }
-		    else
-		      pn = p1;
+                    double l2(100),l1(100);
+                    if ( fabs (f1-f2) > 1e-20 )
+                      {
+                        l2 = -f1/(f2-f1);
+                        l1 = f2/(f2-f1);
+                        pn = Point<3>(l1 * p1(0) + l2 * p2(0),
+                                      l1 * p1(1) + l2 * p2(1),
+                                      l1 * p1(2) + l2 * p2(2));
+                      }
+                    else
+                      pn = p1;
 
-// 		    if(fabs(pn(0)) > 4 || fabs(pn(1)) > 4 || fabs(pn(2)) > 4)
-// 		      {
-// 			cout << "p1 " << p1 << " p2 " << p2 
-// 			     << " f1 " << f1 << " f2 " << f2
-// 			     << " l1 " << l1 << " l2 " << l2 
-// 			     << " pn " << pn << endl;
+//                  if(fabs(pn(0)) > 4 || fabs(pn(1)) > 4 || fabs(pn(2)) > 4)
+//                    {
+//                      cout << "p1 " << p1 << " p2 " << p2 
+//                           << " f1 " << f1 << " f2 " << f2
+//                           << " l1 " << l1 << " l2 " << l2 
+//                           << " pn " << pn << endl;
 
-// 		      }
+//                    }
 
-		    
-		    //GetSurface (surfind)->Project (pn);
-		    
-		    pnums[lpin] = tams.AddPoint (pn);
+                    
+                    //GetSurface (surfind)->Project (pn);
+                    
+                    pnums[lpin] = tams.AddPoint (pn);
 
-		    GetSurface (surfind)->Project (pn);
-		    
-		    Vec<3> n;
-		    n = GetSurface (surfind)->GetNormalVector (pn);
-		    if (inverse) n *= -1;
-		    tams.AddNormal(n);
-		  }
-	      }
-	  
-	    int vcase = 0;
-	    if (onsurface[0]) vcase++;
-	    if (onsurface[1]) vcase+=2;
-	    if (onsurface[2]) vcase+=4;
-	  
-	    static int trias[8][6] =
-	      { { 0, 0, 0,   0, 0, 0 },
-		{ 1, 6, 5,   0, 0, 0 },
-		{ 2, 4, 6,   0, 0, 0 },
-		{ 1, 2, 4,   1, 4, 5 },
-		{ 3, 5, 4,   0, 0, 0 },
-		{ 1, 6, 4,   1, 4, 3 },
-		{ 2, 3, 6,   3, 5, 6 },
-		{ 1, 2, 3,   0, 0, 0 } };
-	    static int ntrias[4] =
-	      { 0, 1, 2, 1 };
+                    GetSurface (surfind)->Project (pn);
+                    
+                    Vec<3> n;
+                    n = GetSurface (surfind)->GetNormalVector (pn);
+                    if (inverse) n *= -1;
+                    tams.AddNormal(n);
+                  }
+              }
+          
+            int vcase = 0;
+            if (onsurface[0]) vcase++;
+            if (onsurface[1]) vcase+=2;
+            if (onsurface[2]) vcase+=4;
+          
+            static int trias[8][6] =
+              { { 0, 0, 0,   0, 0, 0 },
+                { 1, 6, 5,   0, 0, 0 },
+                { 2, 4, 6,   0, 0, 0 },
+                { 1, 2, 4,   1, 4, 5 },
+                { 3, 5, 4,   0, 0, 0 },
+                { 1, 6, 4,   1, 4, 3 },
+                { 2, 3, 6,   3, 5, 6 },
+                { 1, 2, 3,   0, 0, 0 } };
+            static int ntrias[4] =
+              { 0, 1, 2, 1 };
 
-	    int nvis = 0;
-	    for (int j = 0; j < 3; j++)
-	      if (onsurface[j])
-		nvis++;
+            int nvis = 0;
+            for (int j = 0; j < 3; j++)
+              if (onsurface[j])
+                nvis++;
 
-	    for (int j = 0; j < ntrias[nvis]; j++)
-	      {
-		TATriangle ntria(tria.SurfaceIndex(),
-				 pnums[trias[vcase][3*j]-1],
-				 pnums[trias[vcase][3*j+1]-1],
-				 pnums[trias[vcase][3*j+2]-1]);
-		//(*testout) << "pos2 " << tams.GetPoint(ntria[0]) << " - " << tams.GetPoint(ntria[1]) << " - " << tams.GetPoint(ntria[2]) << endl
-		//	   << "( " << ntria[0] << " - " << ntria[1] << " - " << ntria[2] << ")" << endl;
-		tams.AddTriangle (ntria);
-	      }
+            for (int j = 0; j < ntrias[nvis]; j++)
+              {
+                TATriangle ntria(tria.SurfaceIndex(),
+                                 pnums[trias[vcase][3*j]-1],
+                                 pnums[trias[vcase][3*j+1]-1],
+                                 pnums[trias[vcase][3*j+2]-1]);
+                //(*testout) << "pos2 " << tams.GetPoint(ntria[0]) << " - " << tams.GetPoint(ntria[1]) << " - " << tams.GetPoint(ntria[2]) << endl
+                //         << "( " << ntria[0] << " - " << ntria[1] << " - " << ntria[2] << ")" << endl;
+                tams.AddTriangle (ntria);
+              }
 
-	    /* saturn changes:
+            /* saturn changes:
 
-	    int pvis[3];
-	    for (j = 0; j < 3; j++)
-	    pvis[j] = !locsol->IsStrictIn (tams.GetPoint (j+1), 1e-6) &&
-	    locsol->IsIn (tams.GetPoint (j+1), 1e-6);
-	  
-	    int newpi[3];
-	    for (j = 0; j < 3; j++)
-	    {
-	    int pi1 = j;
-	    int pi2 = (j+1) % 3;
-	    int pic = j;
+            int pvis[3];
+            for (j = 0; j < 3; j++)
+            pvis[j] = !locsol->IsStrictIn (tams.GetPoint (j+1), 1e-6) &&
+            locsol->IsIn (tams.GetPoint (j+1), 1e-6);
+          
+            int newpi[3];
+            for (j = 0; j < 3; j++)
+            {
+            int pi1 = j;
+            int pi2 = (j+1) % 3;
+            int pic = j;
 
-	    if (pvis[pi1] != pvis[pi2])
-	    {
-	    Point<3> hp = Center (tams.GetPoint (tria.PNum (pi1+1)),
-	    tams.GetPoint (tria.PNum (pi2+1)));
+            if (pvis[pi1] != pvis[pi2])
+            {
+            Point<3> hp = Center (tams.GetPoint (tria.PNum (pi1+1)),
+            tams.GetPoint (tria.PNum (pi2+1)));
 
-	    newpi[j] = tams.AddPoint (hp);
-	    Vec<3> n = tams.GetNormal (pi1);
-	    tams.AddNormal (n);
-	    }
-	    else
-	    newpi[j] = 0;
-	    }
+            newpi[j] = tams.AddPoint (hp);
+            Vec<3> n = tams.GetNormal (pi1);
+            tams.AddNormal (n);
+            }
+            else
+            newpi[j] = 0;
+            }
 
-	    int nvis = 0;
-	    for (j = 0; j <= nvis; j++)
-	    if (pvis[j]) nvis++;
+            int nvis = 0;
+            for (j = 0; j <= nvis; j++)
+            if (pvis[j]) nvis++;
 
-	    int si = tria.SurfaceIndex();
-	    switch (nvis)
-	    {
-	    case 0:
-	    break;
-	    case 1:
-	    {
-	    int visj;
-	    for (j = 0; j < 3; j++)
-	    if (pvis[j]) visj = j;
-	    int pivis = tria.PNum (visj+1);
-	    int pic1 = newpi[(visj+1)%3];
-	    int pic2 = newpi[(visj+2)%3];
-		
-	    cout << pivis << "," << pic1 << "," << pic2 << endl;
-		
-	    tams.AddTriangle (TATriangle (si, pivis, pic1,pic2));
-	    break;
-	    }
-	    case 2:
-	    {
-	    int nvisj;
-	    for (j = 0; j < 3; j++)
-	    if (!pvis[j]) nvisj = j;
+            int si = tria.SurfaceIndex();
+            switch (nvis)
+            {
+            case 0:
+            break;
+            case 1:
+            {
+            int visj;
+            for (j = 0; j < 3; j++)
+            if (pvis[j]) visj = j;
+            int pivis = tria.PNum (visj+1);
+            int pic1 = newpi[(visj+1)%3];
+            int pic2 = newpi[(visj+2)%3];
+                
+            cout << pivis << "," << pic1 << "," << pic2 << endl;
+                
+            tams.AddTriangle (TATriangle (si, pivis, pic1,pic2));
+            break;
+            }
+            case 2:
+            {
+            int nvisj;
+            for (j = 0; j < 3; j++)
+            if (!pvis[j]) nvisj = j;
 
-	    int pivis1 = tria.PNum ((nvisj+1)%3+1);
-	    int pivis2 = tria.PNum ((nvisj+2)%3+1);
-	    int pic1 = newpi[nvisj];
-	    int pic2 = newpi[(nvisj+2)%3];
+            int pivis1 = tria.PNum ((nvisj+1)%3+1);
+            int pivis2 = tria.PNum ((nvisj+2)%3+1);
+            int pic1 = newpi[nvisj];
+            int pic2 = newpi[(nvisj+2)%3];
 
-	    tams.AddTriangle (TATriangle (si, pivis1, pic1,pic2));
-	    tams.AddTriangle (TATriangle (si, pivis1, pic1,pivis2));
-	    break;
-	    }
-	    case 3:
-	    {
-	    tams.AddTriangle (tria);
-	    break;
-	    }
-	    }
+            tams.AddTriangle (TATriangle (si, pivis1, pic1,pic2));
+            tams.AddTriangle (TATriangle (si, pivis1, pic1,pivis2));
+            break;
+            }
+            case 3:
+            {
+            tams.AddTriangle (tria);
+            break;
+            }
+            }
 
-	    */
-	    return;
-	  }
+            */
+            return;
+          }
       }
 
     // bisection
     if (box.Diam() < detail)
       {
-	//cout << "returning" << endl;
-	return;
+        //cout << "returning" << endl;
+        return;
       }
 
     for (int i = 0; i < 3; i++)
@@ -1520,56 +1520,56 @@ namespace netgen
   
     static int between[3][3] =
       { { 0, 1, 5 },
-	{ 0, 2, 4 },
-	{ 1, 2, 3 } };
+        { 0, 2, 4 },
+        { 1, 2, 3 } };
   
     for (int i = 0; i < 3; i++)
       {
-	// int pi1 = tria[between[i][0]];
+        // int pi1 = tria[between[i][0]];
 
-	Point<3> newp = Center (tams.GetPoint (tria[between[i][0]]),
-				tams.GetPoint (tria[between[i][1]]));
-	Vec<3> n;
-	
-	GetSurface(surfind)->Project (newp);
+        Point<3> newp = Center (tams.GetPoint (tria[between[i][0]]),
+                                tams.GetPoint (tria[between[i][1]]));
+        Vec<3> n;
+        
+        GetSurface(surfind)->Project (newp);
 
-	n = GetSurface(surfind)->GetNormalVector (newp);
+        n = GetSurface(surfind)->GetNormalVector (newp);
       
-	pinds[between[i][2]] = tams.AddPoint (newp);
-	if (inverse) n *= -1;
-	tams.AddNormal (n);
+        pinds[between[i][2]] = tams.AddPoint (newp);
+        if (inverse) n *= -1;
+        tams.AddNormal (n);
       }
   
     static int trias[4][4] =
       { { 0, 5, 4 },
-	{ 5, 1, 3 },
-	{ 4, 3, 2 },
-	{ 3, 4, 5 } };
+        { 5, 1, 3 },
+        { 4, 3, 2 },
+        { 3, 4, 5 } };
  
     for (int i = 0; i < 4; i++)
       {
-	TATriangle ntri(surfind,
-			pinds[trias[i][0]],
-			pinds[trias[i][1]],
-			pinds[trias[i][2]]);
+        TATriangle ntri(surfind,
+                        pinds[trias[i][0]],
+                        pinds[trias[i][1]],
+                        pinds[trias[i][2]]);
 
-	// check triangle
-	BoxSphere<3> nbox;
-	nbox.Set (tams.GetPoint (ntri[0]));
-	nbox.Add (tams.GetPoint (ntri[1]));
-	nbox.Add (tams.GetPoint (ntri[2]));
-	nbox.Increase (1e-8);
-	nbox.CalcDiamCenter();
+        // check triangle
+        BoxSphere<3> nbox;
+        nbox.Set (tams.GetPoint (ntri[0]));
+        nbox.Add (tams.GetPoint (ntri[1]));
+        nbox.Add (tams.GetPoint (ntri[2]));
+        nbox.Increase (1e-8);
+        nbox.CalcDiamCenter();
 
-	Solid * nsol = locsol -> GetReducedSolid (nbox);
+        Solid * nsol = locsol -> GetReducedSolid (nbox);
 
-	if (nsol)
-	  {
-	    RefineTriangleApprox (nsol, surfind, nbox, 
-				  detail, ntri, tams, iset, level+1);
-	  
-	    delete nsol;
-	  }
+        if (nsol)
+          {
+            RefineTriangleApprox (nsol, surfind, nbox, 
+                                  detail, ntri, tams, iset, level+1);
+          
+            delete nsol;
+          }
       }
   }
 
@@ -1594,9 +1594,9 @@ namespace netgen
   {
     if (only_once)
       {
-	ClearVisitedIt clit;
-	for (int i = 0; i < solids.Size(); i++)
-	  solids[i] -> IterateSolid (clit, 0);
+        ClearVisitedIt clit;
+        for (int i = 0; i < solids.Size(); i++)
+          solids[i] -> IterateSolid (clit, 0);
       }
 
     for (int i = 0; i < solids.Size(); i++)
@@ -1608,11 +1608,11 @@ namespace netgen
   {
     double maxs, mins;
     maxs = max3 (boundingbox.PMax()(0), 
-		 boundingbox.PMax()(1), 
-		 boundingbox.PMax()(2));
+                 boundingbox.PMax()(1), 
+                 boundingbox.PMax()(2));
     mins = min3 (boundingbox.PMin()(0), 
-		 boundingbox.PMin()(1), 
-		 boundingbox.PMin()(2));
+                 boundingbox.PMin()(1), 
+                 boundingbox.PMin()(2));
     return max2 (maxs, -mins) * 1.1;
   }
 
@@ -1633,27 +1633,27 @@ namespace netgen
     string extension = filename.extension().string();
     if (extension == ".geo")
       {
-	PrintMessage (1, "Load CSG geometry file ", filename);
+        PrintMessage (1, "Load CSG geometry file ", filename);
 
-	ifstream infile(filename);
+        ifstream infile(filename);
 
-	CSGeometry * hgeom = ParseCSG (infile);
-	if (!hgeom)
-	  throw NgException ("geo-file should start with 'algebraic3d'");
+        CSGeometry * hgeom = ParseCSG (infile);
+        if (!hgeom)
+          throw NgException ("geo-file should start with 'algebraic3d'");
 
-	hgeom -> FindIdenticSurfaces(1e-8 * hgeom->MaxSize()); 
-	return hgeom;
+        hgeom -> FindIdenticSurfaces(1e-8 * hgeom->MaxSize()); 
+        return hgeom;
       }
 
     if (extension == ".ngg")
       {
-	PrintMessage (1, "Load new CSG geometry file ", filename);
+        PrintMessage (1, "Load new CSG geometry file ", filename);
 
-	ifstream infile(filename);
-	CSGeometry * hgeom = new CSGeometry("");
-	hgeom -> Load (infile);
+        ifstream infile(filename);
+        CSGeometry * hgeom = new CSGeometry("");
+        hgeom -> Load (infile);
 
-	return hgeom;
+        return hgeom;
       }
     
     return NULL;
@@ -1661,12 +1661,12 @@ namespace netgen
 
   NetgenGeometry * CSGeometryRegister :: LoadFromMeshFile (istream & ist, string token) const
   {
-	if (token != "csgsurfaces")
+        if (token != "csgsurfaces")
         return nullptr;
 
     CSGeometry * geometry = new CSGeometry ("");
-	geometry -> LoadSurfaces(ist);
-	return geometry;
+        geometry -> LoadSurfaces(ist);
+        return geometry;
   }
 
 

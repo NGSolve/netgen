@@ -271,7 +271,7 @@ extern "C" {
 
 
   void Ng_SurfaceElementTransformation (int eli, double x, double y, 
-					double * p3d, double * jacobian);
+                                        double * p3d, double * jacobian);
 
 #ifdef PARALLEL
 

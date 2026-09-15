@@ -193,12 +193,12 @@ public:
 
     for (int i = 0; i < D; i++)
       for (int j = 0; j < D; j++)
-	ddval[i*D+j] += dval[i] * y.dval[j] + dval[j] * y.dval[i];
+        ddval[i*D+j] += dval[i] * y.dval[j] + dval[j] * y.dval[i];
 
     for (int i = 0; i < D; i++)
       {
-	dval[i] *= y.val;
-	dval[i] += val * y.dval[i];
+        dval[i] *= y.val;
+        dval[i] += val * y.dval[i];
       }
     val *= y.val;
     return *this;
@@ -410,7 +410,7 @@ inline AutoDiffDiff<D, SCAL> operator* (const AutoDiffDiff<D, SCAL> & x, const A
   for (int i = 0; i < D; i++)
     for (int j = 0; j < D; j++)
       res.DDValue(i,j) = hx * y.DDValue(i,j) + hy * x.DDValue(i,j)
-	+ x.DValue(i) * y.DValue(j) + x.DValue(j) * y.DValue(i);
+        + x.DValue(i) * y.DValue(j) + x.DValue(j) * y.DValue(i);
 
   return res;
 }

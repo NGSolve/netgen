@@ -339,14 +339,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                              return py::tuple(l);
                            })
     .def("__getitem__", [](const MeshPoint & self, int index) {
-	  if(index<0 || index>2)
+          if(index<0 || index>2)
               throw py::index_error();
-	  return self[index];
-	})
+          return self[index];
+        })
     .def("__setitem__", [](MeshPoint & self, int index, double val) {
-	  if(index<0 || index>2)
+          if(index<0 || index>2)
               throw py::index_error();
-	  self(index) = val;
+          self(index) = val;
     })
     .def_property("singular",
                   [](const MeshPoint & pnt) { return pnt.Singularity(); },
@@ -932,7 +932,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::init( [] (int dim, NgMPI_Comm comm)
                    {
                      auto mesh = make_shared<Mesh>();
-		     mesh->SetCommunicator(comm);
+                     mesh->SetCommunicator(comm);
                      mesh -> SetDimension(dim);
                      SetGlobalMesh(mesh);  // for visualization
                      mesh -> SetGeometry (nullptr);
@@ -942,7 +942,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          )
     .def(NGSPickle<Mesh>())
     .def_property_readonly("comm", [](const Mesh & amesh) -> NgMPI_Comm
-			   { return amesh.GetCommunicator(); },
+                           { return amesh.GetCommunicator(); },
                            "MPI-communicator the Mesh lives in")
     /*
     .def("__init__",
@@ -970,13 +970,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       })
     
     .def("Distribute", [](shared_ptr<Mesh> self, NgMPI_Comm comm) {
-	self->SetCommunicator(comm);
-	if(comm.Size()==1) return self;
-	// if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
-	// cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
-	if(comm.Rank()==0) self->Distribute();
-	else self->SendRecvMesh();
-	return self;
+        self->SetCommunicator(comm);
+        if(comm.Size()==1) return self;
+        // if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
+        // cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
+        if(comm.Rank()==0) self->Distribute();
+        else self->SendRecvMesh();
+        return self;
       }, py::arg("comm"))
     .def_static("Receive", [](NgMPI_Comm comm) -> shared_ptr<Mesh> {
         auto mesh = make_shared<Mesh>();
@@ -985,42 +985,42 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         return mesh;
       }, py::arg("comm"))
     .def("Load",  FunctionPointer 
-	 ([](shared_ptr<Mesh> self, const string & filename)
-	  {
+         ([](shared_ptr<Mesh> self, const string & filename)
+          {
 
-	    auto comm = self->GetCommunicator();
-	    int id = comm.Rank();
-	    int ntasks = comm.Size();
-	    auto & mesh = self;
+            auto comm = self->GetCommunicator();
+            int id = comm.Rank();
+            int ntasks = comm.Size();
+            auto & mesh = self;
 
-	    {
-	      ifstream infile(filename.c_str());
-	      if(!infile.good())
-		throw NgException(string("Error opening file ") + filename);
-	    }
+            {
+              ifstream infile(filename.c_str());
+              if(!infile.good())
+                throw NgException(string("Error opening file ") + filename);
+            }
 
-	    if ( filename.find(".vol") == string::npos )
-	      {
-		if(ntasks>1)
-		  throw NgException("Not sure what to do with this?? Does this work with MPI??");
-		mesh->SetCommunicator(comm);
-		ReadFile(*mesh,filename.c_str());
-		//mesh->SetGlobalH (mparam.maxh);
-		//mesh->CalcLocalH();
-		return;
-	      }
+            if ( filename.find(".vol") == string::npos )
+              {
+                if(ntasks>1)
+                  throw NgException("Not sure what to do with this?? Does this work with MPI??");
+                mesh->SetCommunicator(comm);
+                ReadFile(*mesh,filename.c_str());
+                //mesh->SetGlobalH (mparam.maxh);
+                //mesh->CalcLocalH();
+                return;
+              }
 
-	    istream * infile = nullptr;
-	    Array<char> buf; // for distributing geometry!
-	    int strs;
+            istream * infile = nullptr;
+            Array<char> buf; // for distributing geometry!
+            int strs;
 
-	    if( id == 0) {
-	      if (filename.length() > 8 && filename.substr (filename.length()-8, 8) == ".vol.bin")
+            if( id == 0) {
+              if (filename.length() > 8 && filename.substr (filename.length()-8, 8) == ".vol.bin")
                 mesh -> Load(filename);
               else if (filename.substr (filename.length()-3, 3) == ".gz")
-		infile = new igzstream (filename.c_str());
-	      else
-		infile = new ifstream (filename.c_str());
+                infile = new igzstream (filename.c_str());
+              else
+                infile = new ifstream (filename.c_str());
 
               if(infile)
                 {
@@ -1038,94 +1038,94 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                 }
 
 
-	      if (ntasks > 1)
-		{
+              if (ntasks > 1)
+                {
 
-		  char * weightsfilename = new char [filename.size()+1];
-		  strcpy (weightsfilename, filename.c_str());            
-		  weightsfilename[strlen (weightsfilename)-3] = 'w';
-		  weightsfilename[strlen (weightsfilename)-2] = 'e';
-		  weightsfilename[strlen (weightsfilename)-1] = 'i';
+                  char * weightsfilename = new char [filename.size()+1];
+                  strcpy (weightsfilename, filename.c_str());            
+                  weightsfilename[strlen (weightsfilename)-3] = 'w';
+                  weightsfilename[strlen (weightsfilename)-2] = 'e';
+                  weightsfilename[strlen (weightsfilename)-1] = 'i';
 
-		  ifstream weightsfile(weightsfilename);      
-		  delete [] weightsfilename;  
-	  
-		  if (!(weightsfile.good()))
-		    {
-		      // cout << "regular distribute" << endl;
-		      mesh -> Distribute();
-		    }
-		  else
-		    {
-		      char str[20];   
-		      bool endfile = false;
-		      int n, dummy;
-	      
-		      Array<int> segment_weights;
-		      Array<int> surface_weights;
-		      Array<int> volume_weights;
-	      
-		      while (weightsfile.good() && !endfile)
-			{
-			  weightsfile >> str;
-		  
-			  if (strcmp (str, "edgeweights") == 0)
-			    {
-			      weightsfile >> n;
-			      segment_weights.SetSize(n);
-			      for (int i = 0; i < n; i++)
-				weightsfile >> dummy >> segment_weights[i];
-			    }
-		  
-			  if (strcmp (str, "surfaceweights") == 0)
-			    {
-			      weightsfile >> n;
-			      surface_weights.SetSize(n);
-			      for (int i=0; i<n; i++)
-				weightsfile >> dummy >> surface_weights[i];
-			    }
-		  
-			  if (strcmp (str, "volumeweights") == 0)
-			    {
-			      weightsfile >> n;
-			      volume_weights.SetSize(n);
-			      for (int i=0; i<n; i++)
-				weightsfile >> dummy >> volume_weights[i];
-			    }
-		  
-			  if (strcmp (str, "endfile") == 0)
-			    endfile = true;  
-			}     
-	      
-		      mesh -> Distribute(volume_weights, surface_weights, segment_weights);
-		    }
-		} // ntasks>1 end
-	    } // id==0 end
-	    else {
-	      mesh->SendRecvMesh();
-	    }
+                  ifstream weightsfile(weightsfilename);      
+                  delete [] weightsfilename;  
+          
+                  if (!(weightsfile.good()))
+                    {
+                      // cout << "regular distribute" << endl;
+                      mesh -> Distribute();
+                    }
+                  else
+                    {
+                      char str[20];   
+                      bool endfile = false;
+                      int n, dummy;
+              
+                      Array<int> segment_weights;
+                      Array<int> surface_weights;
+                      Array<int> volume_weights;
+              
+                      while (weightsfile.good() && !endfile)
+                        {
+                          weightsfile >> str;
+                  
+                          if (strcmp (str, "edgeweights") == 0)
+                            {
+                              weightsfile >> n;
+                              segment_weights.SetSize(n);
+                              for (int i = 0; i < n; i++)
+                                weightsfile >> dummy >> segment_weights[i];
+                            }
+                  
+                          if (strcmp (str, "surfaceweights") == 0)
+                            {
+                              weightsfile >> n;
+                              surface_weights.SetSize(n);
+                              for (int i=0; i<n; i++)
+                                weightsfile >> dummy >> surface_weights[i];
+                            }
+                  
+                          if (strcmp (str, "volumeweights") == 0)
+                            {
+                              weightsfile >> n;
+                              volume_weights.SetSize(n);
+                              for (int i=0; i<n; i++)
+                                weightsfile >> dummy >> volume_weights[i];
+                            }
+                  
+                          if (strcmp (str, "endfile") == 0)
+                            endfile = true;  
+                        }     
+              
+                      mesh -> Distribute(volume_weights, surface_weights, segment_weights);
+                    }
+                } // ntasks>1 end
+            } // id==0 end
+            else {
+              mesh->SendRecvMesh();
+            }
 
-	    if(ntasks>1) {
+            if(ntasks>1) {
               // #ifdef PARALLEL
-	      /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
+              /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
               /*
-	      int strs = buf.Size();
-	      MyMPI_Bcast(strs, comm);
-	      if(strs>0)
-		MyMPI_Bcast(buf, comm);
+              int strs = buf.Size();
+              MyMPI_Bcast(strs, comm);
+              if(strs>0)
+                MyMPI_Bcast(buf, comm);
               */
               comm.Bcast(buf);
               // #endif
-	    }
+            }
 
-	    shared_ptr<NetgenGeometry> geo;
-	    if(buf.Size()) { // if we had geom-info in the file, take it
-	      istringstream geom_infile(string((const char*)buf.Data(), buf.Size()));
-	      geo = GeometryRegister().LoadFromMeshFile(geom_infile);
-	    }
-	    if(geo!=nullptr) mesh->SetGeometry(geo);
-	    else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
-	  }),py::call_guard<py::gil_scoped_release>())
+            shared_ptr<NetgenGeometry> geo;
+            if(buf.Size()) { // if we had geom-info in the file, take it
+              istringstream geom_infile(string((const char*)buf.Data(), buf.Size()));
+              geo = GeometryRegister().LoadFromMeshFile(geom_infile);
+            }
+            if(geo!=nullptr) mesh->SetGeometry(geo);
+            else if(ng_geometry!=nullptr) mesh->SetGeometry(ng_geometry);
+          }),py::call_guard<py::gil_scoped_release>())
     .def("Save", static_cast<void(Mesh::*)(const filesystem::path & name)const>(&Mesh::Save),py::call_guard<py::gil_scoped_release>())
     .def("Export",
          [] (Mesh & self, string filename, string format)
@@ -1284,7 +1284,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def ("AddSingularity", [](Mesh & self, PointIndex pi, double factor)
          {
-	   self[pi].Singularity(factor);
+           self[pi].Singularity(factor);
          })
 
     .def ("AddPoints", [](Mesh & self, py::buffer b1)
@@ -1357,7 +1357,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                         // find some point in the mid of trig/quad for
                         // quick + stable uv-projection of all points
                         // auto startp = Center(self[el[0]], self[el[1]]);
-			int edgenr = self.GetEdgeDescriptor(index).EdgeNr();
+                        int edgenr = self.GetEdgeDescriptor(index).EdgeNr();
                         for(auto i : Range(np))
                           self.GetGeometry()->ProjectPointEdge(0, 0, self[el[i]],
                                                                (i<2)?&el.EPGeomInfo(i):nullptr, edgenr);
@@ -1392,7 +1392,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                         // find some point in the mid of trig/quad for
                         // quick + stable uv-projection of all points
                         auto startp = Center(self[el[0]], self[el[1]], self[el[2]]);
-			int surfnr = self.GetFaceDescriptor(index).SurfNr();
+                        int surfnr = self.GetFaceDescriptor(index).SurfNr();
                         PointGeomInfo gi = self.GetGeometry()->ProjectPoint(surfnr,
                                                                             startp);
                         for(auto i : Range(np))
@@ -1527,11 +1527,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          })
     .def ("AddPointIdentification", [](Mesh & self, py::object pindex1, py::object pindex2, int identnr, Identifications::ID_TYPE type)
                            {
-			     if(py::extract<PointIndex>(pindex1).check() && py::extract<PointIndex>(pindex2).check())
-			       {
-				 self.GetIdentifications().Add (py::extract<PointIndex>(pindex1)(), py::extract<PointIndex>(pindex2)(), identnr);
-				 self.GetIdentifications().SetType(identnr, type); // type = 2 ... periodic
-			       }
+                             if(py::extract<PointIndex>(pindex1).check() && py::extract<PointIndex>(pindex2).check())
+                               {
+                                 self.GetIdentifications().Add (py::extract<PointIndex>(pindex1)(), py::extract<PointIndex>(pindex2)(), identnr);
+                                 self.GetIdentifications().SetType(identnr, type); // type = 2 ... periodic
+                               }
                            },
           //py::default_call_policies(),
           py::arg("pid1"),
@@ -1779,7 +1779,7 @@ py::arg("point_tolerance") = -1.)
     .def ("Scale", [](Mesh & self, double factor)
           {
             for(auto & pnt : self.Points())
-	      pnt.Scale(factor);
+              pnt.Scale(factor);
           })
     .def ("Copy", [](Mesh & self)
           {
@@ -2117,25 +2117,25 @@ project_boundaries : Optional[str] = None
              Array<string> hpbnd(py::len(py_hpbnd));
              Array<float> hpbndfac(py::len(py_hpbnd));
              for(int i = 0; i<py::len(py_bbbpts);i++)
-		 {
+                 {
                    py::tuple pnt = py::extract<py::tuple>(py_bbbpts[i])();
                    bbbpts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
                    bbbname[i] = py::extract<string>(py_bbbnames[i])();
                  }
              for(int i = 0; i<py::len(py_hppnts);i++)
-		 {
+                 {
                    py::tuple pnt = py::extract<py::tuple>(py_hppnts[i])();
                    hppnts[i] = Point<3>(py::extract<double>(pnt[0])(),py::extract<double>(pnt[1])(),py::extract<double>(pnt[2])());
                    hppntsfac[i] = py::extract<double>(pnt[3])();
                  }
 
-	     int ii=0;
+             int ii=0;
              for(auto val : py_hpbnd)
                {
                  hpbnd[ii] = py::cast<string>(val.first);
-		 hpbndfac[ii] = py::cast<float>(val.second);
-		 ii++;
-	       }
+                 hpbndfac[ii] = py::cast<float>(val.second);
+                 ii++;
+               }
 
              
              Array<double> layer_thickness[4];
@@ -2143,25 +2143,25 @@ project_boundaries : Optional[str] = None
 
              for(auto val : py_layers)
                {
-		 int index = -1;
+                 int index = -1;
                  if (py::cast<string>(val.first) == "left") index = 0;
                  else if (py::cast<string>(val.first) == "top") index = 3;
                  else if (py::cast<string>(val.first) == "right") index = 2;
                  else if (py::cast<string>(val.first) == "bottom") index = 1;
-		 else if (py::cast<string>(val.first) == "quads") layer_quad = py::cast<bool>(val.second);
-		 else throw Exception("Unknown parameter " + string(py::cast<string>(val.first)));
-		 if (index < 0) continue;
+                 else if (py::cast<string>(val.first) == "quads") layer_quad = py::cast<bool>(val.second);
+                 else throw Exception("Unknown parameter " + string(py::cast<string>(val.first)));
+                 if (index < 0) continue;
 
-		 auto list = py::cast<py::list>(val.second);
-		 layer_thickness[index] = Array<double>(py::len(list));
-		 for (size_t i = 0; i < py::len(list); i++)
-		   layer_thickness[index][i] = py::cast<double>(list[i]);
+                 auto list = py::cast<py::list>(val.second);
+                 layer_thickness[index] = Array<double>(py::len(list));
+                 for (size_t i = 0; i < py::len(list); i++)
+                   layer_thickness[index][i] = py::cast<double>(list[i]);
                }
                    
              auto mesh = make_shared<Mesh>();
              SetGlobalMesh (mesh);
              mesh->SetGeometry(geo);
-	     ng_geometry = geo;
+             ng_geometry = geo;
              auto result = geo->GenerateStructuredMesh (mesh, quads, nx, ny, flip_triangles, bbbpts, bbbname, hppnts, hppntsfac, hpbnd, hpbndfac, layer_thickness, layer_quad);
              if(result != 0)
                throw Exception("SurfaceGeometry: Meshing failed!");

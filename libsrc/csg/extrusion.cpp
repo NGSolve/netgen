@@ -24,23 +24,23 @@ namespace netgen
 
     for(int i=0; i<path->GetNSplines(); i++)
       {
-	spline3_path[i] = dynamic_cast < const SplineSeg3<3>* >(&path->GetSpline(i));
-	line_path[i] = dynamic_cast < const LineSeg<3>* >(&path->GetSpline(i));
-	
-	if(line_path[i])
-	  {
-	    y_dir[i] = line_path[i]->EndPI() - line_path[i]->StartPI();
-	    y_dir[i].Normalize();
-	    z_dir[i] = glob_z_direction;
-	    Orthogonalize(y_dir[i],z_dir[i]);
-	    x_dir[i] = Cross(y_dir[i],z_dir[i]);
-	    loc_z_dir[i] = z_dir[i];
-	  }
-	else
-	  {
-	    z_dir[i] = glob_z_direction;
-	    loc_z_dir[i] = glob_z_direction;
-	  }
+        spline3_path[i] = dynamic_cast < const SplineSeg3<3>* >(&path->GetSpline(i));
+        line_path[i] = dynamic_cast < const LineSeg<3>* >(&path->GetSpline(i));
+        
+        if(line_path[i])
+          {
+            y_dir[i] = line_path[i]->EndPI() - line_path[i]->StartPI();
+            y_dir[i].Normalize();
+            z_dir[i] = glob_z_direction;
+            Orthogonalize(y_dir[i],z_dir[i]);
+            x_dir[i] = Cross(y_dir[i],z_dir[i]);
+            loc_z_dir[i] = z_dir[i];
+          }
+        else
+          {
+            z_dir[i] = glob_z_direction;
+            loc_z_dir[i] = glob_z_direction;
+          }
       }
 
     double cum_angle = 0.;
@@ -61,8 +61,8 @@ namespace netgen
 
   
   ExtrusionFace :: ExtrusionFace(const SplineSeg<2> * profile_in,
-				 const SplineGeometry<3> * path_in,
-				 const Vec<3> & z_direction) :
+                                 const SplineGeometry<3> * path_in,
+                                 const Vec<3> & z_direction) :
     profile(profile_in), path(path_in), glob_z_direction(z_direction)
   {
     deletable = false;
@@ -82,19 +82,19 @@ namespace netgen
 
     for(int i=0; i<ptype; i++)
       {
-	p[i](0) = raw_data[pos]; pos++;
-	p[i](1) = raw_data[pos]; pos++;
+        p[i](0) = raw_data[pos]; pos++;
+        p[i](1) = raw_data[pos]; pos++;
       }
     if(ptype == 2)
       {
-	profile = new LineSeg<2>(GeomPoint<2>(p[0],1),
-				 GeomPoint<2>(p[1],1));
+        profile = new LineSeg<2>(GeomPoint<2>(p[0],1),
+                                 GeomPoint<2>(p[1],1));
       }
     else if(ptype == 3)
       {
-	profile = new SplineSeg3<2>(GeomPoint<2>(p[0],1),
-				    GeomPoint<2>(p[1],1),
-				    GeomPoint<2>(p[2],1));
+        profile = new SplineSeg3<2>(GeomPoint<2>(p[0],1),
+                                    GeomPoint<2>(p[1],1),
+                                    GeomPoint<2>(p[2],1));
       }
 
     path = new SplineGeometry<3>;
@@ -102,8 +102,8 @@ namespace netgen
 
     for(int i = 0; i < 3; i++)
       {
-	glob_z_direction(i) = raw_data[pos]; 
-	pos++;
+        glob_z_direction(i) = raw_data[pos]; 
+        pos++;
       }
     
     Init();
@@ -113,8 +113,8 @@ namespace netgen
   {
     if(deletable)
       {
-	delete profile;
-	delete path;
+        delete profile;
+        delete path;
       }
   }
 
@@ -139,7 +139,7 @@ namespace netgen
 
 
   void ExtrusionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
-				 int & seg, double & t) const
+                                 int & seg, double & t) const
   {
     static mutex set_latest_point;
 
@@ -164,34 +164,34 @@ namespace netgen
 
     for(int i = 0; i < path->GetNSplines(); i++)
       {
-	double auxcut = -1;
-	double auxmin = -1;
+        double auxcut = -1;
+        double auxmin = -1;
 
-	if(spline3_path[i])
-	  {
-	    Point<3> startp(path->GetSpline(i).StartPI());
-	    Point<3> endp(path->GetSpline(i).EndPI());
-	    Point<3> tanp(spline3_path[i]->TangentPoint());
+        if(spline3_path[i])
+          {
+            Point<3> startp(path->GetSpline(i).StartPI());
+            Point<3> endp(path->GetSpline(i).EndPI());
+            Point<3> tanp(spline3_path[i]->TangentPoint());
             
             // lower bound for dist
             auxmin = sqrt (MinDistTP2 (startp, endp, tanp, point3d)); 
             
             // upper bound for dist
             auxcut = min2 (Dist (startp, point3d), Dist (endp, point3d));
-	  }
-	else if(line_path[i])
-	  {
+          }
+        else if(line_path[i])
+          {
             auxmin = auxcut = sqrt (MinDistLP2 (path->GetSpline(i).StartPI(),
                                                 path->GetSpline(i).EndPI(),
                                                 point3d));
-	  }
-	
-	mindist[i] = auxmin;
-	
-	if(i==0 || auxcut < cutdist)
-	  cutdist = auxcut;
+          }
+        
+        mindist[i] = auxmin;
+        
+        if(i==0 || auxcut < cutdist)
+          cutdist = auxcut;
       }
-	
+        
 
 
     Point<2> testpoint2d;
@@ -204,22 +204,22 @@ namespace netgen
 
     for(int i=0; i<path->GetNSplines(); i++)
       {
-	if(mindist[i] > cutdist*(1+1e-10)) continue;
+        if(mindist[i] > cutdist*(1+1e-10)) continue;
 
-	double thist = CalcProj(point3d,testpoint2d,i);
+        double thist = CalcProj(point3d,testpoint2d,i);
 
-	testpoint3d = p0[i] + testpoint2d(0)*x_dir[i] + testpoint2d(1)*loc_z_dir[i];
-	double d = Dist2(point3d,testpoint3d);
+        testpoint3d = p0[i] + testpoint2d(0)*x_dir[i] + testpoint2d(1)*loc_z_dir[i];
+        double d = Dist2(point3d,testpoint3d);
 
 
-	if(!minproj_set || d < minproj)
-	  {
-	    minproj_set = true;
-	    minproj = d;
-	    point2d = testpoint2d;
-	    t = thist;
-	    seg = i;
-	  }
+        if(!minproj_set || d < minproj)
+          {
+            minproj_set = true;
+            minproj = d;
+            point2d = testpoint2d;
+            t = thist;
+            seg = i;
+          }
       }
     std::lock_guard<std::mutex> guard(set_latest_point);
     latest_seg = seg;
@@ -229,33 +229,33 @@ namespace netgen
   }
 
   double ExtrusionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
-				   int seg) const
+                                   int seg) const
   {
     double t = -1;
 
     if(line_path[seg])
       {
-	point2d(0) = (point3d-line_path[seg]->StartPI())*x_dir[seg];
-	point2d(1) = (point3d-line_path[seg]->StartPI())*z_dir[seg];
-	double l = Dist(line_path[seg]->StartPI(),
-			line_path[seg]->EndPI());
-	t = min2(max2((point3d - line_path[seg]->StartPI()) * y_dir[seg],0.),
-		 l);	
-	p0[seg] = line_path[seg]->StartPI() + t*y_dir[seg];
-	t *= 1./l;
+        point2d(0) = (point3d-line_path[seg]->StartPI())*x_dir[seg];
+        point2d(1) = (point3d-line_path[seg]->StartPI())*z_dir[seg];
+        double l = Dist(line_path[seg]->StartPI(),
+                        line_path[seg]->EndPI());
+        t = min2(max2((point3d - line_path[seg]->StartPI()) * y_dir[seg],0.),
+                 l);    
+        p0[seg] = line_path[seg]->StartPI() + t*y_dir[seg];
+        t *= 1./l;
       }
     else if(spline3_path[seg])
       {
-	spline3_path[seg]->Project(point3d,p0[seg],t);
-	
-	y_dir[seg] = spline3_path[seg]->GetTangent(t); 
+        spline3_path[seg]->Project(point3d,p0[seg],t);
+        
+        y_dir[seg] = spline3_path[seg]->GetTangent(t); 
         y_dir[seg].Normalize();
-	loc_z_dir[seg] = z_dir[seg];
-	Orthogonalize(y_dir[seg],loc_z_dir[seg]);
-	x_dir[seg] = Cross(y_dir[seg],loc_z_dir[seg]);
-	Vec<3> dir = point3d-p0[seg];
-	point2d(0) = x_dir[seg]*dir;
-	point2d(1) = loc_z_dir[seg]*dir;	
+        loc_z_dir[seg] = z_dir[seg];
+        Orthogonalize(y_dir[seg],loc_z_dir[seg]);
+        x_dir[seg] = Cross(y_dir[seg],loc_z_dir[seg]);
+        Vec<3> dir = point3d-p0[seg];
+        point2d(0) = x_dir[seg]*dir;
+        point2d(1) = loc_z_dir[seg]*dir;        
       }
     return t;
   }
@@ -327,15 +327,15 @@ namespace netgen
 
     for(int i=0; i<3; i++)
       {
-	auxpoint1(i) -= eps;
-	auxpoint2(i) += eps;
-	CalcGradient(auxpoint1,auxgrad1);
-	CalcGradient(auxpoint2,auxgrad2);
-	auxvec = (1./(2.*eps)) * (auxgrad2-auxgrad1);
-	for(int j=0; j<3; j++)
-	  hesse(i,j) = auxvec(j);
-	auxpoint1(i) = point(i);
-	auxpoint2(i) = point(i);
+        auxpoint1(i) -= eps;
+        auxpoint2(i) += eps;
+        CalcGradient(auxpoint1,auxgrad1);
+        CalcGradient(auxpoint2,auxgrad2);
+        auxvec = (1./(2.*eps)) * (auxgrad2-auxgrad1);
+        for(int j=0; j<3; j++)
+          hesse(i,j) = auxvec(j);
+        auxpoint1(i) = point(i);
+        auxpoint2(i) = point(i);
       }
 
     /*
@@ -347,19 +347,19 @@ namespace netgen
 
     for(int i=0; i<3; i++)
       {
-	auxpoint(i) -= eps;
-	CalcGradient(auxpoint,auxgrad);
-	auxvec = (1./eps) * (grad-auxgrad);
-	for(int j=0; j<3; j++)
-	  hesse(i,j) = auxvec(j);
-	auxpoint(i) = point(i);
+        auxpoint(i) -= eps;
+        CalcGradient(auxpoint,auxgrad);
+        auxvec = (1./eps) * (grad-auxgrad);
+        for(int j=0; j<3; j++)
+          hesse(i,j) = auxvec(j);
+        auxpoint(i) = point(i);
       }
     */
 
     
     for(int i=0; i<3; i++)
       for(int j=i+1; j<3; j++)
-	hesse(i,j) = hesse(j,i) = 0.5*(hesse(i,j)+hesse(j,i));
+        hesse(i,j) = hesse(j,i) = 0.5*(hesse(i,j)+hesse(j,i));
   }
   
 
@@ -377,9 +377,9 @@ namespace netgen
     retval = profile->MaxCurvature();
     for(int i=0; i<path->GetNSplines(); i++)
       {
-	actmax = path->GetSpline(i).MaxCurvature();
-	if(actmax > retval)
-	  retval = actmax;
+        actmax = path->GetSpline(i).MaxCurvature();
+        if(actmax > retval)
+          retval = actmax;
       }
 
     return 2.*retval;
@@ -409,11 +409,11 @@ namespace netgen
     p0[0] = path->GetSpline(0).GetPoint(0.5);
     if(!line_path[0])
       {
-	y_dir[0] = path->GetSpline(0).GetTangent(0.5);
-	y_dir[0].Normalize();
-	loc_z_dir[0] = z_dir[0];
-	Orthogonalize(y_dir[0],loc_z_dir[0]);
-	x_dir[0] = Cross(y_dir[0],loc_z_dir[0]);
+        y_dir[0] = path->GetSpline(0).GetTangent(0.5);
+        y_dir[0].Normalize();
+        loc_z_dir[0] = z_dir[0];
+        Orthogonalize(y_dir[0],loc_z_dir[0]);
+        x_dir[0] = Cross(y_dir[0],loc_z_dir[0]);
       }
 
     Point<2> locpoint = profile->GetPoint(0.5);
@@ -444,11 +444,11 @@ namespace netgen
   
 
   void ExtrusionFace :: LineIntersections ( const Point<3> & p,
-					    const Vec<3> & v,
-					    const double eps,
-					    int & before,
-					    int & after,
-					    bool & intersecting ) const
+                                            const Vec<3> & v,
+                                            const double eps,
+                                            int & before,
+                                            int & after,
+                                            bool & intersecting ) const
   {
     Point<2> p2d;
     Vec<2> v2d;
@@ -462,19 +462,19 @@ namespace netgen
 
     if(seg == 0 && segt < 1e-20)
       {
-	Vec<3> v1,v2;
-	v1 = path->GetSpline(0).GetTangent(0);
-	v2 = p-p0[seg];
-	if(v1*v2 < -eps)
-	  return;
+        Vec<3> v1,v2;
+        v1 = path->GetSpline(0).GetTangent(0);
+        v2 = p-p0[seg];
+        if(v1*v2 < -eps)
+          return;
       }
     if(seg == path->GetNSplines()-1 && 1.-segt < 1e-20)
       {
-	Vec<3> v1,v2;
-	v1 = path->GetSpline(seg).GetTangent(1);
-	v2 = p-p0[seg];
-	if(v1*v2 > eps)
-	  return;
+        Vec<3> v1,v2;
+        v1 = path->GetSpline(seg).GetTangent(1);
+        v2 = p-p0[seg];
+        if(v1*v2 > eps)
+          return;
       }
 
     v2d(0) = v * x_dir[seg];
@@ -485,9 +485,9 @@ namespace netgen
 
 
     profile->LineIntersections(v2d(1),
-			      -v2d(0),
-			      -v2d(1)*p2d(0) + v2d(0)*p2d(1),
-			      ips,eps);
+                              -v2d(0),
+                              -v2d(1)*p2d(0) + v2d(0)*p2d(1),
+                              ips,eps);
     int comp;
 
     if(fabs(v2d(0)) >= fabs(v2d(1)))
@@ -499,16 +499,16 @@ namespace netgen
 
     for(int i=0; i<ips.Size(); i++)
       {
-	//(*testout) << " ip " << ips[i];
+        //(*testout) << " ip " << ips[i];
 
-	double t = (ips[i](comp)-p2d(comp))/v2d(comp);
+        double t = (ips[i](comp)-p2d(comp))/v2d(comp);
 
-	if(t < -eps)
-	  before++;
-	else if(t > eps)
-	  after++;
-	else
-	  intersecting = true;
+        if(t < -eps)
+          before++;
+        else if(t > eps)
+          after++;
+        else
+          intersecting = true;
       }
     //(*testout) << endl;
   }
@@ -516,8 +516,8 @@ namespace netgen
   void ExtrusionFace :: Print (ostream & str) const{}
 
   INSOLID_TYPE ExtrusionFace :: VecInFace ( const Point<3> & p,
-					    const Vec<3> & v,
-					    const double eps ) const
+                                            const Vec<3> & v,
+                                            const double eps ) const
   {
     
     Vec<3> normal1;
@@ -560,7 +560,7 @@ namespace netgen
     v2d(0) = v*x_dir[seg];
     v2d(1) = v*loc_z_dir[seg];
 
-			    	    
+                                    
     Vec<2> normal(-profile_tangent(1),profile_tangent(0));
     
     //d = normal*v2d;
@@ -581,43 +581,43 @@ namespace netgen
 
 
   void ExtrusionFace :: GetTriangleApproximation (TriangleApproximation & tas, 
-						  const Box<3> & boundingbox, 
-						  double facets) const
+                                                  const Box<3> & boundingbox, 
+                                                  double facets) const
   {
     int n = int(facets) + 1;
 
     for(int k = 0; k < path -> GetNSplines(); k++)
       {
-	for(int i = 0; i <= n; i++)
-	  {
-	    Point<3> origin = path -> GetSpline(k).GetPoint(double(i)/double(n));
-	    if(!line_path[k])
-	      {
-		y_dir[k] = path->GetSpline(k).GetTangent(double(i)/double(n));
-		y_dir[k].Normalize();
-	      }
-	    loc_z_dir[k] = z_dir[k];
-	    Orthogonalize(y_dir[k],loc_z_dir[k]);
-	    if(!line_path[k])
-	      x_dir[k] = Cross(y_dir[k],loc_z_dir[k]);
-	    
-	    for(int j = 0; j <= n; j++)
-	      {
-		Point<2> locp = profile->GetPoint(double(j)/double(n));
-		tas.AddPoint(origin + locp(0)*x_dir[k] + locp(1)*loc_z_dir[k]);
-	      }
-	  }
+        for(int i = 0; i <= n; i++)
+          {
+            Point<3> origin = path -> GetSpline(k).GetPoint(double(i)/double(n));
+            if(!line_path[k])
+              {
+                y_dir[k] = path->GetSpline(k).GetTangent(double(i)/double(n));
+                y_dir[k].Normalize();
+              }
+            loc_z_dir[k] = z_dir[k];
+            Orthogonalize(y_dir[k],loc_z_dir[k]);
+            if(!line_path[k])
+              x_dir[k] = Cross(y_dir[k],loc_z_dir[k]);
+            
+            for(int j = 0; j <= n; j++)
+              {
+                Point<2> locp = profile->GetPoint(double(j)/double(n));
+                tas.AddPoint(origin + locp(0)*x_dir[k] + locp(1)*loc_z_dir[k]);
+              }
+          }
       }
     
     for(int k = 0; k < path->GetNSplines(); k++)
       for(int i = 0; i < n; i++)
-	for(int j = 0; j < n; j++)
-	  {
-	    int pi = k*(n+1)*(n+1) + (n+1)*i +j;
-	  
-	    tas.AddTriangle( TATriangle (0, pi,pi+1,pi+n+1) );
-	    tas.AddTriangle( TATriangle (0, pi+1,pi+n+1,pi+n+2) );
-	  }
+        for(int j = 0; j < n; j++)
+          {
+            int pi = k*(n+1)*(n+1) + (n+1)*i +j;
+          
+            tas.AddTriangle( TATriangle (0, pi,pi+1,pi+n+1) );
+            tas.AddTriangle( TATriangle (0, pi+1,pi+n+1,pi+n+2) );
+          }
   }
   
 
@@ -694,8 +694,8 @@ namespace netgen
   }
 
   Extrusion :: Extrusion(shared_ptr<SplineGeometry<3>> path_in,
-			 shared_ptr<SplineGeometry<2>> profile_in,
-			 const Vec<3> & z_dir) :
+                         shared_ptr<SplineGeometry<2>> profile_in,
+                         const Vec<3> & z_dir) :
     path(path_in), profile(profile_in), z_direction(z_dir)
   {
     surfaceactive.SetSize(0);
@@ -703,12 +703,12 @@ namespace netgen
 
     for(int j=0; j<profile->GetNSplines(); j++)
       {
-	ExtrusionFace * face = new ExtrusionFace(&(profile->GetSpline(j)),
-						 path.get(),
-						 z_direction);
-	faces.Append(face);
-	surfaceactive.Append(true);
-	surfaceids.Append(0);
+        ExtrusionFace * face = new ExtrusionFace(&(profile->GetSpline(j)),
+                                                 path.get(),
+                                                 z_direction);
+        faces.Append(face);
+        surfaceactive.Append(true);
+        surfaceids.Append(0);
       }
 
   }
@@ -728,8 +728,8 @@ namespace netgen
   {
     for(int i=0; i<faces.Size(); i++)
       {
-	if(faces[i]->BoxIntersectsFace(box))
-	  return DOES_INTERSECT;
+        if(faces[i]->BoxIntersectsFace(box))
+          return DOES_INTERSECT;
       }
 
     return PointInSolid(box.Center(),0);
@@ -737,8 +737,8 @@ namespace netgen
 
 
   INSOLID_TYPE Extrusion :: PointInSolid (const Point<3> & p,
-					  const double eps,
-					  Array<int> * const facenums) const
+                                          const double eps,
+                                          Array<int> * const facenums) const
   {
     Vec<3> random_vec(-0.4561,0.7382,0.4970247);
 
@@ -748,19 +748,19 @@ namespace netgen
 
     for(int i=0; i<faces.Size(); i++)
       {
-	faces[i]->LineIntersections(p,random_vec,eps,before,after,intersects);
+        faces[i]->LineIntersections(p,random_vec,eps,before,after,intersects);
 
-	//(*testout) << "intersects " << intersects << " before " << before << " after " << after << endl;
-	if(intersects)
-	  {
-	    if(facenums)
-	      {
-		facenums->Append(i);
-		does_intersect = true;
-	      }
-	    else
-	      return DOES_INTERSECT;
-	  }
+        //(*testout) << "intersects " << intersects << " before " << before << " after " << after << endl;
+        if(intersects)
+          {
+            if(facenums)
+              {
+                facenums->Append(i);
+                does_intersect = true;
+              }
+            else
+              return DOES_INTERSECT;
+          }
       }
 
     if(does_intersect)
@@ -775,7 +775,7 @@ namespace netgen
 
 
   INSOLID_TYPE Extrusion :: PointInSolid (const Point<3> & p,
-					  double eps) const
+                                          double eps) const
   {
     return PointInSolid(p,eps,NULL);    
   }
@@ -791,8 +791,8 @@ namespace netgen
 
   
   INSOLID_TYPE Extrusion :: VecInSolid (const Point<3> & p,
-					const Vec<3> & v,
-					double eps) const
+                                        const Vec<3> & v,
+                                        double eps) const
   {
     Array<int> facenums;
     INSOLID_TYPE pInSolid = PointInSolid(p,eps,&facenums);
@@ -805,65 +805,65 @@ namespace netgen
 
     if(facenums.Size() == 1)
       {
-	Vec<3> normal;
-	faces[facenums[0]]->CalcGradient(p,normal);
-	normal.Normalize();
-	d = normal*v;
-	
-	latestfacenum = facenums[0];
+        Vec<3> normal;
+        faces[facenums[0]]->CalcGradient(p,normal);
+        normal.Normalize();
+        d = normal*v;
+        
+        latestfacenum = facenums[0];
       }
     else if (facenums.Size() == 2)
       {
-	Vec<3> checkvec;
+        Vec<3> checkvec;
 
-	Point<3> dummy(p);
-	faces[facenums[0]]->Project(dummy);
-	if(fabs(faces[facenums[0]]->GetProfilePar()) < 0.1)
-	  {
-	    int aux = facenums[0];
-	    facenums[0] = facenums[1]; facenums[1] = aux;
-	  }
-	
-	checkvec = faces[facenums[0]]->GetYDir();
+        Point<3> dummy(p);
+        faces[facenums[0]]->Project(dummy);
+        if(fabs(faces[facenums[0]]->GetProfilePar()) < 0.1)
+          {
+            int aux = facenums[0];
+            facenums[0] = facenums[1]; facenums[1] = aux;
+          }
+        
+        checkvec = faces[facenums[0]]->GetYDir();
      
-	Vec<3> n0, n1;
-	faces[facenums[0]]->CalcGradient(p,n0);
-	faces[facenums[1]]->CalcGradient(p,n1);
-	n0.Normalize();
-	n1.Normalize();
-	
+        Vec<3> n0, n1;
+        faces[facenums[0]]->CalcGradient(p,n0);
+        faces[facenums[1]]->CalcGradient(p,n1);
+        n0.Normalize();
+        n1.Normalize();
+        
 
-	Vec<3> t = Cross(n0,n1);
-	if(checkvec*t < 0) t*= (-1.);
-	
-	Vec<3> t0 = Cross(n0,t);
-	Vec<3> t1 = Cross(t,n1);
-	
-	t0.Normalize();
-	t1.Normalize();
-	
+        Vec<3> t = Cross(n0,n1);
+        if(checkvec*t < 0) t*= (-1.);
+        
+        Vec<3> t0 = Cross(n0,t);
+        Vec<3> t1 = Cross(t,n1);
+        
+        t0.Normalize();
+        t1.Normalize();
+        
 
-	const double t0v = t0*v;
-	const double t1v = t1*v;
+        const double t0v = t0*v;
+        const double t1v = t1*v;
 
-	if(t0v > t1v)
-	  {
-	    latestfacenum = facenums[0];
-	    d = n0*v;
-	  }
-	else
-	  {
-	    latestfacenum = facenums[1];
-	    d = n1*v;
-	  }
+        if(t0v > t1v)
+          {
+            latestfacenum = facenums[0];
+            d = n0*v;
+          }
+        else
+          {
+            latestfacenum = facenums[1];
+            d = n1*v;
+          }
 
-	if(fabs(t0v) < eps && fabs(t1v) < eps)
-	  latestfacenum = -1;
+        if(fabs(t0v) < eps && fabs(t1v) < eps)
+          latestfacenum = -1;
       }
 
     else
       {
-	cerr << "WHY ARE THERE " << facenums.Size() << " FACES?" << endl;
+        cerr << "WHY ARE THERE " << facenums.Size() << " FACES?" << endl;
       }
 
     if(d > eps)
@@ -878,9 +878,9 @@ namespace netgen
 
   // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
   INSOLID_TYPE Extrusion :: VecInSolid2 (const Point<3> & p,
-					 const Vec<3> & v1,
-					 const Vec<3> & v2,
-					 double eps) const
+                                         const Vec<3> & v1,
+                                         const Vec<3> & v2,
+                                         double eps) const
   {
     INSOLID_TYPE retval;
     retval = VecInSolid(p,v1,eps);

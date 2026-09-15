@@ -27,15 +27,15 @@ namespace netgen
       order[i-1] = i;
     for (i = 1; i <= n-1; i++)
       for (j = 1; j <= n-1; j++)
-	if (values[order[j-1]-1] > values[order[j]-1])
-	  {
-	    Swap (order[j-1], order[j]);
-	  }
+        if (values[order[j-1]-1] > values[order[j]-1])
+          {
+            Swap (order[j-1], order[j]);
+          }
   }
 
 
   void QuickSortRec (FlatArray<double> values, FlatArray<int> order,
-		     int left, int right)
+                     int left, int right)
   {
     int i, j;
     double midval;
@@ -46,14 +46,14 @@ namespace netgen
   
     do
       {
-	while (values[order[i-1]-1] < midval) i++;
-	while (midval < values[order[j-1]-1]) j--;
+        while (values[order[i-1]-1] < midval) i++;
+        while (midval < values[order[j-1]-1]) j--;
       
-	if (i <= j)
-	  {
-	    Swap (order[i-1], order[j-1]);
-	    i++; j--;
-	  }
+        if (i <= j)
+          {
+            Swap (order[i-1], order[j-1]);
+            i++; j--;
+          }
       }
     while (i <= j);
     if (left < j) QuickSortRec (values, order, left, j);

@@ -46,18 +46,18 @@ double BSplineCurve2d :: ProjectParam (const Point<2> & p) const
       for (t = n1; t <= n1+1; t += dt)
         if (Dist (Eval(t), p) < mindist)
           {
-	    mint = t;
-	    mindist = Dist (Eval(t), p);
+            mint = t;
+            mindist = Dist (Eval(t), p);
           }
     
   if (mindist > 1e9) 
     {
       for (t = 0; t <= points.Size(); t += dt)
-	if (Dist (Eval(t), p) < mindist)
-	  {
-	    mint = t;
-	    mindist = Dist (Eval(t), p);
-	  }   
+        if (Dist (Eval(t), p) < mindist)
+          {
+            mint = t;
+            mindist = Dist (Eval(t), p);
+          }   
     }
 
   while (Dist (Eval (mint-dt), p) < mindist)
@@ -200,26 +200,26 @@ void BSplineCurve2d :: Reduce (const Point<2> & p, double rad)
     
       n = n1;
       for (j = 1; j <= 3; j++)
-	{
-	  n++;
-	  if (n > points.Size()) n = 1;
-	  if (points[n-1](0) < minx) minx = points[n-1](0);
-	  if (points[n-1](1) < miny) miny = points[n-1](1);
-	  if (points[n-1](0) > maxx) maxx = points[n-1](0);
-	  if (points[n-1](1) > maxy) maxy = points[n-1](1);
-	}
+        {
+          n++;
+          if (n > points.Size()) n = 1;
+          if (points[n-1](0) < minx) minx = points[n-1](0);
+          if (points[n-1](1) < miny) miny = points[n-1](1);
+          if (points[n-1](0) > maxx) maxx = points[n-1](0);
+          if (points[n-1](1) > maxy) maxy = points[n-1](1);
+        }
       
       if (minx > p(0) + rad || maxx < p(0) - rad ||
-	  miny > p(1) + rad || maxy < p(1) - rad)
-	{
-	  intervallused[n1-1] = redlevel;
-	  //      (*testout) << 0;
-	}
+          miny > p(1) + rad || maxy < p(1) - rad)
+        {
+          intervallused[n1-1] = redlevel;
+          //      (*testout) << 0;
+        }
       else
-	{
-	  //      (*testout) << 1;
-	  intervallused[n1-1] = 0;
-	}
+        {
+          //      (*testout) << 1;
+          intervallused[n1-1] = 0;
+        }
     }
   //  (*testout) << endl;
 }

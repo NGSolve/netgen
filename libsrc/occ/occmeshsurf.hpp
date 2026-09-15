@@ -96,27 +96,27 @@ public:
   void Project (Point<3> & p, PointGeomInfo & gi);
 
   void GetNormalVector (const Point<3> & p,
-			const PointGeomInfo & geominfo,
-			Vec<3> & n) const;
+                        const PointGeomInfo & geominfo,
+                        Vec<3> & n) const;
 
   /**
     Defines tangential plane in ap1.
     The local x-coordinate axis point to the direction of ap2 */
   void DefineTangentialPlane (const Point<3> & ap1, 
-			      const PointGeomInfo & geominfo1,
-			      const Point<3> & ap2,
-			      const PointGeomInfo & geominfo2);
+                              const PointGeomInfo & geominfo1,
+                              const Point<3> & ap2,
+                              const PointGeomInfo & geominfo2);
 
 
   /// Transforms 3d point p3d to local coordinates pplane
   void ToPlane (const Point<3> & p3d, const PointGeomInfo & geominfo,
-		Point<2> & pplane, double h, int & zone) const;
+                Point<2> & pplane, double h, int & zone) const;
   
   /// Transforms point pplane in local coordinates to 3d point
   void FromPlane (const Point<2> & pplane, 
-		  Point<3> & p3d,
-		  PointGeomInfo & gi,
-		  double h);
+                  Point<3> & p3d,
+                  PointGeomInfo & gi,
+                  double h);
 };
 
 

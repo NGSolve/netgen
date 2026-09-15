@@ -147,8 +147,8 @@ namespace netgen
   
     if ( ! infile.good() )
       throw NgException(string ("Input file '") + 
-			filename.string() +
-			string ("' not available!"));
+                        filename.string() +
+                        string ("' not available!"));
 
     TestComment ( infile );
   
@@ -160,15 +160,15 @@ namespace netgen
     TestComment ( infile );
     if ( strcmp (buf, "splinecurves2dnew") == 0 )
       {
-	LoadDataNew ( infile );
+        LoadDataNew ( infile );
       }
     else if ( strcmp (buf, "splinecurves2dv2") == 0 )
       {
-	LoadDataV2 ( infile );
+        LoadDataV2 ( infile );
       }
     else
       {
-	LoadData(infile );
+        LoadData(infile );
       }
     infile.close();
   }
@@ -183,19 +183,19 @@ namespace netgen
     while ( comment == true && !infile.eof() ) {
       infile.get(ch);
       if ( ch == '#' ) { // skip comments
-	while (  ch != '\n' && !infile.eof() ) {
-	  infile.get(ch);
-	}
+        while (  ch != '\n' && !infile.eof() ) {
+          infile.get(ch);
+        }
       }
       else if ( ch == '\n' )  { // skip empty lines
-	;
+        ;
       }
       else if ( isspace(ch) ) { // skip whitespaces
-	; 
+        ; 
       }
       else { // end of comment
-	infile.putback(ch);
-	comment = false;
+        infile.putback(ch);
+        comment = false;
       }
     }
     return;
@@ -223,36 +223,36 @@ namespace netgen
     infile >> nump;
     for (int i = 0; i < nump; i++)
       {
-	TestComment ( infile );
-	for(int j=0; j<D; j++)
-	  infile >> x(j);
-	infile >> hd;
+        TestComment ( infile );
+        for(int j=0; j<D; j++)
+          infile >> x(j);
+        infile >> hd;
 
-	Flags flags;
+        Flags flags;
 
-	ch = 'a';
-	// infile >> ch;
-	do {
-	  infile.get (ch);
-	} while (isspace(ch) && ch != '\n');
-	while (ch == '-')
-	  {
-	    char flag[100];
-	    flag[0]='-';
-	    infile >> (flag+1);
-	    flags.SetCommandLineFlag (flag);
-	    ch = 'a';
-	    do {
-	      infile.get (ch);
-	    } while (isspace(ch) && ch != '\n');
-	  }
+        ch = 'a';
+        // infile >> ch;
+        do {
+          infile.get (ch);
+        } while (isspace(ch) && ch != '\n');
+        while (ch == '-')
+          {
+            char flag[100];
+            flag[0]='-';
+            infile >> (flag+1);
+            flags.SetCommandLineFlag (flag);
+            ch = 'a';
+            do {
+              infile.get (ch);
+            } while (isspace(ch) && ch != '\n');
+          }
     
-	if (infile.good())
-	  infile.putback (ch);
+        if (infile.good())
+          infile.putback (ch);
 
-	geompoints.Append (GeomPoint<D>(x, hd));
-	geompoints.Last().hpref = flags.GetDefineFlag ("hpref");
-	geompoints.Last().hmax = flags.GetNumFlag("hmax", 1e99);
+        geompoints.Append (GeomPoint<D>(x, hd));
+        geompoints.Last().hpref = flags.GetDefineFlag ("hpref");
+        geompoints.Last().hmax = flags.GetNumFlag("hmax", 1e99);
       }
 
     PrintMessage (3, nump, " points loaded");
@@ -268,85 +268,85 @@ namespace netgen
     PrintMessage (3, numseg, " segments loaded");
     for (int i = 0; i < numseg; i++)
       {
-	TestComment ( infile );
+        TestComment ( infile );
       
-	infile >> leftdom >> rightdom;
+        infile >> leftdom >> rightdom;
 
-	// cout << "add spline " << i << ", left = " << leftdom << ", right = " << rightdom << endl;
+        // cout << "add spline " << i << ", left = " << leftdom << ", right = " << rightdom << endl;
       
-	infile >> buf;
-	// type of spline segment
-	if (strcmp (buf, "2") == 0)
-	  { // a line
-	    infile >> hi1 >> hi2;
-	    spline = new LineSeg<D>(geompoints[hi1-1],
-				    geompoints[hi2-1]);
-	  }
-	else if (strcmp (buf, "3") == 0)
-	  { // a rational spline
-	    infile >> hi1 >> hi2 >> hi3;
-	    spline = new SplineSeg3<D> (geompoints[hi1-1],
-					geompoints[hi2-1],
-					geompoints[hi3-1]);
-	  }
-	else if (strcmp (buf, "4") == 0)
-	  { // an arc
-	    infile >> hi1 >> hi2 >> hi3;
-	    spline = new CircleSeg<D> (geompoints[hi1-1],
-				       geompoints[hi2-1],
-				       geompoints[hi3-1]);
-	    // 	  break;
-	  }
-	else if (strcmp (buf, "discretepoints") == 0)
-	  {
-	    int npts;
-	    infile >> npts;
-	    Array< Point<D> > pts(npts);
-	    for (int j = 0; j < npts; j++)
-	      for(int k=0; k<D; k++)
-		infile >> pts[j](k);
+        infile >> buf;
+        // type of spline segment
+        if (strcmp (buf, "2") == 0)
+          { // a line
+            infile >> hi1 >> hi2;
+            spline = new LineSeg<D>(geompoints[hi1-1],
+                                    geompoints[hi2-1]);
+          }
+        else if (strcmp (buf, "3") == 0)
+          { // a rational spline
+            infile >> hi1 >> hi2 >> hi3;
+            spline = new SplineSeg3<D> (geompoints[hi1-1],
+                                        geompoints[hi2-1],
+                                        geompoints[hi3-1]);
+          }
+        else if (strcmp (buf, "4") == 0)
+          { // an arc
+            infile >> hi1 >> hi2 >> hi3;
+            spline = new CircleSeg<D> (geompoints[hi1-1],
+                                       geompoints[hi2-1],
+                                       geompoints[hi3-1]);
+            //    break;
+          }
+        else if (strcmp (buf, "discretepoints") == 0)
+          {
+            int npts;
+            infile >> npts;
+            Array< Point<D> > pts(npts);
+            for (int j = 0; j < npts; j++)
+              for(int k=0; k<D; k++)
+                infile >> pts[j](k);
 
-	    spline = new DiscretePointsSeg<D> (pts);
-	  }
+            spline = new DiscretePointsSeg<D> (pts);
+          }
     
 
-	SplineSegExt * spex = new SplineSegExt (*spline);
-	
-	infile >> spex->reffak;
-	spex -> leftdom = leftdom;
-	spex -> rightdom = rightdom;
-	splines.Append (spex);
+        SplineSegExt * spex = new SplineSegExt (*spline);
+        
+        infile >> spex->reffak;
+        spex -> leftdom = leftdom;
+        spex -> rightdom = rightdom;
+        splines.Append (spex);
 
 
-	Flags flags;
-	ch = 'a';
-	infile >> ch;
-	while (ch == '-')
-	  {
-	    char flag[100];
-	    flag[0]='-';
-	    infile >> (flag+1);
-	    flags.SetCommandLineFlag (flag);
-	    ch = 'a';
-	    infile >> ch;
-	  }
+        Flags flags;
+        ch = 'a';
+        infile >> ch;
+        while (ch == '-')
+          {
+            char flag[100];
+            flag[0]='-';
+            infile >> (flag+1);
+            flags.SetCommandLineFlag (flag);
+            ch = 'a';
+            infile >> ch;
+          }
     
-	if (infile.good())
-	  infile.putback (ch);
+        if (infile.good())
+          infile.putback (ch);
     
-	spex->bc = int (flags.GetNumFlag ("bc", i+1));
-	spex->hpref_left = int (flags.GetDefineFlag ("hpref")) || 
-	  int (flags.GetDefineFlag ("hprefleft"));
-	spex->hpref_right = int (flags.GetDefineFlag ("hpref")) || 
-	  int (flags.GetDefineFlag ("hprefright"));
-	spex->copyfrom = int (flags.GetNumFlag ("copy", -1));
-	if ( flags.StringFlagDefined("bcname") )
-	  {
-	    int mybc = spex->bc-1;
-	    delete bcnames[mybc];
-	    bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
-	  }
-	spex -> hmax = flags.GetNumFlag("hmax", 1e99);
+        spex->bc = int (flags.GetNumFlag ("bc", i+1));
+        spex->hpref_left = int (flags.GetDefineFlag ("hpref")) || 
+          int (flags.GetDefineFlag ("hprefleft"));
+        spex->hpref_right = int (flags.GetDefineFlag ("hpref")) || 
+          int (flags.GetDefineFlag ("hprefright"));
+        spex->copyfrom = int (flags.GetNumFlag ("copy", -1));
+        if ( flags.StringFlagDefined("bcname") )
+          {
+            int mybc = spex->bc-1;
+            delete bcnames[mybc];
+            bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
+          }
+        spex -> hmax = flags.GetNumFlag("hmax", 1e99);
       }
   }
 
@@ -373,60 +373,60 @@ namespace netgen
       
     for (int i = 0; i < nump; i++)
       {
-	TestComment ( infile );
-	infile >> pointnr;
-	if ( pointnr > nump )
-	  {
-	    throw NgException(string ("Point number greater than total number of points") );
-	  }
-	for(int j=0; j<D; j++)
-	  infile >> x(j);
+        TestComment ( infile );
+        infile >> pointnr;
+        if ( pointnr > nump )
+          {
+            throw NgException(string ("Point number greater than total number of points") );
+          }
+        for(int j=0; j<D; j++)
+          infile >> x(j);
 
 
-	// hd is now optional, default 1
-	//  infile >> hd;
-	hd = 1;
+        // hd is now optional, default 1
+        //  infile >> hd;
+        hd = 1;
 
-	Flags flags;
+        Flags flags;
 
 
-	// get flags, 
-	ch = 'a';
-	// infile >> ch;
-	do 
-	  {
+        // get flags, 
+        ch = 'a';
+        // infile >> ch;
+        do 
+          {
 
-	    infile.get (ch);
-	    // if another int-value, set refinement flag to this value
-	    // (corresponding to old files)
-	    if ( int (ch) >= 48 && int(ch) <= 57 )
-	      {
-		infile.putback(ch);
-		infile >> hd;
-		infile.get(ch);
-	      }
-	  } 
-	while (isspace(ch) && ch != '\n');
-	while (ch == '-')
-	  {
-	    char flag[100];
-	    flag[0]='-';
-	    infile >> (flag+1);
-	    flags.SetCommandLineFlag (flag);
-	    ch = 'a';
-	    do {
-	      infile.get (ch);
-	    } while (isspace(ch) && ch != '\n');
-	  }
+            infile.get (ch);
+            // if another int-value, set refinement flag to this value
+            // (corresponding to old files)
+            if ( int (ch) >= 48 && int(ch) <= 57 )
+              {
+                infile.putback(ch);
+                infile >> hd;
+                infile.get(ch);
+              }
+          } 
+        while (isspace(ch) && ch != '\n');
+        while (ch == '-')
+          {
+            char flag[100];
+            flag[0]='-';
+            infile >> (flag+1);
+            flags.SetCommandLineFlag (flag);
+            ch = 'a';
+            do {
+              infile.get (ch);
+            } while (isspace(ch) && ch != '\n');
+          }
     
-	if (infile.good())
-	  infile.putback (ch);
+        if (infile.good())
+          infile.putback (ch);
 
-	if ( hd == 1 )
-	  hd = flags.GetNumFlag ( "ref", 1.0);
-	//       geompoints.Append (GeomPoint<D>(x, hd));
-	geompoints[pointnr-1] = GeomPoint<D>(x, hd);
-	geompoints[pointnr-1].hpref = flags.GetDefineFlag ("hpref");
+        if ( hd == 1 )
+          hd = flags.GetNumFlag ( "ref", 1.0);
+        //       geompoints.Append (GeomPoint<D>(x, hd));
+        geompoints[pointnr-1] = GeomPoint<D>(x, hd);
+        geompoints[pointnr-1].hpref = flags.GetDefineFlag ("hpref");
       }
 
     TestComment ( infile );
@@ -439,103 +439,103 @@ namespace netgen
     SplineSeg<D> * spline = 0;
     for (int i = 0; i < numseg; i++)
       {
-	TestComment ( infile );
+        TestComment ( infile );
       
-	infile >> leftdom >> rightdom;
+        infile >> leftdom >> rightdom;
 
-	// cout << "add spline " << i << ", left = " << leftdom << endl;
+        // cout << "add spline " << i << ", left = " << leftdom << endl;
 
-	infile >> buf;
-	// type of spline segment
-	if (strcmp (buf, "2") == 0)
-	  { // a line
-	    infile >> hi1 >> hi2;
-	    spline = new LineSeg<D> (geompoints[hi1-1],
-				     geompoints[hi2-1]);
-	  }
-	else if (strcmp (buf, "3") == 0)
-	  { // a rational spline
-	    infile >> hi1 >> hi2 >> hi3;
-	    spline = new SplineSeg3<D> (geompoints[hi1-1],
-					geompoints[hi2-1],
-					geompoints[hi3-1]);
-	  }
-	else if (strcmp (buf, "4") == 0)
-	  { // an arc
-	    infile >> hi1 >> hi2 >> hi3;
-	    spline = new CircleSeg<D> (geompoints[hi1-1],
-				       geompoints[hi2-1],
-				       geompoints[hi3-1]);
-	    // 	  break;
-	  }
-	else if (strcmp (buf, "discretepoints") == 0)
-	  {
-	    int npts;
-	    infile >> npts;
-	    Array< Point<D> > pts(npts);
-	    for (int j = 0; j < npts; j++)
-	      for(int k=0; k<D; k++)
-		infile >> pts[j](k);
+        infile >> buf;
+        // type of spline segment
+        if (strcmp (buf, "2") == 0)
+          { // a line
+            infile >> hi1 >> hi2;
+            spline = new LineSeg<D> (geompoints[hi1-1],
+                                     geompoints[hi2-1]);
+          }
+        else if (strcmp (buf, "3") == 0)
+          { // a rational spline
+            infile >> hi1 >> hi2 >> hi3;
+            spline = new SplineSeg3<D> (geompoints[hi1-1],
+                                        geompoints[hi2-1],
+                                        geompoints[hi3-1]);
+          }
+        else if (strcmp (buf, "4") == 0)
+          { // an arc
+            infile >> hi1 >> hi2 >> hi3;
+            spline = new CircleSeg<D> (geompoints[hi1-1],
+                                       geompoints[hi2-1],
+                                       geompoints[hi3-1]);
+            //    break;
+          }
+        else if (strcmp (buf, "discretepoints") == 0)
+          {
+            int npts;
+            infile >> npts;
+            Array< Point<D> > pts(npts);
+            for (int j = 0; j < npts; j++)
+              for(int k=0; k<D; k++)
+                infile >> pts[j](k);
 
-	    spline = new DiscretePointsSeg<D> (pts);
-	  }
+            spline = new DiscretePointsSeg<D> (pts);
+          }
     
-	//      infile >> spline->reffak;
+        //      infile >> spline->reffak;
 
-	SplineSegExt * spex = new SplineSegExt (*spline);
+        SplineSegExt * spex = new SplineSegExt (*spline);
 
-	spex -> leftdom = leftdom;
-	spex -> rightdom = rightdom;
-	splines.Append (spex);
+        spex -> leftdom = leftdom;
+        spex -> rightdom = rightdom;
+        splines.Append (spex);
 
-	// hd is now optional, default 1
-	//  infile >> hd;
-	hd = 1;
-	infile >> ch;
+        // hd is now optional, default 1
+        //  infile >> hd;
+        hd = 1;
+        infile >> ch;
       
-	// get refinement parameter, if it is there
-	// infile.get (ch);
-	// if another int-value, set refinement flag to this value
-	// (corresponding to old files)
-	if ( int (ch) >= 48 && int(ch) <= 57 )
-	  {
-	    infile.putback(ch);
-	    infile >> hd;
-	    infile >> ch ;
-	  }
+        // get refinement parameter, if it is there
+        // infile.get (ch);
+        // if another int-value, set refinement flag to this value
+        // (corresponding to old files)
+        if ( int (ch) >= 48 && int(ch) <= 57 )
+          {
+            infile.putback(ch);
+            infile >> hd;
+            infile >> ch ;
+          }
       
-	Flags flags;
-	while (ch == '-')
-	  {
-	    char flag[100];
-	    flag[0]='-';
-	    infile >> (flag+1);
-	    flags.SetCommandLineFlag (flag);
-	    ch = 'a';
-	    infile >> ch;
-	  }
+        Flags flags;
+        while (ch == '-')
+          {
+            char flag[100];
+            flag[0]='-';
+            infile >> (flag+1);
+            flags.SetCommandLineFlag (flag);
+            ch = 'a';
+            infile >> ch;
+          }
     
-	if (infile.good())
-	  infile.putback (ch);
+        if (infile.good())
+          infile.putback (ch);
     
-	spex->bc = int (flags.GetNumFlag ("bc", i+1));
-	spex->hpref_left = int (flags.GetDefineFlag ("hpref")) || 
-	  int (flags.GetDefineFlag ("hprefleft"));
-	spex->hpref_right = int (flags.GetDefineFlag ("hpref")) || 
-	  int (flags.GetDefineFlag ("hprefright"));
-	spex->copyfrom = int (flags.GetNumFlag ("copy", -1));
-	spex->reffak = flags.GetNumFlag ("ref", 1 );
-	spex->hmax = flags.GetNumFlag ("maxh", 1e99 );
+        spex->bc = int (flags.GetNumFlag ("bc", i+1));
+        spex->hpref_left = int (flags.GetDefineFlag ("hpref")) || 
+          int (flags.GetDefineFlag ("hprefleft"));
+        spex->hpref_right = int (flags.GetDefineFlag ("hpref")) || 
+          int (flags.GetDefineFlag ("hprefright"));
+        spex->copyfrom = int (flags.GetNumFlag ("copy", -1));
+        spex->reffak = flags.GetNumFlag ("ref", 1 );
+        spex->hmax = flags.GetNumFlag ("maxh", 1e99 );
 
-	if ( flags.StringFlagDefined("bcname") )
-	  {
-	    int mybc = spex->bc-1;
-	    if ( bcnames[mybc] ) delete bcnames[mybc];
-	    bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
-	  }
+        if ( flags.StringFlagDefined("bcname") )
+          {
+            int mybc = spex->bc-1;
+            if ( bcnames[mybc] ) delete bcnames[mybc];
+            bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
+          }
 
-	if ( hd != 1 )
-	  spex->reffak = hd;
+        if ( hd != 1 )
+          spex->reffak = hd;
       }
     if ( !infile.good() )
       return;
@@ -559,28 +559,28 @@ namespace netgen
 
     for ( int i=0; i<numdomains && infile.good(); i++)
       {
-	TestComment ( infile );
-	infile >> domainnr;
-	infile >> material;
-	strcpy(materials[domainnr-1], material);
+        TestComment ( infile );
+        infile >> domainnr;
+        infile >> material;
+        strcpy(materials[domainnr-1], material);
 
-	Flags flags;
-	ch = 'a';
-	infile >> ch;
-	while (ch == '-')
-	  {
-	    char flag[100];
-	    flag[0]='-';
-	    infile >> (flag+1);
-	    flags.SetCommandLineFlag (flag);
-	    ch = 'a';
-	    infile >> ch;
-	  }
+        Flags flags;
+        ch = 'a';
+        infile >> ch;
+        while (ch == '-')
+          {
+            char flag[100];
+            flag[0]='-';
+            infile >> (flag+1);
+            flags.SetCommandLineFlag (flag);
+            ch = 'a';
+            infile >> ch;
+          }
     
-	if (infile.good())
-	  infile.putback (ch);
-	 
-	maxh[domainnr-1] = flags.GetNumFlag ( "maxh", 1e99);
+        if (infile.good())
+          infile.putback (ch);
+         
+        maxh[domainnr-1] = flags.GetNumFlag ( "maxh", 1e99);
       }
     return;
   }
@@ -620,315 +620,315 @@ namespace netgen
 
     while ( infile.good() )
       {
-	infile >> keyword;
+        infile >> keyword;
 
-	ischar = false;
+        ischar = false;
 
-	if ( keyword == "points" )
-	  {
-	    PrintMessage (3, "load points");
-	    infile.get(ch);
-	    infile.putback(ch);
+        if ( keyword == "points" )
+          {
+            PrintMessage (3, "load points");
+            infile.get(ch);
+            infile.putback(ch);
 
-	    // test if ch is a letter
-	    if ( int(ch) >= 65 && int(ch) <=90 )
-	      ischar = true;
-	    if ( int(ch) >= 97 && int(ch) <= 122 )
-	      ischar = true;
+            // test if ch is a letter
+            if ( int(ch) >= 65 && int(ch) <=90 )
+              ischar = true;
+            if ( int(ch) >= 97 && int(ch) <= 122 )
+              ischar = true;
 
-	    while ( ! ischar )
-	      {
-		TestComment ( infile );
-		infile >> pointnr;
-		// pointnrs 1-based
-		if ( pointnr > nump ) nump = pointnr; 
-		pointnrs.Append(pointnr);
-	      
-		for(int j=0; j<D; j++)
-		  infile >> x(j);
-		// hd is now optional, default 1
-		//  infile >> hd;
-		hd = 1;
-	      
-		Flags flags;
-	      
-	      
-		// get flags, 
-		ch = 'a';
-		// infile >> ch;
-		do 
-		  {
-		    infile.get (ch);
-		    // if another int-value, set refinement flag to this value
-		    // (corresponding to old files)
-		    if ( int (ch) >= 48 && int(ch) <= 57 )
-		      {
-			infile.putback(ch);
-			infile >> hd;
-			infile.get(ch);
-		      }
-		  } 
-		while (isspace(ch) && ch != '\n');
-		while (ch == '-')
-		  {
-		    char flag[100];
-		    flag[0]='-';
-		    infile >> (flag+1);
-		    flags.SetCommandLineFlag (flag);
-		    ch = 'a';
-		    do {
-		      infile.get (ch);
-		    } while (isspace(ch) && ch != '\n');
-		  }
-		if (infile.good())
-		  infile.putback (ch);
-	      
-		if ( hd == 1 )
-		  hd = flags.GetNumFlag ( "ref", 1.0);
-		//       geompoints.Append (GeomPoint<D>(x, hd));
+            while ( ! ischar )
+              {
+                TestComment ( infile );
+                infile >> pointnr;
+                // pointnrs 1-based
+                if ( pointnr > nump ) nump = pointnr; 
+                pointnrs.Append(pointnr);
+              
+                for(int j=0; j<D; j++)
+                  infile >> x(j);
+                // hd is now optional, default 1
+                //  infile >> hd;
+                hd = 1;
+              
+                Flags flags;
+              
+              
+                // get flags, 
+                ch = 'a';
+                // infile >> ch;
+                do 
+                  {
+                    infile.get (ch);
+                    // if another int-value, set refinement flag to this value
+                    // (corresponding to old files)
+                    if ( int (ch) >= 48 && int(ch) <= 57 )
+                      {
+                        infile.putback(ch);
+                        infile >> hd;
+                        infile.get(ch);
+                      }
+                  } 
+                while (isspace(ch) && ch != '\n');
+                while (ch == '-')
+                  {
+                    char flag[100];
+                    flag[0]='-';
+                    infile >> (flag+1);
+                    flags.SetCommandLineFlag (flag);
+                    ch = 'a';
+                    do {
+                      infile.get (ch);
+                    } while (isspace(ch) && ch != '\n');
+                  }
+                if (infile.good())
+                  infile.putback (ch);
+              
+                if ( hd == 1 )
+                  hd = flags.GetNumFlag ( "ref", 1.0);
+                //       geompoints.Append (GeomPoint<D>(x, hd));
 
-		infilepoints.Append ( GeomPoint<D>(x, hd) );
-		infilepoints.Last().hpref = flags.GetDefineFlag ("hpref");
-		infilepoints.Last().hmax = flags.GetNumFlag ("maxh", 1e99);
+                infilepoints.Append ( GeomPoint<D>(x, hd) );
+                infilepoints.Last().hpref = flags.GetDefineFlag ("hpref");
+                infilepoints.Last().hmax = flags.GetNumFlag ("maxh", 1e99);
 
-		TestComment(infile);
-		infile.get(ch);
-		infile.putback(ch);
+                TestComment(infile);
+                infile.get(ch);
+                infile.putback(ch);
 
-		// test if letter
-		if ( int(ch) >= 65 && int(ch) <=90 )
-		  ischar = true;
-		if ( int(ch) >= 97 && int(ch) <= 122 )
-		  ischar = true;
-	      }
+                // test if letter
+                if ( int(ch) >= 65 && int(ch) <=90 )
+                  ischar = true;
+                if ( int(ch) >= 97 && int(ch) <= 122 )
+                  ischar = true;
+              }
 
-	    //	  infile.putback (ch);
+            //    infile.putback (ch);
 
-	    geompoints.SetSize(nump);
-	    for ( int i = 0; i < nump; i++ )
-	      {
-		geompoints[pointnrs[i] - 1] = infilepoints[i];
-		geompoints[pointnrs[i] - 1].hpref = infilepoints[i].hpref; 
-	      }
-	    TestComment(infile);
-	  }
+            geompoints.SetSize(nump);
+            for ( int i = 0; i < nump; i++ )
+              {
+                geompoints[pointnrs[i] - 1] = infilepoints[i];
+                geompoints[pointnrs[i] - 1].hpref = infilepoints[i].hpref; 
+              }
+            TestComment(infile);
+          }
 
-	else if ( keyword == "segments" )
-	  {
-	    PrintMessage (3, "load segments");
+        else if ( keyword == "segments" )
+          {
+            PrintMessage (3, "load segments");
 
-	    bcnames.SetSize(0);
-	    infile.get(ch);
-	    infile.putback(ch);
-	    int i = 0;
+            bcnames.SetSize(0);
+            infile.get(ch);
+            infile.putback(ch);
+            int i = 0;
 
-	    // test if ch is a letter
-	    if ( int(ch) >= 65 && int(ch) <=90 )
-	      ischar = true;
-	    if ( int(ch) >= 97 && int(ch) <= 122 )
-	      ischar = true;
+            // test if ch is a letter
+            if ( int(ch) >= 65 && int(ch) <=90 )
+              ischar = true;
+            if ( int(ch) >= 97 && int(ch) <= 122 )
+              ischar = true;
 
-	    while ( !ischar ) //ch != 'p' && ch != 'm' )
-	      {
-		i++;
-		TestComment ( infile );
+            while ( !ischar ) //ch != 'p' && ch != 'm' )
+              {
+                i++;
+                TestComment ( infile );
 
-		SplineSeg<D> * spline = 0;
-		TestComment ( infile );
-		  
-		infile >> leftdom >> rightdom;
-	      
-		if ( leftdom > numdomains ) numdomains = leftdom;
-		if ( rightdom > numdomains ) numdomains = rightdom;
+                SplineSeg<D> * spline = 0;
+                TestComment ( infile );
+                  
+                infile >> leftdom >> rightdom;
+              
+                if ( leftdom > numdomains ) numdomains = leftdom;
+                if ( rightdom > numdomains ) numdomains = rightdom;
 
-	      
-		infile >> buf;
-		// type of spline segment
-		if (strcmp (buf, "2") == 0)
-		  { // a line
-		    infile >> hi1 >> hi2;
-		    spline = new LineSeg<D>(geompoints[hi1-1],
-					    geompoints[hi2-1]);
-		  }
-		else if (strcmp (buf, "3") == 0)
-		  { // a rational spline
-		    infile >> hi1 >> hi2 >> hi3;
-		    spline = new SplineSeg3<D> (geompoints[hi1-1],
-						geompoints[hi2-1],
-						geompoints[hi3-1]);
-		  }
-		else if (strcmp (buf, "4") == 0)
-		  { // an arc
-		    infile >> hi1 >> hi2 >> hi3;
-		    spline = new CircleSeg<D> (geompoints[hi1-1],
-					       geompoints[hi2-1],
-					       geompoints[hi3-1]);
-		  }
-		else if (strcmp (buf, "discretepoints") == 0)
-		  {
-		    int npts;
-		    infile >> npts;
-		    Array< Point<D> > pts(npts);
-		    for (int j = 0; j < npts; j++)
-		      for(int k=0; k<D; k++)
-			infile >> pts[j](k);
-		  
-		    spline = new DiscretePointsSeg<D> (pts);
-		  }
-		else if (strcmp (buf, "bsplinepoints") == 0)
-		  {
-		    int npts,order;
-		    infile >> npts;    
-		    infile >> order;
-		    Array< Point<D> > pts(npts);
-		    for (int j = 0; j < npts; j++)
-		      for(int k=0; k<D; k++)
-			infile >> pts[j](k);	    		    
-		    if(order<2)		      
-			cerr<<"Minimum order of 2 is required!!"<<endl;
-		    else if(order==2)
-		      spline = new BSplineSeg<D,2> (pts);
-		      else if(order==3)
-			spline = new BSplineSeg<D,3> (pts);
-		      else if(order==4)
-			spline = new BSplineSeg<D,4> (pts);
-		      else if(order>4)		      
-			cerr<<"Maximum allowed order is 4!!"<<endl;
-		  }
-	      
-		//      infile >> spline->reffak;
-		SplineSegExt * spex = new SplineSegExt (*spline);
+              
+                infile >> buf;
+                // type of spline segment
+                if (strcmp (buf, "2") == 0)
+                  { // a line
+                    infile >> hi1 >> hi2;
+                    spline = new LineSeg<D>(geompoints[hi1-1],
+                                            geompoints[hi2-1]);
+                  }
+                else if (strcmp (buf, "3") == 0)
+                  { // a rational spline
+                    infile >> hi1 >> hi2 >> hi3;
+                    spline = new SplineSeg3<D> (geompoints[hi1-1],
+                                                geompoints[hi2-1],
+                                                geompoints[hi3-1]);
+                  }
+                else if (strcmp (buf, "4") == 0)
+                  { // an arc
+                    infile >> hi1 >> hi2 >> hi3;
+                    spline = new CircleSeg<D> (geompoints[hi1-1],
+                                               geompoints[hi2-1],
+                                               geompoints[hi3-1]);
+                  }
+                else if (strcmp (buf, "discretepoints") == 0)
+                  {
+                    int npts;
+                    infile >> npts;
+                    Array< Point<D> > pts(npts);
+                    for (int j = 0; j < npts; j++)
+                      for(int k=0; k<D; k++)
+                        infile >> pts[j](k);
+                  
+                    spline = new DiscretePointsSeg<D> (pts);
+                  }
+                else if (strcmp (buf, "bsplinepoints") == 0)
+                  {
+                    int npts,order;
+                    infile >> npts;    
+                    infile >> order;
+                    Array< Point<D> > pts(npts);
+                    for (int j = 0; j < npts; j++)
+                      for(int k=0; k<D; k++)
+                        infile >> pts[j](k);                        
+                    if(order<2)               
+                        cerr<<"Minimum order of 2 is required!!"<<endl;
+                    else if(order==2)
+                      spline = new BSplineSeg<D,2> (pts);
+                      else if(order==3)
+                        spline = new BSplineSeg<D,3> (pts);
+                      else if(order==4)
+                        spline = new BSplineSeg<D,4> (pts);
+                      else if(order>4)                
+                        cerr<<"Maximum allowed order is 4!!"<<endl;
+                  }
+              
+                //      infile >> spline->reffak;
+                SplineSegExt * spex = new SplineSegExt (*spline);
 
-		spex -> leftdom = leftdom;
-		spex -> rightdom = rightdom;
-		splines.Append (spex);
-	      
-	      
-		// hd is now optional, default 1
-		//  infile >> hd;
-		hd = 1;
+                spex -> leftdom = leftdom;
+                spex -> rightdom = rightdom;
+                splines.Append (spex);
+              
+              
+                // hd is now optional, default 1
+                //  infile >> hd;
+                hd = 1;
 
-		infile >> ch;
-	      
-		// get refinement parameter, if it is there
-		//infile.get (ch);
-		// if another int-value, set refinement flag to this value
-		// (corresponding to old files)
+                infile >> ch;
+              
+                // get refinement parameter, if it is there
+                //infile.get (ch);
+                // if another int-value, set refinement flag to this value
+                // (corresponding to old files)
                 /*
-		if ( int (ch) >= 48 && int(ch) <= 57 )
-		  {
-		    infile.putback(ch);
-		    infile >> hd;
-		    infile >> ch ;
-		  }
+                if ( int (ch) >= 48 && int(ch) <= 57 )
+                  {
+                    infile.putback(ch);
+                    infile >> hd;
+                    infile >> ch ;
+                  }
                 */
-		// get flags, 
-		Flags flags;
-		while (ch == '-')
-		  {
-		    char flag[100];
-		    flag[0]='-';
-		    infile >> (flag+1);
-		    flags.SetCommandLineFlag (flag);
-		    ch = 'a';
-		    infile >> ch;
-		  }
-	      
-		if (infile.good())
-		  infile.putback (ch);
-	      
-		spex->bc = int (flags.GetNumFlag ("bc", i+1));
-		spex->hpref_left = int (flags.GetDefineFlag ("hpref")) || 
-		  int (flags.GetDefineFlag ("hprefleft"));
-		spex->hpref_right = int (flags.GetDefineFlag ("hpref")) || 
-		  int (flags.GetDefineFlag ("hprefright"));
-		spex->copyfrom = int (flags.GetNumFlag ("copy", -1));
-		spex->reffak = flags.GetNumFlag ("ref", 1 );
-		spex->hmax = flags.GetNumFlag ("maxh", 1e99 );
-		if ( hd != 1 ) spex->reffak = hd;
+                // get flags, 
+                Flags flags;
+                while (ch == '-')
+                  {
+                    char flag[100];
+                    flag[0]='-';
+                    infile >> (flag+1);
+                    flags.SetCommandLineFlag (flag);
+                    ch = 'a';
+                    infile >> ch;
+                  }
+              
+                if (infile.good())
+                  infile.putback (ch);
+              
+                spex->bc = int (flags.GetNumFlag ("bc", i+1));
+                spex->hpref_left = int (flags.GetDefineFlag ("hpref")) || 
+                  int (flags.GetDefineFlag ("hprefleft"));
+                spex->hpref_right = int (flags.GetDefineFlag ("hpref")) || 
+                  int (flags.GetDefineFlag ("hprefright"));
+                spex->copyfrom = int (flags.GetNumFlag ("copy", -1));
+                spex->reffak = flags.GetNumFlag ("ref", 1 );
+                spex->hmax = flags.GetNumFlag ("maxh", 1e99 );
+                if ( hd != 1 ) spex->reffak = hd;
 
-		if ( flags.StringFlagDefined("bcname") )
-		  {
-		    int mybc = spex->bc-1;
-		    for ( int ii = bcnames.Size(); ii <= mybc; ii++ )
-		      bcnames.Append ( new string ("default"));
-		    if ( bcnames[mybc] ) delete bcnames[mybc];
-		    bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
-		  }
+                if ( flags.StringFlagDefined("bcname") )
+                  {
+                    int mybc = spex->bc-1;
+                    for ( int ii = bcnames.Size(); ii <= mybc; ii++ )
+                      bcnames.Append ( new string ("default"));
+                    if ( bcnames[mybc] ) delete bcnames[mybc];
+                    bcnames[mybc] = new string (flags.GetStringFlag("bcname","") );
+                  }
 
-		TestComment(infile);
-		infile.get(ch);
-		infile.putback(ch);
+                TestComment(infile);
+                infile.get(ch);
+                infile.putback(ch);
 
-		// test if ch is a letter
-		if ( int(ch) >= 65 && int(ch) <=90 )
-		  ischar = true;
-		if ( int(ch) >= 97 && int(ch) <= 122 )
-		  ischar = true;
+                // test if ch is a letter
+                if ( int(ch) >= 65 && int(ch) <=90 )
+                  ischar = true;
+                if ( int(ch) >= 97 && int(ch) <= 122 )
+                  ischar = true;
 
-	      }
-	  
-	    infile.get(ch);
-	    infile.putback(ch);
-	
+              }
+          
+            infile.get(ch);
+            infile.putback(ch);
+        
 
-	  }
-	else if ( keyword == "materials" )
-	  {
-	    TestComment ( infile );
-	    int domainnr;
-	    char material[100];
-	  
-	    if ( !infile.good() ) 
-	      return;
-	  
-	    materials.SetSize(numdomains) ;
-	    maxh.SetSize ( numdomains ) ;
-	    for ( int i = 0; i < numdomains; i++)
-	      maxh[i] = 1000;
-	    quadmeshing.SetSize ( numdomains );
-	    quadmeshing = false;
-	    tensormeshing.SetSize ( numdomains );
-	    tensormeshing = false;
-	    layer.SetSize ( numdomains );
-	    layer = 1;
+          }
+        else if ( keyword == "materials" )
+          {
+            TestComment ( infile );
+            int domainnr;
+            char material[100];
+          
+            if ( !infile.good() ) 
+              return;
+          
+            materials.SetSize(numdomains) ;
+            maxh.SetSize ( numdomains ) ;
+            for ( int i = 0; i < numdomains; i++)
+              maxh[i] = 1000;
+            quadmeshing.SetSize ( numdomains );
+            quadmeshing = false;
+            tensormeshing.SetSize ( numdomains );
+            tensormeshing = false;
+            layer.SetSize ( numdomains );
+            layer = 1;
 
-	  
-	    TestComment ( infile );
-	  
-	    for ( int i=0; i<numdomains; i++)
-	      materials [ i ] = new char[100];
-	  
-	    for ( int i=0; i<numdomains && infile.good(); i++)
-	      {
-		TestComment ( infile );
-		infile >> domainnr;
-		infile >> material;
+          
+            TestComment ( infile );
+          
+            for ( int i=0; i<numdomains; i++)
+              materials [ i ] = new char[100];
+          
+            for ( int i=0; i<numdomains && infile.good(); i++)
+              {
+                TestComment ( infile );
+                infile >> domainnr;
+                infile >> material;
 
-		strcpy (materials[domainnr-1], material);
-	      
-		Flags flags;
-		ch = 'a';
-		infile >> ch;
-		while (ch == '-')
-		  {
-		    char flag[100];
-		    flag[0]='-';
-		    infile >> (flag+1);
-		    flags.SetCommandLineFlag (flag);
-		    ch = 'a';
-		    infile >> ch;
-		  }
-	      
-		if (infile.good())
-		  infile.putback (ch);
-	      
-		maxh[domainnr-1] = flags.GetNumFlag ( "maxh", 1000);
-		if (flags.GetDefineFlag("quad")) quadmeshing[domainnr-1] = true;
-		if (flags.GetDefineFlag("tensor")) tensormeshing[domainnr-1] = true;
-		layer[domainnr-1] = int(flags.GetNumFlag ("layer", 1));
-	      }
-	  }
+                strcpy (materials[domainnr-1], material);
+              
+                Flags flags;
+                ch = 'a';
+                infile >> ch;
+                while (ch == '-')
+                  {
+                    char flag[100];
+                    flag[0]='-';
+                    infile >> (flag+1);
+                    flags.SetCommandLineFlag (flag);
+                    ch = 'a';
+                    infile >> ch;
+                  }
+              
+                if (infile.good())
+                  infile.putback (ch);
+              
+                maxh[domainnr-1] = flags.GetNumFlag ( "maxh", 1000);
+                if (flags.GetDefineFlag("quad")) quadmeshing[domainnr-1] = true;
+                if (flags.GetDefineFlag("tensor")) tensormeshing[domainnr-1] = true;
+                layer[domainnr-1] = int(flags.GetNumFlag ("layer", 1));
+              }
+          }
       }
     return;
   }
@@ -943,8 +943,8 @@ namespace netgen
 
   /*
   void CalcPartition (const SplineSegExt & spline,
-		      double l, double h, double h1, double h2,
-		      double hcurve, double elto0, Array<double> & points)
+                      double l, double h, double h1, double h2,
+                      double hcurve, double elto0, Array<double> & points)
   {
     double fperel, oldf, f;
 
@@ -957,13 +957,13 @@ namespace netgen
     double sum = 0;
     for (int i = 1; i <= n; i++)
       {
-	double t = (i-0.5)*dt;
-	double fun = min3 (hcurve, t/elto0 + h1, (l-t)/elto0 + h2);
-	double curv = spline.CalcCurvature (t/l);
-	cout << "curv = " << curv << endl;
-	if (curv < 1e-10) curv = 1e-10;
-	fun = min2 (fun, 0.1/curv);
-	sum += dt / fun;
+        double t = (i-0.5)*dt;
+        double fun = min3 (hcurve, t/elto0 + h1, (l-t)/elto0 + h2);
+        double curv = spline.CalcCurvature (t/l);
+        cout << "curv = " << curv << endl;
+        if (curv < 1e-10) curv = 1e-10;
+        fun = min2 (fun, 0.1/curv);
+        sum += dt / fun;
       }
 
     int nel = int (sum+1);
@@ -976,21 +976,21 @@ namespace netgen
     // t = 0.5 * dt;
     for (int j = 1; j <= n && i < nel; j++)
       {
-	double t = (j-0.5)*dt;
-	double fun = min3 (hcurve, t/elto0 + h1, (l-t)/elto0 + h2);
-	double curv = spline.CalcCurvature (t/l);
-	if (curv < 1e-10) curv = 1e-10;
-	fun = min2 (fun, 0.1/curv);
+        double t = (j-0.5)*dt;
+        double fun = min3 (hcurve, t/elto0 + h1, (l-t)/elto0 + h2);
+        double curv = spline.CalcCurvature (t/l);
+        if (curv < 1e-10) curv = 1e-10;
+        fun = min2 (fun, 0.1/curv);
 
-	f = oldf + dt / fun;
+        f = oldf + dt / fun;
 
-	while (i * fperel < f && i < nel)
-	  {
-	    points.Append ( dt * (j-1) +  (i * fperel - oldf) * fun);
-	    i++;
-	  }
-	oldf = f;
-	t += dt;
+        while (i * fperel < f && i < nel)
+          {
+            points.Append ( dt * (j-1) +  (i * fperel - oldf) * fun);
+            i++;
+          }
+        oldf = f;
+        t += dt;
       }
     points.Append (l);
   }
@@ -1016,7 +1016,7 @@ namespace netgen
   {
     if (bcnames.Size() >= bcnr)
       if (bcnames[bcnr-1] )
-	return *bcnames[bcnr-1];
+        return *bcnames[bcnr-1];
     return "default";
   }
 
@@ -1096,8 +1096,8 @@ namespace netgen
   
 
   extern void MeshFromSpline2D (SplineGeometry2d & geometry,
-				shared_ptr<Mesh> & mesh, 
-				MeshingParameters & mp);
+                                shared_ptr<Mesh> & mesh, 
+                                MeshingParameters & mp);
 
 
   int SplineGeometry2d :: GenerateMesh (shared_ptr<Mesh> & mesh, MeshingParameters & mparam)
@@ -1126,13 +1126,13 @@ namespace netgen
     string ext = ToLower(filename.extension());
     if (ext == ".in2d")
       {
-	PrintMessage (1, "Load 2D-Spline geometry file ", filename);
+        PrintMessage (1, "Load 2D-Spline geometry file ", filename);
 
-	ifstream infile(filename);
+        ifstream infile(filename);
 
-	SplineGeometry2d * hgeom = new SplineGeometry2d();
-	hgeom -> Load (filename);
-	return hgeom;
+        SplineGeometry2d * hgeom = new SplineGeometry2d();
+        hgeom -> Load (filename);
+        return hgeom;
       }
     
     return NULL;

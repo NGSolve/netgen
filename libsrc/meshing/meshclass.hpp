@@ -31,7 +31,7 @@ namespace netgen
   
 
   enum resthtype { RESTRICTH_FACE, RESTRICTH_EDGE, 
-		   RESTRICTH_SURFACEELEMENT, RESTRICTH_POINT, RESTRICTH_SEGMENT };
+                   RESTRICTH_SURFACEELEMENT, RESTRICTH_POINT, RESTRICTH_SEGMENT };
 
   class HPRefElement;
   class CurvedElements;
@@ -211,15 +211,15 @@ namespace netgen
     DLL_HEADER void BuildBoundaryEdges(bool rebuild=true);
 
     DLL_HEADER bool PointContainedIn2DElement(const netgen::Point<3> & p,
-				   double lami[3],
-				   SurfaceElementIndex element,
-				   bool consider3D = false) const;
+                                   double lami[3],
+                                   SurfaceElementIndex element,
+                                   bool consider3D = false) const;
     DLL_HEADER bool PointContainedIn3DElement(const netgen::Point<3> & p,
-				   double lami[3],
+                                   double lami[3],
                                    ElementIndex element,
                                    double tol=1e-4) const;
     DLL_HEADER bool PointContainedIn3DElementOld(const netgen::Point<3> & p,
-				      double lami[3],
+                                      double lami[3],
                                       ElementIndex element,
                                       double tol=1e-4) const;
 
@@ -470,7 +470,7 @@ namespace netgen
     DLL_HEADER void RestrictLocalH (const netgen::Point<3> & p, double hloc, int layer=1);
     ///
     DLL_HEADER void RestrictLocalHLine (const netgen::Point<3> & p1, const netgen::Point<3> & p2, 
-			     double hloc, int layer=1);
+                             double hloc, int layer=1);
     /// number of elements per radius
     DLL_HEADER void CalcLocalHFromSurfaceCurvature(double grading, double elperr, int layer=1);
     ///
@@ -484,11 +484,11 @@ namespace netgen
     ///
     DLL_HEADER void SetGlobalH (double h);
     ///
-	DLL_HEADER void SetMinimalH (double h);
+        DLL_HEADER void SetMinimalH (double h);
     ///
-	DLL_HEADER double MaxHDomain (int dom) const;
+        DLL_HEADER double MaxHDomain (int dom) const;
     ///
-	DLL_HEADER void SetMaxHDomain (const Array<double> & mhd);
+        DLL_HEADER void SetMaxHDomain (const Array<double> & mhd);
     ///
     DLL_HEADER double GetH (const netgen::Point<3> & p, int layer=1) const;
     DLL_HEADER double GetH (PointIndex pi) const { return GetH(points[pi], points[pi].GetLayer()); }
@@ -531,10 +531,10 @@ namespace netgen
     bool HasOpenQuads () const;
 
     /// split into connected pieces
-	DLL_HEADER void SplitIntoParts ();
+        DLL_HEADER void SplitIntoParts ();
 
     /// 
-	DLL_HEADER void SplitSeparatedFaces ();
+        DLL_HEADER void SplitSeparatedFaces ();
 
     /// Refines mesh and projects points to true surface
     // void Refine (int levels, const CSGeometry * geom);
@@ -544,7 +544,7 @@ namespace netgen
     bool BoundaryEdge (PointIndex pi1, PointIndex pi2) const
     {
       if(!boundaryedges)
-	const_cast<Mesh *>(this)->BuildBoundaryEdges();
+        const_cast<Mesh *>(this)->BuildBoundaryEdges();
       
       return boundaryedges->Used ({pi1, pi2});
     }
@@ -574,32 +574,32 @@ namespace netgen
     void OrderElements(); 
 
     ///
-	DLL_HEADER void Save (ostream & outfile) const;
+        DLL_HEADER void Save (ostream & outfile) const;
     ///
-	DLL_HEADER void Load (istream & infile);
+        DLL_HEADER void Load (istream & infile);
     ///
-	DLL_HEADER void Merge (istream & infile, const int surfindex_offset = 0);
+        DLL_HEADER void Merge (istream & infile, const int surfindex_offset = 0);
     ///
-	DLL_HEADER void Save (const filesystem::path & filename) const;
+        DLL_HEADER void Save (const filesystem::path & filename) const;
     ///
-	DLL_HEADER void Load (const filesystem::path & filename);
+        DLL_HEADER void Load (const filesystem::path & filename);
     ///
-	DLL_HEADER void Merge (const filesystem::path & filename, const int surfindex_offset = 0);
+        DLL_HEADER void Merge (const filesystem::path & filename, const int surfindex_offset = 0);
 
 
     DLL_HEADER void DoArchive (Archive & archive);
     ///
-	DLL_HEADER void ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
+        DLL_HEADER void ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY);
 
     ///
     void ImproveMeshJacobian (const MeshingParameters & mp, OPTIMIZEGOAL goal = OPT_QUALITY,
                               const TBitArray<PointIndex> * usepoint = NULL);
     ///
     void ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
-				       const TBitArray<PointIndex> & usepoint, 
-				       const Array< Vec<3>* > & nv,
-				       OPTIMIZEGOAL goal = OPT_QUALITY,
-				       const Array< idmap_type* > * idmaps = NULL);
+                                       const TBitArray<PointIndex> & usepoint, 
+                                       const Array< Vec<3>* > & nv,
+                                       OPTIMIZEGOAL goal = OPT_QUALITY,
+                                       const Array< idmap_type* > * idmaps = NULL);
     /**
        free nodes in environment of openelements 
        for optimiztion
@@ -614,7 +614,7 @@ namespace netgen
     bool LegalTet (Element & el) const
     {
       if (el.IllegalValid())
-	return !el.Illegal();
+        return !el.Illegal();
       return LegalTet2 (el);
     }
     ///
@@ -632,19 +632,19 @@ namespace netgen
        triangle angles min/max, tetangles min/max
        if null, output results on cout
     */
-	DLL_HEADER void CalcMinMaxAngle (double badellimit, double * retvalues = NULL);
+        DLL_HEADER void CalcMinMaxAngle (double badellimit, double * retvalues = NULL);
 
     /*
       Marks elements which are dangerous to refine
       return: number of illegal elements
     */
-	DLL_HEADER int MarkIllegalElements (int domain=0);
+        DLL_HEADER int MarkIllegalElements (int domain=0);
 
     /// orient surface mesh, for one sub-domain only
-	DLL_HEADER void SurfaceMeshOrientation ();
+        DLL_HEADER void SurfaceMeshOrientation ();
 
     /// convert mixed element mesh to tet-mesh
-	DLL_HEADER void Split2Tets();
+        DLL_HEADER void Split2Tets();
 
 
     /// build box-search tree
@@ -691,7 +691,7 @@ namespace netgen
 
     /// give list of vol elements which are int the box(p1,p2)
     void GetIntersectingVolEls(const netgen::Point<3>& p1, const netgen::Point<3>& p2, 
-			       Array<ElementIndex> & locels) const;
+                               Array<ElementIndex> & locels) const;
 
     ///
     int AddFaceDescriptor(const FaceDescriptor& fd)
@@ -934,27 +934,27 @@ namespace netgen
       double area;
     public:
       CSurfaceArea (const Mesh & amesh) 
-	: mesh(amesh), valid(false), area(0.) { ; }
+        : mesh(amesh), valid(false), area(0.) { ; }
 
       void Add (const Element2d & sel)
       {
-	if (sel.GetNP() == 3)
-	  area += Cross ( mesh[sel[1]]-mesh[sel[0]],
-			  mesh[sel[2]]-mesh[sel[0]] ).Length() / 2;
-	else
-	  area += Cross (Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(3)]),
-			 Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(4)])).Length() / 2;;
+        if (sel.GetNP() == 3)
+          area += Cross ( mesh[sel[1]]-mesh[sel[0]],
+                          mesh[sel[2]]-mesh[sel[0]] ).Length() / 2;
+        else
+          area += Cross (Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(3)]),
+                         Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(4)])).Length() / 2;;
       }
       void ReCalc ()
       {
-	area = 0;
+        area = 0;
         /*
-	for (auto & el : mesh.SurfaceElements())
-	  Add (el);
+        for (auto & el : mesh.SurfaceElements())
+          Add (el);
         */
         for (const Element2d & el : mesh.SurfaceElements())
           Add (el);
-	valid = true;
+        valid = true;
       }
 
       operator double () const { return area; }

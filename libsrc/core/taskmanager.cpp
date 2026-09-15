@@ -153,7 +153,7 @@ namespace ngcore
         {
           void * mem = numa_alloc_onnode (sizeof(NodeData), j);
           nodedata[j] = new (mem) NodeData;
-	  complete[j] = -1;
+          complete[j] = -1;
           workers_on_node[j] = 0;          
         }
 #else
@@ -570,7 +570,7 @@ namespace ngcore
             while (1)
               {
                 if (mynode_data.start_cnt >= mytasks.Size()) break;
-		int mytask = mynode_data.start_cnt.fetch_add(1, memory_order_relaxed);
+                int mytask = mynode_data.start_cnt.fetch_add(1, memory_order_relaxed);
                 if (mytask >= mytasks.Size()) break;
                 
                 ti.task_nr = mytasks.First()+mytask;
@@ -605,10 +605,10 @@ namespace ngcore
 
         mynode_data.participate-=2;
 
-	{
-	  int oldpart = 1;
-	  if (mynode_data.participate.compare_exchange_strong (oldpart, 0))
-	    {
+        {
+          int oldpart = 1;
+          if (mynode_data.participate.compare_exchange_strong (oldpart, 0))
+            {
               if (jobdone < jobnr.load())
                 { // reopen gate
                   mynode_data.participate |= 1;                  
@@ -619,8 +619,8 @@ namespace ngcore
                     mynode_data.start_cnt = 0;
                   complete[mynode] = jobnr.load(); 
                 }
-	    }	      
-	}
+            }         
+        }
       }
     
 

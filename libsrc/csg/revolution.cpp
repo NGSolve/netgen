@@ -13,39 +13,39 @@ namespace netgen
 
     if(line)
       {
-	checklines_start.Append(new Point<2>(line->StartPI()));
-	checklines_vec.Append(new Vec<2>(line->EndPI() - line->StartPI()));
-	(*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        checklines_start.Append(new Point<2>(line->StartPI()));
+        checklines_vec.Append(new Vec<2>(line->EndPI() - line->StartPI()));
+        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
       }
     else if (spline3)
       {
-	checklines_start.Append(new Point<2>(spline3->EndPI()));
-	checklines_start.Append(new Point<2>(spline3->TangentPoint()));
-	checklines_start.Append(new Point<2>(spline3->StartPI()));
-	checklines_vec.Append(new Vec<2>(spline3->StartPI() - spline3->EndPI()));
-	(*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
-	checklines_vec.Append(new Vec<2>(spline3->EndPI() - spline3->TangentPoint()));
-	(*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
-	checklines_vec.Append(new Vec<2>(spline3->TangentPoint() - spline3->StartPI()));
-	(*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
-	
+        checklines_start.Append(new Point<2>(spline3->EndPI()));
+        checklines_start.Append(new Point<2>(spline3->TangentPoint()));
+        checklines_start.Append(new Point<2>(spline3->StartPI()));
+        checklines_vec.Append(new Vec<2>(spline3->StartPI() - spline3->EndPI()));
+        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        checklines_vec.Append(new Vec<2>(spline3->EndPI() - spline3->TangentPoint()));
+        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        checklines_vec.Append(new Vec<2>(spline3->TangentPoint() - spline3->StartPI()));
+        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        
       }
     
     for(int i=0; i<checklines_vec.Size(); i++)
       {
-	checklines_normal.Append(new Vec<2>);
-	(*checklines_normal.Last())(0) = - (*checklines_vec[i])(1);
-	(*checklines_normal.Last())(1) = (*checklines_vec[i])(0);
-	checklines_normal.Last()->Normalize();
+        checklines_normal.Append(new Vec<2>);
+        (*checklines_normal.Last())(0) = - (*checklines_vec[i])(1);
+        (*checklines_normal.Last())(1) = (*checklines_vec[i])(0);
+        checklines_normal.Last()->Normalize();
       }
   }
 
   RevolutionFace :: RevolutionFace(const SplineSeg<2> & spline_in,
-				   const Point<3> & p,
-				   const Vec<3> & vec,
-				   bool first,
-				   bool last,
-				   const int id_in) :
+                                   const Point<3> & p,
+                                   const Vec<3> & vec,
+                                   bool first,
+                                   bool last,
+                                   const int id_in) :
     isfirst(first), islast(last), spline(&spline_in), p0(p), v_axis(vec),  id(id_in)
   {    
     deletable = false;
@@ -67,35 +67,35 @@ namespace netgen
 
     for(int i=0; i<stype; i++)
       {
-	p[i](0) = raw_data[pos]; pos++;
-	p[i](1) = raw_data[pos]; pos++;
+        p[i](0) = raw_data[pos]; pos++;
+        p[i](1) = raw_data[pos]; pos++;
       }
 
     if(stype == 2)
       {
-	spline = new LineSeg<2>(GeomPoint<2>(p[0],1),
-				GeomPoint<2>(p[1],1));
-	//(*testout) << "appending LineSeg<2> " << p[0] 
-	//	   << " to " << p[1] << endl;
+        spline = new LineSeg<2>(GeomPoint<2>(p[0],1),
+                                GeomPoint<2>(p[1],1));
+        //(*testout) << "appending LineSeg<2> " << p[0] 
+        //         << " to " << p[1] << endl;
       }
     else if(stype == 3)
       {
-	spline = new SplineSeg3<2>(GeomPoint<2>(p[0],1),
-				   GeomPoint<2>(p[1],1),
-				   GeomPoint<2>(p[2],1));
-	//(*testout) << "appending SplineSeg<3> "
-	//	   << p[0] << " -- " << p[1] << " -- " << p[2] << endl;
+        spline = new SplineSeg3<2>(GeomPoint<2>(p[0],1),
+                                   GeomPoint<2>(p[1],1),
+                                   GeomPoint<2>(p[2],1));
+        //(*testout) << "appending SplineSeg<3> "
+        //         << p[0] << " -- " << p[1] << " -- " << p[2] << endl;
       }
 
     for(int i=0; i<3; i++)
       {
-	p0(i) = raw_data[pos];
-	pos++;
+        p0(i) = raw_data[pos];
+        pos++;
       }
     for(int i=0; i<3; i++)
       {
-	v_axis(i) = raw_data[pos];
-	pos++;
+        v_axis(i) = raw_data[pos];
+        pos++;
       }
     isfirst = (raw_data[pos] > 0.9);
     pos++;
@@ -110,9 +110,9 @@ namespace netgen
   {
     for(int i=0; i<checklines_start.Size(); i++)
       {
-	delete checklines_start[i];
-	delete checklines_vec[i];
-	delete checklines_normal[i];
+        delete checklines_start[i];
+        delete checklines_vec[i];
+        delete checklines_normal[i];
       }
 
     if(deletable)
@@ -120,7 +120,7 @@ namespace netgen
   }
   
   void RevolutionFace :: CalcProj(const Point<3> & point3d, Point<2> & point2d,
-				  const Vec<3> & vector3d, Vec<2> & vector2d) const
+                                  const Vec<3> & vector3d, Vec<2> & vector2d) const
   {
     Vec<3> pmp0 = point3d-p0;
     CalcProj0(pmp0,point2d);
@@ -200,19 +200,19 @@ namespace netgen
 
     if(fabs(p(1)) > 1e-10)
       {
-	const double dFdybar = 2.*spline_coefficient(1)*p(1) + spline_coefficient(2)*p(0) + spline_coefficient(4);
+        const double dFdybar = 2.*spline_coefficient(1)*p(1) + spline_coefficient(2)*p(0) + spline_coefficient(4);
 
-	grad(0) = dFdxbar*v_axis(0) + dFdybar * ( point_minus_p0(0)-v_axis(0)*p(0) )/p(1);
-	grad(1) = dFdxbar*v_axis(1) + dFdybar * ( point_minus_p0(1)-v_axis(1)*p(0) )/p(1);
-	grad(2) = dFdxbar*v_axis(2) + dFdybar * ( point_minus_p0(2)-v_axis(2)*p(0) )/p(1);
-	//(*testout) << "grad1("<<point<<") = " << grad << endl;
+        grad(0) = dFdxbar*v_axis(0) + dFdybar * ( point_minus_p0(0)-v_axis(0)*p(0) )/p(1);
+        grad(1) = dFdxbar*v_axis(1) + dFdybar * ( point_minus_p0(1)-v_axis(1)*p(0) )/p(1);
+        grad(2) = dFdxbar*v_axis(2) + dFdybar * ( point_minus_p0(2)-v_axis(2)*p(0) )/p(1);
+        //(*testout) << "grad1("<<point<<") = " << grad << endl;
       }
     else
       {
-	grad(0) = dFdxbar*v_axis(0);
-	grad(1) = dFdxbar*v_axis(1);
-	grad(2) = dFdxbar*v_axis(2);
-	//(*testout) << "grad2("<<point<<") = " << grad << endl;
+        grad(0) = dFdxbar*v_axis(0);
+        grad(1) = dFdxbar*v_axis(1);
+        grad(2) = dFdxbar*v_axis(2);
+        //(*testout) << "grad2("<<point<<") = " << grad << endl;
       }
     */
     Vec<2> pr = p-spline->StartPI();
@@ -220,19 +220,19 @@ namespace netgen
 
     if(fabs(p(1)) > 1e-10)
       {
-	const double dFdybar = 2.*spline_coefficient_shifted(1)*pr(1) + spline_coefficient_shifted(2)*pr(0) + spline_coefficient_shifted(4);
+        const double dFdybar = 2.*spline_coefficient_shifted(1)*pr(1) + spline_coefficient_shifted(2)*pr(0) + spline_coefficient_shifted(4);
 
-	grad(0) = dFdxbar*v_axis(0) + dFdybar * ( point_minus_p0(0)-v_axis(0)*p(0) )/p(1);
-	grad(1) = dFdxbar*v_axis(1) + dFdybar * ( point_minus_p0(1)-v_axis(1)*p(0) )/p(1);
-	grad(2) = dFdxbar*v_axis(2) + dFdybar * ( point_minus_p0(2)-v_axis(2)*p(0) )/p(1);
-	//(*testout) << "grad1("<<point<<") = " << grad << endl;
+        grad(0) = dFdxbar*v_axis(0) + dFdybar * ( point_minus_p0(0)-v_axis(0)*p(0) )/p(1);
+        grad(1) = dFdxbar*v_axis(1) + dFdybar * ( point_minus_p0(1)-v_axis(1)*p(0) )/p(1);
+        grad(2) = dFdxbar*v_axis(2) + dFdybar * ( point_minus_p0(2)-v_axis(2)*p(0) )/p(1);
+        //(*testout) << "grad1("<<point<<") = " << grad << endl;
       }
     else
       {
-	grad(0) = dFdxbar*v_axis(0);
-	grad(1) = dFdxbar*v_axis(1);
-	grad(2) = dFdxbar*v_axis(2);
-	//(*testout) << "grad2("<<point<<") = " << grad << endl;
+        grad(0) = dFdxbar*v_axis(0);
+        grad(1) = dFdxbar*v_axis(1);
+        grad(2) = dFdxbar*v_axis(2);
+        //(*testout) << "grad2("<<point<<") = " << grad << endl;
       }
     
   }
@@ -251,65 +251,65 @@ namespace netgen
 
     if(fabs(p(1)) > 1e-10)
       {
-	const double dFdybar = 2.*spline_coefficient(1)*p(1) + spline_coefficient(2)*p(0) + spline_coefficient(4);
-	
-	const double aux = -pow(p(1),-3);
-	const double aux0 = point_minus_p0(0) - v_axis(0)*p(0);
-	const double aux1 = point_minus_p0(1) - v_axis(1)*p(0);
-	const double aux2 = point_minus_p0(2) - v_axis(2)*p(0);
-	
+        const double dFdybar = 2.*spline_coefficient(1)*p(1) + spline_coefficient(2)*p(0) + spline_coefficient(4);
+        
+        const double aux = -pow(p(1),-3);
+        const double aux0 = point_minus_p0(0) - v_axis(0)*p(0);
+        const double aux1 = point_minus_p0(1) - v_axis(1)*p(0);
+        const double aux2 = point_minus_p0(2) - v_axis(2)*p(0);
+        
 
-	const double dybardx = aux0/p(1);
-	const double dybardy = aux1/p(1);
-	const double dybardz = aux2/p(1);
+        const double dybardx = aux0/p(1);
+        const double dybardy = aux1/p(1);
+        const double dybardz = aux2/p(1);
     
-	const double dybardxx = aux*aux0*aux0 + (1.-v_axis(0)*v_axis(0))/p(1);
-	const double dybardyy = aux*aux1*aux1 + (1.-v_axis(1)*v_axis(1))/p(1);
-	const double dybardzz = aux*aux2*aux2 + (1.-v_axis(2)*v_axis(2))/p(1);
-	const double dybardxy = aux*aux0*aux1 - v_axis(0)*v_axis(1)/p(1);
-	const double dybardxz = aux*aux0*aux2 - v_axis(0)*v_axis(2)/p(1);
-	const double dybardyz = aux*aux1*aux2 - v_axis(1)*v_axis(2)/p(1);
-	
-	hesse(0,0) = 2.*spline_coefficient(0)*v_axis(0)*v_axis(0) + 2.*spline_coefficient(2)*v_axis(0)*dybardx + 2.*spline_coefficient(1)*dybardx*dybardx
-	  + dFdybar*dybardxx;
-	hesse(1,1) = 2.*spline_coefficient(0)*v_axis(1)*v_axis(1) + 2.*spline_coefficient(2)*v_axis(1)*dybardy + 2.*spline_coefficient(1)*dybardy*dybardy
-	  + dFdybar*dybardyy;
-	hesse(2,2) = 2.*spline_coefficient(0)*v_axis(2)*v_axis(2) + 2.*spline_coefficient(2)*v_axis(2)*dybardz + 2.*spline_coefficient(1)*dybardz*dybardz
-	  + dFdybar*dybardzz;
-	
-	hesse(0,1) = hesse(1,0) = 2.*spline_coefficient(0)*v_axis(0)*v_axis(1) + spline_coefficient(2)*v_axis(0)*dybardy + spline_coefficient(2)*dybardx*v_axis(1)
-	  + 2.*spline_coefficient(2)*dybardx*dybardy + dFdybar*dybardxy;
-	hesse(0,2) = hesse(2,0) = 2.*spline_coefficient(0)*v_axis(0)*v_axis(2) + spline_coefficient(2)*v_axis(0)*dybardz + spline_coefficient(2)*dybardx*v_axis(2)
-	  + 2.*spline_coefficient(2)*dybardx*dybardz + dFdybar*dybardxz;
-	hesse(1,2) = hesse(2,1) = 2.*spline_coefficient(0)*v_axis(1)*v_axis(2) + spline_coefficient(2)*v_axis(1)*dybardz + spline_coefficient(2)*dybardy*v_axis(2)
-	  + 2.*spline_coefficient(2)*dybardy*dybardz + dFdybar*dybardyz;
+        const double dybardxx = aux*aux0*aux0 + (1.-v_axis(0)*v_axis(0))/p(1);
+        const double dybardyy = aux*aux1*aux1 + (1.-v_axis(1)*v_axis(1))/p(1);
+        const double dybardzz = aux*aux2*aux2 + (1.-v_axis(2)*v_axis(2))/p(1);
+        const double dybardxy = aux*aux0*aux1 - v_axis(0)*v_axis(1)/p(1);
+        const double dybardxz = aux*aux0*aux2 - v_axis(0)*v_axis(2)/p(1);
+        const double dybardyz = aux*aux1*aux2 - v_axis(1)*v_axis(2)/p(1);
+        
+        hesse(0,0) = 2.*spline_coefficient(0)*v_axis(0)*v_axis(0) + 2.*spline_coefficient(2)*v_axis(0)*dybardx + 2.*spline_coefficient(1)*dybardx*dybardx
+          + dFdybar*dybardxx;
+        hesse(1,1) = 2.*spline_coefficient(0)*v_axis(1)*v_axis(1) + 2.*spline_coefficient(2)*v_axis(1)*dybardy + 2.*spline_coefficient(1)*dybardy*dybardy
+          + dFdybar*dybardyy;
+        hesse(2,2) = 2.*spline_coefficient(0)*v_axis(2)*v_axis(2) + 2.*spline_coefficient(2)*v_axis(2)*dybardz + 2.*spline_coefficient(1)*dybardz*dybardz
+          + dFdybar*dybardzz;
+        
+        hesse(0,1) = hesse(1,0) = 2.*spline_coefficient(0)*v_axis(0)*v_axis(1) + spline_coefficient(2)*v_axis(0)*dybardy + spline_coefficient(2)*dybardx*v_axis(1)
+          + 2.*spline_coefficient(2)*dybardx*dybardy + dFdybar*dybardxy;
+        hesse(0,2) = hesse(2,0) = 2.*spline_coefficient(0)*v_axis(0)*v_axis(2) + spline_coefficient(2)*v_axis(0)*dybardz + spline_coefficient(2)*dybardx*v_axis(2)
+          + 2.*spline_coefficient(2)*dybardx*dybardz + dFdybar*dybardxz;
+        hesse(1,2) = hesse(2,1) = 2.*spline_coefficient(0)*v_axis(1)*v_axis(2) + spline_coefficient(2)*v_axis(1)*dybardz + spline_coefficient(2)*dybardy*v_axis(2)
+          + 2.*spline_coefficient(2)*dybardy*dybardz + dFdybar*dybardyz;
 
-	//(*testout) << "hesse1: " << hesse <<endl;
+        //(*testout) << "hesse1: " << hesse <<endl;
       }
     else if (fabs(spline_coefficient(2)) + fabs(spline_coefficient(4)) < 1.e-9 &&
-	     fabs(spline_coefficient(0)) > 1e-10)
+             fabs(spline_coefficient(0)) > 1e-10)
       {
-	double aux = spline_coefficient(0)-spline_coefficient(1);
-	
-	hesse(0,0) = aux*v_axis(0)*v_axis(0) + spline_coefficient(1);
-	hesse(0,0) = aux*v_axis(1)*v_axis(1) + spline_coefficient(1);
-	hesse(0,0) = aux*v_axis(2)*v_axis(2) + spline_coefficient(1);
+        double aux = spline_coefficient(0)-spline_coefficient(1);
+        
+        hesse(0,0) = aux*v_axis(0)*v_axis(0) + spline_coefficient(1);
+        hesse(0,0) = aux*v_axis(1)*v_axis(1) + spline_coefficient(1);
+        hesse(0,0) = aux*v_axis(2)*v_axis(2) + spline_coefficient(1);
 
-	hesse(0,1) = hesse(1,0) = aux*v_axis(0)*v_axis(1);
-	hesse(0,2) = hesse(2,0) = aux*v_axis(0)*v_axis(2);
-	hesse(1,2) = hesse(2,1) = aux*v_axis(1)*v_axis(2);
-	//(*testout) << "hesse2: " << hesse <<endl;
-	
+        hesse(0,1) = hesse(1,0) = aux*v_axis(0)*v_axis(1);
+        hesse(0,2) = hesse(2,0) = aux*v_axis(0)*v_axis(2);
+        hesse(1,2) = hesse(2,1) = aux*v_axis(1)*v_axis(2);
+        //(*testout) << "hesse2: " << hesse <<endl;
+        
       }
     else if (fabs(spline_coefficient(1)) + fabs(spline_coefficient(3)) + fabs(spline_coefficient(4)) + fabs(spline_coefficient(5)) < 1.e-9) // line
       {
-	hesse = 0;
-	//(*testout) << "hesse3: " << hesse <<endl;
+        hesse = 0;
+        //(*testout) << "hesse3: " << hesse <<endl;
       }
     else
       {
         hesse = 0;
-	(*testout) << "hesse4: " << hesse <<endl;
+        (*testout) << "hesse4: " << hesse <<endl;
       }
   }
 
@@ -321,7 +321,7 @@ namespace netgen
       return 0;
       
     if (fabs(spline_coefficient(2)) + fabs(spline_coefficient(4)) < 1.e-9 &&
-	fabs(spline_coefficient(0)) > 1e-10)
+        fabs(spline_coefficient(0)) > 1e-10)
       return 2.*max2(fabs(spline_coefficient(0)),fabs(spline_coefficient(1)));
 
 
@@ -329,7 +329,7 @@ namespace netgen
       max2(fabs(spline->StartPI()(1)),fabs(spline->EndPI()(1)));
 
     return max2(2.*fabs(spline_coefficient(0))+sqrt(2.)*fabs(spline_coefficient(2)),
-		2.*fabs(spline_coefficient(1))+spline_coefficient(2)+1.5*alpha);
+                2.*fabs(spline_coefficient(1))+spline_coefficient(2)+1.5*alpha);
   }
 
   double  RevolutionFace :: MaxCurvature() const
@@ -343,43 +343,43 @@ namespace netgen
     
     if(ss3)
       {
-	checkpoints.Append(ss3->StartPI());
-	checkpoints.Append(ss3->TangentPoint());
-	checkpoints.Append(ss3->TangentPoint());
-	checkpoints.Append(ss3->EndPI());
+        checkpoints.Append(ss3->StartPI());
+        checkpoints.Append(ss3->TangentPoint());
+        checkpoints.Append(ss3->TangentPoint());
+        checkpoints.Append(ss3->EndPI());
       }
     else if(ls)
       {
-	checkpoints.Append(ls->StartPI());
-	checkpoints.Append(ls->EndPI());
+        checkpoints.Append(ls->StartPI());
+        checkpoints.Append(ls->EndPI());
       }
 
     for(int i=0; i<checkpoints.Size(); i+=2)
       {
-	Vec<2> v = checkpoints[i+1]-checkpoints[i];
-	Vec<2> n(v(1),-v(0)); n.Normalize();
+        Vec<2> v = checkpoints[i+1]-checkpoints[i];
+        Vec<2> n(v(1),-v(0)); n.Normalize();
 
-	//if(ss3)
-	//  (*testout) << "n " << n << endl;
+        //if(ss3)
+        //  (*testout) << "n " << n << endl;
 
-	if(fabs(n(1)) < 1e-15)
-	  continue;
+        if(fabs(n(1)) < 1e-15)
+          continue;
 
-	double t1 = -checkpoints[i](1)/n(1);
-	double t2 = -checkpoints[i+1](1)/n(1);
-	
-	double c1 = (t1 > 0) ? (1./t1) : -1;
-	double c2 = (t2 > 0) ? (1./t2) : -1;
-	
-	//if(ss3)
-	//  (*testout) << "t1 " << t1 << " t2 " << t2 << " c1 " << c1 << " c2 " << c2 << endl;
+        double t1 = -checkpoints[i](1)/n(1);
+        double t2 = -checkpoints[i+1](1)/n(1);
+        
+        double c1 = (t1 > 0) ? (1./t1) : -1;
+        double c2 = (t2 > 0) ? (1./t2) : -1;
+        
+        //if(ss3)
+        //  (*testout) << "t1 " << t1 << " t2 " << t2 << " c1 " << c1 << " c2 " << c2 << endl;
 
-	if(c1 > retval)
-	  retval = c1;
-	if(c2 > retval)
-	  retval = c2;
+        if(c1 > retval)
+          retval = c1;
+        if(c2 > retval)
+          retval = c2;
       }
-	
+        
     //if(ss3)
     //  (*testout) << "curvature " << retval << endl;
 
@@ -400,25 +400,25 @@ namespace netgen
 
     if(s3)
       {
-	double denom = (2.-sqrt(2.))*(s3->EndPI()(1) - s3->StartPI()(1));
-	
-	if(fabs(denom) < 1e-20)
-	  testt.Append(0.5);
-	else
-	  {
-	    double sD = sqrt(pow(s3->TangentPoint()(1) - s3->StartPI()(1),2)+
-			     pow(s3->TangentPoint()(1) - s3->EndPI()(1),2));
-	    testt.Append((s3->StartPI()(1)*(sqrt(2.)-1.) - sqrt(2.)*s3->TangentPoint()(1) + s3->EndPI()(1) + sD)/denom);
-	    testt.Append((s3->StartPI()(1)*(sqrt(2.)-1.) - sqrt(2.)*s3->TangentPoint()(1) + s3->EndPI()(1) - sD)/denom);
-	  }	
+        double denom = (2.-sqrt(2.))*(s3->EndPI()(1) - s3->StartPI()(1));
+        
+        if(fabs(denom) < 1e-20)
+          testt.Append(0.5);
+        else
+          {
+            double sD = sqrt(pow(s3->TangentPoint()(1) - s3->StartPI()(1),2)+
+                             pow(s3->TangentPoint()(1) - s3->EndPI()(1),2));
+            testt.Append((s3->StartPI()(1)*(sqrt(2.)-1.) - sqrt(2.)*s3->TangentPoint()(1) + s3->EndPI()(1) + sD)/denom);
+            testt.Append((s3->StartPI()(1)*(sqrt(2.)-1.) - sqrt(2.)*s3->TangentPoint()(1) + s3->EndPI()(1) - sD)/denom);
+          }     
       }
 
     double miny = fabs(spline.GetPoint(testt[0])(1));
     for(int i=1; i<testt.Size(); i++)
       {
-	double thisy = fabs(spline.GetPoint(testt[i])(1));
-	if(thisy < miny)
-	  miny = thisy;
+        double thisy = fabs(spline.GetPoint(testt[i])(1));
+        if(thisy < miny)
+          miny = thisy;
       }
 
     return max2(splinecurvature,1./miny);
@@ -467,15 +467,15 @@ namespace netgen
       spline->GetCoeff(spline_coefficient);
 
     str << p0(0) << " " << p0(1) << " " << p0(2) << " "
-	<< v_axis(0) << " " << v_axis(1) << " " << v_axis(2) << " ";
+        << v_axis(0) << " " << v_axis(1) << " " << v_axis(2) << " ";
     for(int i=0; i<6; i++) str << spline_coefficient(i) << " ";
     str << endl;
   }
 
 
   void RevolutionFace :: GetTriangleApproximation (TriangleApproximation & tas, 
-						   const Box<3> & boundingbox, 
-						   double facets) const
+                                                   const Box<3> & boundingbox, 
+                                                   double facets) const
   {
     Vec<3> random_vec(0.760320,-0.241175,0.60311534);
 
@@ -486,24 +486,24 @@ namespace netgen
 
     for(int i=0; i<=n; i++)
       {
-	Point<2> sp = spline->GetPoint(double(i)/double(n));
-	for(int j=0; j<=n; j++)
-	  {
-	    double phi = 2.*M_PI*double(j)/double(n);
-	    
-	    Point<3> p = p0 + sp(0)*v_axis + sp(1)*cos(phi)*v1 + sp(1)*sin(phi)*v2;
-	    tas.AddPoint(p);   
-	  }
+        Point<2> sp = spline->GetPoint(double(i)/double(n));
+        for(int j=0; j<=n; j++)
+          {
+            double phi = 2.*M_PI*double(j)/double(n);
+            
+            Point<3> p = p0 + sp(0)*v_axis + sp(1)*cos(phi)*v1 + sp(1)*sin(phi)*v2;
+            tas.AddPoint(p);   
+          }
       }
     
     for(int i=0; i<n; i++)
       for(int j=0; j<n; j++)
-	{
-	  int pi = (n+1)*i+j;
+        {
+          int pi = (n+1)*i+j;
 
-	  tas.AddTriangle( TATriangle (id, pi,pi+1,pi+n+1));
-	  tas.AddTriangle( TATriangle (id, pi+1,pi+n+1,pi+n+2));
-	}
+          tas.AddTriangle( TATriangle (id, pi,pi+1,pi+n+1));
+          tas.AddTriangle( TATriangle (id, pi+1,pi+n+1,pi+n+2));
+        }
   }
   
 
@@ -547,38 +547,38 @@ namespace netgen
   
     for(int i=0; i<checklines_start.Size(); i++)
       {
-	Vec<2> b = box.Center()- (*checklines_start[i]);
+        Vec<2> b = box.Center()- (*checklines_start[i]);
 
-	double d;
+        double d;
 
-	double checkdist = b * (*checklines_vec[i]);
-	double ncomp = b * (*checklines_normal[i]);
+        double checkdist = b * (*checklines_vec[i]);
+        double ncomp = b * (*checklines_normal[i]);
 
-	if(checkdist < 0)
-	  d = b.Length();
-	else if (checkdist > 1)
-	  {
-	    if(spline3)
-	      d = Dist(box.Center(),*checklines_start[(i+1)%3]);
-	    else
-	      d = Dist(box.Center(),(*checklines_start[i]) 
-		       + pow(checklines_vec[i]->Length(),2)*(*checklines_vec[i]));
-	  }
-	else 
-	  d = fabs(ncomp);
-	  
-	thisint = (box.Diam() >= 2.*d);
-	retval = retval || thisint;
-	if(thisint)
-	  {
-	    if(i==0)
-	      intdirect = true;
-	    else
-	      inttangent = true;
-	  }
+        if(checkdist < 0)
+          d = b.Length();
+        else if (checkdist > 1)
+          {
+            if(spline3)
+              d = Dist(box.Center(),*checklines_start[(i+1)%3]);
+            else
+              d = Dist(box.Center(),(*checklines_start[i]) 
+                       + pow(checklines_vec[i]->Length(),2)*(*checklines_vec[i]));
+          }
+        else 
+          d = fabs(ncomp);
+          
+        thisint = (box.Diam() >= 2.*d);
+        retval = retval || thisint;
+        if(thisint)
+          {
+            if(i==0)
+              intdirect = true;
+            else
+              inttangent = true;
+          }
 
-	if(ncomp > 0) always_right = false;
-	else if(ncomp < 0) always_left = false;
+        if(ncomp > 0) always_right = false;
+        else if(ncomp < 0) always_left = false;
       }
 
     if(retval && !(intdirect && inttangent))
@@ -586,11 +586,11 @@ namespace netgen
 
     if(!retval && spline3 && (always_right || always_left))
       {
-	retval = true;
-	uncertain = true;
+        retval = true;
+        uncertain = true;
       }
     
-    return retval;	
+    return retval;      
   }  
   */
   
@@ -642,8 +642,8 @@ namespace netgen
 
 
   Revolution :: Revolution(const Point<3> & p0_in,
-			   const Point<3> & p1_in,
-			   shared_ptr<SplineGeometry<2>> spline_in) :
+                           const Point<3> & p1_in,
+                           shared_ptr<SplineGeometry<2>> spline_in) :
     p0(p0_in), p1(p1_in), splinegeo(spline_in)
   {
     auto nsplines = spline_in->GetNSplines();
@@ -658,20 +658,20 @@ namespace netgen
        spline_in->GetSpline(nsplines-1).EndPI()(1) <= 0.)
       type = 2;
     else if (Dist(spline_in->GetSpline(0).StartPI(),
-		  spline_in->GetSpline(nsplines-1).EndPI()) < 1e-7)
+                  spline_in->GetSpline(nsplines-1).EndPI()) < 1e-7)
       type = 1;
     else
       cerr << "Surface of revolution cannot be constructed" << endl;
 
     for(int i=0; i<spline_in->GetNSplines(); i++)
       {
-	faces.Append(new RevolutionFace
+        faces.Append(new RevolutionFace
                      (spline_in->GetSpline(i),
                       p0,v_axis,
                       type==2 && i==0,
                       type==2 && i==spline_in->GetNSplines()-1));
         surfaceactive.Append(1);
-	surfaceids.Append(0);
+        surfaceids.Append(0);
       }
 
     // checking
@@ -703,11 +703,11 @@ namespace netgen
   {
     for(int i=0; i<faces.Size(); i++)
       if(faces[i]->BoxIntersectsFace(box))
-	return DOES_INTERSECT;
+        return DOES_INTERSECT;
     
     
     return PointInSolid(box.Center(),0);
-	 
+         
 
     /*
     Point<2> c,pmin,pmax;
@@ -724,51 +724,51 @@ namespace netgen
 
     for(int i=0; !(intersection && !uncertain) && i<faces.Size(); i++)
       {
-	bool thisintersects;
-	bool thisuncertain;
-	thisintersects = faces[i]->BoxIntersectsFace(box2d,thisuncertain);
-	intersection = intersection || thisintersects;
-	if(thisintersects && !thisuncertain)
-	  uncertain = false;
+        bool thisintersects;
+        bool thisuncertain;
+        thisintersects = faces[i]->BoxIntersectsFace(box2d,thisuncertain);
+        intersection = intersection || thisintersects;
+        if(thisintersects && !thisuncertain)
+          uncertain = false;
       }
 
     if(intersection)
       {
-	if(!uncertain)
-	  return DOES_INTERSECT;
-	else
-	  {
-	    Array < Point<3> > pext(2);
-	    Point<3> p;
+        if(!uncertain)
+          return DOES_INTERSECT;
+        else
+          {
+            Array < Point<3> > pext(2);
+            Point<3> p;
 
-	    pext[0] = box.PMin();
-	    pext[1] = box.PMax();
+            pext[0] = box.PMin();
+            pext[1] = box.PMax();
 
-	    INSOLID_TYPE position;
-	    bool firsttime = true;
+            INSOLID_TYPE position;
+            bool firsttime = true;
 
-	    for(int i=0; i<2; i++)
-	      for(int j=0; j<2; j++)
-		for(int k=0; k<2; k++)
-		  {
-		    p(0) = pext[i](0);
-		    p(1) = pext[j](1);
-		    p(2) = pext[k](2);
-		    INSOLID_TYPE ppos = PointInSolid(p,0);
-		    if(ppos == DOES_INTERSECT)
-		      return DOES_INTERSECT;
-		    
-		    if(firsttime)
-		      {
-			firsttime = false;
-			position = ppos;
-		      }
-		    if(position != ppos)
-		      return DOES_INTERSECT;	    
-		  }
-	    return position;
+            for(int i=0; i<2; i++)
+              for(int j=0; j<2; j++)
+                for(int k=0; k<2; k++)
+                  {
+                    p(0) = pext[i](0);
+                    p(1) = pext[j](1);
+                    p(2) = pext[k](2);
+                    INSOLID_TYPE ppos = PointInSolid(p,0);
+                    if(ppos == DOES_INTERSECT)
+                      return DOES_INTERSECT;
+                    
+                    if(firsttime)
+                      {
+                        firsttime = false;
+                        position = ppos;
+                      }
+                    if(position != ppos)
+                      return DOES_INTERSECT;        
+                  }
+            return position;
 
-	  }
+          }
       }
 
     return PointInSolid(box.Center(),0);
@@ -776,7 +776,7 @@ namespace netgen
   }
 
   INSOLID_TYPE Revolution :: PointInSolid (const Point<3> & p,
-					   double eps) const
+                                           double eps) const
   {
     Point<2> p2d;
     faces[0]->CalcProj(p,p2d);
@@ -798,23 +798,23 @@ namespace netgen
     //(*testout) << "face intersections at: " << endl;
     for(int i=0; i<faces.Size(); i++)
       {
-	faces[i]->GetSpline().LineIntersections(a,b,c,points,eps);
-	
-	for(int j=0; j<points.Size(); j++)
-	  {
-	    double t = (points[j](0)-p2d(0))/randomx;
+        faces[i]->GetSpline().LineIntersections(a,b,c,points,eps);
+        
+        for(int j=0; j<points.Size(); j++)
+          {
+            double t = (points[j](0)-p2d(0))/randomx;
 
-	    //(*testout) << t << endl;
-	    if ( t < -eps )
-	      intersections_before++;
-	    else if ( t > eps )
-	      intersections_after++;
-	    else
-	      {
-		intersecting_face = i;
-		return DOES_INTERSECT;
-	      }
-	  }
+            //(*testout) << t << endl;
+            if ( t < -eps )
+              intersections_before++;
+            else if ( t > eps )
+              intersections_after++;
+            else
+              {
+                intersecting_face = i;
+                return DOES_INTERSECT;
+              }
+          }
       }
 
     if(intersections_after % 2 == 0)
@@ -833,117 +833,117 @@ namespace netgen
   }
 
   INSOLID_TYPE Revolution :: VecInSolid (const Point<3> & p,
-					 const Vec<3> & v,
-					 double eps) const
+                                         const Vec<3> & v,
+                                         double eps) const
   {
     INSOLID_TYPE pInSolid = PointInSolid(p,eps);
 
     if(pInSolid != DOES_INTERSECT)
       {
-	//(*testout) << "pInSolid" << endl;
-	return pInSolid;
+        //(*testout) << "pInSolid" << endl;
+        return pInSolid;
       }
 
     Array<int> intersecting_faces;
 
     for(int i=0; i<faces.Size(); i++)
       if(faces[i]->PointInFace(p,eps)) //  == DOES_INTERSECT)
-	intersecting_faces.Append(i);
+        intersecting_faces.Append(i);
 
      Vec<3> hv;
 
     if(intersecting_faces.Size() == 1)
       {
-	faces[intersecting_faces[0]]->CalcGradient(p,hv);
+        faces[intersecting_faces[0]]->CalcGradient(p,hv);
 
-	double hv1;
-	hv1 = v * hv;
-	
-	if (hv1 <= -eps)
-	  return IS_INSIDE;
-	if (hv1 >= eps)
-	  return IS_OUTSIDE;
-	
-	return DOES_INTERSECT; 
+        double hv1;
+        hv1 = v * hv;
+        
+        if (hv1 <= -eps)
+          return IS_INSIDE;
+        if (hv1 >= eps)
+          return IS_OUTSIDE;
+        
+        return DOES_INTERSECT; 
       }
     else if(intersecting_faces.Size() == 2)
       {
-	Point<2> p2d;
-	Vec<2> v2d;
-	faces[intersecting_faces[0]]->CalcProj(p,p2d,v,v2d);
+        Point<2> p2d;
+        Vec<2> v2d;
+        faces[intersecting_faces[0]]->CalcProj(p,p2d,v,v2d);
 
-	if(Dist(faces[intersecting_faces[0]]->GetSpline().StartPI(),p2d) <
-	   Dist(faces[intersecting_faces[0]]->GetSpline().EndPI(),p2d))
-	  {
-	    int aux = intersecting_faces[0];
-	    intersecting_faces[0] = intersecting_faces[1];
-	    intersecting_faces[1] = aux;
-	  }
-	
-	const SplineSeg3<2> * splinesegment3 = 
-	  dynamic_cast<const SplineSeg3<2> *>(&faces[intersecting_faces[0]]->GetSpline());
-	const LineSeg<2> * linesegment = 
-	  dynamic_cast<const LineSeg<2> *>(&faces[intersecting_faces[0]]->GetSpline());
-		
-	Vec<2> t1(0),t2(0);
+        if(Dist(faces[intersecting_faces[0]]->GetSpline().StartPI(),p2d) <
+           Dist(faces[intersecting_faces[0]]->GetSpline().EndPI(),p2d))
+          {
+            int aux = intersecting_faces[0];
+            intersecting_faces[0] = intersecting_faces[1];
+            intersecting_faces[1] = aux;
+          }
+        
+        const SplineSeg3<2> * splinesegment3 = 
+          dynamic_cast<const SplineSeg3<2> *>(&faces[intersecting_faces[0]]->GetSpline());
+        const LineSeg<2> * linesegment = 
+          dynamic_cast<const LineSeg<2> *>(&faces[intersecting_faces[0]]->GetSpline());
+                
+        Vec<2> t1(0),t2(0);
 
-	if(linesegment)
-	  t1 = linesegment->StartPI() - linesegment->EndPI();
-	else if(splinesegment3)
-	  t1 = splinesegment3->TangentPoint() - splinesegment3->EndPI();
+        if(linesegment)
+          t1 = linesegment->StartPI() - linesegment->EndPI();
+        else if(splinesegment3)
+          t1 = splinesegment3->TangentPoint() - splinesegment3->EndPI();
 
-	linesegment = 
-	  dynamic_cast<const LineSeg<2> *>(&faces[intersecting_faces[1]]->GetSpline());
-	splinesegment3 = 
-	  dynamic_cast<const SplineSeg3<2> *>(&faces[intersecting_faces[1]]->GetSpline());
-	
-	if(linesegment)
-	  t2 = linesegment->EndPI() - linesegment->StartPI();
-	else if(splinesegment3)
-	  t2 = splinesegment3->TangentPoint() - splinesegment3->StartPI();
+        linesegment = 
+          dynamic_cast<const LineSeg<2> *>(&faces[intersecting_faces[1]]->GetSpline());
+        splinesegment3 = 
+          dynamic_cast<const SplineSeg3<2> *>(&faces[intersecting_faces[1]]->GetSpline());
+        
+        if(linesegment)
+          t2 = linesegment->EndPI() - linesegment->StartPI();
+        else if(splinesegment3)
+          t2 = splinesegment3->TangentPoint() - splinesegment3->StartPI();
 
-	t1.Normalize();
-	t2.Normalize();
+        t1.Normalize();
+        t2.Normalize();
 
-	double d1 = v2d*t1;
-	double d2 = v2d*t2;
+        double d1 = v2d*t1;
+        double d2 = v2d*t2;
 
-	Vec<2> n;
+        Vec<2> n;
 
-	if(d1 > d2)
-	  {
-	    n(0) = t1(1);
-	    n(1) = -t1(0);
-	  }
-	else
-	  {
-	    n(0) = -t2(1);
-	    n(1) = t2(0);
-	  }
+        if(d1 > d2)
+          {
+            n(0) = t1(1);
+            n(1) = -t1(0);
+          }
+        else
+          {
+            n(0) = -t2(1);
+            n(1) = t2(0);
+          }
 
-	double d = v2d*n;
+        double d = v2d*n;
 
-	if(d > eps)
-	  return IS_OUTSIDE;
-	else if (d < -eps)
-	  return IS_INSIDE;
-	else
-	  return DOES_INTERSECT;
+        if(d > eps)
+          return IS_OUTSIDE;
+        else if (d < -eps)
+          return IS_INSIDE;
+        else
+          return DOES_INTERSECT;
 
 
       }
     else
       {
-	cerr << "Jo gibt's denn des?" << endl;
+        cerr << "Jo gibt's denn des?" << endl;
       }
 
     return DOES_INTERSECT;    
   }
 
   INSOLID_TYPE Revolution :: VecInSolid2 (const Point<3> & p,
-					  const Vec<3> & v1,
-					  const Vec<3> & v2,
-					  double eps) const
+                                          const Vec<3> & v1,
+                                          const Vec<3> & v2,
+                                          double eps) const
   {
     INSOLID_TYPE ret1 = VecInSolid(p,v1,eps);
     if(ret1 != DOES_INTERSECT)

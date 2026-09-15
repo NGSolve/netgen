@@ -101,8 +101,8 @@ public:
   size_t GetNT() const {return charttrigs.Size()+outertrigs.Size(); }
 
   void GetTrianglesInBox (const Point<3> & pmin,
-			  const Point<3> & pmax,
-			  Array<STLTrigId> & trias) const;
+                          const Point<3> & pmax,
+                          Array<STLTrigId> & trias) const;
   void AddOLimit(twoint l) {olimit.Append(l);}
   void AddILimit(twoint l) {ilimit.Append(l);}
 
@@ -150,7 +150,7 @@ class STLBoundarySeg
 public:
   STLBoundarySeg () { ; }
   STLBoundarySeg (STLPointId ai1, STLPointId ai2, const Array<Point<3>,STLPointId> & points,
-		  const STLChart * chart)
+                  const STLChart * chart)
     : p1(points[ai1]), p2(points[ai2]),
       i1(ai1), i2(ai2)
   {
@@ -311,7 +311,7 @@ inline ostream & operator<< (ostream & ost, const STLParameters & stlparam)
 
 
 void STLMeshing (STLGeometry & geom,
-		 Mesh & mesh,
+                 Mesh & mesh,
                  const MeshingParameters& mparam,
                  const STLParameters& stlpar);
 
@@ -322,8 +322,8 @@ int STLSurfaceMeshing (STLGeometry & geom,
                        const STLParameters& stlpar);
 
 void STLSurfaceOptimization (STLGeometry & geom,
-			     Mesh & mesh,
-			     const MeshingParameters & mparam);
+                             Mesh & mesh,
+                             const MeshingParameters & mparam);
 
 
 } // namespace netgen

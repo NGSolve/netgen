@@ -982,15 +982,15 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     {
       typ = atyp;
       switch (typ)
-	{
-	case TRIG: np = 3; break;
-	case QUAD: np = 4; break;
-	case TRIG6: np = 6; break;
-	case QUAD6: np = 6; break;
-	case QUAD8: np = 8; break;
-	default:
-	  PrintSysError ("Element2d::SetType, illegal type ", int(typ));
-	}
+        {
+        case TRIG: np = 3; break;
+        case QUAD: np = 4; break;
+        case TRIG6: np = 6; break;
+        case QUAD6: np = 6; break;
+        case QUAD8: np = 8; break;
+        default:
+          PrintSysError ("Element2d::SetType, illegal type ", int(typ));
+        }
       is_curved = (np >= 4); 
     }
     ///
@@ -1010,19 +1010,19 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
         }
       /*
       switch (typ)
-	{
-	case TRIG:
-	case TRIG6: return 3;
+        {
+        case TRIG:
+        case TRIG6: return 3;
           
-	case QUAD:
-	case QUAD8:
-	case QUAD6: return 4;
-	default:
+        case QUAD:
+        case QUAD8:
+        case QUAD6: return 4;
+        default:
 #ifdef DEBUG
-	  PrintSysError ("element2d::GetNV not implemented for typ", typ)
+          PrintSysError ("element2d::GetNV not implemented for typ", typ)
 #endif
-	    ;
-	}
+            ;
+        }
       return np;
       */
     }
@@ -1135,9 +1135,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void GetIntegrationPoint (int ip, Point<2> & p, double & weight) const;
 
     void GetTransformation (int ip, FlatArray<Point<2>, PointIndex> points,
-			    class DenseMatrix & trans) const;
+                            class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
-			    class DenseMatrix & trans) const;
+                            class DenseMatrix & trans) const;
 
     void GetShape (const Point<2> & p, class Vector & shape) const;
     DLL_HEADER void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
@@ -1150,16 +1150,16 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     
     /// matrix 2 * np
     void GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
-			 class DenseMatrix & pmat) const;
+                         class DenseMatrix & pmat) const;
 
     void ComputeIntegrationPointData () const;
   
 
     double CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const;
     double CalcJacobianBadness (const T_POINTS & points, 
-				const Vec<3> & n) const;
+                                const Vec<3> & n) const;
     double CalcJacobianBadnessDirDeriv (FlatArray<Point<2>, PointIndex> points,
-					int pi, Vec<2> & dir, double & dd) const;
+                                        int pi, Vec<2> & dir, double & dd) const;
 
 
     
@@ -1173,7 +1173,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     {
 #ifdef DEBUG
       if ((pnum[0]-IndexBASE<PointIndex>() < 0) && !deleted)
-	cerr << "Surfelement has illegal pnum, but not marked as deleted" << endl;
+        cerr << "Surfelement has illegal pnum, but not marked as deleted" << endl;
 #endif    
       return deleted; 
     }
@@ -1312,22 +1312,22 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     {
       // __assume(typ >= TET && typ <= PYRAMID13);
       switch (typ)
-	{
+        {
         case TET: 
         case TET10: 
           return 4;
         case PRISM12:
         case PRISM15:
         case PRISM:
-	  return 6; 
-	case PYRAMID:
+          return 6; 
+        case PYRAMID:
         case PYRAMID13:
-	  return 5;
-	case HEX7:
-	  return 7;
-	case HEX:
-	case HEX20:
-	  return 8;
+          return 5;
+        case HEX7:
+          return 7;
+        case HEX:
+        case HEX20:
+          return 8;
         default: // not a 3D element
 #ifdef DEBUG
           PrintSysError ("Element3d::GetNV not implemented for typ ", int(typ));
@@ -1435,22 +1435,22 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int GetNFaces () const
     {
       switch (typ)
-	{
-	case TET: 
-	case TET10: return 4;
-	case PYRAMID: case PYRAMID13: return 5;
-	case PRISM:
+        {
+        case TET: 
+        case TET10: return 4;
+        case PYRAMID: case PYRAMID13: return 5;
+        case PRISM:
         case PRISM15:
-	case PRISM12: return 5;
+        case PRISM12: return 5;
         case HEX7: return 6;
         case HEX: case HEX20:
           return 6;
-	default:
+        default:
 #ifdef DEBUG
-	  PrintSysError ("element3d::GetNFaces not implemented for typ", int(typ))
+          PrintSysError ("element3d::GetNFaces not implemented for typ", int(typ))
 #endif
-	    ;
-	}
+            ;
+        }
       return 0;
     }
     ///
@@ -1480,9 +1480,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void GetIntegrationPoint (int ip, Point<3> & p, double & weight) const;
 
     void GetTransformation (int ip, const T_POINTS & points,
-			    class DenseMatrix & trans) const;
+                            class DenseMatrix & trans) const;
     void GetTransformation (int ip, class DenseMatrix & pmat,
-			    class DenseMatrix & trans) const;
+                            class DenseMatrix & trans) const;
 
     void GetShape (const Point<3> & p, class Vector & shape) const;
     // void GetShapeNew (const Point<3> & p, class FlatVector & shape) const;
@@ -1494,16 +1494,16 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void GetDShapeNew (const Point<3,T> & p, class MatrixFixWidth<3,T> & dshape) const;
     /// matrix 3 * np
     void GetPointMatrix (const T_POINTS & points,
-			 class DenseMatrix & pmat) const; 
+                         class DenseMatrix & pmat) const; 
 
     void ComputeIntegrationPointData () const;
   
 
     double CalcJacobianBadness (const T_POINTS & points) const;
     double CalcJacobianBadnessDirDeriv (const T_POINTS & points,
-					int pi, Vec<3> & dir, double & dd) const;
+                                        int pi, Vec<3> & dir, double & dd) const;
     double CalcJacobianBadnessGradient (const T_POINTS & points,
-					int pi, Vec<3> & grad) const;
+                                        int pi, Vec<3> & grad) const;
 
     ///
     // friend ostream & operator<<(ostream  & s, const Element & el);
@@ -1561,7 +1561,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     { 
 #ifdef DEBUG
       if (pnum[0]-IndexBASE<PointIndex>() < 0 && !flags.deleted)
-	cerr << "Volelement has illegal pnum, but not marked as deleted" << endl;
+        cerr << "Volelement has illegal pnum, but not marked as deleted" << endl;
 #endif    
 
       return flags.deleted; 
@@ -2073,25 +2073,25 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   {
     if (GetNP() == 3)
       {
-	if (PNum(1) < PNum(2) && PNum(1) < PNum(3))
-	  return;
-	else
-	  {
-	    if (PNum(2) < PNum(3))
-	      {
-		PointIndex pi1 = PNum(2);
-		PNum(2) = PNum(3);
-		PNum(3) = PNum(1);
-		PNum(1) = pi1;
-	      }
-	    else
-	      {
-		PointIndex pi1 = PNum(3);
-		PNum(3) = PNum(2);
-		PNum(2) = PNum(1);
-		PNum(1) = pi1;
-	      }
-	  }
+        if (PNum(1) < PNum(2) && PNum(1) < PNum(3))
+          return;
+        else
+          {
+            if (PNum(2) < PNum(3))
+              {
+                PointIndex pi1 = PNum(2);
+                PNum(2) = PNum(3);
+                PNum(3) = PNum(1);
+                PNum(1) = pi1;
+              }
+            else
+              {
+                PointIndex pi1 = PNum(3);
+                PNum(3) = PNum(2);
+                PNum(2) = PNum(1);
+                PNum(1) = pi1;
+              }
+          }
       }
     else
       NormalizeNumbering2();
@@ -2109,10 +2109,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   {
     if (typ == TET)
       {
-	face.SetType(TRIG);
-	face[0] = pnum[gftetfacesa[i-1][0]];
-	face[1] = pnum[gftetfacesa[i-1][1]];
-	face[2] = pnum[gftetfacesa[i-1][2]];
+        face.SetType(TRIG);
+        face[0] = pnum[gftetfacesa[i-1][0]];
+        face[1] = pnum[gftetfacesa[i-1][1]];
+        face[2] = pnum[gftetfacesa[i-1][2]];
       }
     else
       GetFace2 (i, face);
@@ -2199,8 +2199,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     bool UsedSymmetric (PointIndex pi1, PointIndex pi2)
     {
       return 
-	identifiedpoints.Used (PointIndices<2>(pi1, pi2)) ||
-	identifiedpoints.Used (PointIndices<2>(pi2, pi1));
+        identifiedpoints.Used (PointIndices<2>(pi1, pi2)) ||
+        identifiedpoints.Used (PointIndices<2>(pi2, pi1));
     }
 
     ///
@@ -2209,14 +2209,14 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     ID_TYPE GetType(int identnr) const
     {
       if(identnr <= type.Size())
-	return type[identnr-1];
+        return type[identnr-1];
       else
-	return UNDEFINED;
+        return UNDEFINED;
     }
     void SetType(int identnr, ID_TYPE t)
     {
       while(type.Size() < identnr)
-	type.Append(UNDEFINED);
+        type.Append(UNDEFINED);
       type[identnr-1] = t;
     }
     

@@ -20,31 +20,31 @@ namespace netgen
 
   //importance: importance of message: 1=very important, 3=middle, 5=low, 7=unimportant
   extern DLL_HEADER void PrintMessage(int importance, 
-			   const MyStr& s1, const MyStr& s2=MyStr());
+                           const MyStr& s1, const MyStr& s2=MyStr());
   extern DLL_HEADER void PrintMessage(int importance, 
-			   const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4=MyStr());
+                           const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4=MyStr());
   extern DLL_HEADER void PrintMessage(int importance, 
-			   const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
-			   const MyStr& s5, const MyStr& s6=MyStr(), const MyStr& s7=MyStr(), const MyStr& s8=MyStr());
+                           const MyStr& s1, const MyStr& s2, const MyStr& s3, const MyStr& s4, 
+                           const MyStr& s5, const MyStr& s6=MyStr(), const MyStr& s7=MyStr(), const MyStr& s8=MyStr());
 
   // CR without line-feed
   extern DLL_HEADER void PrintMessageCR(int importance, 
-			     const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			     const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                             const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
+                             const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintFnStart(const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			   const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                           const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintWarning(const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			   const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                           const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintError(const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			 const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                         const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintFileError(const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			     const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                             const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintSysError(const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			    const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                            const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintUserError(const MyStr& s1, const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			     const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                             const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
   extern DLL_HEADER void PrintTime(const MyStr& s1="", const MyStr& s2="", const MyStr& s3="", const MyStr& s4="", 
-			const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
+                        const MyStr& s5="", const MyStr& s6="", const MyStr& s7="", const MyStr& s8="");
 
 
 

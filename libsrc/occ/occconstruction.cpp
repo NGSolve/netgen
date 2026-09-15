@@ -74,9 +74,9 @@ namespace netgen
     fix_dom2m8.Perform();
 
     builder.Add (geom.shape, 
-		 BRepAlgoAPI_Cut 
-		 (BRepAlgoAPI_Cut (geom.somap(2), dom6plus),
-		  dom8plus));
+                 BRepAlgoAPI_Cut 
+                 (BRepAlgoAPI_Cut (geom.somap(2), dom6plus),
+                  dom8plus));
     // builder.Add (geom.shape, fix_dom2m8.Shape());
     //     builder.Add (geom.shape, fixshape.Shape());
     */
@@ -85,15 +85,15 @@ namespace netgen
     int cnt = 0;
     for (TopExp_Explorer exp_solid(geom.shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
       {
-	if (cnt == 0)
-	  my_fuse = exp_solid.Current();
-	else
-	  {
-	    cout << "fuse, cnt = " << cnt << endl;
-	    if (cnt != 7 && cnt != 9)
-	      my_fuse = BRepAlgoAPI_Fuse (my_fuse, exp_solid.Current());
-	  }
-	cnt++;
+        if (cnt == 0)
+          my_fuse = exp_solid.Current();
+        else
+          {
+            cout << "fuse, cnt = " << cnt << endl;
+            if (cnt != 7 && cnt != 9)
+              my_fuse = BRepAlgoAPI_Fuse (my_fuse, exp_solid.Current());
+          }
+        cnt++;
       }
     builder.Add (geom.shape, my_fuse);
 
@@ -108,10 +108,10 @@ namespace netgen
     int cnt = 0;
     for (TopExp_Explorer exp_solid(geom.shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
       {
-	cout << "swe, cnt = " << cnt << endl;
-	if (cnt != 7 && cnt != 9)
-	  sewing.Add (exp_solid.Current());
-	cnt++;
+        cout << "swe, cnt = " << cnt << endl;
+        if (cnt != 7 && cnt != 9)
+          sewing.Add (exp_solid.Current());
+        cnt++;
       }
 
     sewing.Perform();
@@ -126,13 +126,13 @@ namespace netgen
     cnt = 0;
     for (TopExp_Explorer exp_solid(geom.shape, TopAbs_SOLID); exp_solid.More(); exp_solid.Next())
       {
-	cout << "section, cnt = " << cnt << endl;
-	if (cnt == 7)
-	  {
-	    builder.Add (geom.shape, 
-			 BRepAlgoAPI_Section (air, exp_solid.Current()));
-	  }
-	cnt++;
+        cout << "section, cnt = " << cnt << endl;
+        if (cnt == 7)
+          {
+            builder.Add (geom.shape, 
+                         BRepAlgoAPI_Section (air, exp_solid.Current()));
+          }
+        cnt++;
       }
     */
 

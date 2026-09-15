@@ -9,7 +9,7 @@
 namespace netgen
 {
 splinesegment3d :: splinesegment3d (const Point<3> & ap1, const Point<3> & ap2, 
-				    const Point<3> & ap3)
+                                    const Point<3> & ap3)
 {
   p1 = ap1;
   p2 = ap2;
@@ -94,7 +94,7 @@ void splinesegment3d :: EvaluateTangent (double t, Vec<3> & tang) const
  
 
 void spline3d :: AddSegment (const Point<3> & ap1, const Point<3> & ap2, 
-			     const Point<3> & ap3)
+                             const Point<3> & ap3)
 {
   segments.Append (new splinesegment3d (ap1, ap2, ap3));
 }
@@ -141,10 +141,10 @@ double spline3d :: ProjectToSpline (Point<3> & p) const
       Evaluate (t, hp);
       dist = Dist (hp, p);
       if (t == 0 || dist < mindist)
-	{
-	  optt = t;
-	  mindist = dist;
-	} 
+        {
+          optt = t;
+          mindist = dist;
+        } 
     }
 
   
@@ -156,9 +156,9 @@ double spline3d :: ProjectToSpline (Point<3> & p) const
       Evaluate (optt, hp);
       EvaluateTangent (optt, tanx);
       if (tanx * (hp - p) > 0)
-	tu = optt;
+        tu = optt;
       else
-	tl = optt;
+        tl = optt;
     } 
 
   optt = 0.5 * (tu + tl);
@@ -199,9 +199,9 @@ double spline3d :: ProjectToSpline (Point<3> & p, double optt) const
       dval = (valu - vall) / (2 * dt);
 
       if (its % 100 == 99)    
-	(*testout) << "optt = " << optt 
-		   << " val = " << val 
-		   << " dval = " << dval << endl;
+        (*testout) << "optt = " << optt 
+                   << " val = " << val 
+                   << " dval = " << dval << endl;
       optt -= val / dval;
       its++;
       if (fabs(val) < 1e-8 && cnt > 5) cnt = 5;
@@ -222,7 +222,7 @@ splinetube :: splinetube (const spline3d & amiddlecurve, double ar)
 }
   
 void splinetube :: DefineTangentialPlane (const Point<3> & ap1, 
-					  const Point<3> & ap2)
+                                          const Point<3> & ap2)
 {
   double t;
   double phi, z;
@@ -246,15 +246,15 @@ void splinetube :: DefineTangentialPlane (const Point<3> & ap1,
   e2y(0) = -e2x(1);
   
   //  (*testout) << "Defineplane: " << endl
-  //  	<< "p1 = " << p1 << "   p2 = " << p2 << endl
-  //  	<< "pc = " << cp << endl
-  //  	<< "ex = " << ex << " ey = " << ey << " ez = " << ez << endl
-  //  	<< "phi = " << phi << "  z = " << z << endl
-  //  	<< "e2x = " << e2x << " e2y = " << e2y << endl;
+  //    << "p1 = " << p1 << "   p2 = " << p2 << endl
+  //    << "pc = " << cp << endl
+  //    << "ex = " << ex << " ey = " << ey << " ez = " << ez << endl
+  //    << "phi = " << phi << "  z = " << z << endl
+  //    << "e2x = " << e2x << " e2y = " << e2y << endl;
 }
   
 void splinetube :: ToPlane (const Point<3> & p3d, Point<2> & pplain, double h, 
-			    int & zone) const
+                            int & zone) const
 {
   Vec<2> v;
   v(0) = r * atan2 (ey * (p3d-cp), ex * (p3d-cp));
@@ -336,8 +336,8 @@ void splinetube :: Print (ostream & str) const
       << middlecurve.GetNumSegments () << " segments, r = " << r << endl;
   for (i = 1; i <= middlecurve.GetNumSegments(); i++)
     str << middlecurve.P1(i) << " - " 
-	<< middlecurve.P2(i) << " - " 
-	<< middlecurve.P3(i) << endl;
+        << middlecurve.P2(i) << " - " 
+        << middlecurve.P3(i) << endl;
 }
 
 

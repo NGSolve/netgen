@@ -33,16 +33,16 @@ namespace netgen
   public:
     void CalcProj(const Point<3> & point3d, Point<2> & point2d) const;
     void CalcProj(const Point<3> & point3d, Point<2> & point2d,
-		  const Vec<3> & vector3d, Vec<2> & vector2d) const;
+                  const Vec<3> & vector3d, Vec<2> & vector2d) const;
     void CalcProj0(const Vec<3> & point3d_minus_p0, Point<2> & point2d) const;
 
   public:
     RevolutionFace(const SplineSeg<2> & spline_in,
-		   const Point<3> & p,
-		   const Vec<3> & vec,
-		   bool first = false,
-		   bool last = false,
-		   const int id_in = 0);
+                   const Point<3> & p,
+                   const Vec<3> & vec,
+                   bool first = false,
+                   bool last = false,
+                   const int id_in = 0);
 
     RevolutionFace(const Array<double> & raw_data);
     // default constructor for archive
@@ -66,7 +66,7 @@ namespace netgen
 
     virtual double MaxCurvature () const;
     //virtual double MaxCurvatureLoc (const Point<3> & /* c */ , 
-    //				  double /* rad */) const;
+    //                            double /* rad */) const;
     
     Point<3> P0() const { return p0; }
     Vec<3> Axis() const { return v_axis; }
@@ -77,8 +77,8 @@ namespace netgen
     virtual void Print (ostream & str) const;
   
     virtual void GetTriangleApproximation (TriangleApproximation & tas, 
-					   const Box<3> & boundingbox, 
-					   double facets) const;
+                                           const Box<3> & boundingbox, 
+                                           double facets) const;
 
     bool BoxIntersectsFace (const Box<3> & box) const;
     /*
@@ -121,8 +121,8 @@ namespace netgen
 
   public:
     Revolution(const Point<3> & p0_in,
-	       const Point<3> & p1_in,
-	       shared_ptr<SplineGeometry<2>> spline_in);
+               const Point<3> & p1_in,
+               shared_ptr<SplineGeometry<2>> spline_in);
     // default constructor for archive
     Revolution() {}
 
@@ -144,23 +144,23 @@ namespace netgen
     */
     virtual INSOLID_TYPE BoxInSolid (const BoxSphere<3> & box) const;
     virtual INSOLID_TYPE PointInSolid (const Point<3> & p,
-				       double eps) const;
+                                       double eps) const;
 
     virtual void GetTangentialSurfaceIndices (const Point<3> & p, 
-					      Array<int> & surfind, double eps) const;
+                                              Array<int> & surfind, double eps) const;
     
     virtual INSOLID_TYPE VecInSolid (const Point<3> & p,
-				     const Vec<3> & v,
-				     double eps) const;
+                                     const Vec<3> & v,
+                                     double eps) const;
 
     // checks if lim s->0 lim t->0  p + t(v1 + s v2) in solid
     virtual INSOLID_TYPE VecInSolid2 (const Point<3> & p,
-				      const Vec<3> & v1,
-				      const Vec<3> & v2,
-				      double eps) const;
+                                      const Vec<3> & v1,
+                                      const Vec<3> & v2,
+                                      double eps) const;
 
     virtual void GetTangentialVecSurfaceIndices2 (const Point<3> & p, const Vec<3> & v1, const Vec<3> & v2,
-						  Array<int> & surfind, double eps) const;
+                                                  Array<int> & surfind, double eps) const;
 
     
     virtual int GetNSurfaces() const;
@@ -171,7 +171,7 @@ namespace netgen
     virtual void Reduce (const BoxSphere<3> & box);
     virtual void UnReduce ();
   
-	     
+             
   };
 
 }

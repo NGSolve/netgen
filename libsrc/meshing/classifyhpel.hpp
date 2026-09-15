@@ -33,142 +33,142 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
   for (int j = 0; j < 4; j++)
     for (int k = 0; k < 4; k++)
       {
-	if (j == k) continue;
-	if (type) break;
-	
-	int pi3 = 0;
-	while (pi3 == j || pi3 == k) pi3++;
-	int pi4 = 6 - j - k - pi3;
-	
-	// preserve orientation
-	int sort[4];
-	sort[0] = j; sort[1] = k; sort[2] = pi3; sort[3] = pi4;
-	int cnt = 0;
-	for (int jj = 0; jj < 4; jj++)
-	  for (int kk = 0; kk < 3; kk++)
-	    if (sort[kk] > sort[kk+1])
-	      {
-		cnt++;
-		Swap (sort[kk], sort[kk+1]); 
-	      }
-	if (cnt % 2 == 1) Swap (pi3, pi4);
-	
-	ep1 = edgepoint.Test (el.pnums[j]);
-	ep2 = edgepoint.Test (el.pnums[k]);
-	ep3 = edgepoint.Test (el.pnums[pi3]);
-	ep4 = edgepoint.Test (el.pnums[pi4]);
-	
-	cp1 = cornerpoint.Test (el.pnums[j]);
-	cp2 = cornerpoint.Test (el.pnums[k]);
-	cp3 = cornerpoint.Test (el.pnums[pi3]);
-	cp4 = cornerpoint.Test (el.pnums[pi4]);
-	
-	isedge1 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[k]).Sort());
-	isedge2 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi3]).Sort());
-	isedge3 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi4]).Sort());
-	isedge4 = edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi3]).Sort());
-	isedge5 = edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi4]).Sort());
-	isedge6 = edges.Used (PointIndices<2>(el.pnums[pi3], el.pnums[pi4]).Sort());
-	
-	if (debug)
-	  {
-	    cout << "debug" << endl;
-	    *testout  << "debug" << endl;
-	    *testout << "ep = " << ep1 << ep2 << ep3 << ep4 << endl;
-	    *testout << "cp = " << cp1 << cp2 << cp3 << cp4 << endl;
-	    *testout << "edge = " << isedge1 << isedge2 << isedge3 << isedge4 << isedge5 << isedge6 << endl;
-	  }
+        if (j == k) continue;
+        if (type) break;
+        
+        int pi3 = 0;
+        while (pi3 == j || pi3 == k) pi3++;
+        int pi4 = 6 - j - k - pi3;
+        
+        // preserve orientation
+        int sort[4];
+        sort[0] = j; sort[1] = k; sort[2] = pi3; sort[3] = pi4;
+        int cnt = 0;
+        for (int jj = 0; jj < 4; jj++)
+          for (int kk = 0; kk < 3; kk++)
+            if (sort[kk] > sort[kk+1])
+              {
+                cnt++;
+                Swap (sort[kk], sort[kk+1]); 
+              }
+        if (cnt % 2 == 1) Swap (pi3, pi4);
+        
+        ep1 = edgepoint.Test (el.pnums[j]);
+        ep2 = edgepoint.Test (el.pnums[k]);
+        ep3 = edgepoint.Test (el.pnums[pi3]);
+        ep4 = edgepoint.Test (el.pnums[pi4]);
+        
+        cp1 = cornerpoint.Test (el.pnums[j]);
+        cp2 = cornerpoint.Test (el.pnums[k]);
+        cp3 = cornerpoint.Test (el.pnums[pi3]);
+        cp4 = cornerpoint.Test (el.pnums[pi4]);
+        
+        isedge1 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[k]).Sort());
+        isedge2 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi3]).Sort());
+        isedge3 = edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi4]).Sort());
+        isedge4 = edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi3]).Sort());
+        isedge5 = edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi4]).Sort());
+        isedge6 = edges.Used (PointIndices<2>(el.pnums[pi3], el.pnums[pi4]).Sort());
+        
+        if (debug)
+          {
+            cout << "debug" << endl;
+            *testout  << "debug" << endl;
+            *testout << "ep = " << ep1 << ep2 << ep3 << ep4 << endl;
+            *testout << "cp = " << cp1 << cp2 << cp3 << cp4 << endl;
+            *testout << "edge = " << isedge1 << isedge2 << isedge3 << isedge4 << isedge5 << isedge6 << endl;
+          }
 
 
         for (int j = 0; j < 4; j++) isface[j] = false;
-	for (int l = 0; l < 4; l++)
-	  {
-	    PointIndices<3> i3(PointIndex::INVALID, PointIndex::INVALID, PointIndex::INVALID);
-	    switch (l)
-	      {
+        for (int l = 0; l < 4; l++)
+          {
+            PointIndices<3> i3(PointIndex::INVALID, PointIndex::INVALID, PointIndex::INVALID);
+            switch (l)
+              {
               case 0: i3[0] = el.pnums[k]; i3[1] = el.pnums[pi3]; i3[2] = el.pnums[pi4]; break;
               case 1: i3[0] = el.pnums[j]; i3[1] = el.pnums[pi3]; i3[2] = el.pnums[pi4]; break;
               case 2: i3[0] = el.pnums[j]; i3[1] = el.pnums[k]; i3[2] = el.pnums[pi4]; break;
               case 3: i3[0] = el.pnums[j]; i3[1] = el.pnums[k]; i3[2] = el.pnums[pi3]; break;
-	      }
-	    i3.Sort();
-	    if (faces.Used (i3))
-	      {
-		int domnr = faces.Get(i3);
-		if (domnr == -1 || domnr == el.GetIndex())
+              }
+            i3.Sort();
+            if (faces.Used (i3))
+              {
+                int domnr = faces.Get(i3);
+                if (domnr == -1 || domnr == el.GetIndex())
                   isface[l] = true;
-	      }
-	  }
-	/*
-	  isface1 = faces.Used (PointIndices<3>(el.pnums[k], el.pnums[pi3], el.pnums[pi4]).Sort());
-	  isface2 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[pi3], el.pnums[pi4]).Sort());
-	  isface3 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[k], el.pnums[pi4]).Sort());
-	  isface4 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[k], el.pnums[pi3]).Sort());
-	*/
-	
-	isfedge1 = isfedge2 = isfedge3 = isfedge4 = isfedge5 = isfedge6 = 0;
-	for (int l = 0; l < 6; l++)
-	  {
-	    PointIndices<2> i2(PointIndex::INVALID, PointIndex::INVALID);
-	    switch (l)
-	      {
+              }
+          }
+        /*
+          isface1 = faces.Used (PointIndices<3>(el.pnums[k], el.pnums[pi3], el.pnums[pi4]).Sort());
+          isface2 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[pi3], el.pnums[pi4]).Sort());
+          isface3 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[k], el.pnums[pi4]).Sort());
+          isface4 = faces.Used (PointIndices<3>(el.pnums[j], el.pnums[k], el.pnums[pi3]).Sort());
+        */
+        
+        isfedge1 = isfedge2 = isfedge3 = isfedge4 = isfedge5 = isfedge6 = 0;
+        for (int l = 0; l < 6; l++)
+          {
+            PointIndices<2> i2(PointIndex::INVALID, PointIndex::INVALID);
+            switch (l)
+              {
               case 0: i2[0] = el.pnums[j]; i2[1] = el[k]; break;
               case 1: i2[0] = el.pnums[j]; i2[1] = el.pnums[pi3]; break;
               case 2: i2[0] = el.pnums[j]; i2[1] = el.pnums[pi4]; break;
               case 3: i2[0] = el.pnums[k]; i2[1] = el.pnums[pi3]; break;
               case 4: i2[0] = el.pnums[k]; i2[1] = el.pnums[pi4]; break;
               case 5: i2[0] = el.pnums[pi3]; i2[1] = el.pnums[pi4]; break;
-	      }
-	    i2.Sort();
-	    if (face_edges.Used (i2))
-	      {
-		int domnr = face_edges.Get(i2);
-		if (domnr == -1 || domnr == el.GetIndex())
-		  {
-		    switch (l)
-		      {
-		      case 0: isfedge1 = 1; break;
-		      case 1: isfedge2 = 1; break;
-		      case 2: isfedge3 = 1; break;
-		      case 3: isfedge4 = 1; break;
-		      case 4: isfedge5 = 1; break;
-		      case 5: isfedge6 = 1; break;
-		      }
-		  }
-	      }
-	  }
-	/*
-	  isfedge1 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[k]).Sort());
-	  isfedge2 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi3]).Sort());
-	  isfedge3 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi4]).Sort());
-	  isfedge4 = face_edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi3]).Sort());
-	  isfedge5 = face_edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi4]).Sort());
-	  isfedge6 = face_edges.Used (PointIndices<2>(el.pnums[pi3], el.pnums[pi4]).Sort());
-	*/
-	
-	fp1 = fp2 = fp3 = fp4 = 0;
-	for (int l = 0; l < 4; l++)
-	  {
-	    PointIndex pti = PointIndex::INVALID;
-	    switch (l)
-	      {
-	      case 0: pti = el.pnums[j]; break;
-	      case 1: pti = el.pnums[k]; break;
-	      case 2: pti = el.pnums[pi3]; break;
-	      case 3: pti = el.pnums[pi4]; break;
-	      }
-	    int domnr = facepoint[pti];
-	    if (domnr == -1 || domnr == el.GetIndex())
-	      {
-		switch (l)
-		  {
-		  case 0: fp1 = 1; break;
-		  case 1: fp2 = 1; break;
-		  case 2: fp3 = 1; break;
-		  case 3: fp4 = 1; break;
-		  }
-	      }
-	  }
+              }
+            i2.Sort();
+            if (face_edges.Used (i2))
+              {
+                int domnr = face_edges.Get(i2);
+                if (domnr == -1 || domnr == el.GetIndex())
+                  {
+                    switch (l)
+                      {
+                      case 0: isfedge1 = 1; break;
+                      case 1: isfedge2 = 1; break;
+                      case 2: isfedge3 = 1; break;
+                      case 3: isfedge4 = 1; break;
+                      case 4: isfedge5 = 1; break;
+                      case 5: isfedge6 = 1; break;
+                      }
+                  }
+              }
+          }
+        /*
+          isfedge1 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[k]).Sort());
+          isfedge2 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi3]).Sort());
+          isfedge3 = face_edges.Used (PointIndices<2>(el.pnums[j], el.pnums[pi4]).Sort());
+          isfedge4 = face_edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi3]).Sort());
+          isfedge5 = face_edges.Used (PointIndices<2>(el.pnums[k], el.pnums[pi4]).Sort());
+          isfedge6 = face_edges.Used (PointIndices<2>(el.pnums[pi3], el.pnums[pi4]).Sort());
+        */
+        
+        fp1 = fp2 = fp3 = fp4 = 0;
+        for (int l = 0; l < 4; l++)
+          {
+            PointIndex pti = PointIndex::INVALID;
+            switch (l)
+              {
+              case 0: pti = el.pnums[j]; break;
+              case 1: pti = el.pnums[k]; break;
+              case 2: pti = el.pnums[pi3]; break;
+              case 3: pti = el.pnums[pi4]; break;
+              }
+            int domnr = facepoint[pti];
+            if (domnr == -1 || domnr == el.GetIndex())
+              {
+                switch (l)
+                  {
+                  case 0: fp1 = 1; break;
+                  case 1: fp2 = 1; break;
+                  case 2: fp3 = 1; break;
+                  case 3: fp4 = 1; break;
+                  }
+              }
+          }
 
         /*
         ep1 |= cp1;
@@ -182,12 +182,12 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
         fp4 |= ep4;
         */
         
-	/*
-	  fp1 = facepoint[el.pnums[j]] != 0;
-	  fp2 = facepoint[el.pnums[k]] != 0;
-	  fp3 = facepoint[el.pnums[pi3]] != 0;
-	  fp4 = facepoint[el.pnums[pi4]] != 0;
-	*/
+        /*
+          fp1 = facepoint[el.pnums[j]] != 0;
+          fp2 = facepoint[el.pnums[k]] != 0;
+          fp3 = facepoint[el.pnums[pi3]] != 0;
+          fp4 = facepoint[el.pnums[pi4]] != 0;
+        */
 
         // cout << "marked faces: "
             // << isface[0] << isface[1] << isface[2] << isface[3] 
@@ -222,172 +222,172 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
         // *testout << "sf = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
 
         
-	switch (isface[0]+isface[1]+isface[2]+isface[3])
-	  {
-	  case 0:
-	    {
-	      isedge1 |= isfedge1;
-	      isedge2 |= isfedge2;
-	      isedge3 |= isfedge3;
-	      isedge4 |= isfedge4;
-	      isedge5 |= isfedge5;
-	      isedge6 |= isfedge6;
-	      
-	      ep1 |= fp1;
-	      ep2 |= fp2;
-	      ep3 |= fp3;
-	      ep4 |= fp4;
-	      
-	      switch (isedge1+isedge2+isedge3+isedge4+isedge5+isedge6)
-		{
-		case 0:
-		  {		
-		    if (!sp1 && !sp2 && !sp3 && !sp4)
-		      type = HP_TET;
-				
-		    if (sp1 && !sp2 && !sp3 && !sp4)
-		      type = HP_TET_0E_1V;
-		    
-		    if (sp1 && sp2 && !sp3 && !sp4)
-		      type = HP_TET_0E_2V;
-		    
-		    if (sp1 && sp2 && sp3 && !sp4)
-		      type = HP_TET_0E_3V;
-		    
-		    if (sp1 && sp2 && sp3 && sp4)
-		      type = HP_TET_0E_4V;
-		    
-		    break;
-		  }
-		  
-		case 1:
-		  {
-		    if (!isedge1) break;
-		    
-		    if (!sp1 && !sp2 && !sp3 && !sp4)
-		      type = HP_TET_1E_0V;
-		    
-		    if (sp1 && !sp2 && !sp3 && !sp4)
-		      type = HP_TET_1E_1VA;
-		    
-		    if (!sp1 && !sp2 && !sp3 && sp4)
-		      type = HP_TET_1E_1VB;
-		    
-		    if (sp1 && sp2 && !sp3 && !sp4)
-		      type = HP_TET_1E_2VA;
-		    
-		    if (sp1 && !sp2 && sp3 && !sp4)
-		      type = HP_TET_1E_2VB;
-		    
-		    if (sp1 && !sp2 && !sp3 && sp4)
-		      type = HP_TET_1E_2VC;
-		    
-		    if (!sp1 && !sp2 && sp3 && sp4)
-		      type = HP_TET_1E_2VD;
-		    
-		    if (sp1 && sp2 && sp3 && !sp4)
-		      type = HP_TET_1E_3VA;
-		    
-		    if (sp1 && !sp2 && sp3 && sp4)
-		      type = HP_TET_1E_3VB;
-		    
-		    if (sp1 && sp2 && sp3 && sp4)
-		      type = HP_TET_1E_4V;
-		    
-		    break;
-		  }
-		case 2:
-		  {
-		    if (isedge1 && isedge2)
-		      {
-			if (!sp2 && !sp3 && !sp4)
-			  type = HP_TET_2EA_0V;
-			
-			if (sp2 && !sp3 && !sp4)
-			  type = HP_TET_2EA_1VA;
-			if (!sp2 && sp3 && !sp4)
-			  type = HP_TET_2EA_1VB;
-			
-			if (!sp2 && !sp3 && sp4)
-			  type = HP_TET_2EA_1VC;
-			
-			if (sp2 && sp3 && !sp4)
-			  type = HP_TET_2EA_2VA;
-			if (sp2 && !sp3 && sp4)
-			  type = HP_TET_2EA_2VB;
-			if (!sp2 && sp3 && sp4)
-			  type = HP_TET_2EA_2VC;
-			
-			if (sp2 && sp3 && sp4)
-			  type = HP_TET_2EA_3V;
-		      }
-		    if (isedge1 && isedge6)
-		      {
-			if (!sp1 && !sp2 && !sp3 && !sp4)
-			  type = HP_TET_2EB_0V;
-			if (sp1 && !sp2 && !sp3 && !sp4)
-			  type = HP_TET_2EB_1V;
-			if (sp1 && sp2 && !sp3 && !sp4)
-			  type = HP_TET_2EB_2VA;
-			if (sp1 && !sp2 && sp3 && !sp4)
-			  type = HP_TET_2EB_2VB;
-			if (sp1 && !sp2 && !sp3 && sp4)
-			  type = HP_TET_2EB_2VC;
-			if (sp1 && sp2 && sp3 && !sp4)
-			  type = HP_TET_2EB_3V;
-			if (sp1 && sp2 && sp3 && sp4)
-			  type = HP_TET_2EB_4V;
-		      }
-		    break;
-		  }
-		case 3:
-		  {
-		    if (isedge1 && isedge2 && isedge3)
-		      {
-			if (!sp2 && !sp3 && !sp4)
-			  type = HP_TET_3EA_0V;
-			if (sp2 && !sp3 && !sp4)
-			  type = HP_TET_3EA_1V;
-			if (sp2 && sp3 && !sp4)
-			  type = HP_TET_3EA_2V;
-			if (sp2 && sp3 && sp4)
-			  type = HP_TET_3EA_3V;
-		      }
-		    if (isedge1 && isedge3 && isedge4)
-		      {
-			if (!sp3 && !sp4)
-			  type = HP_TET_3EB_0V;
-			if (sp3 && !sp4)
+        switch (isface[0]+isface[1]+isface[2]+isface[3])
+          {
+          case 0:
+            {
+              isedge1 |= isfedge1;
+              isedge2 |= isfedge2;
+              isedge3 |= isfedge3;
+              isedge4 |= isfedge4;
+              isedge5 |= isfedge5;
+              isedge6 |= isfedge6;
+              
+              ep1 |= fp1;
+              ep2 |= fp2;
+              ep3 |= fp3;
+              ep4 |= fp4;
+              
+              switch (isedge1+isedge2+isedge3+isedge4+isedge5+isedge6)
+                {
+                case 0:
+                  {             
+                    if (!sp1 && !sp2 && !sp3 && !sp4)
+                      type = HP_TET;
+                                
+                    if (sp1 && !sp2 && !sp3 && !sp4)
+                      type = HP_TET_0E_1V;
+                    
+                    if (sp1 && sp2 && !sp3 && !sp4)
+                      type = HP_TET_0E_2V;
+                    
+                    if (sp1 && sp2 && sp3 && !sp4)
+                      type = HP_TET_0E_3V;
+                    
+                    if (sp1 && sp2 && sp3 && sp4)
+                      type = HP_TET_0E_4V;
+                    
+                    break;
+                  }
+                  
+                case 1:
+                  {
+                    if (!isedge1) break;
+                    
+                    if (!sp1 && !sp2 && !sp3 && !sp4)
+                      type = HP_TET_1E_0V;
+                    
+                    if (sp1 && !sp2 && !sp3 && !sp4)
+                      type = HP_TET_1E_1VA;
+                    
+                    if (!sp1 && !sp2 && !sp3 && sp4)
+                      type = HP_TET_1E_1VB;
+                    
+                    if (sp1 && sp2 && !sp3 && !sp4)
+                      type = HP_TET_1E_2VA;
+                    
+                    if (sp1 && !sp2 && sp3 && !sp4)
+                      type = HP_TET_1E_2VB;
+                    
+                    if (sp1 && !sp2 && !sp3 && sp4)
+                      type = HP_TET_1E_2VC;
+                    
+                    if (!sp1 && !sp2 && sp3 && sp4)
+                      type = HP_TET_1E_2VD;
+                    
+                    if (sp1 && sp2 && sp3 && !sp4)
+                      type = HP_TET_1E_3VA;
+                    
+                    if (sp1 && !sp2 && sp3 && sp4)
+                      type = HP_TET_1E_3VB;
+                    
+                    if (sp1 && sp2 && sp3 && sp4)
+                      type = HP_TET_1E_4V;
+                    
+                    break;
+                  }
+                case 2:
+                  {
+                    if (isedge1 && isedge2)
+                      {
+                        if (!sp2 && !sp3 && !sp4)
+                          type = HP_TET_2EA_0V;
+                        
+                        if (sp2 && !sp3 && !sp4)
+                          type = HP_TET_2EA_1VA;
+                        if (!sp2 && sp3 && !sp4)
+                          type = HP_TET_2EA_1VB;
+                        
+                        if (!sp2 && !sp3 && sp4)
+                          type = HP_TET_2EA_1VC;
+                        
+                        if (sp2 && sp3 && !sp4)
+                          type = HP_TET_2EA_2VA;
+                        if (sp2 && !sp3 && sp4)
+                          type = HP_TET_2EA_2VB;
+                        if (!sp2 && sp3 && sp4)
+                          type = HP_TET_2EA_2VC;
+                        
+                        if (sp2 && sp3 && sp4)
+                          type = HP_TET_2EA_3V;
+                      }
+                    if (isedge1 && isedge6)
+                      {
+                        if (!sp1 && !sp2 && !sp3 && !sp4)
+                          type = HP_TET_2EB_0V;
+                        if (sp1 && !sp2 && !sp3 && !sp4)
+                          type = HP_TET_2EB_1V;
+                        if (sp1 && sp2 && !sp3 && !sp4)
+                          type = HP_TET_2EB_2VA;
+                        if (sp1 && !sp2 && sp3 && !sp4)
+                          type = HP_TET_2EB_2VB;
+                        if (sp1 && !sp2 && !sp3 && sp4)
+                          type = HP_TET_2EB_2VC;
+                        if (sp1 && sp2 && sp3 && !sp4)
+                          type = HP_TET_2EB_3V;
+                        if (sp1 && sp2 && sp3 && sp4)
+                          type = HP_TET_2EB_4V;
+                      }
+                    break;
+                  }
+                case 3:
+                  {
+                    if (isedge1 && isedge2 && isedge3)
+                      {
+                        if (!sp2 && !sp3 && !sp4)
+                          type = HP_TET_3EA_0V;
+                        if (sp2 && !sp3 && !sp4)
+                          type = HP_TET_3EA_1V;
+                        if (sp2 && sp3 && !sp4)
+                          type = HP_TET_3EA_2V;
+                        if (sp2 && sp3 && sp4)
+                          type = HP_TET_3EA_3V;
+                      }
+                    if (isedge1 && isedge3 && isedge4)
+                      {
+                        if (!sp3 && !sp4)
+                          type = HP_TET_3EB_0V;
+                        if (sp3 && !sp4)
                           type = HP_TET_3EB_1V;
-			if (sp3 && sp4)
-			  type = HP_TET_3EB_2V;
-		      }
-		    if (isedge1 && isedge2 && isedge5)
-		      {
-			if (!sp3 && !sp4)
-			  type = HP_TET_3EC_0V;
-			if (sp3 && !sp4)
-			  type = HP_TET_3EC_1V;
-			if (sp3 && sp4)
-			  type = HP_TET_3EC_2V;
-		      }
+                        if (sp3 && sp4)
+                          type = HP_TET_3EB_2V;
+                      }
+                    if (isedge1 && isedge2 && isedge5)
+                      {
+                        if (!sp3 && !sp4)
+                          type = HP_TET_3EC_0V;
+                        if (sp3 && !sp4)
+                          type = HP_TET_3EC_1V;
+                        if (sp3 && sp4)
+                          type = HP_TET_3EC_2V;
+                      }
                     if (isedge1 && isedge2 && isedge4)
                       {
                         if (!sp4)
                           type = HP_TET_3ED_3V; // a loop
                       }
 
-		    break;
-		  }
-		}
-	      break;
-	    }
-	    
-	    
-	    
-	  case 1:  // one singular face
-	    {
-	      if (!isface[0]) break;
+                    break;
+                  }
+                }
+              break;
+            }
+            
+            
+            
+          case 1:  // one singular face
+            {
+              if (!isface[0]) break;
 
               /*
               cout << "1F and 1E, isedge = " << isedge1 << isedge2 << isedge3 << isedge4 << isedge5 << isedge6 << endl;
@@ -397,59 +397,59 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
               cout << "fpoints = " << fp1 << fp2 << fp3 << fp4 << endl;                                  
               */
 
-	      isedge1 |= isfedge1;
-	      isedge2 |= isfedge2;
-	      isedge3 |= isfedge3;
+              isedge1 |= isfedge1;
+              isedge2 |= isfedge2;
+              isedge3 |= isfedge3;
               
-	      // switch (isedge1+isedge2+isedge3+isedge4+isedge5+isedge6)
+              // switch (isedge1+isedge2+isedge3+isedge4+isedge5+isedge6)
               switch (se1+se2+se3+se4+se5+se6)
-		{
-		case 0:
-		  {
-		    if (!fp1 && !ep2 && !ep3 && !ep4)
-		      type = HP_TET_1F_0E_0V;
-		    if (fp1 && !ep2 && !ep3 && !ep4)
-		      type = HP_TET_1F_0E_1VB;
-		    if (!fp1 && ep2 && !ep3 & !ep4)
-		      type = HP_TET_1F_0E_1VA;
-		    if (!fp1 && ep2 && ep3 & !ep4)
-		      type = HP_TET_1F_0E_2V;
+                {
+                case 0:
+                  {
+                    if (!fp1 && !ep2 && !ep3 && !ep4)
+                      type = HP_TET_1F_0E_0V;
+                    if (fp1 && !ep2 && !ep3 && !ep4)
+                      type = HP_TET_1F_0E_1VB;
+                    if (!fp1 && ep2 && !ep3 & !ep4)
+                      type = HP_TET_1F_0E_1VA;
+                    if (!fp1 && ep2 && ep3 & !ep4)
+                      type = HP_TET_1F_0E_2V;
 
                     if (!sp1 && sp2 && sp3 && sp4)
                       type = HP_TET_1F_0E_3V;                        
-		    break;
-		  }
-		case 1:
-		  {
-		    if (se1)
-		      {
-			if (!sp1 && !sp3 && !sp4)
-			  type = HP_TET_1F_1EA_0V;
-			if (!sp1 && sp2 && sp3 && !sp4)
-			  type = HP_TET_1F_1E_2VA;
-			if (!sp1 && sp2 && !sp3 && sp4)
-			  type = HP_TET_1F_1E_2VB;
-			if (!sp1 && !sp2 && sp3 && sp4)
-			  type = HP_TET_1F_1E_2VC;
-			if (!sp1 && sp2 && sp3 && sp4)
-			  type = HP_TET_1F_1EA_3V;
-		      }
-		    if (se4) // V2-V3
-		      {
-			if (!sp1 && !sp2 && !sp3 && !sp4)
-			  type = HP_TET_1F_1EB_0V;
-			if (!sp1 && sp2 && !sp3 && !sp4)
+                    break;
+                  }
+                case 1:
+                  {
+                    if (se1)
+                      {
+                        if (!sp1 && !sp3 && !sp4)
+                          type = HP_TET_1F_1EA_0V;
+                        if (!sp1 && sp2 && sp3 && !sp4)
+                          type = HP_TET_1F_1E_2VA;
+                        if (!sp1 && sp2 && !sp3 && sp4)
+                          type = HP_TET_1F_1E_2VB;
+                        if (!sp1 && !sp2 && sp3 && sp4)
+                          type = HP_TET_1F_1E_2VC;
+                        if (!sp1 && sp2 && sp3 && sp4)
+                          type = HP_TET_1F_1EA_3V;
+                      }
+                    if (se4) // V2-V3
+                      {
+                        if (!sp1 && !sp2 && !sp3 && !sp4)
+                          type = HP_TET_1F_1EB_0V;
+                        if (!sp1 && sp2 && !sp3 && !sp4)
                           type = HP_TET_1F_1E_1VA;
-			if (!sp1 && sp2 && sp3 && sp4)
+                        if (!sp1 && sp2 && sp3 && sp4)
                           type = HP_TET_1F_1E_3V;
-		      }
+                      }
                     if (se5) // V2-V4
                       {
-			if (!sp1 && sp2 && !sp3 && !sp4)
+                        if (!sp1 && sp2 && !sp3 && !sp4)
                           type = HP_TET_1F_1E_1VB;
                       }
-		    break;
-		  }
+                    break;
+                  }
                 case 2:
                   {
                     if (isedge1 && isedge2)
@@ -476,31 +476,31 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
                   }
                 default:
                   ;
-		}
-	      break;
-	    }
-	    
-	    
-	  case 2:  // two singular faces
-	    {
-	      if (!isface[0] || !isface[1]) break;
-	      
-	      switch (isfedge1+isedge2+isedge3+isedge4+isedge5)
-		{
-		case 0:
-		  {
-		    if (!ep1 && !ep2 && !cp3 && !cp4)
+                }
+              break;
+            }
+            
+            
+          case 2:  // two singular faces
+            {
+              if (!isface[0] || !isface[1]) break;
+              
+              switch (isfedge1+isedge2+isedge3+isedge4+isedge5)
+                {
+                case 0:
+                  {
+                    if (!ep1 && !ep2 && !cp3 && !cp4)
                       {
                         type = HP_TET_2F_0E_0V;
                         break;
                       }
-		    if (!ep1 && !ep2 && !cp3 && cp4)
+                    if (!ep1 && !ep2 && !cp3 && cp4)
                       {
                         type = HP_TET_2F_0E_1V;
                         break;
                       }
                     break;
-		  }
+                  }
                 case 1:
                   {
                     // *testout << "so far: 2F, 1E, sp = " << sp1 << sp2 << sp3 << sp4 << endl;
@@ -533,9 +533,9 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
                   }
                 default:
                   *testout << "2F, 2E or more not implemented so far" << endl;
-		}
-	      break;
-	    }
+                }
+              break;
+            }
 
           case 3:
             {
@@ -551,18 +551,18 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
             {
               *testout << "4 singular faces" << endl;
             }
-	  }
-	
-	if (type != HP_NONE)
-	  {
-	    PointIndex pnums[4]; 
-	    pnums[0] = el.pnums[j];
-	    pnums[1] = el.pnums[k];
-	    pnums[2] = el.pnums[pi3];
-	    pnums[3] = el.pnums[pi4];
-	    for(k=0;k<4;k++) el.pnums[k] = pnums[k]; 
-	    break;
-	  }
+          }
+        
+        if (type != HP_NONE)
+          {
+            PointIndex pnums[4]; 
+            pnums[0] = el.pnums[j];
+            pnums[1] = el.pnums[k];
+            pnums[2] = el.pnums[pi3];
+            pnums[3] = el.pnums[pi4];
+            for(k=0;k<4;k++) el.pnums[k] = pnums[k]; 
+            break;
+          }
       }
   
   
@@ -576,14 +576,14 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
                  << el.pnums[1] << " "
                  << el.pnums[2] << " "
                  << el.pnums[3] << endl
-		 << "cp = " << cp1 << cp2 << cp3 << cp4 << endl
-		 << "ep = " << ep1 << ep2 << ep3 << ep4 << endl
-		 << "fp = " << fp1 << fp2 << fp3 << fp4 << endl
-		 << "isedge = " << isedge1 << isedge2 << isedge3 
-		 << isedge4 << isedge5 << isedge6 << endl
-		 << "isfedge = " << isfedge1 << isfedge2 << isfedge3 
-		 << isfedge4 << isfedge5 << isfedge6 << endl
-		 << "isface = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
+                 << "cp = " << cp1 << cp2 << cp3 << cp4 << endl
+                 << "ep = " << ep1 << ep2 << ep3 << ep4 << endl
+                 << "fp = " << fp1 << fp2 << fp3 << fp4 << endl
+                 << "isedge = " << isedge1 << isedge2 << isedge3 
+                 << isedge4 << isedge5 << isedge6 << endl
+                 << "isfedge = " << isfedge1 << isfedge2 << isfedge3 
+                 << isfedge4 << isfedge5 << isfedge6 << endl
+                 << "isface = " << isface[0] << isface[1] << isface[2] << isface[3] << endl;
       cout << "unclassified element !!! " << endl;
 
       
@@ -608,56 +608,56 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
       int edge_sing[9]={0,0,0,0,0,0,0,0,0}; 
       
       if(m<4)
-	{ 
-	  p[0]= m; p[1]=m%3+1; p[2]=(m%3+1)%3+1;
-	  for(int l=3;l<6;l++) p[l]=p[l-3]+3;  
-	}
+        { 
+          p[0]= m; p[1]=m%3+1; p[2]=(m%3+1)%3+1;
+          for(int l=3;l<6;l++) p[l]=p[l-3]+3;  
+        }
       else
-	{
-	  p[0] = m; p[1]=(m%3+1)%3+4; p[2]=m%3+4;
-	  for(int l=3;l<6;l++) p[l]=p[l-3]-3; 
-	}
+        {
+          p[0] = m; p[1]=(m%3+1)%3+4; p[2]=m%3+4;
+          for(int l=3;l<6;l++) p[l]=p[l-3]-3; 
+        }
       
       for(int j=0;j<6;j++) 
-	{ 
-	  if(cornerpoint.Test(el.PNum(p[j])))  { point_sing[p[j]-1]=3;}
-	  else if(edgepoint.Test(el.PNum(p[j]))) point_sing[p[j]-1]=2;
-	  else if (facepoint[el.PNum(p[j])] == -1 || facepoint[el.PNum(p[j])] == el.GetIndex())
-	    point_sing[p[j]-1] = 1;  
-	}
+        { 
+          if(cornerpoint.Test(el.PNum(p[j])))  { point_sing[p[j]-1]=3;}
+          else if(edgepoint.Test(el.PNum(p[j]))) point_sing[p[j]-1]=2;
+          else if (facepoint[el.PNum(p[j])] == -1 || facepoint[el.PNum(p[j])] == el.GetIndex())
+            point_sing[p[j]-1] = 1;  
+        }
       
       const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (PRISM);
       for(int k=0;k<9;k++)
-	{
-	  PointIndices<2> i2 = PointIndices<2>(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])).Sort(); 
-	  if (edges.Used(i2)) edge_sing[k] = 2;
-	  else edge_sing[k] = face_edges.Used(i2);
-	}
+        {
+          PointIndices<2> i2 = PointIndices<2>(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])).Sort(); 
+          if (edges.Used(i2)) edge_sing[k] = 2;
+          else edge_sing[k] = face_edges.Used(i2);
+        }
       
       const ELEMENT_FACE * elfaces  = MeshTopology::GetFaces1 (PRISM);
       for (int k=0;k<5;k++)
-	{
-	  PointIndices<3> i3; 
-	  
-	  if(k<2) 
-	    i3 = PointIndices<3>(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], 
+        {
+          PointIndices<3> i3; 
+          
+          if(k<2) 
+            i3 = PointIndices<3>(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], 
                                        el.pnums[p[elfaces[k][2]-1]-1]).Sort(); 
-	  else 
-	    { 
-	      PointIndices<4> i4 (el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1],
+          else 
+            { 
+              PointIndices<4> i4 (el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1],
                                   el.pnums[p[elfaces[k][2]-1]-1],el.pnums[p[elfaces[k][3]-1]-1]); 
-	      i4.Sort();
-	      i3 = PointIndices<3>(i4[0], i4[1], i4[2]);
-	    }
-	  
-	  if (faces.Used (i3))
-	    {
-	      int domnr = faces.Get(i3); 
-	      if (domnr == -1 || domnr == el.GetIndex())
-		face_sing[k] = 1; 
-	      
-	    } 
-	} 
+              i4.Sort();
+              i3 = PointIndices<3>(i4[0], i4[1], i4[2]);
+            }
+          
+          if (faces.Used (i3))
+            {
+              int domnr = faces.Get(i3); 
+              if (domnr == -1 || domnr == el.GetIndex())
+                face_sing[k] = 1; 
+              
+            } 
+        } 
       if (face_sing[1] > face_sing[0]) {m=m+2; continue;}  
       
       
@@ -669,7 +669,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
       int ehsing = edge_sing[0] + edge_sing[1] + edge_sing[2] + edge_sing[3] + edge_sing[4] + edge_sing[5];
       
       if (qfsing + tfsing + evsing + ehsing == 0)  
-	{ type = HP_PRISM;  break;}
+        { type = HP_PRISM;  break;}
       
       HPREF_ELEMENT_TYPE types[] = {HP_NONE,HP_NONE,HP_NONE};   
       
@@ -681,41 +681,41 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
       
       
       switch(fb)
-	{ 
-	case 0: 
-	  if (evsing == 0 && ehsing==3*tfsing) 
-	    {
-	      types[0] = HP_PRISM; 
-	      types[1] = HP_PRISM_1FA_0E_0V;   
-	      types[2] = HP_PRISM_2FA_0E_0V; 
-	    } 
-	  if(evsing > 0 &&  sve[0] == evsing) // 1 vertical edge 1-4 
-	    { 
-	      types[0] = HP_PRISM_SINGEDGE;
-	      types[1] = HP_PRISM_1FA_1E_0V;
-	      types[2] = HP_PRISM_2FA_1E_0V;   
-	    }
-	  
-	  if(sve[0] > 0 && sve[1] > 0 && sve[2] == 0)
-	    {
-	      types[0] = HP_PRISM_SINGEDGE_V12;
-	      types[1] = HP_PRISM_1FA_2E_0V; 
-	      types[2] = HP_PRISM_2FA_2E_0V; 
-	    }
-	  if(sve[0] > 0 && sve[1] > 0 && sve[2] > 0) 
-	    {
-	      types[0] = HP_PRISM_3E_0V;
-	      types[1] = HP_PRISM_1FA_3E_0V;
-	      types[2] = HP_PRISM_2FA_3E_0V;
-	      
-	      if ( edge_sing[0] > 1 && edge_sing[2] > 1 &&  
-		   edge_sing[4] > 1 && edge_sing[5] > 1 && tfsing==0)
-		types[0] = HP_PRISM_3E_4EH; 
-	    }
-	  
-	  break;
-	case 1:
-	  if(sve[0] <= 1 && sve[1] <= 1)  
+        { 
+        case 0: 
+          if (evsing == 0 && ehsing==3*tfsing) 
+            {
+              types[0] = HP_PRISM; 
+              types[1] = HP_PRISM_1FA_0E_0V;   
+              types[2] = HP_PRISM_2FA_0E_0V; 
+            } 
+          if(evsing > 0 &&  sve[0] == evsing) // 1 vertical edge 1-4 
+            { 
+              types[0] = HP_PRISM_SINGEDGE;
+              types[1] = HP_PRISM_1FA_1E_0V;
+              types[2] = HP_PRISM_2FA_1E_0V;   
+            }
+          
+          if(sve[0] > 0 && sve[1] > 0 && sve[2] == 0)
+            {
+              types[0] = HP_PRISM_SINGEDGE_V12;
+              types[1] = HP_PRISM_1FA_2E_0V; 
+              types[2] = HP_PRISM_2FA_2E_0V; 
+            }
+          if(sve[0] > 0 && sve[1] > 0 && sve[2] > 0) 
+            {
+              types[0] = HP_PRISM_3E_0V;
+              types[1] = HP_PRISM_1FA_3E_0V;
+              types[2] = HP_PRISM_2FA_3E_0V;
+              
+              if ( edge_sing[0] > 1 && edge_sing[2] > 1 &&  
+                   edge_sing[4] > 1 && edge_sing[5] > 1 && tfsing==0)
+                types[0] = HP_PRISM_3E_4EH; 
+            }
+          
+          break;
+        case 1:
+          if(sve[0] <= 1 && sve[1] <= 1)  
             {
               if(sve[2]==0)
                 { 
@@ -731,84 +731,84 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
                 }
             }
 
-	  if(sve[0] > 1 && sve[2] >= 1 && sve[1] <= 1)
-	    { 
-	      types[0] = HP_PRISM_1FB_2EB_0V;  
-	      types[1] = HP_PRISM_1FA_1FB_2EB_0V;
-	      types[2] = HP_PRISM_2FA_1FB_2EB_0V; 
-	    }
-	  
-	  if(sve[0] > 1 && sve[1] <= 1 && sve[2] == 0) // ea && !eb  
-	    {
-	      types[0] = HP_PRISM_1FB_1EA_0V;
-	      types[1] = HP_PRISM_1FA_1FB_1EA_0V;
-	      types[2] = HP_PRISM_2FA_1FB_1EA_0V; 
-	    } 
-	  
-	  if(sve[0] <= 1 && sve[1] > 1 && sve[2] == 0)
-	    types[1] = HP_PRISM_1FA_1FB_1EB_0V; 
-	  
-	  if(sve[0] > 1 && sve[1]>1) 
-	    if(sve[2] == 0)  // ea && eb 
-	      {
-		types[0] = HP_PRISM_1FB_2EA_0V;
-		types[1] = HP_PRISM_1FA_1FB_2EA_0V;
-		types[2] = HP_PRISM_2FA_1FB_2EA_0V; 
-	      }
-	  if(sve[0] <= 1 && sve[1] > 1 && sve[2] >0)
-	    types[1] = HP_PRISM_1FA_1FB_2EC_0V; 
-	  
-	  if(sve[0] > 1 && sve[1] > 1 && sve[2] >= 1) //sve[2] can also be a face-edge  
-	    {
-	      types[0] = HP_PRISM_1FB_3E_0V;  
-	      types[1] = HP_PRISM_1FA_1FB_3E_0V; 
-	      types[2] = HP_PRISM_2FA_1FB_3E_0V; 
-	    } 
-	  
-	  break;  
-	  
-	case 2:
-	  if(sve[0] <= 1) 
-	    cout << " **** WARNING: Edge between to different singular faces should be marked singular " << endl; 
-		      
-	  if(sve[1] <= 1)   
-	    if(sve[2] <=1) 
-	      { 
-		types[0] = HP_PRISM_2FB_0E_0V; 
-		types[1] = HP_PRISM_1FA_2FB_0E_0V;
-		types[2] = HP_PRISM_2FA_2FB_0E_0V;
-	      }
-	    else
-	      { 
-		types[0] = HP_PRISM_2FB_1EC_0V; 
-		types[1] = HP_PRISM_1FA_2FB_1EC_0V; 
-		types[2] = HP_PRISM_2FA_2FB_1EC_0V;   
-	      }
-	  else
-	    if(sve[2] <= 1) 
-	      types[1] = HP_PRISM_1FA_2FB_1EB_0V; 
-	    else
-	      { 
-		types[0] = HP_PRISM_2FB_3E_0V; 
-		types[1] = HP_PRISM_1FA_2FB_3E_0V; 
-		types[2] = HP_PRISM_2FA_2FB_3E_0V; 
-	      }
-	  
-	  break;
-	  
-	case 3: 
-	  types[0] = HP_PRISM_3FB_0V; 
-	  types[1] = HP_PRISM_1FA_3FB_0V; 
-	  types[2] = HP_PRISM_2FA_3FB_0V; 
-	  break;
-	}
+          if(sve[0] > 1 && sve[2] >= 1 && sve[1] <= 1)
+            { 
+              types[0] = HP_PRISM_1FB_2EB_0V;  
+              types[1] = HP_PRISM_1FA_1FB_2EB_0V;
+              types[2] = HP_PRISM_2FA_1FB_2EB_0V; 
+            }
+          
+          if(sve[0] > 1 && sve[1] <= 1 && sve[2] == 0) // ea && !eb  
+            {
+              types[0] = HP_PRISM_1FB_1EA_0V;
+              types[1] = HP_PRISM_1FA_1FB_1EA_0V;
+              types[2] = HP_PRISM_2FA_1FB_1EA_0V; 
+            } 
+          
+          if(sve[0] <= 1 && sve[1] > 1 && sve[2] == 0)
+            types[1] = HP_PRISM_1FA_1FB_1EB_0V; 
+          
+          if(sve[0] > 1 && sve[1]>1) 
+            if(sve[2] == 0)  // ea && eb 
+              {
+                types[0] = HP_PRISM_1FB_2EA_0V;
+                types[1] = HP_PRISM_1FA_1FB_2EA_0V;
+                types[2] = HP_PRISM_2FA_1FB_2EA_0V; 
+              }
+          if(sve[0] <= 1 && sve[1] > 1 && sve[2] >0)
+            types[1] = HP_PRISM_1FA_1FB_2EC_0V; 
+          
+          if(sve[0] > 1 && sve[1] > 1 && sve[2] >= 1) //sve[2] can also be a face-edge  
+            {
+              types[0] = HP_PRISM_1FB_3E_0V;  
+              types[1] = HP_PRISM_1FA_1FB_3E_0V; 
+              types[2] = HP_PRISM_2FA_1FB_3E_0V; 
+            } 
+          
+          break;  
+          
+        case 2:
+          if(sve[0] <= 1) 
+            cout << " **** WARNING: Edge between to different singular faces should be marked singular " << endl; 
+                      
+          if(sve[1] <= 1)   
+            if(sve[2] <=1) 
+              { 
+                types[0] = HP_PRISM_2FB_0E_0V; 
+                types[1] = HP_PRISM_1FA_2FB_0E_0V;
+                types[2] = HP_PRISM_2FA_2FB_0E_0V;
+              }
+            else
+              { 
+                types[0] = HP_PRISM_2FB_1EC_0V; 
+                types[1] = HP_PRISM_1FA_2FB_1EC_0V; 
+                types[2] = HP_PRISM_2FA_2FB_1EC_0V;   
+              }
+          else
+            if(sve[2] <= 1) 
+              types[1] = HP_PRISM_1FA_2FB_1EB_0V; 
+            else
+              { 
+                types[0] = HP_PRISM_2FB_3E_0V; 
+                types[1] = HP_PRISM_1FA_2FB_3E_0V; 
+                types[2] = HP_PRISM_2FA_2FB_3E_0V; 
+              }
+          
+          break;
+          
+        case 3: 
+          types[0] = HP_PRISM_3FB_0V; 
+          types[1] = HP_PRISM_1FA_3FB_0V; 
+          types[2] = HP_PRISM_2FA_3FB_0V; 
+          break;
+        }
       type = types[tfsing];
       
          
       if(type != HP_NONE)  
-	break;
+        break;
     }
-	 
+         
   /*
    *testout << " Prism with pnums " << endl; 
    for(int j=0;j<6;j++) *testout << el.pnums[j] << "\t"; 
@@ -835,7 +835,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
-				HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
+                                HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
 
 {
   HPREF_ELEMENT_TYPE type = HP_NONE;
@@ -857,126 +857,126 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
       int edge_sing[3] = {0,0,0}; 
       // *testout << " actual rotation of trig points " ;  
       for(int m=0;m<3;m++) 
-	{ 
-	  p[m] = (j+m)%3 +1; // local vertex number
-	  pnums[m] = el.PNum(p[m]); // global vertex number 
-	  // *testout << pnums[m] << " \t "; 
-	}
+        { 
+          p[m] = (j+m)%3 +1; // local vertex number
+          pnums[m] = el.PNum(p[m]); // global vertex number 
+          // *testout << pnums[m] << " \t "; 
+        }
       // *testout << endl ; 
       
       if(dim == 3) 
-	{
-	  // face point 
-	  for(int k=0;k<3;k++)
-	    if(!sing_face)
-	      { 
-		//	*testout << " fp [" << k << "] = " << facepoint[pnums[k]] << endl;   
-		//	*testout << " fd.DomainIn()" <<  fd.DomainIn() << endl; 
-		//	*testout  << " fd.DomainOut()" <<  fd.DomainOut() << endl; 
-		if( facepoint[pnums[k]]  && (facepoint[pnums[k]] ==-1 || 
-					     facepoint[pnums[k]] == fd.DomainIn() ||   facepoint[pnums[k]] == fd.DomainOut()))
-		  point_sing[p[k]-1] = 1; 
-	      } 
-	  // if point is on face_edge in next step sing = 2 
+        {
+          // face point 
+          for(int k=0;k<3;k++)
+            if(!sing_face)
+              { 
+                //      *testout << " fp [" << k << "] = " << facepoint[pnums[k]] << endl;   
+                //      *testout << " fd.DomainIn()" <<  fd.DomainIn() << endl; 
+                //      *testout  << " fd.DomainOut()" <<  fd.DomainOut() << endl; 
+                if( facepoint[pnums[k]]  && (facepoint[pnums[k]] ==-1 || 
+                                             facepoint[pnums[k]] == fd.DomainIn() ||   facepoint[pnums[k]] == fd.DomainOut()))
+                  point_sing[p[k]-1] = 1; 
+              } 
+          // if point is on face_edge in next step sing = 2 
 
-	  /*	  *testout << " pointsing NACH FACEPOints ... FALLS EDGEPOINT UMSETZEN" ; 
+          /*      *testout << " pointsing NACH FACEPOints ... FALLS EDGEPOINT UMSETZEN" ; 
             for (int k=0;k<3;k++) *testout << "\t" << point_sing[p[k]-1] ;
             *testout << endl; */
-	}
+        }
       
       const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1(TRIG); 
       
       if(dim==3)
-	{
-	  for(int k=0;k<3;k++) 
-	    { 
-	      int ep1=p[eledges[k][0]-1];  
-	      int ep2=p[eledges[k][1]-1];  
-	      PointIndices<2> i2(el.PNum(ep1),el.PNum(ep2)); 
-	      
-	      if(edges.Used(i2)) 
-		{
-		  
-		  edge_sing[k]=2;
-		  point_sing[ep1-1] = 2; 
-		  point_sing[ep2-1] = 2; 
-		}
-	      else // face_edge? 
-		{	  
-		  i2.Sort();  
-		  if(surf_edges.Used(i2) && surf_edges.Get(i2) != fd.SurfNr()+1)  // edge not face_edge acc. to surface in which trig lies
-		    {
-		      if(face_edges.Get(i2)==-1 ||face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut() )
-			{ 
-			  edge_sing[k]=1;
-			} 
-		      else
-			{ 
-			  point_sing[ep1-1] = 0; // set to edge_point 
-			  point_sing[ep2-1] = 0; // set to edge_point
-			} 
-		    }
-		}
-	      
-	      /*  *testout << " pointsing NACH edges UND FACEEDGES UMSETZEN ... " ; 
+        {
+          for(int k=0;k<3;k++) 
+            { 
+              int ep1=p[eledges[k][0]-1];  
+              int ep2=p[eledges[k][1]-1];  
+              PointIndices<2> i2(el.PNum(ep1),el.PNum(ep2)); 
+              
+              if(edges.Used(i2)) 
+                {
+                  
+                  edge_sing[k]=2;
+                  point_sing[ep1-1] = 2; 
+                  point_sing[ep2-1] = 2; 
+                }
+              else // face_edge? 
+                {         
+                  i2.Sort();  
+                  if(surf_edges.Used(i2) && surf_edges.Get(i2) != fd.SurfNr()+1)  // edge not face_edge acc. to surface in which trig lies
+                    {
+                      if(face_edges.Get(i2)==-1 ||face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut() )
+                        { 
+                          edge_sing[k]=1;
+                        } 
+                      else
+                        { 
+                          point_sing[ep1-1] = 0; // set to edge_point 
+                          point_sing[ep2-1] = 0; // set to edge_point
+                        } 
+                    }
+                }
+              
+              /*  *testout << " pointsing NACH edges UND FACEEDGES UMSETZEN ... " ; 
                   for (int k=0;k<3;k++) *testout << "\t" << point_sing[p[k]-1] ; 
                   *testout << endl;          
                   */
-	    }
-	}
+            }
+        }
       /*
        *testout << " dim " << dim << endl; 
        *testout << " edgepoint_dom " << edgepoint_dom << endl; 
        */
       if(dim==2)
-	{
-	  for(int k=0;k<3;k++) 
-	    { 
-	      int ep1=p[eledges[k][0]-1];  
-	      int ep2=p[eledges[k][1]-1];  
-	     
-	      PointIndices<2> i2 = PointIndices<2>(el.PNum(ep1),el.PNum(ep2)).Sort();
-	     
-	      if(edges.Used(i2)) 
-		{
-		  if(edgepoint_dom.Used( { fd.SurfNr(),pnums[ep1-1] } ) || 
-		     edgepoint_dom.Used( { -1,pnums[ep1-1] } ) || 
-		     edgepoint_dom.Used( { fd.SurfNr(), pnums[ep2-1]} ) || 
-		     edgepoint_dom.Used( { -1,pnums[ep2-1] } )) 
-		    {
-		      edge_sing[k]=2;
-		      point_sing[ep1-1] = 2;
-		      point_sing[ep2-1] = 2; 
-		    }
-		}
-	     
-	    }
-	}
+        {
+          for(int k=0;k<3;k++) 
+            { 
+              int ep1=p[eledges[k][0]-1];  
+              int ep2=p[eledges[k][1]-1];  
+             
+              PointIndices<2> i2 = PointIndices<2>(el.PNum(ep1),el.PNum(ep2)).Sort();
+             
+              if(edges.Used(i2)) 
+                {
+                  if(edgepoint_dom.Used( { fd.SurfNr(),pnums[ep1-1] } ) || 
+                     edgepoint_dom.Used( { -1,pnums[ep1-1] } ) || 
+                     edgepoint_dom.Used( { fd.SurfNr(), pnums[ep2-1]} ) || 
+                     edgepoint_dom.Used( { -1,pnums[ep2-1] } )) 
+                    {
+                      edge_sing[k]=2;
+                      point_sing[ep1-1] = 2;
+                      point_sing[ep2-1] = 2; 
+                    }
+                }
+             
+            }
+        }
 
      
-	 
+         
       for (int k=0;k<3;k++) 
         if (edgepoint.Test(pnums[k]) &&
             (dim==3 || edgepoint_dom.Used( { fd.SurfNr(),pnums[k] } ) || edgepoint_dom.Used( { -1,pnums[k] } )))
           //edgepoint, but not member of sing_edge on trig -> cp
-	  {
-	    PointIndices<2> i2a = PointIndices<2>(el.PNum(p[k]), el.PNum(p[(k+1)%3])).Sort(); 
+          {
+            PointIndices<2> i2a = PointIndices<2>(el.PNum(p[k]), el.PNum(p[(k+1)%3])).Sort(); 
             PointIndices<2> i2b = PointIndices<2>(el.PNum(p[k]), el.PNum(p[(k+2)%3])).Sort();
-	    
-	    if(!edges.Used(i2a) && !edges.Used(i2b)) 
-	      point_sing[p[k]-1] = 3; 	
-	  } 
+            
+            if(!edges.Used(i2a) && !edges.Used(i2b)) 
+              point_sing[p[k]-1] = 3;   
+          } 
       
       for(int k=0;k<3;k++) 
-	if(cornerpoint.Test(el.PNum(p[k]))) 
-	  point_sing[p[k]-1] = 3;
+        if(cornerpoint.Test(el.PNum(p[k]))) 
+          point_sing[p[k]-1] = 3;
       
       // *testout << "point_sing = " << point_sing[0] << point_sing[1] << point_sing[2] << endl;
 
       if(edge_sing[0] + edge_sing[1] + edge_sing[2] == 0) 
         { 
           int ps = point_sing[0] + point_sing[1] + point_sing[2]; 
-	 
+         
           if(ps==0) 
             type = HP_TRIG; 
           else if(point_sing[p[0]-1]  && !point_sing[p[1]-1] && !point_sing[p[2]-1])
@@ -996,7 +996,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
             if(point_sing[p[0]-1] > edge_sing[2]) code+=1; 
             if(point_sing[p[1]-1] > edge_sing[2]) code+=2; 
             if(point_sing[p[2]-1]) code+=4; 
-	
+        
             HPREF_ELEMENT_TYPE types[] =
               {
                 HP_TRIG_SINGEDGE, 
@@ -1009,7 +1009,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
                 HP_TRIG_SINGEDGECORNER123, 
               };
             type = types[code]; 
-	
+        
           }  // E[0] = [0,2], E[1] =[1,2], E[2] = [0,1]
         else 
           if(edge_sing[2] && !edge_sing[1] && edge_sing[0])
@@ -1050,13 +1050,13 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
 }
 #ifdef HPREF_OLD 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edges, INDEX_2_HASHTABLE<int> & edgepoint_dom, 
-				BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
-				INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
+                                BitArray & cornerpoint, BitArray & edgepoint, INDEX_3_HASHTABLE<int> & faces, INDEX_2_HASHTABLE<int> & face_edges, 
+                                INDEX_2_HASHTABLE<int> & surf_edges, Array<int, PointIndex::BASE> & facepoint, int dim, const FaceDescriptor & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
   int pnums[3]; 
-	      
+              
   INDEX_3 i3 (el.pnums[0], el.pnums[1], el.pnums[2]);
   i3.Sort();
   bool sing_face = faces.Used (i3);
@@ -1069,21 +1069,21 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
       int ep3 = edgepoint.Test (el.PNumMod (j+2));
       
       if (dim == 2)
-	{
-	  // JS, Dec 11
-	  ep1 = edgepoint_dom.Used (INDEX_2 (fd.SurfNr(), el.PNumMod(j))) ||
-	    edgepoint_dom.Used (INDEX_2 (-1, el.PNumMod(j)));
-	  ep2 = edgepoint_dom.Used (INDEX_2 (fd.SurfNr(), el.PNumMod(j+1))) ||
-	    edgepoint_dom.Used (INDEX_2 (-1, el.PNumMod(j+1)));
-	  ep3 = edgepoint_dom.Used (INDEX_2 (fd.SurfNr(), el.PNumMod(j+2))) ||
-	    edgepoint_dom.Used (INDEX_2 (-1, el.PNumMod(j+2)));
-	  /*
+        {
+          // JS, Dec 11
+          ep1 = edgepoint_dom.Used (INDEX_2 (fd.SurfNr(), el.PNumMod(j))) ||
+            edgepoint_dom.Used (INDEX_2 (-1, el.PNumMod(j)));
+          ep2 = edgepoint_dom.Used (INDEX_2 (fd.SurfNr(), el.PNumMod(j+1))) ||
+            edgepoint_dom.Used (INDEX_2 (-1, el.PNumMod(j+1)));
+          ep3 = edgepoint_dom.Used (INDEX_2 (fd.SurfNr(), el.PNumMod(j+2))) ||
+            edgepoint_dom.Used (INDEX_2 (-1, el.PNumMod(j+2)));
+          /*
             ep1 = edgepoint_dom.Used (INDEX_2 (el.index, el.PNumMod(j)));
             ep2 = edgepoint_dom.Used (INDEX_2 (el.index, el.PNumMod(j+1)));
             ep3 = edgepoint_dom.Used (INDEX_2 (el.index, el.PNumMod(j+2)));
-	  */
-	  // ep3 = edgepoint_dom.Used (INDEX_2 (mesh.SurfaceElement(i).GetIndex(), el.PNumMod(j+2)));
-	}
+          */
+          // ep3 = edgepoint_dom.Used (INDEX_2 (mesh.SurfaceElement(i).GetIndex(), el.PNumMod(j+2)));
+        }
       
       
       
@@ -1100,64 +1100,64 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 
       int p[3] = { el.PNumMod (j), el.PNumMod (j+1), el.PNumMod (j+2)};
       if(ep1)
-	{
-	  INDEX_2 i2a=INDEX_2::Sort(p[0], p[1]); 
-	  INDEX_2 i2b=INDEX_2::Sort(p[0], p[2]); 
-	  if(!edges.Used(i2a) && !edges.Used(i2b)) 
-	    cp1 = 1; 
-	}
+        {
+          INDEX_2 i2a=INDEX_2::Sort(p[0], p[1]); 
+          INDEX_2 i2b=INDEX_2::Sort(p[0], p[2]); 
+          if(!edges.Used(i2a) && !edges.Used(i2b)) 
+            cp1 = 1; 
+        }
       if(ep2)
-	{
-	  INDEX_2 i2a=INDEX_2::Sort(p[1], p[0]); 
-	  INDEX_2 i2b=INDEX_2::Sort(p[1], p[2]); 
-	  if(!edges.Used(i2a) && !edges.Used(i2b)) 
-	    cp2 = 1; 
-	}
+        {
+          INDEX_2 i2a=INDEX_2::Sort(p[1], p[0]); 
+          INDEX_2 i2b=INDEX_2::Sort(p[1], p[2]); 
+          if(!edges.Used(i2a) && !edges.Used(i2b)) 
+            cp2 = 1; 
+        }
       if(ep3)
-	{
-	  INDEX_2 i2a=INDEX_2::Sort(p[2], p[0]); 
-	  INDEX_2 i2b=INDEX_2::Sort(p[2], p[1]); 
-	  if(!edges.Used(i2a) && !edges.Used(i2b)) 
-	    cp3= 1; 
-	}		      
+        {
+          INDEX_2 i2a=INDEX_2::Sort(p[2], p[0]); 
+          INDEX_2 i2b=INDEX_2::Sort(p[2], p[1]); 
+          if(!edges.Used(i2a) && !edges.Used(i2b)) 
+            cp3= 1; 
+        }                     
       
       
       int isedge1=0, isedge2=0, isedge3=0; 
       if(dim == 3 )
-	{
-	  INDEX_2 i2;
-	  i2 = INDEX_2(el.PNumMod (j), el.PNumMod (j+1));
-	  isedge1 = edges.Used (i2);
-	  i2.Sort();
-	  if(surf_edges.Used(i2) &&  surf_edges.Get(i2)   != fd.SurfNr()+1 && 
-	     (face_edges.Get(i2) == -1 || face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut()) ) 
-	    {
-	      isedge1=1;
-	      ep1 = 1; ep2=1;
-	    }
-	  
-	  i2 = INDEX_2(el.PNumMod (j+1), el.PNumMod (j+2));
-	  isedge2 = edges.Used (i2);
-	  i2.Sort();
-	  if(surf_edges.Used(i2) &&  surf_edges.Get(i2)   != fd.SurfNr()+1 &&
-	     (face_edges.Get(i2) == -1 || face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut()) ) 
-	    {
-	      isedge2=1;
-	      ep2 = 1; ep3=1;
-	    }
-	  i2 = INDEX_2(el.PNumMod (j+2), el.PNumMod (j+3));
-	  isedge3 = edges.Used (i2);
-	  i2.Sort();
-	  if(surf_edges.Used(i2) &&  surf_edges.Get(i2)   != fd.SurfNr()+1 && 
-	     (face_edges.Get(i2) == -1 || face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut()) ) 
-	    {
-	      isedge3=1;
-	      ep1 = 1; ep3=1;
-	    }
-	  
-	  // cout << " isedge " << isedge1 << " \t " << isedge2 << " \t " << isedge3 << endl;  
-	
-	  if (!sing_face)
+        {
+          INDEX_2 i2;
+          i2 = INDEX_2(el.PNumMod (j), el.PNumMod (j+1));
+          isedge1 = edges.Used (i2);
+          i2.Sort();
+          if(surf_edges.Used(i2) &&  surf_edges.Get(i2)   != fd.SurfNr()+1 && 
+             (face_edges.Get(i2) == -1 || face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut()) ) 
+            {
+              isedge1=1;
+              ep1 = 1; ep2=1;
+            }
+          
+          i2 = INDEX_2(el.PNumMod (j+1), el.PNumMod (j+2));
+          isedge2 = edges.Used (i2);
+          i2.Sort();
+          if(surf_edges.Used(i2) &&  surf_edges.Get(i2)   != fd.SurfNr()+1 &&
+             (face_edges.Get(i2) == -1 || face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut()) ) 
+            {
+              isedge2=1;
+              ep2 = 1; ep3=1;
+            }
+          i2 = INDEX_2(el.PNumMod (j+2), el.PNumMod (j+3));
+          isedge3 = edges.Used (i2);
+          i2.Sort();
+          if(surf_edges.Used(i2) &&  surf_edges.Get(i2)   != fd.SurfNr()+1 && 
+             (face_edges.Get(i2) == -1 || face_edges.Get(i2) == fd.DomainIn() || face_edges.Get(i2) == fd.DomainOut()) ) 
+            {
+              isedge3=1;
+              ep1 = 1; ep3=1;
+            }
+          
+          // cout << " isedge " << isedge1 << " \t " << isedge2 << " \t " << isedge3 << endl;  
+        
+          if (!sing_face)
             {
               /*
                 if (!isedge1)  { cp1 |= ep1; cp2 |= ep2; }
@@ -1167,44 +1167,44 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
               ep1 |= facepoint [el.PNumMod(j)] != 0;
               ep2 |= facepoint [el.PNumMod(j+1)] != 0;
               ep3 |= facepoint [el.PNumMod(j+2)] != 0;
-	  
-	  
+          
+          
               isedge1 |= face_edges.Used (INDEX_2::Sort (el.PNumMod(j), el.PNumMod(j+1)));
               isedge2 |= face_edges.Used (INDEX_2::Sort (el.PNumMod(j+1), el.PNumMod(j+2)));
               isedge3 |= face_edges.Used (INDEX_2::Sort (el.PNumMod(j+2), el.PNumMod(j+3)));
             }
-	}
+        }
       
       if(dim ==2) 
-	{ 
-	  INDEX_2 i2;
-	  i2 = INDEX_2(el.PNumMod (j), el.PNumMod (j+1));
-	  i2.Sort();
-	  isedge1 = edges.Used (i2);
-	  if(isedge1)
-	    {
-	      ep1 = 1; ep2=1;
-	    }
-	  
-	  i2 = INDEX_2(el.PNumMod (j+1), el.PNumMod (j+2));
-	  i2.Sort();
-	  isedge2 = edges.Used (i2);
-	  if(isedge2)
-	    {
-	      ep2 = 1; ep3=1;
-	    }
-	  i2 = INDEX_2(el.PNumMod (j+2), el.PNumMod (j+3));
-	  i2.Sort();
-	  isedge3 = edges.Used (i2);
-	  if(isedge3)
-	    {
-	      ep1 = 1; ep3=1;
-	    }
-	  
-	  
-	}
+        { 
+          INDEX_2 i2;
+          i2 = INDEX_2(el.PNumMod (j), el.PNumMod (j+1));
+          i2.Sort();
+          isedge1 = edges.Used (i2);
+          if(isedge1)
+            {
+              ep1 = 1; ep2=1;
+            }
+          
+          i2 = INDEX_2(el.PNumMod (j+1), el.PNumMod (j+2));
+          i2.Sort();
+          isedge2 = edges.Used (i2);
+          if(isedge2)
+            {
+              ep2 = 1; ep3=1;
+            }
+          i2 = INDEX_2(el.PNumMod (j+2), el.PNumMod (j+3));
+          i2.Sort();
+          isedge3 = edges.Used (i2);
+          if(isedge3)
+            {
+              ep1 = 1; ep3=1;
+            }
+          
+          
+        }
       
-		  
+                  
       /*
         cout << " used " << face_edges.Used (INDEX_2::Sort (el.PNumMod(j), el.PNumMod(j+1))) << endl; 
 
@@ -1212,90 +1212,90 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
         cout << " ep " << ep1 << "\t" << ep2 << " \t " << ep3 << endl; 
         cout << " cp " << cp1 << "\t" << cp2 << " \t " << cp3 << endl; 
       */
-		  
+                  
 
       
       if (isedge1 + isedge2 + isedge3 == 0)
-	{
-	  if (!ep1 && !ep2 && !ep3)
-	    type = HP_TRIG;
-	  
-	  if (ep1 && !ep2 && !ep3)
-	    type = HP_TRIG_SINGCORNER;
-	  
-	  if (ep1 && ep2 && !ep3)
-	    type = HP_TRIG_SINGCORNER12;
-	  
-	  if (ep1 && ep2 && ep3)
-	    {
-	      if (dim == 2)
+        {
+          if (!ep1 && !ep2 && !ep3)
+            type = HP_TRIG;
+          
+          if (ep1 && !ep2 && !ep3)
+            type = HP_TRIG_SINGCORNER;
+          
+          if (ep1 && ep2 && !ep3)
+            type = HP_TRIG_SINGCORNER12;
+          
+          if (ep1 && ep2 && ep3)
+            {
+              if (dim == 2)
                 type = HP_TRIG_SINGCORNER123_2D;
-	      else
-		type = HP_TRIG_SINGCORNER123;
-	    }
-	  
-	  if (type != HP_NONE)
-	    {
-	      pnums[0] = el.PNumMod (j);
-	      pnums[1] = el.PNumMod (j+1);
-	      pnums[2] = el.PNumMod (j+2);
-	      break;
-	    }
-	}
+              else
+                type = HP_TRIG_SINGCORNER123;
+            }
+          
+          if (type != HP_NONE)
+            {
+              pnums[0] = el.PNumMod (j);
+              pnums[1] = el.PNumMod (j+1);
+              pnums[2] = el.PNumMod (j+2);
+              break;
+            }
+        }
       
       if (isedge1 && !isedge2 && !isedge3)
-	{
-	  int code = 0;
-	  if (cp1) code += 1;
-	  if (cp2) code += 2;
-	  if (ep3) code += 4;
-	  
-	  HPREF_ELEMENT_TYPE types[] =
-	    {
-	      HP_TRIG_SINGEDGE, 
-	      HP_TRIG_SINGEDGECORNER1, 
-	      HP_TRIG_SINGEDGECORNER2,
-	      HP_TRIG_SINGEDGECORNER12, 
-	      HP_TRIG_SINGEDGECORNER3, 
-	      HP_TRIG_SINGEDGECORNER13, 
-	      HP_TRIG_SINGEDGECORNER23, 
-	      HP_TRIG_SINGEDGECORNER123, 
-	    };
-	  type = types[code];
-	  pnums[0] = el.PNumMod (j);
-	  pnums[1] = el.PNumMod (j+1);
-	  pnums[2] = el.PNumMod (j+2);
-	  break;
-	}
+        {
+          int code = 0;
+          if (cp1) code += 1;
+          if (cp2) code += 2;
+          if (ep3) code += 4;
+          
+          HPREF_ELEMENT_TYPE types[] =
+            {
+              HP_TRIG_SINGEDGE, 
+              HP_TRIG_SINGEDGECORNER1, 
+              HP_TRIG_SINGEDGECORNER2,
+              HP_TRIG_SINGEDGECORNER12, 
+              HP_TRIG_SINGEDGECORNER3, 
+              HP_TRIG_SINGEDGECORNER13, 
+              HP_TRIG_SINGEDGECORNER23, 
+              HP_TRIG_SINGEDGECORNER123, 
+            };
+          type = types[code];
+          pnums[0] = el.PNumMod (j);
+          pnums[1] = el.PNumMod (j+1);
+          pnums[2] = el.PNumMod (j+2);
+          break;
+        }
       
       
       if (isedge1 && !isedge2 && isedge3)
-	{
-	  if (!cp3)
-	    {
-	      if (!cp2) type = HP_TRIG_SINGEDGES;
-	      else      type = HP_TRIG_SINGEDGES2;
-	    }
-	  else
-	    { 
-	      if (!cp2) type = HP_TRIG_SINGEDGES3;
-	      else      type = HP_TRIG_SINGEDGES23;
-	    }
-	  
-	  pnums[0] = el.PNumMod (j);
-	  pnums[1] = el.PNumMod (j+1);
-	  pnums[2] = el.PNumMod (j+2);
-	  break;
-	}
+        {
+          if (!cp3)
+            {
+              if (!cp2) type = HP_TRIG_SINGEDGES;
+              else      type = HP_TRIG_SINGEDGES2;
+            }
+          else
+            { 
+              if (!cp2) type = HP_TRIG_SINGEDGES3;
+              else      type = HP_TRIG_SINGEDGES23;
+            }
+          
+          pnums[0] = el.PNumMod (j);
+          pnums[1] = el.PNumMod (j+1);
+          pnums[2] = el.PNumMod (j+2);
+          break;
+        }
        
       if (isedge1 && isedge2 && isedge3)
-	{
-	  type = HP_TRIG_3SINGEDGES;
-	  pnums[0] = el.PNumMod (j);
-	  pnums[1] = el.PNumMod (j+1);
-	  pnums[2] = el.PNumMod (j+2);
-	  break;
-	}
+        {
+          type = HP_TRIG_3SINGEDGES;
+          pnums[0] = el.PNumMod (j);
+          pnums[1] = el.PNumMod (j+1);
+          pnums[2] = el.PNumMod (j+2);
+          break;
+        }
     }
   
   for(int k=0;k<3;k++) el[k] = pnums[k]; 
@@ -1312,7 +1312,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, INDEX_2_HASHTABLE<int> & edge
 #endif
 HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
-				HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
+                                HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   
@@ -1345,7 +1345,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
       ep2 |= cp2;
       ep3 |= cp3;
       ep4 |= cp4;
-		
+                
       PointIndex p[4] = { el.PNumMod (j), el.PNumMod (j+1), el.PNumMod (j+2), el.PNumMod(j+4)};
       //int epp[4] = { ep1, ep2, ep3, ep4}; 
       int cpp[4] = { cp1, cp2, cp3, cp4};
@@ -1357,7 +1357,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
             cpp[k] = 1; 
         }
       cp1= cpp[0]; cp2=cpp[1]; cp3=cpp[2]; cp4=cpp[3];
-		  
+                  
 
       if(dim ==3) 
         { 
@@ -1400,7 +1400,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
               isedge4=1;
               ep4=1; ep1=1;
             } 
-		    
+                    
 
           //MH***********************************************************************************************************
           if(ep1)
@@ -1457,7 +1457,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
           i2 = PointIndices<2>(el.PNumMod (j+2), el.PNumMod (j+3));
           i2.Sort();
           isedge3 = edges.Used (i2); 
-		      
+                      
           if(isedge3)
             {
               ep3=1; ep4=1;
@@ -1556,7 +1556,7 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
               {
                 if (!cp2 && !ep3 && !cp4)
                   type = HP_QUAD_2E;
-			  
+                          
                 if (cp2 && !ep3 && !cp4)
                   type = HP_QUAD_2E_1VA;
                 if (!cp2 && ep3 && !cp4)
@@ -1636,11 +1636,11 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
           pnums[2] = el.PNumMod (j+2); 
           pnums[3] = el.PNumMod (j+3);
           for (int k=0;k<4;k++) el[k] = pnums[k]; 
-	
+        
           /*  cout << " QUAD with pnums " << pnums[0] << "\t"  << 
               pnums[1] << "\t"  << pnums[2] << "\t"  << pnums[3] 
               << endl << " of type " << type << endl; */
-		   		      
+                                      
           break;
         }
     }
@@ -1652,11 +1652,11 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
                  << "isedge = " << isedge1 << isedge2 << isedge3 
                  << isedge4 << endl;
     }
-	    
+            
   *testout << "quad type = " << type << endl;
 
   return type;  
-}	    
+}           
 
 
 HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
@@ -1679,27 +1679,27 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
   for(int m=0;m<6 && type == HP_NONE;m++) 
     for(int j=0;j<4 && type == HP_NONE;j++) 
       { 
-	int point_sing[8]={0,0,0,0,0,0,0,0}; 
-	int face_sing[6] = {0,0,0,0,0,0};
-	int edge_sing[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
-	int spoint=0, sface=0, sedge=0; 
-	for(int l=0;l<4;l++) 
-	  {
-	    p[l] = elfaces[index[m][0]][(4-j-l)%4]; 
-	    p[l+4] = elfaces[index[m][1]][(j+l)%4];
-	  }
-	
-	for(int l=0;l<8;l++) 
-	  if(cornerpoint.Test(el.PNum(p[l])))  
-	    { 
-	      point_sing[p[l]-1]=3;
-	      spoint++; 
-	    }
-	  else if(edgepoint.Test(el.PNum(p[l]))) point_sing[p[l]-1]=2;
-	  else if (facepoint[el.PNum(p[l])] == -1 || facepoint[el.PNum(p[l])] == el.GetIndex())
-	    point_sing[p[l]-1] = 1;   
-	
-	for(int k=0;k<12;k++)
+        int point_sing[8]={0,0,0,0,0,0,0,0}; 
+        int face_sing[6] = {0,0,0,0,0,0};
+        int edge_sing[12] = {0,0,0,0,0,0,0,0,0,0,0,0};
+        int spoint=0, sface=0, sedge=0; 
+        for(int l=0;l<4;l++) 
+          {
+            p[l] = elfaces[index[m][0]][(4-j-l)%4]; 
+            p[l+4] = elfaces[index[m][1]][(j+l)%4];
+          }
+        
+        for(int l=0;l<8;l++) 
+          if(cornerpoint.Test(el.PNum(p[l])))  
+            { 
+              point_sing[p[l]-1]=3;
+              spoint++; 
+            }
+          else if(edgepoint.Test(el.PNum(p[l]))) point_sing[p[l]-1]=2;
+          else if (facepoint[el.PNum(p[l])] == -1 || facepoint[el.PNum(p[l])] == el.GetIndex())
+            point_sing[p[l]-1] = 1;   
+        
+        for(int k=0;k<12;k++)
           {
             PointIndices<2> i2 = PointIndices<2>(el.PNum(p[eledges[k][0]-1]),el.PNum(p[eledges[k][1]-1])).Sort(); 
             if (edges.Used(i2)) 
@@ -1709,50 +1709,50 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
               }
             else edge_sing[k] = face_edges.Used(i2);
           }
-	
-	for (int k=0;k<6;k++)
+        
+        for (int k=0;k<6;k++)
           {
             PointIndices<3> i3; 
-	  
-	
+          
+        
             PointIndices<4>  i4 = PointIndices<4>(el.pnums[p[elfaces[k][0]-1]-1], el.pnums[p[elfaces[k][1]-1]-1], el.pnums[p[elfaces[k][2]-1]-1],el.pnums[p[elfaces[k][3]-1]-1]); 
             i4.Sort();
             i3 = PointIndices<3>(i4[0], i4[1], i4[2]); 
-	  
+          
             if (faces.Used (i3))
               {
-	      
+              
                 int domnr = faces.Get(i3); 
                 if (domnr == -1 || domnr == el.GetIndex())
                   {
                     face_sing[k] = 1;
                     sface++;
                   }
-	      
+              
               } 
           } 
-	
-	if(!sface && !sedge && !spoint) type = HP_HEX; 
-	if(!sedge && !spoint) 
-	  {
-	    if(face_sing[0] && face_sing[2] && sface==2) 
-	      type = HP_HEX_1FA_1FB_0E_0V; 
-	    if (face_sing[0] && sface==1)  
-	      type = HP_HEX_1F_0E_0V; 
-	  }
-	
-	el.type=type; 
+        
+        if(!sface && !sedge && !spoint) type = HP_HEX; 
+        if(!sedge && !spoint) 
+          {
+            if(face_sing[0] && face_sing[2] && sface==2) 
+              type = HP_HEX_1FA_1FB_0E_0V; 
+            if (face_sing[0] && sface==1)  
+              type = HP_HEX_1F_0E_0V; 
+          }
+        
+        el.type=type; 
 
-	if(type != HP_NONE) 
-	  {
-	    PointIndex pnums[8]; 
-	    for(int l=0;l<8;l++) pnums[l] = el[p[l]-1];
-	    for(int l=0;l<8;l++) el[l] = pnums[l];
-	    /* cout << " HEX with pnums " << pnums[0] << "\t"  << 
+        if(type != HP_NONE) 
+          {
+            PointIndex pnums[8]; 
+            for(int l=0;l<8;l++) pnums[l] = el[p[l]-1];
+            for(int l=0;l<8;l++) el[l] = pnums[l];
+            /* cout << " HEX with pnums " << pnums[0] << "\t"  << 
                pnums[1] << "\t"  << pnums[2] << "\t"  << pnums[3] << "\t"  << 
                pnums[4] << "\t"  <<  pnums[5] << endl << " of type " << type << endl; */
-	    break; 
-	  }
+            break; 
+          }
       }
   
   return (type); 
@@ -1884,40 +1884,40 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
       int p[5] = {m%4, m%4+1, m%4+2, m%4+3, 4}; 
 
       for(int l=0;l<5;l++) 
-	{
-	  if(cornerpoint.Test(el.pnums[p[l]]))  
-	    point_sing[l]=3;
-	  
+        {
+          if(cornerpoint.Test(el.pnums[p[l]]))  
+            point_sing[l]=3;
+          
           else if(edgepoint.Test(el.pnums[p[l]]))
-	    point_sing[l]=2;
-	  
-	  else if (facepoint[el.pnums[p[l]]] == -1 || facepoint[el.pnums[p[l]]] == el.GetIndex())
-	    point_sing[l] = 1;   
-	  
-	  spoint += point_sing[l]; 
-	}
+            point_sing[l]=2;
+          
+          else if (facepoint[el.pnums[p[l]]] == -1 || facepoint[el.pnums[p[l]]] == el.GetIndex())
+            point_sing[l] = 1;   
+          
+          spoint += point_sing[l]; 
+        }
       
       for(int k=0;k<8;k++)
-	{
-	  PointIndices<2> i2 = PointIndices<2>(el.pnums[p[eledges[k][0]-1]],
-				       el.pnums[p[eledges[k][1]-1]]).Sort(); 
-	  if (edges.Used(i2)) 
-	    edge_sing[k] = 2;
-	  else 
-	    edge_sing[k] = face_edges.Used(i2);
-	  
-	  sedge += edge_sing[k]; 
-	}
+        {
+          PointIndices<2> i2 = PointIndices<2>(el.pnums[p[eledges[k][0]-1]],
+                                       el.pnums[p[eledges[k][1]-1]]).Sort(); 
+          if (edges.Used(i2)) 
+            edge_sing[k] = 2;
+          else 
+            edge_sing[k] = face_edges.Used(i2);
+          
+          sedge += edge_sing[k]; 
+        }
   
       for (int k=0;k<5;k++)
-	{
-	  PointIndices<3> i3;
+        {
+          PointIndices<3> i3;
           /*
-	  PointIndices<4> i4 = PointIndices<4>(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]],
-				el.pnums[p[elfaces[k][3]-1]]); 
-	  i4.Sort();
-	  i3 = PointIndices<3>(i4.I1(), i4.I2(), i4.I3()); 
-	  */
+          PointIndices<4> i4 = PointIndices<4>(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]],
+                                el.pnums[p[elfaces[k][3]-1]]); 
+          i4.Sort();
+          i3 = PointIndices<3>(i4.I1(), i4.I2(), i4.I3()); 
+          */
           if (k < 4)
             {
               i3 = PointIndices<3>(el.pnums[p[elfaces[k][0]-1]], el.pnums[p[elfaces[k][1]-1]], el.pnums[p[elfaces[k][2]-1]]);
@@ -1932,15 +1932,15 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
             }
 
           
-	  if (faces.Used (i3))
-	    {
-	      
-	      int domnr = faces.Get(i3); 
-	      if (domnr == -1 || domnr == el.GetIndex())
-		face_sing[k] = 1;
-	    } 
-	  sface +=face_sing[k]; 
-	} 
+          if (faces.Used (i3))
+            {
+              
+              int domnr = faces.Get(i3); 
+              if (domnr == -1 || domnr == el.GetIndex())
+                face_sing[k] = 1;
+            } 
+          sface +=face_sing[k]; 
+        } 
 
       *testout << "point_sing: ";
       for (int k = 0; k < 5; k++) *testout << point_sing[k] << " ";
@@ -1957,11 +1957,11 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
       if(!sface && !spoint && !sedge) return(HP_PYRAMID); 
       
       if(!sface && !sedge && point_sing[p[0]] == spoint) 
-	type = HP_PYRAMID_0E_1V; 
+        type = HP_PYRAMID_0E_1V; 
       
       if(!sface && edge_sing[0] + edge_sing[2] == sedge && 
-	 spoint == point_sing[0] + point_sing[1] + point_sing[3]) 
-	type = HP_PYRAMID_EDGES; 
+         spoint == point_sing[0] + point_sing[1] + point_sing[3]) 
+        type = HP_PYRAMID_EDGES; 
       
       if(sface && sface == face_sing[0] && spoint == point_sing[4] + 2)
         {
@@ -1973,13 +1973,13 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
       
       
       if(type != HP_NONE) 
-	{ 
-	  PointIndex pnums[8]; 
-	  for(int l=0;l<5;l++) pnums[l] = el[p[l]];
-	  for(int l=0;l<5;l++) el[l] = pnums[l];
-	  el.type=type; 
-	  break; 
-	} 
+        { 
+          PointIndex pnums[8]; 
+          for(int l=0;l<5;l++) pnums[l] = el[p[l]];
+          for(int l=0;l<5;l++) el[l] = pnums[l];
+          el.type=type; 
+          break; 
+        } 
     }
   
   return (type); 

@@ -94,151 +94,151 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
       }
 
       for (int j = 1; j <= line->GetNS(); j++)
-	{
-	  int p1, p2;
-	  
-	  line->GetSeg(j, p1, p2);
-	  int trig1, trig2, trig1b, trig2b;
+        {
+          int p1, p2;
+          
+          line->GetSeg(j, p1, p2);
+          int trig1, trig2, trig1b, trig2b;
 
-	  if (p1 == p2) 
-	    cout << "Add Segment, p1 == p2 == " << p1 << endl;
+          if (p1 == p2) 
+            cout << "Add Segment, p1 == p2 == " << p1 << endl;
 
-	  // Test auf geschlossener Rand mit 2 Segmenten 
-	      
-	  if ((j == 2) && (line->GetNS() == 2))
-	    {
-	      int oldp1, oldp2;
-	      line->GetSeg (1, oldp1, oldp2);
-	      if (oldp1 == p2 && oldp2 == p1)
-		{
-		  PrintMessage(7,"MESSAGE: don't use second segment");
-		  continue;
-		}
-	    }
-
-
-	  //mesh point number
-	  //p1 = geom2meshnum.Get(p1); // for unmeshed lines!!!
-	  //p2 = geom2meshnum.Get(p2); // for unmeshed lines!!!
-	  
-	  //left and right trigs
-	  trig1 = line->GetLeftTrig(j);
-	  trig2 = line->GetRightTrig(j);
-	  trig1b = line->GetLeftTrig(j+1);
-	  trig2b = line->GetRightTrig(j+1);
-	  
-	  (*testout) << "j = " << j << ", p1 = " << p1 << ", p2 = " << p2 << endl;
-	  (*testout) << "segm-trigs: "
-		   << "trig1 = " << trig1
-		   << ", trig1b = " << trig1b
-		   << ", trig2 = " << trig2
-		   << ", trig2b = " << trig2b << endl;
-
-	  if (trig1 <= 0 || trig2 < 0 || trig1b <= 0 || trig2b < 0)
-	    {
-	      cout << "negative trigs, "
-		   << ", trig1 = " << trig1
-		   << ", trig1b = " << trig1b
-		   << ", trig2 = " << trig2
-		   << ", trig2b = " << trig2b << endl;
-	    }
-	  /*
-	  (*testout) << "   trigs p1: " << trig1 << " - " << trig2 << endl;
-	  (*testout) << "   trigs p2: " << trig1b << " - " << trig2b << endl;
-	  (*testout) << "   charts p1: " << geom.GetChartNr(trig1) << " - " << geom.GetChartNr(trig2) << endl;
-	  (*testout) << "   charts p2: " << geom.GetChartNr(trig1b) << " - " << geom.GetChartNr(trig2b) << endl;
-	  */
-	  Segment seg;
-	  seg[0] = p1 + IndexBASE<PointIndex>()-1;
-	  seg[1] = p2 + IndexBASE<PointIndex>()-1;
-	  seg.EPGeomInfo(0).dist = line->GetDist(j);
-	  seg.EPGeomInfo(1).dist = line->GetDist(j+1);
-	  /*
-	  (*testout) << "seg = " 
-		     << " dist " << seg.epgeominfo[0].dist
-		     << " dist " << seg.epgeominfo[1].dist << endl;
-	  */
-	  
-	  seg.GeomInfo(0).trignum = trig1;
-	  seg.GeomInfo(1).trignum = trig1b;
-
-	  /*
-	  geom.SelectChartOfTriangle (trig1);
-	  hp = hp2 = mesh.Point (seg[0]);
-	  seg.geominfo[0].trignum = geom.Project (hp);
-
-	  (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[0].trignum << endl;
-	  if (Dist (hp, hp2) > 1e-5 || seg.geominfo[0].trignum == 0) 
-	    {
-	      (*testout) << "PROBLEM" << endl;
-	    }
-
-	  geom.SelectChartOfTriangle (trig1b);
-	  hp = hp2 = mesh.Point (seg[1]);
-	  seg.geominfo[1].trignum = geom.Project (hp);
-
-	  (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[1].trignum << endl;
-	  if (Dist (hp, hp2) > 1e-5 || seg.geominfo[1].trignum == 0) 
-	    {
-	      (*testout) << "PROBLEM" << endl;
-	    }
-	  */
+          // Test auf geschlossener Rand mit 2 Segmenten 
+              
+          if ((j == 2) && (line->GetNS() == 2))
+            {
+              int oldp1, oldp2;
+              line->GetSeg (1, oldp1, oldp2);
+              if (oldp1 == p2 && oldp2 == p1)
+                {
+                  PrintMessage(7,"MESSAGE: don't use second segment");
+                  continue;
+                }
+            }
 
 
-	  if (Dist (mesh.Point(seg[0]), mesh.Point(seg[1])) < 1e-10)
-	    {
-	      (*testout) << "ERROR: Line segment of length 0" << endl;
-	      (*testout) << "pi1, 2 = " << seg[0] << ", " << seg[1] << endl;
-	      (*testout) << "p1, 2 = " << mesh.Point(seg[0])
-			 << ", " << mesh.Point(seg[1]) << endl;
-	      throw NgException ("Line segment of length 0");
-	    }
-	  
-	  seg.SetIndex(edsi_left);
-	  mesh.AddSegment (seg);
+          //mesh point number
+          //p1 = geom2meshnum.Get(p1); // for unmeshed lines!!!
+          //p2 = geom2meshnum.Get(p2); // for unmeshed lines!!!
+          
+          //left and right trigs
+          trig1 = line->GetLeftTrig(j);
+          trig2 = line->GetRightTrig(j);
+          trig1b = line->GetLeftTrig(j+1);
+          trig2b = line->GetRightTrig(j+1);
+          
+          (*testout) << "j = " << j << ", p1 = " << p1 << ", p2 = " << p2 << endl;
+          (*testout) << "segm-trigs: "
+                   << "trig1 = " << trig1
+                   << ", trig1b = " << trig1b
+                   << ", trig2 = " << trig2
+                   << ", trig2b = " << trig2b << endl;
+
+          if (trig1 <= 0 || trig2 < 0 || trig1b <= 0 || trig2b < 0)
+            {
+              cout << "negative trigs, "
+                   << ", trig1 = " << trig1
+                   << ", trig1b = " << trig1b
+                   << ", trig2 = " << trig2
+                   << ", trig2b = " << trig2b << endl;
+            }
+          /*
+          (*testout) << "   trigs p1: " << trig1 << " - " << trig2 << endl;
+          (*testout) << "   trigs p2: " << trig1b << " - " << trig2b << endl;
+          (*testout) << "   charts p1: " << geom.GetChartNr(trig1) << " - " << geom.GetChartNr(trig2) << endl;
+          (*testout) << "   charts p2: " << geom.GetChartNr(trig1b) << " - " << geom.GetChartNr(trig2b) << endl;
+          */
+          Segment seg;
+          seg[0] = p1 + IndexBASE<PointIndex>()-1;
+          seg[1] = p2 + IndexBASE<PointIndex>()-1;
+          seg.EPGeomInfo(0).dist = line->GetDist(j);
+          seg.EPGeomInfo(1).dist = line->GetDist(j+1);
+          /*
+          (*testout) << "seg = " 
+                     << " dist " << seg.epgeominfo[0].dist
+                     << " dist " << seg.epgeominfo[1].dist << endl;
+          */
+          
+          seg.GeomInfo(0).trignum = trig1;
+          seg.GeomInfo(1).trignum = trig1b;
+
+          /*
+          geom.SelectChartOfTriangle (trig1);
+          hp = hp2 = mesh.Point (seg[0]);
+          seg.geominfo[0].trignum = geom.Project (hp);
+
+          (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[0].trignum << endl;
+          if (Dist (hp, hp2) > 1e-5 || seg.geominfo[0].trignum == 0) 
+            {
+              (*testout) << "PROBLEM" << endl;
+            }
+
+          geom.SelectChartOfTriangle (trig1b);
+          hp = hp2 = mesh.Point (seg[1]);
+          seg.geominfo[1].trignum = geom.Project (hp);
+
+          (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[1].trignum << endl;
+          if (Dist (hp, hp2) > 1e-5 || seg.geominfo[1].trignum == 0) 
+            {
+              (*testout) << "PROBLEM" << endl;
+            }
+          */
+
+
+          if (Dist (mesh.Point(seg[0]), mesh.Point(seg[1])) < 1e-10)
+            {
+              (*testout) << "ERROR: Line segment of length 0" << endl;
+              (*testout) << "pi1, 2 = " << seg[0] << ", " << seg[1] << endl;
+              (*testout) << "p1, 2 = " << mesh.Point(seg[0])
+                         << ", " << mesh.Point(seg[1]) << endl;
+              throw NgException ("Line segment of length 0");
+            }
+          
+          seg.SetIndex(edsi_left);
+          mesh.AddSegment (seg);
 
 
           if(trig2 != 0)
             {
-	  Segment seg2;
-	  seg2[0] = p2 + IndexBASE<PointIndex>()-1;
-	  seg2[1] = p1 + IndexBASE<PointIndex>()-1;
-	  seg2.EPGeomInfo(0).dist = line->GetDist(j+1);
-	  seg2.EPGeomInfo(1).dist = line->GetDist(j);
-	  /*
-	  (*testout) << "seg = " 
-		     << " dist " << seg2.epgeominfo[0].dist
-		     << " dist " << seg2.epgeominfo[1].dist << endl;
-	  */
-	  
-	  seg2.GeomInfo(0).trignum = trig2b;
-	  seg2.GeomInfo(1).trignum = trig2;
-	  
-	  /*
-	  geom.SelectChartOfTriangle (trig2);
-	  hp = hp2 = mesh.Point (seg[0]);
-	  seg2.geominfo[0].trignum = geom.Project (hp);
+          Segment seg2;
+          seg2[0] = p2 + IndexBASE<PointIndex>()-1;
+          seg2[1] = p1 + IndexBASE<PointIndex>()-1;
+          seg2.EPGeomInfo(0).dist = line->GetDist(j+1);
+          seg2.EPGeomInfo(1).dist = line->GetDist(j);
+          /*
+          (*testout) << "seg = " 
+                     << " dist " << seg2.epgeominfo[0].dist
+                     << " dist " << seg2.epgeominfo[1].dist << endl;
+          */
+          
+          seg2.GeomInfo(0).trignum = trig2b;
+          seg2.GeomInfo(1).trignum = trig2;
+          
+          /*
+          geom.SelectChartOfTriangle (trig2);
+          hp = hp2 = mesh.Point (seg[0]);
+          seg2.geominfo[0].trignum = geom.Project (hp);
 
-	  (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[0].trignum << endl;
-	  if (Dist (hp, hp2) > 1e-5 || seg2.geominfo[0].trignum == 0) 
-	    {
-	      (*testout) << "Get GeomInfo PROBLEM" << endl;
-	    }
-
-
-	  geom.SelectChartOfTriangle (trig2b);
-	  hp = hp2 = mesh.Point (seg[1]);
-	  seg2.geominfo[1].trignum = geom.Project (hp);
-	  (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[1].trignum << endl;
-	  if (Dist (hp, hp2) > 1e-5 || seg2.geominfo[1].trignum == 0) 
-	    {
-	      (*testout) << "Get GeomInfo PROBLEM" << endl;
-	    }
-	  */	  
-	  seg2.SetIndex(edsi_right);
-	  mesh.AddSegment (seg2);
+          (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[0].trignum << endl;
+          if (Dist (hp, hp2) > 1e-5 || seg2.geominfo[0].trignum == 0) 
+            {
+              (*testout) << "Get GeomInfo PROBLEM" << endl;
             }
-	}
+
+
+          geom.SelectChartOfTriangle (trig2b);
+          hp = hp2 = mesh.Point (seg[1]);
+          seg2.geominfo[1].trignum = geom.Project (hp);
+          (*testout) << "hp = " << hp2 << ", hp proj = " << hp << ", trignum = " << seg.geominfo[1].trignum << endl;
+          if (Dist (hp, hp2) > 1e-5 || seg2.geominfo[1].trignum == 0) 
+            {
+              (*testout) << "Get GeomInfo PROBLEM" << endl;
+            }
+          */      
+          seg2.SetIndex(edsi_right);
+          mesh.AddSegment (seg2);
+            }
+        }
     }
 
   PopStatus();
@@ -248,7 +248,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 
 
 void STLSurfaceMeshing1 (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam,
-			 int retrynr, const STLParameters& stlparam);
+                         int retrynr, const STLParameters& stlparam);
 
 
 int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParameters& mparam,
@@ -268,7 +268,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
     {
       const Segment & seg = mesh[i];
       if (seg.GeomInfo(0).trignum <= 0 || seg.GeomInfo(1).trignum <= 0)
-	(*testout) << "Problem with segment " << i.Nr1() << ": " << seg << endl;
+        (*testout) << "Problem with segment " << i.Nr1() << ": " << seg << endl;
     }
 
 
@@ -276,7 +276,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
     {
       outercnt--;
       if (outercnt <= 0)
-	return MESHING3_OUTERSTEPSEXCEEDED;
+        return MESHING3_OUTERSTEPSEXCEEDED;
       
       if (multithread.terminate) return MESHING3_TERMINATE;
 
@@ -284,239 +284,239 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
       nopen = mesh.GetNOpenSegments();
 
       if (nopen)
-	{
-	  int trialcnt = 0;
-	  while (nopen && trialcnt <= 5)
-	    {
-	      if (multithread.terminate) { return MESHING3_TERMINATE; }
+        {
+          int trialcnt = 0;
+          while (nopen && trialcnt <= 5)
+            {
+              if (multithread.terminate) { return MESHING3_TERMINATE; }
 
-	      trialcnt++;
-	      STLSurfaceMeshing1 (geom, mesh, mparam, trialcnt, stlparam);
+              trialcnt++;
+              STLSurfaceMeshing1 (geom, mesh, mparam, trialcnt, stlparam);
 
-	      mesh.FindOpenSegments();
-	      nopen = mesh.GetNOpenSegments();
+              mesh.FindOpenSegments();
+              nopen = mesh.GetNOpenSegments();
 
               auto n_illegal_trigs = mesh.FindIllegalTrigs();
               PrintMessage (3, n_illegal_trigs, " illegal triangles");
 
-	      if (nopen)
-		{
-		  geom.ClearMarkedSegs();
-		  for (int i = 1; i <= nopen; i++)
-		    {
-		      const Segment & seg = mesh.GetOpenSegment (i);
-		      geom.AddMarkedSeg(mesh.Point(seg[0]),mesh.Point(seg[1]));
-		    }
+              if (nopen)
+                {
+                  geom.ClearMarkedSegs();
+                  for (int i = 1; i <= nopen; i++)
+                    {
+                      const Segment & seg = mesh.GetOpenSegment (i);
+                      geom.AddMarkedSeg(mesh.Point(seg[0]),mesh.Point(seg[1]));
+                    }
 
-		  geom.InitMarkedTrigs();
-		  for (int i = 1; i <= nopen; i++)
-		    {
-		      const Segment & seg = mesh.GetOpenSegment (i);
-		      geom.SetMarkedTrig(seg.GeomInfo(0).trignum,1);
-		      geom.SetMarkedTrig(seg.GeomInfo(1).trignum,1);
-		    }
+                  geom.InitMarkedTrigs();
+                  for (int i = 1; i <= nopen; i++)
+                    {
+                      const Segment & seg = mesh.GetOpenSegment (i);
+                      geom.SetMarkedTrig(seg.GeomInfo(0).trignum,1);
+                      geom.SetMarkedTrig(seg.GeomInfo(1).trignum,1);
+                    }
 
-		  MeshOptimize2d optmesh(mesh);
-		  optmesh.SetFaceIndex (0);
-		  optmesh.SetImproveEdges (0);
-		  optmesh.SetMetricWeight (0);
-		  
-		  mesh.CalcSurfacesOfNode();
-		  optmesh.EdgeSwapping (0);
-		  optmesh.ImproveMesh (mparam);
-		}
+                  MeshOptimize2d optmesh(mesh);
+                  optmesh.SetFaceIndex (0);
+                  optmesh.SetImproveEdges (0);
+                  optmesh.SetMetricWeight (0);
+                  
+                  mesh.CalcSurfacesOfNode();
+                  optmesh.EdgeSwapping (0);
+                  optmesh.ImproveMesh (mparam);
+                }
 
-	      mesh.Compress();
-	      mesh.FindOpenSegments();
-	      nopen = mesh.GetNOpenSegments();
+              mesh.Compress();
+              mesh.FindOpenSegments();
+              nopen = mesh.GetNOpenSegments();
 
-	      if (trialcnt <= 5 && nopen)
-		{
-		  mesh.RemoveOneLayerSurfaceElements();
+              if (trialcnt <= 5 && nopen)
+                {
+                  mesh.RemoveOneLayerSurfaceElements();
 
-		  if (trialcnt >= 4)
-		    {
-		      mesh.FindOpenSegments();
-		      mesh.RemoveOneLayerSurfaceElements();
+                  if (trialcnt >= 4)
+                    {
+                      mesh.FindOpenSegments();
+                      mesh.RemoveOneLayerSurfaceElements();
 
-		      mesh.FindOpenSegments ();		  
-		      nopen = mesh.GetNOpenSegments();
-		    }
-		}
-	    }
+                      mesh.FindOpenSegments ();           
+                      nopen = mesh.GetNOpenSegments();
+                    }
+                }
+            }
 
 
-	  if (multithread.terminate)
-	    return MESHING3_TERMINATE;
+          if (multithread.terminate)
+            return MESHING3_TERMINATE;
 
-	  if (nopen)
-	    {
-	      
-	      PrintMessage(3,"Meshing failed, trying to refine");
+          if (nopen)
+            {
+              
+              PrintMessage(3,"Meshing failed, trying to refine");
 
-	      mesh.FindOpenSegments ();
-	      nopen = mesh.GetNOpenSegments();
-			  
-	      mesh.FindOpenSegments ();
-	      mesh.RemoveOneLayerSurfaceElements();
-	      mesh.FindOpenSegments ();
-	      mesh.RemoveOneLayerSurfaceElements();
+              mesh.FindOpenSegments ();
+              nopen = mesh.GetNOpenSegments();
+                          
+              mesh.FindOpenSegments ();
+              mesh.RemoveOneLayerSurfaceElements();
+              mesh.FindOpenSegments ();
+              mesh.RemoveOneLayerSurfaceElements();
 
-	      // Open edge-segments will be refined !
-	      ClosedHashTable<SortedPointIndices<2>, int> openseght (2*nopen+8);
-	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
-		{
-		  const Segment & seg = mesh.GetOpenSegment (i);
-		  openseght.Set (SortedPointIndices<2>(seg[0], seg[1]), 1);
-		}
+              // Open edge-segments will be refined !
+              ClosedHashTable<SortedPointIndices<2>, int> openseght (2*nopen+8);
+              for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
+                {
+                  const Segment & seg = mesh.GetOpenSegment (i);
+                  openseght.Set (SortedPointIndices<2>(seg[0], seg[1]), 1);
+                }
 
-	      
-	      mesh.FindOpenSegments ();
-	      mesh.RemoveOneLayerSurfaceElements();
-	      mesh.FindOpenSegments ();
-	      mesh.RemoveOneLayerSurfaceElements();
-	      
+              
+              mesh.FindOpenSegments ();
+              mesh.RemoveOneLayerSurfaceElements();
+              mesh.FindOpenSegments ();
+              mesh.RemoveOneLayerSurfaceElements();
+              
 
-	      ClosedHashTable<SortedPointIndices<2>, PointIndex> newpht(128);
+              ClosedHashTable<SortedPointIndices<2>, PointIndex> newpht(128);
 
-	      int nsegold = mesh.GetNSeg();
-	      for (SegmentIndex i : T_Range<SegmentIndex>(nsegold))
-		{
-		  Segment seg = mesh[i];
-		  SortedPointIndices<2> i2(seg[0], seg[1]);
-		  if (openseght.Used (i2))
-		    {
-		      // segment will be split
-		      PrintMessage(7,"Split segment ", seg[0].Nr1(), "-", seg[1].Nr1());
-	      
-		      Segment nseg1, nseg2;
-		      EdgePointGeomInfo newgi;
-		      
-		      const EdgePointGeomInfo & gi1 = seg.EPGeomInfo(0);
-		      const EdgePointGeomInfo & gi2 = seg.EPGeomInfo(1);
-		      
-		      newgi.dist = 0.5 * (gi1.dist + gi2.dist);
+              int nsegold = mesh.GetNSeg();
+              for (SegmentIndex i : T_Range<SegmentIndex>(nsegold))
+                {
+                  Segment seg = mesh[i];
+                  SortedPointIndices<2> i2(seg[0], seg[1]);
+                  if (openseght.Used (i2))
+                    {
+                      // segment will be split
+                      PrintMessage(7,"Split segment ", seg[0].Nr1(), "-", seg[1].Nr1());
+              
+                      Segment nseg1, nseg2;
+                      EdgePointGeomInfo newgi;
+                      
+                      const EdgePointGeomInfo & gi1 = seg.EPGeomInfo(0);
+                      const EdgePointGeomInfo & gi2 = seg.EPGeomInfo(1);
+                      
+                      newgi.dist = 0.5 * (gi1.dist + gi2.dist);
 
-		      int hi;
-		      
-		      Point<3> newp;
-		      PointIndex newpi;
-		      
-		      auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
-		      if (!newpht.Used (i2))
-			{
-			  newp = geom.GetLine (edgenr)->
-			    GetPointInDist (geom.GetPoints(), newgi.dist, hi);
-			  newpi = mesh.AddPoint (newp);
-			  newpht.Set (i2, newpi);
-			}
-		      else
-			{
-			  newpi = newpht.Get (i2);
-			  newp = mesh[newpi];
-			}
+                      int hi;
+                      
+                      Point<3> newp;
+                      PointIndex newpi;
+                      
+                      auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
+                      if (!newpht.Used (i2))
+                        {
+                          newp = geom.GetLine (edgenr)->
+                            GetPointInDist (geom.GetPoints(), newgi.dist, hi);
+                          newpi = mesh.AddPoint (newp);
+                          newpht.Set (i2, newpi);
+                        }
+                      else
+                        {
+                          newpi = newpht.Get (i2);
+                          newp = mesh[newpi];
+                        }
 
-		      nseg1 = seg;
-		      nseg2 = seg;
-		      nseg1[1] = newpi;
-		      nseg1.EPGeomInfo(1) = newgi;
-		      
-		      nseg2[0] = newpi;
-		      nseg2.EPGeomInfo(0) = newgi;
-		      
-		      mesh[i] = nseg1;
-		      mesh.AddSegment (nseg2);
-		      
-		      mesh.RestrictLocalH (Center (mesh.Point(nseg1[0]),
-						   mesh.Point(nseg1[1])),
-					   Dist (mesh.Point(nseg1[0]),
-						 mesh.Point(nseg1[1])));
-		      mesh.RestrictLocalH (Center (mesh.Point(nseg2[0]),
-						   mesh.Point(nseg2[1])),
-					   Dist (mesh.Point(nseg2[0]),
-						 mesh.Point(nseg2[1])));
-		    }
-		}
+                      nseg1 = seg;
+                      nseg2 = seg;
+                      nseg1[1] = newpi;
+                      nseg1.EPGeomInfo(1) = newgi;
+                      
+                      nseg2[0] = newpi;
+                      nseg2.EPGeomInfo(0) = newgi;
+                      
+                      mesh[i] = nseg1;
+                      mesh.AddSegment (nseg2);
+                      
+                      mesh.RestrictLocalH (Center (mesh.Point(nseg1[0]),
+                                                   mesh.Point(nseg1[1])),
+                                           Dist (mesh.Point(nseg1[0]),
+                                                 mesh.Point(nseg1[1])));
+                      mesh.RestrictLocalH (Center (mesh.Point(nseg2[0]),
+                                                   mesh.Point(nseg2[1])),
+                                           Dist (mesh.Point(nseg2[0]),
+                                                 mesh.Point(nseg2[1])));
+                    }
+                }
 
-	    }
+            }
 
-	  nopen = -1;
-	}
+          nopen = -1;
+        }
     
       else
 
-	{
-	  PrintMessage(5,"mesh is closed, verifying ...");
+        {
+          PrintMessage(5,"mesh is closed, verifying ...");
 
-	  // no open elements, check wrong elements (intersecting..)
+          // no open elements, check wrong elements (intersecting..)
 
 
 
-	  PrintMessage(5,"check overlapping");
-	  // 	  mesh.FindOpenElements(); // would leed to locked points
+          PrintMessage(5,"check overlapping");
+          //      mesh.FindOpenElements(); // would leed to locked points
           mesh.CheckOverlappingBoundary();
-	  // if(mesh.CheckOverlappingBoundary()) ;
+          // if(mesh.CheckOverlappingBoundary()) ;
           // return MESHING3_BADSURFACEMESH;
 
-	  geom.InitMarkedTrigs();
+          geom.InitMarkedTrigs();
 
-	  for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
-	    if (mesh[i].BadElement())
-	      {
-		geom.SetMarkedTrig(mesh[i].GeomInfoPi(1).trignum, 1);
-		PrintMessage(7, "overlapping element, will be removed");
-	      }
-	  
-	  
+          for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
+            if (mesh[i].BadElement())
+              {
+                geom.SetMarkedTrig(mesh[i].GeomInfoPi(1).trignum, 1);
+                PrintMessage(7, "overlapping element, will be removed");
+              }
+          
+          
 
-	  Array<Point<3>> refpts;
-	  Array<double> refh;
+          Array<Point<3>> refpts;
+          Array<double> refh;
 
-	  // was commented:
+          // was commented:
 
-	  for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
-	    if (mesh[sei].BadElement())
-	      {
-		for (int j = 1; j <= 3; j++)
-		  {
-		    refpts.Append (mesh.Point (mesh[sei].PNum(j)));
-		    refh.Append (mesh.GetH (refpts.Last()) / 2);
-		  }
-		mesh.Delete(sei);
-	      }
-	  	  
-	  // delete wrong oriented element
-	  for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
-	    {
-	      const Element2d & el = mesh[sei];
+          for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+            if (mesh[sei].BadElement())
+              {
+                for (int j = 1; j <= 3; j++)
+                  {
+                    refpts.Append (mesh.Point (mesh[sei].PNum(j)));
+                    refh.Append (mesh.GetH (refpts.Last()) / 2);
+                  }
+                mesh.Delete(sei);
+              }
+                  
+          // delete wrong oriented element
+          for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+            {
+              const Element2d & el = mesh[sei];
               if (el.IsDeleted()) continue;
-	      if (!el.PNum(1).IsValid()) continue;
+              if (!el.PNum(1).IsValid()) continue;
 
-	      Vec<3> n = Cross (Vec<3> (mesh.Point(el.PNum(1)), 
-				      mesh.Point(el.PNum(2))),
-			       Vec<3> (mesh.Point(el.PNum(1)), 
-				      mesh.Point(el.PNum(3))));
-	      Vec<3> ng = geom.GetTriangle(el.GeomInfoPi(1).trignum).Normal();
-	      if (n * ng < 0)
-		{
-		  refpts.Append (mesh.Point (mesh[sei].PNum(1)));
-		  refh.Append (mesh.GetH (refpts.Last()) / 2);
-		  mesh.Delete(sei);
-		}
-	    }
-	  // end comments
+              Vec<3> n = Cross (Vec<3> (mesh.Point(el.PNum(1)), 
+                                      mesh.Point(el.PNum(2))),
+                               Vec<3> (mesh.Point(el.PNum(1)), 
+                                      mesh.Point(el.PNum(3))));
+              Vec<3> ng = geom.GetTriangle(el.GeomInfoPi(1).trignum).Normal();
+              if (n * ng < 0)
+                {
+                  refpts.Append (mesh.Point (mesh[sei].PNum(1)));
+                  refh.Append (mesh.GetH (refpts.Last()) / 2);
+                  mesh.Delete(sei);
+                }
+            }
+          // end comments
 
-	  for (int i = 1; i <= refpts.Size(); i++)
-	    mesh.RestrictLocalH (refpts[i-1], refh[i-1]);
+          for (int i = 1; i <= refpts.Size(); i++)
+            mesh.RestrictLocalH (refpts[i-1], refh[i-1]);
 
-	  mesh.RemoveOneLayerSurfaceElements();
+          mesh.RemoveOneLayerSurfaceElements();
           // Open edge-segments will be refined !
-	      ClosedHashTable<SortedPointIndices<2>, int> openseght (2*nopen+8);
-	      for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
-		{
-		  const Segment & seg = mesh.GetOpenSegment (i);
-		  openseght.Set (SortedPointIndices<2>(seg[0], seg[1]), 1);
-		}
+              ClosedHashTable<SortedPointIndices<2>, int> openseght (2*nopen+8);
+              for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
+                {
+                  const Segment & seg = mesh.GetOpenSegment (i);
+                  openseght.Set (SortedPointIndices<2>(seg[0], seg[1]), 1);
+                }
           mesh.FindOpenSegments ();
           mesh.RemoveOneLayerSurfaceElements();
           mesh.FindOpenSegments ();
@@ -530,20 +530,20 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                 {
                   // segment will be split
                   PrintMessage(7,"Split segment ", seg[0].Nr1(), "-", seg[1].Nr1());
-	      
+              
                   Segment nseg1, nseg2;
                   EdgePointGeomInfo newgi;
-		      
+                      
                   const EdgePointGeomInfo & gi1 = seg.EPGeomInfo(0);
                   const EdgePointGeomInfo & gi2 = seg.EPGeomInfo(1);
-		      
+                      
                   newgi.dist = 0.5 * (gi1.dist + gi2.dist);
 
                   int hi;
-		      
+                      
                   Point<3> newp;
                   PointIndex newpi;
-		      
+                      
                   auto edgenr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
                   if (!newpht.Used (i2))
                     {
@@ -562,13 +562,13 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                   nseg2 = seg;
                   nseg1[1] = newpi;
                   nseg1.EPGeomInfo(1) = newgi;
-		      
+                      
                   nseg2[0] = newpi;
                   nseg2.EPGeomInfo(0) = newgi;
-		      
+                      
                   mesh[i] = nseg1;
                   mesh.AddSegment (nseg2);
-		      
+                      
                   mesh.RestrictLocalH (Center (mesh.Point(nseg1[0]),
                                                mesh.Point(nseg1[1])),
                                        Dist (mesh.Point(nseg1[0]),
@@ -579,23 +579,23 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                                              mesh.Point(nseg2[1])));
                 }
             }
-	  mesh.Compress();
-	  
-	  mesh.FindOpenSegments ();
-	  nopen = mesh.GetNOpenSegments();
+          mesh.Compress();
+          
+          mesh.FindOpenSegments ();
+          nopen = mesh.GetNOpenSegments();
 
-	  /*
-	  if (!nopen)
-	    {
-	      // mesh is still ok
+          /*
+          if (!nopen)
+            {
+              // mesh is still ok
 
-	      void STLSurfaceOptimization (STLGeometry & geom,
-					   class Mesh & mesh,
-					   MeshingParameters & mparam)
-	      
-	    }
-	  */
-	}
+              void STLSurfaceOptimization (STLGeometry & geom,
+                                           class Mesh & mesh,
+                                           MeshingParameters & mparam)
+              
+            }
+          */
+        }
       
     }
   while (nopen);
@@ -615,9 +615,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 
 void STLSurfaceMeshing1 (STLGeometry & geom,
-			 Mesh & mesh,
+                         Mesh & mesh,
                          const MeshingParameters& mparam,
-			 int retrynr,
+                         int retrynr,
                          const STLParameters& stlparam)
 {
   static Timer timer1("STL surface meshing1");
@@ -645,7 +645,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   for (int i = 1; i <= mesh.GetNP(); i++)
     for (int j = 1; j <= spiralps.Size(); j++)
       if (Dist2(geom.GetPoint(spiralps.Get(j)), mesh.Point(i)) < 1e-20) 
-	meshsp.Elem(i) = spiralps.Get(j);
+        meshsp.Elem(i) = spiralps.Get(j);
   Array<PointIndex> imeshsp;
   for (int i = 1; i <= meshsp.Size(); i++)
     if (meshsp.Elem(i)) imeshsp.Append(i);
@@ -655,12 +655,12 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
   for (PointIndex pi : mesh.Points().Range())
     {
       for (int j = 1; j <= spiralps.Size(); j++)
-	if (Dist2(geom.GetPoint(spiralps[j-1]), mesh[pi]) < 1e-20) 
-	  {
-	    imeshsp.Append(pi);
-	    ispiral_point.Append(spiralps[j-1]);
-	    break;
-	  }
+        if (Dist2(geom.GetPoint(spiralps[j-1]), mesh[pi]) < 1e-20) 
+          {
+            imeshsp.Append(pi);
+            ispiral_point.Append(spiralps[j-1]);
+            break;
+          }
     }
 
   double starttime = GetTime ();
@@ -682,7 +682,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
     {
       int fdi = mesh.GetOpenSegmentFace(i);
       if (fdi < 1 || fdi > mesh.GetNFD())
-	cerr << "segment index " << fdi << " out of range [1, " << mesh.GetNFD() << "]" << endl;
+        cerr << "segment index " << fdi << " out of range [1, " << mesh.GetNFD() << "]" << endl;
       opensegments.Add (fdi, i);
     }
   
@@ -705,10 +705,10 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       int cntused = 0;
 
       for (int i = 0; i < imeshsp.Size(); i++)
-	{
-	  compress[imeshsp[i]] = ++cntused;
-	  icompress.Append(imeshsp[i]);
-	}
+        {
+          compress[imeshsp[i]] = ++cntused;
+          icompress.Append(imeshsp[i]);
+        }
 
       timer1a.Stop();
       timer1b.Start();
@@ -717,94 +717,94 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
       /*
       for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
-	{
-	  const Segment & seg = mesh.GetOpenSegment (i);
-	  if (seg_fdi(seg) == fnr)
-	    for (int j = 0; j < 2; j++)
-	      if (compress[seg[j]] == 0)
-		{
-		  compress[seg[j]] = ++cntused;
-		  icompress.Append(seg[j]);
-		}
-	}
+        {
+          const Segment & seg = mesh.GetOpenSegment (i);
+          if (seg_fdi(seg) == fnr)
+            for (int j = 0; j < 2; j++)
+              if (compress[seg[j]] == 0)
+                {
+                  compress[seg[j]] = ++cntused;
+                  icompress.Append(seg[j]);
+                }
+        }
       */
       FlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
-	{
-	  int i = segs[hi];
-	  const Segment & seg = mesh.GetOpenSegment (i);
-	  for (int j = 0; j < 2; j++)
-	    if (compress[seg[j]] == 0)
-	      {
-		compress[seg[j]] = ++cntused;
-		icompress.Append(seg[j]);
-	      }
-	}
+        {
+          int i = segs[hi];
+          const Segment & seg = mesh.GetOpenSegment (i);
+          for (int j = 0; j < 2; j++)
+            if (compress[seg[j]] == 0)
+              {
+                compress[seg[j]] = ++cntused;
+                icompress.Append(seg[j]);
+              }
+        }
 
       timer1b.Stop();
       timer1c.Start();
 
 
       for (int hi = 0; hi < icompress.Size(); hi++)
-	{
-	  PointIndex pi = icompress[hi];
-	  
-	  /*
-	  // int sppointnum = meshsp.Get(i);
-	  int sppointnum = 0;
-	  if (hi < ispiral_point.Size())
-	    sppointnum = ispiral_point[hi];
+        {
+          PointIndex pi = icompress[hi];
+          
+          /*
+          // int sppointnum = meshsp.Get(i);
+          int sppointnum = 0;
+          if (hi < ispiral_point.Size())
+            sppointnum = ispiral_point[hi];
 
-	  if (sppointnum)
-	    {
-	  */
-	  if (hi < ispiral_point.Size())
-	    {
-	      int sppointnum = ispiral_point[hi];
+          if (sppointnum)
+            {
+          */
+          if (hi < ispiral_point.Size())
+            {
+              int sppointnum = ispiral_point[hi];
 
-	      MultiPointGeomInfo mgi;
-	      
-	      int ntrigs = geom.NOTrigsPerPoint(sppointnum);
-	      for (int j = 0; j < ntrigs; j++)
-		{
-		  PointGeomInfo gi;
-		  gi.trignum = geom.TrigPerPoint(sppointnum, j+1);
-		  mgi.AddPointGeomInfo (gi);
-		}
-	      
-	      // Einfuegen von ConePoint: Point bekommt alle
-	      // Dreiecke (werden dann intern kopiert)
-	      // Ein Segment zum ConePoint muss vorhanden sein !!!
-	      
-	      // meshing.AddPoint (mesh.Point(i), i, &mgi);
-	      meshing.AddPoint (mesh[pi], pi, &mgi);
-	    }
-	  else
-	    meshing.AddPoint (mesh[pi], pi);
-	}
+              MultiPointGeomInfo mgi;
+              
+              int ntrigs = geom.NOTrigsPerPoint(sppointnum);
+              for (int j = 0; j < ntrigs; j++)
+                {
+                  PointGeomInfo gi;
+                  gi.trignum = geom.TrigPerPoint(sppointnum, j+1);
+                  mgi.AddPointGeomInfo (gi);
+                }
+              
+              // Einfuegen von ConePoint: Point bekommt alle
+              // Dreiecke (werden dann intern kopiert)
+              // Ein Segment zum ConePoint muss vorhanden sein !!!
+              
+              // meshing.AddPoint (mesh.Point(i), i, &mgi);
+              meshing.AddPoint (mesh[pi], pi, &mgi);
+            }
+          else
+            meshing.AddPoint (mesh[pi], pi);
+        }
 
       timer1c.Stop();
       timer1d.Start();
 
       /*
         for (int i = 1; i <= mesh.GetNOpenSegments(); i++)
-	  {
-	    const Segment & seg = mesh.GetOpenSegment (i);
-	    if (seg_fdi(seg) == fnr)
-	      meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], 
-					  seg.geominfo[0], seg.geominfo[1]);
-	  }
+          {
+            const Segment & seg = mesh.GetOpenSegment (i);
+            if (seg_fdi(seg) == fnr)
+              meshing.AddBoundaryElement (compress[seg[0]], compress[seg[1]], 
+                                          seg.geominfo[0], seg.geominfo[1]);
+          }
       */
 
 
       // FlatArray<int> segs = opensegments[fnr];
       for (int hi = 0; hi < segs.Size(); hi++)
-	{
-	  int i = segs[hi];
-	  const Segment & seg = mesh.GetOpenSegment (i);
-	  meshing.AddBoundaryElement (seg[0], seg[1], 
-				      seg.GeomInfo(0), seg.GeomInfo(1));
-	}
+        {
+          int i = segs[hi];
+          const Segment & seg = mesh.GetOpenSegment (i);
+          meshing.AddBoundaryElement (seg[0], seg[1], 
+                                      seg.GeomInfo(0), seg.GeomInfo(1));
+        }
 
 
 
@@ -817,7 +817,7 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
       meshing.GenerateMesh (mesh, mparam, h, fnr);  
       
       for (int i = 0; i < icompress.Size(); i++)
-	compress[icompress[i]] = 0;
+        compress[icompress[i]] = 0;
       
       
       mparam.Render();
@@ -831,8 +831,8 @@ void STLSurfaceMeshing1 (STLGeometry & geom,
 
 
 void STLSurfaceOptimization (STLGeometry & geom,
-			     Mesh & mesh,
-			     const MeshingParameters & mparam)
+                             Mesh & mesh,
+                             const MeshingParameters & mparam)
 {
   PrintFnStart("optimize STL Surface");
 
@@ -847,35 +847,35 @@ void STLSurfaceOptimization (STLGeometry & geom,
   for (int i = 1; i <= mparam.optsteps2d; i++)
     for (size_t j = 1; j <= mparam.optimize2d.length(); j++)
       {
-	if (multithread.terminate)
-	  break;
+        if (multithread.terminate)
+          break;
 
-	//(*testout) << "optimize, before, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
+        //(*testout) << "optimize, before, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
 
-	mesh.CalcSurfacesOfNode();
-	switch (mparam.optimize2d[j-1])
-	  {
-	  case 's': 
-	    {
-	      optmesh.EdgeSwapping(0);
-	      break;
-	    }
-	  case 'S': 
-	    {
-	      optmesh.EdgeSwapping(1);
-	      break;
-	    }
-	  case 'm': 
-	    {
-	      optmesh.ImproveMesh(mparam);
-	      break;
-	    }
-	  case 'c': 
-	    {
-	      optmesh.CombineImprove();
-	      break;
-	    }
-	  }
+        mesh.CalcSurfacesOfNode();
+        switch (mparam.optimize2d[j-1])
+          {
+          case 's': 
+            {
+              optmesh.EdgeSwapping(0);
+              break;
+            }
+          case 'S': 
+            {
+              optmesh.EdgeSwapping(1);
+              break;
+            }
+          case 'm': 
+            {
+              optmesh.ImproveMesh(mparam);
+              break;
+            }
+          case 'c': 
+            {
+              optmesh.CombineImprove();
+              break;
+            }
+          }
         // while(mesh.CheckOverlappingBoundary())
         //   {
         //     for(const auto & el : mesh.SurfaceElements())
@@ -892,7 +892,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
         //       }
         //     optmesh.SplitImprove();
         //   }
-	//(*testout) << "optimize, after, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
+        //(*testout) << "optimize, after, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
       }
 
   geom.surfaceoptimized = 1;
@@ -906,15 +906,15 @@ void STLSurfaceOptimization (STLGeometry & geom,
 
 
 MeshingSTLSurface :: MeshingSTLSurface (STLGeometry & ageom,
-					const MeshingParameters & mp)
+                                        const MeshingParameters & mp)
   : Meshing2(ageom, mp, ageom.GetBoundingBox()), geom(ageom)
 {
   ;
 }
 
 void MeshingSTLSurface :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
-						const PointGeomInfo * geominfo,
-						const PointGeomInfo * geominfo2)
+                                                const PointGeomInfo * geominfo,
+                                                const PointGeomInfo * geominfo2)
 {
   transformationtrig = geominfo[0].trignum;
   
@@ -922,7 +922,7 @@ void MeshingSTLSurface :: DefineTransformation (const Point<3> & p1, const Point
 }
 
 void MeshingSTLSurface :: TransformToPlain (const Point<3> & locpoint, const MultiPointGeomInfo & gi,
-					    Point<2> & plainpoint, double h, int & zone)
+                                            Point<2> & plainpoint, double h, int & zone)
 {
   int trigs[10000];
 
@@ -943,14 +943,14 @@ void MeshingSTLSurface :: TransformToPlain (const Point<3> & locpoint, const Mul
   //  geom.ToPlane (locpoint, NULL, plainpoint, h, zone, 1);
   /*
   (*testout) << " plainpoint = " << plainpoint
-	     << " h = " << h 
-	     << endl;
+             << " h = " << h 
+             << endl;
   */
 }
 
 /*
 int MeshingSTLSurface :: ComputeLineGeoInfo (const Point<3> & p1, const Point<3> & p2,
-					      int & geoinfosize, void *& geoinfo)
+                                              int & geoinfosize, void *& geoinfo)
 {
   static int geomtrig[2] = { 0, 0 };
 
@@ -992,23 +992,23 @@ int MeshingSTLSurface :: ComputePointGeomInfo (const Point<3> & p, PointGeomInfo
 
 int MeshingSTLSurface :: 
 ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi, 
-			  PointGeomInfo & pgi)
+                          PointGeomInfo & pgi)
 {
   for (int i = 1; i <= mpgi.GetNPGI(); i++)
     if (geom.TrigIsInOC (mpgi.GetPGI(i).trignum, geom.meshchart))
       {
-	pgi = mpgi.GetPGI(i);
-	return 0;
+        pgi = mpgi.GetPGI(i);
+        return 0;
       }
   /*
   for (i = 0; i < mpgi.cnt; i++)
     {
       //      (*testout) << "d" << endl;
       if (geom.TrigIsInOC (mpgi.mgi[i].trignum, geom.meshchart))
-	{
-	  pgi = mpgi.mgi[i];
-	  return 0;
-	}
+        {
+          pgi = mpgi.mgi[i];
+          return 0;
+        }
     }
   */
   PrintMessage(7,"INFORM: no gi on chart");
@@ -1020,7 +1020,7 @@ ChooseChartPointGeomInfo (const MultiPointGeomInfo & mpgi,
 
 int MeshingSTLSurface :: 
 IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
-		     int endpoint, const PointGeomInfo & gi)
+                     int endpoint, const PointGeomInfo & gi)
 {
   int lineendtrig = gi.trignum;
   return geom.TrigIsInOC (lineendtrig, geom.meshchart);
@@ -1032,8 +1032,8 @@ IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
 
 void MeshingSTLSurface :: 
 GetChartBoundary (Array<Point<2>> & points, 
-		  Array<Point<3>> & points3d,
-		  Array<INDEX_2> & lines, double h) const
+                  Array<Point<3>> & points3d,
+                  Array<INDEX_2> & lines, double h) const
 {
   points.SetSize (0);
   points3d.SetSize (0);
@@ -1045,9 +1045,9 @@ GetChartBoundary (Array<Point<2>> & points,
 
 
 int MeshingSTLSurface :: TransformFromPlain (const Point<2> & plainpoint,
-					     Point<3> & locpoint, 
-					     PointGeomInfo & gi, 
-					     double h)
+                                             Point<3> & locpoint, 
+                                             PointGeomInfo & gi, 
+                                             double h)
 {
   //return 0, wenn alles OK
   Point<3> hp3d;
@@ -1060,7 +1060,7 @@ int MeshingSTLSurface :: TransformFromPlain (const Point<2> & plainpoint,
 
 int MeshingSTLSurface :: 
 BelongsToActiveChart (const Point<3> & p, 
-		      const PointGeomInfo & gi)
+                      const PointGeomInfo & gi)
 {
   return (geom.TrigIsInOC(gi.trignum, geom.meshchart) != 0);
 }

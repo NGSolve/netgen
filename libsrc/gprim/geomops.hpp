@@ -188,9 +188,9 @@ namespace netgen
     Vec<2> res;
     for (int i = 0; i < 2; i++)
       {
-	res(i) = 0;
-	for (int j = 0; j < 2; j++)
-	  res(i) += m(i,j) * v(j);
+        res(i) = 0;
+        for (int j = 0; j < 2; j++)
+          res(i) += m(i,j) * v(j);
       }
     return res;
   }
@@ -200,9 +200,9 @@ namespace netgen
     Vec<2> res;
     for (int i = 0; i < 2; i++)
       {
-	res(i) = 0;
-	for (int j = 0; j < 3; j++)
-	  res(i) += m(i,j) * v(j);
+        res(i) = 0;
+        for (int j = 0; j < 3; j++)
+          res(i) += m(i,j) * v(j);
       }
     return res;
   }
@@ -213,9 +213,9 @@ namespace netgen
     Vec<3> res;
     for (int i = 0; i < 3; i++)
       {
-	res(i) = 0;
-	for (int j = 0; j < 2; j++)
-	  res(i) += m(i,j) * v(j);
+        res(i) = 0;
+        for (int j = 0; j < 2; j++)
+          res(i) += m(i,j) * v(j);
       }
     return res;
   }
@@ -226,9 +226,9 @@ namespace netgen
     Vec<3> res;
     for (int i = 0; i < 3; i++)
       {
-	res(i) = 0;
-	for (int j = 0; j < 3; j++)
-	  res(i) += m(i,j) * v(j);
+        res(i) = 0;
+        for (int j = 0; j < 3; j++)
+          res(i) += m(i,j) * v(j);
       }
     return res;
   }
@@ -262,12 +262,12 @@ namespace netgen
     Mat<2,2,T> m;
     for (int i = 0; i < 2; i++)
       for (int j = 0; j < 2; j++)
-	{
+        {
           T sum(0);
-	  for (int k = 0; k < 2; k++)
-	    sum += a(i,k) * b(k, j);
-	  m(i,j) = sum; 
-	}
+          for (int k = 0; k < 2; k++)
+            sum += a(i,k) * b(k, j);
+          m(i,j) = sum; 
+        }
     return m;
   }
 
@@ -276,12 +276,12 @@ namespace netgen
     Mat<2,2> m;
     for (int i = 0; i < 2; i++)
       for (int j = 0; j < 2; j++)
-	{
-	  double sum = 0;
-	  for (int k = 0; k < 3; k++)
-	    sum += a(i,k) * b(k, j);
-	  m(i,j) = sum; 
-	}
+        {
+          double sum = 0;
+          for (int k = 0; k < 3; k++)
+            sum += a(i,k) * b(k, j);
+          m(i,j) = sum; 
+        }
     return m;
   }
 
@@ -291,12 +291,12 @@ namespace netgen
     Mat<3,2,T> m;
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 2; j++)
-	{
-	  T sum(0.0);
-	  for (int k = 0; k < 2; k++)
-	    sum += a(i,k) * b(k, j);
-	  m(i,j) = sum; 
-	}
+        {
+          T sum(0.0);
+          for (int k = 0; k < 2; k++)
+            sum += a(i,k) * b(k, j);
+          m(i,j) = sum; 
+        }
     return m;
   }
 
@@ -307,12 +307,12 @@ namespace netgen
     Mat<2,3> m;
     for (int i = 0; i < 2; i++)
       for (int j = 0; j < 3; j++)
-	{
-	  double sum = 0;
-	  for (int k = 0; k < 2; k++)
-	    sum += a(i,k) * b(k, j);
-	  m(i,j) = sum; 
-	}
+        {
+          double sum = 0;
+          for (int k = 0; k < 2; k++)
+            sum += a(i,k) * b(k, j);
+          m(i,j) = sum; 
+        }
     return m;
   }
 
@@ -322,12 +322,12 @@ namespace netgen
     Mat<3,3,T> m;
     for (int i = 0; i < 3; i++)
       for (int j = 0; j < 3; j++)
-	{
-	  T sum = T(0);
-	  for (int k = 0; k < 3; k++)
-	    sum += a(i,k) * b(k, j);
-	  m(i,j) = sum; 
-	}
+        {
+          T sum = T(0);
+          for (int k = 0; k < 3; k++)
+            sum += a(i,k) * b(k, j);
+          m(i,j) = sum; 
+        }
     return m;
   }
 
@@ -344,7 +344,7 @@ namespace netgen
     Mat<W,H> res;
     for (int i = 0; i < H; i++)
       for (int j = 0; j < W; j++)
-	res(j,i) = m(i,j);
+        res(j,i) = m(i,j);
     return res;
   }
 
@@ -391,9 +391,9 @@ namespace netgen
     ost << "(";
     for (int i = 0; i < H; i++)
       {
-	for (int j = 0; j < W; j++)
-	  ost << m(i,j) << "   ";
-	ost << endl;
+        for (int j = 0; j < W; j++)
+          ost << m(i,j) << "   ";
+        ost << endl;
       }
     return ost;
   }

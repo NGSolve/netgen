@@ -68,7 +68,7 @@ namespace netgen
             ch = in.get();
             while(ch == ' ' || ch == '\n' || ch == '\t' || ch =='\r')
               ch = in.get();
-	      
+              
             if(ch != '/')
               {
                 comment = false;
@@ -90,7 +90,7 @@ namespace netgen
               }
           }
 
-	  
+          
         switch(inputsection)
           {
           case 0:
@@ -158,7 +158,7 @@ namespace netgen
               for(int i=0; i<nnodes; i++)
                 {
                   in >> nodeid >> p(0) >> p(1) >> p(2) >> type >> pid;
-                  mesh.AddPoint(p);		  
+                  mesh.AddPoint(p);               
                   point_pids.Append(pid);
                   if(pid > maxId0D)
                     maxId0D = pid;
@@ -275,7 +275,7 @@ namespace netgen
                 {
                   int trinum;
                   int segnum;
-		    
+                    
                   tris.Append(new Element2d(TRIG));
 
                   in >> trinum;
@@ -287,7 +287,7 @@ namespace netgen
                         segnum_ng[j] = segnum-1;
                       else
                         segnum_ng[j] = -segnum-1;
-			
+                        
                       if(neg[j])
                         tris.Last()->PNum(j+1) = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[1]-1;
                       else
@@ -298,13 +298,13 @@ namespace netgen
                   in >> type;
                   int faceid;
                   in >> faceid;
-		    
+                    
                   if(faceid > maxId2D)
                     maxId2D = faceid;
 
                   if(i==0 || faceid < minId2D)
                     minId2D = faceid;
-		    
+                    
                   tris.Last()->SetIndex(faceid);
 
                   if(faceid > 0)
@@ -314,7 +314,7 @@ namespace netgen
                       //    cout << "Faces: Assumption about index 0 wrong (face"<<trinum <<")" << endl;
                       //  }
                       //mesh.AddSurfaceElement(tri);
-			
+                        
                       for(int j=0; j<3; j++)
                         {
                           if(neg[j])
@@ -354,8 +354,8 @@ namespace netgen
 
                   if(transl > maxtransl)
                     maxtransl = transl;
-		    
-		    
+                    
+                    
                   for(int j=0; j<3; j++)
                     {
                       nodes1[j] = tris[tri1-1]->PNum(j+1);
@@ -369,11 +369,11 @@ namespace netgen
 
                   for(int j=0; j<3; j++)
                     mesh.GetIdentifications().Add(nodes1[j],nodes2[j],transl);
-			
+                        
                 }
               for(int i=1; i<= maxtransl; i++)
                 mesh.GetIdentifications().SetType(i,Identifications::PERIODIC);
-            }	      
+            }         
             break;
 
           case 22:
@@ -385,7 +385,7 @@ namespace netgen
               bool neg[4];
               int elemid;
               int domain;
-		
+                
               eldom.SetSize(nelts);
 
               for(int i=0; i<nelts; i++)
@@ -411,7 +411,7 @@ namespace netgen
                       tetfacedata.Append(((neg[j]) ? 1 : 0));
                       //surf[j] = dummyint-1;
                     }
-		    
+                    
                   in >> domain;
                   eldom[i] = domain;
                   tetfacedata.Append(domain);
@@ -421,46 +421,46 @@ namespace netgen
 
                   if(domain > maxId3D)
                     maxId3D = domain;
-		    
-                  // 		    for(int j=0; j<4; j++)
-                  // 		      {
-                  // 			if(mesh.GetNSE() <= surf[j])
-                  // 			  continue;
+                    
+                  //                for(int j=0; j<4; j++)
+                  //                  {
+                  //                    if(mesh.GetNSE() <= surf[j])
+                  //                      continue;
 
-                  // 			int faceind = 0;
-                  // 			for(int k=1; k<=mesh.GetNFD(); k++)
-                  // 			  {
-                  // 			    if(mesh.GetFaceDescriptor(k).SurfNr() == mesh[surf[j]].GetIndex())
-                  // 			      faceind = k;
-                  // 			  }
-                  // 			if(faceind)
-                  // 			  {
-                  // 			    if(neg[j])
-                  // 			      mesh.GetFaceDescriptor(faceind).SetDomainOut(domain);
-                  // 			    else
-                  // 			      mesh.GetFaceDescriptor(faceind).SetDomainIn(domain);
-                  // 			  }
-                  // 			else
-                  // 			  {
-                  // 			    if(neg[j])
-                  // 			      faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf[j]].GetIndex(),0,domain,0));
-                  // 			    else
-                  // 			      faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf[j]].GetIndex(),domain,0,0));
-                  // 			    mesh.GetFaceDescriptor(faceind).SetBCProperty(mesh[surf[j]].GetIndex());
-                  // 			  }
-                  // 		      }
+                  //                    int faceind = 0;
+                  //                    for(int k=1; k<=mesh.GetNFD(); k++)
+                  //                      {
+                  //                        if(mesh.GetFaceDescriptor(k).SurfNr() == mesh[surf[j]].GetIndex())
+                  //                          faceind = k;
+                  //                      }
+                  //                    if(faceind)
+                  //                      {
+                  //                        if(neg[j])
+                  //                          mesh.GetFaceDescriptor(faceind).SetDomainOut(domain);
+                  //                        else
+                  //                          mesh.GetFaceDescriptor(faceind).SetDomainIn(domain);
+                  //                      }
+                  //                    else
+                  //                      {
+                  //                        if(neg[j])
+                  //                          faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf[j]].GetIndex(),0,domain,0));
+                  //                        else
+                  //                          faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf[j]].GetIndex(),domain,0,0));
+                  //                        mesh.GetFaceDescriptor(faceind).SetBCProperty(mesh[surf[j]].GetIndex());
+                  //                      }
+                  //                  }
                 }
               cout << endl;
-		
-		
-              // 		Array<int> indextodescriptor(maxId2D+1);
-		
-              // 		for(int i=1; i<=mesh.GetNFD(); i++)
-              // 		  indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
-		
-		
-              // 		for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
-              // 		  mesh[i].SetIndex(indextodescriptor[mesh[i].GetIndex()]);
+                
+                
+              //                Array<int> indextodescriptor(maxId2D+1);
+                
+              //                for(int i=1; i<=mesh.GetNFD(); i++)
+              //                  indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
+                
+                
+              //                for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
+              //                  mesh[i].SetIndex(indextodescriptor[mesh[i].GetIndex()]);
             }
             break;
 
@@ -475,13 +475,13 @@ namespace netgen
                   for(int j=1; j<=4; j++)
                     in >> el.PNum(j);
                   swap(el.PNum(1),el.PNum(2));
-		    
+                    
                   el.SetIndex(eldom[i]);
                   mesh.AddVolumeElement(el);
-                }	
-            }	  
+                }       
+            }     
             break;
-	      
+              
           case 24:
             // Physical Object counts (#Obj3D,#Obj2D,#Obj1D,#Obj0D)
             {
@@ -521,10 +521,10 @@ namespace netgen
                   for(int j=0; j<nelems; j++)
                     {
                       in >> dummyint;
-			
+                        
                       (*testout) << "read " << dummyint << endl;
                       //userdata_int.Append(dummyint);
-			
+                        
                       if(dummyint < 0) 
                         dummyint *= -1;
                       uid_to_group_3D[eldom[dummyint-1]] = groupid;
@@ -569,9 +569,9 @@ namespace netgen
                         }
                       else
                         in.putback(port);
-			
+                        
                       //userdata_int.Append(dummyint);
-			
+                        
                       uid_to_group_2D[uid] = groupid;
                       (*testout) << "setting " << uid << endl;
 
@@ -639,9 +639,9 @@ namespace netgen
 
           default:
             done = true;
-	      
+              
           }
-	  
+          
         if(inputsection == 4 && version == "1.1")
           inputsection++;
 
@@ -693,14 +693,14 @@ namespace netgen
     else
       for(int i=minId2D; i<minId3D; i++)
         mesh.AddFaceDescriptor(FaceDescriptor(i,0,0,0));
-	
+        
 
     for(int i=0; i<tetfacedata.Size(); i+=9)
       {
         for(int j=0; j<4; j++)
           {
             SurfaceElementIndex surf = surfindices[tetfacedata[i+2*j]];
-	      
+              
             //if(mesh.GetNSE() <= surf)
             if(!surf.IsValid())
               continue;
@@ -709,23 +709,23 @@ namespace netgen
               mesh.GetFaceDescriptor(mesh[surf].GetIndex()).SetDomainOut(tetfacedata[i+8]);
             else
               mesh.GetFaceDescriptor(mesh[surf].GetIndex()).SetDomainIn(tetfacedata[i+8]);
-			
+                        
 
             /*
-	      int faceind = 0;
-	      for(int k=1; k<=mesh.GetNFD(); k++)
+              int faceind = 0;
+              for(int k=1; k<=mesh.GetNFD(); k++)
               {
               if(mesh.GetFaceDescriptor(k).SurfNr() == mesh[surf].GetIndex())
               faceind = k;
               }
-	      if(faceind)
+              if(faceind)
               {
               if(tetfacedata[i+4+j] == 1)
               mesh.GetFaceDescriptor(faceind).SetDomainOut(tetfacedata[i+8]);
               else
               mesh.GetFaceDescriptor(faceind).SetDomainIn(tetfacedata[i+8]);
               }
-	      else
+              else
               {
               if(tetfacedata[i+4+j] == 1)
               faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf].GetIndex(),0,tetfacedata[i+8],0));
@@ -739,20 +739,20 @@ namespace netgen
       }
       
     //       Array<int> indextodescriptor(maxId2D+1);
-		
+                
     //       for(int i=1; i<=mesh.GetNFD(); i++)
-    // 	indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
-		
-		
+    //  indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
+                
+                
     //       for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
-    // 	mesh[i].SetIndex(indextodescriptor[mesh[i].GetIndex()]);
+    //  mesh[i].SetIndex(indextodescriptor[mesh[i].GetIndex()]);
 
 
     for(int i=0; i<segmentdata.Size(); i++)
       {
         Segment seg;
 
-	  
+          
         if((atof(version.c_str()) <= 1.999999 && (*segmentdata[i])[2] > 0) ||
            (atof(version.c_str()) > 1.999999  && (*segmentdata[i])[2] > 0 && (*segmentdata[i])[2] < minId2D))
           {

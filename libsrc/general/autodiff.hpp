@@ -102,8 +102,8 @@ public:
   {
     for (int i = 0; i < D; i++)
       {
-	// dval[i] *= y.val;
-	// dval[i] += val * y.dval[i];
+        // dval[i] *= y.val;
+        // dval[i] += val * y.dval[i];
         dval[i] = dval[i] * y.val + val * y.dval[i];
       }
     val *= y.val;

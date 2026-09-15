@@ -82,9 +82,9 @@ namespace netgen
     }
 
     virtual void GetDerivatives (const double t,  
-				 Point<2> & point,
-				 Vec<2> & first,
-				 Vec<2> & second) const
+                                 Point<2> & point,
+                                 Vec<2> & first,
+                                 Vec<2> & second) const
     {
       seg->GetDerivatives (t, point, first, second);
     }

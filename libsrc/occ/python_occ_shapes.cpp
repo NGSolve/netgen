@@ -2561,7 +2561,7 @@ TopoDS_Shape
       return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("p1"), py::arg("p2"), "Create a straight edge between two points.");
   m.def("Circle", [](gp_Pnt c, gp_Dir n, double r) {
-	Handle(Geom_Circle) curve = GC_MakeCircle (c, n, r);
+        Handle(Geom_Circle) curve = GC_MakeCircle (c, n, r);
         return BRepBuilderAPI_MakeEdge(curve).Edge();
     }, py::arg("center"), py::arg("normal"), py::arg("radius"),
     "Create a circular edge defined by center, normal, and radius.");

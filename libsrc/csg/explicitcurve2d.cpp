@@ -28,7 +28,7 @@ double ExplicitCurve2d :: NumericalProjectParam (const Point<2> & p, double lb, 
   tan = EvalPrime (lb);
   cp = Eval (lb);
   fl = tan * (cp - p);
-  if (fl > 0)			// changed by wmf, originally fl >= 0
+  if (fl > 0)                   // changed by wmf, originally fl >= 0
     {
       //      cerr << "tan = " << tan << " cp - p = " << (cp - p) << endl;
       //      cerr << "ExplicitCurve2d::NumericalProject: lb wrong" << endl;
@@ -38,7 +38,7 @@ double ExplicitCurve2d :: NumericalProjectParam (const Point<2> & p, double lb, 
   tan = EvalPrime (ub);
   cp = Eval (ub);
   fu = tan * (cp - p);
-  if (fu < 0)			// changed by wmf, originally fu <= 0
+  if (fu < 0)                   // changed by wmf, originally fu <= 0
     {
       //    cerr << "tan = " << tan << " cp - p = " << (cp - p) << endl;
       //    cerr << "ExplicitCurve2d::NumericalProject: ub wrong" << endl;

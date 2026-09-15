@@ -20,7 +20,7 @@ namespace netgen
 
 
 void WriteDiffPackFormat (const Mesh & mesh,
-			  const filesystem::path & filename)
+                          const filesystem::path & filename)
 {
   //   double scale = globflags.GetNumFlag ("scale", 1);
   double scale = 1;
@@ -49,47 +49,47 @@ void WriteDiffPackFormat (const Mesh & mesh,
 
       const Element & eldummy = mesh[ElementIndex::FromNr1((int)1)];
       outfile << "\n\n"
-	"Finite element mesh (GridFE):\n\n"
-	"  Number of space dim. =   3\n"
-	"  Number of elements   =  " << ne << "\n"
-	"  Number of nodes      =  " << np << "\n\n"
-	"  All elements are of the same type : dpTRUE\n"
-	"  Max number of nodes in an element: "<< eldummy.GetNP() << "\n"
-	"  Only one subdomain               : dpFALSE\n"
-	"  Lattice data                     ? 0\n\n\n\n";
+        "Finite element mesh (GridFE):\n\n"
+        "  Number of space dim. =   3\n"
+        "  Number of elements   =  " << ne << "\n"
+        "  Number of nodes      =  " << np << "\n\n"
+        "  All elements are of the same type : dpTRUE\n"
+        "  Max number of nodes in an element: "<< eldummy.GetNP() << "\n"
+        "  Only one subdomain               : dpFALSE\n"
+        "  Lattice data                     ? 0\n\n\n\n";
       
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse)) 
-	{
-	  int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
-	  int nbi=BIname.Size();
-	  int found=0;
-	  for (int j = 1; j <= nbi; j++)
-	    if(BI == BIname[j-1]) found = 1;
-	  if( ! found ) BIname.Append(BI);	    	     
-	}
+        {
+          int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
+          int nbi=BIname.Size();
+          int found=0;
+          for (int j = 1; j <= nbi; j++)
+            if(BI == BIname[j-1]) found = 1;
+          if( ! found ) BIname.Append(BI);                   
+        }
       
       outfile << "  " << BIname.Size() <<  " Boundary indicators:  ";
       for (int i =1 ; i <= BIname.Size(); i++)
-	outfile << BIname[i-1] << " ";
+        outfile << BIname[i-1] << " ";
       outfile << "\n\n\n";
       
       outfile << "  Nodal coordinates and nodal boundary indicators,\n"
-	"  the columns contain:\n"
-	"   - node number\n"
-	"   - coordinates\n"
-	"   - no of boundary indicators that are set (ON)\n"
-	"   - the boundary indicators that are set (ON) if any.\n"
-	"#\n";
+        "  the columns contain:\n"
+        "   - node number\n"
+        "   - coordinates\n"
+        "   - no of boundary indicators that are set (ON)\n"
+        "   - the boundary indicators that are set (ON) if any.\n"
+        "#\n";
 
 
       // setup point-to-surfaceelement table 
       DynamicTable<SurfaceElementIndex, PointIndex> point2sel(np);
       for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
-	{
-	  const Element2d & el = mesh[sei];
-	  for (int j = 0; j < el.GetNP(); j++)
-	    point2sel.Add (el[j], sei);
-	}
+        {
+          const Element2d & el = mesh[sei];
+          for (int j = 0; j < el.GetNP(); j++)
+            point2sel.Add (el[j], sei);
+        }
 
 
       // for (int i = 1; i <= np; i++)
@@ -105,47 +105,47 @@ void WriteDiffPackFormat (const Mesh & mesh,
           outfile << p(1)/scale << ", ";
           outfile.width(16);
           outfile << p(2)/scale << ") ";
-	 
-	  if(mesh[PointIndex(i)].Type() != INNERPOINT) 
-	    {
-	      BCsinpoint.DeleteAll();
-	      /*
-	      for (j = 1; j <= nse; j++) 
-	      */
-	      FlatArray<SurfaceElementIndex> sels = point2sel[PointIndex(i)];
-	      for (int jj = 0; jj < sels.Size(); jj++)
-		{
-		  for (int k = 1; k <= mesh[sels[jj]].GetNP(); k++) 
-		    {
-		      if(mesh[sels[jj]].PNum(k)==i) 
-			{
-			  int BC=mesh.GetFaceDescriptor(mesh[sels[jj]].GetIndex()).BCProperty();
-			  int nbcsp=BCsinpoint.Size();
-			  int found = 0;
-			  for (int l = 1; l <= nbcsp; l++)
-			    if(BC == BCsinpoint[l-1]) found = 1;
-			  if( ! found ) BCsinpoint.Append(BC); 	    	     
-			}
-		    }
-		}
-	      int nbcsp = BCsinpoint.Size();
-	      outfile << "[" << nbcsp << "] ";
-	      for (int j = 1; j <= nbcsp; j++)
-		outfile << BCsinpoint[j-1] << " ";
-	      outfile << "\n";
+         
+          if(mesh[PointIndex(i)].Type() != INNERPOINT) 
+            {
+              BCsinpoint.DeleteAll();
+              /*
+              for (j = 1; j <= nse; j++) 
+              */
+              FlatArray<SurfaceElementIndex> sels = point2sel[PointIndex(i)];
+              for (int jj = 0; jj < sels.Size(); jj++)
+                {
+                  for (int k = 1; k <= mesh[sels[jj]].GetNP(); k++) 
+                    {
+                      if(mesh[sels[jj]].PNum(k)==i) 
+                        {
+                          int BC=mesh.GetFaceDescriptor(mesh[sels[jj]].GetIndex()).BCProperty();
+                          int nbcsp=BCsinpoint.Size();
+                          int found = 0;
+                          for (int l = 1; l <= nbcsp; l++)
+                            if(BC == BCsinpoint[l-1]) found = 1;
+                          if( ! found ) BCsinpoint.Append(BC);               
+                        }
+                    }
+                }
+              int nbcsp = BCsinpoint.Size();
+              outfile << "[" << nbcsp << "] ";
+              for (int j = 1; j <= nbcsp; j++)
+                outfile << BCsinpoint[j-1] << " ";
+              outfile << "\n";
             }
           else outfile << "[0]\n";
 
         }
 
       outfile << "\n"
-	"  Element types and connectivity\n"
-	"  the columns contain:\n"
-	"   - element number\n"
-	"   - element type\n"
-	"   - subdomain number\n"
-	"   - the global node numbers of the nodes in the element.\n"
-	"#\n";
+        "  Element types and connectivity\n"
+        "  the columns contain:\n"
+        "   - element number\n"
+        "   - element type\n"
+        "   - subdomain number\n"
+        "   - the global node numbers of the nodes in the element.\n"
+        "#\n";
 
       for (ElementIndex i : T_Range<ElementIndex>(ne))
         {
@@ -159,37 +159,37 @@ void WriteDiffPackFormat (const Mesh & mesh,
           outfile << el.GetIndex() << "    ";
           if(el.GetNP()==10)
             {
-	      outfile.width(8);
-	      outfile << el.PNum(1);
-	      outfile.width(8);
-	      outfile << el.PNum(3);
-	      outfile.width(8);
-	      outfile << el.PNum(2);
-	      outfile.width(8);
-	      outfile << el.PNum(4);
-	      outfile.width(8);
-	      outfile << el.PNum(6);
-	      outfile.width(8);
-	      outfile << el.PNum(8);
-	      outfile.width(8);
-	      outfile << el.PNum(5);
-	      outfile.width(8);
-	      outfile << el.PNum(7);
-	      outfile.width(8);
-	      outfile << el.PNum(10);
-	      outfile.width(8);
-	      outfile << el.PNum(9);
+              outfile.width(8);
+              outfile << el.PNum(1);
+              outfile.width(8);
+              outfile << el.PNum(3);
+              outfile.width(8);
+              outfile << el.PNum(2);
+              outfile.width(8);
+              outfile << el.PNum(4);
+              outfile.width(8);
+              outfile << el.PNum(6);
+              outfile.width(8);
+              outfile << el.PNum(8);
+              outfile.width(8);
+              outfile << el.PNum(5);
+              outfile.width(8);
+              outfile << el.PNum(7);
+              outfile.width(8);
+              outfile << el.PNum(10);
+              outfile.width(8);
+              outfile << el.PNum(9);
             }
           else
             {
-	      outfile.width(8);
-	      outfile << el.PNum(1);
-	      outfile.width(8);
-	      outfile << el.PNum(3);
-	      outfile.width(8);
-	      outfile << el.PNum(2);
-	      outfile.width(8);
-	      outfile << el.PNum(4);
+              outfile.width(8);
+              outfile << el.PNum(1);
+              outfile.width(8);
+              outfile << el.PNum(3);
+              outfile.width(8);
+              outfile << el.PNum(2);
+              outfile.width(8);
+              outfile << el.PNum(4);
             }
           outfile << "\n";
         }
@@ -213,37 +213,37 @@ void WriteDiffPackFormat (const Mesh & mesh,
       outfile.setf (ios::showpoint);
       const Element2d & eldummy = mesh[SurfaceElementIndex::FromNr1((int)1)];
       outfile << "\n\n"
-	"Finite element mesh (GridFE):\n\n"
-	"  Number of space dim. =  2\n"
-	"  Number of elements   =  " << nse << "\n"
-	"  Number of nodes      =  " << np << "\n\n"
-	"  All elements are of the same type : dpTRUE\n"
-	"  Max number of nodes in an element: "<<eldummy.GetNP()<<"\n"
-	"  Only one subdomain               : dpFALSE\n"
-	"  Lattice data                     ? 0\n\n\n\n";
+        "Finite element mesh (GridFE):\n\n"
+        "  Number of space dim. =  2\n"
+        "  Number of elements   =  " << nse << "\n"
+        "  Number of nodes      =  " << np << "\n\n"
+        "  All elements are of the same type : dpTRUE\n"
+        "  Max number of nodes in an element: "<<eldummy.GetNP()<<"\n"
+        "  Only one subdomain               : dpFALSE\n"
+        "  Lattice data                     ? 0\n\n\n\n";
       
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse)) 
-	{
-	  int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
-	  int nbi=BIname.Size();
-	  int found=0;
-	  for (j = 1; j <= nbi; j++)
-	    if(BI == BIname[j-1]) found = 1;
-	  if( ! found ) BIname.Append(BI);	    	     
-	}
+        {
+          int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
+          int nbi=BIname.Size();
+          int found=0;
+          for (j = 1; j <= nbi; j++)
+            if(BI == BIname[j-1]) found = 1;
+          if( ! found ) BIname.Append(BI);                   
+        }
       
       outfile << "  " << BIname.Size() <<  " Boundary indicators:  ";
       for (i =1 ; i <= BIname.Size(); i++)
-	outfile << BIname[i-1] << " ";
+        outfile << BIname[i-1] << " ";
       outfile << "\n\n\n";
       
       outfile << "  Nodal coordinates and nodal boundary indicators,\n"
-	"  the columns contain:\n"
-	"   - node number\n"
-	"   - coordinates\n"
-	"   - no of boundary indicators that are set (ON)\n"
-	"   - the boundary indicators that are set (ON) if any.\n"
-	"#\n";
+        "  the columns contain:\n"
+        "   - node number\n"
+        "   - coordinates\n"
+        "   - no of boundary indicators that are set (ON)\n"
+        "   - the boundary indicators that are set (ON) if any.\n"
+        "#\n";
 
       // for (i = 1; i <= np; i++)
       for (PointIndex i : mesh.Points().Range())
@@ -256,43 +256,43 @@ void WriteDiffPackFormat (const Mesh & mesh,
           outfile << p(0)/scale << ", ";
           outfile.width(16);
           outfile << p(1)/scale << ") ";
-	 
-	  if(mesh[PointIndex(i)].Type() != INNERPOINT) 
-	    {
-	      BCsinpoint.DeleteAll();
-	      for (SurfaceElementIndex j : T_Range<SurfaceElementIndex>(nse)) 
-		{
-		  for (k = 1; k <= 2; k++) 
-		    {
-		      if(mesh[j].PNum(k)==i) 
-			{
-			  int BC=mesh.GetFaceDescriptor(mesh[j].GetIndex()).BCProperty();
-			  int nbcsp=BCsinpoint.Size();
-			  int found = 0;
-			  for (l = 1; l <= nbcsp; l++)
-			    if(BC == BCsinpoint[l-1]) found = 1;
-			  if( ! found ) BCsinpoint.Append(BC); 	    	     
-			}
-		    }
-		}
-	      int nbcsp = BCsinpoint.Size();
-	      outfile << "[" << nbcsp << "] ";
-	      for (j = 1; j <= nbcsp; j++)
-		outfile << BCsinpoint[j-1] << " ";
-	      outfile << "\n";
+         
+          if(mesh[PointIndex(i)].Type() != INNERPOINT) 
+            {
+              BCsinpoint.DeleteAll();
+              for (SurfaceElementIndex j : T_Range<SurfaceElementIndex>(nse)) 
+                {
+                  for (k = 1; k <= 2; k++) 
+                    {
+                      if(mesh[j].PNum(k)==i) 
+                        {
+                          int BC=mesh.GetFaceDescriptor(mesh[j].GetIndex()).BCProperty();
+                          int nbcsp=BCsinpoint.Size();
+                          int found = 0;
+                          for (l = 1; l <= nbcsp; l++)
+                            if(BC == BCsinpoint[l-1]) found = 1;
+                          if( ! found ) BCsinpoint.Append(BC);               
+                        }
+                    }
+                }
+              int nbcsp = BCsinpoint.Size();
+              outfile << "[" << nbcsp << "] ";
+              for (j = 1; j <= nbcsp; j++)
+                outfile << BCsinpoint[j-1] << " ";
+              outfile << "\n";
             }
           else outfile << "[0]\n";
 
         }
 
       outfile << "\n"
-	"  Element types and connectivity\n"
-	"  the columns contain:\n"
-	"   - element number\n"
-	"   - element type\n"
-	"   - subdomain number\n"
-	"   - the global node numbers of the nodes in the element.\n"
-	"#\n";
+        "  Element types and connectivity\n"
+        "  the columns contain:\n"
+        "   - element number\n"
+        "   - element type\n"
+        "   - subdomain number\n"
+        "   - the global node numbers of the nodes in the element.\n"
+        "#\n";
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
@@ -304,20 +304,20 @@ void WriteDiffPackFormat (const Mesh & mesh,
             outfile << i.Nr1() << "  ElmT6n2D ";
           outfile.width(12);
           outfile << el.GetIndex() << "    ";
-	  outfile.width(16);
-	  outfile << el.PNum(1);
-	  outfile.width(16);
-	  outfile << el.PNum(2);
-	  outfile.width(16);
-	  outfile << el.PNum(3);
+          outfile.width(16);
+          outfile << el.PNum(1);
+          outfile.width(16);
+          outfile << el.PNum(2);
+          outfile.width(16);
+          outfile << el.PNum(3);
           if(eldummy.GetNP()==6)
             {
-	     outfile.width(16);
-	     outfile << el.PNum(6);
-	     outfile.width(16);
-	     outfile << el.PNum(4);
-	     outfile.width(16);
-	     outfile << el.PNum(5);
+             outfile.width(16);
+             outfile << el.PNum(6);
+             outfile.width(16);
+             outfile << el.PNum(4);
+             outfile.width(16);
+             outfile << el.PNum(5);
             }
           outfile << "\n";
         }

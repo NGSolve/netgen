@@ -51,14 +51,14 @@ namespace netgen
     }
 
     virtual bool GetMultiValue (int elnr, int facetnr, int npts,
-				const double * xref, int sxref,
-				const double * x, int sx,
-				const double * dxdxref, int sdxdxref,
-				double * values, int svalues)
+                                const double * xref, int sxref,
+                                const double * x, int sx,
+                                const double * dxdxref, int sdxdxref,
+                                double * values, int svalues)
     {
       bool res = false;
       for (int i = 0; i < npts; i++)
-	res = GetValue (elnr, &xref[i*sxref], &x[i*sx], &dxdxref[i*sdxdxref], &values[i*svalues]);
+        res = GetValue (elnr, &xref[i*sxref], &x[i*sx], &dxdxref[i*sdxdxref], &values[i*svalues]);
       return res;
     }
 
@@ -88,7 +88,7 @@ namespace netgen
     {
       bool res = false;
       for (int i = 0; i < npts; i++)
-	res = GetSurfValue (selnr, facetnr, &xref[i*sxref], &x[i*sx], &dxdxref[i*sdxdxref], &values[i*svalues]);
+        res = GetSurfValue (selnr, facetnr, &xref[i*sxref], &x[i*sx], &dxdxref[i*sdxdxref], &values[i*svalues]);
       return res;
     }
 

@@ -98,8 +98,8 @@ namespace netgen
   {
     return Vec<3,T> 
       ( v1(1) * v2(2) - v1(2) * v2(1),
-	v1(2) * v2(0) - v1(0) * v2(2),
-	v1(0) * v2(1) - v1(1) * v2(0) );
+        v1(2) * v2(0) - v1(0) * v2(2),
+        v1(0) * v2(1) - v1(1) * v2(0) );
   }
 
   inline void Cross (const Vec<3> & v1, const Vec<3> & v2, Vec<3> & prod)
@@ -108,8 +108,8 @@ namespace netgen
 
 
   inline double Determinant (const Vec<3> & col1,
-			     const Vec<3> & col2,
-			     const Vec<3> & col3)
+                             const Vec<3> & col2,
+                             const Vec<3> & col3)
   {
     return
       col1(0) * ( col2(1) * col3(2) - col2(2) * col3(1)) +
@@ -142,8 +142,8 @@ namespace netgen
     double det = m(0,0) * m(1,1) - m(0,1) * m(1,0);
     if (det == 0) 
       {
-	inv = 0;
-	return;
+        inv = 0;
+        return;
       }
 
     double idet = 1.0 / det;

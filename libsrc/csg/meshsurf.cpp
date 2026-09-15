@@ -25,16 +25,16 @@ Meshing2Surfaces :: Meshing2Surfaces (const Surface & asurface)
 
 
 void Meshing2Surfaces :: DefineTransformation (const Point<3> & p1, const Point<3> & p2,
-					       const PointGeomInfo * geominfo1,
-					       const PointGeomInfo * geominfo2)
+                                               const PointGeomInfo * geominfo1,
+                                               const PointGeomInfo * geominfo2)
 {
   ((Surface&)surface).DefineTangentialPlane (p1, p2);
 }
 
 void Meshing2Surfaces :: TransformToPlain (const Point<3> & locpoint, 
-					   const MultiPointGeomInfo & geominfo,
-					   Point<2> & planepoint, 
-					   double h, int & zone)
+                                           const MultiPointGeomInfo & geominfo,
+                                           Point<2> & planepoint, 
+                                           double h, int & zone)
 {
   surface.ToPlane (locpoint, planepoint, h, zone);
 }

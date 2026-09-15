@@ -54,9 +54,9 @@ namespace netgen
     double maxhinit;
   public:
     SingularEdge (double abeta, int adomnr, 
-		  const CSGeometry & ageom,
-		  const Solid * asol1, const Solid * asol2, double sf,
-		  const double maxh_at_initialization = -1);
+                  const CSGeometry & ageom,
+                  const Solid * asol1, const Solid * asol2, double sf,
+                  const double maxh_at_initialization = -1);
     void FindPointsOnEdge (class Mesh & mesh);
     void SetMeshSize (class Mesh & mesh, double globalh);
   };
@@ -73,7 +73,7 @@ namespace netgen
  
   public:
     SingularPoint (double abeta, const Solid * asol1, const Solid * asol2,
-		   const Solid * asol3, double sf);
+                   const Solid * asol3, double sf);
     void FindPoints (class Mesh & mesh);
     void SetMeshSize (class Mesh & mesh, double globalh);
   };
