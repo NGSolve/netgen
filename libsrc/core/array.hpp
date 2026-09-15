@@ -214,8 +214,18 @@ namespace ngcore
   };
 
 
+  // index classes provide their own base via a static Base(); everything else starts at 0
+  template <typename T, typename = void>
+  struct has_index_base : std::false_type { };
+  template <typename T>
+  struct has_index_base<T, std::void_t<decltype(T::Base())>> : std::true_type { };
+
   template <typename  T>
-  constexpr T IndexBASE () { return T(0); }
+  constexpr T IndexBASE ()
+  {
+    if constexpr (has_index_base<T>::value) return T::Base();
+    else return T(0);
+  }
 
   template <typename  T>
   constexpr T IndexBASE (T ind) { return IndexBASE<T>(); }

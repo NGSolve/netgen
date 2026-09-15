@@ -452,7 +452,7 @@ namespace netgen
     ///
     DLL_HEADER void SetGlobalH (double h);
     ///
-        DLL_HEADER void SetMinimalH (double h);
+       DLL_HEADER void SetMinimalH (double h);
     ///
         DLL_HEADER double MaxHDomain (int dom) const;
     ///

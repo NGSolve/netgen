@@ -240,17 +240,6 @@ namespace netgen
     operator int & () = delete;
   };
 
-}
-
-namespace ngcore
-{
-  template<> 
-  constexpr netgen::PointIndex IndexBASE<netgen::PointIndex> () { return netgen::PointIndex::Base(); }
-}
-
-namespace netgen
-{
-
   // input-output is 1-based
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
@@ -384,95 +373,40 @@ namespace netgen
 
   class AnyElementIndex;
 
-  class ElementIndex : public Index<int,ElementIndex,0>
+  /**
+     Element number of a D-dimensional mesh element:
+     ElIndex<3> is a volume element, ElIndex<2> a surface element, ElIndex<1> a segment.
+  */
+  template <int D>
+  class ElIndex : public Index<int,ElIndex<D>,0>
   {
-    friend class Index<int,ElementIndex,0>;
-    constexpr ElementIndex (int ai) : Index(ai) { }   // use IndexBASE<ElementIndex>()+nr, or FromNr0/FromNr1
+    typedef Index<int,ElIndex<D>,0> TBase;
+    friend class Index<int,ElIndex<D>,0>;
+    constexpr ElIndex (int ai) : TBase(ai) { }   // use IndexBASE<ElIndex<D>>()+nr, or FromNr0/FromNr1
   public:
-    using Index::Index; // <int,ElementIndex,0>::Index;
-    operator int () const = delete;    // an ElementIndex stays an ElementIndex
+    using TBase::TBase;
+    operator int () const = delete;    // an ElIndex stays an ElIndex
     operator int & () = delete;
     /// narrowing from AnyElementIndex is explicit - name the kind you mean
-    explicit constexpr ElementIndex (AnyElementIndex bi);
+    explicit constexpr ElIndex (AnyElementIndex bi);
   };
-  
-  inline istream & operator>> (istream & ist, ElementIndex & ei)
+
+  using ElementIndex = ElIndex<3>;
+  using SurfaceElementIndex = ElIndex<2>;
+  using SegmentIndex = ElIndex<1>;
+
+  template <int D>
+  inline istream & operator>> (istream & ist, ElIndex<D> & ei)
   {
-    int i; ist >> i; ei = ElementIndex::FromNr0(i); return ist;
+    int i; ist >> i; ei = ElIndex<D>::FromNr0(i); return ist;
   }
 
-  inline ostream & operator<< (ostream & ost, const ElementIndex & ei)
+  template <int D>
+  inline ostream & operator<< (ostream & ost, const ElIndex<D> & ei)
   {
     return ost << ei.Nr0();
   }
-}
 
-namespace ngcore
-{
-  // the generic IndexBASE does T(0); give ElementIndex its own, as PointIndex has,
-  // so it keeps working once int -> ElementIndex gets blocked
-  template<>
-  constexpr netgen::ElementIndex IndexBASE<netgen::ElementIndex> () { return netgen::ElementIndex::Base(); }
-}
-
-namespace netgen
-{
-
-  class SurfaceElementIndex : public Index<int,SurfaceElementIndex,0>
-  {
-    friend class Index<int,SurfaceElementIndex,0>;
-    constexpr SurfaceElementIndex (int ai) : Index(ai) { }   // use IndexBASE<SurfaceElementIndex>()+nr, or FromNr0/FromNr1
-  public:
-    using Index::Index;
-    operator int () const = delete;    // a SurfaceElementIndex stays a SurfaceElementIndex
-    operator int & () = delete;
-    explicit constexpr SurfaceElementIndex (AnyElementIndex bi);
-  };
-}
-
-namespace ngcore
-{
-  // the generic IndexBASE does T(0); give SurfaceElementIndex its own,
-  // so it keeps working once int -> SurfaceElementIndex gets blocked
-  template<>
-  constexpr netgen::SurfaceElementIndex IndexBASE<netgen::SurfaceElementIndex> () { return netgen::SurfaceElementIndex::Base(); }
-}
-
-namespace netgen
-{
-
-  inline istream & operator>> (istream & ist, SurfaceElementIndex & si)
-  {
-    int i; ist >> i; si = SurfaceElementIndex::FromNr0(i); return ist;
-  }
-
-  inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & si)
-  {
-    return ost << si.Nr0();
-  }
-
-
-  class SegmentIndex : public Index<int,SegmentIndex,0>
-  {
-    friend class Index<int,SegmentIndex,0>;
-    constexpr SegmentIndex (int ai) : Index(ai) { }   // use IndexBASE<SegmentIndex>()+nr, or FromNr0/FromNr1
-  public:
-    using Index::Index;
-    operator int () const = delete;    // a SegmentIndex stays a SegmentIndex
-    operator int & () = delete;
-    /// narrowing from AnyElementIndex is explicit - name the kind you mean
-    explicit constexpr SegmentIndex (AnyElementIndex bi);
-  };
-}
-
-namespace ngcore
-{
-  template<>
-  constexpr netgen::SegmentIndex IndexBASE<netgen::SegmentIndex> () { return netgen::SegmentIndex::Base(); }
-}
-
-namespace netgen
-{
 
   /**
      An element number whose kind (volume element, surface element or segment)
@@ -483,38 +417,13 @@ namespace netgen
   {
   public:
     using Index::Index;
-    constexpr AnyElementIndex (ElementIndex ei)        : Index(ei.Nr0()) { }
-    constexpr AnyElementIndex (SurfaceElementIndex si) : Index(si.Nr0()) { }
-    constexpr AnyElementIndex (SegmentIndex si)        : Index(si.Nr0()) { }
+    template <int D>
+    constexpr AnyElementIndex (ElIndex<D> ei) : Index(ei.Nr0()) { }
   };
 
-  constexpr ElementIndex::ElementIndex (AnyElementIndex bi)
-    : Index(bi.Nr0()) { }
-  constexpr SurfaceElementIndex::SurfaceElementIndex (AnyElementIndex bi)
-    : Index(bi.Nr0()) { }
-  constexpr SegmentIndex::SegmentIndex (AnyElementIndex bi)
-    : Index(bi.Nr0()) { }
-}
-
-namespace ngcore
-{
-  template<>
-  constexpr netgen::AnyElementIndex IndexBASE<netgen::AnyElementIndex> ()
-  { return netgen::AnyElementIndex::Base(); }
-}
-
-namespace netgen
-{
-
-  inline istream & operator>> (istream & ist, SegmentIndex & si)
-  {
-    int i; ist >> i; si = SegmentIndex::FromNr0(i); return ist;
-  }
-
-  inline ostream & operator<< (ostream & ost, const SegmentIndex & si)
-  {
-    return ost << si.Nr0();
-  } 
+  template <int D>
+  constexpr ElIndex<D>::ElIndex (AnyElementIndex bi)
+    : Index<int,ElIndex<D>,0>(bi.Nr0()) { }
 
 
   /**
@@ -586,24 +495,6 @@ namespace netgen
     operator int & () = delete;
   };
 
-}
-
-namespace ngcore
-{
-  template<>
-  constexpr netgen::Front3PointIndex IndexBASE<netgen::Front3PointIndex> () { return netgen::Front3PointIndex::Base(); }
-  template<>
-  constexpr netgen::Front2PointIndex IndexBASE<netgen::Front2PointIndex> () { return netgen::Front2PointIndex::Base(); }
-  template<>
-  constexpr netgen::LocalPointIndex IndexBASE<netgen::LocalPointIndex> () { return netgen::LocalPointIndex::Base(); }
-  template<>
-  constexpr netgen::RulePointIndex IndexBASE<netgen::RulePointIndex> () { return netgen::RulePointIndex::Base(); }
-  template<>
-  constexpr netgen::ElementVertexIndex IndexBASE<netgen::ElementVertexIndex> () { return netgen::ElementVertexIndex::Base(); }
-}
-
-namespace netgen
-{
   inline ostream & operator<< (ostream & ost, const Front2PointIndex & fpi)
   {
     return ost << (fpi - IndexBASE<Front2PointIndex>());
