@@ -1795,27 +1795,7 @@ namespace netgen
 
 
 
-  void MeshTopology :: GetElementEdges (int elnr, Array<int> & eledges) const
-  {
-    int ned = GetNEdges ((*mesh)[ElementIndex::FromNr1(elnr)].GetType());
-    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
-    eledges.SetSize (ned);
-    for (int i = 0; i < ned; i++)
-      // eledges[i] = edges.Get(elnr)[i]+1;
-      eledges[i] = edges[ei][i]+1;
-  }
 
-  void MeshTopology :: GetElementFaces (int elnr, Array<int> & elfaces) const
-  {
-    int nfa = GetNFaces ((*mesh)[ElementIndex::FromNr1(elnr)].GetType());
-    ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
-    
-    elfaces.SetSize (nfa);
-
-    for (auto i : Range(nfa))
-      // elfaces[i] = faces.Get(elnr)[i]+1;
-      elfaces[i] = faces[ei][i]+1;
-  }
 
   
   void MeshTopology :: GetElementFaces (int elnr, Array<int> & elfaces, bool withorientation) const
@@ -1977,23 +1957,7 @@ namespace netgen
   }
 
   
-  void MeshTopology :: GetSurfaceElementEdges (int elnr, Array<int> & eledges) const
-  {
-    int ned = GetNEdges ((*mesh)[SurfaceElementIndex::FromNr1(elnr)].GetType());
-    SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);    
-    eledges.SetSize (ned);
-    for (int i = 0; i < ned; i++)
-      // eledges[i] = surfedges.Get(elnr)[i]+1;
-      eledges[i] = surfedges[sei][i]+1;
-  }
 
-  void MeshTopology :: GetEdges (SurfaceElementIndex elnr, Array<int> & eledges) const
-  {
-    int ned = GetNEdges ( (*mesh)[elnr].GetType());
-    eledges.SetSize (ned);
-    for (int i = 0; i < ned; i++)
-      eledges[i] = surfedges[elnr][i];
-  }
 
   /*
   FlatArray<T_EDGE> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
@@ -2026,16 +1990,6 @@ namespace netgen
   */
 
 
-  void MeshTopology :: 
-  GetSurfaceElementEdgeOrientations (int elnr, Array<int> & eorient) const
-  {
-    int ned = GetNEdges ((*mesh)[SurfaceElementIndex::FromNr1(elnr)].GetType());
-    eorient.SetSize (ned);
-    for (int i = 0; i < ned; i++)
-      // eorient[i] = (surfedges.Get(elnr)[i] > 0) ? 1 : -1;
-      // eorient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
-      eorient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
-  }
 
   int MeshTopology :: GetSurfaceElementFaceOrientation (int elnr) const
   {
@@ -2274,22 +2228,7 @@ namespace netgen
   }
 
 
-  void MeshTopology :: GetEdgeVertices (int ednr, int & v1, int & v2) const
-  {
-    // cout << "id = " << id << "getedgevertices, ednr = " << ednr << ", ned = " << edge2vert.Size() << "&v1 = " << &v1 << endl;
-    if (ednr < 1 || ednr > edge2vert.Size())
-      cerr << "illegal edge nr: " << ednr << ", numedges = " << edge2vert.Size() 
-	   << " id = " << id 
-	   << endl;
-    v1 = edge2vert[ednr-1][0].Nr1();
-    v2 = edge2vert[ednr-1][1].Nr1();
-  }
 
-  void MeshTopology :: GetEdgeVertices (int ednr, PointIndex & v1, PointIndex & v2) const
-  {
-    v1 = edge2vert[ednr-1][0];
-    v2 = edge2vert[ednr-1][1];
-  }
 
 
   void MeshTopology :: GetFaceEdges (int fnr, Array<int> & fedges, bool withorientation) const
@@ -2407,18 +2346,7 @@ namespace netgen
   }
 
 
-  void MeshTopology :: GetVertexElements (int vnr, Array<ElementIndex> & elements) const
-  {
-    if (vert2element.Size())
-      elements = vert2element[PointIndex::FromNr1(vnr)];
-  }
 
-  void MeshTopology :: GetVertexSurfaceElements( int vnr, 
-						 Array<SurfaceElementIndex> & elements ) const
-  {
-    if (vert2surfelement.Size())
-      elements = vert2surfelement[PointIndex::FromNr1(vnr)];
-  }
 
 
   int MeshTopology :: GetVerticesEdge ( PointIndex v1, PointIndex v2 ) const

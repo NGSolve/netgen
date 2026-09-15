@@ -1092,6 +1092,17 @@ namespace netgen
     return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
   }
 
+  /// a surface element has one face, a segment one edge
+  FlatArray<T_FACE> MeshTopology :: GetFaces (SurfaceElementIndex elnr) const
+  {
+    return FlatArray<T_FACE>(1, &surffaces[elnr]);
+  }
+
+  FlatArray<T_EDGE> MeshTopology :: GetEdges (SegmentIndex segnr) const
+  {
+    return FlatArray<T_EDGE>(1, &segedges[segnr]);
+  }
+
   DLL_HEADER void AddFacesBetweenDomains(Mesh & mesh);
 }
 

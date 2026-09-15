@@ -127,11 +127,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   ret.vertices.num = 2;
   ret.vertices.ptr = (int*)&(el[0]);
 
-  /*
-  ret.edges.num = 1;
-  ret.edges.ptr = mesh->GetTopology().GetSegmentElementEdgesPtr (nr);
-  */
-  ret.edges.Assign ( FlatArray<T_EDGE2> (1, const_cast<T_EDGE2*>((const int*)  mesh->GetTopology().GetSegmentElementEdgesPtr (nr))));
+  auto hedges = mesh->GetTopology().GetEdges (SegmentIndex::FromNr0(nr));
+  ret.edges.Assign ( { hedges.Size(), (T_EDGE2*)hedges.Data() } );
 
   /*
   ret.faces.num = 0;
@@ -192,13 +189,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
   auto hedges = mesh->GetTopology().GetEdges (SurfaceElementIndex::FromNr0(nr));
   ret.edges.Assign ( { hedges.Size(), (int*)hedges.Data() } );
   
-  /*
-  ret.faces.num = MeshTopology::GetNFaces (el.GetType());
-  ret.faces.ptr = mesh->GetTopology().GetSurfaceElementFacesPtr (nr);
-  */
-
-  // ret.faces.Assign ( { 1, const_cast<int*>(mesh->GetTopology().GetSurfaceElementFacesPtr (nr)) });
-  ret.faces.Assign ( { 1, (int*)(mesh->GetTopology().GetSurfaceElementFacesPtr (nr)) });
+  auto hfaces = mesh->GetTopology().GetFaces (SurfaceElementIndex::FromNr0(nr));
+  ret.faces.Assign ( { hfaces.Size(), (int*)hfaces.Data() } );
   
   if (mesh->GetDimension() == 3)
     {
