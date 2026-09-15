@@ -2619,7 +2619,7 @@ namespace netgen
     surfcolour = Vec<4>(0.0,1.0,0.0,1.0);
     tlosurf = -1; 
     // bcname = 0;
-    firstelement = -1;
+    firstelement = SurfaceElementIndex::INVALID;
   }
 
   FaceDescriptor ::  FaceDescriptor(const FaceDescriptor& other)
@@ -2628,7 +2628,7 @@ namespace netgen
       surfcolour(other.surfcolour), bcname(other.bcname),
       domin_singular(other.domin_singular), domout_singular(other.domout_singular)
   { 
-    firstelement = -1;
+    firstelement = SurfaceElementIndex::INVALID;
   }
 
   FaceDescriptor :: 
@@ -2644,7 +2644,7 @@ namespace netgen
     bcprop = surfnri;
     domin_singular = domout_singular = 0.;
     // bcname = 0;
-    firstelement = -1;
+    firstelement = SurfaceElementIndex::INVALID;
   }
 
 

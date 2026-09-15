@@ -254,13 +254,13 @@ namespace netgen
 
 
   
-    DynamicTable<int,PointIndex> elonnode(np);
+    DynamicTable<SurfaceElementIndex,PointIndex> elonnode(np);
     Array<int,PointIndex> nelonnode(np);
     TABLE<SurfaceElementIndex> nbels(ne);
 
     nelonnode = -4;
 
-    for (SurfaceElementIndex sei = 0; sei < ne; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
 	const Element2d & el = mesh[sei];
 
@@ -276,7 +276,7 @@ namespace netgen
 	  }
       }
 
-    for (SurfaceElementIndex sei = 0; sei < ne; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
 	const Element2d & el = mesh[sei];
 	if (el.GetIndex() == faceindex && !el.IsDeleted())
@@ -285,7 +285,7 @@ namespace netgen
 	      {
 		for (int k = 0; k < elonnode[el[j]].Size(); k++)
 		  {
-		    int nbel = elonnode[el[j]] [k];
+		    SurfaceElementIndex nbel = elonnode[el[j]] [k];
 		    bool inuse = false;
 		    for (int l = 0; l < nbels[sei].Size(); l++)
 		      if (nbels[sei][l] == nbel)
@@ -308,7 +308,7 @@ namespace netgen
 	pgi.SetSize (rule.onp);
 
 
-	for (SurfaceElementIndex sei = 0; sei < ne; sei++)
+	for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
 	  {
 	    if (multithread.terminate)
 	      break;
@@ -343,9 +343,10 @@ namespace netgen
 		    const Element2d & rel = rule.oldels[i];
 		    bool possible = 0;
 
-		    for (elmap[i] = 0; elmap[i] < neighbours.Size(); elmap[i]++)
+		    int nbi;   // position in neighbours while searching
+		    for (nbi = 0; nbi < neighbours.Size(); nbi++)
 		      {
-			const Element2d & el = mesh[neighbours[elmap[i]]];
+			const Element2d & el = mesh[neighbours[nbi]];
 			if (el.IsDeleted()) continue;
 			if (el.GetNP() != rel.GetNP()) continue;
 
@@ -377,7 +378,7 @@ namespace netgen
 			break;
 		      }
 
-		    elmap[i] = neighbours[elmap[i]];
+		    elmap[i] = neighbours[nbi];
 		  }
 
 		for(int i=0; ok && i<rule.deledges.Size(); i++)

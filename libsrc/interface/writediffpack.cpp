@@ -84,7 +84,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 
       // setup point-to-surfaceelement table 
       DynamicTable<SurfaceElementIndex, PointIndex> point2sel(np);
-      for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+      for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
 	{
 	  const Element2d & el = mesh[sei];
 	  for (int j = 0; j < el.GetNP(); j++)

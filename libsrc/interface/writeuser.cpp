@@ -789,7 +789,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   outfile << nsurfelem << "\n";
   for (int i = 1; i <= nsurfelem; i++)
     {
-      SurfaceElementIndex sei(i-1);
+      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(i);
       Element2d el = mesh[sei];
       if (invertsurf)
 	el.Invert();

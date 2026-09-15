@@ -335,7 +335,7 @@ namespace netgen
       surfelements.Elem(eli).PNum(2).Invalidate();
       surfelements.Elem(eli).PNum(3).Invalidate();
       */
-      surfelements[eli-1].Delete();
+      surfelements[IndexBASE<SurfaceElementIndex>()+(eli-1)].Delete();
       /*
       surfelements[eli-1].PNum(1).Invalidate();
       surfelements[eli-1].PNum(2).Invalidate();
@@ -362,9 +362,9 @@ namespace netgen
     auto GetNSE () const { return surfelements.Size(); }
 
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
-    Element2d & SurfaceElement(int i) { return surfelements[i-1]; }
+    Element2d & SurfaceElement(int i) { return surfelements[IndexBASE<SurfaceElementIndex>()+(i-1)]; }
     // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
-    const Element2d & SurfaceElement(int i) const { return surfelements[i-1]; }
+    const Element2d & SurfaceElement(int i) const { return surfelements[IndexBASE<SurfaceElementIndex>()+(i-1)]; }
     // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
     // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
@@ -960,8 +960,8 @@ namespace netgen
       {
 	area = 0;
         /*
-	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
-	  Add (mesh[sei]);
+	for (auto & el : mesh.SurfaceElements())
+	  Add (el);
         */
         for (const Element2d & el : mesh.SurfaceElements())
           Add (el);

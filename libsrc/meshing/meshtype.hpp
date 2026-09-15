@@ -427,12 +427,12 @@ namespace netgen
   
   inline istream & operator>> (istream & ist, ElementIndex & ei)
   {
-    int i; ist >> i; ei = ElementIndex::Base()+i; return ist;
+    int i; ist >> i; ei = ElementIndex::FromNr0(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const ElementIndex & ei)
   {
-    return ost << int(ei-ElementIndex::Base());
+    return ost << ei.Nr0();
   }
 }
 
@@ -459,11 +459,25 @@ namespace netgen
 
   class SurfaceElementIndex : public Index<int,SurfaceElementIndex,0>
   {
+    friend class Index<int,SurfaceElementIndex,0>;
+    constexpr SurfaceElementIndex (int ai) : Index(ai) { }   // use IndexBASE<SurfaceElementIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index;
     /// narrowing from BaseElementIndex is explicit - name the kind you mean
     explicit constexpr SurfaceElementIndex (BaseElementIndex bi);
   };
+}
+
+namespace ngcore
+{
+  // the generic IndexBASE does T(0); give SurfaceElementIndex its own,
+  // so it keeps working once int -> SurfaceElementIndex gets blocked
+  template<>
+  constexpr netgen::SurfaceElementIndex IndexBASE<netgen::SurfaceElementIndex> () { return netgen::SurfaceElementIndex::Base(); }
+}
+
+namespace netgen
+{
 
   
   // these should not be needed soon
@@ -481,14 +495,14 @@ namespace netgen
   // inline void SetInvalid (SurfaceElementIndex & id) { id.Invalidate(); }
   // inline bool IsInvalid (SurfaceElementIndex & id) { return !id.IsValid(); }
 
-  inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
+  inline istream & operator>> (istream & ist, SurfaceElementIndex & si)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; si = SurfaceElementIndex::FromNr0(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & si)
   {
-    return ost << (si-IndexBASE(si));
+    return ost << si.Nr0();
   }
 
 

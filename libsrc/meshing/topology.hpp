@@ -159,13 +159,13 @@ public:
 
   // ELEMENT_TYPE GetFaceType (int fnr) const
   // { return (!face2vert[fnr-1][3].IsValid()) ? TRIG : QUAD; }    
-  ELEMENT_TYPE GetFaceType0 (SurfaceElementIndex fnr) const
+  ELEMENT_TYPE GetFaceType0 (int fnr) const   // a face number, not a surface element
   { return (!face2vert[fnr][3].IsValid()) ? TRIG : QUAD; }    
 
   [[deprecated("use GetEdges (SurfaceElementIndex) -> FlatArray")]]  
   void GetSurfaceElementEdges (int elnr, Array<int> & edges) const;
   [[deprecated("use GetFace(SurfaceElementIndex")]]                            
-  int GetSurfaceElementFace1 (int elnr) const { return surffaces[elnr-1]+1; }    
+  int GetSurfaceElementFace1 (int elnr) const { return surffaces[IndexBASE<SurfaceElementIndex>()+(elnr-1)]+1; }    
   [[deprecated("orientation is outdated")]]                          
   void GetSurfaceElementEdgeOrientations (int elnr, Array<int> & eorient) const;
   // [[deprecated("orientation is outdated")]]                            
@@ -185,11 +185,11 @@ public:
   int GetNSurfedges() const {return surfedges.Size();}
   [[deprecated("use GetEdges(ElementIndex) instead")]]
   const EdgeIndex * GetElementEdgesPtr (int elnr) const { return &edges[IndexBASE<ElementIndex>()+elnr][0]; }
-  const EdgeIndex * GetSurfaceElementEdgesPtr (int selnr) const { return &surfedges[selnr][0]; }
+  const EdgeIndex * GetSurfaceElementEdgesPtr (int selnr) const { return &surfedges[IndexBASE<SurfaceElementIndex>()+selnr][0]; }
   const EdgeIndex * GetSegmentElementEdgesPtr (int selnr) const { return &segedges[selnr]; }
 
   const FaceIndex * GetElementFacesPtr (int elnr) const { return &faces[IndexBASE<ElementIndex>()+elnr][0]; }
-  const FaceIndex * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[selnr]; }
+  const FaceIndex * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[IndexBASE<SurfaceElementIndex>()+selnr]; }
 
 
   void GetSurface2VolumeElement (int selnr, int & elnr1, int & elnr2) const

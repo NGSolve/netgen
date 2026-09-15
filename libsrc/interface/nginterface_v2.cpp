@@ -474,7 +474,7 @@ namespace netgen
     Point<3> xg;
     Mat<3,2> dx;
 
-    mesh->GetCurvedElements().CalcSurfaceTransformation (xl, elnr, xg, dx);
+    mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr0(elnr), xg, dx);
     
     if (x)
       for (int i = 0; i < 3; i++) x[i] = xg(i);
@@ -526,7 +526,7 @@ namespace netgen
     Point<3> xg;
     Mat<3,2> dx;
 
-    mesh->GetCurvedElements().CalcSurfaceTransformation (xl, elnr, xg, dx);
+    mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr0(elnr), xg, dx);
     
     if (x)
       for (int i = 0; i < 2; i++) x[i] = xg(i);
@@ -623,7 +623,7 @@ namespace netgen
                                    double * x, size_t sx,
                                    double * dxdxi, size_t sdxdxi) const
   {
-    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (SurfaceElementIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
   }
 
   template <> DLL_HEADER void Ngx_Mesh :: 
@@ -632,7 +632,7 @@ namespace netgen
                                    double * x, size_t sx,
                                    double * dxdxi, size_t sdxdxi) const
   {
-    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<3> (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<3> (SurfaceElementIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
   }
 
   template <> DLL_HEADER void Ngx_Mesh ::
@@ -796,7 +796,7 @@ namespace netgen
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2>
-      (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+      (SurfaceElementIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
     /*
     for (int i = 0; i < npts; i++)
       {
@@ -954,7 +954,7 @@ namespace netgen
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<3>
-      (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+      (SurfaceElementIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
     /*
     for (int i = 0; i < npts; i++)
       {
@@ -1275,7 +1275,7 @@ int Ngx_Mesh::GetSurfaceElement_Face (int selnr, int * orient) const
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
 	*orient = topology.GetSurfaceElementFaceOrientation (selnr+1);
-      return topology.GetFace (SurfaceElementIndex(selnr));
+      return topology.GetFace (SurfaceElementIndex::FromNr0(selnr));
     }
   return -1;
 }

@@ -1405,7 +1405,7 @@ void MeshOptimize3d :: SwapImproveSurface (
     for (int j = 0; j < mesh[ei].GetNP(); j++)
       elementsonnode.Add (mesh[ei][j], ei);
 
-  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     for(int j=0; j<mesh[sei].GetNP(); j++)
       {
 	surfaceelementsonnode.Add(mesh[sei][j], sei);
@@ -1600,8 +1600,8 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  //  (*testout) << "hasbothpoints["<<k<<"]: " << mesh[hasbothpoints[k]] << endl;
 
 	  
-	  SurfaceElementIndex sel1=-1,sel2=-1;
-	  SurfaceElementIndex sel1other=-1,sel2other=-1;
+	  SurfaceElementIndex sel1 = SurfaceElementIndex::INVALID, sel2 = SurfaceElementIndex::INVALID;
+	  SurfaceElementIndex sel1other = SurfaceElementIndex::INVALID, sel2other = SurfaceElementIndex::INVALID;
 	  for(int k = 0; k < surfaceelementsonnode[pi1].Size(); k++)
 	    {
 	      bool has1 = false, has2 = false;
@@ -2411,7 +2411,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
   auto elementsonnode = mesh.CreatePoint2ElementTable(nullopt, mp.only3D_domain_nr);
   // todo: respect mp.only3D_domain_nr
   
-  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     for (int j = 0; j < 3; j++)
       belementsonnode.Add (mesh[sei][j], sei);
 

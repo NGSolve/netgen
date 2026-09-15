@@ -642,7 +642,7 @@ namespace netgen
 	elements.Append(hpel); 
       }
 	    
-    for(SurfaceElementIndex i = 0; i < mesh.GetNSE(); i++)
+    for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
       {
 	HPRefElement hpel(mesh[i]);
 	hpel.coarse_elnr = i; 
@@ -1578,17 +1578,17 @@ namespace netgen
 	    if(setorders)
 	      mesh[i].SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
 	  }
-	for(SurfaceElementIndex i=0;i<mesh.GetNSE(); i++) 
+	for (auto & sel : mesh.SurfaceElements()) 
 	  { 
-	    // Element2d el = mesh[i] ;
-	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
-	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (mesh[i].GetType());
+	    // Element2d el = sel ;
+	    HPRefElement & hpel = hpelements[sel.GetHpElnr()];
+	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (sel.GetType());
 	    double dist[3] = {0,0,0}; 
 	    int ord_dir[3] = {0,0,0}; 
 	    int  edge_dir[4] = {0,0,0,0} ; 
 	    int ned = 3; 
 	   
-	    if(mesh[i].GetType() == QUAD)
+	    if(sel.GetType() == QUAD)
 	      {
 		/*	cout << " QUAD " ; 
 		for(int k=0;k<4;k++) cout << el[k] << "\t" ; 
@@ -1618,7 +1618,7 @@ namespace netgen
 	      refi[j] = int(max(double(floor(log(dist[ord_dir[j]]/sqrt(2.))/log(fac1))),0.)); 	
 	    
 	    if(setorders)
-	      mesh[i].SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
+	      sel.SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
 
 	      // cout << " ref " << refi[0] << "\t" << refi[1] << endl; 
 	      // cout << " order " << act_ref +1 - refi[0] << "\t" << act_ref +1 - refi[1] << endl; 
@@ -1640,9 +1640,8 @@ namespace netgen
 	Array<INDEX_3, PointIndex> surfonpoint(mesh.GetNP());
   	surfonpoint = INDEX_3(0,0,0);
 
-	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+	for (const Element2d & el : mesh.SurfaceElements())
 	  {
-	    const Element2d & el = mesh[sei];
 	    int ind = el.GetIndex();
 	    for (int j = 0; j < el.GetNP(); j++)
 	      {
@@ -1726,9 +1725,8 @@ namespace netgen
 	(*testout) << "edgepoint = " << endl << edgepoint << endl;
 
 	facepoint = 0;
-	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+	for (const Element2d & el : mesh.SurfaceElements())
 	  {
-	    const Element2d & el = mesh[sei];
 	    const FaceDescriptor & fd = mesh.GetFaceDescriptor (el.GetIndex());
 	  
 	    int domnr = 0;

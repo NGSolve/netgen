@@ -461,7 +461,7 @@ namespace netgen
                      });
 	ParallelFor (nse, [this](auto i)
                      {
-                       for (auto & e : surfedges[i])
+                       for (auto & e : surfedges[SurfaceElementIndex::FromNr0(i)])
                          e = -1;
                      });
 
@@ -981,7 +981,7 @@ namespace netgen
                     }
                 }
 
-            for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+            for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
               {
                 const Element2d & sel = (*mesh)[sei];
                 IVec<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
@@ -1223,7 +1223,7 @@ namespace netgen
 
 	face2surfel.SetSize (nfa);
 	face2surfel = SurfaceElementIndex::INVALID;
-	for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+	for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
 	  face2surfel[GetFace(sei)] = sei;
 
 	/*

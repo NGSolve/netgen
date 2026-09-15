@@ -123,12 +123,12 @@ namespace netgen
 	  point_ids[seg[1]] = (version >= 2) ? edgenr : 0;
       }
 
-    for(SurfaceElementIndex si = 0; si < mesh.GetNSE(); si++)
+    for (auto & el : mesh.SurfaceElements())
       {
-	if(mesh[si].IsDeleted())
+	if(el.IsDeleted())
 	  continue;
 
-	const Element2d & elem = mesh[si];
+	const Element2d & elem = el;
 
 	numfaces++;
 	PointIndices<3> i3(elem[0], elem[1], elem[2]);

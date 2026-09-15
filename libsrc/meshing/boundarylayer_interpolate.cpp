@@ -431,7 +431,7 @@ void BoundaryLayerTool ::FixSurfaceElements ()
 
   std::set<PointIndex> points_set;
   // only smooth over old surface elements
-  for (SurfaceElementIndex sei : Range(nse))
+  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     {
       const auto& sel = mesh[sei];
       if (sel.GetNP() == 3 && is_boundary_moved[sel.GetIndex()])

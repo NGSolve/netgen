@@ -747,7 +747,7 @@ namespace netgen
             throw NgException("meshing failed");
         }
         
-	for (SurfaceElementIndex sei = oldnf; sei < mesh->GetNSE(); sei++)
+	for (SurfaceElementIndex sei : mesh->SurfaceElements().Range().Modify(oldnf, 0))
 	  (*mesh)[sei].SetIndex (domnr);
 
 	// astrid

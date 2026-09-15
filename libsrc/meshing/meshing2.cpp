@@ -312,10 +312,10 @@ namespace netgen
 
 
     // test for 3d overlaps
-    BoxTree<3> surfeltree (boundingbox.PMin(),
+    BoxTree<3, SurfaceElementIndex> surfeltree (boundingbox.PMin(),
                            boundingbox.PMax());
 
-    Array<int> intersecttrias;
+    Array<SurfaceElementIndex> intersecttrias;
     Array<Point<3>> critpoints;
 
     // test for doubled edges
@@ -384,9 +384,8 @@ namespace netgen
     if (totalarea > 0 || maxarea > 0)
       meshedarea = mesh.SurfaceArea();
       /*
-      for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+      for (const Element2d & sel : mesh.SurfaceElements())
 	{
-	  const Element2d & sel = mesh[sei];
 	  if (sel.IsDeleted()) continue;
 	
 	  double trigarea = Cross ( mesh[sel[1]]-mesh[sel[0]],
@@ -1395,7 +1394,7 @@ namespace netgen
 		box.Set (mesh[mtri[0]]);
 		box.Add (mesh[mtri[1]]);
 		box.Add (mesh[mtri[2]]);
-		surfeltree.Insert (box, mesh.GetNSE()-1);
+		surfeltree.Insert (box, IndexBASE<SurfaceElementIndex>()+(mesh.GetNSE()-1));
 
 		const Point<3> & sep1 = mesh.Point (mtri.PNum(1));
 		const Point<3> & sep2 = mesh.Point (mtri.PNum(2));

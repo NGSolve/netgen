@@ -459,7 +459,7 @@ namespace netgen
               // 		  indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
 		
 		
-              // 		for(SurfaceElementIndex i=0; i<mesh.GetNSE(); i++)
+              // 		for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
               // 		  mesh[i].SetIndex(indextodescriptor[mesh[i].GetIndex()]);
             }
             break;
@@ -664,7 +664,7 @@ namespace netgen
 
 
     Array<SurfaceElementIndex> surfindices(tris.Size());
-    surfindices = -1;
+    surfindices = SurfaceElementIndex::INVALID;
 
     for(int i=0; i<tris.Size(); i++)
       {
@@ -744,7 +744,7 @@ namespace netgen
     // 	indextodescriptor[mesh.GetFaceDescriptor(i).SurfNr()] = i;
 		
 		
-    //       for(SurfaceElementIndex i=0; i<mesh.GetNSE(); i++)
+    //       for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
     // 	mesh[i].SetIndex(indextodescriptor[mesh[i].GetIndex()]);
 
 

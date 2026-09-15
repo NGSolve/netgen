@@ -886,7 +886,7 @@ void BoundaryLayerTool ::InsertNewElements (
   BitArray fixed_points(np + 1);
   fixed_points.Clear();
   auto p2el = mesh.CreatePoint2ElementTable();
-  for (SurfaceElementIndex si = 0; si < nse; si++)
+  for (SurfaceElementIndex si : T_Range<SurfaceElementIndex>(nse))
     {
       const auto sel = mesh[si];
       const auto iface = sel.GetIndex();

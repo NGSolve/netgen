@@ -13,7 +13,7 @@ namespace netgen
     SurfaceElementIndex tnr;
     int sidenr;
 
-    trionedge () { tnr = 0; sidenr = 0; }
+    trionedge () { tnr = SurfaceElementIndex::INVALID; sidenr = 0; }
     trionedge (SurfaceElementIndex atnr, int asidenr)
     { tnr = atnr; sidenr = asidenr; }
   };
@@ -275,7 +275,7 @@ namespace netgen
               AsAtomic(pdef[pi])++;
           for (int j = 0; j < 3; j++)
             {
-              neighbors[sei].SetNr (j, -1);
+              neighbors[sei].SetNr (j, SurfaceElementIndex::INVALID);
               neighbors[sei].SetOrientation (j, 0);
             }
 

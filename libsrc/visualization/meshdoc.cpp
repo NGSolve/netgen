@@ -162,7 +162,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 
       // copy to be thread-safe
       // Element2d el = mesh->SurfaceElement (i);
-      Element2d el = (*mesh)[SurfaceElementIndex(i-1)];
+      Element2d el = (*mesh)[SurfaceElementIndex::FromNr1(i)];
 
       int drawel = 1;
       for (int j = 1; j <= el.GetNP(); j++)
@@ -275,7 +275,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   
   for (int i = 1; i <= mesh->GetNSE(); i++)
     {
-      Element2d el = (*mesh)[SurfaceElementIndex(i-1)];
+      Element2d el = (*mesh)[SurfaceElementIndex::FromNr1(i)];
 
       int drawel = 1;
       for (int j = 1; j <= el.GetNP(); j++)
@@ -501,7 +501,7 @@ void VisualSceneMeshDoctor :: ClickElement (int elnr)
   
   if (selelement > 0 && selelement <= mesh->GetNSE())
     {
-      SurfaceElementIndex sei(elnr-1);
+      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(elnr);
       selpoint = (*mesh)[sei].PNum(locpi);
       selpoint2 = (*mesh)[sei].PNum(oldlocpi);
       cout << "selpts = " << selpoint << ", " << selpoint2 << endl;

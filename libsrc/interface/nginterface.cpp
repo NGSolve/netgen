@@ -755,7 +755,7 @@ void Ng_GetElementTransformation (int ei, const double * xi,
       Point<3> xg;
       Mat<3,2> dx;
 
-      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, ei-1, xg, dx);
+      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr1(ei), xg, dx);
 
       if (x)
 	{
@@ -807,7 +807,7 @@ void Ng_GetMultiElementTransformation (int ei, int n,
                                        double * dxdxi, size_t sdxdxi)
 {
   if (mesh->GetDimension() == 2)
-    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (ei-1, n, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (SurfaceElementIndex::FromNr1(ei), n, xi, sxi, x, sx, dxdxi, sdxdxi);
   else
     mesh->GetCurvedElements().CalcMultiPointElementTransformation (ElementIndex::FromNr1(ei), n, xi, sxi, x, sx, dxdxi, sdxdxi);
 }
@@ -839,7 +839,7 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
       Point<3> xg;
       Mat<3,2> dx;
       
-      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, sei-1, xg, dx);
+      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr1(sei), xg, dx);
       
       for (int i=0; i<3; i++)
 	{
@@ -1579,7 +1579,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 {
   if (mesh->GetDimension() == 3)
     {
-      SurfaceElementIndex sei = selnr-1;
+      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(selnr);
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
 	*orient = topology.GetSurfaceElementFaceOrientation (selnr);
@@ -2336,7 +2336,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
         int cnt = 0;
         if (nodeset & 1)  // Vertices
           {
-            const Element2d & el = (*mesh)[SurfaceElementIndex(elementnr)];
+            const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr0(elementnr)];
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
@@ -2358,7 +2358,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
 
         if (nodeset & 4)  // Faces
           {
-            int face = mesh->GetTopology().GetFace (SurfaceElementIndex(elementnr))+1;
+            int face = mesh->GetTopology().GetFace (SurfaceElementIndex::FromNr0(elementnr))+1;
             nodes[cnt++] = 2;
             nodes[cnt++] = face-1;
           }

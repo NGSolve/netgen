@@ -524,7 +524,7 @@ namespace netgen
 
 	if (multithread.terminate) return;
         
-	for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
+	for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
 	  mesh[sei].SetIndex (k);
 
         auto n_illegal_trigs = mesh.FindIllegalTrigs();
@@ -663,7 +663,7 @@ namespace netgen
 	  
 	    if (multithread.terminate) return;
 
-	    for (SurfaceElementIndex  sei = oldnf; sei < mesh.GetNSE(); sei++)
+	    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
 	      mesh[sei].SetIndex (k);
 
 

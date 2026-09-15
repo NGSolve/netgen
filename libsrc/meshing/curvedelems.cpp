@@ -716,7 +716,7 @@ namespace netgen
     if (working)
       {
 	if (mesh.GetDimension() == 3)
-	  for (SurfaceElementIndex i = 0; i < mesh.GetNSE(); i++)
+	  for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
 	    {
 	      // top.GetEdges (i, edgenrs);
               auto edgenrs = top.GetEdges (i);
@@ -856,7 +856,7 @@ namespace netgen
 	surfnr = -1;
 
 	if (working)
-	  for (SurfaceElementIndex i = 0; i < mesh.GetNSE(); i++)
+	  for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
 	    {
 	      // top.GetEdges (i, edgenrs);
               auto edgenrs = top.GetEdges(i);
@@ -1280,7 +1280,7 @@ namespace netgen
     surfnr = -1;
 
     if (working)
-      for (SurfaceElementIndex i = 0; i < mesh.GetNSE(); i++)
+      for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
 	surfnr[top.GetFace(i)] = 
 	  mesh.GetFaceDescriptor(mesh[i].GetIndex()).SurfNr();
 
@@ -1450,7 +1450,7 @@ namespace netgen
                            procs, only one of them has the surf-el
                         **/
                         SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
-                        if (sei != SurfaceElementIndex(-1)) {
+                        if (sei.IsValid()) {
                           PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
                           // use improved initial guess
                           gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
@@ -1499,7 +1499,7 @@ namespace netgen
                         **/
                         SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
 
-                        if (sei != SurfaceElementIndex(-1)) {
+                        if (sei.IsValid()) {
                           PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
                           // use improved initial guess TODO JOACHIM
                           gi.u = 0;

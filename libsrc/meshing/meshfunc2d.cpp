@@ -16,8 +16,8 @@ namespace netgen
 
     if (secondorder)
       {
-      for (SurfaceElementIndex ei = 0; ei < mesh.GetNSE(); ei++)
-        mesh[ei].SetType(TRIG);
+      for (auto & el : mesh.SurfaceElements())
+        el.SetType(TRIG);
       }
     mesh.Compress();
 
@@ -27,7 +27,7 @@ namespace netgen
       bool mixed = false;
       ParallelFor( Range(mesh.GetNSE()), [&] (auto i) NETGEN_LAMBDA_INLINE
           {
-            if (mesh[SurfaceElementIndex(i)].GetNP() != 3)
+            if (mesh[SurfaceElementIndex::FromNr0(i)].GetNP() != 3)
                 mixed = true;
           });
       if(mixed)

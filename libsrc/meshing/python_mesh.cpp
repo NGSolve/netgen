@@ -299,13 +299,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
 
   py::class_<SurfaceElementIndex>(m, "ElementId2D")
-    .def(py::init<int>())
+    .def(py::init([](int i) { return SurfaceElementIndex::FromNr0(i); }))
     .def("__repr__", &ToString<SurfaceElementIndex>)
     .def("__str__", &ToString<SurfaceElementIndex>)
-    .def_property_readonly("nr", &SurfaceElementIndex::operator int)
+    .def_property_readonly("nr", [](SurfaceElementIndex &self) { return self.Nr0(); })
     .def("__eq__" , FunctionPointer( [](SurfaceElementIndex &self, SurfaceElementIndex &other)
-                  { return static_cast<int>(self)==static_cast<int>(other); }) )
-    .def("__hash__" , FunctionPointer( [](SurfaceElementIndex &self ) { return static_cast<int>(self); }) )
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](SurfaceElementIndex &self ) { return self.Nr0(); }) )
     ;
 
   py::class_<SegmentIndex>(m, "ElementId1D")
@@ -1188,7 +1188,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       switch (*dim)
         {
         case 2:
-          return (*self.hpelements)[self[SurfaceElementIndex(elnr)].GetHpElnr()].coarse_elnr.Nr0();
+          return (*self.hpelements)[self[SurfaceElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
         case 3:
           return (*self.hpelements)[self[ElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
         }
@@ -1686,7 +1686,7 @@ py::arg("point_tolerance") = -1.)
 
             if (dim == 2)  // mapping of 2D elements
               {
-                for (SurfaceElementIndex i = 0; i < self.GetNSE(); i++)
+                for (SurfaceElementIndex i : self.SurfaceElements().Range())
                   for (size_t j = 0; j < npts; j++)
                     {
                       Point<2> xref;
@@ -1869,7 +1869,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & surfels = self.SurfaceElements();
                 for(auto i : myrange)
                 {
-                    const auto & sel = surfels[i];
+                    const auto & sel = surfels[SurfaceElementIndex::FromNr0(i)];
                     auto * trig = &trigs[3*i];
                     for(auto k : Range(3))
                         trig[k] = sel[k].Nr0();

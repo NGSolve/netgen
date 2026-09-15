@@ -265,12 +265,12 @@ namespace netgen
 
     Array<int> num_sels_on_proc(ntasks);
     num_sels_on_proc = 0;
-    for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
+    for (SurfaceElementIndex ei : SurfaceElements().Range())
       num_sels_on_proc[surf_partition[ei]]++;
 
     Table<SurfaceElementIndex> sels_of_proc (num_sels_on_proc);
     num_sels_on_proc = 0;
-    for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
+    for (SurfaceElementIndex ei : SurfaceElements().Range())
       {
         auto nr = surf_partition[ei];
         sels_of_proc[nr][num_sels_on_proc[nr]++] = ei;
@@ -655,12 +655,12 @@ namespace netgen
     // build sel-identification
     size_t nse = GetNSE();
     Array<SurfaceElementIndex> ided_sel(nse);
-    ided_sel = -1;
+    ided_sel = SurfaceElementIndex::INVALID;
     [[maybe_unused]] bool has_ided_sels = false;
     if(GetNE() && has_periodic) //we can only have identified surf-els if we have vol-els (right?)
       {
 	Array<SurfaceElementIndex> os1, os2;
-	for(SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+	for (SurfaceElementIndex sei : SurfaceElements().Range())
 	  {
 	    if(ided_sel[sei]!=-1) continue;
 	    const Element2d & sel = (*this)[sei];
@@ -696,7 +696,7 @@ namespace netgen
       }
     // build sel data to send
     auto iterate_sels = [&](auto f) {
-      for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++ )
+      for (SurfaceElementIndex sei : SurfaceElements().Range())
 	{
 	  const Element2d & sel = (*this)[sei];
 	  // int dest = (*this)[sei].GetPartition();
@@ -1344,7 +1344,7 @@ namespace netgen
     /*
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
       *testout << "el(" << ei << ") is in part " << (*this)[ei].GetPartition() << endl;
-    for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
+    for (SurfaceElementIndex ei : SurfaceElements().Range())
       *testout << "sel(" << int(ei) << ") is in part " << (*this)[ei].GetPartition() << endl;
       */
     
@@ -1436,9 +1436,9 @@ namespace netgen
     boundarypoints = false;
 
     if(GetDimension() == 3)
-      for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+      for (auto & sel : SurfaceElements())
 	{
-	  const Element2d & el = (*this)[sei];
+	  const Element2d & el = sel;
 	  for (int j = 0; j < el.GetNP(); j++)
 	    boundarypoints[el[j]] = true;
 	}
@@ -1456,7 +1456,7 @@ namespace netgen
     cnt = 0;
 
     auto loop_els_2d = [&](auto f) {
-      for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+      for (SurfaceElementIndex sei : SurfaceElements().Range())
 	{
 	  const Element2d & el = (*this)[sei];
 	  for (int j = 0; j < el.GetNP(); j++) {
@@ -1496,7 +1496,7 @@ namespace netgen
 
     if (GetDimension() == 3)
       {
-	for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+	for (SurfaceElementIndex sei : SurfaceElements().Range())
 	  {
 	    Element2d & sel = (*this)[sei];
 	    PointIndex pi1 = sel[0];
@@ -1583,7 +1583,7 @@ namespace netgen
 	    FlatArray<int> sels = pnt2el[pi1];
 	    for (int j = 0; j < sels.Size(); j++)
 	      {
-		SurfaceElementIndex sei = sels[j];
+		SurfaceElementIndex sei = SurfaceElementIndex::FromNr0(sels[j]);
 		Element2d & se = (*this)[sei];
 		bool found = false;
 		for (int l = 0; l < se.GetNP(); l++ && !found)
@@ -1637,7 +1637,7 @@ namespace netgen
     /*
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
       *testout << "el(" << ei << ") is in part " << (*this)[ei].GetPartition() << endl;
-    for (SurfaceElementIndex ei = 0; ei < GetNSE(); ei++)
+    for (SurfaceElementIndex ei : SurfaceElements().Range())
       *testout << "sel(" << int(ei) << ") is in part " << (*this)[ei].GetPartition() << endl;
       */
     
@@ -2153,12 +2153,12 @@ namespace netgen
     // first, build the vertex 2 element table:
     Array<int, PointIndex> cnt(nv);
     cnt = 0;
-    for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
-      for (int j = 0; j < (*this)[sei].GetNP(); j++)
-	cnt[ (*this)[sei][j] ] ++;
+    for (auto & el : SurfaceElements())
+      for (int j = 0; j < el.GetNP(); j++)
+	cnt[ el[j] ] ++;
     
     DynamicTable<SurfaceElementIndex, PointIndex> vert2els(nv);
-    for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
+    for (SurfaceElementIndex sei : SurfaceElements().Range())
       for (int j = 0; j < (*this)[sei].GetNP(); j++)
 	vert2els.Add ((*this)[sei][j], sei);
     
@@ -2167,7 +2167,7 @@ namespace netgen
     int cntnb = 0;
     Array<int> marks(ne);   // to visit each neighbour just once
     marks = -1;
-    for (SurfaceElementIndex sei = 0; sei < ne; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
 	xadj[sei] = cntnb;
 	for (int j = 0; j < (*this)[sei].GetNP(); j++)
@@ -2226,7 +2226,7 @@ namespace netgen
 
 
     surf_partition.SetSize(ne);
-    for (SurfaceElementIndex sei = 0; sei < ne; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       // (*this) [sei].SetPartition (part[sei]+1);
       surf_partition[sei] = part[sei]+1;
 #else

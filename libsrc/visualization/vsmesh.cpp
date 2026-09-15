@@ -693,9 +693,9 @@ namespace netgen
 	      }
 	  }
 
-        for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
+        for (auto & sel : mesh->SurfaceElements())
 	  {
-            Element2d el = (*mesh)[sei]; // copy to be thread-safe
+            Element2d el = sel; // copy to be thread-safe
             if (!el.BadElement())
 	      continue;
 
@@ -1392,7 +1392,7 @@ namespace netgen
     int hoplotn = 1 << subdivisions;
 
     // PrintMessage (3, "nse = ", mesh->GetNSE());
-    for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
+    for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
       {
 	const Element2d & el = (*mesh)[sei];
 

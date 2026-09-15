@@ -240,22 +240,22 @@ namespace netgen
           }
 
         int cntverts = 0;
-        for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
-          cntverts += 1 + (*mesh)[sei].GetNP();
+        for (auto & el : mesh->SurfaceElements())
+          cntverts += 1 + el.GetNP();
 
         surf_ost << "\nCELLS " << mesh->GetNSE() << " " << cntverts << "\n";
-        for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
+        for (auto & sel : mesh->SurfaceElements())
           {
-            const Element2d & el = (*mesh)[sei];
+            const Element2d & el = sel;
             surf_ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
               surf_ost << " " << el[j] - IndexBASE<PointIndex>();
             surf_ost << "\n";
           }
         surf_ost << "\nCELL_TYPES " << mesh->GetNSE() << "\n";
-        for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
+        for (auto & sel : mesh->SurfaceElements())
           {
-            const Element2d & el = (*mesh)[sei];
+            const Element2d & el = sel;
             switch (el.GetType())
               {
               case QUAD: surf_ost << 9; break;
@@ -970,7 +970,7 @@ namespace netgen
           {
             glBegin (GL_LINES);
           
-            for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+            for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
               {
                 const Element2d & el = (*mesh)[sei];
 
@@ -1338,7 +1338,7 @@ namespace netgen
     // NgProfiler::StopTimer(timerstart);
     auto sol_active = GetScalOrVecFunction();
     
-    for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
         const Element2d & el = (*mesh)[sei];
 
@@ -1508,7 +1508,7 @@ namespace netgen
     glob_ind.SetSize(ind_reftrig.Size());    
 
     
-    for(SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
         const Element2d & el = (*mesh)[sei];
 	// if (el.GetIndex() <= 1) continue;
@@ -1819,7 +1819,7 @@ namespace netgen
 
     auto sol_active = GetScalOrVecFunction();
 
-    for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
         Element2d & el = (*mesh)[sei];
 
@@ -2156,7 +2156,7 @@ namespace netgen
 
   void  VisualSceneSolution :: DrawTrigSurfaceVectors(const Array< Point<3> > & lp, 
                                                       const Point<3> & pmin, const Point<3> & pmax,
-                                                      const int sei, const SolData * vsol, bool swap_lam)
+                                                      SurfaceElementIndex sei, const SolData * vsol, bool swap_lam)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -2303,7 +2303,7 @@ namespace netgen
     if (vsol->draw_surface && showsurfacesolution)
       {
         int nse = mesh->GetNSE();
-        for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+        for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
           {
             const Element2d & el = (*mesh)[sei];
             if(!SurfaceElementActive(vsol, *mesh, el))
@@ -4928,10 +4928,10 @@ namespace netgen
     double lami[3] = {0.0, 0.0, 0.0};
     // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
     bool found_2del = false;
-    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement-1, false && fabs(lami[2])<1e-3))
+    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, SurfaceElementIndex::FromNr1(selelement), false && fabs(lami[2])<1e-3))
       {
         // Found it, use coordinates of point projected to surface element
-        mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);
+        mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, SurfaceElementIndex::FromNr1(selelement), p);
         found_2del = true;
       }
     cout << endl << "Selected point " << p << " on surface" << endl;
@@ -4952,17 +4952,17 @@ namespace netgen
         if(sol.iscomplex && rcomponent != 0)
           {
             rcomponent = 2 * ((rcomponent-1)/2) + 1;
-            GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
+            GetSurfValue(&sol, SurfaceElementIndex::FromNr1(selelement), -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
             comp = (scalcomp-1)/2 + 1;
           }
-        GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
+        GetSurfValue(&sol, SurfaceElementIndex::FromNr1(selelement), -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
         printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
       }
     if(have_vec_func)
       {
         auto & sol = *soldata[vecfunction];
         ArrayMem<double, 10> values(sol.components);
-        GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
+        GetSurfValues(&sol, SurfaceElementIndex::FromNr1(selelement), -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
         printVecValue(sol, values);
       }
   }

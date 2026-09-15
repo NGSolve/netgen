@@ -1632,9 +1632,8 @@ namespace netgen
 
 
     
-    for(SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (const Element2d & el2d : mesh.SurfaceElements())
       {
-	const Element2d & el2d = mesh[sei];
 	
 	for(i = 0; i < el2d.GetNP(); i++)
 	  {
@@ -2151,7 +2150,7 @@ namespace netgen
 	
 	// for (int i = 1; i <= nse; i++)
         /*
-        for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+        for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
 	  {
 	    const Element2d & el = mesh[sei];
         */
@@ -2636,9 +2635,8 @@ namespace netgen
       }
     
     /*
-    for(SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (const Element2d & el : mesh.SurfaceElements())
        {
-	 const Element2d & el = mesh[sei];
     */
 
     for (const Element2d & el : mesh.SurfaceElements())
@@ -2871,7 +2869,7 @@ namespace netgen
 	      if (mesh[ei].TestStrongRefinementFlag())
 		mesh[ei].SetOrder (ox+2,oy+2,oz+2);
 	    }
-	for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+	for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
 	  if (mesh[sei].TestRefinementFlag())
 	    {
 	      mesh[sei].GetOrder(ox,oy);
@@ -2892,7 +2890,7 @@ namespace netgen
               if (mesh[ei].GetOrder() > v_order[mesh[ei][j]])
                 v_order[mesh[ei][j]] = mesh[ei].GetOrder();
 
-	  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+	  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
             for (int j = 0; j < mesh[sei].GetNP(); j++)
               if (mesh[sei].GetOrder() > v_order[mesh[sei][j]])
                 v_order[mesh[sei][j]] = mesh[sei].GetOrder();
@@ -2903,7 +2901,7 @@ namespace netgen
               if (mesh[ei].GetOrder() < v_order[mesh[ei][j]]-1)
                 mesh[ei].SetOrder(v_order[mesh[ei][j]]-1);
 
-	  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+	  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
             for (int j = 0; j < mesh[sei].GetNP(); j++)
               if (mesh[sei].GetOrder() < v_order[mesh[sei][j]]-1)
                 mesh[sei].SetOrder(v_order[mesh[sei][j]]-1);
@@ -3146,14 +3144,14 @@ namespace netgen
 	    int cnttrig = 0;
 	    int cntquad = 0;
 	    // for (int i = 1; i <= mesh.GetNSE(); i++)
-            for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+            for (auto & el : mesh.SurfaceElements())
 	      {
-		if (mesh[sei].GetType() == TRIG ||
-		    mesh[sei].GetType() == TRIG6)
+		if (el.GetType() == TRIG ||
+		    el.GetType() == TRIG6)
 		  {
 		    cnttrig++;
 		    mtris[cnttrig-1].marked =
-		      mesh[sei].TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
+		      el.TestRefinementFlag() ? (opt.onlyonce ? 1 : 2) : 0;
 		    // mtris.Elem(cnttrig).marked = 0;
 		    if (mtris[cnttrig-1].marked)
 		      cntm++;
@@ -3163,7 +3161,7 @@ namespace netgen
 		    cntquad++;
                     // 2d: marked=2, 3d prisms: marked=1
 		    mquads[cntquad-1].marked =
-                        mesh[sei].TestRefinementFlag() ? 4-mesh.GetDimension() : 0 ;
+                        el.TestRefinementFlag() ? 4-mesh.GetDimension() : 0 ;
 		    // mquads.Elem(cntquad).marked = 0;
 		    if (mquads[cntquad-1].marked)
 		      cntm++;
@@ -3531,7 +3529,7 @@ namespace netgen
 		
 		  mtris[i] = newtri1;
 		  mtris.Append (newtri2);
-		  mesh.mlparentsurfaceelement.Append (i);
+		  mesh.mlparentsurfaceelement.Append (SurfaceElementIndex::FromNr0(i));
 		}
 
             timer_bisecttrig.Stop();
@@ -3870,7 +3868,7 @@ namespace netgen
                 el.GeomInfoPi(j+1) = trig.pgeominfo[j];
               }
             el.NewestVertex() = trig.newest_vertex;
-            mesh.SetSurfaceElement (SurfaceElementIndex(i), el);
+            mesh.SetSurfaceElement (SurfaceElementIndex::FromNr0(i), el);
           }
        });
     mesh.RebuildSurfaceElementLists();

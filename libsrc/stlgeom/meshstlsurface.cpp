@@ -474,7 +474,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 	  // was commented:
 
-	  for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+	  for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
 	    if (mesh[sei].BadElement())
 	      {
 		for (int j = 1; j <= 3; j++)
@@ -486,7 +486,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      }
 	  	  
 	  // delete wrong oriented element
-	  for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+	  for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
 	    {
 	      const Element2d & el = mesh[sei];
               if (el.IsDeleted()) continue;

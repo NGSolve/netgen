@@ -56,9 +56,8 @@ namespace netgen
             parents.Append(i2);
           }
       }
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (const Element2d & el : mesh.SurfaceElements())
       {
-	const Element2d & el = mesh[sei];
 	switch (el.GetType())
 	  {
 	  case TRIG:
@@ -218,7 +217,7 @@ namespace netgen
 
 
     int oldnf = mesh.GetNSE();
-    for (SurfaceElementIndex sei = 0; sei < oldnf; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(oldnf))
       {
 	const Element2d & el = mesh[sei];
 

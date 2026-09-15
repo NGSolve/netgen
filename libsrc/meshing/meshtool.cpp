@@ -128,11 +128,11 @@ namespace netgen
 
     incl = 0;
 
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (auto & el : mesh.SurfaceElements())
       {
-	double qual = TriangleQualityInst (mesh[mesh[sei][0]],
-					   mesh[mesh[sei][1]],
-					   mesh[mesh[sei][2]]);
+	double qual = TriangleQualityInst (mesh[el[0]],
+					   mesh[el[1]],
+					   mesh[el[2]]);
 
 	int cl = int ( (ncl-1e-3) * qual ) + 1;
 	incl[cl-1]++;
