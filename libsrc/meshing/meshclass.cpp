@@ -1073,7 +1073,7 @@ namespace netgen
         outfile << "singular_face_inside" << endl << cnt_sing << endl;
         for (SurfaceElementIndex sei : SurfaceElements().Range())
           if ( GetFaceDescriptor ((*this)[sei].GetIndex()).domin_singular) 
-            outfile << int(sei)  << "\t" << 
+            outfile << sei  << "\t" << 
               GetFaceDescriptor ((*this)[sei].GetIndex()).domin_singular  << endl;
       }
 
@@ -1085,7 +1085,7 @@ namespace netgen
         outfile << "singular_face_outside" << endl << cnt_sing << endl;
         for (SurfaceElementIndex sei : SurfaceElements().Range())
           if ( GetFaceDescriptor ((*this)[sei].GetIndex()).domout_singular) 
-            outfile << int(sei) << "\t" 
+            outfile << sei << "\t" 
                     << GetFaceDescriptor ((*this)[sei].GetIndex()).domout_singular << endl;
       }
 
@@ -2675,7 +2675,7 @@ namespace netgen
     */
 
     if (dimension == 3)
-      surfelementht = make_unique<ClosedHashTable<SortedPointIndices<3>, int>> (3*GetNSE() + 1);
+      surfelementht = make_unique<ClosedHashTable<SortedPointIndices<3>, SurfaceElementIndex>> (3*GetNSE() + 1);
     segmentht = make_unique<ClosedHashTable<SortedPointIndices<2>, int>> (3*GetNSeg() + 1);
 
     tn2se.Start();
@@ -4776,7 +4776,7 @@ namespace netgen
                       if(!incons_layers)
                         {
                           PrintWarning ("Intersecting elements "
-                                        ,int(sei), " and ", int(sej));
+                                        ,sei.Nr0(), " and ", sej.Nr0());
                       
                           (*testout) << "Intersecting: " << endl;
                           (*testout) << "openelement " << sei << " with open element " << sej << endl;
@@ -4850,7 +4850,7 @@ namespace netgen
   int Mesh :: FindIllegalTrigs ()
   {
     // Temporary table to store the vertex numbers of all triangles
-    ClosedHashTable<SortedPointIndices<3>, int> temp_tab(3*GetNSE() + 1);
+    ClosedHashTable<SortedPointIndices<3>, SurfaceElementIndex> temp_tab(3*GetNSE() + 1);
     size_t cnt = 0;
     for (SurfaceElementIndex sei : SurfaceElements().Range())
       {
@@ -4860,7 +4860,7 @@ namespace netgen
         SortedPointIndices<3> i3(sel[0], sel[1], sel[2]);
         if(temp_tab.Used(i3))
           {
-            temp_tab.Set (i3, -1);
+            temp_tab.Set (i3, SurfaceElementIndex::INVALID);
             cnt++;
           }
         else
@@ -4875,7 +4875,7 @@ namespace netgen
         if (sel.IsDeleted()) continue;
 
         SortedPointIndices<3> i3(sel[0], sel[1], sel[2]);
-        if(temp_tab.Get(i3)==-1)
+        if(!temp_tab.Get(i3).IsValid())
             illegal_trigs -> Set (i3, 1);
       }
     return cnt;
@@ -6848,7 +6848,7 @@ namespace netgen
           }
       }
 
-    BitArray sel_done(surfelements.Size());
+    TBitArray<SurfaceElementIndex> sel_done(surfelements.Size());
     sel_done = false;
 
     // Split surface elements
@@ -7665,15 +7665,14 @@ namespace netgen
 
     for (auto sei : Range(SurfaceElements()))
       {
-        int eli0, eli1;
-        GetTopology().GetSurface2VolumeElement(sei+1, eli0, eli1);
-        // auto [ei0,ei1] = GetTopology().GetSurface2VolumeElement(sei); // the way to go
-        if(eli0 == 0)
+        ElementIndex eli0, eli1;
+        GetTopology().GetSurface2VolumeElement(sei, eli0, eli1);
+        if(!eli0.IsValid())
           continue;
         auto & sel = (*this)[sei];
         int face = sel.GetIndex();
-        int domin = VolumeElement(eli0).GetIndex();
-        int domout = eli1 ? VolumeElement(eli1).GetIndex() : 0;
+        int domin = (*this)[eli0].GetIndex();
+        int domout = eli1.IsValid() ? (*this)[eli1].GetIndex() : 0;
         if(domin < domout)
           swap(domin, domout);
 
@@ -8152,7 +8151,7 @@ namespace netgen
 
     ost << "surfelementht: ";
     if (surfelementht)
-      print_ht (*surfelementht, sizeof(SortedPointIndices<3>) + sizeof(int));
+      print_ht (*surfelementht, sizeof(SortedPointIndices<3>) + sizeof(SurfaceElementIndex));
   }
 
   shared_ptr<Mesh> Mesh :: Mirror ( netgen::Point<3> p_plane, Vec<3> n_plane )

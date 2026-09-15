@@ -1065,7 +1065,7 @@ namespace netgen
             lami[1] = lam3[0];
           }
       }
-    return elnr;
+    return elnr.Nr0();
   }
 
 

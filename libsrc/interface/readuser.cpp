@@ -241,7 +241,7 @@ namespace netgen
 			  for (int j = 0; j < nnodes; j++)
 			    el[j] = PointIndex::FromNr1(nodes[j]);
 			  auto nr = mesh.AddSurfaceElement (el);
-                          element_map[label] = std::make_tuple(nr+1, 1);
+                          element_map[label] = std::make_tuple(nr.Nr1(), 1);
 			  break;
 			}
                       case 42: // TRIG6
@@ -252,7 +252,7 @@ namespace netgen
                           for(auto j : {0,2,4,3,5,1})
                               el[jj++] = PointIndex::FromNr1(nodes[j]);
                           auto nr = mesh.AddSurfaceElement(el);
-                          element_map[label] = std::make_tuple(nr+1, 1);
+                          element_map[label] = std::make_tuple(nr.Nr1(), 1);
                           break;
                         }
 		      case 111: // TET

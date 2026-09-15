@@ -326,7 +326,7 @@ struct GrowthVectorLimiter
 
       // ignore new surface elements, side trigs are only built
       // from original surface elements
-      if (sei >= tool.nse)
+      if (sei.Nr0() >= tool.nse)
         return false;
       const auto sel = Get(sei);
       auto np = sel.GetNP();
@@ -356,7 +356,7 @@ struct GrowthVectorLimiter
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
       {
         auto sel = mesh[sei];
-        if (sei >= tool.nse)
+        if (sei.Nr0() >= tool.nse)
           continue;
         if (!tool.moved_surfaces[sel.GetIndex()])
           continue;
@@ -637,7 +637,7 @@ struct GrowthVectorLimiter
     double seg_shift = safety;
     FindTreeIntersections(
       trig_shift, seg_shift, [&] (PointIndex pi_to, SurfaceElementIndex sei) {
-        if (sei >= tool.nse)
+        if (sei.Nr0() >= tool.nse)
           return; // ignore new surface elements in first pass
         LimitGrowthVector(pi_to, sei, trig_shift, seg_shift);
       });

@@ -1118,15 +1118,15 @@ void BoundaryLayerTool ::SetDomInOutSides ()
         continue;
 
       // First check if there are adjacent volume elements, if so, use their domains
-      int e1 = 0, e2 = 0;
-      mesh.GetTopology().GetSurface2VolumeElement(sei + 1, e1, e2);
+      ElementIndex e1, e2;
+      mesh.GetTopology().GetSurface2VolumeElement(sei, e1, e2);
 
       int dom[2] = {-1, -1};
 
-      if (e1)
-        dom[0] = mesh.VolumeElement(e1).GetIndex();
-      if (e2)
-        dom[1] = mesh.VolumeElement(e2).GetIndex();
+      if (e1.IsValid())
+        dom[0] = mesh[e1].GetIndex();
+      if (e2.IsValid())
+        dom[1] = mesh[e2].GetIndex();
 
       const auto& fd_old = mesh.GetFaceDescriptor(inv_si_map[index]);
       int dom_old[2] = {fd_old.DomainIn(), fd_old.DomainOut()};

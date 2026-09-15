@@ -192,10 +192,10 @@ public:
   const FaceIndex * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[IndexBASE<SurfaceElementIndex>()+selnr]; }
 
 
-  void GetSurface2VolumeElement (int selnr, int & elnr1, int & elnr2) const
+  void GetSurface2VolumeElement (SurfaceElementIndex selnr, ElementIndex & elnr1, ElementIndex & elnr2) const
   { 
-    elnr1 = surf2volelement[SurfaceElementIndex::Base() + selnr-1][0]+1  - ElementIndex::Base(); 
-    elnr2 = surf2volelement[SurfaceElementIndex::Base() + selnr-1][1]+1  - ElementIndex::Base();
+    elnr1 = surf2volelement[selnr][0];
+    elnr2 = surf2volelement[selnr][1];
   }
 
   std::array<ElementIndex,2> GetSurface2VolumeElement (SurfaceElementIndex sei) 

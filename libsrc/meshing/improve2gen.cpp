@@ -256,7 +256,7 @@ namespace netgen
   
     DynamicTable<SurfaceElementIndex,PointIndex> elonnode(np);
     Array<int,PointIndex> nelonnode(np);
-    TABLE<SurfaceElementIndex> nbels(ne);
+    DynamicTable<SurfaceElementIndex, SurfaceElementIndex> nbels(ne);
 
     nelonnode = -4;
 

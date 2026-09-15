@@ -1219,9 +1219,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)
                                                 {
-                                                  int elnr1, elnr2;
-                                                  self.GetTopology().GetSurface2VolumeElement(sel+1, elnr1, elnr2);
-                                                  return py::make_tuple(elnr1, elnr2);
+                                                  ElementIndex elnr1, elnr2;
+                                                  self.GetTopology().GetSurface2VolumeElement(SurfaceElementIndex::FromNr0(sel), elnr1, elnr2);
+                                                  return py::make_tuple(elnr1.Nr1(), elnr2.Nr1());
                                                 }, "Returns element nrs of volume element connected to surface element, -1 if no volume element")
 
     .def("GetNCD2Names", &Mesh::GetNCD2Names)
@@ -1695,7 +1695,7 @@ py::arg("point_tolerance") = -1.)
                         xref(k) = ref_ptr[j*stride_refpts+k];
                       curved.CalcSurfaceTransformation(xref, i, xphys);
                       for (size_t k = 0; k < dim_phys; k++)
-                        phys_ptr[i*stride_physels+j*stride_physpts+k] = xphys(k);
+                        phys_ptr[i.Nr0()*stride_physels+j*stride_physpts+k] = xphys(k);
                     }
               }
             

@@ -93,7 +93,7 @@ namespace netgen
     ///
     unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> segmentht;
     ///
-    unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> surfelementht;
+    unique_ptr<ClosedHashTable<SortedPointIndices<3>, SurfaceElementIndex>> surfelementht;
     unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> illegal_trigs;
 
     /// faces of rest-solid
@@ -1063,7 +1063,7 @@ namespace netgen
 #endif
 
     Array<int, ElementIndex> vol_partition;
-    Array<int> surf_partition;
+    Array<int, SurfaceElementIndex> surf_partition;
     Array<int> seg_partition;
 
     shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );

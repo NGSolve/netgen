@@ -80,7 +80,7 @@ namespace ngcore
     SelPackage (const netgen::Mesh & mesh, netgen::SurfaceElementIndex _sei)
     {
       const netgen::Element2d & el = mesh[_sei];
-      sei = _sei;
+      sei = _sei.Nr0();
       index = el.GetIndex();
       np = el.GetNP();
       for (int k : Range(1, np+1)) {
@@ -654,7 +654,7 @@ namespace netgen
     PrintMessage ( 3, "Sending Surface elements" );
     // build sel-identification
     size_t nse = GetNSE();
-    Array<SurfaceElementIndex> ided_sel(nse);
+    Array<SurfaceElementIndex, SurfaceElementIndex> ided_sel(nse);
     ided_sel = SurfaceElementIndex::INVALID;
     [[maybe_unused]] bool has_ided_sels = false;
     if(GetNE() && has_periodic) //we can only have identified surf-els if we have vol-els (right?)
@@ -662,7 +662,7 @@ namespace netgen
 	Array<SurfaceElementIndex> os1, os2;
 	for (SurfaceElementIndex sei : SurfaceElements().Range())
 	  {
-	    if(ided_sel[sei]!=-1) continue;
+	    if(ided_sel[sei].IsValid()) continue;
 	    const Element2d & sel = (*this)[sei];
 	    auto points = sel.PNums();
 	    auto ided1 = per_verts[points[0]];
@@ -702,7 +702,7 @@ namespace netgen
 	  // int dest = (*this)[sei].GetPartition();
           int dest = surf_partition[sei];
 	  f(sei, sel, dest);
-	  if(ided_sel[sei]!=-1)
+	  if(ided_sel[sei].IsValid())
 	    {
 	      // int dest2 = (*this)[ided_sel[sei]].GetPartition();
               int dest2 = surf_partition[ided_sel[sei]];
@@ -1399,7 +1399,7 @@ namespace netgen
         for (int i = 0; i < GetNE(); i++)
           vol_partition[ElementIndex::FromNr0(i)]= 1;
         for (int i = 0; i < GetNSE(); i++)
-          surf_partition[i] = 1;
+          surf_partition[SurfaceElementIndex::FromNr0(i)] = 1;
         for (int i = 0; i < GetNSeg(); i++)
           seg_partition[i] = 1;
       }
@@ -1425,7 +1425,7 @@ namespace netgen
         for (int i = 0; i < GetNE(); i++)
           vol_partition[ElementIndex::FromNr0(i)]= epart[i] + 1;
         for (int i = 0; i < GetNSE(); i++)
-          surf_partition[i] = epart[i+GetNE()] + 1;
+          surf_partition[SurfaceElementIndex::FromNr0(i)] = epart[i+GetNE()] + 1;
         for (int i = 0; i < GetNSeg(); i++)
           seg_partition[i] = epart[i+GetNE()+GetNSE()] + 1;
       }
@@ -1725,7 +1725,7 @@ namespace netgen
           vol_partition[ElementIndex::FromNr0(i)] = 1;
         for (int i = 0; i < GetNSE(); i++)
           // SurfaceElement(i+1).SetPartition(1);
-          surf_partition[i] = 1;
+          surf_partition[SurfaceElementIndex::FromNr0(i)] = 1;
         for (int i = 0; i < GetNSeg(); i++)
           // LineSegment(i+1).SetPartition(1);
           seg_partition[i] = 1;
@@ -1753,7 +1753,7 @@ namespace netgen
       vol_partition[ElementIndex::FromNr0(i)] = epart[i] + 1;
     for (int i = 0; i < GetNSE(); i++)
       // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
-      surf_partition[i] = epart[i+GetNE()] + 1;
+      surf_partition[SurfaceElementIndex::FromNr0(i)] = epart[i+GetNE()] + 1;
     for (int i = 0; i < GetNSeg(); i++)
       // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
       seg_partition[i] = epart[i+GetNE()+GetNSE()] + 1;
@@ -1899,16 +1899,16 @@ namespace netgen
 
     for (int sei = 1; sei <= GetNSE(); sei++ )
       {
-	int ei1, ei2;
-	GetTopology().GetSurface2VolumeElement (sei, ei1, ei2);
+	ElementIndex ei1, ei2;
+	GetTopology().GetSurface2VolumeElement (SurfaceElementIndex::FromNr1(sei), ei1, ei2);
 	Element2d & sel = SurfaceElement (sei);
 
         for (int j = 0; j < 2; j++)
           {
-            int ei = (j == 0) ? ei1 : ei2;
-            if ( ei > 0 && ei <= GetNE() )
+            ElementIndex ei = (j == 0) ? ei1 : ei2;
+            if ( ei.IsValid() && ei.Nr0() < GetNE() )
               {
-		sel.SetPartition (VolumeElement(ei).GetPartition());
+		sel.SetPartition ((*this)[ei].GetPartition());
 		break;
 	      }
 	  }	
@@ -2165,11 +2165,11 @@ namespace netgen
 
     // find all neighbour elements
     int cntnb = 0;
-    Array<int> marks(ne);   // to visit each neighbour just once
-    marks = -1;
+    Array<SurfaceElementIndex, SurfaceElementIndex> marks(ne);   // to visit each neighbour just once
+    marks = SurfaceElementIndex::INVALID;
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
-	xadj[sei] = cntnb;
+	xadj[sei.Nr0()] = cntnb;
 	for (int j = 0; j < (*this)[sei].GetNP(); j++)
 	  {
 	    PointIndex vnr = (*this)[sei][j];
@@ -2191,7 +2191,7 @@ namespace netgen
 		if (common >= 2)
 		  {
 		    marks[sei2] = sei;     // mark as visited
-		    adjacency[cntnb++] = sei2;
+		    adjacency[cntnb++] = sei2.Nr0();
 		  }
 	      }
 	  }
@@ -2228,7 +2228,7 @@ namespace netgen
     surf_partition.SetSize(ne);
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       // (*this) [sei].SetPartition (part[sei]+1);
-      surf_partition[sei] = part[sei]+1;
+      surf_partition[sei] = part[sei.Nr0()]+1;
 #else
     cout << "partdualmesh not available" << endl;
 #endif

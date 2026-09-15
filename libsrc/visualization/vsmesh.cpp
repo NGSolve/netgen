@@ -503,7 +503,7 @@ namespace netgen
                                (*mesh)[sel[2]],
                                (*mesh)[sel[3]]);
                   glRasterPos3d (c[0], c[1], c[2]);
-                  snprintf (buf, size(buf),  "%d", int(sei));
+                  snprintf (buf, size(buf),  "%d", sei.Nr0());
                   MyOpenGLText (buf);
                 }
             }
@@ -1285,8 +1285,8 @@ namespace netgen
         if (build_select)
           {
             GLushort r,g,b;
-            r = (sei+1) % (1<<16);
-            g = (sei+1) >> 16;
+            r = sei.Nr1() % (1<<16);
+            g = sei.Nr1() >> 16;
             b = 0;
             glColor3us(r,g,b);
           }

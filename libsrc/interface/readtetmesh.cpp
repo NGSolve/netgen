@@ -702,7 +702,7 @@ namespace netgen
             SurfaceElementIndex surf = surfindices[tetfacedata[i+2*j]];
 	      
             //if(mesh.GetNSE() <= surf)
-            if(surf == -1)
+            if(!surf.IsValid())
               continue;
 
             if(tetfacedata[i+2*j+1] == 1)

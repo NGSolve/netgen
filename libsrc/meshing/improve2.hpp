@@ -118,7 +118,7 @@ public:
   DLL_HEADER void ProjectBoundaryPoints(Array<int> & surfaceindex, 
 			     const Array<Point<3>* > & from, Array<Point<3>* > & dest);
 
-  DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
+  DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour, SurfaceElementIndex> &neighbors, Array<bool, SurfaceElementIndex> &swapped,
                                 const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
   DLL_HEADER void EdgeSwapping (int usemetric);
   DLL_HEADER void CombineImprove ();

@@ -24,7 +24,7 @@ namespace netgen
         auto ei = mesh.GetSurfaceElementOfPoint(p, lami, true);
         if(!ei.IsValid())
           return -1;
-        return ei;
+        return ei.Nr0();
       }
   }
 

@@ -41,8 +41,8 @@ namespace netgen
   }
 
   bool MeshOptimize2d :: EdgeSwapping (const int usemetric,
-    Array<Neighbour> &neighbors,
-    Array<bool> &swapped,
+    Array<Neighbour, SurfaceElementIndex> &neighbors,
+    Array<bool, SurfaceElementIndex> &swapped,
     const SurfaceElementIndex t1, const int o1,
     const int t,
     Array<int,PointIndex> &pdef,
@@ -54,7 +54,7 @@ namespace netgen
     SurfaceElementIndex t2 = neighbors[t1].GetNr (o1);
     int o2 = neighbors[t1].GetOrientation (o1);
 
-    if (t2 == -1) return false;
+    if (!t2.IsValid()) return false;
     if (swapped[t1] || swapped[t2]) return false;
     if (mesh[t2].IsDeleted()) return false;
     if (mesh[t2].GetNP() != 3) return false;
@@ -211,10 +211,10 @@ namespace netgen
         return GenericImprove();
     }
 
-    Array<Neighbour> neighbors(mesh.GetNSE());
+    Array<Neighbour, SurfaceElementIndex> neighbors(mesh.GetNSE());
     auto elements_on_node = mesh.CreateCompressedPoint2SurfaceElementTable(faceindex);
 
-    Array<bool> swapped(mesh.GetNSE());
+    Array<bool, SurfaceElementIndex> swapped(mesh.GetNSE());
     Array<int,PointIndex> pdef(mesh.GetNP());
     Array<double,PointIndex> pangle(mesh.GetNP());
 

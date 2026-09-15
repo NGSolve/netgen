@@ -680,21 +680,21 @@ namespace netgen
 
       for (auto sei : Range(mesh.SurfaceElements()))
       {
-        int ei0, ei1;
-        topo.GetSurface2VolumeElement (sei+1, ei0, ei1);
+        ElementIndex ei0, ei1;
+        topo.GetSurface2VolumeElement (sei, ei0, ei1);
         auto si = mesh.SurfaceElement(sei).GetIndex();
         auto & fd = mesh.GetFaceDescriptor(si);
 
-        if(ei0>0)
+        if(ei0.IsValid())
         {
-          int i0 = mesh.VolumeElement(ei0).GetIndex();
+          int i0 = mesh[ei0].GetIndex();
           if(fd.DomainIn()!=i0)
             fd.SetDomainOut(i0);
         }
 
-        if(ei1>0)
+        if(ei1.IsValid())
         {
-          int i1 = mesh.VolumeElement(ei1).GetIndex();
+          int i1 = mesh[ei1].GetIndex();
           if(fd.DomainIn()!=i1)
             fd.SetDomainOut(i1);
         }

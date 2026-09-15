@@ -664,7 +664,7 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
       double lam3[3];
       Point<3> p2d(p[0], p[1], 0);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0) + 1;
+	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0).Nr1();
 
       if (ind > 0)
 	{
@@ -703,7 +703,7 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
     {
       Point<3> p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
+	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
     }
   else
     {

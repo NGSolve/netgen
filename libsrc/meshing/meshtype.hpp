@@ -463,6 +463,8 @@ namespace netgen
     constexpr SurfaceElementIndex (int ai) : Index(ai) { }   // use IndexBASE<SurfaceElementIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index;
+    operator int () const = delete;    // a SurfaceElementIndex stays a SurfaceElementIndex
+    operator int & () = delete;
     /// narrowing from BaseElementIndex is explicit - name the kind you mean
     explicit constexpr SurfaceElementIndex (BaseElementIndex bi);
   };
