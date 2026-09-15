@@ -156,13 +156,13 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   
   glDisable (GL_COLOR_MATERIAL);
     
-  for (int i = 1; i <= mesh->GetNSE(); i++)
+  for (SurfaceElementIndex i : mesh->SurfaceElements().Range())
     {
-      glLoadName (i);
+      glLoadName (i.Nr1());
 
       // copy to be thread-safe
       // Element2d el = mesh->SurfaceElement (i);
-      Element2d el = (*mesh)[SurfaceElementIndex(i-1)];
+      Element2d el = (*mesh)[i];
 
       int drawel = 1;
       for (int j = 1; j <= el.GetNP(); j++)
@@ -177,7 +177,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       GLfloat matcol[] = { 0, 1, 0, 1 };
       GLfloat matcolsel[] = { 1, 0, 0, 1 };
 
-      if (i == selelement)
+      if (i.Nr1() == selelement)
 	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, matcolsel);
       else
 	glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, matcol);
@@ -273,9 +273,9 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   glColor3f (0.0f, 0.0f, 0.0f);
   glEnable (GL_COLOR_MATERIAL);
   
-  for (int i = 1; i <= mesh->GetNSE(); i++)
+  for (auto & sel : mesh->SurfaceElements())
     {
-      Element2d el = (*mesh)[SurfaceElementIndex(i-1)];
+      Element2d el = sel;
 
       int drawel = 1;
       for (int j = 1; j <= el.GetNP(); j++)
@@ -370,9 +370,8 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 
   glLineWidth (2.0f);
 
-  for (int i = 1; i <= mesh->GetNSeg(); i++)
+  for (auto & seg : mesh->LineSegments())
     {
-      const Segment & seg = mesh->LineSegment(i);
       const Point<3> & p1 = mesh->Point(seg[0]);
       const Point<3> & p2 = mesh->Point(seg[1]);
 
@@ -501,7 +500,7 @@ void VisualSceneMeshDoctor :: ClickElement (int elnr)
   
   if (selelement > 0 && selelement <= mesh->GetNSE())
     {
-      SurfaceElementIndex sei(elnr-1);
+      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(elnr);
       selpoint = (*mesh)[sei].PNum(locpi);
       selpoint2 = (*mesh)[sei].PNum(oldlocpi);
       cout << "selpts = " << selpoint << ", " << selpoint2 << endl;
@@ -516,13 +515,12 @@ void VisualSceneMeshDoctor :: UpdateTables ()
   if (!mesh) return;
 
   edgedist.SetSize(mesh->GetNP());
-  int i, changed;
+  int changed;
 
   edgedist = 10000;
 
-  for (i = 1; i <= mesh->GetNSeg(); i++)
+  for (auto & seg : mesh->LineSegments())
     {
-      const Segment & seg = mesh->LineSegment(i);
       if ( (seg[0] == selpoint && seg[1] == selpoint2) ||
            (seg[1] == selpoint && seg[0] == selpoint2) )
 	{
@@ -535,9 +533,8 @@ void VisualSceneMeshDoctor :: UpdateTables ()
     {
       changed = 0;
 
-      for (i = 1; i <= mesh->GetNSeg(); i++)
+      for (auto & seg : mesh->LineSegments())
 	{
-	  const Segment & seg = mesh->LineSegment(i);
 	  
 	  int edist = min2 (edgedist[seg[0]], edgedist[seg[1]]);
 	  edist++;
@@ -559,7 +556,7 @@ void VisualSceneMeshDoctor :: UpdateTables ()
 
 int VisualSceneMeshDoctor :: IsSegmentMarked (int segnr) const
 {
-  const Segment & seg = mesh->LineSegment(segnr);
+  const Segment & seg = (*mesh)[SegmentIndex::FromNr1(segnr)];
   return (edgedist[seg[0]] <= markedgedist &&
 	  edgedist[seg[1]] <= markedgedist);
 }

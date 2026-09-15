@@ -24,12 +24,12 @@ namespace netgen
 	  mesh.Point(pi) = Center (mesh.Point(mesh.mlbetweennodes[pi][0]),
 				   mesh.Point(mesh.mlbetweennodes[pi][1]));
       }
-    for (ElementIndex i = 0; i < mesh.GetNE(); i++)
+    for (auto & el : mesh.VolumeElements())
       {
-	double bad = mesh[i].CalcJacobianBadness (mesh.Points());
-	for(int j=0; j<mesh[i].GetNP(); j++)
-	  if(bad > pure_badness[mesh[i][j]])
-	    pure_badness[mesh[i][j]] = bad;
+	double bad = el.CalcJacobianBadness (mesh.Points());
+	for(int j=0; j<el.GetNP(); j++)
+	  if(bad > pure_badness[el[j]])
+	    pure_badness[el[j]] = bad;
 
 	// save maximum
 	if(bad > pure_badness.Last())
@@ -44,7 +44,7 @@ namespace netgen
   double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
 		  const Array<double, PointIndex> & pure_badness,
 		  double max_worsening, const bool uselocalworsening,
-		  Array<double> * quality_loss)
+		  Array<double, ElementIndex> * quality_loss)
   {
     PrintMessage(3,"!!!! Validating !!!!");
     //if(max_worsening > 0)
@@ -64,7 +64,7 @@ namespace netgen
     if(quality_loss != NULL)
       quality_loss->SetSize(mesh.GetNE());
 
-    for (ElementIndex i = 0; i < mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	if(uselocalworsening)
 	  {
@@ -98,7 +98,7 @@ namespace netgen
   }
 
 
-  void GetWorkingArea(BitArray & working_elements, TBitArray<PointIndex> & working_points,
+  void GetWorkingArea(TBitArray<ElementIndex> & working_elements, TBitArray<PointIndex> & working_points,
 		      const Mesh & mesh, const Array<ElementIndex> & bad_elements,
 		      const int width)
   {
@@ -116,7 +116,7 @@ namespace netgen
 
     for(int i=0; i<width; i++)
       {
-	for(ElementIndex j=0; j<mesh.GetNE(); j++)
+	for (ElementIndex j : mesh.VolumeElements().Range())
 	  {
 	    if(!working_elements.Test(j))
 	      {  
@@ -131,7 +131,7 @@ namespace netgen
 	      }
 	  }
 
-	for(ElementIndex j=0; j<mesh.GetNE(); j++)
+	for (ElementIndex j : mesh.VolumeElements().Range())
 	  {
 	    if(working_elements.Test(j))
 	      {
@@ -179,9 +179,8 @@ namespace netgen
     isboundarypoint.Clear();
     isedgepoint.Clear();
 
-    for(int i = 1; i <= mesh.GetNSeg(); i++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 	isedgepoint.SetBit(seg[0]);
 	isedgepoint.SetBit(seg[1]);
       }

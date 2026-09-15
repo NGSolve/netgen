@@ -321,7 +321,7 @@ private:
   Vec<3> GetDeformation (ElementIndex elnr, const Point<3> & p) const;
   Vec<3> GetSurfDeformation (SurfaceElementIndex selnr, int facetnr, double lam1, double lam2) const;
 
-  void GetPointDeformation (PointIndex pnum, Point<3> & p, SurfaceElementIndex elnr = -1) const;
+  void GetPointDeformation (PointIndex pnum, Point<3> & p, SurfaceElementIndex elnr = SurfaceElementIndex::INVALID) const;
 
 public:
   /// draw elements (build lists)
@@ -331,7 +331,7 @@ public:
 
   void DrawSurfaceVectors ();
   void DrawTrigSurfaceVectors(const Array< Point<3> > & lp, const Point<3> & pmin, const Point<3> & pmax,
-			      const int sei, const SolData * vsol, bool swap_lam=false);
+			      SurfaceElementIndex sei, const SolData * vsol, bool swap_lam=false);
   void DrawIsoSurface(const SolData * sol, const SolData * grad, int comp);
   
   void DrawIsoLines (const Point<3> & p1, 

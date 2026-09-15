@@ -84,14 +84,14 @@ void BuildEdgeList( const Mesh & mesh, const T_PI2SEI & elementsonnode, Array<st
 
 class Neighbour
 {
-  int nr[3];
+  SurfaceElementIndex nr[3];
   int orient[3];
 
 public:
   Neighbour () { ; }
 
-  void SetNr (int side, int anr) { nr[side] = anr; }
-  int GetNr (int side) { return nr[side]; }
+  void SetNr (int side, SurfaceElementIndex anr) { nr[side] = anr; }
+  SurfaceElementIndex GetNr (int side) { return nr[side]; }
 
   void SetOrientation (int side, int aorient) { orient[side] = aorient; }
   int GetOrientation (int side) { return orient[side]; }
@@ -118,7 +118,7 @@ public:
   DLL_HEADER void ProjectBoundaryPoints(Array<int> & surfaceindex, 
 			     const Array<Point<3>* > & from, Array<Point<3>* > & dest);
 
-  DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour> &neighbors, Array<bool> &swapped,
+  DLL_HEADER bool EdgeSwapping (const int usemetric, Array<Neighbour, SurfaceElementIndex> &neighbors, Array<bool, SurfaceElementIndex> &swapped,
                                 const SurfaceElementIndex t1, const int edge, const int t, Array<int,PointIndex> &pdef, const bool check_only=false);
   DLL_HEADER void EdgeSwapping (int usemetric);
   DLL_HEADER void CombineImprove ();

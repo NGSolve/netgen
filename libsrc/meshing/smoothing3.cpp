@@ -1509,9 +1509,9 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
   TBitArray<PointIndex> badnodes(np);
   badnodes.Clear();
 
-  for (int i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = VolumeElement(i);
+      const Element & el = (*this)[i];
       double bad = el.CalcJacobianBadness (Points());
       if (bad > 1)
 	for (int j = 1; j <= el.GetNP(); j++)
@@ -1529,9 +1529,8 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
   else
     {
       pointh = 0;
-      for (int i=0; i<GetNE(); i++)
+      for (const Element & el : VolumeElements())
 	{
-	  const Element & el = VolumeElement(i+1);
 	  double h = pow(el.Volume(points),1./3.);
 	  for(int j=1; j<=el.GetNV(); j++)
 	    if(h > pointh[el.PNum(j)])
@@ -1666,9 +1665,9 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   TBitArray<PointIndex> badnodes(np);
   badnodes.Clear();
 
-  for (int i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = VolumeElement(i);
+      const Element & el = (*this)[i];
       double bad = el.CalcJacobianBadness (Points());
       if (bad > 1)
 	for (int j = 1; j <= el.GetNP(); j++)
@@ -1686,9 +1685,8 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   else
     {
       pointh = 0;
-      for(int i=0; i<GetNE(); i++)
+      for (const Element & el : VolumeElements())
 	{
-	  const Element & el = VolumeElement(i+1);
 	  double h = pow(el.Volume(points),1./3.);
 	  for(int j=1; j<=el.GetNV(); j++)
 	    if(h > pointh[el.PNum(j)])

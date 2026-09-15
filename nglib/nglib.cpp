@@ -270,7 +270,7 @@ namespace nglib
    NGLIB_API Ng_Surface_Element_Type 
       Ng_GetSurfaceElement (Ng_Mesh * mesh, int num, int * pi)
    {
-     const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex(num-1));
+     const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex::FromNr1(num));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i).Nr1();
       Ng_Surface_Element_Type et;
@@ -301,7 +301,7 @@ namespace nglib
    NGLIB_API Ng_Volume_Element_Type
       Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi)
    {
-     const Element & el = ((Mesh*)mesh)->VolumeElement(ElementIndex(num-1));
+     const Element & el = ((Mesh*)mesh)->VolumeElement(ElementIndex::FromNr1(num));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i).Nr1();
       Ng_Volume_Element_Type et;
@@ -439,7 +439,7 @@ namespace nglib
    NGLIB_API Ng_Surface_Element_Type
       Ng_GetElement_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum)
    {
-     const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex(num-1));
+     const Element2d & el = ((Mesh*)mesh)->SurfaceElement(SurfaceElementIndex::FromNr1(num));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i).Nr1();
 
@@ -473,7 +473,7 @@ namespace nglib
 
    NGLIB_API void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum)
    {
-      const Segment & seg = ((Mesh*)mesh)->LineSegment(num);
+      const Segment & seg = (*(Mesh*)mesh)[SegmentIndex::FromNr1(num)];
       pi[0] = seg[0].Nr1();
       pi[1] = seg[1].Nr1();
 

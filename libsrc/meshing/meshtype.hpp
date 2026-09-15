@@ -411,21 +411,41 @@ namespace std
 namespace netgen
 {
 
+  class BaseElementIndex;
+
   class ElementIndex : public Index<int,ElementIndex,0>
   {
+    friend class Index<int,ElementIndex,0>;
+    constexpr ElementIndex (int ai) : Index(ai) { }   // use IndexBASE<ElementIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index; // <int,ElementIndex,0>::Index;
+    operator int () const = delete;    // an ElementIndex stays an ElementIndex
+    operator int & () = delete;
+    /// narrowing from BaseElementIndex is explicit - name the kind you mean
+    explicit constexpr ElementIndex (BaseElementIndex bi);
   };
   
   inline istream & operator>> (istream & ist, ElementIndex & ei)
   {
-    int i; ist >> i; ei = ElementIndex::Base()+i; return ist;
+    int i; ist >> i; ei = ElementIndex::FromNr0(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const ElementIndex & ei)
   {
-    return ost << int(ei-ElementIndex::Base());
+    return ost << ei.Nr0();
   }
+}
+
+namespace ngcore
+{
+  // the generic IndexBASE does T(0); give ElementIndex its own, as PointIndex has,
+  // so it keeps working once int -> ElementIndex gets blocked
+  template<>
+  constexpr netgen::ElementIndex IndexBASE<netgen::ElementIndex> () { return netgen::ElementIndex::Base(); }
+}
+
+namespace netgen
+{
 
 
   /*
@@ -439,9 +459,27 @@ namespace netgen
 
   class SurfaceElementIndex : public Index<int,SurfaceElementIndex,0>
   {
+    friend class Index<int,SurfaceElementIndex,0>;
+    constexpr SurfaceElementIndex (int ai) : Index(ai) { }   // use IndexBASE<SurfaceElementIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index;
+    operator int () const = delete;    // a SurfaceElementIndex stays a SurfaceElementIndex
+    operator int & () = delete;
+    /// narrowing from BaseElementIndex is explicit - name the kind you mean
+    explicit constexpr SurfaceElementIndex (BaseElementIndex bi);
   };
+}
+
+namespace ngcore
+{
+  // the generic IndexBASE does T(0); give SurfaceElementIndex its own,
+  // so it keeps working once int -> SurfaceElementIndex gets blocked
+  template<>
+  constexpr netgen::SurfaceElementIndex IndexBASE<netgen::SurfaceElementIndex> () { return netgen::SurfaceElementIndex::Base(); }
+}
+
+namespace netgen
+{
 
   
   // these should not be needed soon
@@ -459,22 +497,73 @@ namespace netgen
   // inline void SetInvalid (SurfaceElementIndex & id) { id.Invalidate(); }
   // inline bool IsInvalid (SurfaceElementIndex & id) { return !id.IsValid(); }
 
-  inline istream & operator>> (istream & ist, SurfaceElementIndex & pi)
+  inline istream & operator>> (istream & ist, SurfaceElementIndex & si)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; si = SurfaceElementIndex::FromNr0(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const SurfaceElementIndex & si)
   {
-    return ost << (si-IndexBASE(si));
+    return ost << si.Nr0();
   }
 
 
   class SegmentIndex : public Index<int,SegmentIndex,0>
   {
+    friend class Index<int,SegmentIndex,0>;
+    constexpr SegmentIndex (int ai) : Index(ai) { }   // use IndexBASE<SegmentIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index;
+    operator int () const = delete;    // a SegmentIndex stays a SegmentIndex
+    operator int & () = delete;
+    /// narrowing from BaseElementIndex is explicit - name the kind you mean
+    explicit constexpr SegmentIndex (BaseElementIndex bi);
   };
+}
+
+namespace ngcore
+{
+  // the generic IndexBASE does T(0); give SegmentIndex its own,
+  // so it keeps working once int -> SegmentIndex gets blocked
+  template<>
+  constexpr netgen::SegmentIndex IndexBASE<netgen::SegmentIndex> () { return netgen::SegmentIndex::Base(); }
+}
+
+namespace netgen
+{
+
+
+  /**
+     An element number whose kind (volume element, surface element or segment)
+     is fixed by the context, not by the value - e.g. HPRefElement::coarse_elnr.
+     Widening from a concrete index is implicit, narrowing back is explicit.
+  */
+  class BaseElementIndex : public Index<int,BaseElementIndex,0>
+  {
+  public:
+    using Index::Index;
+    constexpr BaseElementIndex (ElementIndex ei)        : Index(ei.Nr0()) { }
+    constexpr BaseElementIndex (SurfaceElementIndex si) : Index(si.Nr0()) { }
+    constexpr BaseElementIndex (SegmentIndex si)        : Index(si.Nr0()) { }
+  };
+
+  constexpr ElementIndex::ElementIndex (BaseElementIndex bi)
+    : Index(bi.Nr0()) { }
+  constexpr SurfaceElementIndex::SurfaceElementIndex (BaseElementIndex bi)
+    : Index(bi.Nr0()) { }
+  constexpr SegmentIndex::SegmentIndex (BaseElementIndex bi)
+    : Index(bi.Nr0()) { }
+}
+
+namespace ngcore
+{
+  template<>
+  constexpr netgen::BaseElementIndex IndexBASE<netgen::BaseElementIndex> ()
+  { return netgen::BaseElementIndex::Base(); }
+}
+
+namespace netgen
+{
 
   // these should not be needed soon
   /*
@@ -488,14 +577,14 @@ namespace netgen
   // inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
 
 
-  inline istream & operator>> (istream & ist, SegmentIndex & pi)
+  inline istream & operator>> (istream & ist, SegmentIndex & si)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; si = SegmentIndex::FromNr0(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const SegmentIndex & si)
   {
-    return ost << (si - IndexBASE(si));
+    return ost << si.Nr0();
   } 
 
 

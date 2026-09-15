@@ -108,14 +108,12 @@ namespace netgen
     par.maxit_bfgs = 5;
 
     int np = mesh.GetNP();
-    int ne = mesh.GetNE();
 
     TBitArray<PointIndex> badnodes(np);
     badnodes.Clear();
 
-    for (i = 1; i <= ne; i++)
+    for (auto & el : mesh.VolumeElements())
       {
-	const Element & el = mesh.VolumeElement(i);
 	double bad = el.CalcJacobianBadness (mesh.Points());
 	if (bad > 1)
 	  for (j = 1; j <= el.GetNP(); j++)

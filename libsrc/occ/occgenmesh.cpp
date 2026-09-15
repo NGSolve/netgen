@@ -456,13 +456,13 @@ namespace netgen
     bool meshing_failed = res != MESHING2_OK;
     if(meshing_failed && delete_on_failure)
     {
-        for (SurfaceElementIndex sei = noldsurfel; sei < mesh.GetNSE(); sei++)
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(noldsurfel, 0))
             mesh.Delete(sei);
 
         mesh.Compress();
     }
 
-    for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
+    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
       mesh[sei].SetIndex (k);
 
     auto n_illegal_trigs = mesh.FindIllegalTrigs();

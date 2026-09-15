@@ -25,7 +25,7 @@ namespace netgen
     Array<int> point_ids_ud;    // user data, indexed by the raw point number
     Array<int> edge_ids,face_ids;
     Array<int, PointIndex> point_ids;
-    Array<int> elnum(mesh.GetNE());
+    Array<int, ElementIndex> elnum(mesh.GetNE());
     elnum = -1;
 
     
@@ -69,8 +69,8 @@ namespace netgen
 	// test if ids are disjunct, if not version 2.0 not possible
 	int maxbc(-1),mindomain(-1);
 	
-	for(ElementIndex i=0; i<mesh.GetNE(); i++)
-	  if(i==0 || mesh[i].GetIndex() < mindomain)
+	for (ElementIndex i : mesh.VolumeElements().Range())
+	  if(i.Nr0()==0 || mesh[i].GetIndex() < mindomain)
 	    mindomain = mesh[i].GetIndex();
 	for(int i=1; i<=mesh.GetNFD(); i++)
 	  if(i==1 || mesh.GetFaceDescriptor(i).BCProperty() > maxbc)
@@ -102,10 +102,9 @@ namespace netgen
 
     int numelems(0),numfaces(0),numedges(0),numnodes(0);
 
-    for(SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh[si];
-	PointIndices<2> i2(seg[0],seg[1]);
+		PointIndices<2> i2(seg[0],seg[1]);
 	i2.Sort();
 	if(edgenumbers.Used(i2))
 	  continue;
@@ -123,12 +122,12 @@ namespace netgen
 	  point_ids[seg[1]] = (version >= 2) ? edgenr : 0;
       }
 
-    for(SurfaceElementIndex si = 0; si < mesh.GetNSE(); si++)
+    for (auto & el : mesh.SurfaceElements())
       {
-	if(mesh[si].IsDeleted())
+	if(el.IsDeleted())
 	  continue;
 
-	const Element2d & elem = mesh[si];
+	const Element2d & elem = el;
 
 	numfaces++;
 	PointIndices<3> i3(elem[0], elem[1], elem[2]);
@@ -182,7 +181,7 @@ namespace netgen
 	face2edge.Append(f_to_n);
       }
     
-    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 
@@ -940,7 +939,7 @@ namespace netgen
     outfile << "// ElemID, FaceID0, FaceID1, FaceID2, FaceID3, "<<uidpid<<":\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
-    for(ElementIndex i=0; i<mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	if(elnum[i] >= 0)
 	  {
@@ -957,7 +956,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
     
-    for(ElementIndex i=0; i<mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	if(elnum[i] >= 0)
 	  outfile << elnum[i] << " "
@@ -998,9 +997,10 @@ namespace netgen
     for(int i=0; i<groups.Size(); i++)
       groups[i] = new Array<int>;
 
-    for(ElementIndex i=0; i<mesh.GetNE() && uid_to_group_3D.Size(); i++)
-      if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)
-	groups[uid_to_group_3D[mesh[i].GetIndex()]]->Append(i+1);
+    if (uid_to_group_3D.Size())          // loop-invariant guard, hoisted
+      for(ElementIndex i : mesh.VolumeElements().Range())
+        if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)
+	  groups[uid_to_group_3D[mesh[i].GetIndex()]]->Append(i.Nr1());
       
     
 

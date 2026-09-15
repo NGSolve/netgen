@@ -25,32 +25,31 @@ namespace netgen
       Array<PointIndex, PointIndex> mapto(np);
 
       bndnodes.Clear();
-      for (int i = 1; i <= mesh.GetNSeg(); i++)
+      for (auto & seg : mesh.LineSegments())
       {
-         int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
+         int snr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
          cout << "snr = " << snr << endl;
          if (snr == surfid)
          {
-            bndnodes.SetBit (mesh.LineSegment(i)[0]);
-            bndnodes.SetBit (mesh.LineSegment(i)[1]);
+            bndnodes.SetBit (seg[0]);
+            bndnodes.SetBit (seg[1]);
          }
       }
-      for (int i = 1; i <= mesh.GetNSeg(); i++)
+      for (auto & seg : mesh.LineSegments())
       {
-         int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
+         int snr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
          if (snr != surfid)
          {
-            bndnodes.Clear (mesh.LineSegment(i)[0]);
-            bndnodes.Clear (mesh.LineSegment(i)[1]);
+            bndnodes.Clear (seg[0]);
+            bndnodes.Clear (seg[1]);
          }
       }
 
       for (PointIndex pi : mesh.Points().Range())
         mapto[pi] = bndnodes.Test(pi) ? mesh.AddPoint (mesh[pi]) : PointIndex(PointIndex::INVALID);
 
-      for (int i = 1; i <= mesh.GetNSE(); i++)
+      for (auto & el : mesh.SurfaceElements())
       {
-         Element2d & el = mesh.SurfaceElement(i);
          for (int j = 1; j <= el.GetNP(); j++)
             if (mapto[el.PNum(j)].IsValid())
                el.PNum(j) = mapto[el.PNum(j)];
@@ -58,13 +57,13 @@ namespace netgen
 
 
       int nq = 0;
-      for (int i = 1; i <= mesh.GetNSeg(); i++)
+      for (auto & seg : mesh.LineSegments())
       {
-         int snr = mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).EdgeNr();
+         int snr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
          if (snr == surfid)
          {
-            PointIndex p1 = mesh.LineSegment(i)[0];
-            PointIndex p2 = mesh.LineSegment(i)[1];
+            PointIndex p1 = seg[0];
+            PointIndex p2 = seg[1];
             PointIndex p3 = mapto[p1];
             if (!p3.IsValid()) p3 = p1;
             PointIndex p4 = mapto[p2];
@@ -150,7 +149,7 @@ namespace netgen
      Array<Array<PointIndex>, PointIndex> mapto(np);
 
      // Bit array to keep track of segments already processed
-     BitArray segs_done(nseg);
+     TBitArray<SegmentIndex> segs_done(nseg);
      segs_done.Clear();
 
      // moved segments
@@ -184,7 +183,7 @@ namespace netgen
     int next_edge_nr = max_edge_nr+1;
 
     BitArray active_boundaries(max_edge_nr+1);
-    BitArray active_segments(nseg);
+    TBitArray<SegmentIndex> active_segments(nseg);
     active_boundaries.Clear();
     active_segments.Clear();
 
@@ -647,9 +646,9 @@ namespace netgen
         int ed_idx = -1;
         for(int iter = 0; iter < nseg; iter++)
         {
-           SegmentIndex found(0);
+           SegmentIndex found = SegmentIndex::INVALID;
            PointIndex next(PointIndex::INVALID);
-           for(SegmentIndex segi(0); segi < nseg; segi++)
+           for(SegmentIndex segi : T_Range<SegmentIndex>(nseg))
            {
               if(active_segments.Test(segi)) continue;
               const auto & sg = line_segments[segi];

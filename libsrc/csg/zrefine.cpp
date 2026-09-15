@@ -26,9 +26,8 @@ namespace netgen
       }
 
     // edges interactively selected
-    for (int i = 1; i <= mesh.GetNSeg(); i++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 	auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
 	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
 	  {
@@ -46,7 +45,7 @@ namespace netgen
   {
     // volume elements
     // for (int i = 1; i <= mesh.GetNE(); i++)
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	Element & el = mesh.VolumeElement(ei);
 	if (el.GetType() != TET) continue;
@@ -76,9 +75,9 @@ namespace netgen
       }
 
     // surface elements
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (auto & sel : mesh.SurfaceElements())
       {
-	Element2d & el = mesh.SurfaceElement(sei);
+	Element2d & el = sel;
 	if (el.GetType() != TRIG) continue;
 
 	for (int j = 1; j <= 3; j++)
@@ -110,7 +109,7 @@ namespace netgen
   void MakePrismsClosePoints (Mesh & mesh)
   {
     // int i, j, k;
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	Element & el = mesh.VolumeElement(ei);
 	if (el.GetType() == TET)
@@ -169,9 +168,9 @@ namespace netgen
 	  }
       }
   
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (auto & sel : mesh.SurfaceElements())
       {
-	Element2d & el = mesh.SurfaceElement(sei);
+	Element2d & el = sel;
 	if (el.GetType() != TRIG) continue;
 
 	for (int j = 1; j <= 3; j++)
@@ -412,7 +411,7 @@ namespace netgen
 
 
 
-	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
 	    Element & el = mesh.VolumeElement (ei);
 	    if (el.GetType() != PRISM)
@@ -463,7 +462,7 @@ namespace netgen
 	  {
 	    PrintMessage (5, "start loop");
 	    change = 0;
-	    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	    for (ElementIndex ei : mesh.VolumeElements().Range())
 	      {
 		Element & el = mesh.VolumeElement (ei);
 		if (el.GetType() != PRISM)
@@ -512,11 +511,10 @@ namespace netgen
 
 	//      (*testout) << "closure formed, np = " << mesh.GetNP() << endl;
 
-	int oldns = mesh.GetNSeg();
 
-	for (int i = 1; i <= oldns; i++)
+	for (SegmentIndex i : mesh.LineSegments().Range())
 	  {
-	    const Segment & el = mesh.LineSegment(i);
+	    const Segment & el = mesh[i];
 
 	    SortedPointIndices<2> i2(el[0], el[1]);
 	  
@@ -559,15 +557,16 @@ namespace netgen
 	    ns2[0] = pnew;
 	    ns2.EPGeomInfo(0) = ngi;
 
-	    mesh.LineSegment(i) = ns1;
+	    mesh[i] = ns1;
 	    mesh.AddSegment (ns2);
 	  }
       
 	PrintMessage (5, "Segments done, NSeg = ", mesh.GetNSeg());
 
 	// do refinement
-	int oldne = mesh.GetNE();
-	for (ElementIndex ei = 0; ei < oldne; ei++)
+	// the range is evaluated once, so the elements appended while
+	// refining are not visited
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
 	    Element & el = mesh.VolumeElement (ei);
 	    if (el.GetNP() != 6)
@@ -622,7 +621,7 @@ namespace netgen
 	// do surface elements
 	int oldnse = mesh.GetNSE();
 	//      cout << "oldnse = " << oldnse << endl;
-	for (SurfaceElementIndex sei = 0; sei < oldnse; sei++)
+	for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(oldnse))
 	  {
 	    Element2d & el = mesh.SurfaceElement (sei);
 	    if (el.GetType() != QUAD)
@@ -709,7 +708,7 @@ namespace netgen
 
   void CombineSingularPrisms(Mesh& mesh)
   {
-    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
         Element& el = mesh.VolumeElement(ei);
         if(el.GetType() != PRISM)

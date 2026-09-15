@@ -593,9 +593,8 @@ namespace netgen
     Array<PointIndex> addpoints;
     add_point.Clear();
     /*
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & s : mesh.LineSegments())
     {
-      const auto & s = mesh[si];
       if ( s.domin==domainnr || s.domout==domainnr )
       {
         add_point.SetBit(s[0]);

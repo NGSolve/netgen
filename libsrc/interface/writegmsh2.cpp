@@ -207,11 +207,11 @@ namespace netgen
          outfile << "$Elements\n";
          outfile << nse << "\n";
 
-         for (int k = 1; k <= nse; k++)
+         for (SurfaceElementIndex k : T_Range<SurfaceElementIndex>(nse))
          {
             int elType = 0;
 
-            const Element2d & el = mesh.SurfaceElement(k);
+            const Element2d & el = mesh[k];
 
             if(el.GetNP() == 3) elType = GMSH_TRIG;   //// GMSH Type for a 3 node triangle
             if(el.GetNP() == 6) elType = GMSH_TRIG6;  //// GMSH Type for a 6 node triangle
@@ -223,7 +223,7 @@ namespace netgen
                return;
             }
 
-            outfile << k;
+            outfile << k.Nr1();
             outfile << " ";
             outfile << elType;
             outfile << " ";

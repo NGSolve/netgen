@@ -338,7 +338,9 @@ public:
   int levely;
   int levelz;
   int np; 
-  int coarse_elnr;  // issue (JS): same class is for ElementIndex, SurfaceElementIndex, SegmentIndex 
+  /// the coarse element this one came from; which kind it is
+  /// follows from the element type, so narrowing is explicit
+  BaseElementIndex coarse_elnr;
   int domin, domout; // he: needed for segment!! in 3d there should be surf1, surf2!!
   // int coarse_hpelnr; 
   PointIndex & operator[](int i) { return(pnums[i]);}

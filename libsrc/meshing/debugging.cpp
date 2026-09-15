@@ -82,7 +82,7 @@ namespace netgen
                     mesh[ind].Delete();
             }
 
-            for(auto i = 0; i<els.Size(); i++)
+            for(auto i : Range(els))
                 if(els[i].IsDeleted())
                 {
                     els.DeleteElement(i);

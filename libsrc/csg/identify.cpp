@@ -360,7 +360,7 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
     return -1;
   };
 
-  int i, j, k, l;
+  int i, j;
   int fi1, fi2, side;
   for (i = 1; i <= mesh.GetNFD(); i++)
     for (j = 1; j <= mesh.GetNFD(); j++)
@@ -391,16 +391,14 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 		fi2 = i;
 	      }
 
-	    for (k = 1; k <= mesh.GetNSeg(); k++)
+	    for (auto & seg1 : mesh.LineSegments())
 	      {
-		const Segment & seg1 = mesh.LineSegment(k);
 		if (seg_fdi(seg1) != fi1)
 		  continue;
 
 		int foundother = 0;
-		for (l = 1; l <= mesh.GetNSeg(); l++)
+		for (auto & seg2 : mesh.LineSegments())
 		  {
-		    const Segment & seg2 = mesh.LineSegment(l);
 		    if (seg_fdi(seg2) != fi2)
 		      continue;
 		    
@@ -481,9 +479,8 @@ BuildSurfaceElements (Array<Segment> & segs,
     {
       Array<PointIndex> copy_points;
 
-      for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+      for (const Element2d & sel : mesh.SurfaceElements())
 	{
-	  const Element2d & sel = mesh[sei];
 	  IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
 	  if (identfaces.Used (fpair))
             {
@@ -498,9 +495,8 @@ BuildSurfaceElements (Array<Segment> & segs,
 
 
 
-      for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+      for (const Element2d & sel : mesh.SurfaceElements())
 	{
-	  const Element2d & sel = mesh[sei];
 	  IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
 	  if (identfaces.Used (fpair))
 	    {
@@ -1161,18 +1157,17 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 	      segs_on_face1.SetSize(0);
 	      segs_on_face2.SetSize(0);
 
-	      for (int k = 1; k <= mesh.GetNSeg(); k++)
+	      for (SegmentIndex k : mesh.LineSegments().Range())
 		{
-		  if (seg_fdi(mesh.LineSegment(k)) == fi1)
-		    segs_on_face1.Append (k);
-		  if (seg_fdi(mesh.LineSegment(k)) == fi2)
-		    segs_on_face2.Append (k);
+		  if (seg_fdi(mesh[k]) == fi1)
+		    segs_on_face1.Append (k.Nr1());
+		  if (seg_fdi(mesh[k]) == fi2)
+		    segs_on_face2.Append (k.Nr1());
 		}
 
 
-	      for (int k = 1; k <= mesh.GetNSeg(); k++)
+	      for (auto & seg1 : mesh.LineSegments())
 		{
-		  const Segment & seg1 = mesh.LineSegment(k);
 		  if (seg_fdi(seg1) != fi1)
 		    continue;
 		  
@@ -1187,7 +1182,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 		  for (int ll = 0; ll < segs_on_face2.Size(); ll++)
 		    {
 		      int l = segs_on_face2[ll];
-		      const Segment & seg2 = mesh.LineSegment(l);
+		      const Segment & seg2 = mesh[SegmentIndex::FromNr1(l)];
 		      
 		      if (side == 1)
 			{
@@ -1398,9 +1393,8 @@ BuildSurfaceElements2 (Array<Segment> & segs,
     {
       //	  (*testout) << "surfaces found" << endl;
       // copy surface
-      for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+      for (const Element2d & sel : mesh.SurfaceElements())
 	{
-	  const Element2d & sel = mesh[sei];
 	  IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
 	  if (identfaces.Used (fpair))
 	    {

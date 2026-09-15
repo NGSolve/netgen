@@ -280,9 +280,8 @@ namespace netgen
       {
 	glColor3d (1, 0, 0);
 	glBegin (GL_LINES);
-	for (int i = 1; i <= mesh->GetNSeg(); i++)
+	for (auto & seg : mesh->LineSegments())
 	  {
-	    const Segment & seg = mesh -> LineSegment (i);
 	    glVertex3dv ( (*mesh)[seg[0]] );
             glVertex3dv ( (*mesh)[seg[1]] );
 	    // glVertex3dv ( &(*mesh)[seg[0]].X() );
@@ -334,9 +333,8 @@ namespace netgen
 	// glListBase (fontbase);
 
 	char buf[20];
-	for (int i = 1; i <= mesh->GetNSeg(); i++)
+	for (auto & seg : mesh->LineSegments())
 	  {
-	    const Segment & seg = mesh -> LineSegment (i);
 	    const Point<3> p1 = mesh -> Point (seg[0]);
 	    const Point<3> p2 = mesh -> Point (seg[1]);
 
@@ -454,11 +452,11 @@ namespace netgen
   
     if (mesh->GetNSeg())
       {
-	box.SetPoint (mesh->Point (mesh->LineSegment(1)[0]));
-	for (int i = 1; i <= mesh->GetNSeg(); i++)
+	box.SetPoint (mesh->Point ((*mesh)[SegmentIndex::FromNr1(1)][0]));
+	for (auto & seg : mesh->LineSegments())
 	  {
-	    box.AddPoint (mesh->Point (mesh->LineSegment(i)[0]));
-	    box.AddPoint (mesh->Point (mesh->LineSegment(i)[1]));
+	    box.AddPoint (mesh->Point (seg[0]));
+	    box.AddPoint (mesh->Point (seg[1]));
 	  }
       }
     else if (specpoints.Size() >= 2)

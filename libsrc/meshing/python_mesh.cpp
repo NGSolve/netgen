@@ -288,34 +288,34 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<ElementIndex>(m, "ElementId3D")
-    .def(py::init<int>())
+    .def(py::init([](int i) { return ElementIndex::FromNr0(i); }))
     .def("__repr__", &ToString<ElementIndex>)
     .def("__str__", &ToString<ElementIndex>)
-    .def_property_readonly("nr", &ElementIndex::operator int)
+    .def_property_readonly("nr", [](ElementIndex &self) { return self.Nr0(); })
     .def("__eq__" , FunctionPointer( [](ElementIndex &self, ElementIndex &other)
-                  { return static_cast<int>(self)==static_cast<int>(other); }) )
-    .def("__hash__" , FunctionPointer( [](ElementIndex &self ) { return static_cast<int>(self); }) )
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](ElementIndex &self ) { return self.Nr0(); }) )
     ;
 
 
   py::class_<SurfaceElementIndex>(m, "ElementId2D")
-    .def(py::init<int>())
+    .def(py::init([](int i) { return SurfaceElementIndex::FromNr0(i); }))
     .def("__repr__", &ToString<SurfaceElementIndex>)
     .def("__str__", &ToString<SurfaceElementIndex>)
-    .def_property_readonly("nr", &SurfaceElementIndex::operator int)
+    .def_property_readonly("nr", [](SurfaceElementIndex &self) { return self.Nr0(); })
     .def("__eq__" , FunctionPointer( [](SurfaceElementIndex &self, SurfaceElementIndex &other)
-                  { return static_cast<int>(self)==static_cast<int>(other); }) )
-    .def("__hash__" , FunctionPointer( [](SurfaceElementIndex &self ) { return static_cast<int>(self); }) )
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](SurfaceElementIndex &self ) { return self.Nr0(); }) )
     ;
 
   py::class_<SegmentIndex>(m, "ElementId1D")
-    .def(py::init<int>())
+    .def(py::init([](int i) { return SegmentIndex::FromNr0(i); }))
     .def("__repr__", &ToString<SegmentIndex>)
     .def("__str__", &ToString<SegmentIndex>)
-    .def_property_readonly("nr", &SegmentIndex::operator int)
+    .def_property_readonly("nr", [](SegmentIndex &self) { return self.Nr0(); })
     .def("__eq__" , FunctionPointer( [](SegmentIndex &self, SegmentIndex &other)
-                  { return static_cast<int>(self)==static_cast<int>(other); }) )
-    .def("__hash__" , FunctionPointer( [](SegmentIndex &self ) { return static_cast<int>(self); }) )
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](SegmentIndex &self ) { return self.Nr0(); }) )
     ;
 
 
@@ -1188,9 +1188,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       switch (*dim)
         {
         case 2:
-          return (*self.hpelements)[self[SurfaceElementIndex(elnr)].GetHpElnr()].coarse_elnr;
+          return (*self.hpelements)[self[SurfaceElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
         case 3:
-          return (*self.hpelements)[self[ElementIndex(elnr)].GetHpElnr()].coarse_elnr;
+          return (*self.hpelements)[self[ElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
         }
       throw Exception ("MacroElementNr not implemented for dim");
     }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")
@@ -1219,9 +1219,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)
                                                 {
-                                                  int elnr1, elnr2;
-                                                  self.GetTopology().GetSurface2VolumeElement(sel+1, elnr1, elnr2);
-                                                  return py::make_tuple(elnr1, elnr2);
+                                                  ElementIndex elnr1, elnr2;
+                                                  self.GetTopology().GetSurface2VolumeElement(SurfaceElementIndex::FromNr0(sel), elnr1, elnr2);
+                                                  return py::make_tuple(elnr1.Nr1(), elnr2.Nr1());
                                                 }, "Returns element nrs of volume element connected to surface element, -1 if no volume element")
 
     .def("GetNCD2Names", &Mesh::GetNCD2Names)
@@ -1686,7 +1686,7 @@ py::arg("point_tolerance") = -1.)
 
             if (dim == 2)  // mapping of 2D elements
               {
-                for (SurfaceElementIndex i = 0; i < self.GetNSE(); i++)
+                for (SurfaceElementIndex i : self.SurfaceElements().Range())
                   for (size_t j = 0; j < npts; j++)
                     {
                       Point<2> xref;
@@ -1695,13 +1695,13 @@ py::arg("point_tolerance") = -1.)
                         xref(k) = ref_ptr[j*stride_refpts+k];
                       curved.CalcSurfaceTransformation(xref, i, xphys);
                       for (size_t k = 0; k < dim_phys; k++)
-                        phys_ptr[i*stride_physels+j*stride_physpts+k] = xphys(k);
+                        phys_ptr[i.Nr0()*stride_physels+j*stride_physpts+k] = xphys(k);
                     }
               }
             
             if (dim == 3)  // mapping of 3D elements
               {
-                for (ElementIndex i = 0; i < self.GetNE(); i++)
+                for (ElementIndex i : self.VolumeElements().Range())
                   for (size_t j = 0; j < npts; j++)
                     {
                       Point<3> xref;
@@ -1710,7 +1710,7 @@ py::arg("point_tolerance") = -1.)
                         xref(k) = ref_ptr[j*stride_refpts+k];
                       curved.CalcElementTransformation(xref, i, xphys);
                       for (size_t k = 0; k < 3; k++)
-                        phys_ptr[i*stride_physels+j*stride_physpts+k] = xphys(k);
+                        phys_ptr[i.Nr0()*stride_physels+j*stride_physpts+k] = xphys(k);
                     }
               }
           })
@@ -1832,7 +1832,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & segs = self.LineSegments();
                 for(auto i : myrange)
                 {
-                    const auto & seg = segs[i];
+                    const auto & seg = segs[SegmentIndex::FromNr0(i)];
                     for(auto k : Range(2))
                       output[2*i+k] = seg[k].Nr0();
                 } });
@@ -1869,7 +1869,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & surfels = self.SurfaceElements();
                 for(auto i : myrange)
                 {
-                    const auto & sel = surfels[i];
+                    const auto & sel = surfels[SurfaceElementIndex::FromNr0(i)];
                     auto * trig = &trigs[3*i];
                     for(auto k : Range(3))
                         trig[k] = sel[k].Nr0();
@@ -1887,7 +1887,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & els = self.VolumeElements();
                 for(auto i : myrange)
                 {
-                    const auto & el = els[i];
+                    const auto & el = els[ElementIndex::FromNr0(i)];
                     auto * trig = &tets[4*i];
                     for(auto k : Range(4))
                         trig[k] = el[k].Nr0();

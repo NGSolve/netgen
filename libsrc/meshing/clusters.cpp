@@ -231,9 +231,9 @@ namespace netgen
 	// cnt++;
 	changed = 0;
       
-	for (int i = 1; i <= ne; i++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
-            ElementIndex ei(i-1);
+
             
 	    const Element & el = mesh[ei];
 	    ELEMENT_TYPE typ = el.GetType();
@@ -297,7 +297,7 @@ namespace netgen
                   nnums[elnv+j] = nv+ednums[j]+1;
                 for (int j = 0; j < elnfa; j++)
                   nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
-                nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
+                nnums[elnv+elned+elnfa] = nv+ned+nfa+ei.Nr1();
                 
                 
 	      for (int j = 0; j < nnums.Size(); j++)

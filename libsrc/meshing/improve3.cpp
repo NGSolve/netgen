@@ -160,7 +160,7 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
   double maxbad = 0.0;
   atomic<int> bad_elements = 0;
 
-  ParallelForRange(Range(mesh.GetNE()), [&] (auto myrange) {
+  ParallelForRange(Range(mesh.VolumeElements()), [&] (auto myrange) {
     double totalbad_local = 0.0;
     double maxbad_local = 0.0;
     int bad_elements_local = 0;
@@ -785,7 +785,7 @@ double MeshOptimize3d :: SwapImproveEdge (
           return 0.0;
 
       if(working_elements &&
-              ei < working_elements->Size() &&
+              ei.Nr0() < working_elements->Size() &&
          !working_elements->Test(ei))
           return 0.0;
 
@@ -1277,7 +1277,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
 
   tloop.Start();
 
-  auto num_elements_before = mesh.VolumeElements().Range().Next();
+  auto num_elements_before = mesh.VolumeElements().Size();
 
   ParallelForRange(Range(edges), [&] (auto myrange)
   {
@@ -1315,8 +1315,9 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
       // Remove open elements that were closed by new tets
       auto & open_els = mesh.OpenElements();
 
-      for (auto & el : mesh.VolumeElements().Range( num_elements_before, mesh.VolumeElements().Range().Next() ))
+      for (ElementIndex ei : mesh.VolumeElements().Range().Modify(num_elements_before, 0))
       {
+          const Element & el = mesh[ei];
           for (auto i : Range(1,5))
           {
               Element2d sel;
@@ -1400,11 +1401,11 @@ void MeshOptimize3d :: SwapImproveSurface (
       
   
   // find elements on node
-  for (ElementIndex ei = 0; ei < ne; ei++)
+  for (ElementIndex ei : mesh.VolumeElements().Range())
     for (int j = 0; j < mesh[ei].GetNP(); j++)
       elementsonnode.Add (mesh[ei][j], ei);
 
-  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     for(int j=0; j<mesh[sei].GetNP(); j++)
       {
 	surfaceelementsonnode.Add(mesh[sei][j], sei);
@@ -1418,18 +1419,18 @@ void MeshOptimize3d :: SwapImproveSurface (
   // INDEX_2_HASHTABLE<int> edgeused(2 * ne + 5);
   ClosedHashTable<SortedPointIndices<2>, int> edgeused(12 * ne + 8);
 
-  for (ElementIndex ei = 0; ei < ne; ei++)
+  for (ElementIndex ei : mesh.VolumeElements().Range())
     {
       if (multithread.terminate)
 	break;
       
-      multithread.percent = 100.0 * (ei+1) / ne;
+      multithread.percent = 100.0 * ei.Nr1() / ne;
 
       if (mesh.ElementType(ei) == FIXEDELEMENT)
 	continue;
       
       if(working_elements && 
-	 ei < working_elements->Size() &&
+	 ei.Nr0() < working_elements->Size() &&
 	 !working_elements->Test(ei))
 	continue;
 
@@ -1599,8 +1600,8 @@ void MeshOptimize3d :: SwapImproveSurface (
 	  //  (*testout) << "hasbothpoints["<<k<<"]: " << mesh[hasbothpoints[k]] << endl;
 
 	  
-	  SurfaceElementIndex sel1=-1,sel2=-1;
-	  SurfaceElementIndex sel1other=-1,sel2other=-1;
+	  SurfaceElementIndex sel1 = SurfaceElementIndex::INVALID, sel2 = SurfaceElementIndex::INVALID;
+	  SurfaceElementIndex sel1other = SurfaceElementIndex::INVALID, sel2other = SurfaceElementIndex::INVALID;
 	  for(int k = 0; k < surfaceelementsonnode[pi1].Size(); k++)
 	    {
 	      bool has1 = false, has2 = false;
@@ -2410,7 +2411,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
   auto elementsonnode = mesh.CreatePoint2ElementTable(nullopt, mp.only3D_domain_nr);
   // todo: respect mp.only3D_domain_nr
   
-  for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     for (int j = 0; j < 3; j++)
       belementsonnode.Add (mesh[sei][j], sei);
 
@@ -2421,7 +2422,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
 
   UpdateBadness();
 
-  ParallelForRange( Range(ne), [&]( auto myrange )
+  ParallelForRange( Range(mesh.VolumeElements()), [&]( auto myrange )
       {
         int tid = ngcore::TaskManager::GetThreadId();
         auto & my_faces_with_improvement = faces_with_improvement_threadlocal[tid];
@@ -2626,7 +2627,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   std::atomic<int> improvement_counter(0);
 
   tsearch.Start();
-  ParallelForRange(Range(ne), [&] (auto myrange)
+  ParallelForRange(Range(mesh.VolumeElements()), [&] (auto myrange)
   {
     for(ElementIndex ei : myrange)
     {

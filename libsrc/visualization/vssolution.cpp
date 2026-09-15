@@ -240,22 +240,22 @@ namespace netgen
           }
 
         int cntverts = 0;
-        for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
-          cntverts += 1 + (*mesh)[sei].GetNP();
+        for (auto & el : mesh->SurfaceElements())
+          cntverts += 1 + el.GetNP();
 
         surf_ost << "\nCELLS " << mesh->GetNSE() << " " << cntverts << "\n";
-        for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
+        for (auto & sel : mesh->SurfaceElements())
           {
-            const Element2d & el = (*mesh)[sei];
+            const Element2d & el = sel;
             surf_ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
               surf_ost << " " << el[j] - IndexBASE<PointIndex>();
             surf_ost << "\n";
           }
         surf_ost << "\nCELL_TYPES " << mesh->GetNSE() << "\n";
-        for (SurfaceElementIndex sei = 0; sei < mesh->GetNSE(); sei++)
+        for (auto & sel : mesh->SurfaceElements())
           {
-            const Element2d & el = (*mesh)[sei];
+            const Element2d & el = sel;
             switch (el.GetType())
               {
               case QUAD: surf_ost << 9; break;
@@ -283,22 +283,20 @@ namespace netgen
           }
 
         cntverts = 0;
-        for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+        for (ElementIndex ei : mesh->VolumeElements().Range())
           cntverts += 1 + (*mesh)[ei].GetNP();
 
         ost << "\nCELLS " << mesh->GetNE() << " " << cntverts << "\n";
-        for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+        for (auto & el : mesh->VolumeElements())
           {
-            const Element & el = (*mesh)[ei];
             ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
               ost << " " << el[j] - IndexBASE<PointIndex>();
             ost << "\n";
           }
         ost << "\nCELL_TYPES " << mesh->GetNE() << "\n";
-        for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+        for (auto & el : mesh->VolumeElements())
           {
-            const Element & el = (*mesh)[ei];
             switch (el.GetType())
               {
               case TET: ost << 10; break;
@@ -970,14 +968,14 @@ namespace netgen
           {
             glBegin (GL_LINES);
           
-            for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+            for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
               {
                 const Element2d & el = (*mesh)[sei];
 
                 if(!SurfaceElementActive(sol_active, *mesh, el))
                   continue;
 
-                bool curved = curv.IsHighOrder(); //  && curv.IsSurfaceElementCurved(sei);
+                bool curved = curv.IsHighOrder(); //  && curv.IsCurved(sei);
               
                 if (el.GetType() == TRIG || el.GetType() == TRIG6)
                   {
@@ -1156,7 +1154,7 @@ namespace netgen
     for (int i = 0; i < npt; i++)
       pref[i] = double(i) / (npt-1);
     int meshdim = mesh->GetDimension();
-    for (SegmentIndex i = 0; i < mesh -> GetNSeg(); i++)
+    for (SegmentIndex i : mesh->LineSegments().Range())
       {
         // mesh->GetCurvedElements().
         // CalcMultiPointSegmentTransformation (&pref, i, &points, NULL);
@@ -1168,7 +1166,7 @@ namespace netgen
           {
             for (int j = 0; j < npt; j++)
               {
-                vsol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
+                vsol->solclass->GetSegmentValue (i.Nr0(), pref[j], &mvalues[0]);
                 // values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
                 for (int k = 0; k < min(ncomp, 3); k++)
                   points[j](k) += scaledeform * mvalues[k];
@@ -1180,7 +1178,7 @@ namespace netgen
           {
             for (int j = 0; j < npt; j++)
               {
-                sol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
+                sol->solclass->GetSegmentValue (i.Nr0(), pref[j], &mvalues[0]);
                 values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
                 points[j](meshdim) += scaledeform * values[j];
               }
@@ -1338,7 +1336,7 @@ namespace netgen
     // NgProfiler::StopTimer(timerstart);
     auto sol_active = GetScalOrVecFunction();
     
-    for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
         const Element2d & el = (*mesh)[sei];
 
@@ -1347,7 +1345,7 @@ namespace netgen
 
         if ( el.GetType() == QUAD || el.GetType() == QUAD6 || el.GetType() == QUAD8 )
           {
-            bool curved = curv.IsSurfaceElementCurved (sei);
+            bool curved = curv.IsCurved (sei);
 
 
             for (int iy = 0, ii = 0; iy <= n; iy++)
@@ -1508,7 +1506,7 @@ namespace netgen
     glob_ind.SetSize(ind_reftrig.Size());    
 
     
-    for(SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
         const Element2d & el = (*mesh)[sei];
 	// if (el.GetIndex() <= 1) continue;
@@ -1521,7 +1519,7 @@ namespace netgen
             // NgProfiler::StartTimer(timer1);
 #ifdef __AVX_try_it_out__
             // NgProfiler::StartTimer(timer1a);            
-	    bool curved = curv.IsSurfaceElementCurved(sei);
+	    bool curved = curv.IsCurved(sei);
             
             if (curved)
               {
@@ -1819,7 +1817,7 @@ namespace netgen
 
     auto sol_active = GetScalOrVecFunction();
 
-    for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
         Element2d & el = (*mesh)[sei];
 
@@ -1921,7 +1919,7 @@ namespace netgen
     MatrixFixWidth<3> pointmat(8);
     grads1 = Vec<3> (0.0);
 
-    for (ElementIndex ei = 0; ei < ne; ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
         // if(vispar.clipdomain > 0 && vispar.clipdomain != (*mesh)[ei].GetIndex()) continue;
         // if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
@@ -2156,7 +2154,7 @@ namespace netgen
 
   void  VisualSceneSolution :: DrawTrigSurfaceVectors(const Array< Point<3> > & lp, 
                                                       const Point<3> & pmin, const Point<3> & pmax,
-                                                      const int sei, const SolData * vsol, bool swap_lam)
+                                                      SurfaceElementIndex sei, const SolData * vsol, bool swap_lam)
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
@@ -2303,7 +2301,7 @@ namespace netgen
     if (vsol->draw_surface && showsurfacesolution)
       {
         int nse = mesh->GetNSE();
-        for (SurfaceElementIndex sei = 0; sei < nse; sei++)
+        for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
           {
             const Element2d & el = (*mesh)[sei];
             if(!SurfaceElementActive(vsol, *mesh, el))
@@ -2665,9 +2663,9 @@ namespace netgen
                   for (int i=first; i<next; i++)
                     {
                       double val;
-                      if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex(i)]))
+                      if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex::FromNr0(i)]))
                         continue;
-                      bool considerElem = GetValue (sol, i, 0.333, 0.333, 0.333, comp, val);
+                      bool considerElem = GetValue (sol, ElementIndex::FromNr0(i), 0.333, 0.333, 0.333, comp, val);
                       if (considerElem)
                         {
                           if (val > maxv_local) maxv_local = val;
@@ -2750,7 +2748,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ok = data->solclass->GetValue (elnr, lam1, lam2, lam3, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), lam1, lam2, lam3, values);
           break;
         }
       default:
@@ -2772,7 +2770,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ok = data->solclass->GetValue (elnr, xref, x, dxdxref, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), xref, x, dxdxref, values);
           break;
         }
       default:
@@ -2815,7 +2813,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
           double values[20];
-          ok = data->solclass->GetValue (elnr, xref, x, dxdxref, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), xref, x, dxdxref, values);
 
           val = values[comp-1];
           return ok;
@@ -2864,7 +2862,7 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
-          val = data->data[elnr * data->dist + comp-1];
+          val = data->data[elnr.Nr0() * data->dist + comp-1];
           return 1;
         }
 
@@ -2930,9 +2928,9 @@ namespace netgen
 
           int base;
           if (data->order == 1)
-            base = 6 * elnr;
+            base = 6 * elnr.Nr0();
           else
-            base = 10 * elnr;
+            base = 10 * elnr.Nr0();
 
 
           for (int i = 0; i < np; i++)
@@ -2986,7 +2984,7 @@ namespace netgen
         {
 	  val = 0.0;
           double values[20];
-	  ok = data->solclass->GetValue (elnr, lam1, lam2, lam3, values);
+	  ok = data->solclass->GetValue (elnr.Nr0(), lam1, lam2, lam3, values);
 
           val = values[comp-1];
           return ok;
@@ -3034,7 +3032,7 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
-          val = data->data[elnr * data->dist + comp-1];
+          val = data->data[elnr.Nr0() * data->dist + comp-1];
           return 1;
         }
 
@@ -3098,9 +3096,9 @@ namespace netgen
 
           int base;
           if (data->order == 1)
-            base = 6 * elnr;
+            base = 6 * elnr.Nr0();
           else
-            base = 10 * elnr;
+            base = 10 * elnr.Nr0();
 
 
           for (int i = 0; i < np; i++)
@@ -3148,7 +3146,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
           double values[20];
-          ok = data->solclass->GetValue (elnr, lam1, lam2, lam3, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), lam1, lam2, lam3, values);
           val = complex<double> (values[comp-1], values[comp]);
           return ok;
         }
@@ -3168,7 +3166,7 @@ namespace netgen
   {
     bool drawelem = false;
     if (data->soltype == SOL_VIRTUALFUNCTION)
-      drawelem = data->solclass->GetMultiValue(elnr, facetnr, npt, xref, sxref, x, sx, dxdxref, sdxdxref, val, sval);
+      drawelem = data->solclass->GetMultiValue(elnr.Nr0(), facetnr, npt, xref, sxref, x, sx, dxdxref, sdxdxref, val, sval);
     else
       for (int i = 0; i < npt; i++)
         drawelem = GetValues (data, elnr, xref+i*sxref, x+i*sx, dxdxref+i*sdxdxref, val+i*sval);
@@ -3190,7 +3188,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, values);
+          ok = data->solclass->GetSurfValue (selnr.Nr0(), facetnr, lam1, lam2, values);
           // ok = 1;
           // values[0] = 1.0;
           break;
@@ -3215,7 +3213,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ok = data->solclass->GetSurfValue (selnr, facetnr, xref, x, dxdxref, values);
+          ok = data->solclass->GetSurfValue (selnr.Nr0(), facetnr, xref, x, dxdxref, values);
           break;
         }
       default:
@@ -3236,7 +3234,7 @@ namespace netgen
   {
     bool drawelem = false;
     if (data->soltype == SOL_VIRTUALFUNCTION)
-      drawelem = data->solclass->GetMultiSurfValue(elnr, facetnr, npt, xref, sxref, x, sx, dxdxref, sdxdxref, val, sval);
+      drawelem = data->solclass->GetMultiSurfValue(elnr.Nr0(), facetnr, npt, xref, sxref, x, sx, dxdxref, sdxdxref, val, sval);
     else
       for (int i = 0; i < npt; i++)
         drawelem = GetSurfValues (data, elnr, facetnr, xref+i*sxref, x+i*sx, dxdxref+i*sdxdxref, val+i*sval);
@@ -3357,7 +3355,7 @@ namespace netgen
           ArrayMem<double,20> values(data->components);
           bool ok;
           
-          ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
+          ok = data->solclass->GetSurfValue (selnr.Nr0(), facetnr, lam1, lam2, &values[0]);
           
           if (ok)
             {
@@ -3399,7 +3397,7 @@ namespace netgen
           ArrayMem<double,20> values(data->components);
           bool ok;
 
-          ok = data->solclass->GetSurfValue (selnr, facetnr, lam1, lam2, &values[0]);
+          ok = data->solclass->GetSurfValue (selnr.Nr0(), facetnr, lam1, lam2, &values[0]);
 
           if (ok)
             {
@@ -3488,11 +3486,10 @@ namespace netgen
       case SOL_ELEMENT:
         {
           shared_ptr<Mesh> mesh = GetMesh();          
-          int el1, el2;
-          mesh->GetTopology().GetSurface2VolumeElement (selnr+1, el1, el2);
-          el1--;
+          ElementIndex el1, el2;
+          mesh->GetTopology().GetSurface2VolumeElement (selnr, el1, el2);
 
-          val = data->data[el1 * data->dist+comp-1];
+          val = data->data[el1.Nr0() * data->dist+comp-1];
           return 1;
         }
 
@@ -3505,7 +3502,7 @@ namespace netgen
 
       case SOL_SURFACE_ELEMENT:
         {
-          val = data->data[selnr * data->dist + comp-1];
+          val = data->data[selnr.Nr0() * data->dist + comp-1];
           return 1;
         }
 
@@ -3522,7 +3519,7 @@ namespace netgen
           switch (order)
             {
             case 0:
-              return data->data[selnr * data->dist + comp-1];
+              return data->data[selnr.Nr0() * data->dist + comp-1];
             case 1:
               {
                 switch (el.GetType())
@@ -3574,9 +3571,9 @@ namespace netgen
         
           int base;
           if (order == 1)
-            base = 4 * selnr;
+            base = 4 * selnr.Nr0();
           else 
-            base = 9 * selnr;
+            base = 9 * selnr.Nr0();
 
           for (int i = 0; i < np; i++)
             val += lami[i] * data->data[(base+i) * data->dist + comp-1];
@@ -3642,7 +3639,7 @@ namespace netgen
 
           // ok = data->solclass->GetSurfValue (selnr, lam1, lam2, &values[0]);
           // cout << "data->solclass = " << flush << data->solclass << endl;
-          ok = data->solclass->GetSurfValue (selnr, facetnr, xref, x, dxdxref, &values[0]);
+          ok = data->solclass->GetSurfValue (selnr.Nr0(), facetnr, xref, x, dxdxref, &values[0]);
           // ok = 1;
           // values[0] = 1.0;
 
@@ -3729,11 +3726,10 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
-          int el1, el2;
-          mesh->GetTopology().GetSurface2VolumeElement (selnr+1, el1, el2);
-          el1--;
+          ElementIndex el1, el2;
+          mesh->GetTopology().GetSurface2VolumeElement (selnr, el1, el2);
 
-          val = data->data[el1 * data->dist+comp-1];
+          val = data->data[el1.Nr0() * data->dist+comp-1];
           return 1;
         }
 
@@ -3746,7 +3742,7 @@ namespace netgen
 
       case SOL_SURFACE_ELEMENT:
         {
-          val = data->data[selnr * data->dist + comp-1];
+          val = data->data[selnr.Nr0() * data->dist + comp-1];
           return 1;
         }
 
@@ -3762,7 +3758,7 @@ namespace netgen
           switch (order)
             {
             case 0:
-              return data->data[selnr * data->dist + comp-1];
+              return data->data[selnr.Nr0() * data->dist + comp-1];
             case 1:
               {
                 switch (el.GetType())
@@ -3814,9 +3810,9 @@ namespace netgen
         
           int base;
           if (order == 1)
-            base = 4 * selnr;
+            base = 4 * selnr.Nr0();
           else 
-            base = 9 * selnr;
+            base = 9 * selnr.Nr0();
 
           for (int i = 0; i < np; i++)
             val += lami[i] * data->data[(base+i) * data->dist + comp-1];
@@ -3916,7 +3912,7 @@ namespace netgen
             for (int j = 0; j < el.GetNP(); j++)
               if (el[j] == pnum)
                 {
-                  int base = (4*elnr+j-1) * vsol->dist;
+                  int base = (4*elnr.Nr0()+j-1) * vsol->dist;
                   v = Vec<3>(vsol->data[base],
                             vsol->data[base+1],
                             vsol->data[base+2]);
@@ -3997,7 +3993,7 @@ namespace netgen
     ClosedHashTable<IVec<2>, int> edges(8*n3);  // point nr of edge
     
 
-    for (ElementIndex ei = 0; ei < ne; ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
         // NgProfiler::RegionTimer reg1a (timer1a);
 
@@ -4336,9 +4332,9 @@ namespace netgen
             }
 
           double lami[3];
-          int elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex);
+          ElementIndex elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex);
 
-          if (elnr != -1)
+          if (elnr.IsValid())
             {
               ClipPlanePoint cpp;
               cpp.p = hp;
@@ -4434,14 +4430,14 @@ namespace netgen
     Point<3> p[3];
     // double val[3];
     // complex<double> valc[3];
-    int lastelnr = -1;
+    ElementIndex lastelnr = ElementIndex::INVALID;
     int nlp = -1;
     bool ok = false;
 
     for (int i = 0; i < trigs.Size(); i++)
       {
         const ClipPlaneTrig & trig = trigs[i];
-	if (trig.elnr != ElementIndex(lastelnr))
+	if (trig.elnr != lastelnr)
 	  {
 	    lastelnr = trig.elnr;
 	    nlp = -1;
@@ -4785,8 +4781,8 @@ namespace netgen
         if(!SurfaceElementActive(sol, *mesh, (*mesh)[sei]))
           return false;
         GLushort r,g,b;
-        r = (sei+1) % (1<<16);
-        g = (sei+1) >> 16;
+        r = sei.Nr1() % (1<<16);
+        g = sei.Nr1() >> 16;
         b = 0;
         glColor3us(r,g,b);
         return true;
@@ -4888,7 +4884,7 @@ namespace netgen
       if(n*view > 1e-8)
       {
         double lami[3];
-        if(auto el3d = mesh->GetElementOfPoint( p, lami ))
+        if(auto el3d = mesh->GetElementOfPoint( p, lami ); el3d.IsValid())
         {
           cout << endl << "Selected point " << p << " on clipping plane" << endl;
           // marker = p;
@@ -4928,10 +4924,10 @@ namespace netgen
     double lami[3] = {0.0, 0.0, 0.0};
     // Check if unprojected Point is close to surface element (eps of 1e-3 due to z-Buffer accuracy)
     bool found_2del = false;
-    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, selelement-1, false && fabs(lami[2])<1e-3))
+    if(selelement>0 && mesh->PointContainedIn2DElement(p, lami, SurfaceElementIndex::FromNr1(selelement), false && fabs(lami[2])<1e-3))
       {
         // Found it, use coordinates of point projected to surface element
-        mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, selelement-1, p);
+        mesh->GetCurvedElements().CalcSurfaceTransformation({1.0-lami[0]-lami[1], lami[0]}, SurfaceElementIndex::FromNr1(selelement), p);
         found_2del = true;
       }
     cout << endl << "Selected point " << p << " on surface" << endl;
@@ -4952,17 +4948,17 @@ namespace netgen
         if(sol.iscomplex && rcomponent != 0)
           {
             rcomponent = 2 * ((rcomponent-1)/2) + 1;
-            GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
+            GetSurfValue(&sol, SurfaceElementIndex::FromNr1(selelement), -1,  1.0-lami[0]-lami[1], lami[0], rcomponent+1, imag);
             comp = (scalcomp-1)/2 + 1;
           }
-        GetSurfValue(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
+        GetSurfValue(&sol, SurfaceElementIndex::FromNr1(selelement), -1,  1.0-lami[0]-lami[1], lami[0], rcomponent, val);
         printScalValue(sol, comp, val, imag, sol.iscomplex && comp > 0);
       }
     if(have_vec_func)
       {
         auto & sol = *soldata[vecfunction];
         ArrayMem<double, 10> values(sol.components);
-        GetSurfValues(&sol, selelement-1, -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
+        GetSurfValues(&sol, SurfaceElementIndex::FromNr1(selelement), -1,  1.0-lami[0]-lami[1], lami[0], &values[0]);
         printVecValue(sol, values);
       }
   }

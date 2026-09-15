@@ -148,9 +148,9 @@ namespace netgen
     
     Point<3> pmin, pmax;
     mesh.GetBox (pmin, pmax);
-    BoxTree<3> segtree (pmin, pmax);
+    BoxTree<3, SegmentIndex> segtree (pmin, pmax);
     
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (SegmentIndex si : mesh.LineSegments().Range())
       {
 	if (ec.seg_seginfo[si])
 	  {
@@ -161,9 +161,9 @@ namespace netgen
 	  }
       }
 
-    Array<int> loc;
+    Array<SegmentIndex> loc;
     if (!ec.point_on_edge_problem)
-      for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+      for (SegmentIndex si : mesh.LineSegments().Range())
 	{
 	  if (!ec.seg_seginfo[si]) continue;
 
@@ -456,16 +456,15 @@ namespace netgen
 
 	segments.SetSize (0);
 
-	for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+	for (auto & seg_i : mesh.LineSegments())
 	  {
-	    const auto & seg_i = mesh[si];
 	    int fdi = (seg_i.GetIndex() >= 1 && seg_i.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg_i.GetIndex()).GetIndex() : -1;
 	    if (fdi == k)
 	    {
-	      segments.Append (mesh[si]);
-	      (*testout) << "appending segment " << mesh[si] << endl;
-	      //<< " from " << mesh[mesh[si][0]]
-	      //	 << " to " <<mesh[mesh[si][1]]<< endl;
+	      segments.Append (seg_i);
+	      (*testout) << "appending segment " << seg_i << endl;
+	      //<< " from " << mesh[seg_i[0]]
+	      //	 << " to " <<mesh[seg_i[1]]<< endl;
 	    }
 	  }
 
@@ -524,7 +523,7 @@ namespace netgen
 
 	if (multithread.terminate) return;
         
-	for (SurfaceElementIndex sei = oldnf; sei < mesh.GetNSE(); sei++)
+	for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
 	  mesh[sei].SetIndex (k);
 
         auto n_illegal_trigs = mesh.FindIllegalTrigs();
@@ -632,9 +631,9 @@ namespace netgen
 	    */
   
 	    segments.SetSize (0);
-	    for (int i = 1; i <= mesh.GetNSeg(); i++)
+	    for (auto & seg2 : mesh.LineSegments())
 	      {
-		Segment * seg = &mesh.LineSegment(i);
+		Segment * seg = &seg2;
 		{
 		  int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED())
 		                 ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
@@ -663,7 +662,7 @@ namespace netgen
 	  
 	    if (multithread.terminate) return;
 
-	    for (SurfaceElementIndex  sei = oldnf; sei < mesh.GetNSE(); sei++)
+	    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
 	      mesh[sei].SetIndex (k);
 
 

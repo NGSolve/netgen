@@ -105,8 +105,8 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
     Range(segments.Size() + new_segments.Size()),
     [&] (auto& table, size_t segi) {
       auto& seg = segi < segments.Size()
-                    ? segments[segi]
-                    : new_segments[segi - segments.Size()];
+                    ? segments[SegmentIndex::FromNr0(segi)]
+                    : new_segments[SegmentIndex::FromNr0(segi - segments.Size())];
       table.Add(seg.GetIndex(), &seg);
     },
     new_max_edge_nr + 1);
@@ -114,8 +114,8 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
     Range(segments.Size() + new_segments.Size()),
     [&] (auto& table, size_t segi) {
       auto& seg = segi < segments.Size()
-                    ? segments[segi]
-                    : new_segments[segi - segments.Size()];
+                    ? segments[SegmentIndex::FromNr0(segi)]
+                    : new_segments[SegmentIndex::FromNr0(segi - segments.Size())];
       table.Add(seg[0], &seg);
       table.Add(seg[1], &seg);
     },
@@ -431,7 +431,7 @@ void BoundaryLayerTool ::FixSurfaceElements ()
 
   std::set<PointIndex> points_set;
   // only smooth over old surface elements
-  for (SurfaceElementIndex sei : Range(nse))
+  for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     {
       const auto& sel = mesh[sei];
       if (sel.GetNP() == 3 && is_boundary_moved[sel.GetIndex()])

@@ -46,19 +46,17 @@ namespace netgen
     // new version with consistent ordering across sub-domains
 
     Array<PointIndices<2>> parents;
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & el : mesh.LineSegments())
       {
-	const Segment & el = mesh[si];
-	PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
+		PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
         if (!between.Used(i2))
           {
             between.Set (i2, PointIndex::INVALID);          
             parents.Append(i2);
           }
       }
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (const Element2d & el : mesh.SurfaceElements())
       {
-	const Element2d & el = mesh[sei];
 	switch (el.GetType())
 	  {
 	  case TRIG:
@@ -109,9 +107,8 @@ namespace netgen
             throw NgException ("currently refinement for quad-elements is not supported");
           }
       }
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (auto & el : mesh.VolumeElements())
       {
-	const Element & el = mesh[ei];
 	switch (el.GetType())
 	  {
 	  case TET:
@@ -164,8 +161,7 @@ namespace netgen
     // refine edges
     Array<EdgePointGeomInfo, PointIndex> epgi;
 
-    int oldns = mesh.GetNSeg();
-    for (SegmentIndex si = 0; si < oldns; si++)
+    for (SegmentIndex si : mesh.LineSegments().Range())
       {
 	const Segment & el = mesh.LineSegment(si);
 
@@ -217,8 +213,7 @@ namespace netgen
       surfgi[pi].trignum = -1;
 
 
-    int oldnf = mesh.GetNSE();
-    for (SurfaceElementIndex sei = 0; sei < oldnf; sei++)
+    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
       {
 	const Element2d & el = mesh[sei];
 
@@ -400,7 +395,7 @@ namespace netgen
     // refine volume elements
     int oldne = mesh.GetNE();
     mesh.VolumeElements().SetAllocSize(8*oldne);
-    for (ElementIndex ei = 0; ei < oldne; ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 	switch (el.GetType())

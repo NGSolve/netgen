@@ -17,14 +17,14 @@ namespace netgen
         auto ei = mesh.GetElementOfPoint(p, lami, true);
         if(!ei.IsValid())
           return -1;
-        return ei;
+        return ei.Nr0();
       }
     else
       {
         auto ei = mesh.GetSurfaceElementOfPoint(p, lami, true);
         if(!ei.IsValid())
           return -1;
-        return ei;
+        return ei.Nr0();
       }
   }
 

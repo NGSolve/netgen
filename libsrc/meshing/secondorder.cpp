@@ -23,17 +23,15 @@ namespace netgen
 
     ClosedHashTable<SortedPointIndices<2>, PointIndex> between(2*mesh.GetNP() + 8);
 
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & seg : mesh.LineSegments())
       {
-        auto & seg = mesh[si];
         if (seg.GetType() == SEGMENT3)
           between.Set(SortedPointIndices<2>(seg[0],seg[1]), seg[2]);
       }
     
     
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (const Element2d & el : mesh.SurfaceElements())
       {
-	const Element2d & el = mesh[sei];
 
 	static int betw_trig[3][3] =
 	  { { 1, 2, 3 }, { 0, 2, 4 }, { 0, 1, 5 } };
@@ -79,14 +77,13 @@ namespace netgen
       
 
     bool thinlayers = 0;
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       if (mesh[ei].GetType() == PRISM ||
 	  mesh[ei].GetType() == PRISM12)
 	thinlayers = 1;
     
 
-    int nseg = mesh.GetNSeg();
-    for (SegmentIndex si = 0; si < nseg; si++)
+    for (SegmentIndex si : mesh.LineSegments().Range())
       {
 	Segment & el = mesh.LineSegment(si);
 
@@ -111,9 +108,9 @@ namespace netgen
       }
 
     // refine surface elements
-    for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
+    for (auto & sel : mesh.SurfaceElements())
       {
-	const Element2d & el = mesh[sei];
+	const Element2d & el = sel;
 
 	int onp = 0;
       
@@ -207,7 +204,7 @@ namespace netgen
 	      }
 	  }
       
-	mesh[sei] = newel;
+	sel = newel;
       }
 
  
@@ -431,9 +428,8 @@ namespace netgen
       { p[0].Invalidate(); p[1].Invalidate(); }
 
     // for (int i = 1; i <= ne; i++)
-    for (ElementIndex ei : mesh.VolumeElements().Range())
+    for (auto & el : mesh.VolumeElements())
       {
-	const Element & el = mesh[ei];
 	if (el.GetType() == TET10)
 	  {
 	    static int betweentab[6][3] =
@@ -550,20 +546,20 @@ namespace netgen
 	      
 		//	      (*testout) << "bad els: " << endl;
 		wrongels = 0;
-		for (int i = 1; i <= ne; i++)
+		for (ElementIndex i : T_Range<ElementIndex>(ne))
                   
 		  {
-		    if (!illegalels.Test(i) && 
-			mesh.VolumeElement(i).
+		    if (!illegalels.Test(i.Nr1()) && 
+			mesh[i].
 			CalcJacobianBadness(mesh.Points()) > 1e10)
 		      {
 			wrongels++;
-			Element & el = mesh.VolumeElement(i);
+			Element & el = mesh[i];
 			el.Flags().badel = 1;
 		     
 		      
 			if (lam < 1e-4)
-			  illegalels.SetBit(i);
+			  illegalels.SetBit(i.Nr1());
  
 
 			/*
@@ -574,7 +570,7 @@ namespace netgen
 			*/
 		      }
 		    else
-		      mesh.VolumeElement(i).Flags().badel = 0;
+		      mesh[i].Flags().badel = 0;
 		  }
 		cout << "wrongels = " << wrongels << endl;
 	      }
@@ -592,15 +588,15 @@ namespace netgen
 
 
       
-    for (int i = 1; i <= ne; i++)
+    for (ElementIndex i : T_Range<ElementIndex>(ne))
       {
-	if (illegalels.Test(i))
+	if (illegalels.Test(i.Nr1()))
 	  {
-	    cout << "illegal element: " << i << endl;
-	    mesh.VolumeElement(i).Flags().badel = 1;
+	    cout << "illegal element: " << i.Nr1() << endl;
+	    mesh[i].Flags().badel = 1;
 	  }
 	else
-	  mesh.VolumeElement(i).Flags().badel = 0;
+	  mesh[i].Flags().badel = 0;
       }
   
     /*

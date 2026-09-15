@@ -328,7 +328,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
   if (mesh->GetDimension() == 3)
     {
       int i;
-      const Element & el = mesh->VolumeElement (ei);
+      const Element & el = (*mesh)[ElementIndex::FromNr1(ei)];
       for (i = 0; i < el.GetNP(); i++)
 	epi[i] = PointNr(el.PNum(i+1));
       
@@ -384,7 +384,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
     }
   else
     {
-      const Element2d & el = mesh->SurfaceElement (ei);
+      const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
 	epi[i] = PointNr(el.PNum(i+1));      
 
@@ -401,11 +401,11 @@ NG_ELEMENT_TYPE Ng_GetElementType (int ei)
 {
   if (mesh->GetDimension() == 3)
     {
-      return NG_ELEMENT_TYPE (mesh->VolumeElement (ei).GetType());
+      return NG_ELEMENT_TYPE ((*mesh)[ElementIndex::FromNr1(ei)].GetType());
     }
   else
     {
-      const Element2d & el = mesh->SurfaceElement (ei);
+      const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       switch (el.GetNP())
 	{
 	case 3: return NG_TRIG; 
@@ -423,10 +423,10 @@ NG_ELEMENT_TYPE Ng_GetElementType (int ei)
 int Ng_GetElementIndex (int ei)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->VolumeElement(ei).GetIndex();
+    return (*mesh)[ElementIndex::FromNr1(ei)].GetIndex();
   else
     {
-      int ind = mesh->SurfaceElement(ei).GetIndex(); 
+      int ind = (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex(); 
       ind = mesh->GetFaceDescriptor(ind).BCProperty();
       return ind;
     }
@@ -434,7 +434,7 @@ int Ng_GetElementIndex (int ei)
 
 void Ng_SetElementIndex(const int ei, const int index)
 {
-  mesh->VolumeElement(ei).SetIndex(index);
+  (*mesh)[ElementIndex::FromNr1(ei)].SetIndex(index);
 }
 
 const char * Ng_GetElementMaterial (int ei)
@@ -442,7 +442,7 @@ const char * Ng_GetElementMaterial (int ei)
   static char empty[] = "";
   if (mesh->GetDimension() == 3)
     {
-      int ind = mesh->VolumeElement(ei).GetIndex();
+      int ind = (*mesh)[ElementIndex::FromNr1(ei)].GetIndex();
       // cout << "ind = " << ind << endl;
       const string * mat = mesh->GetMaterialPtr (ind);
       if (mat)
@@ -454,7 +454,7 @@ const char * Ng_GetElementMaterial (int ei)
   // add astrid
   else
     {
-      int ind = mesh->SurfaceElement(ei).GetIndex();
+      int ind = (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex();
       ind = mesh->GetFaceDescriptor(ind).BCProperty();
       const string * mat = mesh->GetMaterialPtr ( ind );
       if (mat)
@@ -501,7 +501,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
 {
   if (mesh->GetDimension() == 3)
     {
-      const Element2d & el = mesh->SurfaceElement (ei);
+      const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
 	epi[i] = PointNr(el[i]);
       
@@ -511,7 +511,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
     }
   else
     {
-      const Segment & seg = mesh->LineSegment (ei);
+      const Segment & seg = (*mesh)[SegmentIndex::FromNr1(ei)];
 
       if (!seg[2].IsValid())
 	{
@@ -538,22 +538,22 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
 int Ng_GetSurfaceElementIndex (int ei)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).BCProperty();
+    return mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).BCProperty();
   else
-    return mesh->LineSegment(ei).GetIndex();
+    return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex();
 }
 
 int Ng_GetSurfaceElementSurfaceNumber (int ei)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).SurfNr();
+    return mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).SurfNr();
   else
-    return mesh->LineSegment(ei).GetIndex();
+    return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex();
 }
 int Ng_GetSurfaceElementFDNumber (int ei)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->SurfaceElement(ei).GetIndex();
+    return (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex();
   else
     return -1;
 }
@@ -562,9 +562,9 @@ int Ng_GetSurfaceElementFDNumber (int ei)
 char * Ng_GetSurfaceElementBCName (int ei)
 {
   if ( mesh->GetDimension() == 3 )
-    return const_cast<char *>(mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).GetBCName().c_str());
+    return const_cast<char *>(mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).GetBCName().c_str());
   else
-    return const_cast<char *>(mesh->GetBCName(mesh->LineSegment(ei).GetIndex()).c_str());
+    return const_cast<char *>(mesh->GetBCName((*mesh)[SegmentIndex::FromNr1(ei)].GetIndex()).c_str());
 }
 
 
@@ -657,18 +657,18 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
     {
       Point<3> p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
+	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
     }
   else
     {
       double lam3[3];
       Point<3> p2d(p[0], p[1], 0);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0) + 1;
+	mesh->GetSurfaceElementOfPoint(p2d, lam3, dummy, build_searchtree != 0).Nr1();
 
       if (ind > 0)
 	{
-	  if(mesh->SurfaceElement(ind).GetType()==QUAD)
+	  if((*mesh)[SurfaceElementIndex::FromNr1(ind)].GetType()==QUAD)
 	    {
 	      lami[0] = lam3[0];
 	      lami[1] = lam3[1];
@@ -703,7 +703,7 @@ int Ng_FindSurfaceElementOfPoint (double * p, double * lami, int build_searchtre
     {
       Point<3> p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
+	mesh->GetSurfaceElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
     }
   else
     {
@@ -721,16 +721,16 @@ int Ng_IsElementCurved (int ei)
 {
   switch (mesh->GetDimension())
     {
-    case 1: return mesh->GetCurvedElements().IsSegmentCurved (ei-1);
-    case 2: return mesh->GetCurvedElements().IsSurfaceElementCurved (ei-1);
-    case 3: return mesh->GetCurvedElements().IsElementCurved (ei-1);
+    case 1: return mesh->GetCurvedElements().IsCurved (SegmentIndex::FromNr1(ei));
+    case 2: return mesh->GetCurvedElements().IsCurved (SurfaceElementIndex::FromNr1(ei));
+    case 3: return mesh->GetCurvedElements().IsCurved (ElementIndex::FromNr1(ei));
     }
   return 0;
   /*
   if (mesh->GetDimension() == 2)
-    return mesh->GetCurvedElements().IsSurfaceElementCurved (ei-1);
+    return mesh->GetCurvedElements().IsCurved (SurfaceElementIndex::FromNr1(ei));
   else
-    return mesh->GetCurvedElements().IsElementCurved (ei-1);
+    return mesh->GetCurvedElements().IsCurved (ElementIndex::FromNr1(ei));
   */
 }
 
@@ -738,9 +738,9 @@ int Ng_IsElementCurved (int ei)
 int Ng_IsSurfaceElementCurved (int sei)
 {
   if (mesh->GetDimension() == 2)
-    return mesh->GetCurvedElements().IsSegmentCurved (sei-1);
+    return mesh->GetCurvedElements().IsCurved (SegmentIndex::FromNr1(sei));
   else
-    return mesh->GetCurvedElements().IsSurfaceElementCurved (sei-1);
+    return mesh->GetCurvedElements().IsCurved (SurfaceElementIndex::FromNr1(sei));
 }
 
 
@@ -755,7 +755,7 @@ void Ng_GetElementTransformation (int ei, const double * xi,
       Point<3> xg;
       Mat<3,2> dx;
 
-      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, ei-1, xg, dx);
+      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr1(ei), xg, dx);
 
       if (x)
 	{
@@ -778,7 +778,7 @@ void Ng_GetElementTransformation (int ei, const double * xi,
       Point<3> xg;
       Mat<3,3> dx;
 
-      mesh->GetCurvedElements().CalcElementTransformation (xl, ei-1, xg, dx);
+      mesh->GetCurvedElements().CalcElementTransformation (xl, ElementIndex::FromNr1(ei), xg, dx);
 
       if (x)
 	{
@@ -807,9 +807,9 @@ void Ng_GetMultiElementTransformation (int ei, int n,
                                        double * dxdxi, size_t sdxdxi)
 {
   if (mesh->GetDimension() == 2)
-    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (ei-1, n, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (SurfaceElementIndex::FromNr1(ei), n, xi, sxi, x, sx, dxdxi, sdxdxi);
   else
-    mesh->GetCurvedElements().CalcMultiPointElementTransformation (ei-1, n, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointElementTransformation (ElementIndex::FromNr1(ei), n, xi, sxi, x, sx, dxdxi, sdxdxi);
 }
 
 
@@ -822,7 +822,7 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
       Point<3> xg;
       Vec<3> dx;
 
-      mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], sei-1, xg, dx);
+      mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], SegmentIndex::FromNr1(sei), xg, dx);
 
       if (x)
         for (int i = 0; i < 2; i++)
@@ -839,7 +839,7 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
       Point<3> xg;
       Mat<3,2> dx;
       
-      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, sei-1, xg, dx);
+      mesh->GetCurvedElements().CalcSurfaceTransformation (xl, SurfaceElementIndex::FromNr1(sei), xg, dx);
       
       for (int i=0; i<3; i++)
 	{
@@ -860,14 +860,14 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
 
 int Ng_GetSegmentIndex (int ei)
 {
-  const Segment & seg = mesh->LineSegment (ei);
+  const Segment & seg = (*mesh)[SegmentIndex::FromNr1(ei)];
   return mesh->GetEdgeDescriptor(seg).EdgeNr();
 }
 
 
 NG_ELEMENT_TYPE Ng_GetSegment (int ei, int * epi, int * np)
 {
-  const Segment & seg = mesh->LineSegment (ei);
+  const Segment & seg = (*mesh)[SegmentIndex::FromNr1(ei)];
   
   epi[0] = PointNr(seg[0]);
   epi[1] = PointNr(seg[1]);
@@ -894,12 +894,12 @@ void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & ou
 {
   if ( mesh->GetDimension() == 3 )
     {
-      in = mesh->GetFaceDescriptor(mesh->SurfaceElement(selnr).GetIndex()).DomainIn();
-      out = mesh->GetFaceDescriptor(mesh->SurfaceElement(selnr).GetIndex()).DomainOut();
+      in = mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(selnr)].GetIndex()).DomainIn();
+      out = mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(selnr)].GetIndex()).DomainOut();
     }
   else
     {
-      const auto & seg = mesh -> LineSegment(selnr);
+      const auto & seg = (*mesh)[SegmentIndex::FromNr1(selnr)];
       const auto & ed = mesh -> GetEdgeDescriptor(seg.GetIndex());
       in = ed.DomainIn();
       out = ed.DomainOut();
@@ -973,13 +973,13 @@ void Ng_SetRefinementFlag (int ei, int flag)
 {
   if (mesh->GetDimension() == 3)
     {
-      mesh->VolumeElement(ei).SetRefinementFlag (flag != 0);
-      mesh->VolumeElement(ei).SetStrongRefinementFlag (flag >= 10);
+      (*mesh)[ElementIndex::FromNr1(ei)].SetRefinementFlag (flag != 0);
+      (*mesh)[ElementIndex::FromNr1(ei)].SetStrongRefinementFlag (flag >= 10);
     }
   else
     {
-      mesh->SurfaceElement(ei).SetRefinementFlag (flag != 0);
-      mesh->SurfaceElement(ei).SetStrongRefinementFlag (flag >= 10);
+      (*mesh)[SurfaceElementIndex::FromNr1(ei)].SetRefinementFlag (flag != 0);
+      (*mesh)[SurfaceElementIndex::FromNr1(ei)].SetStrongRefinementFlag (flag >= 10);
     }
 }
 
@@ -987,8 +987,8 @@ void Ng_SetSurfaceRefinementFlag (int ei, int flag)
 {
   if (mesh->GetDimension() == 3)
     {
-      mesh->SurfaceElement(ei).SetRefinementFlag (flag != 0);
-      mesh->SurfaceElement(ei).SetStrongRefinementFlag (flag >= 10);
+      (*mesh)[SurfaceElementIndex::FromNr1(ei)].SetRefinementFlag (flag != 0);
+      (*mesh)[SurfaceElementIndex::FromNr1(ei)].SetStrongRefinementFlag (flag >= 10);
     }
 }
 
@@ -1579,7 +1579,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
 {
   if (mesh->GetDimension() == 3)
     {
-      SurfaceElementIndex sei = selnr-1;
+      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(selnr);
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
 	*orient = topology.GetSurfaceElementFaceOrientation (selnr);
@@ -1634,8 +1634,8 @@ int Ng_GetNVertexElements (int vnr)
       /*
       {
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
-          if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) cnt++;
+        for (auto & seg : mesh->LineSegments())
+          if ( (seg[0] == vnr) || (seg[1] == vnr) ) cnt++;
         return cnt;
       }
       */
@@ -1653,23 +1653,23 @@ void Ng_GetVertexElements (int vnr, int * els)
     case 3:
       {
         auto ia = mesh->GetTopology().GetVertexElements(PointIdx(vnr));
-        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
+        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i].Nr1();
         break;
       }
     case 2:
       {
         auto ia = mesh->GetTopology().GetVertexSurfaceElements(PointIdx(vnr));
-        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
+        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i].Nr1();
         break;
       }
     case 1:
       {
         auto ia = mesh->GetTopology().GetVertexSegments(PointIdx(vnr));
-        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
+        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i].Nr1();
         break;
         /*
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
+        for (SegmentIndex i : mesh->LineSegments().Range())
           if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) 
             els[cnt++] = i+1;
         break;
@@ -1682,39 +1682,39 @@ void Ng_GetVertexElements (int vnr, int * els)
 int Ng_GetElementOrder (int enr)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->VolumeElement(enr).GetOrder();
+    return (*mesh)[ElementIndex::FromNr1(enr)].GetOrder();
   else
-    return mesh->SurfaceElement(enr).GetOrder();
+    return (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder();
 }
 
 void Ng_GetElementOrders (int enr, int * ox, int * oy, int * oz)
 {
   if (mesh->GetDimension() == 3)
-    mesh->VolumeElement(enr).GetOrder(*ox, *oy, *oz);
+    (*mesh)[ElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, *oz);
   else
-    mesh->SurfaceElement(enr).GetOrder(*ox, *oy, *oz);
+    (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, *oz);
 }
 
 void Ng_SetElementOrder (int enr, int order)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->VolumeElement(enr).SetOrder(order);
+    return (*mesh)[ElementIndex::FromNr1(enr)].SetOrder(order);
   else
-    return mesh->SurfaceElement(enr).SetOrder(order);
+    return (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(order);
 }
 
 void Ng_SetElementOrders (int enr, int ox, int oy, int oz)
 {
   if (mesh->GetDimension() == 3)
-    mesh->VolumeElement(enr).SetOrder(ox, oy, oz);
+    (*mesh)[ElementIndex::FromNr1(enr)].SetOrder(ox, oy, oz);
   else
-    mesh->SurfaceElement(enr).SetOrder(ox, oy);
+    (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(ox, oy);
 }
 
 
 int Ng_GetSurfaceElementOrder (int enr)
 {
-  return mesh->SurfaceElement(enr).GetOrder();
+  return (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder();
 }
 
 //HERBERT: falsche Anzahl von Argumenten
@@ -1722,17 +1722,17 @@ int Ng_GetSurfaceElementOrder (int enr)
 void Ng_GetSurfaceElementOrders (int enr, int * ox, int * oy)
 {
   int d; 
-  mesh->SurfaceElement(enr).GetOrder(*ox, *oy, d);
+  (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, d);
 }
 
 void Ng_SetSurfaceElementOrder (int enr, int order)
 {
-  return mesh->SurfaceElement(enr).SetOrder(order);
+  return (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(order);
 }
 
 void Ng_SetSurfaceElementOrders (int enr, int ox, int oy)
 {
-  mesh->SurfaceElement(enr).SetOrder(ox, oy);
+  (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(ox, oy);
 }
 
 
@@ -1761,12 +1761,12 @@ int Ng_GetParentElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentelement.Size())
-	return mesh->mlparentelement[ei-1]+1;
+	return mesh->mlparentelement[ElementIndex::FromNr1(ei)].Nr1();
     }
   else
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement[ei-1]+1;
+	return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
     }
   return 0;
 }
@@ -1777,7 +1777,7 @@ int Ng_GetParentSElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement[ei-1]+1;
+	return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
     }
   else
     {
@@ -1849,7 +1849,7 @@ int Ng_GetNPeriodicEdges (int idnr)
     mesh->GetIdentifications().GetMap(idnr, map);
     //(*testout) << "ident-map " << id << ":" << endl << map << endl;
 
-    for (SegmentIndex si = 0; si < nse; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nse))
       {
 	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
 	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
@@ -1877,7 +1877,7 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
       
     //(*testout) << "map = " << map << endl;
 
-    for (SegmentIndex si = 0; si < nse; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nse))
       {
 	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
 	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
@@ -1954,7 +1954,7 @@ int Ng_GetVertex_Elements( int vnr, int* elems )
   auto indexArray = topology.GetVertexElements( PointIdx(vnr) );
   
   for( int i=0; i<indexArray.Size(); i++ )
-    elems[i] = indexArray[i]+1;
+    elems[i] = indexArray[i].Nr1();
   
   return indexArray.Size();
 }
@@ -1974,16 +1974,16 @@ int Ng_GetVertex_SurfaceElements( int vnr_, int* elems )
         auto indexArray = topology.GetVertexSurfaceElements( vnr );
         
         for( int i=0; i<indexArray.Size(); i++ )
-          elems[i] = indexArray[i]+1;
+          elems[i] = indexArray[i].Nr1();
         
         return indexArray.Size();
       }
     case 2:
       {
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
+        for (SegmentIndex i : mesh->LineSegments().Range())
           if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) 
-            elems[cnt++] = i+1;
+            elems[cnt++] = i.Nr1();
         return cnt;
       }
     case 1:
@@ -2027,8 +2027,8 @@ int Ng_GetVertex_NSurfaceElements( int vnr_ )
     case 2:
       {
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
-          if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) cnt++;
+        for (auto & seg : mesh->LineSegments())
+          if ( (seg[0] == vnr) || (seg[1] == vnr) ) cnt++;
         return cnt;
       }
     }
@@ -2186,9 +2186,9 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
   
   mesh->LocalHFunction().SetGrading (mparam.grading);
 
-  Array<double> * qualityloss_arr = NULL;
+  Array<double, ElementIndex> * qualityloss_arr = NULL;
   if(qualityloss != NULL)
-    qualityloss_arr = new Array<double>;
+    qualityloss_arr = new Array<double, ElementIndex>;
 
   ref -> Bisect (*mesh, biopt, qualityloss_arr);
 
@@ -2198,8 +2198,8 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
     {
       *qualityloss = new double[qualityloss_arr->Size()+1];
 
-      for(int i = 0; i<qualityloss_arr->Size(); i++)
-	(*qualityloss)[i+1] = (*qualityloss_arr)[i];
+      for(ElementIndex ei : qualityloss_arr->Range())
+	(*qualityloss)[ei.Nr1()] = (*qualityloss_arr)[ei];
 
       retval = qualityloss_arr->Size();
 
@@ -2254,7 +2254,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
         int cnt = 0;
         if (nodeset & 1)  // Vertices
           {
-            const Element & el = (*mesh)[ElementIndex(nodenr)];
+            const Element & el = (*mesh)[ElementIndex::FromNr1(nodenr)];
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
@@ -2264,7 +2264,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
 
         if (nodeset & 2)  // Edges
           {
-            auto edges = mesh->GetTopology().GetEdges (ElementIndex(nodenr));
+            auto edges = mesh->GetTopology().GetEdges (ElementIndex::FromNr1(nodenr));
             for (int i = 0; i < edges.Size(); i++)
               {
                 nodes[cnt++] = 1;
@@ -2336,7 +2336,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
         int cnt = 0;
         if (nodeset & 1)  // Vertices
           {
-            const Element2d & el = (*mesh)[SurfaceElementIndex(elementnr)];
+            const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr0(elementnr)];
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
@@ -2358,7 +2358,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
 
         if (nodeset & 4)  // Faces
           {
-            int face = mesh->GetTopology().GetFace (SurfaceElementIndex(elementnr))+1;
+            int face = mesh->GetTopology().GetFace (SurfaceElementIndex::FromNr0(elementnr))+1;
             nodes[cnt++] = 2;
             nodes[cnt++] = face-1;
           }

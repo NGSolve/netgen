@@ -56,7 +56,7 @@ void WriteElmerFormat (const Mesh &mesh,
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
   int nse = mesh.GetNSE();
-  int i, j;
+  int j;
   // char str[200];
   
   int inverttets = mparam.inverttets;
@@ -130,9 +130,9 @@ void WriteElmerFormat (const Mesh &mesh,
   // use lowest three point numbers of lowest-order face to index faces
   ClosedHashTable<SortedPointIndices<3>, int> face2volelement(2*ne+8);
 
-  for (int i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = mesh.VolumeElement(i);
+      const Element & el = mesh[i];
 
       // getface not working for second order elements -> reconstruct linear element here
       Element linear_el = el;
@@ -142,8 +142,8 @@ void WriteElmerFormat (const Mesh &mesh,
 	{
           Element2d face;
           linear_el.GetFace(j, face);
-	  face2volelement.Set (get3FacePoints(face), i);
-          cout << "set " << get3FacePoints(face) << "\tto " << i << endl;
+	  face2volelement.Set (get3FacePoints(face), i.Nr1());
+          cout << "set " << get3FacePoints(face) << "\tto " << i.Nr1() << endl;
 	}
     }
 
@@ -163,13 +163,13 @@ void WriteElmerFormat (const Mesh &mesh,
       outfile_n << p(2) << "\n";
     }
 
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      Element el = mesh.VolumeElement(i);
+      Element el = mesh[i];
       if (inverttets) el.Invert();
       auto eltype = el.GetType();
       elcount[eltype]++;
-      outfile_e << i << " " << el.GetIndex() << " " << tmap[eltype] <<  "  ";
+      outfile_e << i.Nr1() << " " << el.GetIndex() << " " << tmap[eltype] <<  "  ";
 
       auto & map = pmap[eltype];
       for (j = 1; j <= el.GetNP(); j++)
@@ -180,9 +180,9 @@ void WriteElmerFormat (const Mesh &mesh,
       outfile_e << "\n";
     }
 
-  for (i = 1; i <= nse; i++)
+  for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
     {
-      Element2d el = mesh.SurfaceElement(i);
+      Element2d el = mesh[i];
       if (invertsurf) el.Invert();
       auto eltype = el.GetType();
       elcount[eltype]++;
@@ -190,7 +190,7 @@ void WriteElmerFormat (const Mesh &mesh,
       int elind = face2volelement.Get(get3FacePoints(el));
       cout << "get " << get3FacePoints(el) << "\t " << elind << endl;
 
-      outfile_b << i << " " << mesh.GetFaceDescriptor(el.GetIndex()).BCProperty() << 
+      outfile_b << i.Nr1() << " " << mesh.GetFaceDescriptor(el.GetIndex()).BCProperty() << 
          " " << elind << " 0 "  << tmap[eltype] << "    ";
 
       auto & map = pmap[el.GetType()];

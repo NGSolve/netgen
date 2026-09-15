@@ -91,9 +91,9 @@ namespace netgen
     /// boundary edges  (1..normal bedge, 2..segment)
     unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> boundaryedges;
     ///
-    unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> segmentht;
+    unique_ptr<ClosedHashTable<SortedPointIndices<2>, SegmentIndex>> segmentht;
     ///
-    unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> surfelementht;
+    unique_ptr<ClosedHashTable<SortedPointIndices<3>, SurfaceElementIndex>> surfelementht;
     unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> illegal_trigs;
 
     /// faces of rest-solid
@@ -296,8 +296,8 @@ namespace netgen
     DLL_HEADER SegmentIndex AddSegment (const Segment & s);
     void DeleteSegment (int segnr)
     {
-      segments[segnr-1][0].Invalidate();
-      segments[segnr-1][1].Invalidate();
+      segments[SegmentIndex::FromNr1(segnr)][0].Invalidate();
+      segments[SegmentIndex::FromNr1(segnr)][1].Invalidate();
     }
     /*
     void FullDeleteSegment (int segnr)  // von wem ist das ???
@@ -307,11 +307,6 @@ namespace netgen
     */
 
     int GetNSeg () const { return segments.Size(); }
-    // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
-    Segment & LineSegment(int i) { return segments[i-1]; }
-    // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
-    const Segment & LineSegment(int i) const { return segments[i-1]; }
-
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
     const Segment & LineSegment(SegmentIndex si) const { return segments[si]; }
     const Segment & operator[] (SegmentIndex si) const { return segments[si]; }
@@ -335,7 +330,7 @@ namespace netgen
       surfelements.Elem(eli).PNum(2).Invalidate();
       surfelements.Elem(eli).PNum(3).Invalidate();
       */
-      surfelements[eli-1].Delete();
+      surfelements[IndexBASE<SurfaceElementIndex>()+(eli-1)].Delete();
       /*
       surfelements[eli-1].PNum(1).Invalidate();
       surfelements[eli-1].PNum(2).Invalidate();
@@ -361,10 +356,6 @@ namespace netgen
 
     auto GetNSE () const { return surfelements.Size(); }
 
-    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]    
-    Element2d & SurfaceElement(int i) { return surfelements[i-1]; }
-    // [[deprecated("Use SurfaceElement(SurfaceElementIndex) instead of int !")]]        
-    const Element2d & SurfaceElement(int i) const { return surfelements[i-1]; }
     // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
     Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
     // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
@@ -388,10 +379,6 @@ namespace netgen
 
     auto GetNE () const { return volelements.Size(); }
 
-    // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]    
-    Element & VolumeElement(int i) { return volelements[IndexBASE<ElementIndex>()+(i-1)]; }
-    // [[deprecated("Use VolumeElement(ElementIndex) instead of int !")]]        
-    const Element & VolumeElement(int i) const { return volelements[IndexBASE<ElementIndex>()+(i-1)]; }
     // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
     Element & VolumeElement(ElementIndex i) { return volelements[i]; }
     // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
@@ -490,6 +477,8 @@ namespace netgen
     DLL_HEADER void CalcLocalHFromPointDistances(double grading, int layer=1);
     ///
     DLL_HEADER void RestrictLocalH (resthtype rht, int nr, double loch);
+    DLL_HEADER void RestrictLocalH (const Element2d & sel, double loch);
+    DLL_HEADER void RestrictLocalH (const Segment & seg, double loch);
     ///
     DLL_HEADER void LoadLocalMeshSize (const filesystem::path & meshsizefilename);
     ///
@@ -960,8 +949,8 @@ namespace netgen
       {
 	area = 0;
         /*
-	for (SurfaceElementIndex sei = 0; sei < mesh.GetNSE(); sei++)
-	  Add (mesh[sei]);
+	for (auto & el : mesh.SurfaceElements())
+	  Add (el);
         */
         for (const Element2d & el : mesh.SurfaceElements())
           Add (el);
@@ -1063,8 +1052,8 @@ namespace netgen
 #endif
 
     Array<int, ElementIndex> vol_partition;
-    Array<int> surf_partition;
-    Array<int> seg_partition;
+    Array<int, SurfaceElementIndex> surf_partition;
+    Array<int, SegmentIndex> seg_partition;
 
     shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
 
@@ -1101,6 +1090,17 @@ namespace netgen
   FlatArray<T_FACE> MeshTopology :: GetFaces (ElementIndex elnr) const
   {
     return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+  }
+
+  /// a surface element has one face, a segment one edge
+  FlatArray<T_FACE> MeshTopology :: GetFaces (SurfaceElementIndex elnr) const
+  {
+    return FlatArray<T_FACE>(1, &surffaces[elnr]);
+  }
+
+  FlatArray<T_EDGE> MeshTopology :: GetEdges (SegmentIndex segnr) const
+  {
+    return FlatArray<T_EDGE>(1, &segedges[segnr]);
   }
 
   DLL_HEADER void AddFacesBetweenDomains(Mesh & mesh);
