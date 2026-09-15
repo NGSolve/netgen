@@ -299,12 +299,6 @@ namespace netgen
       segments[SegmentIndex::FromNr1(segnr)][0].Invalidate();
       segments[SegmentIndex::FromNr1(segnr)][1].Invalidate();
     }
-    /*
-    void FullDeleteSegment (int segnr)  // von wem ist das ???
-    {
-      segments.Delete(segnr-PointIndex::BASE);
-    }
-    */
 
     int GetNSeg () const { return segments.Size(); }
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
@@ -320,32 +314,6 @@ namespace netgen
     DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2d & el);
     // write to pre-allocated container, thread-safe
     DLL_HEADER void SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el);
-    
-    [[deprecated("Use Delete(SurfaceElementIndex) instead of int !")]]
-    void DeleteSurfaceElement (int eli)
-    {
-      /*
-      surfelements.Elem(eli).Delete();
-      surfelements.Elem(eli).PNum(1).Invalidate();
-      surfelements.Elem(eli).PNum(2).Invalidate();
-      surfelements.Elem(eli).PNum(3).Invalidate();
-      */
-      surfelements[IndexBASE<SurfaceElementIndex>()+(eli-1)].Delete();
-      /*
-      surfelements[eli-1].PNum(1).Invalidate();
-      surfelements[eli-1].PNum(2).Invalidate();
-      surfelements[eli-1].PNum(3).Invalidate();
-      */
-      timestamp = NextTimeStamp();
-    }
-
-    [[deprecated("Use Delete(SurfaceElementIndex) instead !")]]        
-    void DeleteSurfaceElement (SurfaceElementIndex eli)
-    {
-      // for (auto & p : surfelements[eli].PNums()) p.Invalidate();
-      surfelements[eli].Delete();
-      timestamp = NextTimeStamp();
-    }
     
     void Delete (SurfaceElementIndex eli)
     {
