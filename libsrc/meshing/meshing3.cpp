@@ -277,7 +277,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       pindex.SetSize(0);
       findex.SetSize(0);
 
-      INDEX_2_HASHTABLE<int> connectedpairs(100);  // connected pairs for prism meshing
+      ClosedHashTable<IVec<2>,int> connectedpairs(100);  // connected pairs for prism meshing
       
       // select base-element (will be locface[1])
       // and get local environment of radius (safety * h)

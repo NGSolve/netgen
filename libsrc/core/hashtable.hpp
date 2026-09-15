@@ -839,7 +839,7 @@ namespace ngcore
           
           auto key = hash[nextpos];
           auto val = cont[nextpos];
-          hash[pos] = invalid; used--;
+          hash[nextpos] = invalid; used--;
           
           Set (key, val);
           pos = nextpos;

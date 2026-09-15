@@ -497,7 +497,7 @@ int AdFront3 :: GetLocals (int fstind,
                            Array<MiniElement2d> & locfaces,   // local index
                            Array<Front3PointIndex, LocalPointIndex> & pindex,
                            Array<INDEX> & findex,
-                           INDEX_2_HASHTABLE<int> & getconnectedpairs,
+                           ClosedHashTable<IVec<2>,int> & getconnectedpairs,
                            float xh,
                            float relh,
                            INDEX& facesplit)
@@ -649,8 +649,8 @@ int AdFront3 :: GetLocals (int fstind,
                       // INDEX_2 coned(i, other);
                       // coned.Sort();
                       // (*testout) << "connected: " << locpoints.Get(i) << "-" << locpoints.Get(other) << endl;
-                      getconnectedpairs.Set (INDEX_2::Sort (i.Nr0(),
-                                                            other.Nr0()), 1);
+                      getconnectedpairs.Set (IVec<2>(i.Nr0(),
+                                                                     other.Nr0()).Sort(), 1);
                     }
                 }
             }

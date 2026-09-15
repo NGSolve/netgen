@@ -394,6 +394,21 @@ namespace netgen
   using ElementIndex = ElIndex<3>;
   using SurfaceElementIndex = ElIndex<2>;
   using SegmentIndex = ElIndex<1>;
+}
+
+namespace ngcore
+{
+  template <int D>
+  struct CHT_trait<netgen::ElIndex<D>>
+  {
+    constexpr static inline netgen::ElIndex<D> Invalid() { return netgen::ElIndex<D>::INVALID; }
+    constexpr static inline size_t HashValue (const netgen::ElIndex<D> & hash, size_t mask)
+    { return (hash-IndexBASE<netgen::ElIndex<D>>()) & mask; }
+  };
+}
+
+namespace netgen
+{
 
   template <int D>
   inline istream & operator>> (istream & ist, ElIndex<D> & ei)

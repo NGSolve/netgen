@@ -195,40 +195,6 @@ namespace netgen
 
 
 
-#ifdef OLD
-  void MakeCornerNodes (Mesh & mesh,
-                        INDEX_HASHTABLE<int> & cornernodes)
-  {
-    int i, j;
-    int nseg = mesh.GetNSeg();
-    Array<int> edgesonpoint(mesh.GetNP());
-    for (i = 1; i <= mesh.GetNP(); i++)
-      edgesonpoint.Elem(i) = 0;
-
-    for (i = 1; i <= nseg; i++)
-      {
-        for (j = 1; j <= 2; j++)
-          {
-            int pi = (j == 1) ? 
-              mesh.LineSegment(i)[0] :
-              mesh.LineSegment(i)[1];
-            edgesonpoint.Elem(pi)++;
-          }
-      }
-
-    /*
-      cout << "cornernodes: ";
-      for (i = 1; i <= edgesonpoint.Size(); i++)
-      if (edgesonpoint.Get(i) >= 6)
-      {
-      cornernodes.Set (i, 1);
-      cout << i << " ";
-      }
-      cout << endl;
-    */
-    //  cornernodes.Set (5, 1);
-  }
-#endif
 
 
   void RefinePrisms (Mesh & mesh, const CSGeometry * geom, 

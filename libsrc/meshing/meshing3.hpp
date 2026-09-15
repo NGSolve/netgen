@@ -51,7 +51,7 @@ public:
   int ApplyRules (Array<Point<3>, LocalPointIndex> & lpoints,
                   Array<int, LocalPointIndex> & allowpoint,
                   Array<MiniElement2d> & lfaces, INDEX lfacesplit,
-                  INDEX_2_HASHTABLE<int> & connectedpairs,
+                  ClosedHashTable<IVec<2>,int> & connectedpairs,
                   Array<LocalElement> & elements,
                   Array<INDEX> & delfaces, int tolerance, 
                   double sloppy, int rotind1,

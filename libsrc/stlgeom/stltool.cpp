@@ -1096,10 +1096,10 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
 
   // NgProfiler::StartTimer (timer_new);
 
-  INDEX_2 segs[3];
-  segs[0] = INDEX_2(t[0], t[1]);
-  segs[1] = INDEX_2(t[1], t[2]);
-  segs[2] = INDEX_2(t[2], t[0]);
+  IVec<2> segs[3];
+  segs[0] = IVec<2>(t[0], t[1]);
+  segs[1] = IVec<2>(t[1], t[2]);
+  segs[2] = IVec<2>(t[2], t[0]);
 
   if(!searchtree)
       BuildSearchTree();
@@ -1109,7 +1109,7 @@ void STLBoundary ::AddTriangle(const STLTriangle & t)
       STLBoundarySeg bseg(seg[0], seg[1], geometry->GetPoints(), chart);
       bseg.SetSmoothEdge (geometry->IsSmoothEdge (seg[0],seg[1]));
       
-      INDEX_2 op(seg[1], seg[0]);
+      IVec<2> op(seg[1], seg[0]);
       if (boundary_ht.Used(op))
         {
           boundary_ht.Delete(op);
@@ -1327,7 +1327,7 @@ void STLBoundary :: BuildSearchTree()
   for (size_t i = 0; i < 8; i++)
     box2d.Add ( chart->Project2d (box3d.GetPointNr(i)));
 
-  searchtree = make_unique<BoxTree<2,INDEX_2>> (box2d);
+  searchtree = make_unique<BoxTree<2,IVec<2>>> (box2d);
 //   searchtree = nullptr;
 }
 

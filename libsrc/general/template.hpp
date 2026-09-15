@@ -454,6 +454,19 @@ namespace netgen
     return HashValue2(IVec<3,netgen::INDEX>(ind[0], ind[1], ind[2]), mask);
   }
 
+inline void SetInvalid (INDEX & i) { i = -1; }
+inline bool IsInvalid (INDEX i) { return i == -1; }
+inline size_t HashValue (INDEX i, size_t size) { return (113*size_t(i)) % size; }
+
+inline void SetInvalid (INDEX_2 & i2) { i2[0] = -1; }
+inline bool IsInvalid (INDEX_2 i2) { return i2[0] == -1; }
+inline size_t HashValue (INDEX_2 i2, size_t size) { return (113*size_t(i2[0])+size_t(i2[1])) % size; }
+
+inline void SetInvalid (INDEX_3 & i3) { i3[0] = -1; }
+inline bool IsInvalid (INDEX_3 i3) { return i3[0] == -1; }
+inline size_t HashValue (INDEX_3 i3, size_t size) { return (i3[0]+15*size_t(i3[1])+41*size_t(i3[2])) % size; }
+
 
 }
+
 #endif

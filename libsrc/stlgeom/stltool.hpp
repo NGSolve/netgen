@@ -190,13 +190,13 @@ private:
   STLGeometry * geometry;
   const STLChart * chart;
   // Array<STLBoundarySeg> boundary;
-  NgClosedHashTable<INDEX_2, STLBoundarySeg> boundary_ht;
-  unique_ptr<BoxTree<2,INDEX_2>> searchtree;
+  ClosedHashTable<IVec<2>, STLBoundarySeg> boundary_ht;
+  unique_ptr<BoxTree<2,IVec<2>>> searchtree;
 public:
   STLBoundary(STLGeometry * ageometry);
   ~STLBoundary() {}
 
-  void Clear() { /* boundary.SetSize(0); */ boundary_ht = NgClosedHashTable<INDEX_2,STLBoundarySeg>(); }
+  void Clear() { /* boundary.SetSize(0); */ boundary_ht = ClosedHashTable<IVec<2>,STLBoundarySeg>(); }
   void SetChart (const STLChart * achart) { chart = achart; }
   //don't check, if already exists!
   // void AddNewSegment(const STLBoundarySeg & seg) {boundary.Append(seg);};

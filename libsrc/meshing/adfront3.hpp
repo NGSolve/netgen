@@ -240,7 +240,7 @@ public:
                  Array<MiniElement2d> & locfaces,   // local index
                  Array<Front3PointIndex, LocalPointIndex> & pindex,   // local -> front
                  Array<INDEX> & findex,
-                 INDEX_2_HASHTABLE<int> & connectedpairs,
+                 ClosedHashTable<IVec<2>,int> & connectedpairs,
                  float xh,
                  float relh,
                  INDEX& facesplit);

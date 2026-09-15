@@ -1041,8 +1041,7 @@ namespace netgen
     paralleltop -> SetNV (numvert);
     paralleltop -> SetNV_Loc2Glob (numvert);
     
-    // INDEX_CLOSED_HASHTABLE<int> glob2loc_vert_ht (3*numvert+1);
-    INDEX_HASHTABLE<PointIndex> glob2loc_vert_ht (3*numvert+1);
+    ClosedHashTable<int, PointIndex> glob2loc_vert_ht (3*numvert+1);
 
     for (int vert = 0; vert < numvert; vert++)
       {

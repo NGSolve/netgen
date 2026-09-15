@@ -69,7 +69,7 @@ int Meshing3 :: ApplyRules
  Array<int, LocalPointIndex> & allowpoint,     // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
  Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
  INDEX lfacesplit,             // for local faces in outer radius
- INDEX_2_HASHTABLE<int> & connectedpairs,  // connected pairs for prism-meshing
+ ClosedHashTable<IVec<2>,int> & connectedpairs,  // connected pairs for prism-meshing
  Array<LocalElement> & elements,    // out: new elements
  Array<INDEX> & delfaces,      // out: face indices of faces to delete
  int tolerance,                // quality class: 1 best 
@@ -101,7 +101,7 @@ int Meshing3 :: ApplyRules
   ArrayMem<int,100> fmapi;                        // face in reference is mapped to face nr ...
   ArrayMem<int,100> fmapr;                        // face in reference is rotated to map 
   ArrayMem<Point<3>,100> transfreezone;            // transformed free-zone
-  INDEX_2_CLOSED_HASHTABLE<int> ledges(100); // edges in local environment
+  ClosedHashTable<IVec<2>,int> ledges(100); // edges in local environment
   
   ArrayMem<Point<3>,100> tempnewpoints;
   Array<MiniElement2d> tempnewfaces;
@@ -152,15 +152,10 @@ int Meshing3 :: ApplyRules
                 pnearness[pi] = minn+1;
         }
 
-      for (int i = 1; i <= connectedpairs.GetNBags(); i++)
-        for (int j = 1; j <= connectedpairs.GetBagSize(i); j++)
+      for (auto [edge, val] : connectedpairs)
           {
-            INDEX_2 edge;
-            int val;
-            connectedpairs.GetData (i, j, edge, val);
-
-            LocalPointIndex e1 = LocalPointIndex::FromNr0(edge.I1());
-            LocalPointIndex e2 = LocalPointIndex::FromNr0(edge.I2());
+            LocalPointIndex e1 = LocalPointIndex::FromNr0(edge[0]);
+            LocalPointIndex e2 = LocalPointIndex::FromNr0(edge[1]);
 
             if (pnearness[e1] > pnearness[e2] + 1)
               pnearness[e1] = pnearness[e2] + 1;
@@ -215,8 +210,8 @@ int Meshing3 :: ApplyRules
               {
                 LocalPointIndex oldp = newp;
                 newp = face[k];
-                ledges.Set (INDEX_2::Sort(oldp.Nr0(),
-                                          newp.Nr0()), 1);
+                ledges.Set (IVec<2>(oldp.Nr0(),
+                                    newp.Nr0()).Sort(), 1);
               }
           }
     }
@@ -552,7 +547,7 @@ int Meshing3 :: ApplyRules
                       // check mapedges:
                       for (int i = 1; i <= rule->GetNEd(); i++)
                         {
-                          INDEX_2 in2(pmap[RuleP(rule->GetEdge(i).i1)].Nr0(),
+                          IVec<2> in2(pmap[RuleP(rule->GetEdge(i).i1)].Nr0(),
                                       pmap[RuleP(rule->GetEdge(i).i2)].Nr0());
                           in2.Sort();
                           if (!ledges.Used (in2)) ok = 0;
@@ -567,7 +562,7 @@ int Meshing3 :: ApplyRules
                             { 
                               for (int j = 1; j <= 3; j++)
                                 {
-                                  INDEX_2 in2(pmap[el.PNum(j)].Nr0(),
+                                  IVec<2> in2(pmap[el.PNum(j)].Nr0(),
                                               pmap[el.PNum(j+3)].Nr0());      
                                   in2.Sort();
                                   if (!connectedpairs.Used (in2)) ok = 0;
@@ -579,17 +574,13 @@ int Meshing3 :: ApplyRules
                                 (*testout) << "map pyramid, rule = " << rule->Name() << endl;
                               for (int j = 1; j <= 2; j++)
                                 {
-                                  INDEX_2 in2;
+                                  IVec<2> in2;
                                   if (j == 1)
-                                    {
-                                      in2.I1() = pmap[el.PNum(2)].Nr0();
-                                      in2.I2() = pmap[el.PNum(3)].Nr0();
-                                    }
+                                    in2 = IVec<2>(pmap[el.PNum(2)].Nr0(),
+                                                  pmap[el.PNum(3)].Nr0());
                                   else
-                                    {
-                                      in2.I1() = pmap[el.PNum(1)].Nr0();
-                                      in2.I2() = pmap[el.PNum(4)].Nr0();
-                                    }
+                                    in2 = IVec<2>(pmap[el.PNum(1)].Nr0(),
+                                                  pmap[el.PNum(4)].Nr0());
                                   in2.Sort();
                                   if (!connectedpairs.Used (in2)) 
                                     {
