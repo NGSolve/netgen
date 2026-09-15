@@ -1,0 +1,28 @@
+# normalise line endings in the repository; check out native
+* text=auto
+
+*.cpp   text
+*.hpp   text
+*.h     text
+*.c     text
+*.py    text
+*.tcl   text
+*.cmake text
+CMakeLists.txt text
+
+# keep CRLF in the working tree for Windows-only files
+*.rc          text eol=crlf
+*.rc.template text eol=crlf
+*.bat         text eol=crlf
+
+# vendored third-party: leave exactly as upstream has it
+ng/Togl2.1/** -text
+
+# data and binaries: never touched
+*.step  -text
+*.stl   -text
+*.geo   -text
+*.vol   -text
+*.png   binary
+*.ico   binary
+*.gz    binary

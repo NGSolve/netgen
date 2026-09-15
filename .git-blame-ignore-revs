@@ -1,0 +1,7 @@
+# Revisions to skip in `git blame` — whitespace-only, no code changes.
+# Enable locally once with:
+#     git config blame.ignoreRevsFile .git-blame-ignore-revs
+# GitHub and GitLab honour this file automatically.
+
+# tabs -> spaces (tab width 8), CRLF -> LF
+59aeaf1e7b4298adf4401570145064db59b7d939
