@@ -754,6 +754,10 @@ namespace ngcore
     size_t n = colors.Size();
 
     Array<unsigned int> mask(ndofs);
+    // dofs may be strong index types, mask is 0-based
+    auto ind0 = [] (auto dof)
+      { return size_t(detail::GetRawInteger(dof)
+                      - detail::GetRawInteger(IndexBASE<decltype(dof)>())); };
 
     size_t colored_blocks = 0;
 
@@ -776,7 +780,7 @@ namespace ngcore
 
             // Check if adjacent dofs are already marked by current color
             for (auto dof : dofs)
-                check|=mask[dof];
+                check|=mask[ind0(dof)];
 
             // Did we find a free color?
             if(check != 0xFFFFFFFF)
@@ -794,7 +798,7 @@ namespace ngcore
                 colored_blocks++;
                 // mask all adjacent dofs with the found color
                 for (auto dof : dofs)
-                    mask[dof] |= checkbit;
+                    mask[ind0(dof)] |= checkbit;
             }
         }
         current_color+=32;

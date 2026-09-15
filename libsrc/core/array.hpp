@@ -563,7 +563,13 @@ namespace ngcore
     
     NETGEN_INLINE const CArray<T> Addr (size_t pos) const
     {
-      return CArray<T> (data+pos-BASE);
+      return CArray<T> (data+pos-detail::GetRawInteger(BASE));
+    }
+
+    /// 0-based position of an index
+    NETGEN_INLINE static size_t Ind0 (IndexType i)
+    {
+      return detail::GetRawInteger(i) - detail::GetRawInteger(BASE);
     }
 
     // const CArray<T> operator+ (int pos)
@@ -614,10 +620,18 @@ namespace ngcore
       return FlatArray<T> (range.Size(), data+range.First());
     }
 
+    /// a range of own index type gives a 0-based sub-array
+    template <typename TI = IndexType,
+              typename = std::enable_if_t<!std::is_same_v<TI,size_t>>>
+    NETGEN_INLINE FlatArray<T> Range (T_Range<IndexType> range) const
+    {
+      return FlatArray<T> (range.Size(), data+Ind0(range.First()));
+    }
+
     /// takes range starting from position start of end-start elements
     NETGEN_INLINE const FlatArray<T> operator[] (T_Range<IndexType> range) const
     {
-      return FlatArray<T> (range.Size(), data+range.First());
+      return FlatArray<T> (range.Size(), data+Ind0(range.First()));
     }
     
     template <typename TI1>

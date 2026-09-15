@@ -291,10 +291,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def(py::init([](int i) { return ElementIndex::FromNr0(i); }))
     .def("__repr__", &ToString<ElementIndex>)
     .def("__str__", &ToString<ElementIndex>)
-    .def_property_readonly("nr", &ElementIndex::operator int)
+    .def_property_readonly("nr", [](ElementIndex &self) { return self.Nr0(); })
     .def("__eq__" , FunctionPointer( [](ElementIndex &self, ElementIndex &other)
-                  { return static_cast<int>(self)==static_cast<int>(other); }) )
-    .def("__hash__" , FunctionPointer( [](ElementIndex &self ) { return static_cast<int>(self); }) )
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](ElementIndex &self ) { return self.Nr0(); }) )
     ;
 
 
@@ -1710,7 +1710,7 @@ py::arg("point_tolerance") = -1.)
                         xref(k) = ref_ptr[j*stride_refpts+k];
                       curved.CalcElementTransformation(xref, i, xphys);
                       for (size_t k = 0; k < 3; k++)
-                        phys_ptr[i*stride_physels+j*stride_physpts+k] = xphys(k);
+                        phys_ptr[i.Nr0()*stride_physels+j*stride_physpts+k] = xphys(k);
                     }
               }
           })

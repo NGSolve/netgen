@@ -2163,7 +2163,7 @@ namespace netgen
             if(!visible) continue;
 
             int j;
-            int i = ei + 1;
+            int i = ei.Nr1();
 
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
@@ -2828,7 +2828,7 @@ namespace netgen
                 visible = false;
             if(!visible) continue;
 
-            int i = ei + 1;
+            int i = ei.Nr1();
 
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))

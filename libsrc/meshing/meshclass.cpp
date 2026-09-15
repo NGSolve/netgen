@@ -6898,7 +6898,7 @@ namespace netgen
       }
 
     // Split volume elements
-    BitArray vol_done(volelements.Size());
+    TBitArray<ElementIndex> vol_done(volelements.Size());
     vol_done = false;
     auto p2el = CreatePoint2ElementTable(); // mapped_points);
     for(const auto& [pair, inserted] : inserted_points)

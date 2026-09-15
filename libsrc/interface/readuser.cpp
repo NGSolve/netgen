@@ -262,7 +262,7 @@ namespace netgen
 			  for (int j = 0; j < nnodes; j++)
 			    el[j] = PointIndex::FromNr1(nodes[j]);
 			  auto nr = mesh.AddVolumeElement (el);
-			  element_map[label] = std::make_tuple(nr+1, 0);
+			  element_map[label] = std::make_tuple(nr.Nr1(), 0);
 			  break;
 			}
                       case 118: // TET10
@@ -273,7 +273,7 @@ namespace netgen
                           for(auto j : {0,2,4,9,1,5,6,3,7,8})
                             el[jj++] = PointIndex::FromNr1(nodes[j]);
                           auto nr = mesh.AddVolumeElement(el);
-                          element_map[label] = std::make_tuple(nr+1, 0);
+                          element_map[label] = std::make_tuple(nr.Nr1(), 0);
                           break;
                         }
                       default:

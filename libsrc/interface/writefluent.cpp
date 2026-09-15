@@ -127,7 +127,7 @@ void WriteFluentFormat (const Mesh & mesh,
 		{
 		  el2.GetFace(j2, face2);
 
-		  if (face2.HasFace(face)) {eli2 = locind+1; stopsig = 1; break;}
+		  if (face2.HasFace(face)) {eli2 = locind.Nr1(); stopsig = 1; break;}
 		}
 	      if (stopsig) break;
 	    }

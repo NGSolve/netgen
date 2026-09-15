@@ -2750,7 +2750,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ok = data->solclass->GetValue (elnr, lam1, lam2, lam3, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), lam1, lam2, lam3, values);
           break;
         }
       default:
@@ -2772,7 +2772,7 @@ namespace netgen
       {
       case SOL_VIRTUALFUNCTION:
         {
-          ok = data->solclass->GetValue (elnr, xref, x, dxdxref, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), xref, x, dxdxref, values);
           break;
         }
       default:
@@ -2815,7 +2815,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
           double values[20];
-          ok = data->solclass->GetValue (elnr, xref, x, dxdxref, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), xref, x, dxdxref, values);
 
           val = values[comp-1];
           return ok;
@@ -2864,7 +2864,7 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
-          val = data->data[elnr * data->dist + comp-1];
+          val = data->data[elnr.Nr0() * data->dist + comp-1];
           return 1;
         }
 
@@ -2930,9 +2930,9 @@ namespace netgen
 
           int base;
           if (data->order == 1)
-            base = 6 * elnr;
+            base = 6 * elnr.Nr0();
           else
-            base = 10 * elnr;
+            base = 10 * elnr.Nr0();
 
 
           for (int i = 0; i < np; i++)
@@ -2986,7 +2986,7 @@ namespace netgen
         {
 	  val = 0.0;
           double values[20];
-	  ok = data->solclass->GetValue (elnr, lam1, lam2, lam3, values);
+	  ok = data->solclass->GetValue (elnr.Nr0(), lam1, lam2, lam3, values);
 
           val = values[comp-1];
           return ok;
@@ -3034,7 +3034,7 @@ namespace netgen
 
       case SOL_ELEMENT:
         {
-          val = data->data[elnr * data->dist + comp-1];
+          val = data->data[elnr.Nr0() * data->dist + comp-1];
           return 1;
         }
 
@@ -3098,9 +3098,9 @@ namespace netgen
 
           int base;
           if (data->order == 1)
-            base = 6 * elnr;
+            base = 6 * elnr.Nr0();
           else
-            base = 10 * elnr;
+            base = 10 * elnr.Nr0();
 
 
           for (int i = 0; i < np; i++)
@@ -3148,7 +3148,7 @@ namespace netgen
       case SOL_VIRTUALFUNCTION:
         {
           double values[20];
-          ok = data->solclass->GetValue (elnr, lam1, lam2, lam3, values);
+          ok = data->solclass->GetValue (elnr.Nr0(), lam1, lam2, lam3, values);
           val = complex<double> (values[comp-1], values[comp]);
           return ok;
         }
@@ -3168,7 +3168,7 @@ namespace netgen
   {
     bool drawelem = false;
     if (data->soltype == SOL_VIRTUALFUNCTION)
-      drawelem = data->solclass->GetMultiValue(elnr, facetnr, npt, xref, sxref, x, sx, dxdxref, sdxdxref, val, sval);
+      drawelem = data->solclass->GetMultiValue(elnr.Nr0(), facetnr, npt, xref, sxref, x, sx, dxdxref, sdxdxref, val, sval);
     else
       for (int i = 0; i < npt; i++)
         drawelem = GetValues (data, elnr, xref+i*sxref, x+i*sx, dxdxref+i*sdxdxref, val+i*sval);
@@ -4336,13 +4336,13 @@ namespace netgen
             }
 
           double lami[3];
-          int elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex);
+          ElementIndex elnr = mesh->GetElementOfPoint (hp, lami,0,cindex,allowindex);
 
-          if (elnr != -1)
+          if (elnr.IsValid())
             {
               ClipPlanePoint cpp;
               cpp.p = hp;
-              cpp.elnr = ElementIndex::FromNr0(elnr);
+              cpp.elnr = elnr;
               cpp.lami(0) = lami[0];
               cpp.lami(1) = lami[1];
               cpp.lami(2) = lami[2];
@@ -4434,14 +4434,14 @@ namespace netgen
     Point<3> p[3];
     // double val[3];
     // complex<double> valc[3];
-    int lastelnr = -1;
+    ElementIndex lastelnr = ElementIndex::INVALID;
     int nlp = -1;
     bool ok = false;
 
     for (int i = 0; i < trigs.Size(); i++)
       {
         const ClipPlaneTrig & trig = trigs[i];
-	if (trig.elnr != ElementIndex::FromNr0(lastelnr))
+	if (trig.elnr != lastelnr)
 	  {
 	    lastelnr = trig.elnr;
 	    nlp = -1;
@@ -4888,7 +4888,7 @@ namespace netgen
       if(n*view > 1e-8)
       {
         double lami[3];
-        if(auto el3d = mesh->GetElementOfPoint( p, lami ))
+        if(auto el3d = mesh->GetElementOfPoint( p, lami ); el3d.IsValid())
         {
           cout << endl << "Selected point " << p << " on clipping plane" << endl;
           // marker = p;

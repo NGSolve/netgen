@@ -529,7 +529,7 @@ namespace netgen
                    v2eht.Set (v2, 33);   // some value                   
                  
                  LoopOverEdges (*mesh, *this, v,
-                                [&] (PointIndices<2> edge, int elnr, int loc_edge, int element_dim)
+                                [&] (PointIndices<2> edge, BaseElementIndex elnr, int loc_edge, int element_dim)
                                 {
                                   v2eht.Set (edge[1], 33); // something                                  
                                 });
@@ -586,7 +586,7 @@ namespace netgen
                      }
                  
                  LoopOverEdges (*mesh, *this, v,
-                                [&](PointIndices<2> edge, int elnr, int loc_edge, int element_dim)
+                                [&](PointIndices<2> edge, BaseElementIndex elnr, int loc_edge, int element_dim)
                                 {
                                   size_t pos;
                                   if (v2eht.PositionCreate(edge[1], pos))
@@ -621,20 +621,20 @@ namespace netgen
                    }
                  
                  LoopOverEdges (*mesh, *this, v,
-                                [&](PointIndices<2> edge, int elnr, int loc_edge, int element_dim)
+                                [&](PointIndices<2> edge, BaseElementIndex elnr, int loc_edge, int element_dim)
                                 {
                                   int edgenum = v2eht.Get(edge[1]);
                                   switch (element_dim)
                                     {
                                     case 3:
-                                      edges[ElementIndex::FromNr0(elnr)][loc_edge] = edgenum;
+                                      edges[ElementIndex(elnr)][loc_edge] = edgenum;
                                       break;
                                     case 2:
-                                      surfedges[elnr][loc_edge] = edgenum;
+                                      surfedges[SurfaceElementIndex(elnr)][loc_edge] = edgenum;
                                       break;
                                     case 1:
-                                      segedges[elnr] = edgenum;
-                                      edge2segment[edgenum] = elnr;
+                                      segedges[SegmentIndex(elnr)] = edgenum;
+                                      edge2segment[edgenum] = SegmentIndex(elnr);
                                       break;
                                     }
                                 });
@@ -1020,9 +1020,9 @@ namespace netgen
         // cout << "vert2intermediate = " << endl << vert2intermediate << endl;
 
         
-	for (int elnr = 0; elnr < ne; elnr++)
+	for (ElementIndex elnr : T_Range<ElementIndex>(ne))
 	  for (int j = 0; j < 6; j++)
-	    faces[ElementIndex::FromNr0(elnr)][j] = -1;
+	    faces[elnr][j] = -1;
 	
 
 	int max_face_on_vertex = 0;
@@ -1084,7 +1084,7 @@ namespace netgen
                         }
                     }
                   LoopOverFaces (*mesh, *this, v,
-                                 [&] (PointIndices<4> i4, int elnr, int j, bool volume)
+                                 [&] (PointIndices<4> i4, BaseElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    if (!vert2face.Used (face))
@@ -1164,7 +1164,7 @@ namespace netgen
                     }
                   
                   LoopOverFaces (*mesh, *this, v,
-                                 [&] (PointIndices<4> i4, int elnr, int j, bool volume)
+                                 [&] (PointIndices<4> i4, BaseElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    /*
@@ -1202,14 +1202,14 @@ namespace netgen
                   
                   
                   LoopOverFaces (*mesh, *this, v,
-                                 [&] (PointIndices<4> i4, int elnr, int j, bool volume)
+                                 [&] (PointIndices<4> i4, BaseElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    int facenum = vert2face.Get(face);
                                    if (volume)
-                                     faces[ElementIndex::FromNr0(elnr)][j] = facenum;
+                                     faces[ElementIndex(elnr)][j] = facenum;
                                    else
-                                     surffaces[elnr] = facenum;
+                                     surffaces[SurfaceElementIndex(elnr)] = facenum;
                                  });
                 }
             }, TasksPerThread(4) );
@@ -1339,7 +1339,7 @@ namespace netgen
 			for (int k = 0; k < vertels.Size(); k++)
 			  {
 			    int elfaces[10], orient[10];
-			    int nf = GetElementFaces (vertels[k]+1, elfaces, orient);
+			    int nf = GetElementFaces (vertels[k].Nr1(), elfaces, orient);
 			    for (int l = 0; l < nf; l++)
 			      if (elfaces[l] == i)
 				{

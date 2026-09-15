@@ -596,7 +596,7 @@ namespace netgen
 	if (cl > ncl) cl = ncl;
 
 	incl[cl-1]++;
-	if (inclass) (*inclass)[ei] = cl;
+	if (inclass) (*inclass)[ei.Nr0()] = cl;
 	sum += 1/qual;
       }
 

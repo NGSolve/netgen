@@ -419,6 +419,8 @@ namespace netgen
     constexpr ElementIndex (int ai) : Index(ai) { }   // use IndexBASE<ElementIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index; // <int,ElementIndex,0>::Index;
+    operator int () const = delete;    // an ElementIndex stays an ElementIndex
+    operator int & () = delete;
     /// narrowing from BaseElementIndex is explicit - name the kind you mean
     explicit constexpr ElementIndex (BaseElementIndex bi);
   };

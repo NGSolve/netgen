@@ -44,7 +44,7 @@ namespace netgen
   double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
 		  const Array<double, PointIndex> & pure_badness,
 		  double max_worsening, const bool uselocalworsening,
-		  Array<double> * quality_loss)
+		  Array<double, ElementIndex> * quality_loss)
   {
     PrintMessage(3,"!!!! Validating !!!!");
     //if(max_worsening > 0)
@@ -98,7 +98,7 @@ namespace netgen
   }
 
 
-  void GetWorkingArea(BitArray & working_elements, TBitArray<PointIndex> & working_points,
+  void GetWorkingArea(TBitArray<ElementIndex> & working_elements, TBitArray<PointIndex> & working_points,
 		      const Mesh & mesh, const Array<ElementIndex> & bad_elements,
 		      const int width)
   {

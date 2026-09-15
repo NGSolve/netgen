@@ -626,7 +626,7 @@ namespace netgen
     for(ElementIndex i : mesh.VolumeElements().Range())
       {
 	HPRefElement hpel(mesh[i]); 
-	hpel.coarse_elnr = int(i); 
+	hpel.coarse_elnr = i; 
 	
 	switch (mesh[i].GetType()) 
 	  { 

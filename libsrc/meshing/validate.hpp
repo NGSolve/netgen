@@ -9,7 +9,7 @@ namespace netgen
   double Validate(const Mesh & mesh, Array<ElementIndex> & bad_elements,
 		  const Array<double, PointIndex> & pure_badness, 
 		  double max_worsening, const bool uselocalworsening,
-		  Array<double> * quality_loss = NULL);
+		  Array<double, ElementIndex> * quality_loss = NULL);
   void RepairBisection(Mesh & mesh, Array<ElementIndex> & bad_elements, 
 		       const TBitArray<PointIndex> & isnewpoint, const Refinement & refinement,
 		       const Array<double, PointIndex> & pure_badness, 

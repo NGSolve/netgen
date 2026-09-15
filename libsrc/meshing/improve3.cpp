@@ -785,7 +785,7 @@ double MeshOptimize3d :: SwapImproveEdge (
           return 0.0;
 
       if(working_elements &&
-              ei < working_elements->Size() &&
+              ei.Nr0() < working_elements->Size() &&
          !working_elements->Test(ei))
           return 0.0;
 
@@ -1277,7 +1277,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
 
   tloop.Start();
 
-  auto num_elements_before = mesh.VolumeElements().Range().Next();
+  auto num_elements_before = mesh.VolumeElements().Size();
 
   ParallelForRange(Range(edges), [&] (auto myrange)
   {
@@ -1315,8 +1315,9 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
       // Remove open elements that were closed by new tets
       auto & open_els = mesh.OpenElements();
 
-      for (auto & el : mesh.VolumeElements().Range( num_elements_before, mesh.VolumeElements().Range().Next() ))
+      for (ElementIndex ei : mesh.VolumeElements().Range().Modify(num_elements_before, 0))
       {
+          const Element & el = mesh[ei];
           for (auto i : Range(1,5))
           {
               Element2d sel;
@@ -1423,13 +1424,13 @@ void MeshOptimize3d :: SwapImproveSurface (
       if (multithread.terminate)
 	break;
       
-      multithread.percent = 100.0 * (ei+1) / ne;
+      multithread.percent = 100.0 * ei.Nr1() / ne;
 
       if (mesh.ElementType(ei) == FIXEDELEMENT)
 	continue;
       
       if(working_elements && 
-	 ei < working_elements->Size() &&
+	 ei.Nr0() < working_elements->Size() &&
 	 !working_elements->Test(ei))
 	continue;
 

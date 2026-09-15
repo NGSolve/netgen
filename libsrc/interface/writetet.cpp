@@ -25,7 +25,7 @@ namespace netgen
     Array<int> point_ids_ud;    // user data, indexed by the raw point number
     Array<int> edge_ids,face_ids;
     Array<int, PointIndex> point_ids;
-    Array<int> elnum(mesh.GetNE());
+    Array<int, ElementIndex> elnum(mesh.GetNE());
     elnum = -1;
 
     
@@ -70,7 +70,7 @@ namespace netgen
 	int maxbc(-1),mindomain(-1);
 	
 	for (ElementIndex i : mesh.VolumeElements().Range())
-	  if(i==0 || mesh[i].GetIndex() < mindomain)
+	  if(i.Nr0()==0 || mesh[i].GetIndex() < mindomain)
 	    mindomain = mesh[i].GetIndex();
 	for(int i=1; i<=mesh.GetNFD(); i++)
 	  if(i==1 || mesh.GetFaceDescriptor(i).BCProperty() > maxbc)

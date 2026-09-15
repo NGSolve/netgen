@@ -657,7 +657,7 @@ int Ng_FindElementOfPoint (double * p, double * lami, int build_searchtree,
     {
       Point<3> p3d(p[0], p[1], p[2]);
       ind = 
-	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0) + 1;
+	mesh->GetElementOfPoint(p3d, lami, dummy, build_searchtree != 0).Nr1();
     }
   else
     {
@@ -1653,19 +1653,19 @@ void Ng_GetVertexElements (int vnr, int * els)
     case 3:
       {
         auto ia = mesh->GetTopology().GetVertexElements(PointIdx(vnr));
-        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
+        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i].Nr1();
         break;
       }
     case 2:
       {
         auto ia = mesh->GetTopology().GetVertexSurfaceElements(PointIdx(vnr));
-        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
+        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i].Nr1();
         break;
       }
     case 1:
       {
         auto ia = mesh->GetTopology().GetVertexSegments(PointIdx(vnr));
-        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i]+1;
+        for (int i = 0; i < ia.Size(); i++) els[i] = ia[i].Nr1();
         break;
         /*
         int cnt = 0;
@@ -1954,7 +1954,7 @@ int Ng_GetVertex_Elements( int vnr, int* elems )
   auto indexArray = topology.GetVertexElements( PointIdx(vnr) );
   
   for( int i=0; i<indexArray.Size(); i++ )
-    elems[i] = indexArray[i]+1;
+    elems[i] = indexArray[i].Nr1();
   
   return indexArray.Size();
 }
@@ -1974,7 +1974,7 @@ int Ng_GetVertex_SurfaceElements( int vnr_, int* elems )
         auto indexArray = topology.GetVertexSurfaceElements( vnr );
         
         for( int i=0; i<indexArray.Size(); i++ )
-          elems[i] = indexArray[i]+1;
+          elems[i] = indexArray[i].Nr1();
         
         return indexArray.Size();
       }
@@ -2186,9 +2186,9 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
   
   mesh->LocalHFunction().SetGrading (mparam.grading);
 
-  Array<double> * qualityloss_arr = NULL;
+  Array<double, ElementIndex> * qualityloss_arr = NULL;
   if(qualityloss != NULL)
-    qualityloss_arr = new Array<double>;
+    qualityloss_arr = new Array<double, ElementIndex>;
 
   ref -> Bisect (*mesh, biopt, qualityloss_arr);
 
@@ -2198,8 +2198,8 @@ int Ng_Bisect_WithInfo ( const char * refinementfile, double ** qualityloss, int
     {
       *qualityloss = new double[qualityloss_arr->Size()+1];
 
-      for(int i = 0; i<qualityloss_arr->Size(); i++)
-	(*qualityloss)[i+1] = (*qualityloss_arr)[i];
+      for(ElementIndex ei : qualityloss_arr->Range())
+	(*qualityloss)[ei.Nr1()] = (*qualityloss_arr)[ei];
 
       retval = qualityloss_arr->Size();
 

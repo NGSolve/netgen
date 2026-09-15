@@ -1079,7 +1079,7 @@ namespace netgen
   {
     Point<3> pp(p[0], p[1], p[2]);
     FlatArray<int> ind(numind, indices);
-    return mesh->GetElementOfPoint(pp, lami, ind, build_searchtree, true, tol);
+    return mesh->GetElementOfPoint(pp, lami, ind, build_searchtree, true, tol).Nr0();
   }
 
   void Ngx_Mesh :: Curve (int order)

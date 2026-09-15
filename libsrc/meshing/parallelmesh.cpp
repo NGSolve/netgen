@@ -602,7 +602,7 @@ namespace netgen
 	const Element & el = VolumeElement (ei);
         int dest = vol_partition[ei];
         
-	elementarrays.Add (dest, int(ei+1));
+	elementarrays.Add (dest, ei.Nr1());
 	elementarrays.Add (dest, el.GetIndex());
 	elementarrays.Add (dest, el.GetNP());
         for (PointIndex pi : el.PNums())
@@ -1481,16 +1481,16 @@ namespace netgen
       };
 
     
-    loop_els([&](auto vertex, int index)
+    loop_els([&](auto vertex, auto index)
 	{
 	  if(boundarypoints[vertex])
 	    cnt[vertex]++;
 	});
     DynamicTable<int, PointIndex> pnt2el(GetNP());
-    loop_els([&](auto vertex, int index)
+    loop_els([&](auto vertex, auto index)
 	{
 	  if(boundarypoints[vertex])
-	    pnt2el.Add(vertex, index);
+	    pnt2el.Add(vertex, index.Nr0());
 	});
 
 
