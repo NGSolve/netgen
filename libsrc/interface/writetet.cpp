@@ -69,7 +69,7 @@ namespace netgen
 	// test if ids are disjunct, if not version 2.0 not possible
 	int maxbc(-1),mindomain(-1);
 	
-	for(ElementIndex i=0; i<mesh.GetNE(); i++)
+	for (ElementIndex i : mesh.VolumeElements().Range())
 	  if(i==0 || mesh[i].GetIndex() < mindomain)
 	    mindomain = mesh[i].GetIndex();
 	for(int i=1; i<=mesh.GetNFD(); i++)
@@ -182,7 +182,7 @@ namespace netgen
 	face2edge.Append(f_to_n);
       }
     
-    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 
@@ -940,7 +940,7 @@ namespace netgen
     outfile << "// ElemID, FaceID0, FaceID1, FaceID2, FaceID3, "<<uidpid<<":\n" \
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
-    for(ElementIndex i=0; i<mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	if(elnum[i] >= 0)
 	  {
@@ -957,7 +957,7 @@ namespace netgen
 	    << "// ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n";
 
     
-    for(ElementIndex i=0; i<mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	if(elnum[i] >= 0)
 	  outfile << elnum[i] << " "
@@ -998,9 +998,10 @@ namespace netgen
     for(int i=0; i<groups.Size(); i++)
       groups[i] = new Array<int>;
 
-    for(ElementIndex i=0; i<mesh.GetNE() && uid_to_group_3D.Size(); i++)
-      if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)
-	groups[uid_to_group_3D[mesh[i].GetIndex()]]->Append(i+1);
+    if (uid_to_group_3D.Size())          // loop-invariant guard, hoisted
+      for(ElementIndex i : mesh.VolumeElements().Range())
+        if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)
+	  groups[uid_to_group_3D[mesh[i].GetIndex()]]->Append(i.Nr1());
       
     
 

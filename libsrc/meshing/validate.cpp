@@ -24,7 +24,7 @@ namespace netgen
 	  mesh.Point(pi) = Center (mesh.Point(mesh.mlbetweennodes[pi][0]),
 				   mesh.Point(mesh.mlbetweennodes[pi][1]));
       }
-    for (ElementIndex i = 0; i < mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	double bad = mesh[i].CalcJacobianBadness (mesh.Points());
 	for(int j=0; j<mesh[i].GetNP(); j++)
@@ -64,7 +64,7 @@ namespace netgen
     if(quality_loss != NULL)
       quality_loss->SetSize(mesh.GetNE());
 
-    for (ElementIndex i = 0; i < mesh.GetNE(); i++)
+    for (ElementIndex i : mesh.VolumeElements().Range())
       {
 	if(uselocalworsening)
 	  {
@@ -116,7 +116,7 @@ namespace netgen
 
     for(int i=0; i<width; i++)
       {
-	for(ElementIndex j=0; j<mesh.GetNE(); j++)
+	for (ElementIndex j : mesh.VolumeElements().Range())
 	  {
 	    if(!working_elements.Test(j))
 	      {  
@@ -131,7 +131,7 @@ namespace netgen
 	      }
 	  }
 
-	for(ElementIndex j=0; j<mesh.GetNE(); j++)
+	for (ElementIndex j : mesh.VolumeElements().Range())
 	  {
 	    if(working_elements.Test(j))
 	      {

@@ -288,7 +288,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<ElementIndex>(m, "ElementId3D")
-    .def(py::init<int>())
+    .def(py::init([](int i) { return ElementIndex::FromNr0(i); }))
     .def("__repr__", &ToString<ElementIndex>)
     .def("__str__", &ToString<ElementIndex>)
     .def_property_readonly("nr", &ElementIndex::operator int)
@@ -1188,9 +1188,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
       switch (*dim)
         {
         case 2:
-          return (*self.hpelements)[self[SurfaceElementIndex(elnr)].GetHpElnr()].coarse_elnr;
+          return (*self.hpelements)[self[SurfaceElementIndex(elnr)].GetHpElnr()].coarse_elnr.Nr0();
         case 3:
-          return (*self.hpelements)[self[ElementIndex(elnr)].GetHpElnr()].coarse_elnr;
+          return (*self.hpelements)[self[ElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
         }
       throw Exception ("MacroElementNr not implemented for dim");
     }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")
@@ -1701,7 +1701,7 @@ py::arg("point_tolerance") = -1.)
             
             if (dim == 3)  // mapping of 3D elements
               {
-                for (ElementIndex i = 0; i < self.GetNE(); i++)
+                for (ElementIndex i : self.VolumeElements().Range())
                   for (size_t j = 0; j < npts; j++)
                     {
                       Point<3> xref;
@@ -1887,7 +1887,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & els = self.VolumeElements();
                 for(auto i : myrange)
                 {
-                    const auto & el = els[i];
+                    const auto & el = els[ElementIndex::FromNr0(i)];
                     auto * trig = &tets[4*i];
                     for(auto k : Range(4))
                         trig[k] = el[k].Nr0();

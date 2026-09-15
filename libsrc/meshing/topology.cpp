@@ -456,7 +456,7 @@ namespace netgen
         */
         ParallelFor (ne, [this](auto i)
                      {
-                       for (auto & e : edges[i])
+                       for (auto & e : edges[ElementIndex::FromNr0(i)])
                          e = -1;
                      });
 	ParallelFor (nse, [this](auto i)
@@ -627,7 +627,7 @@ namespace netgen
                                   switch (element_dim)
                                     {
                                     case 3:
-                                      edges[elnr][loc_edge] = edgenum;
+                                      edges[ElementIndex::FromNr0(elnr)][loc_edge] = edgenum;
                                       break;
                                     case 2:
                                       surfedges[elnr][loc_edge] = edgenum;
@@ -948,7 +948,7 @@ namespace netgen
         Array<SortedPointIndices<3>> intermediate_faces;
         if (build_parent_faces)
           {
-            for (ElementIndex ei = 0; ei < ne; ei++)
+            for (ElementIndex ei : mesh->VolumeElements().Range())
               for (int i = 0; i < 4; i++)
                 {
                   Element2d face;
@@ -1022,7 +1022,7 @@ namespace netgen
         
 	for (int elnr = 0; elnr < ne; elnr++)
 	  for (int j = 0; j < 6; j++)
-	    faces[elnr][j] = -1;
+	    faces[ElementIndex::FromNr0(elnr)][j] = -1;
 	
 
 	int max_face_on_vertex = 0;
@@ -1207,7 +1207,7 @@ namespace netgen
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    int facenum = vert2face.Get(face);
                                    if (volume)
-                                     faces[elnr][j] = facenum;
+                                     faces[ElementIndex::FromNr0(elnr)][j] = facenum;
                                    else
                                      surffaces[elnr] = facenum;
                                  });
@@ -1248,12 +1248,12 @@ namespace netgen
                        for (int j = 0; j < 6; j++)
                          {
                            // int fnum = (faces.Get(i)[j]+7) / 8;
-                           int fnum = faces[i][j];
+                           int fnum = faces[ElementIndex::FromNr0(i)][j];
                            if (fnum >= 0 && face2surfel[fnum].IsValid())
                              {
                                SurfaceElementIndex sel = face2surfel[fnum];
                                surf2volelement[sel][1] = surf2volelement[sel][0];
-                               surf2volelement[sel][0] = i; // +1;
+                               surf2volelement[sel][0] = ElementIndex::FromNr0(i); // +1;
                              }
                          }});
         (*tracer) ("Topology::Update build surf2vol", true);        
@@ -1286,8 +1286,8 @@ namespace netgen
                     AsAtomic(face_els[f-1])++;
                 }
               */
-              for (ElementIndex ei : r)
-                for (auto f : GetFaces(ei))
+              for (auto i : r)
+                for (auto f : GetFaces(ElementIndex::FromNr0(i)))
                   AsAtomic(face_els[f])++;
               
             }, TasksPerThread(4));

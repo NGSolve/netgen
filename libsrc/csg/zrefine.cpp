@@ -46,7 +46,7 @@ namespace netgen
   {
     // volume elements
     // for (int i = 1; i <= mesh.GetNE(); i++)
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	Element & el = mesh.VolumeElement(ei);
 	if (el.GetType() != TET) continue;
@@ -110,7 +110,7 @@ namespace netgen
   void MakePrismsClosePoints (Mesh & mesh)
   {
     // int i, j, k;
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	Element & el = mesh.VolumeElement(ei);
 	if (el.GetType() == TET)
@@ -412,7 +412,7 @@ namespace netgen
 
 
 
-	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
 	    Element & el = mesh.VolumeElement (ei);
 	    if (el.GetType() != PRISM)
@@ -463,7 +463,7 @@ namespace netgen
 	  {
 	    PrintMessage (5, "start loop");
 	    change = 0;
-	    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	    for (ElementIndex ei : mesh.VolumeElements().Range())
 	      {
 		Element & el = mesh.VolumeElement (ei);
 		if (el.GetType() != PRISM)
@@ -566,8 +566,9 @@ namespace netgen
 	PrintMessage (5, "Segments done, NSeg = ", mesh.GetNSeg());
 
 	// do refinement
-	int oldne = mesh.GetNE();
-	for (ElementIndex ei = 0; ei < oldne; ei++)
+	// the range is evaluated once, so the elements appended while
+	// refining are not visited
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
 	    Element & el = mesh.VolumeElement (ei);
 	    if (el.GetNP() != 6)
@@ -709,7 +710,7 @@ namespace netgen
 
   void CombineSingularPrisms(Mesh& mesh)
   {
-    for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
         Element& el = mesh.VolumeElement(ei);
         if(el.GetType() != PRISM)

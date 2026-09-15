@@ -59,7 +59,10 @@ public:
   DLL_HEADER bool IsSurfaceElementCurved (SurfaceElementIndex sei) const;
   DLL_HEADER bool IsElementCurved (ElementIndex ei) const;
   DLL_HEADER bool IsElementHighOrder (ElementIndex ei) const;
-
+  /// the index type says which kind of element it is
+  bool IsCurved (ElementIndex ei) const        { return IsElementCurved(ei); }
+  bool IsCurved (SurfaceElementIndex sei) const { return IsSurfaceElementCurved(sei); }
+  bool IsCurved (SegmentIndex segnr) const      { return IsSegmentCurved(segnr); }
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
 				  Point<3> & x)

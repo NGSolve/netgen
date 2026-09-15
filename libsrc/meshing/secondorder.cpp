@@ -79,7 +79,7 @@ namespace netgen
       
 
     bool thinlayers = 0;
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       if (mesh[ei].GetType() == PRISM ||
 	  mesh[ei].GetType() == PRISM12)
 	thinlayers = 1;

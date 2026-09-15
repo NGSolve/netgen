@@ -301,7 +301,7 @@ namespace nglib
    NGLIB_API Ng_Volume_Element_Type
       Ng_GetVolumeElement (Ng_Mesh * mesh, int num, int * pi)
    {
-     const Element & el = ((Mesh*)mesh)->VolumeElement(ElementIndex(num-1));
+     const Element & el = ((Mesh*)mesh)->VolumeElement(ElementIndex::FromNr1(num));
       for (int i = 1; i <= el.GetNP(); i++)
          pi[i-1] = el.PNum(i).Nr1();
       Ng_Volume_Element_Type et;

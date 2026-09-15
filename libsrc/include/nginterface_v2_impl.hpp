@@ -40,7 +40,7 @@ NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<2> (size_t nr) const
 template <>
 NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<3> (size_t nr) const
 {
-  return (*mesh)[ElementIndex(nr)].GetIndex();
+  return (*mesh)[ElementIndex::FromNr0(nr)].GetIndex();
 }
 
 
@@ -158,7 +158,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
       ret.facets.ptr = (int*)&(el[0]);
     }
 
-  // ret.is_curved = mesh->GetCurvedElements().IsSegmentCurved(nr);
+  // ret.is_curved = mesh->GetCurvedElements().IsCurved(SegmentIndex::FromNr0(nr));
   ret.is_curved = el.GetIndex() >= 1 && el.GetIndex() <= mesh->GetNED() && mesh->GetEdgeDescriptor(el.GetIndex()).EdgeNr() > 0;
 
   return ret;
@@ -220,7 +220,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
 {
-  const Element & el = mesh->VolumeElements()[nr];
+  const Element & el = (*mesh)[ElementIndex::FromNr0(nr)];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
@@ -237,7 +237,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   ret.edges.ptr = mesh->GetTopology().GetElementEdgesPtr (nr);
   */
   // ret.edges.Assign (mesh->GetTopology().GetEdges (ElementIndex(nr)));
-  auto hedges = mesh->GetTopology().GetEdges (ElementIndex(nr));
+  auto hedges = mesh->GetTopology().GetEdges (ElementIndex::FromNr0(nr));
   ret.edges.Assign ( { hedges.Size(), (int*)hedges.Data() } );
   
 
@@ -246,7 +246,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   ret.faces.ptr = mesh->GetTopology().GetElementFacesPtr (nr);
   */
   // ret.faces.Assign (mesh->GetTopology().GetFaces (ElementIndex(nr)));
-  auto hfaces = mesh->GetTopology().GetFaces (ElementIndex(nr));
+  auto hfaces = mesh->GetTopology().GetFaces (ElementIndex::FromNr0(nr));
   ret.faces.Assign ( { hfaces.Size(), (int*)hfaces.Data() } );
   
   ret.facets.num = ret.faces.Size();

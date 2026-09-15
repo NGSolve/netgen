@@ -469,7 +469,7 @@ namespace netgen
             { 
               cout << "read elements (2)" << endl;
               Element el(TET);
-              for(ElementIndex i=0; i<nelts; i++)
+              for(int i = 0; i < nelts; i++)   // counter over the file records, not an element index
                 {
                   in >> dummyint;
                   for(int j=1; j<=4; j++)

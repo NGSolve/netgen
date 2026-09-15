@@ -1437,7 +1437,7 @@ namespace netgen
 		    // seg.si     = hpel.index / 10000;
                     seg.SetIndex (hpel.index);
 
-                    const Segment & coarseseg = mesh.coarsemesh->LineSegment(hpel.coarse_elnr+1);
+                    const Segment & coarseseg = mesh.coarsemesh->LineSegment(SegmentIndex(hpel.coarse_elnr));
                     double d1 = coarseseg.EPGeomInfo(0).dist;
                     double d2 = coarseseg.EPGeomInfo(1).dist;
 
@@ -1459,7 +1459,7 @@ namespace netgen
 		    el.SetIndex(hpel.index);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,0); 
-                    if((*mesh.coarsemesh)[SurfaceElementIndex{hpel.coarse_elnr}].IsCurved())
+                    if((*mesh.coarsemesh)[SurfaceElementIndex(hpel.coarse_elnr)].IsCurved())
                         el.SetCurved(true);
 		    mesh.AddSurfaceElement(el);
 		    break; 
@@ -1477,7 +1477,7 @@ namespace netgen
 		    el.SetHpElnr(i);
 		    if(setorders)
 		      el.SetOrder(act_ref+1,act_ref+1,act_ref+1);
-                    if((*mesh.coarsemesh)[ElementIndex{hpel.coarse_elnr}].IsCurved())
+                    if((*mesh.coarsemesh)[ElementIndex(hpel.coarse_elnr)].IsCurved())
                         el.SetCurved(true);
 		    mesh.AddVolumeElement(el); 
 		    break;

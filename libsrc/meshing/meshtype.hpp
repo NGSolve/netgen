@@ -411,10 +411,16 @@ namespace std
 namespace netgen
 {
 
+  class BaseElementIndex;
+
   class ElementIndex : public Index<int,ElementIndex,0>
   {
+    friend class Index<int,ElementIndex,0>;
+    constexpr ElementIndex (int ai) : Index(ai) { }   // use IndexBASE<ElementIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index; // <int,ElementIndex,0>::Index;
+    /// narrowing from BaseElementIndex is explicit - name the kind you mean
+    explicit constexpr ElementIndex (BaseElementIndex bi);
   };
   
   inline istream & operator>> (istream & ist, ElementIndex & ei)
@@ -426,6 +432,18 @@ namespace netgen
   {
     return ost << int(ei-ElementIndex::Base());
   }
+}
+
+namespace ngcore
+{
+  // the generic IndexBASE does T(0); give ElementIndex its own, as PointIndex has,
+  // so it keeps working once int -> ElementIndex gets blocked
+  template<>
+  constexpr netgen::ElementIndex IndexBASE<netgen::ElementIndex> () { return netgen::ElementIndex::Base(); }
+}
+
+namespace netgen
+{
 
 
   /*
@@ -441,6 +459,8 @@ namespace netgen
   {
   public:
     using Index::Index;
+    /// narrowing from BaseElementIndex is explicit - name the kind you mean
+    explicit constexpr SurfaceElementIndex (BaseElementIndex bi);
   };
 
   
@@ -474,7 +494,42 @@ namespace netgen
   {
   public:
     using Index::Index;
+    /// narrowing from BaseElementIndex is explicit - name the kind you mean
+    explicit constexpr SegmentIndex (BaseElementIndex bi);
   };
+
+
+  /**
+     An element number whose kind (volume element, surface element or segment)
+     is fixed by the context, not by the value - e.g. HPRefElement::coarse_elnr.
+     Widening from a concrete index is implicit, narrowing back is explicit.
+  */
+  class BaseElementIndex : public Index<int,BaseElementIndex,0>
+  {
+  public:
+    using Index::Index;
+    constexpr BaseElementIndex (ElementIndex ei)        : Index(ei.Nr0()) { }
+    constexpr BaseElementIndex (SurfaceElementIndex si) : Index(si.Nr0()) { }
+    constexpr BaseElementIndex (SegmentIndex si)        : Index(si.Nr0()) { }
+  };
+
+  constexpr ElementIndex::ElementIndex (BaseElementIndex bi)
+    : Index(bi.Nr0()) { }
+  constexpr SurfaceElementIndex::SurfaceElementIndex (BaseElementIndex bi)
+    : Index(bi.Nr0()) { }
+  constexpr SegmentIndex::SegmentIndex (BaseElementIndex bi)
+    : Index(bi.Nr0()) { }
+}
+
+namespace ngcore
+{
+  template<>
+  constexpr netgen::BaseElementIndex IndexBASE<netgen::BaseElementIndex> ()
+  { return netgen::BaseElementIndex::Base(); }
+}
+
+namespace netgen
+{
 
   // these should not be needed soon
   /*

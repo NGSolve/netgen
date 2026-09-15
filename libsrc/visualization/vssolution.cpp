@@ -283,11 +283,11 @@ namespace netgen
           }
 
         cntverts = 0;
-        for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+        for (ElementIndex ei : mesh->VolumeElements().Range())
           cntverts += 1 + (*mesh)[ei].GetNP();
 
         ost << "\nCELLS " << mesh->GetNE() << " " << cntverts << "\n";
-        for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+        for (ElementIndex ei : mesh->VolumeElements().Range())
           {
             const Element & el = (*mesh)[ei];
             ost << el.GetNP();
@@ -296,7 +296,7 @@ namespace netgen
             ost << "\n";
           }
         ost << "\nCELL_TYPES " << mesh->GetNE() << "\n";
-        for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+        for (ElementIndex ei : mesh->VolumeElements().Range())
           {
             const Element & el = (*mesh)[ei];
             switch (el.GetType())
@@ -977,7 +977,7 @@ namespace netgen
                 if(!SurfaceElementActive(sol_active, *mesh, el))
                   continue;
 
-                bool curved = curv.IsHighOrder(); //  && curv.IsSurfaceElementCurved(sei);
+                bool curved = curv.IsHighOrder(); //  && curv.IsCurved(sei);
               
                 if (el.GetType() == TRIG || el.GetType() == TRIG6)
                   {
@@ -1347,7 +1347,7 @@ namespace netgen
 
         if ( el.GetType() == QUAD || el.GetType() == QUAD6 || el.GetType() == QUAD8 )
           {
-            bool curved = curv.IsSurfaceElementCurved (sei);
+            bool curved = curv.IsCurved (sei);
 
 
             for (int iy = 0, ii = 0; iy <= n; iy++)
@@ -1521,7 +1521,7 @@ namespace netgen
             // NgProfiler::StartTimer(timer1);
 #ifdef __AVX_try_it_out__
             // NgProfiler::StartTimer(timer1a);            
-	    bool curved = curv.IsSurfaceElementCurved(sei);
+	    bool curved = curv.IsCurved(sei);
             
             if (curved)
               {
@@ -1921,7 +1921,7 @@ namespace netgen
     MatrixFixWidth<3> pointmat(8);
     grads1 = Vec<3> (0.0);
 
-    for (ElementIndex ei = 0; ei < ne; ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
         // if(vispar.clipdomain > 0 && vispar.clipdomain != (*mesh)[ei].GetIndex()) continue;
         // if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
@@ -2665,9 +2665,9 @@ namespace netgen
                   for (int i=first; i<next; i++)
                     {
                       double val;
-                      if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex(i)]))
+                      if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex::FromNr0(i)]))
                         continue;
-                      bool considerElem = GetValue (sol, i, 0.333, 0.333, 0.333, comp, val);
+                      bool considerElem = GetValue (sol, ElementIndex::FromNr0(i), 0.333, 0.333, 0.333, comp, val);
                       if (considerElem)
                         {
                           if (val > maxv_local) maxv_local = val;
@@ -3997,7 +3997,7 @@ namespace netgen
     ClosedHashTable<IVec<2>, int> edges(8*n3);  // point nr of edge
     
 
-    for (ElementIndex ei = 0; ei < ne; ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
         // NgProfiler::RegionTimer reg1a (timer1a);
 
@@ -4342,7 +4342,7 @@ namespace netgen
             {
               ClipPlanePoint cpp;
               cpp.p = hp;
-              cpp.elnr = elnr;
+              cpp.elnr = ElementIndex::FromNr0(elnr);
               cpp.lami(0) = lami[0];
               cpp.lami(1) = lami[1];
               cpp.lami(2) = lami[2];
@@ -4441,7 +4441,7 @@ namespace netgen
     for (int i = 0; i < trigs.Size(); i++)
       {
         const ClipPlaneTrig & trig = trigs[i];
-	if (trig.elnr != ElementIndex(lastelnr))
+	if (trig.elnr != ElementIndex::FromNr0(lastelnr))
 	  {
 	    lastelnr = trig.elnr;
 	    nlp = -1;

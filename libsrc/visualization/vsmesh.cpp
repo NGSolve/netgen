@@ -930,7 +930,7 @@ namespace netgen
 	      {
 	      case TRIG:
 		{
-                  if (curv.IsHighOrder()) //  && curv.IsSurfaceElementCurved(sei))
+                  if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
 		    {
 		      if (hoplotn > 128) hoplotn = 128;
 
@@ -995,7 +995,7 @@ namespace netgen
 		}
 	      case QUAD:
 		{
-                  if (curv.IsHighOrder()) //  && curv.IsSurfaceElementCurved(sei))
+                  if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
 		    {
 		      Point<2> xr[4];
 		      Point<3> xg;
@@ -1413,7 +1413,7 @@ namespace netgen
 	  case TRIG:
             {
 	      CurvedElements & curv = mesh->GetCurvedElements();
-	      if (curv.IsHighOrder()) //  && curv.IsSurfaceElementCurved(sei))
+	      if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
 		{
                   Point<3> xg;
                   glBegin (GL_LINE_LOOP);
@@ -1463,7 +1463,7 @@ namespace netgen
 	  case QUAD:
             {
 	      CurvedElements & curv = mesh->GetCurvedElements();
-	      if (curv.IsHighOrder()) //  && curv.IsSurfaceElementCurved(sei))
+	      if (curv.IsHighOrder()) //  && curv.IsCurved(sei))
 		{
                   Point<2> xr;
                   Point<3> xg;
@@ -1869,7 +1869,7 @@ namespace netgen
 
 
 
-    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
 	if (vispar.drawtetsdomain > 0)
 	  {
@@ -1899,7 +1899,7 @@ namespace netgen
 	    glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, tetcols[ind]);
 
 
-            if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
+            if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
 	      {
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (TET);
 		const Point<3> * vertices = MeshTopology :: GetVertices (TET);
@@ -2151,7 +2151,7 @@ namespace netgen
     glDisable (GL_COLOR_MATERIAL);
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, prismcol);
 
-    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == PRISM && !el.IsDeleted())
@@ -2166,7 +2166,7 @@ namespace netgen
             int i = ei + 1;
 
             CurvedElements & curv = mesh->GetCurvedElements();
-            if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
+            if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
 	      {
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PRISM);
 		const Point<3> * vertices = MeshTopology :: GetVertices (PRISM);
@@ -2198,7 +2198,7 @@ namespace netgen
 			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
 			      lami[2] * fpts[2](l);
 
-			  curv.CalcElementTransformation (xl, i-1, grid[ix][iy]);
+			  curv.CalcElementTransformation (xl, ElementIndex::FromNr1(i), grid[ix][iy]);
 			}
 
 		    for (int j = 0; j <= order; j++)
@@ -2485,7 +2485,7 @@ namespace netgen
     Array<ElementFace> faces;
     // int hoplotn = 1 << vispar.subdivisions;
 
-    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == HEX && !el.IsDeleted())
@@ -2496,7 +2496,7 @@ namespace netgen
                 visible = false;
             if(!visible) continue;
             CurvedElements & curv = mesh->GetCurvedElements();
-            if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
+            if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
 	      {
 		/* // classical
 		   glBegin (GL_QUADS);
@@ -2664,7 +2664,7 @@ namespace netgen
     static float hex7col[] = { 1.0f, 0.65f, 0.0f, 1.0f };
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hex7col);
 
-    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
 	const Element & el = (*mesh)[ei];
 	if (el.GetType() == HEX7 && !el.IsDeleted())
@@ -2817,7 +2817,7 @@ namespace netgen
     glLineWidth (1.0f);
     Array<ElementFace> faces;
 
-    for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
+    for (ElementIndex ei : mesh->VolumeElements().Range())
       {
 	const Element & el = (*mesh)[ei];
 	if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
@@ -2831,7 +2831,7 @@ namespace netgen
             int i = ei + 1;
 
             CurvedElements & curv = mesh->GetCurvedElements();
-            if (curv.IsHighOrder()) //  && curv.IsElementCurved(ei))
+            if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
 	      {
 
 		const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PYRAMID);
@@ -2864,7 +2864,7 @@ namespace netgen
 			    xl(l) = lami[0] * fpts[0](l) + lami[1] * fpts[1](l) +
 			      lami[2] * fpts[2](l);
 
-			  curv.CalcElementTransformation (xl, i-1, grid[ix][iy]);
+			  curv.CalcElementTransformation (xl, ElementIndex::FromNr1(i), grid[ix][iy]);
 			}
 
 		    for (int j = 0; j <= order; j++)

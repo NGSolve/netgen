@@ -38,7 +38,7 @@ namespace netgen
         if (searchtree)
           ei = locels[i];
         else
-          ei = i;
+          ei = ElementIndex::FromNr0(i);
 
         if(indices && indices->Size() > 0)
           {
@@ -58,7 +58,7 @@ namespace netgen
         if (searchtree)
           ei = locels[i];
         else
-          ei = i;
+          ei = ElementIndex::FromNr0(i);
 
         if(indices && indices->Size() > 0)
           {
@@ -595,7 +595,7 @@ namespace netgen
       }
     */
 
-    int ve = volelements.Size();
+    ElementIndex ve = IndexBASE<ElementIndex>() + volelements.Size();
 
     if (volelements.Size() == volelements.AllocSize())
       {
@@ -761,7 +761,7 @@ namespace netgen
     outfile << "volumeelements" << "\n";
     outfile << GetNE() << "\n";
 
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
+    for (ElementIndex ei : VolumeElements().Range())
       {
         outfile << (*this)[ei].GetIndex();
         outfile << " " << (*this)[ei].GetNP();
@@ -1793,9 +1793,9 @@ namespace netgen
 
 
             for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
-              (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
-            for (ElementIndex ei = 0; ei < GetNE(); ei++)
-              (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
+              (*this)[sei].SetCurved (GetCurvedElements().IsCurved (sei));
+            for (ElementIndex ei : VolumeElements().Range())
+              (*this)[ei].SetCurved (GetCurvedElements().IsCurved (ei));
           }
 
 
@@ -2444,7 +2444,7 @@ namespace netgen
 
   bool Mesh :: TestOk () const
   {
-    for (ElementIndex ei = 0; ei < volelements.Size(); ei++)
+    for (ElementIndex ei : volelements.Range())
       {
         for (int j = 0; j < 4; j++)
           if ( !(*this)[ei][j].IsValid())
@@ -4376,7 +4376,7 @@ namespace netgen
 
   double Mesh :: ElementError (int eli, const MeshingParameters & mp) const
   {
-    const Element & el = volelements[eli-1];
+    const Element & el = volelements[ElementIndex::FromNr1(eli)];
     return CalcTetBadness (points[el[0]], points[el[1]],
                            points[el[2]], points[el[3]], -1, mp);
   }
@@ -4414,10 +4414,10 @@ namespace netgen
     */
 
     for (int i = 0; i < volelements.Size(); i++)
-      if (!volelements[i][0].IsValid() ||
-          volelements[i].IsDeleted())
+      if (!volelements[ElementIndex::FromNr0(i)][0].IsValid() ||
+          volelements[ElementIndex::FromNr0(i)].IsDeleted())
         {
-          volelements.DeleteElement(i);
+          volelements.DeleteElement(ElementIndex::FromNr0(i));
           i--;
         }
 
@@ -4943,7 +4943,7 @@ namespace netgen
 
          for (auto i : myrange)
            {
-             double elbad = pow (max2(CalcBad (points, volelements[i], 0, mp),1e-10), 1/teterrpow);
+             double elbad = pow (max2(CalcBad (points, volelements[ElementIndex::FromNr0(i)], 0, mp),1e-10), 1/teterrpow);
 
              int qualclass = int (n_classes / elbad + 1);
              if (qualclass < 1) qualclass = 1;
@@ -5646,7 +5646,7 @@ namespace netgen
               for (auto pi : el.PNums())
                 box.Add (points[pi]);
 
-              if(el.IsCurved() && curvedelems->IsElementCurved(ei))
+              if(el.IsCurved() && curvedelems->IsCurved(ei))
                 {
                   // add edge/face midpoints to box
                   auto eltype = el.GetType();
@@ -5687,7 +5687,7 @@ namespace netgen
               for (auto pi : el.PNums())
                 box.Add (points[pi]);
 
-              if(el.IsCurved() && curvedelems->IsSurfaceElementCurved(ei))
+              if(el.IsCurved() && curvedelems->IsCurved(ei))
                 {
                   netgen::Point<2>  lami [4] = {netgen::Point<2>(0.5,0), netgen::Point<2>(0,0.5), netgen::Point<2>(0.5,0.5), netgen::Point<2>(1./3,1./3)};
                   for (auto lam : lami)
@@ -6137,7 +6137,7 @@ namespace netgen
             //(*testout) << "col1 " << col1 << " col2 " << col2 << " col3 " << col3 << " rhs " << rhs << endl;
             //(*testout) << "sol " << sol << endl;
 
-            if (surfelements[ei].GetType() ==TRIG6 || curvedelems->IsSurfaceElementCurved(ei))
+            if (surfelements[ei].GetType() ==TRIG6 || curvedelems->IsCurved(ei))
               {
                 // netgen::Point<2> lam(1./3,1./3);
                 netgen::Point<2> lam(sol(0), sol(1));
@@ -6218,8 +6218,8 @@ namespace netgen
     //(*testout) << "old result: " << oldresult
     //       << " lam " << lami[0] << " " << lami[1] << " " << lami[2] << endl;
 
-    //if(!curvedelems->IsElementCurved(element-1))
-    //  return PointContainedIn3DElementOld(p,lami,element);
+    //if(!curvedelems->IsCurved(ei))
+    //  return PointContainedIn3DElementOld(p,lami,ei);
     const Element & el = volelements[ei];
 
     netgen::Point<3> lam = 0.0;
@@ -7333,7 +7333,7 @@ namespace netgen
       ParallelReduce (VolumeElements().Size(),
                       [&](size_t nr)
                       {
-                        return Max(VolumeElements()[nr].Vertices()) - IndexBASE<PointIndex>();
+                        return Max((*this)[ElementIndex::FromNr0(nr)].Vertices()) - IndexBASE<PointIndex>();
                       },
                       [](auto a, auto b) { return a > b ?  a : b; },
                       numvertices);
@@ -7601,7 +7601,7 @@ namespace netgen
 
   bool Mesh :: PureTetMesh () const
   {
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
+    for (ElementIndex ei : VolumeElements().Range())
       if (VolumeElement(ei).GetNP() != 4)
         return 0;
     return 1;
@@ -7632,9 +7632,9 @@ namespace netgen
 
 
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
-      (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
+      (*this)[sei].SetCurved (GetCurvedElements().IsCurved (sei));
+    for (ElementIndex ei : VolumeElements().Range())
+      (*this)[ei].SetCurved (GetCurvedElements().IsCurved (ei));
     
     SetNextMajorTimeStamp();
   }
@@ -7648,9 +7648,9 @@ namespace netgen
 
 
     for (SurfaceElementIndex sei = 0; sei < GetNSE(); sei++)
-      (*this)[sei].SetCurved (GetCurvedElements().IsSurfaceElementCurved (sei));
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      (*this)[ei].SetCurved (GetCurvedElements().IsElementCurved (ei));
+      (*this)[sei].SetCurved (GetCurvedElements().IsCurved (sei));
+    for (ElementIndex ei : VolumeElements().Range())
+      (*this)[ei].SetCurved (GetCurvedElements().IsCurved (ei));
     
     SetNextMajorTimeStamp();
   }

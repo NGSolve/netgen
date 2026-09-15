@@ -248,14 +248,14 @@ namespace netgen
     
     Array<int> num_els_on_proc(ntasks);
     num_els_on_proc = 0;
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
+    for (ElementIndex ei : VolumeElements().Range())
       num_els_on_proc[vol_partition[ei]]++;
 
     comm.ScatterRoot (num_els_on_proc);
 
     Table<ElementIndex> els_of_proc (num_els_on_proc);
     num_els_on_proc = 0;
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
+    for (ElementIndex ei : VolumeElements().Range())
       {
         auto nr = vol_partition[ei];
         els_of_proc[nr][num_els_on_proc[nr]++] = ei;
@@ -1397,7 +1397,7 @@ namespace netgen
     if (nparts == 1)
       {
         for (int i = 0; i < GetNE(); i++)
-          vol_partition[i]= 1;
+          vol_partition[ElementIndex::FromNr0(i)]= 1;
         for (int i = 0; i < GetNSE(); i++)
           surf_partition[i] = 1;
         for (int i = 0; i < GetNSeg(); i++)
@@ -1423,7 +1423,7 @@ namespace netgen
         PrintMessage (3, "metis complete");
         
         for (int i = 0; i < GetNE(); i++)
-          vol_partition[i]= epart[i] + 1;
+          vol_partition[ElementIndex::FromNr0(i)]= epart[i] + 1;
         for (int i = 0; i < GetNSE(); i++)
           surf_partition[i] = epart[i+GetNE()] + 1;
         for (int i = 0; i < GetNSeg(); i++)
@@ -1465,7 +1465,7 @@ namespace netgen
 	}
     };
     auto loop_els_3d = [&](auto f) {
-      for (ElementIndex ei = 0; ei < GetNE(); ei++)
+      for (ElementIndex ei : VolumeElements().Range())
 	{
 	  const Element & el = (*this)[ei];
 	  for (int j = 0; j < el.GetNP(); j++)
@@ -1508,7 +1508,7 @@ namespace netgen
 	    
 	    for (int j = 0; j < els.Size(); j++)
 	      {
-		const Element & el = (*this)[ElementIndex(els[j])];
+		const Element & el = (*this)[ElementIndex::FromNr0(els[j])];
 		
 		bool hasall = true;
 		
@@ -1525,7 +1525,7 @@ namespace netgen
 		if (hasall)
 		  {
 		    // sel.SetPartition (el.GetPartition());
-                    surf_partition[sei] = vol_partition[ElementIndex(els[j])];
+                    surf_partition[sei] = vol_partition[ElementIndex::FromNr0(els[j])];
 		    break;
 		  }
 	      }
@@ -1546,7 +1546,7 @@ namespace netgen
 	    
 	    for (int j = 0; j < els.Size(); j++)
 	      {
-		const Element & el = (*this)[ElementIndex(els[j])];
+		const Element & el = (*this)[ElementIndex::FromNr0(els[j])];
 		
 		bool haspi[9] = { false };  // max surfnp
 		
@@ -1562,7 +1562,7 @@ namespace netgen
 		if (hasall)
 		  {
 		    // sel.SetPartition (el.GetPartition());
-                    seg_partition[si] = vol_partition[ElementIndex(els[j])];
+                    seg_partition[si] = vol_partition[ElementIndex::FromNr0(els[j])];
 		    break;
 		  }
 	      }
@@ -1722,7 +1722,7 @@ namespace netgen
       {
         for (int i = 0; i < GetNE(); i++)
           // VolumeElement(i+1).SetPartition(1);
-          vol_partition[i] = 1;
+          vol_partition[ElementIndex::FromNr0(i)] = 1;
         for (int i = 0; i < GetNSE(); i++)
           // SurfaceElement(i+1).SetPartition(1);
           surf_partition[i] = 1;
@@ -1750,7 +1750,7 @@ namespace netgen
 
     for (int i = 0; i < GetNE(); i++)
       // VolumeElement(i+1).SetPartition(epart[i] + 1);
-      vol_partition[i] = epart[i] + 1;
+      vol_partition[ElementIndex::FromNr0(i)] = epart[i] + 1;
     for (int i = 0; i < GetNSE(); i++)
       // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
       surf_partition[i] = epart[i+GetNE()] + 1;

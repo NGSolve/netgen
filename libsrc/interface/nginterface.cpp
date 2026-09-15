@@ -721,16 +721,16 @@ int Ng_IsElementCurved (int ei)
 {
   switch (mesh->GetDimension())
     {
-    case 1: return mesh->GetCurvedElements().IsSegmentCurved (ei-1);
-    case 2: return mesh->GetCurvedElements().IsSurfaceElementCurved (ei-1);
-    case 3: return mesh->GetCurvedElements().IsElementCurved (ei-1);
+    case 1: return mesh->GetCurvedElements().IsCurved (SegmentIndex::FromNr1(ei));
+    case 2: return mesh->GetCurvedElements().IsCurved (SurfaceElementIndex::FromNr1(ei));
+    case 3: return mesh->GetCurvedElements().IsCurved (ElementIndex::FromNr1(ei));
     }
   return 0;
   /*
   if (mesh->GetDimension() == 2)
-    return mesh->GetCurvedElements().IsSurfaceElementCurved (ei-1);
+    return mesh->GetCurvedElements().IsCurved (SurfaceElementIndex::FromNr1(ei));
   else
-    return mesh->GetCurvedElements().IsElementCurved (ei-1);
+    return mesh->GetCurvedElements().IsCurved (ElementIndex::FromNr1(ei));
   */
 }
 
@@ -738,9 +738,9 @@ int Ng_IsElementCurved (int ei)
 int Ng_IsSurfaceElementCurved (int sei)
 {
   if (mesh->GetDimension() == 2)
-    return mesh->GetCurvedElements().IsSegmentCurved (sei-1);
+    return mesh->GetCurvedElements().IsCurved (SegmentIndex::FromNr1(sei));
   else
-    return mesh->GetCurvedElements().IsSurfaceElementCurved (sei-1);
+    return mesh->GetCurvedElements().IsCurved (SurfaceElementIndex::FromNr1(sei));
 }
 
 
@@ -778,7 +778,7 @@ void Ng_GetElementTransformation (int ei, const double * xi,
       Point<3> xg;
       Mat<3,3> dx;
 
-      mesh->GetCurvedElements().CalcElementTransformation (xl, ei-1, xg, dx);
+      mesh->GetCurvedElements().CalcElementTransformation (xl, ElementIndex::FromNr1(ei), xg, dx);
 
       if (x)
 	{
@@ -809,7 +809,7 @@ void Ng_GetMultiElementTransformation (int ei, int n,
   if (mesh->GetDimension() == 2)
     mesh->GetCurvedElements().CalcMultiPointSurfaceTransformation<2> (ei-1, n, xi, sxi, x, sx, dxdxi, sdxdxi);
   else
-    mesh->GetCurvedElements().CalcMultiPointElementTransformation (ei-1, n, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointElementTransformation (ElementIndex::FromNr1(ei), n, xi, sxi, x, sx, dxdxi, sdxdxi);
 }
 
 
@@ -1761,12 +1761,12 @@ int Ng_GetParentElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentelement.Size())
-	return mesh->mlparentelement[ei-1]+1;
+	return mesh->mlparentelement[ElementIndex::FromNr1(ei)].Nr1();
     }
   else
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement[ei-1]+1;
+	return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
     }
   return 0;
 }
@@ -1777,7 +1777,7 @@ int Ng_GetParentSElement (int ei)
   if (mesh->GetDimension() == 3)
     {
       if (ei <= mesh->mlparentsurfaceelement.Size())
-	return mesh->mlparentsurfaceelement[ei-1]+1;
+	return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr1(ei)].Nr1();
     }
   else
     {
@@ -2254,7 +2254,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
         int cnt = 0;
         if (nodeset & 1)  // Vertices
           {
-            const Element & el = (*mesh)[ElementIndex(nodenr)];
+            const Element & el = (*mesh)[ElementIndex::FromNr1(nodenr)];
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;
@@ -2264,7 +2264,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
 
         if (nodeset & 2)  // Edges
           {
-            auto edges = mesh->GetTopology().GetEdges (ElementIndex(nodenr));
+            auto edges = mesh->GetTopology().GetEdges (ElementIndex::FromNr1(nodenr));
             for (int i = 0; i < edges.Size(); i++)
               {
                 nodes[cnt++] = 1;

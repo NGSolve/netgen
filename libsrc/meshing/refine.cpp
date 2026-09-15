@@ -109,7 +109,7 @@ namespace netgen
             throw NgException ("currently refinement for quad-elements is not supported");
           }
       }
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 	switch (el.GetType())
@@ -400,7 +400,7 @@ namespace netgen
     // refine volume elements
     int oldne = mesh.GetNE();
     mesh.VolumeElements().SetAllocSize(8*oldne);
-    for (ElementIndex ei = 0; ei < oldne; ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 	switch (el.GetType())

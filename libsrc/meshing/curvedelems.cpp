@@ -1717,7 +1717,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
         
-	return mesh.coarsemesh->GetCurvedElements().IsSegmentCurved (hpref_el.coarse_elnr);
+	return mesh.coarsemesh->GetCurvedElements().IsCurved (SegmentIndex(hpref_el.coarse_elnr));
       }
 
     SegmentInfo info;
@@ -1759,7 +1759,7 @@ namespace netgen
 	    trans += hpref_el.param[i][0] * dlami[i];
 	  }
 
-	mesh.coarsemesh->GetCurvedElements().CalcSegmentTransformation (coarse_xi, hpref_el.coarse_elnr, x, dxdxi, curved);
+	mesh.coarsemesh->GetCurvedElements().CalcSegmentTransformation (coarse_xi, SegmentIndex(hpref_el.coarse_elnr), x, dxdxi, curved);
 	if (dxdxi) *dxdxi *= trans;
 	
 	return;
@@ -1968,7 +1968,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
-	return mesh.coarsemesh->GetCurvedElements().IsSurfaceElementCurved (hpref_el.coarse_elnr);
+	return mesh.coarsemesh->GetCurvedElements().IsCurved (SurfaceElementIndex(hpref_el.coarse_elnr));
       }
 
     const Element2d & el = mesh[elnr];
@@ -2050,7 +2050,7 @@ namespace netgen
 	  for (int j = 0; j < 2; j++)
 	    coarse_xi(j) += hpref_el.param[i][j] * lami[i];
 	
-	mesh.coarsemesh->GetCurvedElements().CalcSurfaceTransformation (coarse_xi, hpref_el.coarse_elnr, x, &dxdxic, curved);
+	mesh.coarsemesh->GetCurvedElements().CalcSurfaceTransformation (coarse_xi, SurfaceElementIndex(hpref_el.coarse_elnr), x, &dxdxic, curved);
 	
 	if (dxdxi)
 	  *dxdxi = dxdxic * trans;
@@ -2845,7 +2845,7 @@ namespace netgen
 	const HPRefElement & hpref_el =
 	  (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
 	
-	return mesh.coarsemesh->GetCurvedElements().IsElementCurved (ElementIndex(hpref_el.coarse_elnr));
+	return mesh.coarsemesh->GetCurvedElements().IsCurved (ElementIndex(hpref_el.coarse_elnr));
       }
 
     const Element & el = mesh[elnr];
@@ -4739,7 +4739,7 @@ namespace netgen
 	  }
 
 	mesh.coarsemesh->GetCurvedElements().
-	  CalcMultiPointSurfaceTransformation<DIM_SPACE,T> (hpref_el.coarse_elnr, npts,
+	  CalcMultiPointSurfaceTransformation<DIM_SPACE,T> (SurfaceElementIndex(hpref_el.coarse_elnr), npts,
                                                             &coarse_xi[0](0), sizeof(Point<2,T>)/sizeof(T),
                                                             x, sx, dxdxi, sdxdxi);
 
@@ -5047,7 +5047,7 @@ namespace netgen
 	  }
 
 	mesh.coarsemesh->GetCurvedElements().
-	  CalcMultiPointElementTransformation (&coarse_xi, hpref_el.coarse_elnr, x, dxdxi);
+	  CalcMultiPointElementTransformation (&coarse_xi, ElementIndex(hpref_el.coarse_elnr), x, dxdxi);
 
 
 	Mat<3,3> trans, dxdxic;

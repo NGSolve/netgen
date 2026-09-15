@@ -450,7 +450,7 @@ namespace netgen
     Point<3> xl(xi[0], xi[1], xi[2]);
     Point<3> xg;
     Mat<3,3> dx;
-    mesh->GetCurvedElements().CalcElementTransformation (xl, elnr, xg, dx);
+    mesh->GetCurvedElements().CalcElementTransformation (xl, ElementIndex::FromNr0(elnr), xg, dx);
 
     if (x)
       for (int i = 0; i < 3; i++) x[i] = xg(i);
@@ -614,7 +614,7 @@ namespace netgen
                                    double * x, size_t sx,
                                    double * dxdxi, size_t sdxdxi) const
   {
-    mesh->GetCurvedElements().CalcMultiPointElementTransformation (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointElementTransformation (ElementIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
   }
   
   template <> DLL_HEADER void Ngx_Mesh ::
@@ -731,12 +731,12 @@ namespace netgen
     if (mesh->GetDimension() == 3)
       {
         if (ei < mesh->mlparentelement.Size())
-          return mesh->mlparentelement[ei];
+          return mesh->mlparentelement[ElementIndex::FromNr0(ei)].Nr0();
       }
     else
       {
         if (ei < mesh->mlparentsurfaceelement.Size())
-          return mesh->mlparentsurfaceelement[ei];
+          return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr0(ei)].Nr0();
       }
     return -1;
   }
@@ -747,7 +747,7 @@ namespace netgen
     if (mesh->GetDimension() == 3)
       {
         if (ei < mesh->mlparentsurfaceelement.Size())
-          return mesh->mlparentsurfaceelement[ei];
+          return mesh->mlparentsurfaceelement[SurfaceElementIndex::FromNr0(ei)].Nr0();
       }
     else
       {
@@ -828,7 +828,7 @@ namespace netgen
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointElementTransformation
-      (elnr, npts,
+      (ElementIndex::FromNr0(elnr), npts,
        xi, sxi,
        x, sx,
        dxdxi, sdxdxi);

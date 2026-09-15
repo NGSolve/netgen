@@ -266,7 +266,7 @@ namespace netgen
         bool drawelem;
         auto mesh = GetMesh();
         if (mesh->GetDimension()==3)
-            drawelem = GetValues (vsol, elnr, lami[0], lami[1], lami[2], values);
+            drawelem = GetValues (vsol, ElementIndex::FromNr0(elnr), lami[0], lami[1], lami[2], values);
         else
             drawelem = GetSurfValues (vsol, elnr, -1, lami[0], lami[1], values);
 

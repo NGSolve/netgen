@@ -576,7 +576,7 @@ namespace netgen
     for (INDEX i = 1; i <= incl.Size(); i++)
       incl[i-1] = 0;
 
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	if (mesh[ei].GetType() != TET)
 	  {
@@ -753,7 +753,7 @@ namespace netgen
 		<< mesh.SurfaceElement(i)[2] << endl;
       }
     outfile << mesh.GetNE() << endl;
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       outfile << mesh[ei].GetIndex() << "\t"
 	      << mesh[ei][0] << " " << mesh[ei][1] << " "
 	      << mesh[ei][2] << " " << mesh[ei][3] << endl;
@@ -810,7 +810,7 @@ namespace netgen
 	  }
       }
   
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 
@@ -846,7 +846,7 @@ namespace netgen
 	  }
       }
   
-    for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+    for (ElementIndex ei : mesh.VolumeElements().Range())
       {
 	const Element & el = mesh[ei];
 
@@ -905,7 +905,7 @@ namespace netgen
 		       << setw(4) << el.PNum(3)  << endl;
 	  }
 	(*testout) << "volelements: " << endl;
-	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
 	    const Element & el = mesh[ei];
 	    (*testout) << setw(5) << ei << ":" 
@@ -946,7 +946,7 @@ namespace netgen
 	      }
 	  }
 
-	for (ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
+	for (ElementIndex ei : mesh.VolumeElements().Range())
 	  {
 	    const Element & el = mesh[ei];
 	    if (el.GetIndex() == k)

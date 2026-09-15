@@ -160,7 +160,7 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
   double maxbad = 0.0;
   atomic<int> bad_elements = 0;
 
-  ParallelForRange(Range(mesh.GetNE()), [&] (auto myrange) {
+  ParallelForRange(Range(mesh.VolumeElements()), [&] (auto myrange) {
     double totalbad_local = 0.0;
     double maxbad_local = 0.0;
     int bad_elements_local = 0;
@@ -1400,7 +1400,7 @@ void MeshOptimize3d :: SwapImproveSurface (
       
   
   // find elements on node
-  for (ElementIndex ei = 0; ei < ne; ei++)
+  for (ElementIndex ei : mesh.VolumeElements().Range())
     for (int j = 0; j < mesh[ei].GetNP(); j++)
       elementsonnode.Add (mesh[ei][j], ei);
 
@@ -1418,7 +1418,7 @@ void MeshOptimize3d :: SwapImproveSurface (
   // INDEX_2_HASHTABLE<int> edgeused(2 * ne + 5);
   ClosedHashTable<SortedPointIndices<2>, int> edgeused(12 * ne + 8);
 
-  for (ElementIndex ei = 0; ei < ne; ei++)
+  for (ElementIndex ei : mesh.VolumeElements().Range())
     {
       if (multithread.terminate)
 	break;
@@ -2421,7 +2421,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
 
   UpdateBadness();
 
-  ParallelForRange( Range(ne), [&]( auto myrange )
+  ParallelForRange( Range(mesh.VolumeElements()), [&]( auto myrange )
       {
         int tid = ngcore::TaskManager::GetThreadId();
         auto & my_faces_with_improvement = faces_with_improvement_threadlocal[tid];
@@ -2626,7 +2626,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   std::atomic<int> improvement_counter(0);
 
   tsearch.Start();
-  ParallelForRange(Range(ne), [&] (auto myrange)
+  ParallelForRange(Range(mesh.VolumeElements()), [&] (auto myrange)
   {
     for(ElementIndex ei : myrange)
     {
