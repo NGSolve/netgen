@@ -67,7 +67,7 @@ namespace netgen
     int cntedge;
 
   public:
-    Array<char> seg_seginfo;
+    Array<char, SegmentIndex> seg_seginfo;
 
   private:
     double ideps;

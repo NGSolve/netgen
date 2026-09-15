@@ -495,9 +495,9 @@ namespace netgen
 
 
     int maxdomnr = 0;
-    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+    for (auto & seg : mesh->LineSegments())
       {
-	const auto & ed = mesh->GetEdgeDescriptor((*mesh)[si].GetIndex());
+	const auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
 	if ( ed.DomainIn() > maxdomnr) maxdomnr = ed.DomainIn();
 	if ( ed.DomainOut() > maxdomnr) maxdomnr = ed.DomainOut();
       }
@@ -526,8 +526,8 @@ namespace netgen
     // set Array<string*> bcnames... 
     // number of bcnames
     int maxsegmentindex = 0;
-    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
-      if ( (*mesh)[si].GetIndex() > maxsegmentindex) maxsegmentindex = (*mesh)[si].GetIndex();
+    for (auto & seg : mesh->LineSegments())
+      if ( seg.GetIndex() > maxsegmentindex) maxsegmentindex = seg.GetIndex();
 
     mesh->SetNBCNames(maxsegmentindex);
 
@@ -561,21 +561,21 @@ namespace netgen
           nextpi = PointIndex::INVALID;
           si1 = -1;
           si2 = -1;
-          for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+          for (auto & seg : mesh->LineSegments())
             {
               PointIndex p1 = PointIndex::INVALID, p2 = PointIndex::INVALID;
 
-              const auto & ed = mesh->GetEdgeDescriptor((*mesh)[si].GetIndex());
+              const auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
               if ( ed.DomainIn() == domnr)
-                { p1 = (*mesh)[si][0]; p2 = (*mesh)[si][1]; }
+                { p1 = seg[0]; p2 = seg[1]; }
               if ( ed.DomainOut() == domnr)
-                { p1 = (*mesh)[si][1]; p2 = (*mesh)[si][0]; }
+                { p1 = seg[1]; p2 = seg[0]; }
               
               if (!p1.IsValid()) continue;
 
               nextpi[p1] = p2;       // counter-clockwise
               
-              int index = (*mesh)[si].GetIndex();
+              int index = seg.GetIndex();
               if (si1[p1] != index && si2[p1] != index)
                 { si2[p1] = si1[p1]; si1[p1] = index; }
               if (si1[p2] != index && si2[p2] != index)
@@ -675,10 +675,9 @@ namespace netgen
 
         t_points.Start();
         /*
-        for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+        for (auto & s : mesh->LineSegments())
         {
-          const auto & s = (*mesh)[si];
-          if ( s.domin==domnr || s.domout==domnr )
+            if ( s.domin==domnr || s.domout==domnr )
           {
             for (auto pi : {s[0], s[1]})
             {
@@ -709,17 +708,17 @@ namespace netgen
 	PointGeomInfo gi;
 	gi.trignum = 1;
         /*
-	for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+	for (auto & seg : mesh->LineSegments())
 	  {
-	    if ( (*mesh)[si].domin == domnr)
+	    if ( seg.domin == domnr)
 	      {
-		meshing.AddBoundaryElement (compress[(*mesh)[si][0]], 
-                                            compress[(*mesh)[si][1]], gi, gi);
+		meshing.AddBoundaryElement (compress[seg[0]], 
+                                            compress[seg[1]], gi, gi);
 	      }
-	    if ( (*mesh)[si].domout == domnr)
+	    if ( seg.domout == domnr)
 	      {
-		meshing.AddBoundaryElement (compress[(*mesh)[si][1]],
-                                            compress[(*mesh)[si][0]], gi, gi);
+		meshing.AddBoundaryElement (compress[seg[1]],
+                                            compress[seg[0]], gi, gi);
 	      }
 	  }
         */

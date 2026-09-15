@@ -867,7 +867,7 @@ namespace netgen
     MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1, face.properties.layer);
 
     for(SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(noldsurfels, 0))
-      mesh.SurfaceElements()[sei].SetIndex(k+1);
+      mesh[sei].SetIndex(k+1);
     return res != MESHING2_OK;
   }
 

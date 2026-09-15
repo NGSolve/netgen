@@ -510,11 +510,27 @@ namespace netgen
 
   class SegmentIndex : public Index<int,SegmentIndex,0>
   {
+    friend class Index<int,SegmentIndex,0>;
+    constexpr SegmentIndex (int ai) : Index(ai) { }   // use IndexBASE<SegmentIndex>()+nr, or FromNr0/FromNr1
   public:
     using Index::Index;
+    operator int () const = delete;    // a SegmentIndex stays a SegmentIndex
+    operator int & () = delete;
     /// narrowing from BaseElementIndex is explicit - name the kind you mean
     explicit constexpr SegmentIndex (BaseElementIndex bi);
   };
+}
+
+namespace ngcore
+{
+  // the generic IndexBASE does T(0); give SegmentIndex its own,
+  // so it keeps working once int -> SegmentIndex gets blocked
+  template<>
+  constexpr netgen::SegmentIndex IndexBASE<netgen::SegmentIndex> () { return netgen::SegmentIndex::Base(); }
+}
+
+namespace netgen
+{
 
 
   /**
@@ -561,14 +577,14 @@ namespace netgen
   // inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
 
 
-  inline istream & operator>> (istream & ist, SegmentIndex & pi)
+  inline istream & operator>> (istream & ist, SegmentIndex & si)
   {
-    int i; ist >> i; pi = i; return ist;
+    int i; ist >> i; si = SegmentIndex::FromNr0(i); return ist;
   }
 
   inline ostream & operator<< (ostream & ost, const SegmentIndex & si)
   {
-    return ost << (si - IndexBASE(si));
+    return ost << si.Nr0();
   } 
 
 

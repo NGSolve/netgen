@@ -102,10 +102,9 @@ namespace netgen
 
     int numelems(0),numfaces(0),numedges(0),numnodes(0);
 
-    for(SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh[si];
-	PointIndices<2> i2(seg[0],seg[1]);
+		PointIndices<2> i2(seg[0],seg[1]);
 	i2.Sort();
 	if(edgenumbers.Used(i2))
 	  continue;

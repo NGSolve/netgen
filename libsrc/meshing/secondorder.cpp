@@ -23,9 +23,8 @@ namespace netgen
 
     ClosedHashTable<SortedPointIndices<2>, PointIndex> between(2*mesh.GetNP() + 8);
 
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & seg : mesh.LineSegments())
       {
-        auto & seg = mesh[si];
         if (seg.GetType() == SEGMENT3)
           between.Set(SortedPointIndices<2>(seg[0],seg[1]), seg[2]);
       }
@@ -85,7 +84,7 @@ namespace netgen
     
 
     int nseg = mesh.GetNSeg();
-    for (SegmentIndex si = 0; si < nseg; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nseg))
       {
 	Segment & el = mesh.LineSegment(si);
 

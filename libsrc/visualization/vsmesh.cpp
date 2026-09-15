@@ -457,7 +457,7 @@ namespace netgen
                 const auto& seg = (*mesh)[si];
                 Point<3> c = Center((*mesh)[seg[0]], (*mesh)[seg[1]]);
 		glRasterPos3d (c[0], c[1], c[2]);
-		snprintf (buf, size(buf),  "%d", int(si));
+		snprintf (buf, size(buf),  "%d", si.Nr0());
 		MyOpenGLText (buf);
               }
             }
@@ -1684,7 +1684,7 @@ namespace netgen
 
             for (int j = 0; j <= hoplotn; j++)
 	      {
-		mesh->GetCurvedElements().CalcSegmentTransformation ((double) j/hoplotn, i-1, x);
+		mesh->GetCurvedElements().CalcSegmentTransformation ((double) j/hoplotn, SegmentIndex::FromNr1(i), x);
 		glVertex3d (x(0), x(1), x(2));
 		/*
 		  cout << "x = " << x(0) << ", " << x(1) << ", " << x(2)

@@ -822,7 +822,7 @@ void Ng_GetSurfaceElementTransformation (int sei, const double * xi,
       Point<3> xg;
       Vec<3> dx;
 
-      mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], sei-1, xg, dx);
+      mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], SegmentIndex::FromNr1(sei), xg, dx);
 
       if (x)
         for (int i = 0; i < 2; i++)
@@ -1634,8 +1634,8 @@ int Ng_GetNVertexElements (int vnr)
       /*
       {
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
-          if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) cnt++;
+        for (auto & seg : mesh->LineSegments())
+          if ( (seg[0] == vnr) || (seg[1] == vnr) ) cnt++;
         return cnt;
       }
       */
@@ -1669,7 +1669,7 @@ void Ng_GetVertexElements (int vnr, int * els)
         break;
         /*
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
+        for (SegmentIndex i : mesh->LineSegments().Range())
           if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) 
             els[cnt++] = i+1;
         break;
@@ -1849,7 +1849,7 @@ int Ng_GetNPeriodicEdges (int idnr)
     mesh->GetIdentifications().GetMap(idnr, map);
     //(*testout) << "ident-map " << id << ":" << endl << map << endl;
 
-    for (SegmentIndex si = 0; si < nse; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nse))
       {
 	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
 	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
@@ -1877,7 +1877,7 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
       
     //(*testout) << "map = " << map << endl;
 
-    for (SegmentIndex si = 0; si < nse; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nse))
       {
 	PointIndex other1 = PointIndex (map[(*mesh)[si][0]]);
 	PointIndex other2 = PointIndex (map[(*mesh)[si][1]]);
@@ -1981,9 +1981,9 @@ int Ng_GetVertex_SurfaceElements( int vnr_, int* elems )
     case 2:
       {
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
+        for (SegmentIndex i : mesh->LineSegments().Range())
           if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) 
-            elems[cnt++] = i+1;
+            elems[cnt++] = i.Nr1();
         return cnt;
       }
     case 1:
@@ -2027,8 +2027,8 @@ int Ng_GetVertex_NSurfaceElements( int vnr_ )
     case 2:
       {
         int cnt = 0;
-        for (SegmentIndex i = 0; i < mesh->GetNSeg(); i++)
-          if ( ((*mesh)[i][0] == vnr) || ((*mesh)[i][1] == vnr) ) cnt++;
+        for (auto & seg : mesh->LineSegments())
+          if ( (seg[0] == vnr) || (seg[1] == vnr) ) cnt++;
         return cnt;
       }
     }

@@ -658,7 +658,7 @@ namespace netgen
 	elements.Append(hpel);
       } 
         
-    for(SegmentIndex i = 0; i < mesh.GetNSeg(); i++) 
+    for (SegmentIndex i : mesh.LineSegments().Range()) 
       { 
 	Segment & seg = mesh[i];
 	HPRefElement hpel(mesh[i], mesh);

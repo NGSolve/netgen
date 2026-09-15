@@ -104,7 +104,7 @@ public:
   inline static const ELEMENT_FACE * GetFaces0 (ELEMENT_TYPE et);
 
   [[deprecated("use GetEdge(SegmentIndex) instead")]]                    
-  EdgeIndex GetSegmentEdge (int segnr) const { return segedges[segnr-1]+1; }
+  EdgeIndex GetSegmentEdge (int segnr) const { return segedges[IndexBASE<SegmentIndex>()+(segnr-1)]+1; }
   
   EdgeIndex GetEdge (SegmentIndex segnr) const { return segedges[segnr]; }
 
@@ -186,7 +186,7 @@ public:
   [[deprecated("use GetEdges(ElementIndex) instead")]]
   const EdgeIndex * GetElementEdgesPtr (int elnr) const { return &edges[IndexBASE<ElementIndex>()+elnr][0]; }
   const EdgeIndex * GetSurfaceElementEdgesPtr (int selnr) const { return &surfedges[IndexBASE<SurfaceElementIndex>()+selnr][0]; }
-  const EdgeIndex * GetSegmentElementEdgesPtr (int selnr) const { return &segedges[selnr]; }
+  const EdgeIndex * GetSegmentElementEdgesPtr (int selnr) const { return &segedges[IndexBASE<SegmentIndex>()+selnr]; }
 
   const FaceIndex * GetElementFacesPtr (int elnr) const { return &faces[IndexBASE<ElementIndex>()+elnr][0]; }
   const FaceIndex * GetSurfaceElementFacesPtr (int selnr) const { return &surffaces[IndexBASE<SurfaceElementIndex>()+selnr]; }

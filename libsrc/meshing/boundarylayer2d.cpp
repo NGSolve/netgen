@@ -150,7 +150,7 @@ namespace netgen
      Array<Array<PointIndex>, PointIndex> mapto(np);
 
      // Bit array to keep track of segments already processed
-     BitArray segs_done(nseg);
+     TBitArray<SegmentIndex> segs_done(nseg);
      segs_done.Clear();
 
      // moved segments
@@ -184,7 +184,7 @@ namespace netgen
     int next_edge_nr = max_edge_nr+1;
 
     BitArray active_boundaries(max_edge_nr+1);
-    BitArray active_segments(nseg);
+    TBitArray<SegmentIndex> active_segments(nseg);
     active_boundaries.Clear();
     active_segments.Clear();
 
@@ -647,9 +647,9 @@ namespace netgen
         int ed_idx = -1;
         for(int iter = 0; iter < nseg; iter++)
         {
-           SegmentIndex found(0);
+           SegmentIndex found = SegmentIndex::INVALID;
            PointIndex next(PointIndex::INVALID);
-           for(SegmentIndex segi(0); segi < nseg; segi++)
+           for(SegmentIndex segi : T_Range<SegmentIndex>(nseg))
            {
               if(active_segments.Test(segi)) continue;
               const auto & sg = line_segments[segi];

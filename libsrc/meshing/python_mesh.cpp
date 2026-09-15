@@ -309,13 +309,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     ;
 
   py::class_<SegmentIndex>(m, "ElementId1D")
-    .def(py::init<int>())
+    .def(py::init([](int i) { return SegmentIndex::FromNr0(i); }))
     .def("__repr__", &ToString<SegmentIndex>)
     .def("__str__", &ToString<SegmentIndex>)
-    .def_property_readonly("nr", &SegmentIndex::operator int)
+    .def_property_readonly("nr", [](SegmentIndex &self) { return self.Nr0(); })
     .def("__eq__" , FunctionPointer( [](SegmentIndex &self, SegmentIndex &other)
-                  { return static_cast<int>(self)==static_cast<int>(other); }) )
-    .def("__hash__" , FunctionPointer( [](SegmentIndex &self ) { return static_cast<int>(self); }) )
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](SegmentIndex &self ) { return self.Nr0(); }) )
     ;
 
 
@@ -1832,7 +1832,7 @@ py::arg("point_tolerance") = -1.)
                 const auto & segs = self.LineSegments();
                 for(auto i : myrange)
                 {
-                    const auto & seg = segs[i];
+                    const auto & seg = segs[SegmentIndex::FromNr0(i)];
                     for(auto k : Range(2))
                       output[2*i+k] = seg[k].Nr0();
                 } });

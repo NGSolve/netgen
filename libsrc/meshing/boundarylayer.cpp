@@ -189,7 +189,7 @@ bool HaveSingleSegments (const Mesh& mesh)
 
   for (auto segi : Range(mesh.LineSegments()))
     {
-      mesh.GetTopology().GetSegmentSurfaceElements(segi + 1, surf_els);
+      mesh.GetTopology().GetSegmentSurfaceElements(segi.Nr1(), surf_els);
       if (surf_els.Size() < 2)
         continue;
 
@@ -220,7 +220,7 @@ bool HaveSingleSegments (const Mesh& mesh)
 
 // duplicates segments to have a unified data structure
 // for all geometry types
-void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segments, Array<Segment>& free_segments, Array<int>& seg_face)
+void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment, SegmentIndex>& segments, Array<Segment, SegmentIndex>& free_segments, Array<int, SegmentIndex>& seg_face)
 {
   // auto& topo = mesh.GetTopology();
 
@@ -245,7 +245,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segme
           seg_face.Append(face);
           continue;
         }
-      mesh.GetTopology().GetSegmentSurfaceElements(segi + 1, surf_els);
+      mesh.GetTopology().GetSegmentSurfaceElements(segi.Nr1(), surf_els);
       for (auto seli : surf_els)
         {
           const auto& sel = mesh[seli];
@@ -266,7 +266,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment>& segme
     }
 }
 
-void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment> segments, FlatArray<Segment> new_segments)
+void MergeAndAddSegments (Mesh& mesh, FlatArray<Segment, SegmentIndex> segments, FlatArray<Segment, SegmentIndex> new_segments)
 {
   ClosedHashTable<SortedPointIndices<2>, bool> already_added(2*(segments.Size() + 2 * new_segments.Size())+8);
 
@@ -464,7 +464,7 @@ Array<Array<pair<SegmentIndex, int>>, SegmentIndex>
 BoundaryLayerTool ::BuildSegMap ()
 {
   // Bit array to keep track of segments already processed
-  BitArray segs_done(nseg + 1);
+  TBitArray<SegmentIndex> segs_done(nseg);
   segs_done.Clear();
 
   // map for all segments with same points
@@ -951,7 +951,7 @@ void BoundaryLayerTool ::InsertNewElements (
         }
     }
 
-  for (SegmentIndex sei = 0; sei < nseg; sei++)
+  for (SegmentIndex sei : T_Range<SegmentIndex>(nseg))
     {
       auto& seg = segments[sei];
       if (is_boundary_moved.Test(seg_face[sei]))

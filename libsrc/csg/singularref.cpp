@@ -51,9 +51,9 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
     si2[i] = geom.GetSurfaceClassRepresentant(si2[i]);
 
 
-  for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+  for (auto & seg : mesh.LineSegments())
     {
-      PointIndices<2> i2 (mesh[si][0], mesh[si][1]);
+      PointIndices<2> i2 (seg[0], seg[1]);
       /*
       
       bool onedge = 1;
@@ -71,7 +71,7 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
       */
 
       {
-        const auto & ed = mesh.GetEdgeDescriptor(mesh[si].GetIndex());
+        const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
         if (domnr != -1 && domnr != ed.DomainIn() && domnr != ed.DomainOut())
 	  continue;
       }
@@ -80,14 +80,14 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
       bool onedge = 1;
       for (int j = 0; j < 2; j++)
 	{
-	  int surfi = (j == 0) ? mesh[si].surfnr1 : mesh[si].surfnr2;
+	  int surfi = (j == 0) ? seg.surfnr1 : seg.surfnr2;
 	  surfi = geom.GetSurfaceClassRepresentant(surfi);
 	  if (!si1.Contains(surfi) && !si2.Contains(surfi))
 	    onedge = 0;
 	}
       */
-      int surfi1 = geom.GetSurfaceClassRepresentant(mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(0));
-      int surfi2 = geom.GetSurfaceClassRepresentant(mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SurfNr(1));
+      int surfi1 = geom.GetSurfaceClassRepresentant(mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0));
+      int surfi2 = geom.GetSurfaceClassRepresentant(mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1));
 
       if ( (si1.Contains(surfi1) && si2.Contains(surfi2)) ||
            (si1.Contains(surfi2) && si2.Contains(surfi1)) )
@@ -98,8 +98,8 @@ void SingularEdge :: FindPointsOnEdge (class Mesh & mesh)
 	  //	  PrintMessage (5, "sing segment ", i2.I1(), " - ", i2.I2());
 	  points.Append (mesh[i2[0]]);
 	  points.Append (mesh[i2[1]]);
-	  mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SetSingEdgeLeft(factor);
-	  mesh.GetEdgeDescriptor(mesh[si].GetIndex()).SetSingEdgeRight(factor);
+	  mesh.GetEdgeDescriptor(seg.GetIndex()).SetSingEdgeLeft(factor);
+	  mesh.GetEdgeDescriptor(seg.GetIndex()).SetSingEdgeRight(factor);
 	}	    
     }
   

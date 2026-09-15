@@ -209,7 +209,7 @@ namespace netgen
                           else if(dim == 2){
                             el.SetIndex(-1);
                             auto nr = mesh.AddSegment(el);
-                            element_map[label] = std::make_tuple(nr+1, 2);
+                            element_map[label] = std::make_tuple(nr.Nr1(), 2);
                           }
                           break;
                         }
@@ -229,7 +229,7 @@ namespace netgen
                           else if(dim == 2){
                             el.SetIndex(-1);
                             auto nr = mesh.AddSegment(el);
-                            element_map[label] = std::make_tuple(nr+1, 2);
+                            element_map[label] = std::make_tuple(nr.Nr1(), 2);
                           }
 
                           break;

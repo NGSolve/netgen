@@ -598,7 +598,7 @@ namespace netgen
     osedges = 2;
 
     // count segments on edges
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (SegmentIndex si : mesh.LineSegments().Range())
       {
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
@@ -610,7 +610,7 @@ namespace netgen
     for (int i = 0; i < cntedge; i++)
       osedges[i] = (osedges[i] > 0) ? 1 : 0;
 
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (SegmentIndex si : mesh.LineSegments().Range())
       {
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
@@ -676,7 +676,7 @@ namespace netgen
     edgenewp = PointIndex::INVALID;
 
     int nseg = mesh.GetNSeg();
-    for (SegmentIndex si = 0; si < nseg; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nseg))
       {
 	const Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
@@ -703,7 +703,7 @@ namespace netgen
     
 
     // for (int i = 1; i <= nseg; i++)
-    for (SegmentIndex si = 0; si < nseg; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(nseg))
       {
 	Segment & seg = mesh[si];
 	const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
@@ -1734,7 +1734,7 @@ namespace netgen
 	int oldseg_ednr = (oldseg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(oldseg.GetIndex()).EdgeNr() : -1;
 	if (oldseg_ednr != copyfromedge)
 	  continue;
-	if (seg_seginfo[i-1] == 0)
+	if (seg_seginfo[SegmentIndex::FromNr1(i)] == 0)
 	  continue;
 
 	PointIndex pi1 = oldseg[0];
@@ -1754,7 +1754,7 @@ namespace netgen
 	    bool inv = refedgesinv[k-1];
 
 	    // other edge is inverse
-	    if (seg_seginfo[i-1] == 1)
+	    if (seg_seginfo[SegmentIndex::FromNr1(i)] == 1)
 	      inv = !inv;
 
 	    //	  (*testout) << "inv, now = " << inv << endl;

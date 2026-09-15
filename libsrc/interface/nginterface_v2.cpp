@@ -495,7 +495,7 @@ namespace netgen
   {
     Point<3> xg;
     Vec<3> dx;
-    mesh->GetCurvedElements().CalcSegmentTransformation(xi[0],elnr,xg,dx);
+    mesh->GetCurvedElements().CalcSegmentTransformation(xi[0],SegmentIndex::FromNr0(elnr),xg,dx);
     if(x)
       for(int i=0;i<3;i++) x[i] = xg(i);
 
@@ -551,7 +551,7 @@ namespace netgen
     Point<3> xg;
     Vec<3> dx;
 
-    mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], elnr, xg, dx);
+    mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], SegmentIndex::FromNr0(elnr), xg, dx);
     
     if (x)
       for (int i = 0; i < 2; i++) x[i] = xg(i);
@@ -572,7 +572,7 @@ namespace netgen
     Point<3> xg;
     Vec<3> dx;
 
-    mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], elnr, xg, dx);
+    mesh->GetCurvedElements().CalcSegmentTransformation (xi[0], SegmentIndex::FromNr0(elnr), xg, dx);
     
     if (x) x[0] = xg(0);
     if (dxdxi) dxdxi[0] = dx(0);
@@ -641,7 +641,7 @@ namespace netgen
                                    double * x, size_t sx,
                                    double * dxdxi, size_t sdxdxi) const
   {
-    mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<3> (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<3> (SegmentIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
   }
 
   template <> DLL_HEADER void Ngx_Mesh ::
@@ -660,7 +660,7 @@ namespace netgen
                                    double * x, size_t sx,
                                    double * dxdxi, size_t sdxdxi) const
   {
-    mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<2> (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+    mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<2> (SegmentIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
   }
 
   template <> DLL_HEADER void Ngx_Mesh :: 
@@ -894,7 +894,7 @@ namespace netgen
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<3>
-      (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+      (SegmentIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
     /*
     double hxi[4][1];
     double hx[4][3];
@@ -922,7 +922,7 @@ namespace netgen
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     mesh->GetCurvedElements().CalcMultiPointSegmentTransformation<2>
-      (elnr, npts, xi, sxi, x, sx, dxdxi, sdxdxi);
+      (SegmentIndex::FromNr0(elnr), npts, xi, sxi, x, sx, dxdxi, sdxdxi);
     /*
     for (int i = 0; i < npts; i++)
       {
@@ -1020,7 +1020,7 @@ namespace netgen
     if(mesh->GetDimension() == 3)
       p[2] = hp[2];
 
-    for (SegmentIndex si = 0; si < mesh->GetNSeg(); si++)
+    for (SegmentIndex si : mesh->LineSegments().Range())
       {
         auto & seg = (*mesh)[si];
         Point<3> p1 = (*mesh)[seg[0]];
@@ -1033,7 +1033,7 @@ namespace netgen
         if (lam >= -1e-10 && lam <= 1+1e-10 && lam2 < 1e-10)
           {
             lami[0] = 1-lam;
-            return si;
+            return si.Nr0();
           }
       }
     return -1;

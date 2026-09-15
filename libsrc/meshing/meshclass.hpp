@@ -91,7 +91,7 @@ namespace netgen
     /// boundary edges  (1..normal bedge, 2..segment)
     unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> boundaryedges;
     ///
-    unique_ptr<ClosedHashTable<SortedPointIndices<2>, int>> segmentht;
+    unique_ptr<ClosedHashTable<SortedPointIndices<2>, SegmentIndex>> segmentht;
     ///
     unique_ptr<ClosedHashTable<SortedPointIndices<3>, SurfaceElementIndex>> surfelementht;
     unique_ptr<ClosedHashTable<SortedPointIndices<3>, int>> illegal_trigs;
@@ -296,8 +296,8 @@ namespace netgen
     DLL_HEADER SegmentIndex AddSegment (const Segment & s);
     void DeleteSegment (int segnr)
     {
-      segments[segnr-1][0].Invalidate();
-      segments[segnr-1][1].Invalidate();
+      segments[SegmentIndex::FromNr1(segnr)][0].Invalidate();
+      segments[SegmentIndex::FromNr1(segnr)][1].Invalidate();
     }
     /*
     void FullDeleteSegment (int segnr)  // von wem ist das ???
@@ -308,9 +308,9 @@ namespace netgen
 
     int GetNSeg () const { return segments.Size(); }
     // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                
-    Segment & LineSegment(int i) { return segments[i-1]; }
+    Segment & LineSegment(int i) { return segments[IndexBASE<SegmentIndex>()+(i-1)]; }
     // [[deprecated("Use LineSegment(SegmentIndex) instead of int !")]]                    
-    const Segment & LineSegment(int i) const { return segments[i-1]; }
+    const Segment & LineSegment(int i) const { return segments[IndexBASE<SegmentIndex>()+(i-1)]; }
 
     Segment & LineSegment(SegmentIndex si) { return segments[si]; }
     const Segment & LineSegment(SegmentIndex si) const { return segments[si]; }
@@ -1064,7 +1064,7 @@ namespace netgen
 
     Array<int, ElementIndex> vol_partition;
     Array<int, SurfaceElementIndex> surf_partition;
-    Array<int> seg_partition;
+    Array<int, SegmentIndex> seg_partition;
 
     shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
 

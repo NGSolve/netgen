@@ -549,7 +549,7 @@ namespace netgen
           }
         edge2vert.SetSize(ned);
         edge2segment.SetSize(ned);
-        edge2segment = -1;
+        edge2segment = SegmentIndex::INVALID;
 
         // INDEX_CLOSED_HASHTABLE<int> v2eht(2*max_edge_on_vertex+10);
 	// Array<int> vertex2;
@@ -2092,7 +2092,7 @@ namespace netgen
 	if (orient)
 	  orient[0] = segedges.Get(elnr) > 0 ? 1 : -1;
         */
-	eledges[0] = segedges[elnr-1]+1;
+	eledges[0] = segedges[SegmentIndex::FromNr1(elnr)]+1;
 	if (orient)
 	  // orient[0] = segedges.Get(elnr).orient ? -1 : 1;
           // orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
@@ -2240,7 +2240,7 @@ namespace netgen
 
   void MeshTopology :: GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
-    enr = segedges[segnr-1]+1;
+    enr = segedges[SegmentIndex::FromNr1(segnr)]+1;
     orient = GetSegmentEdgeOrientation(segnr);
   }
 
@@ -2476,7 +2476,7 @@ namespace netgen
     // GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );
     GetEdgeVertices ( GetEdge (segnr-1)+1, v1, v2 );
     */
-    auto [v1,v2] = GetEdgeVertices ( GetEdge (segnr-1) );
+    auto [v1,v2] = GetEdgeVertices ( GetEdge (SegmentIndex::FromNr1(segnr)) );
     auto volels1 = GetVertexElements ( v1 );
     auto volels2 = GetVertexElements ( v2 );
     volels.SetSize(0);
@@ -2492,7 +2492,7 @@ namespace netgen
     // int v1, v2;
     // GetEdgeVertices ( GetSegmentEdge (segnr), v1, v2 );
     // GetEdgeVertices ( GetEdge (segnr-1)+1, v1, v2 );
-    auto [v1,v2] = GetEdgeVertices ( GetEdge (segnr-1) );
+    auto [v1,v2] = GetEdgeVertices ( GetEdge (SegmentIndex::FromNr1(segnr)) );
     auto els1 = GetVertexSurfaceElements ( v1 );
     auto els2 = GetVertexSurfaceElements ( v2 );
     els.SetSize(0);

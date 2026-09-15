@@ -1156,7 +1156,7 @@ namespace netgen
     for (int i = 0; i < npt; i++)
       pref[i] = double(i) / (npt-1);
     int meshdim = mesh->GetDimension();
-    for (SegmentIndex i = 0; i < mesh -> GetNSeg(); i++)
+    for (SegmentIndex i : mesh->LineSegments().Range())
       {
         // mesh->GetCurvedElements().
         // CalcMultiPointSegmentTransformation (&pref, i, &points, NULL);
@@ -1168,7 +1168,7 @@ namespace netgen
           {
             for (int j = 0; j < npt; j++)
               {
-                vsol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
+                vsol->solclass->GetSegmentValue (i.Nr0(), pref[j], &mvalues[0]);
                 // values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
                 for (int k = 0; k < min(ncomp, 3); k++)
                   points[j](k) += scaledeform * mvalues[k];
@@ -1180,7 +1180,7 @@ namespace netgen
           {
             for (int j = 0; j < npt; j++)
               {
-                sol->solclass->GetSegmentValue (i, pref[j], &mvalues[0]);
+                sol->solclass->GetSegmentValue (i.Nr0(), pref[j], &mvalues[0]);
                 values[j] = ExtractValue (sol, scalcomp, &mvalues[0]);
                 points[j](meshdim) += scaledeform * values[j];
               }

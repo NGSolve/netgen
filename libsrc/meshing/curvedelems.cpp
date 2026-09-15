@@ -724,7 +724,7 @@ namespace netgen
 		edgeorder[edgenrs[j]] = aorder;
 	      faceorder[top.GetFace (i)] = aorder;
 	    }
-	for (SegmentIndex i = 0; i < mesh.GetNSeg(); i++)
+	for (SegmentIndex i : mesh.LineSegments().Range())
 	  edgeorder[top.GetEdge (i)] = aorder;
       }
 
@@ -1070,7 +1070,7 @@ namespace netgen
     edge_geoedgenr = -1;
 
     if (working)
-      for (SegmentIndex i = 0; i < mesh.GetNSeg(); i++)
+      for (SegmentIndex i : mesh.LineSegments().Range())
 	{
 	  const Segment & seg = mesh[i];
 	  int edgenr = top.GetEdge (i);

@@ -46,10 +46,9 @@ namespace netgen
     // new version with consistent ordering across sub-domains
 
     Array<PointIndices<2>> parents;
-    for (SegmentIndex si = 0; si < mesh.GetNSeg(); si++)
+    for (auto & el : mesh.LineSegments())
       {
-	const Segment & el = mesh[si];
-	PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
+		PointIndices<2> i2 = PointIndices<2>(el[0], el[1]).Sort();
         if (!between.Used(i2))
           {
             between.Set (i2, PointIndex::INVALID);          
@@ -164,7 +163,7 @@ namespace netgen
     Array<EdgePointGeomInfo, PointIndex> epgi;
 
     int oldns = mesh.GetNSeg();
-    for (SegmentIndex si = 0; si < oldns; si++)
+    for (SegmentIndex si : T_Range<SegmentIndex>(oldns))
       {
 	const Segment & el = mesh.LineSegment(si);
 
