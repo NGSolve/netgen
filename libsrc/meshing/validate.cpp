@@ -24,12 +24,12 @@ namespace netgen
 	  mesh.Point(pi) = Center (mesh.Point(mesh.mlbetweennodes[pi][0]),
 				   mesh.Point(mesh.mlbetweennodes[pi][1]));
       }
-    for (ElementIndex i : mesh.VolumeElements().Range())
+    for (auto & el : mesh.VolumeElements())
       {
-	double bad = mesh[i].CalcJacobianBadness (mesh.Points());
-	for(int j=0; j<mesh[i].GetNP(); j++)
-	  if(bad > pure_badness[mesh[i][j]])
-	    pure_badness[mesh[i][j]] = bad;
+	double bad = el.CalcJacobianBadness (mesh.Points());
+	for(int j=0; j<el.GetNP(); j++)
+	  if(bad > pure_badness[el[j]])
+	    pure_badness[el[j]] = bad;
 
 	// save maximum
 	if(bad > pure_badness.Last())
@@ -179,9 +179,8 @@ namespace netgen
     isboundarypoint.Clear();
     isedgepoint.Clear();
 
-    for(int i = 1; i <= mesh.GetNSeg(); i++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 	isedgepoint.SetBit(seg[0]);
 	isedgepoint.SetBit(seg[1]);
       }

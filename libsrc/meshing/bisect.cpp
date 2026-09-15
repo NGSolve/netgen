@@ -3253,9 +3253,8 @@ namespace netgen
 
 	    if (mesh.GetDimension() == 3)
 	      {
-		for (int i = 1; i <= mesh.GetNSeg(); i++)
+		for (auto & seg : mesh.LineSegments())
 		  {
-		    const Segment & seg = mesh.LineSegment(i);
 		    singv.SetBit (seg[0]);
 		    singv.SetBit (seg[1]);
 		  }
@@ -3273,9 +3272,8 @@ namespace netgen
 		// vertices with 2 different bnds
 		Array<int,PointIndex> bndind(np);
 		bndind = 0;
-		for (int i = 1; i <= mesh.GetNSeg(); i++)
+		for (auto & seg : mesh.LineSegments())
 		  {
-		    const Segment & seg = mesh.LineSegment(i);
 		    int ednr = mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr();
 		    for (int j = 0; j < 2; j++)
 		      {
@@ -3624,9 +3622,9 @@ namespace netgen
             timer1b.Stop();
             timer_bisectsegms.Start();
 	    int nseg = mesh.GetNSeg ();
-	    for (int i = 1; i <= nseg; i++)
+	    for (SegmentIndex i : T_Range<SegmentIndex>(nseg))
 	      {
-		Segment & seg = mesh.LineSegment (i);
+		Segment & seg = mesh[i];
 		PointIndices<2> edge(seg[0], seg[1]);
 		edge.Sort();
 		if (cutedges.Used (edge))
@@ -3651,7 +3649,7 @@ namespace netgen
 		    nseg1.EPGeomInfo(1) = newepgi;
 		    nseg2.EPGeomInfo(0) = newepgi;
 		  
-		    mesh.LineSegment (i) = nseg1;
+		    mesh[i] = nseg1;
 		    mesh.AddSegment (nseg2);
 		  }
 	      }

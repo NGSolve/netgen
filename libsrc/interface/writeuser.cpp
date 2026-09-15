@@ -159,9 +159,9 @@ void WriteNeutralFormat (const Mesh & mesh,
   if (mesh.GetDimension() == 2)
     {
       outfile << nseg << "\n";
-      for (int i = 1; i <= nseg; i++)
+      for (SegmentIndex i : T_Range<SegmentIndex>(nseg))
 	{
-	  const Segment & seg = mesh.LineSegment(i);
+	  const Segment & seg = mesh[i];
 	  outfile.width(4);
 	outfile << seg.GetIndex() << "    ";
 
@@ -201,7 +201,7 @@ void WriteSurfaceFormat (const Mesh & mesh,
 			 const filesystem::path & filename)
 {
   // surface mesh
-  int i, j;
+  int j;
 
   cout << "Write Surface Mesh" << endl;
 
@@ -220,12 +220,12 @@ void WriteSurfaceFormat (const Mesh & mesh,
       outfile << endl;
     }
   outfile << mesh.GetNSE() << endl;
-  for (i = 1; i <= mesh.GetNSE(); i++)
+  for (auto & sel : mesh.SurfaceElements())
     {
       for (j = 1; j <= 3; j++)
 	{
 	  outfile.width(8);
-	  outfile << mesh.SurfaceElement(i).PNum(j);
+	  outfile << sel.PNum(j);
 	}
       outfile << endl;
     }
@@ -252,18 +252,17 @@ void WriteSTLFormat (const Mesh & mesh,
   else
 	  outfile = make_unique<ofstream>(filename);
 
-  int i;
 
   outfile->precision(10);
 
   *outfile << "solid" << endl;
 
-  for (i = 1; i <= mesh.GetNSE(); i++)
+  for (auto & sel : mesh.SurfaceElements())
     {
       *outfile << "facet normal ";
-      const Point<3>& p1 = mesh.Point(mesh.SurfaceElement(i).PNum(1));
-      const Point<3>& p2 = mesh.Point(mesh.SurfaceElement(i).PNum(2));
-      const Point<3>& p3 = mesh.Point(mesh.SurfaceElement(i).PNum(3));
+      const Point<3>& p1 = mesh.Point(sel.PNum(1));
+      const Point<3>& p2 = mesh.Point(sel.PNum(2));
+      const Point<3>& p3 = mesh.Point(sel.PNum(3));
 
       Vec<3> normal = Cross(p2-p1,p3-p1);
       if (normal.Length() != 0)
@@ -402,7 +401,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
       int np = mesh.GetNP();
       int nse = mesh.GetNSE();
-      int i, j;
+      int j;
 
       ofstream outfile (filename);
 
@@ -434,9 +433,9 @@ void WriteVRMLFormat (const Mesh & mesh,
       outfile << "  ] } \n"
                  "coordIndex [ \n";
 
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
 	{
-	  const Element2d & el = mesh.SurfaceElement(i);
+	  const Element2d & el = mesh[i];
 
 	  for (j = 1; j <= 3; j++)
 	    {
@@ -452,9 +451,9 @@ void WriteVRMLFormat (const Mesh & mesh,
       outfile << "color Color { color [1 0 0, 0 1 0, 0 0 1, 1 1 0]} \n"
                  "colorIndex [\n";
 
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
 	{
-	  outfile << mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex ()).BCProperty();
+	  outfile << mesh.GetFaceDescriptor(mesh[i].GetIndex ()).BCProperty();
           outfile << endl;
 	}
 
@@ -478,7 +477,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
       int np = mesh.GetNP();
       int nse = mesh.GetNSE();
-      int i, j;
+      int j;
 
       ofstream outfile (filename);
 
@@ -510,9 +509,9 @@ void WriteVRMLFormat (const Mesh & mesh,
       outfile << "  ] } \n"
                  "coordIndex [ \n";
 
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
 	{
-	  const Element2d & el = mesh.SurfaceElement(i);
+	  const Element2d & el = mesh[i];
 
 	  for (j = 1; j <= 3; j++)
 	    {
@@ -580,7 +579,7 @@ void WriteFEPPFormat (const Mesh & mesh,
       int ne = mesh.GetNE();
       int nse = mesh.GetNSE();
       // int ns = mesh.GetNFD();
-      int i, j;
+      int j;
 
       outfile.precision(5);
       outfile.setf (ios::fixed, ios::floatfield);
@@ -588,9 +587,9 @@ void WriteFEPPFormat (const Mesh & mesh,
 
       outfile << "volumemesh4" << endl;
       outfile << nse << endl;
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
 	{
-	  const Element2d & el = mesh.SurfaceElement(i);
+	  const Element2d & el = mesh[i];
 
 	  //	  int facenr = mesh.facedecoding.Get(el.GetIndex()).surfnr;
 	  outfile.width(4);
@@ -787,9 +786,9 @@ void WriteEdgeElementFormat (const Mesh & mesh,
 
   // surface element - edge - list (with boundary conditions)
   outfile << nsurfelem << "\n";
-  for (int i = 1; i <= nsurfelem; i++)
+  for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nsurfelem))
     {
-      SurfaceElementIndex sei = SurfaceElementIndex::FromNr1(i);
+      SurfaceElementIndex sei = i;
       Element2d el = mesh[sei];
       if (invertsurf)
 	el.Invert();

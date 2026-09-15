@@ -234,7 +234,7 @@ namespace netgen
             // into the various surface elements lists
             else
             {
-               Element2d sel = mesh.SurfaceElement(surfelem);
+               Element2d sel = mesh[SurfaceElementIndex::FromNr1(surfelem)];
                surfelem_bclist[bc_ind-1] = mesh.GetFaceDescriptor(sel.GetIndex()).BCProperty();
                surfelem_lists[bc_ind-1] = INDEX_2(locfaces[i-1],elind);
 
@@ -630,10 +630,10 @@ namespace netgen
          return;
       }
 
-      if(( (mesh.SurfaceElement(nse/2).GetType() != TRIG) 
-	   && (mesh.SurfaceElement(nse/2).GetType() != QUAD) )
-         || (mesh.VolumeElement(ne/2).GetType() == TET10)
-         || (mesh.VolumeElement(ne/2).GetType() == PRISM12))
+      if(( (mesh[SurfaceElementIndex::FromNr1(nse/2)].GetType() != TRIG) 
+	   && (mesh[SurfaceElementIndex::FromNr1(nse/2)].GetType() != QUAD) )
+         || (mesh[ElementIndex::FromNr1(ne/2)].GetType() == TET10)
+         || (mesh[ElementIndex::FromNr1(ne/2)].GetType() == PRISM12))
       {
          cout << "Export Error: OpenFOAM 1.5+ does not support non-linear elements.... Aborting!\n";
          return;

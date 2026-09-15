@@ -287,18 +287,16 @@ namespace netgen
           cntverts += 1 + (*mesh)[ei].GetNP();
 
         ost << "\nCELLS " << mesh->GetNE() << " " << cntverts << "\n";
-        for (ElementIndex ei : mesh->VolumeElements().Range())
+        for (auto & el : mesh->VolumeElements())
           {
-            const Element & el = (*mesh)[ei];
             ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
               ost << " " << el[j] - IndexBASE<PointIndex>();
             ost << "\n";
           }
         ost << "\nCELL_TYPES " << mesh->GetNE() << "\n";
-        for (ElementIndex ei : mesh->VolumeElements().Range())
+        for (auto & el : mesh->VolumeElements())
           {
-            const Element & el = (*mesh)[ei];
             switch (el.GetType())
               {
               case TET: ost << 10; break;

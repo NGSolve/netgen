@@ -113,10 +113,10 @@ namespace netgen
     int n = mesh.GetNSE();   // number of surface elements
     cout << n << " Surface elements" << endl;
   
-    for (int i = 1; i <= n; i++)
+    for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(n))
       {
         SURFELEMENT sel;
-        const Element2d & el = mesh.SurfaceElement(i);
+        const Element2d & el = mesh[i];
         sel.snr = el.GetIndex();
         sel.p1 = el.PNum(1);
         sel.p2 = el.PNum(2);
@@ -127,10 +127,10 @@ namespace netgen
     n = mesh.GetNE();   // number of volume elements
     cout << n << " Volume elements" << endl;
   
-    for (int i = 1; i <= n; i++)
+    for (ElementIndex i : T_Range<ElementIndex>(n))
       {
         VOLELEMENT el;
-        const Element & nel = mesh.VolumeElement(i);
+        const Element & nel = mesh[i];
         el.p1 = nel.PNum(1);
         el.p2 = nel.PNum(2);
         el.p3 = nel.PNum(3);

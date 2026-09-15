@@ -1368,21 +1368,21 @@ namespace netgen
     for (int i = 0; i < GetNE(); i++)
       {
 	eptr.Append (eind.Size());
-	const Element & el = VolumeElement(i+1);
+	const Element & el = (*this)[ElementIndex::FromNr1(i+1)];
 	for (int j = 0; j < el.GetNP(); j++)
 	  eind.Append (el[j].Nr0());
       }
     for (int i = 0; i < GetNSE(); i++)
       {
 	eptr.Append (eind.Size());
-	const Element2d & el = SurfaceElement(i+1);
+	const Element2d & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
 	for (int j = 0; j < el.GetNP(); j++)
 	  eind.Append (el[j].Nr0());
       }
     for (int i = 0; i < GetNSeg(); i++)
       {
 	eptr.Append (eind.Size());
-	const Segment & el = LineSegment(i+1);
+	const Segment & el = (*this)[SegmentIndex::FromNr1(i+1)];
 	eind.Append (el[0].Nr0());
 	eind.Append (el[1].Nr0());
       }
@@ -1665,7 +1665,7 @@ namespace netgen
       {
 	eptr.Append (eind.Size());
 	
-	const Element & el = VolumeElement(i+1);
+	const Element & el = (*this)[ElementIndex::FromNr1(i+1)];
 	
 	int ind = el.GetIndex();	
 	if (volume_weights.Size()<ind)
@@ -1679,7 +1679,7 @@ namespace netgen
     for (int i = 0; i < GetNSE(); i++)
       {
 	eptr.Append (eind.Size());
-	const Element2d & el = SurfaceElement(i+1);
+	const Element2d & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
 	
 	
 	int ind = el.GetIndex(); 
@@ -1697,7 +1697,7 @@ namespace netgen
       {
 	eptr.Append (eind.Size());
 	
-	const Segment & el = LineSegment(i+1);	
+	const Segment & el = (*this)[SegmentIndex::FromNr1(i+1)];	
 	
 	int ind = el.GetIndex();
 	if (segment_weights.Size()<ind)
@@ -1896,11 +1896,11 @@ namespace netgen
       }
     
 
-    for (int sei = 1; sei <= GetNSE(); sei++ )
+    for (SurfaceElementIndex sei : SurfaceElements().Range())
       {
 	ElementIndex ei1, ei2;
-	GetTopology().GetSurface2VolumeElement (SurfaceElementIndex::FromNr1(sei), ei1, ei2);
-	Element2d & sel = SurfaceElement (sei);
+	GetTopology().GetSurface2VolumeElement (sei, ei1, ei2);
+	Element2d & sel = (*this)[sei];
 
         for (int j = 0; j < 2; j++)
           {

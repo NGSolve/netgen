@@ -264,11 +264,11 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
   int nopen;
   int outercnt = 20;
 
-  for (int i = 1; i <= mesh.GetNSeg(); i++)
+  for (SegmentIndex i : mesh.LineSegments().Range())
     {
-      const Segment & seg = mesh.LineSegment (i);
+      const Segment & seg = mesh[i];
       if (seg.GeomInfo(0).trignum <= 0 || seg.GeomInfo(1).trignum <= 0)
-	(*testout) << "Problem with segment " << i << ": " << seg << endl;
+	(*testout) << "Problem with segment " << i.Nr1() << ": " << seg << endl;
     }
 
 
@@ -380,9 +380,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 	      ClosedHashTable<SortedPointIndices<2>, PointIndex> newpht(128);
 
 	      int nsegold = mesh.GetNSeg();
-	      for (int i = 1; i <= nsegold; i++)
+	      for (SegmentIndex i : T_Range<SegmentIndex>(nsegold))
 		{
-		  Segment seg = mesh.LineSegment(i);
+		  Segment seg = mesh[i];
 		  SortedPointIndices<2> i2(seg[0], seg[1]);
 		  if (openseght.Used (i2))
 		    {
@@ -424,7 +424,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 		      nseg2[0] = newpi;
 		      nseg2.EPGeomInfo(0) = newgi;
 		      
-		      mesh.LineSegment(i) = nseg1;
+		      mesh[i] = nseg1;
 		      mesh.AddSegment (nseg2);
 		      
 		      mesh.RestrictLocalH (Center (mesh.Point(nseg1[0]),
@@ -460,10 +460,10 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
 
 	  geom.InitMarkedTrigs();
 
-	  for (int i = 1; i <= mesh.GetNSE(); i++)
-	    if (mesh.SurfaceElement(i).BadElement())
+	  for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
+	    if (mesh[i].BadElement())
 	      {
-		geom.SetMarkedTrig(mesh.SurfaceElement(i).GeomInfoPi(1).trignum, 1);
+		geom.SetMarkedTrig(mesh[i].GeomInfoPi(1).trignum, 1);
 		PrintMessage(7, "overlapping element, will be removed");
 	      }
 	  
@@ -522,9 +522,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
           mesh.FindOpenSegments ();
           int nsegold = mesh.GetNSeg();
           ClosedHashTable<SortedPointIndices<2>, PointIndex> newpht(128);
-          for (int i = 1; i <= nsegold; i++)
+          for (SegmentIndex i : T_Range<SegmentIndex>(nsegold))
             {
-              Segment seg = mesh.LineSegment(i);
+              Segment seg = mesh[i];
               SortedPointIndices<2> i2(seg[0], seg[1]);
               if (openseght.Used (i2))
                 {
@@ -566,7 +566,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                   nseg2[0] = newpi;
                   nseg2.EPGeomInfo(0) = newgi;
 		      
-                  mesh.LineSegment(i) = nseg1;
+                  mesh[i] = nseg1;
                   mesh.AddSegment (nseg2);
 		      
                   mesh.RestrictLocalH (Center (mesh.Point(nseg1[0]),

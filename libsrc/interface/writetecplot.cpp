@@ -22,7 +22,6 @@ void WriteTecPlotFormat (const Mesh & mesh,
   if(geom == nullptr)
     throw Exception("TecPlot format requires a CSGeometry");
 
-  INDEX i;
   int j, k, e, z;
   Vec<3> n;
   
@@ -39,9 +38,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
   ClosedHashTable<SortedPointIndices<3>, int> face2volelement(2*ne+8);
 
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = mesh.VolumeElement(i);
+      const Element & el = mesh[i];
       PointIndices<3> i3;
       int l;
       for (j = 1; j <= 4; j++)   // loop over faces of tet
@@ -54,7 +53,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
 		i3[l-1] = el.PNum(k);
 	      }
 	  i3.Sort();
-	  face2volelement.Set (i3, i);
+	  face2volelement.Set (i3, i.Nr1());
 	}
     }
       
@@ -65,9 +64,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
       e = 0;
        
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
 	{
-	  const Element2d & el = mesh.SurfaceElement(i);
+	  const Element2d & el = mesh[i];
 	  if (j ==  mesh.GetFaceDescriptor (el.GetIndex ()).SurfNr())
 	    {
 	      for (k = 1; k <= 3; k++)
@@ -99,9 +98,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 	  }
 	  
 
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
 	{
-	  const Element2d & el = mesh.SurfaceElement(i);
+	  const Element2d & el = mesh[i];
 	  if (j ==  mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr())
 	    /* FlaechenKnoten (3) */
 	    outfile << sn[el.PNum(1)] << " " 
@@ -111,9 +110,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
 	  /// Hier soll noch die Ausgabe der Nummer des angrenzenden
 	      /// Vol.elements erfolgen !
 
-	      for (k = 1; k <= nse; k++)
+	      for (SurfaceElementIndex k : T_Range<SurfaceElementIndex>(nse))
 		{
-		  const Element2d & sel = mesh.SurfaceElement(k);
+		  const Element2d & sel = mesh[k];
 		  PointIndices<3> i3;
 		  for (j = 1; j <= 3; j++)
 		    i3[j-1] = sel.PNum(j);

@@ -47,7 +47,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
       outfile.setf (ios::fixed, ios::floatfield);
       outfile.setf (ios::showpoint);
 
-      const Element & eldummy = mesh.VolumeElement((int)1);
+      const Element & eldummy = mesh[ElementIndex::FromNr1((int)1)];
       outfile << "\n\n"
 	"Finite element mesh (GridFE):\n\n"
 	"  Number of space dim. =   3\n"
@@ -58,9 +58,9 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"  Only one subdomain               : dpFALSE\n"
 	"  Lattice data                     ? 0\n\n\n\n";
       
-      for (int i = 1; i <= nse; i++) 
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse)) 
 	{
-	  int BI=mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex()).BCProperty();
+	  int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
 	  int nbi=BIname.Size();
 	  int found=0;
 	  for (int j = 1; j <= nbi; j++)
@@ -147,14 +147,14 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"   - the global node numbers of the nodes in the element.\n"
 	"#\n";
 
-      for (int i = 1; i <= ne; i++)
+      for (ElementIndex i : T_Range<ElementIndex>(ne))
         {
-          const Element & el = mesh.VolumeElement(i);
+          const Element & el = mesh[i];
           outfile.width(5);
           if(el.GetNP()==4)
-            outfile << i << "  ElmT4n3D ";
+            outfile << i.Nr1() << "  ElmT4n3D ";
           else
-            outfile << i << "  ElmT10n3D ";
+            outfile << i.Nr1() << "  ElmT10n3D ";
           outfile.width(4);
           outfile << el.GetIndex() << "    ";
           if(el.GetNP()==10)
@@ -211,7 +211,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
       outfile.setf (ios::showpoint);
-      const Element2d & eldummy = mesh.SurfaceElement((int)1);
+      const Element2d & eldummy = mesh[SurfaceElementIndex::FromNr1((int)1)];
       outfile << "\n\n"
 	"Finite element mesh (GridFE):\n\n"
 	"  Number of space dim. =  2\n"
@@ -222,9 +222,9 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"  Only one subdomain               : dpFALSE\n"
 	"  Lattice data                     ? 0\n\n\n\n";
       
-      for (i = 1; i <= nse; i++) 
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse)) 
 	{
-	  int BI=mesh.GetFaceDescriptor(mesh.SurfaceElement(i).GetIndex()).BCProperty();
+	  int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
 	  int nbi=BIname.Size();
 	  int found=0;
 	  for (j = 1; j <= nbi; j++)
@@ -260,13 +260,13 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	  if(mesh[PointIndex(i)].Type() != INNERPOINT) 
 	    {
 	      BCsinpoint.DeleteAll();
-	      for (j = 1; j <= nse; j++) 
+	      for (SurfaceElementIndex j : T_Range<SurfaceElementIndex>(nse)) 
 		{
 		  for (k = 1; k <= 2; k++) 
 		    {
-		      if(mesh.SurfaceElement(j).PNum(k)==i) 
+		      if(mesh[j].PNum(k)==i) 
 			{
-			  int BC=mesh.GetFaceDescriptor(mesh.SurfaceElement(j).GetIndex()).BCProperty();
+			  int BC=mesh.GetFaceDescriptor(mesh[j].GetIndex()).BCProperty();
 			  int nbcsp=BCsinpoint.Size();
 			  int found = 0;
 			  for (l = 1; l <= nbcsp; l++)
@@ -294,14 +294,14 @@ void WriteDiffPackFormat (const Mesh & mesh,
 	"   - the global node numbers of the nodes in the element.\n"
 	"#\n";
 
-      for (i = 1; i <= nse; i++)
+      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh.SurfaceElement(i);
+          const Element2d & el = mesh[i];
           outfile.width(12);
           if(eldummy.GetNP()==3)
-            outfile << i << "  ElmT3n2D ";
+            outfile << i.Nr1() << "  ElmT3n2D ";
           else
-            outfile << i << "  ElmT6n2D ";
+            outfile << i.Nr1() << "  ElmT6n2D ";
           outfile.width(12);
           outfile << el.GetIndex() << "    ";
 	  outfile.width(16);

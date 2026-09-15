@@ -1503,17 +1503,17 @@ namespace netgen
     if(act_ref>=1)
       { 
 	// for(ElementIndex i=0;i<mesh.GetNE(); i++)
-        for (ElementIndex i : mesh.VolumeElements().Range())
+        for (auto & el : mesh.VolumeElements())
 	  { 
-	    // Element el = mesh[i] ;
-	    HPRefElement & hpel = hpelements[mesh[i].GetHpElnr()];
-	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (mesh[i].GetType());
+	    // Element el = el ;
+	    HPRefElement & hpel = hpelements[el.GetHpElnr()];
+	    const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (el.GetType());
 	    double dist[3] = {0,0,0}; 
 	    int ord_dir[3] = {0,0,0}; 
 	    int edge_dir[12] = {0,0,0,0,0,0,0,0,0,0,0,0}; 
 	    int ned = 4; 
 	    
-	    switch (mesh[i].GetType())
+	    switch (el.GetType())
 	      {
 	      case TET: 
 		/* cout << " TET " ; 
@@ -1554,7 +1554,7 @@ namespace netgen
 
 
               default:
-                cerr << "HPRefElement: illegal elementtype (2) " << mesh[i].GetType() << endl;
+                cerr << "HPRefElement: illegal elementtype (2) " << el.GetType() << endl;
                 throw NgException ("HPRefElement: illegal elementtype (2)");
                 
 	      }
@@ -1576,7 +1576,7 @@ namespace netgen
 	    // cout << " order " << act_ref +1 - refi[0] << "\t" << act_ref +1 - refi[1] << "\t" << act_ref +1 - refi[2] << endl; 
 	   	      
 	    if(setorders)
-	      mesh[i].SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
+	      el.SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
 	  }
 	for (auto & sel : mesh.SurfaceElements()) 
 	  { 
@@ -1670,11 +1670,11 @@ namespace netgen
 	  }
 	// cout << endl; 
 
-	for (int i = 1; i <= mesh.GetNSeg(); i++)
-	  if (mesh.GetEdgeDescriptor(mesh.LineSegment(i).GetIndex()).SingEdgeLeft() * levels >= act_ref)
+	for (SegmentIndex i : mesh.LineSegments().Range())
+	  if (mesh.GetEdgeDescriptor(mesh[i].GetIndex()).SingEdgeLeft() * levels >= act_ref)
 	    {
-	      PointIndices<2> i2 (mesh.LineSegment(i)[0], 
-			  mesh.LineSegment(i)[1]);
+	      PointIndices<2> i2 (mesh[i][0], 
+			  mesh[i][1]);
 
 	      /*
 		// before
@@ -1785,16 +1785,15 @@ namespace netgen
 
 	surfonpoint = INDEX_3(0,0,0);
 	
-	for (int i = 1; i <= mesh.GetNSeg(); i++)
+	for (auto & seg : mesh.LineSegments())
 	  {
-	    const Segment & seg = mesh.LineSegment(i);
 	    const EdgeDescriptor & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
 	    int ind = ed.EdgeNr();
 	    
 	    if (ed.SingEdgeLeft() * levels >= act_ref)
 	      {
-		PointIndices<2> i2 = PointIndices<2>(mesh.LineSegment(i)[0], 
-                                           mesh.LineSegment(i)[1]).Sort();
+		PointIndices<2> i2 = PointIndices<2>(seg[0], 
+                                           seg[1]).Sort();
 		edges.Set(i2,1); 
 		edgepoint.SetBit(i2[0]);
 		edgepoint.SetBit(i2[1]);
@@ -1809,8 +1808,8 @@ namespace netgen
 	    
 	    if (ed.SingEdgeRight() * levels >= act_ref)
 	      {
-		PointIndices<2> i2 = PointIndices<2>(mesh.LineSegment(i)[1], 
-                                                   mesh.LineSegment(i)[0]).Sort();  
+		PointIndices<2> i2 = PointIndices<2>(seg[1], 
+                                                   seg[0]).Sort();  
 		edges.Set (i2, 1);
 		edgepoint.SetBit(i2[0]);
 		edgepoint.SetBit(i2[1]);

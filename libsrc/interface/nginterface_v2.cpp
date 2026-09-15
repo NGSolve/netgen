@@ -704,9 +704,9 @@ namespace netgen
       {
 	int hpelnr = -1;
 	if (mesh->GetDimension() == 2)
-	  hpelnr = mesh->SurfaceElement(ei).GetHpElnr();
+	  hpelnr = (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetHpElnr();
 	else
-	  hpelnr = mesh->VolumeElement(ei).GetHpElnr();
+	  hpelnr = (*mesh)[ElementIndex::FromNr1(ei)].GetHpElnr();
 
         if (hpelnr < 0)
           throw NgException("Ngx_Mesh::GetHPElementLevel: Wrong hp-element number!");
@@ -1104,13 +1104,13 @@ namespace netgen
   template <>
   DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<2> (size_t elnr, bool flag)
   {
-    mesh->SurfaceElement(elnr+1).SetRefinementFlag(flag);
+    (*mesh)[SurfaceElementIndex::FromNr1(elnr+1)].SetRefinementFlag(flag);
   }
 
   template <>
   DLL_HEADER void Ngx_Mesh :: SetRefinementFlag<3> (size_t elnr, bool flag)
   {
-    mesh->VolumeElement(elnr+1).SetRefinementFlag(flag);    
+    (*mesh)[ElementIndex::FromNr1(elnr+1)].SetRefinementFlag(flag);    
   }
   
   void Ngx_Mesh :: Refine (NG_REFINEMENT_TYPE reftype, bool onlyonce,
@@ -1156,14 +1156,14 @@ namespace netgen
   int Ngx_Mesh::GetSurfaceElementSurfaceNumber (size_t ei) const
   {
     if (mesh->GetDimension() == 3)
-      return mesh->GetFaceDescriptor(mesh->SurfaceElement(ei).GetIndex()).SurfNr();
+      return mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).SurfNr();
     else
-      return mesh->LineSegment(ei).GetIndex();
+      return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex();
   }
   int Ngx_Mesh::GetSurfaceElementFDNumber (size_t ei) const
   {
     if (mesh->GetDimension() == 3)
-      return mesh->SurfaceElement(ei).GetIndex();
+      return (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex();
     else
       return -1;
   }
@@ -1188,9 +1188,9 @@ namespace netgen
 int Ngx_Mesh::GetElementOrder (int enr) const
 {
   if (mesh->GetDimension() == 3)
-    return mesh->VolumeElement(enr).GetOrder();
+    return (*mesh)[ElementIndex::FromNr1(enr)].GetOrder();
   else
-    return mesh->SurfaceElement(enr).GetOrder();
+    return (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder();
 }
 
 void Ngx_Mesh::GetElementOrders (int enr, int * ox, int * oy, int * oz) const
@@ -1210,23 +1210,23 @@ void Ngx_Mesh::GetElementOrders (int enr, int * ox, int * oy, int * oz) const
 void Ngx_Mesh::SetElementOrder (int enr, int order)
 {
   if (mesh->GetDimension() == 3)
-    return mesh->VolumeElement(enr).SetOrder(order);
+    return (*mesh)[ElementIndex::FromNr1(enr)].SetOrder(order);
   else
-    return mesh->SurfaceElement(enr).SetOrder(order);
+    return (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(order);
 }
 
 void Ngx_Mesh::SetElementOrders (int enr, int ox, int oy, int oz)
 {
   if (mesh->GetDimension() == 3)
-    mesh->VolumeElement(enr).SetOrder(ox, oy, oz);
+    (*mesh)[ElementIndex::FromNr1(enr)].SetOrder(ox, oy, oz);
   else
-    mesh->SurfaceElement(enr).SetOrder(ox, oy);
+    (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(ox, oy);
 }
 
 
 int Ngx_Mesh::GetSurfaceElementOrder (int enr) const
 {
-  return mesh->SurfaceElement(enr).GetOrder();
+  return (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder();
 }
 
 int Ngx_Mesh::GetClusterRepVertex (int pi) const
@@ -1287,17 +1287,17 @@ int Ngx_Mesh::GetSurfaceElement_Face (int selnr, int * orient) const
 void Ngx_Mesh::GetSurfaceElementOrders (int enr, int * ox, int * oy) const
 {
   int d; 
-  mesh->SurfaceElement(enr).GetOrder(*ox, *oy, d);
+  (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, d);
 }
 
 void Ngx_Mesh::SetSurfaceElementOrder (int enr, int order)
 {
-  return mesh->SurfaceElement(enr).SetOrder(order);
+  return (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(order);
 }
 
 void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
 {
-  mesh->SurfaceElement(enr).SetOrder(ox, oy);
+  (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(ox, oy);
 }
 
   

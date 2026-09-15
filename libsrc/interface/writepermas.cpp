@@ -47,7 +47,7 @@ namespace netgen
         int np = mesh.GetNP();
         int ne = mesh.GetNE();
         int nse = mesh.GetNSE();
-        int i, j, k;
+        int j, k;
     
         if (ne == 0)
         {
@@ -70,9 +70,9 @@ namespace netgen
                     break;
                 }
                 
-                for (i = 1; i <= nse; i++)
+                for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
                 {
-                    const Element2d & el = mesh.SurfaceElement(i);
+                    const Element2d & el = mesh[i];
                     if (el.GetNP() != nelp)
                         continue;
                     
@@ -89,15 +89,15 @@ namespace netgen
         {
             cout << "\nWrite Permas Volume Mesh" << endl;
             
-            int secondorder = (mesh.VolumeElement(1).GetNP() == 10);
+            int secondorder = (mesh[ElementIndex::FromNr1(1)].GetNP() == 10);
             
             if (!secondorder)
             {
                 outfile << "$ELEMENT TYPE = TET4  ESET = ALLTET" << endl;
-                for (i = 1; i <= ne; i++)
+                for (ElementIndex i : T_Range<ElementIndex>(ne))
                 {
-                    const Element & el = mesh.VolumeElement(i);
-                    outfile << i 
+                    const Element & el = mesh[i];
+                    outfile << i.Nr1() 
                             << " " << el.PNum(1) 
                             << " " << el.PNum(2) 
                             << " " << el.PNum(4) 
@@ -107,10 +107,10 @@ namespace netgen
             else
             {
                 outfile << "$ELEMENT TYPE = TET10  ESET = ALLTET" << endl;
-                for (i = 1; i <= ne; i++)
+                for (ElementIndex i : T_Range<ElementIndex>(ne))
                 {
-                    const Element & el = mesh.VolumeElement(i);
-                    outfile << i 
+                    const Element & el = mesh[i];
+                    outfile << i.Nr1() 
                             << " " << el.PNum(1) 
                             << " " << el.PNum(5) 
                             << " " << el.PNum(2) 
@@ -128,9 +128,9 @@ namespace netgen
             
             
             outfile << "$SURFACE GEO  SURFID = 1  SFSET = ALLSUR" << endl;
-            for (i = 1; i <= nse; i++)
+            for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
             {
-                const Element2d & el = mesh.SurfaceElement(i);
+                const Element2d & el = mesh[i];
                 if (el.GetNP() == 3)
                     outfile << "STRIA3"
                             << " " << el.PNum(1) 
@@ -138,9 +138,9 @@ namespace netgen
                             << " " << el.PNum(3) << endl;
             }    
             
-            for (i = 1; i <= nse; i++)
+            for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
             {
-                const Element2d & el = mesh.SurfaceElement(i);
+                const Element2d & el = mesh[i];
                 if (el.GetNP() == 4)
                     outfile << "SQUAD4"
                             << " " << el.PNum(1) 
@@ -149,9 +149,9 @@ namespace netgen
                             << " " << el.PNum(4) << endl;
             }      
             
-            for (i = 1; i <= nse; i++)
+            for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
             {
-                const Element2d & el = mesh.SurfaceElement(i);
+                const Element2d & el = mesh[i];
                 if (el.GetNP() == 6)
                     outfile << "STRIA6"
                             << " " << el.PNum(1) 

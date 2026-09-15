@@ -473,7 +473,7 @@ namespace nglib
 
    NGLIB_API void Ng_GetSegment_2D (Ng_Mesh * mesh, int num, int * pi, int * matnum)
    {
-      const Segment & seg = ((Mesh*)mesh)->LineSegment(num);
+      const Segment & seg = (*(Mesh*)mesh)[SegmentIndex::FromNr1(num)];
       pi[0] = seg[0].Nr1();
       pi[1] = seg[1].Nr1();
 

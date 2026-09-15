@@ -107,9 +107,8 @@ namespace netgen
             throw NgException ("currently refinement for quad-elements is not supported");
           }
       }
-    for (ElementIndex ei : mesh.VolumeElements().Range())
+    for (auto & el : mesh.VolumeElements())
       {
-	const Element & el = mesh[ei];
 	switch (el.GetType())
 	  {
 	  case TET:
@@ -162,8 +161,7 @@ namespace netgen
     // refine edges
     Array<EdgePointGeomInfo, PointIndex> epgi;
 
-    int oldns = mesh.GetNSeg();
-    for (SegmentIndex si : T_Range<SegmentIndex>(oldns))
+    for (SegmentIndex si : mesh.LineSegments().Range())
       {
 	const Segment & el = mesh.LineSegment(si);
 
@@ -215,8 +213,7 @@ namespace netgen
       surfgi[pi].trignum = -1;
 
 
-    int oldnf = mesh.GetNSE();
-    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(oldnf))
+    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
       {
 	const Element2d & el = mesh[sei];
 

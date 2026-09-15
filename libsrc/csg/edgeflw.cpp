@@ -1726,15 +1726,14 @@ namespace netgen
 	*/
       }
 
-    int oldns = mesh.GetNSeg();
-    for (int i = 1; i <= oldns; i++)
+    for (SegmentIndex i : mesh.LineSegments().Range())
       {
 	// real copy, since array might be reallocated !!
-	const Segment oldseg = mesh.LineSegment(i);
+	const Segment oldseg = mesh[i];
 	int oldseg_ednr = (oldseg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(oldseg.GetIndex()).EdgeNr() : -1;
 	if (oldseg_ednr != copyfromedge)
 	  continue;
-	if (seg_seginfo[SegmentIndex::FromNr1(i)] == 0)
+	if (seg_seginfo[i] == 0)
 	  continue;
 
 	PointIndex pi1 = oldseg[0];
@@ -1754,7 +1753,7 @@ namespace netgen
 	    bool inv = refedgesinv[k-1];
 
 	    // other edge is inverse
-	    if (seg_seginfo[SegmentIndex::FromNr1(i)] == 1)
+	    if (seg_seginfo[i] == 1)
 	      inv = !inv;
 
 	    //	  (*testout) << "inv, now = " << inv << endl;
@@ -1817,9 +1816,8 @@ namespace netgen
     BitArray pointatsurface (nsurf);
     pointatsurface.Clear();
   
-    for (int i = 1; i <= mesh.GetNSeg(); i++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 
 #ifdef DEVELOP      
 	{

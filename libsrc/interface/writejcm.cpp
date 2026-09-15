@@ -42,9 +42,9 @@ void WriteJCMFormat (const Mesh & mesh,
   int ne = mesh.GetNE();
   int ntets = 0;
   int nprisms = 0;
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh.VolumeElement(i);
+    Element el = mesh[i];
     if (el.GetNP() == 4)
     {
       ntets++;
@@ -99,9 +99,9 @@ void WriteJCMFormat (const Mesh & mesh,
   // this is needed in order to arrange the prism points in the right order
   Array<int, PointIndex> pointsOnTetras(mesh.GetNP());
   pointsOnTetras = 0;
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh.VolumeElement(i);
+    Element el = mesh[i];
     if (el.GetNP() == 4)
     {
       for (j = 1; j <= 4; j++)
@@ -110,9 +110,9 @@ void WriteJCMFormat (const Mesh & mesh,
   }
 
   // number of boundary triangles and boundary quadrilaterals
-  for (i = 1; i <= nse; i++)
+  for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
   {
-    Element2d el = mesh.SurfaceElement(i);
+    Element2d el = mesh[i];
     if (el.GetNP() == 3 &&
         ( mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0  ||
           mesh.GetFaceDescriptor (el.GetIndex()).DomainOut()==0 ) )
@@ -165,9 +165,9 @@ void WriteJCMFormat (const Mesh & mesh,
   outfile << "\n";
   outfile << "# Tetrahedra\n";
   counter = 0;
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh.VolumeElement(i);
+    Element el = mesh[i];
     if (el.GetNP() == 4)
     {
       counter++;
@@ -204,9 +204,9 @@ void WriteJCMFormat (const Mesh & mesh,
   outfile << "\n";
   outfile << "# Prisms\n";
   counter = 0;
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh.VolumeElement(i);
+    Element el = mesh[i];
     if (el.GetNP() == 6)
     {
       counter++;
@@ -292,9 +292,9 @@ void WriteJCMFormat (const Mesh & mesh,
   outfile << "# Number of identified points in 1-direction: " << npid1 << "\n";
   outfile << "# Number of identified points in 2-direction: " << npid2 << "\n";
   outfile << "# Number of identified points in 3-direction: " << npid3 << "\n";
-  for (i = 1; i <= nse; i++)
+  for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
   {
-    Element2d el = mesh.SurfaceElement(i);
+    Element2d el = mesh[i];
     if (el.GetNP() == 3
         && (mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0
             || mesh.GetFaceDescriptor (el.GetIndex()).DomainOut()==0))
@@ -343,9 +343,9 @@ void WriteJCMFormat (const Mesh & mesh,
 
   outfile << "\n";
   outfile << "# Boundary quadrilaterals\n";
-  for (i = 1; i <= nse; i++)
+  for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
   {
-    Element2d el = mesh.SurfaceElement(i);
+    Element2d el = mesh[i];
 
     if (el.GetNP() == 4
         && (mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0

@@ -41,14 +41,14 @@ void WriteGmshFormat (const Mesh & mesh,
   int np = mesh.GetNP();  /// number of point
   int ne = mesh.GetNE();  /// number of element
   int nse = mesh.GetNSE();  /// number of surface element (BC)
-  int i, j, k, l;
+  int j, l;
 
 
   /*
    * 3D section : Linear volume elements (only tetrahedra)
    */
 
-   if (ne > 0 && mesh.VolumeElement(1).GetNP() == 4)
+   if (ne > 0 && mesh[ElementIndex::FromNr1(1)].GetNP() == 4)
       {
       cout << "Write GMSH Format \n";
       cout << "The GMSH format is available for linear tetrahedron elements only in 3D\n" << endl;
@@ -75,11 +75,11 @@ void WriteGmshFormat (const Mesh & mesh,
       outfile << "$ELM\n";
       outfile << ne + nse << "\n";  ////  number of elements + number of surfaces BC
 
-     for (i = 1; i <= nse; i++)
+     for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
          {
-         Element2d el = mesh.SurfaceElement(i);
+         Element2d el = mesh[i];
          if (invertsurf) el.Invert();
-         outfile << i;
+         outfile << i.Nr1();
          outfile << " ";
          outfile << "2";
          outfile << " ";
@@ -97,11 +97,11 @@ void WriteGmshFormat (const Mesh & mesh,
          }
 
 
-         for (i = 1; i <= ne; i++)
+         for (ElementIndex i : T_Range<ElementIndex>(ne))
              {
-             Element el = mesh.VolumeElement(i);
+             Element el = mesh[i];
              if (inverttets) el.Invert();
-             outfile << nse + i; /// element number
+             outfile << nse + i.Nr1(); /// element number
              outfile << " ";
              outfile << "4"; /// element type i.e. Tetraedron == 4
              outfile << " ";
@@ -158,12 +158,12 @@ void WriteGmshFormat (const Mesh & mesh,
               outfile << "$ELM\n";
               outfile << nse << "\n";
 
-              for (k = 1; k <= nse; k++)
+              for (SurfaceElementIndex k : T_Range<SurfaceElementIndex>(nse))
               {
-              const Element2d & el = mesh.SurfaceElement(k);
+              const Element2d & el = mesh[k];
 
 
-              outfile << k;
+              outfile << k.Nr1();
               outfile << " ";
               outfile << (el.GetNP()-1);   // 2 for a triangle and 3 for a quadrangle
               outfile << " ";

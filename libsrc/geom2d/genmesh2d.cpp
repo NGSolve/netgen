@@ -408,10 +408,9 @@ namespace netgen
     mesh.GetEdgeDescriptor(copy_edsi).SetIndex(GetSpline(to-1).bc);
 
     // copy segments
-    int oldnseg = mesh.GetNSeg();
-    for (int i = 1; i <= oldnseg; i++)
+    for (SegmentIndex i : mesh.LineSegments().Range())
       {
-	const Segment & seg = mesh.LineSegment(i);
+	const Segment & seg = mesh[i];
 	if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
 	  {
 	    Segment nseg;

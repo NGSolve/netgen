@@ -35,7 +35,7 @@ void WriteTochnogFormat (const Mesh & mesh,
 
   int np = mesh.GetNP();
   int ne = mesh.GetNE();
-  int i, j;
+  int j;
 
   for (PointIndex pi : mesh.Points().Range())
     {
@@ -52,7 +52,7 @@ void WriteTochnogFormat (const Mesh & mesh,
   while (!finished)
     {
       int actcnt = 0;
-      const Element & el1 = mesh.VolumeElement(1);
+      const Element & el1 = mesh[ElementIndex::FromNr1(1)];
       int non = el1.GetNP();
       if (non == 4)
 	{
@@ -63,9 +63,9 @@ void WriteTochnogFormat (const Mesh & mesh,
 	  cout << "unsupported Element type!!!" << endl;	  
 	}
 
-      for (i = 1; i <= ne; i++)
+      for (ElementIndex i : T_Range<ElementIndex>(ne))
 	{
-	  const Element & el = mesh.VolumeElement(i);
+	  const Element & el = mesh[i];
 	      
 	  if (el.GetIndex() == indcnt)
 	    {

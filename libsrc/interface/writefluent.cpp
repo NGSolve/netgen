@@ -81,17 +81,17 @@ void WriteFluentFormat (const Mesh & mesh,
 
   const_cast<Mesh&> (mesh).BuildElementSearchTree(3);
 
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
       if (ne > 2000)
 	{
-	  if (i%2000 == 0)
+	  if (i.Nr1()%2000 == 0)
 	    {
-	      cout << (double)i/(double)ne*100. << "%" << endl;
+	      cout << (double)i.Nr1()/(double)ne*100. << "%" << endl;
 	    }
 	}
 
-      Element el = mesh.VolumeElement(i);
+      Element el = mesh[i];
       //if (inverttets)
       //  el.Invert();
 	  
@@ -132,21 +132,21 @@ void WriteFluentFormat (const Mesh & mesh,
 	      if (stopsig) break;
 	    }
 	      
-	  if (eli2==i) cout << "error in WRITE_FLUENT!!!" << endl;
+	  if (eli2==i.Nr1()) cout << "error in WRITE_FLUENT!!!" << endl;
 	      
-	  if (eli2 > i) //don't write faces two times!
+	  if (eli2 > i.Nr1()) //don't write faces two times!
 	    {
 	      //i: left cell, eli: right cell
 	      outfile << hex << face.PNum(2) << " "
 		<< hex << face.PNum(1) << " "
 		<< hex << face.PNum(3) << " "
-		<< hex << i  << " "
+		<< hex << i.Nr1()  << " "
 		<< hex << eli2 << "\n";
 	    }
 	  if (eli2 == 0) 
 	    {
 	      surfaceelp.Append(PointIndices<3>(face.PNum(2),face.PNum(1),face.PNum(3)));
-	      surfaceeli.Append(i);
+	      surfaceeli.Append(i.Nr1());
 	    }
 	}
     }

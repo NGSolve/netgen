@@ -631,9 +631,9 @@ namespace netgen
 	    */
   
 	    segments.SetSize (0);
-	    for (int i = 1; i <= mesh.GetNSeg(); i++)
+	    for (auto & seg2 : mesh.LineSegments())
 	      {
-		Segment * seg = &mesh.LineSegment(i);
+		Segment * seg = &seg2;
 		{
 		  int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED())
 		                 ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;

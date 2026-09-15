@@ -1758,9 +1758,8 @@ namespace netgen
     if (strcmp (argv[1], "edge") == 0)
       {
 	int edgenr = vsmesh.SelectedEdge();
-	for (int i = 1; i <= mesh->GetNSeg(); i++)
+	for (auto & seg : mesh->LineSegments())
 	  {
-	    Segment & seg = mesh->LineSegment(i);
 	    auto & ed = mesh->GetEdgeDescriptor(seg.GetIndex());
 	    if (ed.EdgeNr() == edgenr)
 	      {

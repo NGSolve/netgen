@@ -32,7 +32,7 @@ void WriteFEAPFormat (const Mesh & mesh,
   int inverttets = mparam.inverttets;
   //int invertsurf = mparam.inverttrigs;
 
-  int i, j;
+  int j;
 
   double scale = 1;   // globflags.GetNumFlag ("scale", 1);
   
@@ -71,15 +71,15 @@ void WriteFEAPFormat (const Mesh & mesh,
   outfile << "!elm,,mat,     n1      n2      n3      n4" << "\n";
   outfile << "ELEM" << "\n";
 
-  for (i = 1; i <= mesh.GetNE(); i++)
+  for (ElementIndex i : mesh.VolumeElements().Range())
     {
-      Element el = mesh.VolumeElement(i);
+      Element el = mesh[i];
       if (inverttets)
 	el.Invert();
 
 
       outfile.width(5);
-      outfile << i;
+      outfile << i.Nr1();
       outfile << ",,";
       outfile << el.GetIndex();
       outfile << ",";

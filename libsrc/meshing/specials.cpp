@@ -14,7 +14,6 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   int nse = othermesh.GetNSE();
   int onp = othermesh.GetNP();
 
-  int ne = mesh.GetNE();
 
   PrintMessage (1, "other mesh has ",
 		othermesh.GetNP(), " points, ",
@@ -24,13 +23,13 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   Box3d otherbox;
 
   double maxh = 0;
-  for (i = 1; i <= nse; i++)
+  for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
     {
-      const Element2d & sel = othermesh.SurfaceElement(i);
-      sel.GetBox(othermesh.Points(), otherbounds[i-1]);
+      const Element2d & sel = othermesh[i];
+      sel.GetBox(othermesh.Points(), otherbounds[i.Nr1()-1]);
 
       double loch = othermesh.GetH (othermesh.Point (sel.PNum(1)));
-      otherbounds[i-1].Increase(loch);
+      otherbounds[i.Nr1()-1].Increase(loch);
       if (loch > maxh) maxh = loch;
     }
 
@@ -39,15 +38,15 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     otherbox.AddPoint (othermesh[pi]);
   otherbox.Increase (maxh);
 
-  for (i = 1; i <= ne; i++)
+  for (ElementIndex i : mesh.VolumeElements().Range())
     {
       Box3d box;
       int remove = 0;
 
-      const Element & el = mesh.VolumeElement(i);
+      const Element & el = mesh[i];
       el.GetBox(mesh.Points(), box);
 
-      if (i % 10000 == 0)
+      if (i.Nr1() % 10000 == 0)
 	cout << "+" << flush;
 
       if (box.Intersect(otherbox))
@@ -58,15 +57,14 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 	}
 
       if (remove)
-	mesh.VolumeElement(i).Delete();
+	mesh[i].Delete();
     }
   cout << endl;
 
   TBitArray<PointIndex> connected(mesh.GetNP());
   connected.Clear();
-  for (i = 1; i <= mesh.GetNSE(); i++)
+  for (auto & el : mesh.SurfaceElements())
     {
-      const Element2d & el = mesh.SurfaceElement(i);
       for (j = 1; j <= 3; j++)
 	connected.SetBit(el.PNum(j));
     }
@@ -75,9 +73,8 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   do
     {
       changed = 0;
-      for (i = 1; i <= mesh.GetNE(); i++)
+      for (auto & el : mesh.VolumeElements())
 	{
-	  const Element & el = mesh.VolumeElement(i);
 	  int has = 0, hasnot = 0;
 	  if (el[0].IsValid())
 	    {
@@ -101,9 +98,8 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   while (changed);
   cout << endl;
 
-  for (i = 1; i <= mesh.GetNE(); i++)
+  for (auto & el : mesh.VolumeElements())
     {
-      const Element & el = mesh.VolumeElement(i);
       int hasnot = 0;
       if (el[0].IsValid())
 	{
@@ -113,7 +109,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 		hasnot = 1;
 	    }
 	  if (hasnot)
-	    mesh.VolumeElement(i).Delete();
+	    el.Delete();
 	}
     }
 
@@ -143,9 +139,9 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   int fnum = 
     mesh.AddFaceDescriptor (FaceDescriptor(0,0,1,0));
 
-  for (i = 1; i <= othermesh.GetNSE(); i++)
+  for (auto & sel : othermesh.SurfaceElements())
     {
-      Element2d tri = othermesh.SurfaceElement(i);
+      Element2d tri = sel;
       for (j = 1; j <= 3; j++)
 	tri.PNum(j) = pmat[tri.PNum(j)];
       tri.SetIndex(fnum);

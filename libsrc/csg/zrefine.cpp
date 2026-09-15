@@ -26,9 +26,8 @@ namespace netgen
       }
 
     // edges interactively selected
-    for (int i = 1; i <= mesh.GetNSeg(); i++)
+    for (auto & seg : mesh.LineSegments())
       {
-	const Segment & seg = mesh.LineSegment(i);
 	auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
 	if (ed.SingEdgeLeft() || ed.SingEdgeRight())
 	  {
@@ -512,11 +511,10 @@ namespace netgen
 
 	//      (*testout) << "closure formed, np = " << mesh.GetNP() << endl;
 
-	int oldns = mesh.GetNSeg();
 
-	for (int i = 1; i <= oldns; i++)
+	for (SegmentIndex i : mesh.LineSegments().Range())
 	  {
-	    const Segment & el = mesh.LineSegment(i);
+	    const Segment & el = mesh[i];
 
 	    SortedPointIndices<2> i2(el[0], el[1]);
 	  
@@ -559,7 +557,7 @@ namespace netgen
 	    ns2[0] = pnew;
 	    ns2.EPGeomInfo(0) = ngi;
 
-	    mesh.LineSegment(i) = ns1;
+	    mesh[i] = ns1;
 	    mesh.AddSegment (ns2);
 	  }
       
