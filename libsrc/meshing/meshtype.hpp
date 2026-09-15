@@ -154,23 +154,6 @@ namespace netgen
 #endif
     }
 
-
-    /*
-      // didn't manage constexpr friend functions so far ???
-    friend auto operator+ (Index, int) -> TIndex;
-    friend TIndex operator+ (Index, size_t);    
-    friend TIndex operator+ (int, Index);
-    friend TIndex operator+ (size_t, Index);
-    friend constexpr TIndex operator- (Index, int);
-    friend int operator- (Index, Index);
-    friend bool operator< (Index a, Index b);
-    friend bool operator> (Index a, Index b);
-    friend bool operator>= (Index a, Index b);
-    friend bool operator<= (Index a, Index b);
-    friend bool operator== (Index a, Index b);
-    friend bool operator!= (Index a, Index b);
-    */
-    
   public:
     constexpr Index (t_invalid inv) : i(long(BASE)-1) { ; }
     // protected:
@@ -181,20 +164,11 @@ namespace netgen
     TIndex operator-- (int) { TIndex hi(*this); i--; return hi; }
     TIndex & operator++ () { i++; return static_cast<TIndex&>(*this); }
     TIndex & operator-- () { i--; return static_cast<TIndex&>(*this); }
-
-    /*
-    constexpr TIndex operator+= (int add) { i += add; return TIndex{*this}; }
-    constexpr TIndex operator+= (size_t add) { i += add; return TIndex{*this}; }
-    constexpr TIndex operator-= (int add) { i -= add; return TIndex{*this}; }
-    constexpr TIndex operator-= (size_t add) { i -= add; return TIndex{*this}; }
-    */
     constexpr TIndex operator+= (T_diff add) { i += add; return TIndex{*this}; }
     constexpr TIndex operator-= (T_diff add) { i -= add; return TIndex{*this}; }
     
     constexpr auto operator- (Index i2) const { return i-i2.i; }
 
-    // bool operator== (Index i2) const { return i==i2.i; }
-    // bool operator!= (Index i2) const { return i!=i2.i; }
     /// 0-based number of this index
     constexpr T Nr0 () const { return i - BASE_; }
     /// index for a 0-based number
@@ -231,8 +205,6 @@ namespace netgen
   
   template <typename T, typename TIndex, int Base>    
   constexpr inline auto operator- (Index<T,TIndex,Base> ind, int i) { Index<T,TIndex,Base> res(ind); return res -= i; }  
-  // template <typename T, typename TIndex, int Base>    
-  // constexpr inline auto operator- (Index<T,TIndex,Base> pa, Index<T,TIndex,Base> pb) { return pa.i-pb.i; }
   
   template <typename T, typename TIndex, int Base>      
   inline bool operator< (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b < 0; }
@@ -244,9 +216,9 @@ namespace netgen
   inline bool operator<= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a-b <= 0; }
 
   template <typename T, typename TIndex, int Base>      
-  inline bool operator== (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i == b.i; }
+  constexpr bool operator== (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i == b.i; }
   template <typename T, typename TIndex, int Base>      
-  inline bool operator!= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i != b.i; }
+  constexpr bool operator!= (Index<T,TIndex,Base> a, Index<T,TIndex,Base> b) { return a.i != b.i; }
 
 
   template <typename T, typename TIndex, int Base>      
@@ -282,7 +254,6 @@ namespace netgen
   // input-output is 1-based
   inline istream & operator>> (istream & ist, PointIndex & pi)
   {
-    // int i; ist >> i; pi = PointIndex(i); return ist;
     int i; ist >> i;
     pi = PointIndex::FromNr1(i);
     return ist;
@@ -411,7 +382,7 @@ namespace std
 namespace netgen
 {
 
-  class BaseElementIndex;
+  class AnyElementIndex;
 
   class ElementIndex : public Index<int,ElementIndex,0>
   {
@@ -421,8 +392,8 @@ namespace netgen
     using Index::Index; // <int,ElementIndex,0>::Index;
     operator int () const = delete;    // an ElementIndex stays an ElementIndex
     operator int & () = delete;
-    /// narrowing from BaseElementIndex is explicit - name the kind you mean
-    explicit constexpr ElementIndex (BaseElementIndex bi);
+    /// narrowing from AnyElementIndex is explicit - name the kind you mean
+    explicit constexpr ElementIndex (AnyElementIndex bi);
   };
   
   inline istream & operator>> (istream & ist, ElementIndex & ei)
@@ -447,16 +418,6 @@ namespace ngcore
 namespace netgen
 {
 
-
-  /*
-  // these should not be needed soon
-  inline bool operator== (Index<int,ElementIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
-  inline bool operator< (size_t s, Index<int,ElementIndex,0> ei2) { return int(s) < int(ei2); };    
-  inline bool operator< ( Index<int,ElementIndex,0> ei1, size_t s) { return int(ei1) < int(s); };   // should not need
-  inline bool operator< ( Index<int,ElementIndex,0> ei1, int s) { return int(ei1) < int(s); };   // should not need
-  inline bool operator>= (size_t s,  Index<int,ElementIndex,0> ei2) { return int(s) >= int(ei2); };
-  */
-
   class SurfaceElementIndex : public Index<int,SurfaceElementIndex,0>
   {
     friend class Index<int,SurfaceElementIndex,0>;
@@ -465,8 +426,7 @@ namespace netgen
     using Index::Index;
     operator int () const = delete;    // a SurfaceElementIndex stays a SurfaceElementIndex
     operator int & () = delete;
-    /// narrowing from BaseElementIndex is explicit - name the kind you mean
-    explicit constexpr SurfaceElementIndex (BaseElementIndex bi);
+    explicit constexpr SurfaceElementIndex (AnyElementIndex bi);
   };
 }
 
@@ -480,22 +440,6 @@ namespace ngcore
 
 namespace netgen
 {
-
-  
-  // these should not be needed soon
-  /*
-  inline bool operator== (Index<int, SurfaceElementIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };
-  inline bool operator== (int ei2, Index<int, SurfaceElementIndex,0> ei1) { return int(ei1) == int(ei2); };
-  inline bool operator!= (Index<int, SurfaceElementIndex,0> ei1, int ei2) { return int(ei1) != int(ei2); };    
-  inline bool operator< (size_t s, Index<int, SurfaceElementIndex,0> ei2) { return int(s) < int(ei2); };    
-  inline bool operator< (Index<int, SurfaceElementIndex,0> ei1, size_t s) { return int(ei1) < int(s); };   // should not need
-  inline bool operator< (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) < int(s); };   // should not need
-  inline bool operator>= (size_t s, Index<int, SurfaceElementIndex,0> ei2) { return int(s) >= int(ei2); };
-  inline bool operator>= (Index<int, SurfaceElementIndex,0> ei1, int s) { return int(ei1) >= int(s); };
-  */
-  
-  // inline void SetInvalid (SurfaceElementIndex & id) { id.Invalidate(); }
-  // inline bool IsInvalid (SurfaceElementIndex & id) { return !id.IsValid(); }
 
   inline istream & operator>> (istream & ist, SurfaceElementIndex & si)
   {
@@ -516,15 +460,13 @@ namespace netgen
     using Index::Index;
     operator int () const = delete;    // a SegmentIndex stays a SegmentIndex
     operator int & () = delete;
-    /// narrowing from BaseElementIndex is explicit - name the kind you mean
-    explicit constexpr SegmentIndex (BaseElementIndex bi);
+    /// narrowing from AnyElementIndex is explicit - name the kind you mean
+    explicit constexpr SegmentIndex (AnyElementIndex bi);
   };
 }
 
 namespace ngcore
 {
-  // the generic IndexBASE does T(0); give SegmentIndex its own,
-  // so it keeps working once int -> SegmentIndex gets blocked
   template<>
   constexpr netgen::SegmentIndex IndexBASE<netgen::SegmentIndex> () { return netgen::SegmentIndex::Base(); }
 }
@@ -532,50 +474,37 @@ namespace ngcore
 namespace netgen
 {
 
-
   /**
      An element number whose kind (volume element, surface element or segment)
      is fixed by the context, not by the value - e.g. HPRefElement::coarse_elnr.
      Widening from a concrete index is implicit, narrowing back is explicit.
   */
-  class BaseElementIndex : public Index<int,BaseElementIndex,0>
+  class AnyElementIndex : public Index<int,AnyElementIndex,0>
   {
   public:
     using Index::Index;
-    constexpr BaseElementIndex (ElementIndex ei)        : Index(ei.Nr0()) { }
-    constexpr BaseElementIndex (SurfaceElementIndex si) : Index(si.Nr0()) { }
-    constexpr BaseElementIndex (SegmentIndex si)        : Index(si.Nr0()) { }
+    constexpr AnyElementIndex (ElementIndex ei)        : Index(ei.Nr0()) { }
+    constexpr AnyElementIndex (SurfaceElementIndex si) : Index(si.Nr0()) { }
+    constexpr AnyElementIndex (SegmentIndex si)        : Index(si.Nr0()) { }
   };
 
-  constexpr ElementIndex::ElementIndex (BaseElementIndex bi)
+  constexpr ElementIndex::ElementIndex (AnyElementIndex bi)
     : Index(bi.Nr0()) { }
-  constexpr SurfaceElementIndex::SurfaceElementIndex (BaseElementIndex bi)
+  constexpr SurfaceElementIndex::SurfaceElementIndex (AnyElementIndex bi)
     : Index(bi.Nr0()) { }
-  constexpr SegmentIndex::SegmentIndex (BaseElementIndex bi)
+  constexpr SegmentIndex::SegmentIndex (AnyElementIndex bi)
     : Index(bi.Nr0()) { }
 }
 
 namespace ngcore
 {
   template<>
-  constexpr netgen::BaseElementIndex IndexBASE<netgen::BaseElementIndex> ()
-  { return netgen::BaseElementIndex::Base(); }
+  constexpr netgen::AnyElementIndex IndexBASE<netgen::AnyElementIndex> ()
+  { return netgen::AnyElementIndex::Base(); }
 }
 
 namespace netgen
 {
-
-  // these should not be needed soon
-  /*
-  inline bool operator== (Index<int, SegmentIndex,0> ei1, int ei2) { return int(ei1) == int(ei2); };  
-  inline bool operator< (size_t s, Index<int,SegmentIndex,0> ei2) { return int(s) < int(ei2); };
-  inline bool operator< (Index<int, SegmentIndex,0> ei1, size_t s) { return int(ei1) < int(s); };
-  inline bool operator< (Index<int, SegmentIndex,0> ei1, int s) { return int(ei1) < int(s); };   
-  */
-  
-  // inline void SetInvalid (SegmentIndex & id) { id = -1; }
-  // inline bool IsInvalid (SegmentIndex & id) { return id == -1; }
-
 
   inline istream & operator>> (istream & ist, SegmentIndex & si)
   {
@@ -843,16 +772,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
 
   public:
-    MeshPoint () 
-    { 
-      ;
-    }
+    MeshPoint () = default;
 
     MeshPoint (const Point<3> & ap, int alayer = 1, POINTTYPE apt = INNERPOINT)
-      : Point<3> (ap), singular(0.), layer(alayer), type(apt) 
-    { 
-      ;
-    }
+      : Point<3> (ap), singular(0.), layer(alayer), type(apt) { }
   
     void SetPoint (const Point<3> & ap)
     { 
@@ -861,7 +784,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       singular = 0; 
     }
 
-    void Scale(double factor) { *testout << "before: " << x[0] << endl; x[0] *= factor; x[1] *= factor; x[2] *= factor; *testout << "after: " << x[0] << endl;}
+    void Scale(double factor) { x[0] *= factor; x[1] *= factor; x[2] *= factor; }
 
     int GetLayer() const { return layer; }
 
@@ -878,10 +801,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     void DoArchive (Archive & ar)
     {
-      // ar & x[0] & x[1] & x[2] & layer & singular;
-      // ar.Do(&x[0], 3);
-      // ar & layer & singular;
-      // ar & (unsigned char&)(type);
       ar.DoPacked (x[0], x[1], x[2], layer, singular, (unsigned char&)(type));
     }
   };

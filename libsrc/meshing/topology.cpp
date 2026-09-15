@@ -529,7 +529,7 @@ namespace netgen
                    v2eht.Set (v2, 33);   // some value                   
                  
                  LoopOverEdges (*mesh, *this, v,
-                                [&] (PointIndices<2> edge, BaseElementIndex elnr, int loc_edge, int element_dim)
+                                [&] (PointIndices<2> edge, AnyElementIndex elnr, int loc_edge, int element_dim)
                                 {
                                   v2eht.Set (edge[1], 33); // something                                  
                                 });
@@ -586,7 +586,7 @@ namespace netgen
                      }
                  
                  LoopOverEdges (*mesh, *this, v,
-                                [&](PointIndices<2> edge, BaseElementIndex elnr, int loc_edge, int element_dim)
+                                [&](PointIndices<2> edge, AnyElementIndex elnr, int loc_edge, int element_dim)
                                 {
                                   size_t pos;
                                   if (v2eht.PositionCreate(edge[1], pos))
@@ -621,7 +621,7 @@ namespace netgen
                    }
                  
                  LoopOverEdges (*mesh, *this, v,
-                                [&](PointIndices<2> edge, BaseElementIndex elnr, int loc_edge, int element_dim)
+                                [&](PointIndices<2> edge, AnyElementIndex elnr, int loc_edge, int element_dim)
                                 {
                                   int edgenum = v2eht.Get(edge[1]);
                                   switch (element_dim)
@@ -1084,7 +1084,7 @@ namespace netgen
                         }
                     }
                   LoopOverFaces (*mesh, *this, v,
-                                 [&] (PointIndices<4> i4, BaseElementIndex elnr, int j, bool volume)
+                                 [&] (PointIndices<4> i4, AnyElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    if (!vert2face.Used (face))
@@ -1164,7 +1164,7 @@ namespace netgen
                     }
                   
                   LoopOverFaces (*mesh, *this, v,
-                                 [&] (PointIndices<4> i4, BaseElementIndex elnr, int j, bool volume)
+                                 [&] (PointIndices<4> i4, AnyElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    /*
@@ -1202,7 +1202,7 @@ namespace netgen
                   
                   
                   LoopOverFaces (*mesh, *this, v,
-                                 [&] (PointIndices<4> i4, BaseElementIndex elnr, int j, bool volume)
+                                 [&] (PointIndices<4> i4, AnyElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
                                    int facenum = vert2face.Get(face);
