@@ -939,6 +939,62 @@ namespace netgen
                     p2seg[s[0]].Append(si);
                     p2seg[s[1]].Append(si);
                 }
+
+                // the face might connect closesurfaces in more than one direction
+                // (e.g. thin box identified in y and z), generate connecting quads only for one of them
+                auto is_closesurface_ident = [&] (const ShapeIdentification & ident)
+                {
+                    return ident.type == Identifications::CLOSESURFACES &&
+                        relevant_edges.count(ident.from->nr) && relevant_edges.count(ident.to->nr);
+                };
+
+                auto same_trafo = [&] (const ShapeIdentification & a, const ShapeIdentification & b)
+                {
+                    if(!a.trafo || !b.trafo)
+                        return a.name == b.name;
+                    Point<3> p0 = bounding_box.PMin();
+                    double d = bounding_box.Diam();
+                    for(auto p : { p0, p0 + Vec<3>(d,0,0), p0 + Vec<3>(0,d,0), p0 + Vec<3>(0,0,d) })
+                        if(Dist((*a.trafo)(p), (*b.trafo)(p)) > 1e-8*d)
+                            return false;
+                    return true;
+                };
+
+                auto is_mapped = [&] (int edgenr, const ShapeIdentification & dir)
+                {
+                    for(auto & ident : edges[edgenr]->identifications)
+                        if(is_closesurface_ident(ident) && same_trafo(ident, dir))
+                            return true;
+                    return false;
+                };
+
+                Array<int> nsegs_on_edge(edges.Size());
+                nsegs_on_edge = 0;
+                for(const auto & s : segments)
+                    nsegs_on_edge[mesh.GetEdgeDescriptor(s.GetIndex()).EdgeNr()-1]++;
+
+                Array<const ShapeIdentification*> candidates;
+                for(auto edgenr : relevant_edges)
+                    for(auto & ident : edges[edgenr]->identifications)
+                        if(is_closesurface_ident(ident) && ident.from->nr == edgenr)
+                            candidates.Append(&ident);
+
+                // prefer a direction where all edges not mapped in this direction have a single segment,
+                // otherwise the connecting quads are not conforming
+                const ShapeIdentification * face_ident = candidates.Size() ? candidates[0] : nullptr;
+                for(auto cand : candidates)
+                {
+                    bool conforming = true;
+                    for(auto edgenr : relevant_edges)
+                        if(nsegs_on_edge[edgenr] > 1 && !is_mapped(edgenr, *cand))
+                            conforming = false;
+                    if(conforming)
+                    {
+                        face_ident = cand;
+                        break;
+                    }
+                }
+
                 for(const auto & s : segments)
                 {
                     auto edgenr = mesh.GetEdgeDescriptor(s.GetIndex()).EdgeNr()-1;
@@ -954,7 +1010,8 @@ namespace netgen
                         {
                             if(edge_ident.type == Identifications::CLOSESURFACES &&
                                     edge_ident.from->nr == edgenr &&
-                                    relevant_edges.count(edge_ident.to->nr) > 0
+                                    relevant_edges.count(edge_ident.to->nr) > 0 &&
+                                    (!face_ident || same_trafo(edge_ident, *face_ident))
                               )
                             {
                                 trafo = edge_ident.trafo;
