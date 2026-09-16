@@ -274,6 +274,26 @@ namespace ngcore
   
   template <int N> using IC = std::integral_constant<int,N>;  // needed for Iterate
 
+  /// integral, and IC<N> counts as integral too (usable as index type)
+  template <typename T>
+  struct my_is_integral : std::is_integral<T> {};
+  template <int N>
+  struct my_is_integral<IC<N>> : std::true_type {};
+}
+
+namespace std
+{
+  template <int I1, int I2>
+  constexpr NETGEN_INLINE integral_constant<int,I1+I2>
+  operator+ (integral_constant<int,I1>, integral_constant<int,I2>)
+  {
+    return integral_constant<int,I1+I2>();
+  }
+}
+
+namespace ngcore
+{
+
   
   namespace detail {
     template <typename T, typename Enable = int>
