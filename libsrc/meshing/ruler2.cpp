@@ -66,7 +66,7 @@ namespace netgen
                              Array<IVec<2,LocalPointIndex>> & llines1,
                              int maxlegalline,
                              Array<MiniElement2d> & elements,
-                             Array<INDEX> & dellines, int tolerance,
+                             Array<int> & dellines, int tolerance,
                              const MeshingParameters & mp)
   {
     // static Timer timer ("meshing2::ApplyRules"); RegionTimer reg (timer);

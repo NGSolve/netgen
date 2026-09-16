@@ -117,7 +117,7 @@ Front3PointIndex AdFront3 :: AddPoint (const Point<3> & p, PointIndex globind)
 }
 
 
-INDEX AdFront3 :: AddFace (const FrontElement2d & aface)
+int AdFront3 :: AddFace (const FrontElement2d & aface)
 {
   int i, minfn;
 
@@ -178,7 +178,7 @@ INDEX AdFront3 :: AddFace (const FrontElement2d & aface)
 
 
 
-void AdFront3 :: DeleteFace (INDEX fi)
+void AdFront3 :: DeleteFace (int fi)
 {
   nff--;
 
@@ -217,7 +217,7 @@ void AdFront3 :: DeleteFace (INDEX fi)
 }
 
 
-INDEX AdFront3 :: AddConnectedPair (IVec<2,Front3PointIndex> apair)
+int AdFront3 :: AddConnectedPair (IVec<2,Front3PointIndex> apair)
 {
   if (!connectedpairs)
     connectedpairs = make_unique<DynamicTable<Front3PointIndex, Front3PointIndex>> (GetNP());
@@ -496,11 +496,11 @@ int AdFront3 :: GetLocals (int fstind,
                            Array<Point<3>, LocalPointIndex> & locpoints,
                            Array<MiniElement2d> & locfaces,   // local index
                            Array<Front3PointIndex, LocalPointIndex> & pindex,
-                           Array<INDEX> & findex,
+                           Array<int> & findex,
                            ClosedHashTable<IVec<2>,int> & getconnectedpairs,
                            float xh,
                            float relh,
-                           INDEX& facesplit)
+                           int& facesplit)
 {
   // static Timer timer("AdFront3::GetLocals");
   // RegionTimer reg (timer);
@@ -513,7 +513,7 @@ int AdFront3 :: GetLocals (int fstind,
       hashcreated=1;
     }
 
-  INDEX i;
+  int i;
   Front3PointIndex pstind;
   Point<3> midp, p0;
 
@@ -521,7 +521,7 @@ int AdFront3 :: GetLocals (int fstind,
   
   Array<FrontElement2d> locfaces2;          // all front faces in radius xh
   Array<int> locfaces3;           // all faces in outer radius relh
-  Array<INDEX> findex2;
+  Array<int> findex2;
 
   locfaces2.SetSize(0);
   locfaces3.SetSize(0);
@@ -680,7 +680,7 @@ void AdFront3 :: GetGroup (int fi,
                            Array<MeshPoint, LocalPointIndex> & grouppoints,
                            Array<MiniElement2d> & groupelements,
                            Array<Front3PointIndex, LocalPointIndex> & pindex,
-                           Array<INDEX> & findex) 
+                           Array<int> & findex) 
 {
   // static Array<char> pingroup;
   int changed;
@@ -772,7 +772,7 @@ void AdFront3 :: GetGroup (int fi,
 
 void AdFront3 :: SetStartFront (int /* baseelnp */)
 {
-  for (INDEX i = 1; i <= faces.Size(); i++)
+  for (int i = 1; i <= faces.Size(); i++)
     if (faces[i-1].Valid())
       {
         const FrontElement2d & face = faces[i-1].Face();

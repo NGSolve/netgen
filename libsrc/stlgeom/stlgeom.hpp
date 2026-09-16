@@ -193,7 +193,7 @@ namespace netgen
     virtual void Save (const filesystem::path & filename) const override;
 
     bool CalcPointGeomInfo(int surfind, PointGeomInfo& gi, const Point<3> & p3) const override;
-    PointGeomInfo ProjectPoint(INDEX surfind, Point<3> & p) const override;
+    PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
     bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
     Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const override;
     void PointBetween(const Point<3> & p1, const Point<3> & p2,

@@ -14,7 +14,6 @@ namespace netgen
 {
 
 
-  extern DLL_HEADER void MyError (const char * ch);
 
   /// a unit vector normal to v
   DLL_HEADER void GetNormal (const Vec<3> & v, Vec<3> & n);

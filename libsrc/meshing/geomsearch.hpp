@@ -43,11 +43,11 @@ public:
   void Create();
 
   ///add new element to Hashtable
-  void AddElem(const FrontElement2d& elem, INDEX elemnum);
+  void AddElem(const FrontElement2d& elem, int elemnum);
 
   ///GetLocal faces in sphere with radius xh and middlepoint p
-  void GetLocals(Array<FrontElement2d> & locfaces,  Array<INDEX> & findex,
-                 INDEX fstind, const Point<3>& p0, double xh);
+  void GetLocals(Array<FrontElement2d> & locfaces,  Array<int> & findex,
+                 int fstind, const Point<3>& p0, double xh);
 
 private:
   

@@ -141,7 +141,7 @@ bool STLGeometry :: ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & g
   return true;
 }
 
-PointGeomInfo STLGeometry :: ProjectPoint (INDEX surfind, Point<3> & p) const
+PointGeomInfo STLGeometry :: ProjectPoint (int surfind, Point<3> & p) const
 {
   throw Exception("ProjectPoint without PointGeomInfo not implemented");
 }

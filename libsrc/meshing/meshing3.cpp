@@ -202,7 +202,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   Array<MiniElement2d> locfaces;                   // local faces
   Array<Front3PointIndex, LocalPointIndex> pindex;  // mapping from local to front point numbering
   Array<int, LocalPointIndex> allowpoint;         // point is allowed (0/1/2) ?
-  Array<INDEX> findex;                             // mapping from local to front face numbering
+  Array<int> findex;                             // mapping from local to front face numbering
   //INDEX_2_HASHTABLE<int> connectedpairs(100);    // connecgted pairs for prism meshing
 
   Array<Point<3>, LocalPointIndex> plainpoints;    // points in reference coordinates
@@ -216,7 +216,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   Point<3> inp = Point<3>(0,0,0);
   float err;
 
-  INDEX locfacesplit;             //index for faces in outer area
+  int locfacesplit;             //index for faces in outer area
   
   bool loktestmode = false;
 
@@ -231,7 +231,7 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
   Array<MeshPoint, LocalPointIndex> grouppoints;      
   Array<MiniElement2d> groupfaces;
   Array<Front3PointIndex, LocalPointIndex> grouppindex;
-  Array<INDEX> groupfindex;
+  Array<int> groupfindex;
   
   
   float minerr;

@@ -66,8 +66,6 @@ namespace nglib
    // initialize, deconstruct Netgen library:
    NGLIB_API void Ng_Init ()
    {
-      mycout = &cout;
-      myerr = &cerr;
       // netgen::testout->SetOutStream (new ofstream ("test.out"));
       // testout = new ofstream ("test.out");
    }
@@ -701,22 +699,22 @@ namespace nglib
       int retval = STLSurfaceMeshing (*stlgeometry, *me, mparam, stlparam);
       if (retval == MESHING3_OK)
       {
-         (*mycout) << "Success !!!!" << endl;
+         cout << "Success !!!!" << endl;
          stlgeometry->surfacemeshed = 1;
          stlgeometry->surfaceoptimized = 0;
          stlgeometry->volumemeshed = 0;
       } 
       else if (retval == MESHING3_OUTERSTEPSEXCEEDED)
       {
-         (*mycout) << "ERROR: Give up because of too many trials. Meshing aborted!" << endl;
+         cout << "ERROR: Give up because of too many trials. Meshing aborted!" << endl;
       }
       else if (retval == MESHING3_TERMINATE)
       {
-         (*mycout) << "Meshing Stopped!" << endl;
+         cout << "Meshing Stopped!" << endl;
       }
       else
       {
-         (*mycout) << "ERROR: Surface meshing not successful. Meshing aborted!" << endl;
+         cout << "ERROR: Surface meshing not successful. Meshing aborted!" << endl;
       }
 
 
@@ -970,10 +968,6 @@ namespace netgen
 {
    char geomfilename[255];
 
-   NGLIB_API void MyError2 (const char * ch)
-   {
-      cerr << ch;
-   }
 
 
 
@@ -986,7 +980,7 @@ namespace netgen
      NG_MPI_Comm_rank(NG_MPI_COMM_WORLD, &id);
      if (id != 0) return;
 #endif
-     (*mycout) << s << flush;
+     cout << s << flush;
    }
 
 
@@ -1007,10 +1001,6 @@ namespace netgen
   */
 
 
-   void MyBeep (int i)
-   {
-      ;
-   }
 
 
 

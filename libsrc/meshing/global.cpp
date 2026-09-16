@@ -25,8 +25,6 @@ namespace netgen
 
   const string netgen_version = NETGEN_VERSION;
 
-  ostream * mycout = &cout;
-  ostream * myerr = &cerr;
 
   // some functions (visualization) still need a global mesh
   // TraceGlobal glob1("global1");
@@ -73,14 +71,9 @@ namespace netgen
   void Ng_PrintDest(const char * s)
   {
     if (id == 0)
-      (*mycout) << s << flush;
+      cout << s << flush;
   }
 
-  DLL_HEADER void MyError(const char * ch)
-  {
-    cout << ch;
-    (*testout) << "Error !!! " << ch << endl << flush;
-  }
 
   static double starttimea;
   void ResetTime ()

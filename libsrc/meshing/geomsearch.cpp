@@ -65,7 +65,7 @@ namespace netgen
 
   void GeomSearch3d :: Create()
   {
-    INDEX i,j,k;
+    int i,j,k;
     if (reset)
       {
         const double hashelemsizefactor = 4;
@@ -126,7 +126,7 @@ namespace netgen
               {
                 for (k = 1; k <= size[2]; k++)
                   {
-                    INDEX ind=i+(j-1)*size[0]+(k-1)*size[1]*size[0];
+                    int ind=i+(j-1)*size[0]+(k-1)*size[1]*size[0];
                     hashtable[ind-1] = new Array <int> ();
                   }
               }
@@ -141,7 +141,7 @@ namespace netgen
               {
                 for (k = 1; k <= size[2]; k++)
                   {
-                    INDEX ind=i+(j-1)*size[0]+(k-1)*size[1]*size[0];
+                    int ind=i+(j-1)*size[0]+(k-1)*size[1]*size[0];
                     hashtable[ind-1]->SetSize(0);
                   }
               }
@@ -156,7 +156,7 @@ namespace netgen
   
   }
 
-  void GeomSearch3d :: AddElem(const FrontElement2d& elem, INDEX elemnum)
+  void GeomSearch3d :: AddElem(const FrontElement2d& elem, int elemnum)
   {
     Point<3> minp, maxp;
     ElemMaxExt(minp, maxp, elem);
@@ -171,7 +171,7 @@ namespace netgen
       for (int iy = sy; iy <= ey; iy++)
         for (int iz = sz; iz <= ez; iz++)
           {
-            INDEX ind=ix+(iy-1)*size[0]+(iz-1)*size[1]*size[0];
+            int ind=ix+(iy-1)*size[0]+(iz-1)*size[1]*size[0];
             if (ind < 1 || ind > size[0] * size[1] * size[2])
               {
                 cerr << "Illegal hash-position";
@@ -182,8 +182,8 @@ namespace netgen
           }
   }
 
-  void GeomSearch3d :: GetLocals(Array<FrontElement2d> & locfaces,  Array<INDEX> & findex,
-                                 INDEX fstind, const Point<3>& p0, double xh)
+  void GeomSearch3d :: GetLocals(Array<FrontElement2d> & locfaces,  Array<int> & findex,
+                                 int fstind, const Point<3>& p0, double xh)
   {
     hashcount++;
   
@@ -216,7 +216,7 @@ namespace netgen
           {
             for (iz = sz; iz <= ez; iz++)
               {
-                INDEX ind=ix+(iy-1)*size[0]+(iz-1)*size[1]*size[0];
+                int ind=ix+(iy-1)*size[0]+(iz-1)*size[1]*size[0];
               
                 //go through all elements in one hash area
                 const Array <int> & area = *hashtable[ind-1];

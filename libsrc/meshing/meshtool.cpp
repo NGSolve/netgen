@@ -124,7 +124,7 @@ namespace netgen
   void MeshQuality2d (const Mesh & mesh)
   {
     int ncl = 20;
-    Array<INDEX> incl(ncl);
+    Array<int> incl(ncl);
 
     incl = 0;
 
@@ -147,7 +147,7 @@ namespace netgen
     (*testout) << "Elements in qualityclasses:" << endl;
     // (*testout).precision(2);
     (*testout) << setprecision(2);
-    for (INDEX i = 1; i <= ncl; i++)
+    for (int i = 1; i <= ncl; i++)
       {
         (*testout) << setw(4) << double (i-1)/ncl << " - "
                    << setw(4) << double (i) / ncl << ": "
@@ -569,11 +569,11 @@ namespace netgen
   void MeshQuality3d (const Mesh & mesh, Array<int> * inclass)
   { 
     int ncl = 20;
-    Array<INDEX> incl(ncl);
+    Array<int> incl(ncl);
     double sum = 0;
     int nontet  = 0;
 
-    for (INDEX i = 1; i <= incl.Size(); i++)
+    for (int i = 1; i <= incl.Size(); i++)
       incl[i-1] = 0;
 
     for (ElementIndex ei : mesh.VolumeElements().Range())
@@ -609,7 +609,7 @@ namespace netgen
 
     (*testout) << "Volume elements in qualityclasses:" << endl;
     (*testout) << setprecision(2);
-    for (INDEX i = 1; i <= ncl; i++)
+    for (int i = 1; i <= ncl; i++)
       {
         (*testout) << setw(4) << double (i-1)/ncl << " - "
                    << setw(4) << double (i) / ncl << ": "
@@ -765,7 +765,7 @@ namespace netgen
 
 #ifdef SOLIDGEOM
     outfile << geometry.GetNSurf() << endl;
-    for (INDEX i = 1; i <= geometry.GetNSurf(); i++)
+    for (int i = 1; i <= geometry.GetNSurf(); i++)
       geometry.GetSurface(i) -> Print (outfile);
 #endif
   }

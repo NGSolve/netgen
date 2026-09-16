@@ -50,10 +50,10 @@ public:
   ///
   int ApplyRules (Array<Point<3>, LocalPointIndex> & lpoints,
                   Array<int, LocalPointIndex> & allowpoint,
-                  Array<MiniElement2d> & lfaces, INDEX lfacesplit,
+                  Array<MiniElement2d> & lfaces, int lfacesplit,
                   ClosedHashTable<IVec<2>,int> & connectedpairs,
                   Array<LocalElement> & elements,
-                  Array<INDEX> & delfaces, int tolerance, 
+                  Array<int> & delfaces, int tolerance, 
                   double sloppy, int rotind1,
                   float & retminerr);
   

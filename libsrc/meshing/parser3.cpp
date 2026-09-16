@@ -881,7 +881,7 @@ void vnetrule :: LoadRule (istream & ist)
       Array<IVec<2>> & freesetedges = *freeedges.Last();
       Array<IVec<3>> & freesetfaces = *freefaces[fs-1];
       // int k,l;
-      // INDEX ind;
+      // int ind;
       
       for (int k = 1; k <= freesetfaces.Size(); k++)
         {
@@ -889,7 +889,7 @@ void vnetrule :: LoadRule (istream & ist)
 
           for (int l = k+1; l <= freesetfaces.Size(); l++)
             {
-              INDEX ind = NeighbourTrianglePoint(freesetfaces[k-1], freesetfaces[l-1]);
+              int ind = NeighbourTrianglePoint(freesetfaces[k-1], freesetfaces[l-1]);
               if (!ind) continue;
 
               IVec<3> f1(freesetfaces[k-1][0], 

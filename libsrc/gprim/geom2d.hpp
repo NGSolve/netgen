@@ -21,7 +21,6 @@ namespace netgen
 #define EPSGEOM 1E-5
 
 
-  DLL_HEADER void MyError (const char * ch);
 
 
   class LINE2D;
@@ -201,13 +200,13 @@ namespace netgen
   class ILINE
   {
     ///
-    INDEX i[2];
+    int i[2];
 
   public:
     ///
     ILINE() {};
     ///
-    ILINE(INDEX i1, INDEX i2) { i[0] = i1; i[1] = i2; }
+    ILINE(int i1, int i2) { i[0] = i1; i[1] = i2; }
     ///
     ILINE(const ILINE & l) { i[0] = l.i[0]; i[1] = l.i[1]; }
 
@@ -216,26 +215,26 @@ namespace netgen
     { i[0] = l.i[0]; i[1] = l.i[1]; return *this; }
 
     ///
-    const INDEX & I(int ai) const { return i[ai-1]; }
+    const int & I(int ai) const { return i[ai-1]; }
     ///
-    const INDEX & X() const { return i[0]; }
+    const int & X() const { return i[0]; }
     ///
-    const INDEX & Y() const { return i[1]; }
+    const int & Y() const { return i[1]; }
     ///
-    const INDEX & I1() const { return i[0]; }
+    const int & I1() const { return i[0]; }
     ///
-    const INDEX & I2() const { return i[1]; }
+    const int & I2() const { return i[1]; }
 
     ///
-    INDEX & I(int ai) { return i[ai-1]; }
+    int & I(int ai) { return i[ai-1]; }
     ///
-    INDEX & X() { return i[0]; }
+    int & X() { return i[0]; }
     ///
-    INDEX & Y() { return i[1]; }
+    int & Y() { return i[1]; }
     ///
-    INDEX & I1() { return i[0]; }
+    int & I1() { return i[0]; }
     ///
-    INDEX & I2() { return i[1]; }
+    int & I2() { return i[1]; }
   };
 
 
@@ -436,13 +435,13 @@ namespace netgen
     { for (int i = 0; i < 4; i++) coeff[i] = m2.Get(i); }
 
     ///
-    double & Elem (INDEX i, INDEX j) { return coeff[2*(i-1)+j-1]; }
+    double & Elem (int i, int j) { return coeff[2*(i-1)+j-1]; }
     ///
-    double & Elem (INDEX i) {return coeff[i]; }
+    double & Elem (int i) {return coeff[i]; }
     ///
-    double Get (INDEX i, INDEX j) const { return coeff[2*(i-1)+j-1]; }
+    double Get (int i, int j) const { return coeff[2*(i-1)+j-1]; }
     ///
-    double Get (INDEX i) const {return coeff[i]; }
+    double Get (int i) const {return coeff[i]; }
 
     ///  
     double Det () const { return coeff[0] * coeff[3] - coeff[1] * coeff[2]; }
@@ -481,12 +480,9 @@ namespace netgen
     double det = Det();
   
     if (det == 0)
-      MyError ("Mat2d::Solve: zero determinant");
-    else
-      {
-        x(0) = (coeff[3] * rhs(0) - coeff[1] * rhs(1)) / det;
-        x(1) = (-coeff[2] * rhs(0) + coeff[0] * rhs(1)) / det;
-      }
+      throw Exception ("Mat2d::Solve: zero determinant");
+    x(0) = (coeff[3] * rhs(0) - coeff[1] * rhs(1)) / det;
+    x(1) = (-coeff[2] * rhs(0) + coeff[0] * rhs(1)) / det;
   }
 
 

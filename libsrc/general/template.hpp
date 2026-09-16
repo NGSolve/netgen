@@ -28,34 +28,12 @@ namespace netgen
 /** output stream for testing.
   testout is opened by main */
 
-/** use instead of cout */
-DLL_HEADER extern ostream * mycout;
-
-/** error output stream */
-DLL_HEADER extern ostream * myerr;
-
-/** Error messages display.
-  Error messages are displayed by this function */
-DLL_HEADER extern void MyError (const char * ch);
-
-
-/** Rings the bell.
-  Produces nr beeps. */
-DLL_HEADER extern void MyBeep (int nr = 1);
-
-
-/**
-  INDEX is a typedef for (at least) 4-byte integer
- */
-typedef int INDEX;
 
 /**
   BOOL is a typedef for boolean variables
   */
 // typedef int BOOL;
 
-typedef int ELIND;
-typedef int PIND;
 
 
 
@@ -141,9 +119,9 @@ void MergeSort (int size, T * data, T * help);
 namespace netgen
 {
 
-inline void SetInvalid (INDEX & i) { i = -1; }
-inline bool IsInvalid (INDEX i) { return i == -1; }
-inline size_t HashValue (INDEX i, size_t size) { return (113*size_t(i)) % size; }
+inline void SetInvalid (int & i) { i = -1; }
+inline bool IsInvalid (int i) { return i == -1; }
+inline size_t HashValue (int i, size_t size) { return (113*size_t(i)) % size; }
 
 
 

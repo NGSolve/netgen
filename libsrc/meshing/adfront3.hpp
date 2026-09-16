@@ -239,33 +239,33 @@ public:
                  Array<Point<3>, LocalPointIndex> & locpoints,
                  Array<MiniElement2d> & locfaces,   // local index
                  Array<Front3PointIndex, LocalPointIndex> & pindex,   // local -> front
-                 Array<INDEX> & findex,
+                 Array<int> & findex,
                  ClosedHashTable<IVec<2>,int> & connectedpairs,
                  float xh,
                  float relh,
-                 INDEX& facesplit);
+                 int& facesplit);
   
   ///
   void GetGroup (int fi,
                  Array<MeshPoint, LocalPointIndex> & grouppoints,
                  Array<MiniElement2d> & groupelements,
                  Array<Front3PointIndex, LocalPointIndex> & pindex,
-                 Array<INDEX> & findex);
+                 Array<int> & findex);
 
   ///
-  void DeleteFace (INDEX fi);
+  void DeleteFace (int fi);
   ///
   Front3PointIndex AddPoint (const Point<3> & p, PointIndex globind);
   ///
-  INDEX AddFace (const FrontElement2d & e);
+  int AddFace (const FrontElement2d & e);
   ///
-  INDEX AddConnectedPair (IVec<2,Front3PointIndex> pair);
+  int AddConnectedPair (IVec<2,Front3PointIndex> pair);
   ///
-  void IncrementClass (INDEX fi)
+  void IncrementClass (int fi)
   { faces[fi-1].IncrementQualClass(); }
 
   ///
-  void ResetClass (INDEX fi)
+  void ResetClass (int fi)
   { faces[fi-1].ResetQualClass(); }
 
   ///

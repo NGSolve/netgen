@@ -99,7 +99,7 @@ namespace netgen
 #ifdef DEBUG
     if (i < 0 || i >= data.Size())
       {
-        MyError ("BASE_TABLE::Inc: Out of range");
+        throw Exception ("BASE_TABLE::Inc: Out of range");
         return;
       }
 #endif
@@ -149,7 +149,7 @@ namespace netgen
 #ifdef DEBUG
     if (i < 0 || i >= data.Size())
       {
-        MyError ("BASE_TABLE::Dec: Out of range");
+        throw Exception ("BASE_TABLE::Dec: Out of range");
         return;
       }
 #endif
@@ -159,7 +159,7 @@ namespace netgen
 #ifdef DEBUG
     if (line.size == 0)
       {
-        MyError ("BASE_TABLE::Dec: EntrySize < 0");
+        throw Exception ("BASE_TABLE::Dec: EntrySize < 0");
         return;      
       }
 #endif

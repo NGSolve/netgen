@@ -158,7 +158,7 @@ protected:
                   int maxlegalpoint,
                   Array<IVec<2,LocalPointIndex>> & llines,
                   int maxlegelline,
-                  Array<MiniElement2d> & elements, Array<INDEX> & dellines,
+                  Array<MiniElement2d> & elements, Array<int> & dellines,
                   int tolerance,
                   const MeshingParameters & mp);
   

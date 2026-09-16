@@ -130,7 +130,7 @@ template <typename T>
 BlockAllocator ADTreeNode3<T> :: ball(sizeof (ADTreeNode3<T>));
 
 
-template <typename T = INDEX>
+template <typename T = int>
 class ADTree3
 {
   ADTreeNode3<T> * root;
@@ -609,7 +609,7 @@ public:
 
 
 
-  template <int dim, typename T = INDEX>
+  template <int dim, typename T = int>
   class T_ADTree
   {
     T_ADTreeNode<dim,T> * root;
@@ -912,7 +912,7 @@ public:
 
 
 
-template <typename T = INDEX>
+template <typename T = int>
 class Point3dTree
 {
   ADTree3<T> tree;
@@ -949,7 +949,7 @@ public:
   const ADTree3<T> & Tree() const { return tree; }
 };
 
-template<int dim, typename T=INDEX>
+template<int dim, typename T=int>
 class BoxTree
 {
 public:
@@ -1220,7 +1220,7 @@ public:
     }
 };
 
-//   template <int dim, typename T = INDEX>
+//   template <int dim, typename T = int>
 //   class BoxTree
 //   {
 //     T_ADTree<2*dim,T> * tree;
@@ -1303,7 +1303,7 @@ public:
 //     auto & Tree() { return *tree; };
 //   };
 
-  template<int dim, typename T=INDEX, typename TSCAL=double>
+  template<int dim, typename T=int, typename TSCAL=double>
   class DelaunayTree
   {
   public:

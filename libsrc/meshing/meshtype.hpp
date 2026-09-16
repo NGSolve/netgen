@@ -317,7 +317,7 @@ namespace ngcore
     constexpr static inline netgen::SortedPointIndices<2> Invalid()
     { return netgen::SortedPointIndices<2>::Ordered ({ netgen::PointIndex::INVALID, netgen::PointIndex::INVALID }); }
     constexpr static inline size_t HashValue (const netgen::SortedPointIndices<2> & hash, size_t mask)
-    // { return HashValue2(IVec<2,netgen::INDEX>(hash[0], hash[1]), mask); }
+    // { return HashValue2(IVec<2,netgen::int>(hash[0], hash[1]), mask); }
     { return CHT_trait<netgen::PointIndices<2>>::HashValue (hash, mask); }
   };
   

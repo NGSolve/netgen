@@ -278,7 +278,7 @@ namespace netgen
                              Array<MultiPointGeomInfo, LocalPointIndex> & pgeominfo,
                              Array<IVec<2,LocalPointIndex>> & loclines,
                              Array<Front2PointIndex, LocalPointIndex> & pindex,   // local -> front
-                             Array<INDEX> & lindex,
+                             Array<int> & lindex,
                              double xh)
   {
     // static Timer timer("adfront2::GetLocals"); RegionTimer reg (timer);

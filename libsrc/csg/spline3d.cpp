@@ -106,7 +106,7 @@ void spline3d :: Evaluate (double t, Point<3> & p) const
   static int cnt = 0;
   
   cnt++;
-  if (cnt % 10000 == 0) (*mycout) << "Evaluate calls: " << cnt << endl;
+  if (cnt % 10000 == 0) cout << "Evaluate calls: " << cnt << endl;
 
   while (t < 0) t += GetNumSegments();
   while (t >= GetNumSegments()) t -= GetNumSegments();
@@ -217,7 +217,7 @@ double spline3d :: ProjectToSpline (Point<3> & p, double optt) const
 splinetube :: splinetube (const spline3d & amiddlecurve, double ar)
   : Surface(), middlecurve (amiddlecurve), r(ar)
 {
-  (*mycout) << "Splinetube Allocated, r = " << r << endl;
+  cout << "Splinetube Allocated, r = " << r << endl;
 
 }
   
@@ -325,7 +325,7 @@ Point<3> splinetube :: GetSurfacePoint () const
   middlecurve.EvaluateTangent (0, t);
   n = t.GetNormal ();
   n *= r;
-  (*mycout) << "p = " << p << " t = " << t << "  n = " << n << endl;
+  cout << "p = " << p << " t = " << t << "  n = " << n << endl;
   return p + n;
 }
 

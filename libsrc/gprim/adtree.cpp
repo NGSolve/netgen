@@ -2148,18 +2148,18 @@ namespace netgen
   */
   
   /*
-  template<> BlockAllocator T_ADTreeNode<4,INDEX> :: ball(sizeof (T_ADTreeNode<4,INDEX>));
-  template class T_ADTree<4,INDEX>;
-  template class BoxTree<2,INDEX>;
+  template<> BlockAllocator T_ADTreeNode<4,int> :: ball(sizeof (T_ADTreeNode<4,int>));
+  template class T_ADTree<4,int>;
+  template class BoxTree<2,int>;
 
   template<> BlockAllocator T_ADTreeNode<4,IVec<2>> :: ball(sizeof (T_ADTreeNode<4,IVec<2>>));
   template class T_ADTree<4,IVec<2>>;
   template class BoxTree<2,IVec<2>>;
   
   
-  template<> BlockAllocator T_ADTreeNode<6,INDEX> :: ball(sizeof (T_ADTreeNode<6,INDEX>));
-  template class T_ADTree<6,INDEX>;
-  template class BoxTree<3,INDEX>;
+  template<> BlockAllocator T_ADTreeNode<6,int> :: ball(sizeof (T_ADTreeNode<6,int>));
+  template class T_ADTree<6,int>;
+  template class BoxTree<3,int>;
   */
   
 }

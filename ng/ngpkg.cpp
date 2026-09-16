@@ -3168,9 +3168,6 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
     //testout->setstate(ios_base::badbit);
 
-    myerr = &cerr;
-    extern ostream * mycout;
-    mycout = &cout;
 
     testmode = 0;
 

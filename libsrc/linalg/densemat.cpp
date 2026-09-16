@@ -295,7 +295,7 @@ namespace netgen
         for (i = 1; i <= n; i++)
           {
             if (dots && i % 10 == 0)
-              (*mycout) << "." << flush;
+              cout << "." << flush;
 
             for (j = i; j <= n; j++)
               {
@@ -351,7 +351,7 @@ namespace netgen
         for (i = 1; i <= n; i++)
           {
             if (dots && i % 10 == 0)
-              (*mycout) << "+" << flush;
+              cout << "+" << flush;
 
             for (j = i; j <= n; j++)
               {
@@ -386,7 +386,7 @@ namespace netgen
         for (i = 1; i <= n; i++)
           {
             if (dots && i % 10 == 0)
-              (*mycout) << "-" << flush;
+              cout << "-" << flush;
 
             for (j = 1; j <= i; j++)
               {
@@ -410,7 +410,7 @@ namespace netgen
           for (j = 1; j < i; j++)
             m2.Elem(j, i) = m2.Get(i, j);
       
-        if (dots) (*mycout) << endl;
+        if (dots) cout << endl;
 #endif
 
 
@@ -519,7 +519,7 @@ namespace netgen
       
           for (i = 1; i <= n; i++)
           {
-          //    (*mycout) << '.' << flush;
+          //    cout << '.' << flush;
           q = m1.Get(i, i);
           for (k = 1; k <= n; k++)
           {
@@ -554,7 +554,7 @@ namespace netgen
             
           for (i = n; i >= 1; i--)
           {
-          //    (*mycout) << "+" << flush;
+          //    cout << "+" << flush;
           for (j = 1; j < i; j++)
           {
           q = m1.Elem(j, i);
@@ -1201,7 +1201,7 @@ namespace netgen
       
         for (i = 1; i <= n; i++)
           {
-            // (*mycout) << "." << flush;
+            // cout << "." << flush;
             for (j = i; j <= n; j++)
               {
                 x = Get(i, j);
@@ -1278,7 +1278,7 @@ namespace netgen
       }
     else
       {
-        //      (*mycout) << "gauss" << endl;
+        //      cout << "gauss" << endl;
         int n = Height();
         for (int i = 1; i <= n; i++)
           {

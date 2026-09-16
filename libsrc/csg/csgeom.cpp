@@ -87,7 +87,7 @@ namespace netgen
     return true;
   }
 
-  void CSGeometry :: ProjectPointEdge(int surfind, INDEX surfind2,
+  void CSGeometry :: ProjectPointEdge(int surfind, int surfind2,
                                       Point<3> & p, EdgePointGeomInfo* /*unused*/, int /*edgenr*/) const
   {
     Point<3> hp = p;

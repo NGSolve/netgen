@@ -68,10 +68,10 @@ int Meshing3 :: ApplyRules
  Array<Point<3>, LocalPointIndex> & lpoints,     // in: local points, out: old+new local points
  Array<int, LocalPointIndex> & allowpoint,     // in: 2 .. it is allowed to use pointi, 1..will be allowed later, 0..no means
  Array<MiniElement2d> & lfaces,    // in: local faces, out: old+new local faces
- INDEX lfacesplit,             // for local faces in outer radius
+ int lfacesplit,             // for local faces in outer radius
  ClosedHashTable<IVec<2>,int> & connectedpairs,  // connected pairs for prism-meshing
  Array<LocalElement> & elements,    // out: new elements
- Array<INDEX> & delfaces,      // out: face indices of faces to delete
+ Array<int> & delfaces,      // out: face indices of faces to delete
  int tolerance,                // quality class: 1 best 
  double sloppy,                // quality strength
  int rotind1,                  // how to rotate base element

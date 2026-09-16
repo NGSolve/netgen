@@ -980,7 +980,7 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 // public:
 //   Mesh::T_POINTS & points;
 //   const Array<Element> & elements;
-//   TABLE<INDEX> elementsonpoint;
+//   TABLE<int> elementsonpoint;
 //   PointIndex actpind;
   
 // public:

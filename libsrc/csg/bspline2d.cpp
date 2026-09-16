@@ -86,7 +86,7 @@ Point<2> BSplineCurve2d :: Eval (double t) const
 
   static int cnt = 0;
   cnt++;
-  if (cnt % 100000 == 0) (*mycout) << "cnt = " << cnt << endl;
+  if (cnt % 100000 == 0) cout << "cnt = " << cnt << endl;
   
   n = int(t);   
   loct = t - n;
@@ -104,7 +104,7 @@ Point<2> BSplineCurve2d :: Eval (double t) const
   n4 = n3+1;
   if (n4 > points.Size()) n4 = 1;
 
-  //  (*mycout) << "t = " << t << " n = " << n << " loct = " << loct 
+  //  cout << "t = " << t << " n = " << n << " loct = " << loct 
   //      << " n1 = " << n1 << endl;
 
   

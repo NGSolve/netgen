@@ -69,8 +69,7 @@ namespace netgen
 
   Point<3> QuadraticSurface :: GetSurfacePoint () const
   {
-    MyError ("GetSurfacePoint called for QuadraticSurface");
-    return Point<3> (0, 0, 0);
+    throw Exception ("GetSurfacePoint called for QuadraticSurface");
   }
 
 

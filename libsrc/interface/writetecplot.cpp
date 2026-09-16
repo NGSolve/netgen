@@ -25,9 +25,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
   int j, k, e, z;
   Vec<3> n;
   
-  INDEX np = mesh.GetNP();
-  INDEX ne = mesh.GetNE();
-  INDEX nse = mesh.GetNSE();
+  int np = mesh.GetNP();
+  int ne = mesh.GetNE();
+  int nse = mesh.GetNSE();
   
   Array<int, PointIndex> sn(np);
   ofstream outfile(filename);

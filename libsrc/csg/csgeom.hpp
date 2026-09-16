@@ -190,9 +190,9 @@ namespace netgen
 
     virtual void SaveToMeshFile (ostream & ost) const override;
 
-    PointGeomInfo ProjectPoint(INDEX surfind, Point<3> & p) const override;
+    PointGeomInfo ProjectPoint(int surfind, Point<3> & p) const override;
     bool ProjectPointGI (int surfind, Point<3> & p, PointGeomInfo & gi) const override;
-    void ProjectPointEdge(INDEX surfind, INDEX surfind2, Point<3> & p,
+    void ProjectPointEdge(int surfind, int surfind2, Point<3> & p,
                           EdgePointGeomInfo* gi = nullptr, int edgenr = -1) const override;
     Vec<3> GetNormal(int surfind, const Point<3> & p, const PointGeomInfo* gi = nullptr) const override;
 
