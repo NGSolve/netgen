@@ -7,15 +7,15 @@ namespace netgen
 {
   GeomSearch3d :: GeomSearch3d() 
   {
-    size.i1 = 0; size.i2 = 0; size.i3 = 0; 
+    size[0] = 0; size[1] = 0; size[2] = 0; 
   };
 
   GeomSearch3d :: ~GeomSearch3d()
   {
     //delete old Hashtable:
-    if (size.i1 != 0)
+    if (size[0] != 0)
       {
-        for (int i = 0; i < size.i1*size.i2*size.i3; i++)
+        for (int i = 0; i < size[0]*size[1]*size[2]; i++)
           delete hashtable[i];
       } 
   }
@@ -24,7 +24,7 @@ namespace netgen
   {
     points = pointsi;
     faces = facesi;
-    size.i1 = 0; size.i2 = 0; size.i3 = 0; 
+    size[0] = 0; size[1] = 0; size[2] = 0; 
     reset = 1;
     hashcount = 1;
   }
@@ -95,38 +95,38 @@ namespace netgen
         Vec<3> boxext = maxext - minext;
       
         //delete old Hashtable:
-        if (size.i1 != 0)
+        if (size[0] != 0)
           {
-            for (i = 1; i <= size.i1*size.i2*size.i3; i++)
+            for (i = 1; i <= size[0]*size[1]*size[2]; i++)
               {
                 delete hashtable[i-1];
               }
           } 
       
-        size.i1 = int (boxext(0)/midext(0)/hashelemsizefactor+1);
-        size.i2 = int (boxext(1)/midext(1)/hashelemsizefactor+1);
-        size.i3 = int (boxext(2)/midext(2)/hashelemsizefactor+1);
+        size[0] = int (boxext(0)/midext(0)/hashelemsizefactor+1);
+        size[1] = int (boxext(1)/midext(1)/hashelemsizefactor+1);
+        size[2] = int (boxext(2)/midext(2)/hashelemsizefactor+1);
 
         int nfaces = faces->Size();
-        size.i1 = min(size.i1, nfaces);
-        size.i2 = min(size.i2, nfaces);
-        size.i3 = min(size.i3, nfaces);
+        size[0] = min(size[0], nfaces);
+        size[1] = min(size[1], nfaces);
+        size[2] = min(size[2], nfaces);
 
-        // PrintMessage (5, "hashsizes = ", size.i1, ", ", size.i2, ", ", size.i3);
+        // PrintMessage (5, "hashsizes = ", size[0], ", ", size[1], ", ", size[2]);
       
-        elemsize(0)=boxext(0)/size.i1;
-        elemsize(1)=boxext(1)/size.i2;
-        elemsize(2)=boxext(2)/size.i3;
+        elemsize(0)=boxext(0)/size[0];
+        elemsize(1)=boxext(1)/size[1];
+        elemsize(2)=boxext(2)/size[2];
 
         //create Hasharrays:
-        hashtable.SetSize(size.i1*size.i2*size.i3);
-        for (i = 1; i <= size.i1; i++)
+        hashtable.SetSize(size[0]*size[1]*size[2]);
+        for (i = 1; i <= size[0]; i++)
           {
-            for (j = 1; j <= size.i2; j++)
+            for (j = 1; j <= size[1]; j++)
               {
-                for (k = 1; k <= size.i3; k++)
+                for (k = 1; k <= size[2]; k++)
                   {
-                    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
+                    INDEX ind=i+(j-1)*size[0]+(k-1)*size[1]*size[0];
                     hashtable[ind-1] = new Array <int> ();
                   }
               }
@@ -135,13 +135,13 @@ namespace netgen
     else
       {
         //Clear all Hash-Arrays
-        for (i = 1; i <= size.i1; i++)
+        for (i = 1; i <= size[0]; i++)
           {
-            for (j = 1; j <= size.i2; j++)
+            for (j = 1; j <= size[1]; j++)
               {
-                for (k = 1; k <= size.i3; k++)
+                for (k = 1; k <= size[2]; k++)
                   {
-                    INDEX ind=i+(j-1)*size.i1+(k-1)*size.i2*size.i1;
+                    INDEX ind=i+(j-1)*size[0]+(k-1)*size[1]*size[0];
                     hashtable[ind-1]->SetSize(0);
                   }
               }
@@ -171,8 +171,8 @@ namespace netgen
       for (int iy = sy; iy <= ey; iy++)
         for (int iz = sz; iz <= ez; iz++)
           {
-            INDEX ind=ix+(iy-1)*size.i1+(iz-1)*size.i2*size.i1;
-            if (ind < 1 || ind > size.i1 * size.i2 * size.i3)
+            INDEX ind=ix+(iy-1)*size[0]+(iz-1)*size[1]*size[0];
+            if (ind < 1 || ind > size[0] * size[1] * size[2])
               {
                 cerr << "Illegal hash-position";
                 cerr << "Position: " << ix << "," << iy << "," << iz << endl;
@@ -216,7 +216,7 @@ namespace netgen
           {
             for (iz = sz; iz <= ez; iz++)
               {
-                INDEX ind=ix+(iy-1)*size.i1+(iz-1)*size.i2*size.i1;
+                INDEX ind=ix+(iy-1)*size[0]+(iz-1)*size[1]*size[0];
               
                 //go through all elements in one hash area
                 const Array <int> & area = *hashtable[ind-1];

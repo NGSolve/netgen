@@ -194,7 +194,7 @@ int STLEdgeDataList :: GetNConfCandEPP(int p) const
 }
 
 
-void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
+void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<IVec<2>>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -232,7 +232,7 @@ void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
               if (pnew == pstart) {closed = 1;}
               else
                 {
-                  line.Append(twoint(p,pnew));
+                  line.Append(IVec<2>(p,pnew));
                   p = pnew;
                   en = ennew;
                   found = 1;
@@ -421,7 +421,7 @@ int STLEdgeDataList :: GetNConfCandEPP(int p) const
 }
 
 
-void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
+void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<IVec<2>>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -459,7 +459,7 @@ void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
               if (pnew == pstart) {closed = 1;}
               else
                 {
-                  line.Append(twoint(p,pnew));
+                  line.Append(IVec<2>(p,pnew));
                   p = pnew;
                   en = ennew;
                   found = 1;
@@ -470,19 +470,19 @@ void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line)
   
 }
 
-int Exists(int p1, int p2, const Array<twoint>& line)
+int Exists(int p1, int p2, const Array<IVec<2>>& line)
 {
   int i;
   for (i = 1; i <= line.Size(); i++)
     {
-      if ( (line[i-1].i1 == p1 && line[i-1].i2 == p2) ||
-           (line[i-1].i1 == p2 && line[i-1].i2 == p1) )
+      if ( (line[i-1][0] == p1 && line[i-1][1] == p2) ||
+           (line[i-1][0] == p2 && line[i-1][1] == p1) )
         {return 1;}
     }
   return 0;
 }
 
-void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& line)
+void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<IVec<2>>& line)
 {
   int status = Get(GetEdgeNum(ep1,ep2)).GetStatus();
 
@@ -503,9 +503,9 @@ void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& li
           newend = line.Size();
           for (k = oldend; k <= line.Size(); k++)
             {
-              if (j == 1) p = line[k-1].i1;
-              if (j == 2) p = line[k-1].i2;
-              en = GetEdgeNum(line[k-1].i1, line[k-1].i2);
+              if (j == 1) p = line[k-1][0];
+              if (j == 2) p = line[k-1][1];
+              en = GetEdgeNum(line[k-1][0], line[k-1][1]);
 
               for (i = 1; i <= GetNEPP(p); i++)
                 {               
@@ -523,7 +523,7 @@ void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& li
                   if (pnew && !Exists(p,pnew,line))
                     {
                       changed = 1;
-                      line.Append(twoint(p,pnew));
+                      line.Append(IVec<2>(p,pnew));
                       p = pnew;
                       en = ennew;
                     }

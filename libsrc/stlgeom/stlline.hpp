@@ -120,7 +120,7 @@ public:
   void Write(ofstream& of) const;
   void Read(ifstream& ifs);
 
-  void BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line);
+  void BuildLineWithEdge(int ep1, int ep2, Array<IVec<2>>& line);
 
   int GetNEPPStat(int p, int status) const;
   int GetNConfCandEPP(int p) const;

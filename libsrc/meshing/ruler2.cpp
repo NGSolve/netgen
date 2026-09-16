@@ -461,9 +461,9 @@ namespace netgen
 
                         for (int i = 1; i <= rule->GetNOrientations(); i++)
                           {
-                            if (CW (lpoints[pmap[rule->GetOrientation(i).i1]],
-                                    lpoints[pmap[rule->GetOrientation(i).i2]],
-                                    lpoints[pmap[rule->GetOrientation(i).i3]]) )
+                            if (CW (lpoints[pmap[rule->GetOrientation(i)[0]]],
+                                    lpoints[pmap[rule->GetOrientation(i)[1]]],
+                                    lpoints[pmap[rule->GetOrientation(i)[2]]]) )
                               {
                                 ok = 0;
 #ifdef LOCDEBUG
@@ -585,9 +585,9 @@ namespace netgen
 
                         for (i = 1; i <= rule->GetNOrientations() && ok; i++)
                         {
-                        if (CW (lpoints[pmap[rule->GetOrientation(i).i1]],
-                        lpoints[pmap[rule->GetOrientation(i).i2]],
-                        lpoints[pmap[rule->GetOrientation(i).i3]]) )
+                        if (CW (lpoints[pmap[rule->GetOrientation(i)[0]]],
+                        lpoints[pmap[rule->GetOrientation(i)[1]]],
+                        lpoints[pmap[rule->GetOrientation(i)[2]]]) )
                         {
                         ok = 0;
                         if (loctestmode)

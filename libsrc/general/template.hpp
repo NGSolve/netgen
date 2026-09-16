@@ -58,34 +58,6 @@ typedef int ELIND;
 typedef int PIND;
 
 
-class twoint 
-{ 
-public: ///
-  int i1, i2; ///
-  twoint() {};
-  ///
-  twoint(int ii1, int ii2) {i1 = ii1; i2 = ii2;}
-  friend int operator== (const twoint& t1, const twoint& t2);
-  ///
-  void Swap() {int x = i1; i1 = i2; i2 = x;}
-  void Sort() {if (i1 > i2) {Swap();}}
-};
-
-inline int operator== (const twoint& t1, const twoint& t2) 
-{
-  return t1.i1 == t2.i1 && t1.i2 == t2.i2;
-}
-
-class threeint 
-{ 
-public: /// 
-  int i1, i2, i3; ///
-  threeint() {}; 
-  ///
-  threeint(int ii1, int ii2, int ii3) {i1 = ii1; i2 = ii2; i3 = ii3;}
-};
-
-class fourint { public: int i1, i2, i3, i4; fourint() {}; };
 
 
 

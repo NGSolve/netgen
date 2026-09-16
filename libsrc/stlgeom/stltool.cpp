@@ -611,8 +611,8 @@ STLChart :: STLChart(STLGeometry * ageometry, const STLParameters& astlparam)
 {
   // charttrigs = new Array<int> (0,0);
   // outertrigs = new Array<int> (0,0);
-  // ilimit = new Array<twoint> (0,0);
-  // olimit = new Array<twoint> (0,0);
+  // ilimit = new Array<IVec<2>> (0,0);
+  // olimit = new Array<IVec<2>> (0,0);
 
   geometry = ageometry;
 

@@ -304,7 +304,7 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
                                         Array<Point<3>> & points3d,
                                         Array<IVec<2>> & alines, double h)
 {
-  twoint seg, newseg;
+  IVec<2> seg, newseg;
   int zone;
   Point<2> p2;
 
@@ -317,7 +317,7 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
       IVec<2> i2;
       for (int j = 1; j <= 2; j++)
         {
-          int pi = (j == 1) ? seg.i1 : seg.i2;
+          int pi = (j == 1) ? seg[0] : seg[1];
           int lpi;
           if (ha_points[pi-1] == 0)
             {
@@ -342,15 +342,15 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
       seg = chart.GetOLimit(i);
       psize = points.Size();
 
-      newseg.i1 = psize+1;
-      newseg.i2 = psize+2;
+      newseg[0] = psize+1;
+      newseg[1] = psize+2;
 
-      ToPlane(GetPoint(seg.i1), 0, p2, h, zone, 0);
+      ToPlane(GetPoint(seg[0]), 0, p2, h, zone, 0);
       points.Append(p2);
-      points3d.Append (GetPoint(seg.i1));
-      ToPlane(GetPoint(seg.i2), 0, p2, h, zone, 0);
+      points3d.Append (GetPoint(seg[0]));
+      ToPlane(GetPoint(seg[1]), 0, p2, h, zone, 0);
       points.Append(p2);
-      points3d.Append (GetPoint(seg.i2));
+      points3d.Append (GetPoint(seg[1]));
       lines.Append (IVec<2> (points.Size()-1, points.Size()));
       */
     }
@@ -358,8 +358,8 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
   for (int i = 1; i <= chart.GetNOLimit(); i++)
     {
       seg = chart.GetOLimit(i);
-      ha_points[seg.i1-1] = 0;
-      ha_points[seg.i2-1] = 0;
+      ha_points[seg[0]-1] = 0;
+      ha_points[seg[1]-1] = 0;
     }
 }
 
@@ -1195,7 +1195,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
                       plimes1trigs.Append(t);
                       plimes1origin.Append(np2);                              
                     }
-                  chart.AddILimit(twoint(np1,np2));
+                  chart.AddILimit(IVec<2>(np1,np2));
 
                   for (int di = 1; di <= divisions; di++)
                     {
@@ -1249,7 +1249,7 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
                       plimes2.Append(p3p2);
                       plimes2trigs.Append(t);
                     }
-                  chart.AddOLimit(twoint(np1,np2));
+                  chart.AddOLimit(IVec<2>(np1,np2));
 
                   for (int di = 1; di <= divisions; di++)
                     {

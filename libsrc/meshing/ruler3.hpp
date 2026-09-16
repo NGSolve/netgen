@@ -7,7 +7,6 @@ namespace netgen
 /**
   3D element generation rule.
  */
-class fourpoints { public: RulePointIndex i1, i2, i3, i4; fourpoints() { } };
 
 class vnetrule
 {
@@ -21,7 +20,7 @@ private:
   /// old and new faces in reference numbering
   Array<RuleElement2d> faces;
   /// additional edges of rule
-  Array<twoint> edges;
+  Array<IVec<2>> edges;
 
   /// points of freezone in reference coordinates
   Array<Point<3>> freezone;
@@ -30,13 +29,13 @@ private:
   /// point index, if point equal to mappoint, otherwise 0
   Array<int> freezonepi;
   /// faces of each convex part of freezone
-  Array<Array<threeint>*> freefaces;
+  Array<Array<IVec<3>>*> freefaces;
   /// set of points of each convex part of freezone
   Array<Array<int>*> freesets;
   /// points of transformed freezone
   Array<Point<3>> transfreezone;
   /// edges of each convex part of freezone
-  Array<Array<twoint>*> freeedges;
+  Array<Array<IVec<2>>*> freeedges;
 
   /// face numbers to be deleted
   Array<int> delfaces;
@@ -62,7 +61,7 @@ private:
     */
   Array<DenseMatrix*> freefaceinequ;
   /// 
-  Array<fourpoints> orientations;
+  Array<IVec<4,RulePointIndex>> orientations;
   /**
     flags specified in rule-description file:
     t .. test rule
@@ -125,7 +124,7 @@ public:
   ///
   const RuleElement & GetElement (int i) const { return elements[i-1]; }
   ///
-  const twoint & GetEdge (int i) const { return edges[i-1]; }
+  const IVec<2> & GetEdge (int i) const { return edges[i-1]; }
   ///
   int GetDelFace (int i) const { return delfaces[i-1]; }
   ///
@@ -167,7 +166,7 @@ public:
   int ConvexFreeZone () const;
   
   /// if t1 and t2 are neighbourtriangles, NTP returns the opposite Point of t1 in t2
-  int NeighbourTrianglePoint (const threeint & t1, const threeint & t2) const;
+  int NeighbourTrianglePoint (const IVec<3> & t1, const IVec<3> & t2) const;
   ///
   const Point<3> & GetTransFreeZone (int i) { return transfreezone[i-1]; }
 
@@ -181,7 +180,7 @@ public:
   RulePointIndex GetPointNrMod (int fn, int endp) const
   { return faces[fn-1].PNumMod(endp); }
   ///
-  const fourpoints & GetOrientation (int i) { return orientations[i-1]; }
+  const IVec<4,RulePointIndex> & GetOrientation (int i) { return orientations[i-1]; }
 
   ///
   int TestFlag (char flag) const;

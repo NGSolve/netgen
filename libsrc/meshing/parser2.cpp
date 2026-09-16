@@ -356,10 +356,10 @@ void netrule :: LoadRule (istream & ist)
                   
                   // const Element2d & el = elements.Last();
                   /*
-                  orientations.Append (threeint(el.PNum(1), el.PNum(2), el.PNum(3)));
-                  orientations.Append (threeint(el.PNum(2), el.PNum(3), el.PNum(4)));
-                  orientations.Append (threeint(el.PNum(3), el.PNum(4), el.PNum(1)));
-                  orientations.Append (threeint(el.PNum(4), el.PNum(1), el.PNum(2)));
+                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(1), el.PNum(2), el.PNum(3)));
+                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(2), el.PNum(3), el.PNum(4)));
+                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(3), el.PNum(4), el.PNum(1)));
+                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(4), el.PNum(1), el.PNum(2)));
                   */
                 }
 
@@ -382,14 +382,14 @@ void netrule :: LoadRule (istream & ist)
 
           while (ch == '(')
             {
-              //        threeint a = threeint();
-              orientations.Append (threeint());
+              //        IVec<3,RulePointIndex> a = IVec<3,RulePointIndex>();
+              orientations.Append (IVec<3,RulePointIndex>());
 
-              ist >> orientations.Last().i1;
+              ist >> orientations.Last()[0];
               ist >> ch;    // ','
-              ist >> orientations.Last().i2;
+              ist >> orientations.Last()[1];
               ist >> ch;    // ','
-              ist >> orientations.Last().i3;
+              ist >> orientations.Last()[2];
               ist >> ch;    // ','
 
               ist >> ch;

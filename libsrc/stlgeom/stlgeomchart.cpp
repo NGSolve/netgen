@@ -683,7 +683,7 @@ int AddIfNotExists(Array<int>& list, int x)
 }
 */
 
-void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum)
+void STLGeometry :: GetInnerChartLimes(Array<IVec<2>>& limes, ChartId chartnum)
 {
   STLPointId np1, np2;
   
@@ -703,7 +703,7 @@ void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum)
               tt.GetNeighbourPoints(GetTriangle(nt),np1,np2);
               if (!IsEdge(np1,np2))
                 {
-                  limes.Append(twoint(np1,np2));
+                  limes.Append(IVec<2>(np1,np2));
                   /*
                   p3p1 = GetPoint(np1);
                   p3p2 = GetPoint(np2);
@@ -719,7 +719,7 @@ void STLGeometry :: GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum)
                       //plimes1trigs.Append(t);
                       //plimes1origin.Append(np2);                            
                     }
-                  //chart.AddILimit(twoint(np1,np2));
+                  //chart.AddILimit(IVec<2>(np1,np2));
                   
                   for (int di = 1; di <= divisions; di++)
                     {

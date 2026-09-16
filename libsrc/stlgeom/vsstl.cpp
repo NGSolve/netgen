@@ -379,13 +379,13 @@ void VisualSceneSTLMeshing :: DrawScene ()
             {
               //multiedge
               
-              const Array<twoint>& me = stlgeometry->SelectedMultiEdge();
+              const Array<IVec<2>>& me = stlgeometry->SelectedMultiEdge();
               if (stlgeometry->GetSelectTrig() > 0 && 
                   stlgeometry->GetSelectTrig() <= stlgeometry->GetNT() &&
                   me.Size())
                 {
 
-                  int en = stlgeometry->EdgeDataList().GetEdgeNum(me[0].i1,me[0].i2);
+                  int en = stlgeometry->EdgeDataList().GetEdgeNum(me[0][0],me[0][1]);
                   int status = stlgeometry->EdgeDataList().Get(en).GetStatus();
                   
                   switch (status)
@@ -407,8 +407,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
                   glBegin (GL_LINES);
                   for (j = 1; j <= me.Size(); j++)
                     { 
-                      Point<3> p1 = stlgeometry->GetPoint(me[j-1].i1);
-                      Point<3> p2 = stlgeometry->GetPoint(me[j-1].i2);
+                      Point<3> p1 = stlgeometry->GetPoint(me[j-1][0]);
+                      Point<3> p2 = stlgeometry->GetPoint(me[j-1][1]);
                       
                       glVertex3f(p1(0), p1(1), p1(2));
                       glVertex3f(p2(0), p2(1), p2(2));
@@ -644,12 +644,12 @@ void VisualSceneSTLMeshing :: DrawScene ()
               glMaterialfv (GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, mat_colorange);
               for (j = 1; j <= stlgeometry -> NOExternalEdges(); j++)
                 {
-                  twoint v = stlgeometry->GetExternalEdge(j);
-                  Point<3> p1 = stlgeometry->GetPoint(v.i1);
-                  Point<3> p2 = stlgeometry->GetPoint(v.i2);
+                  IVec<2> v = stlgeometry->GetExternalEdge(j);
+                  Point<3> p1 = stlgeometry->GetPoint(v[0]);
+                  Point<3> p2 = stlgeometry->GetPoint(v[1]);
                   
-                  Vec<3> n1 = stlgeometry->GetNormal(v.i1);
-                  Vec<3> n2 = stlgeometry->GetNormal(v.i2);
+                  Vec<3> n1 = stlgeometry->GetNormal(v[0]);
+                  Vec<3> n2 = stlgeometry->GetNormal(v[1]);
                   
                   glNormal3f(n1.X(), n1.Y(), n1.Z());
                   glVertex3f(p1.X(), p1.Y(), p1.Z());
@@ -1017,17 +1017,17 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
       if (stldoctor.selectmode == 1)
         {
-          stlgeometry->BuildSelectedEdge(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
+          stlgeometry->BuildSelectedEdge(IVec<2>(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
                                                 stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
         }
       if (stldoctor.selectmode == 3)
         {
-          stlgeometry->BuildSelectedMultiEdge(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
+          stlgeometry->BuildSelectedMultiEdge(IVec<2>(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
                                                      stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
         }
       else if (stldoctor.selectmode == 4)
         {
-          stlgeometry->BuildSelectedCluster(twoint(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
+          stlgeometry->BuildSelectedCluster(IVec<2>(stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig),
                                                    stlgeometry->GetTriangle(selecttrig).PNumMod(nodeofseltrig+1)));
         }
  

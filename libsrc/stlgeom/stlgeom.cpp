@@ -585,8 +585,8 @@ void STLGeometry :: STLDoctorConfirmEdge()
           int i;
           for (i = 1; i <= selectedmultiedge.Size(); i++)
             {
-              int ap1 = selectedmultiedge[i-1].i1;
-              int ap2 = selectedmultiedge[i-1].i2;
+              int ap1 = selectedmultiedge[i-1][0];
+              int ap2 = selectedmultiedge[i-1][1];
               edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus (ED_CONFIRMED);
             }
         }
@@ -609,8 +609,8 @@ void STLGeometry :: STLDoctorCandidateEdge()
           int i;
           for (i = 1; i <= selectedmultiedge.Size(); i++)
             {
-              int ap1 = selectedmultiedge[i-1].i1;
-              int ap2 = selectedmultiedge[i-1].i2;
+              int ap1 = selectedmultiedge[i-1][0];
+              int ap2 = selectedmultiedge[i-1][1];
               edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus (ED_CANDIDATE);
             }
         }
@@ -633,8 +633,8 @@ void STLGeometry :: STLDoctorExcludeEdge()
           int i;
           for (i = 1; i <= selectedmultiedge.Size(); i++)
             {
-              int ap1 = selectedmultiedge[i-1].i1;
-              int ap2 = selectedmultiedge[i-1].i2;
+              int ap1 = selectedmultiedge[i-1][0];
+              int ap2 = selectedmultiedge[i-1][1];
               edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus(ED_EXCLUDED);
             }
         }
@@ -657,8 +657,8 @@ void STLGeometry :: STLDoctorUndefinedEdge()
           int i;
           for (i = 1; i <= selectedmultiedge.Size(); i++)
             {
-              int ap1 = selectedmultiedge[i-1].i1;
-              int ap2 = selectedmultiedge[i-1].i2;
+              int ap1 = selectedmultiedge[i-1][0];
+              int ap2 = selectedmultiedge[i-1][1];
               edgedata->Elem(edgedata->GetEdgeNum(ap1,ap2)).SetStatus(ED_UNDEFINED);
             }
         }
@@ -698,7 +698,7 @@ void STLGeometry :: STLDoctorLongLinesToCandidates()
   StoreEdgeData();
 }
 
-twoint STLGeometry :: GetNearestSelectedDefinedEdge()
+IVec<2> STLGeometry :: GetNearestSelectedDefinedEdge()
 {
   Point<3> pestimate = Center(GetTriangle(GetSelectTrig()).center,
                              GetPoint(GetTriangle(GetSelectTrig()).PNum(GetNodeOfSelTrig())));
@@ -709,9 +709,9 @@ twoint STLGeometry :: GetNearestSelectedDefinedEdge()
   GetVicinity(GetSelectTrig(),4,vic);
   
 
-  twoint fedg;
-  fedg.i1 = 0;
-  fedg.i2 = 0;
+  IVec<2> fedg;
+  fedg[0] = 0;
+  fedg[1] = 0;
   double mindist = 1E50;
   double dist;
   Point<3> p;
@@ -729,8 +729,8 @@ twoint STLGeometry :: GetNearestSelectedDefinedEdge()
             if (dist < mindist)
               {
                 mindist = dist;
-                fedg.i1 = t.PNum(j);
-                fedg.i2 = t.PNumMod(j+1);
+                fedg[0] = t.PNum(j);
+                fedg[1] = t.PNumMod(j+1);
               }
           }
       }
@@ -738,7 +738,7 @@ twoint STLGeometry :: GetNearestSelectedDefinedEdge()
   return fedg;
 }
  
-void STLGeometry :: BuildSelectedMultiEdge(twoint ep)
+void STLGeometry :: BuildSelectedMultiEdge(IVec<2> ep)
 {
   if (edgedata->Size() == 0 || 
       !GetEPPSize()) 
@@ -747,29 +747,29 @@ void STLGeometry :: BuildSelectedMultiEdge(twoint ep)
     }
 
   selectedmultiedge.SetSize(0);
-  int tenum = GetTopEdgeNum (ep.i1, ep.i2);
+  int tenum = GetTopEdgeNum (ep[0], ep[1]);
 
   if (edgedata->Get(tenum).GetStatus() == ED_UNDEFINED)
     {
-      twoint epnew = GetNearestSelectedDefinedEdge();
-      if (epnew.i1) 
+      IVec<2> epnew = GetNearestSelectedDefinedEdge();
+      if (epnew[0]) 
         {
           ep = epnew;
-          tenum = GetTopEdgeNum (ep.i1, ep.i2);
+          tenum = GetTopEdgeNum (ep[0], ep[1]);
         }
     }
 
-  selectedmultiedge.Append(twoint(ep));
+  selectedmultiedge.Append(IVec<2>(ep));
 
   if (edgedata->Get(tenum).GetStatus() == ED_UNDEFINED)
     {
       return;
     }
 
-  edgedata->BuildLineWithEdge(ep.i1,ep.i2,selectedmultiedge);
+  edgedata->BuildLineWithEdge(ep[0],ep[1],selectedmultiedge);
 }
 
-void STLGeometry :: BuildSelectedEdge(twoint ep)
+void STLGeometry :: BuildSelectedEdge(IVec<2> ep)
 {
   if (edgedata->Size() == 0 || 
       !GetEPPSize()) 
@@ -779,10 +779,10 @@ void STLGeometry :: BuildSelectedEdge(twoint ep)
 
   selectedmultiedge.SetSize(0);
 
-  selectedmultiedge.Append(twoint(ep));
+  selectedmultiedge.Append(IVec<2>(ep));
 }
 
-void STLGeometry :: BuildSelectedCluster(twoint ep)
+void STLGeometry :: BuildSelectedCluster(IVec<2> ep)
 {
   if (edgedata->Size() == 0 || 
       !GetEPPSize()) 
@@ -792,26 +792,26 @@ void STLGeometry :: BuildSelectedCluster(twoint ep)
 
   selectedmultiedge.SetSize(0);
 
-  int tenum = GetTopEdgeNum (ep.i1, ep.i2);
+  int tenum = GetTopEdgeNum (ep[0], ep[1]);
 
   if (edgedata->Get(tenum).GetStatus() == ED_UNDEFINED)
     {
-      twoint epnew = GetNearestSelectedDefinedEdge();
-      if (epnew.i1) 
+      IVec<2> epnew = GetNearestSelectedDefinedEdge();
+      if (epnew[0]) 
         {
           ep = epnew;
-          tenum = GetTopEdgeNum (ep.i1, ep.i2);
+          tenum = GetTopEdgeNum (ep[0], ep[1]);
         }
     }
 
-  selectedmultiedge.Append(twoint(ep));
+  selectedmultiedge.Append(IVec<2>(ep));
 
   if (edgedata->Get(tenum).GetStatus() == ED_UNDEFINED)
     {
       return;
     }
 
-  edgedata->BuildClusterWithEdge(ep.i1,ep.i2,selectedmultiedge);
+  edgedata->BuildClusterWithEdge(ep[0],ep[1],selectedmultiedge);
 }
 
 void STLGeometry :: ImportEdges()
@@ -1136,9 +1136,9 @@ void STLGeometry :: SaveExternalEdges()
   int i;
   for (i = 1; i <= n; i++)
     {
-      twoint e = GetExternalEdge(i);
-      fout << GetPoint(e.i1)(0) << " " << GetPoint(e.i1)(1) << " " << GetPoint(e.i1)(2) << endl;
-      fout << GetPoint(e.i2)(0) << " " << GetPoint(e.i2)(1) << " " << GetPoint(e.i2)(2) << endl;
+      IVec<2> e = GetExternalEdge(i);
+      fout << GetPoint(e[0])(0) << " " << GetPoint(e[0])(1) << " " << GetPoint(e[0])(2) << endl;
+      fout << GetPoint(e[1])(0) << " " << GetPoint(e[1])(1) << " " << GetPoint(e[1])(2) << endl;
     }
 
 }
@@ -1413,7 +1413,7 @@ void STLGeometry :: BuildExternalEdgesFromEdges()
 
 void STLGeometry :: AddExternalEdge(int ap1, int ap2)
 {
-  externaledges.Append(twoint(ap1,ap2));
+  externaledges.Append(IVec<2>(ap1,ap2));
 }
 
 void STLGeometry :: DeleteExternalEdge(int ap1, int ap2)
@@ -1423,8 +1423,8 @@ void STLGeometry :: DeleteExternalEdge(int ap1, int ap2)
   int found = 0;
   for (i = 1; i <= NOExternalEdges(); i++)
     {
-      if ((GetExternalEdge(i).i1 == ap1 && GetExternalEdge(i).i2 == ap2) ||
-          (GetExternalEdge(i).i1 == ap2 && GetExternalEdge(i).i2 == ap1)) {found = 1;};
+      if ((GetExternalEdge(i)[0] == ap1 && GetExternalEdge(i)[1] == ap2) ||
+          (GetExternalEdge(i)[0] == ap2 && GetExternalEdge(i)[1] == ap1)) {found = 1;};
       if (found && i < NOExternalEdges())
         {
           externaledges[i-1] = externaledges[i];
@@ -1443,8 +1443,8 @@ int STLGeometry :: IsExternalEdge(int ap1, int ap2)
   int i;
   for (i = 1; i <= NOExternalEdges(); i++)
     {
-      if ((GetExternalEdge(i).i1 == ap1 && GetExternalEdge(i).i2 == ap2) ||
-          (GetExternalEdge(i).i1 == ap2 && GetExternalEdge(i).i2 == ap1)) {return 1;};
+      if ((GetExternalEdge(i)[0] == ap1 && GetExternalEdge(i)[1] == ap2) ||
+          (GetExternalEdge(i)[0] == ap2 && GetExternalEdge(i)[1] == ap1)) {return 1;};
     }
   return 0;
 }
@@ -2479,7 +2479,7 @@ void STLGeometry :: BuildEdges(const STLParameters& stlparam)
 void STLGeometry :: UseExternalEdges()
 {
   for (int i = 1; i <= NOExternalEdges(); i++)
-    AddEdge(GetExternalEdge(i).i1,GetExternalEdge(i).i2);
+    AddEdge(GetExternalEdge(i)[0],GetExternalEdge(i)[1]);
   //BuildEdgesPerPointy();
 }
 

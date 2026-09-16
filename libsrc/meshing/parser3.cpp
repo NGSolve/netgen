@@ -51,16 +51,16 @@ void LoadVMatrixLine (istream & ist, DenseMatrix & m, int line)
 
 
 
-int vnetrule :: NeighbourTrianglePoint (const threeint & t1, const threeint & t2) const
+int vnetrule :: NeighbourTrianglePoint (const IVec<3> & t1, const IVec<3> & t2) const
 {
   Array<int> tr1(3);
   Array<int> tr2(3);
-  tr1[0]=t1.i1;
-  tr1[1]=t1.i2;
-  tr1[2]=t1.i3;
-  tr2[0]=t2.i1;
-  tr2[1]=t2.i2;
-  tr2[2]=t2.i3;
+  tr1[0]=t1[0];
+  tr1[1]=t1[1];
+  tr1[2]=t1[2];
+  tr2[0]=t2[0];
+  tr2[1]=t2[1];
+  tr2[2]=t2[2];
 
 
   int ret=0;
@@ -86,7 +86,7 @@ void vnetrule :: LoadRule (istream & ist)
   Point<3> p;
   RuleElement2d face(3);
   int i, j, i1, i2, i3, fs, ii, ii1, ii2, ii3;
-  twoint edge;
+  IVec<2> edge;
   DenseMatrix tempoldutonewu(30, 20), 
     tempoldutofreezone(30, 20),
     tempoldutofreezonelimit(30, 20),
@@ -217,9 +217,9 @@ void vnetrule :: LoadRule (istream & ist)
 
           while (ch == '(')
             {
-              ist >> edge.i1;
+              ist >> edge[0];
               ist >> ch;    // ','
-              ist >> edge.i2;
+              ist >> edge[1];
               ist >> ch;    // ')'
 
               edges.Append (edge);
@@ -549,11 +549,11 @@ void vnetrule :: LoadRule (istream & ist)
                 }
 
               /*
-              orientations.Append (fourpoints());
-              orientations.Last().i1 = elements.Last().PNum(1);
-              orientations.Last().i2 = elements.Last().PNum(2);
-              orientations.Last().i3 = elements.Last().PNum(3);
-              orientations.Last().i4 = elements.Last().PNum(4);
+              orientations.Append (IVec<4,RulePointIndex>());
+              orientations.Last()[0] = elements.Last().PNum(1);
+              orientations.Last()[1] = elements.Last().PNum(2);
+              orientations.Last()[2] = elements.Last().PNum(3);
+              orientations.Last()[3] = elements.Last().PNum(4);
               */
 
               ist >> ch;
@@ -575,16 +575,16 @@ void vnetrule :: LoadRule (istream & ist)
 
           while (ch == '(')
             {
-              //        fourint a = fourint();
-              orientations.Append (fourpoints());
+              //        IVec<4> a = IVec<4>();
+              orientations.Append (IVec<4,RulePointIndex>());
 
-              ist >> orientations.Last().i1;
+              ist >> orientations.Last()[0];
               ist >> ch;    // ','
-              ist >> orientations.Last().i2;
+              ist >> orientations.Last()[1];
               ist >> ch;    // ','
-              ist >> orientations.Last().i3;
+              ist >> orientations.Last()[2];
               ist >> ch;    // ','
-              ist >> orientations.Last().i4;
+              ist >> orientations.Last()[3];
               ist >> ch;    // ','
 
 
@@ -682,25 +682,25 @@ void vnetrule :: LoadRule (istream & ist)
     {
       if (elements[i-1].GetNP() == 4)
         {
-          orientations.Append (fourpoints());
-          orientations.Last().i1 = elements[i-1].PNum(1);
-          orientations.Last().i2 = elements[i-1].PNum(2);
-          orientations.Last().i3 = elements[i-1].PNum(3);
-          orientations.Last().i4 = elements[i-1].PNum(4);
+          orientations.Append (IVec<4,RulePointIndex>());
+          orientations.Last()[0] = elements[i-1].PNum(1);
+          orientations.Last()[1] = elements[i-1].PNum(2);
+          orientations.Last()[2] = elements[i-1].PNum(3);
+          orientations.Last()[3] = elements[i-1].PNum(4);
         }
       if (elements[i-1].GetNP() == 5)
         {
-          orientations.Append (fourpoints());
-          orientations.Last().i1 = elements[i-1].PNum(1);
-          orientations.Last().i2 = elements[i-1].PNum(2);
-          orientations.Last().i3 = elements[i-1].PNum(3);
-          orientations.Last().i4 = elements[i-1].PNum(5);
+          orientations.Append (IVec<4,RulePointIndex>());
+          orientations.Last()[0] = elements[i-1].PNum(1);
+          orientations.Last()[1] = elements[i-1].PNum(2);
+          orientations.Last()[2] = elements[i-1].PNum(3);
+          orientations.Last()[3] = elements[i-1].PNum(5);
 
-          orientations.Append (fourpoints());
-          orientations.Last().i1 = elements[i-1].PNum(1);
-          orientations.Last().i2 = elements[i-1].PNum(3);
-          orientations.Last().i3 = elements[i-1].PNum(4);
-          orientations.Last().i4 = elements[i-1].PNum(5);
+          orientations.Append (IVec<4,RulePointIndex>());
+          orientations.Last()[0] = elements[i-1].PNum(1);
+          orientations.Last()[1] = elements[i-1].PNum(3);
+          orientations.Last()[2] = elements[i-1].PNum(4);
+          orientations.Last()[3] = elements[i-1].PNum(5);
         }
     }
 
@@ -738,10 +738,10 @@ void vnetrule :: LoadRule (istream & ist)
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      freefaces.Append (new Array<threeint>);
+      freefaces.Append (new Array<IVec<3>>);
 
       Array<int> & freeset = *freesets[fs-1];
-      Array<threeint> & freesetfaces = *freefaces.Last();
+      Array<IVec<3>> & freesetfaces = *freefaces.Last();
 
       for (ii1 = 1; ii1 <= freeset.Size(); ii1++)
         for (ii2 = 1; ii2 <= freeset.Size(); ii2++)
@@ -771,10 +771,10 @@ void vnetrule :: LoadRule (istream & ist)
 
                 if (ok)
                   {
-                    freesetfaces.Append (threeint());
-                    freesetfaces.Last().i1 = i1;
-                    freesetfaces.Last().i2 = i2;
-                    freesetfaces.Last().i3 = i3;
+                    freesetfaces.Append (IVec<3>());
+                    freesetfaces.Last()[0] = i1;
+                    freesetfaces.Last()[1] = i2;
+                    freesetfaces.Last()[2] = i3;
                   }
               }
     }
@@ -815,8 +815,8 @@ void vnetrule :: LoadRule (istream & ist)
 
         for (i = 1; i <= edges.Size(); i++)
           {
-            RulePointIndex pi1 = RuleP(edges[i-1].i1);
-            RulePointIndex pi2 = RuleP(edges[i-1].i2);
+            RulePointIndex pi1 = RuleP(edges[i-1][0]);
+            RulePointIndex pi2 = RuleP(edges[i-1][1]);
 
             if (pnearness[pi1] > pnearness[pi2]+1)
               {
@@ -875,29 +875,29 @@ void vnetrule :: LoadRule (istream & ist)
   //Table of edges:
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      freeedges.Append (new Array<twoint>);
+      freeedges.Append (new Array<IVec<2>>);
       
       //      Array<int> & freeset = *freesets.Get(fs);
-      Array<twoint> & freesetedges = *freeedges.Last();
-      Array<threeint> & freesetfaces = *freefaces[fs-1];
+      Array<IVec<2>> & freesetedges = *freeedges.Last();
+      Array<IVec<3>> & freesetfaces = *freefaces[fs-1];
       // int k,l;
       // INDEX ind;
       
       for (int k = 1; k <= freesetfaces.Size(); k++)
         {
-          // threeint tr = freesetfaces.Get(k);
+          // IVec<3> tr = freesetfaces.Get(k);
 
           for (int l = k+1; l <= freesetfaces.Size(); l++)
             {
               INDEX ind = NeighbourTrianglePoint(freesetfaces[k-1], freesetfaces[l-1]);
               if (!ind) continue;
 
-              IVec<3> f1(freesetfaces[k-1].i1, 
-                         freesetfaces[k-1].i2, 
-                         freesetfaces[k-1].i3);
-              IVec<3> f2(freesetfaces[l-1].i1, 
-                         freesetfaces[l-1].i2, 
-                         freesetfaces[l-1].i3);
+              IVec<3> f1(freesetfaces[k-1][0], 
+                         freesetfaces[k-1][1], 
+                         freesetfaces[k-1][2]);
+              IVec<3> f2(freesetfaces[l-1][0], 
+                         freesetfaces[l-1][1], 
+                         freesetfaces[l-1][2]);
               IVec<2,RulePointIndex> ed(RulePointIndex::INVALID, RulePointIndex::INVALID);
               for (int f11 = 1; f11 <= 3; f11++)
                 for (int f12 = 1; f12 <= 3; f12++)
@@ -936,12 +936,12 @@ void vnetrule :: LoadRule (istream & ist)
                 {
                   /*
                   (*testout) << "new edge from face " << k 
-                             << " = (" << freesetfaces.Get(k).i1 
-                             << ", " << freesetfaces.Get(k).i2 
-                             << ", " << freesetfaces.Get(k).i3
+                             << " = (" << freesetfaces.Get(k)[0] 
+                             << ", " << freesetfaces.Get(k)[1] 
+                             << ", " << freesetfaces.Get(k)[2]
                              << "), point " << ind << endl;
                              */
-                  freesetedges.Append(twoint(k,ind));
+                  freesetedges.Append(IVec<2>(k,ind));
                 }
             }   
         }

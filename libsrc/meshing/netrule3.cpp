@@ -43,7 +43,7 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
   int i, j;
   // double nx, ny, nz, v1x, v1y, v1z, v2x, v2y, v2z;
   double nl;
-  const threeint * ti;
+  const IVec<3> * ti;
   int fs;
 
   double lam1 = 1.0/(2 * tolclass - 1);
@@ -85,15 +85,15 @@ void vnetrule :: SetFreeZoneTransformation (const Vector & allp, int tolclass)
 
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
-      Array<threeint> & freesetfaces = *freefaces[fs-1];
+      Array<IVec<3>> & freesetfaces = *freefaces[fs-1];
       DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
       
       for (i = 1; i <= freesetfaces.Size(); i++)
         {
           ti = &freesetfaces[i-1];
-          const Point<3> & p1 = transfreezone[(ti->i1)-1];
-          const Point<3> & p2 = transfreezone[(ti->i2)-1];
-          const Point<3> & p3 = transfreezone[(ti->i3)-1];
+          const Point<3> & p1 = transfreezone[(*ti)[0]-1];
+          const Point<3> & p2 = transfreezone[(*ti)[1]-1];
+          const Point<3> & p3 = transfreezone[(*ti)[2]-1];
 
           Vec<3> v1(p1, p2);   
           Vec<3> v2(p1, p3);   
@@ -144,13 +144,13 @@ int vnetrule :: ConvexFreeZone () const
       const DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
 
       // const Array<int> & freeset = *freesets.Get(fs);
-      const Array<twoint> & freesetedges = *freeedges[fs-1];
-      // const Array<threeint> & freesetfaces = *freefaces.Get(fs);
+      const Array<IVec<2>> & freesetedges = *freeedges[fs-1];
+      // const Array<IVec<3>> & freesetfaces = *freefaces.Get(fs);
       
       for (i = 1; i <= freesetedges.Size(); i++)
         {
-          j = freesetedges[i-1].i1;    //triangle j with opposite point k
-          k = freesetedges[i-1].i2;
+          j = freesetedges[i-1][0];    //triangle j with opposite point k
+          k = freesetedges[i-1][1];
           
           if ( freesetinequ.Get(j, 1) * transfreezone[k-1](0) +
                freesetinequ.Get(j, 2) * transfreezone[k-1](1) +
@@ -176,7 +176,7 @@ int vnetrule :: IsInFreeZone (const Point<3> & p) const
   for (fs = 1; fs <= freesets.Size(); fs++)
     {
       inthis = 1;
-      Array<threeint> & freesetfaces = *freefaces[fs-1];
+      Array<IVec<3>> & freesetfaces = *freefaces[fs-1];
       DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
       
       for (i = 1; i <= freesetfaces.Size() && inthis; i++)
@@ -258,7 +258,7 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
 
   // MARK(triinfz);
   
-  Array<threeint> & freesetfaces = *freefaces[fs-1];
+  Array<IVec<3>> & freesetfaces = *freefaces[fs-1];
   DenseMatrix & freesetinequ = *freefaceinequ[fs-1];
   
 
@@ -316,9 +316,9 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
       //      (*testout) << "Test new: " << endl;
       for (i = 1; i <= freesetfaces.Size(); i++)
         {
-          if ( (freesetfaces[i-1].i1 == lpiu) || 
-               (freesetfaces[i-1].i2 == lpiu) ||
-               (freesetfaces[i-1].i3 == lpiu) )
+          if ( (freesetfaces[i-1][0] == lpiu) || 
+               (freesetfaces[i-1][1] == lpiu) ||
+               (freesetfaces[i-1][2] == lpiu) )
             {
               // freeface has point
 
@@ -446,18 +446,18 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
       
       for (i = 1; i <= freesetfaces.Size(); i++)
         {
-          if ( (freesetfaces[i-1].i1 == lpiu) || 
-               (freesetfaces[i-1].i2 == lpiu) ||
-               (freesetfaces[i-1].i3 == lpiu) )
+          if ( (freesetfaces[i-1][0] == lpiu) || 
+               (freesetfaces[i-1][1] == lpiu) ||
+               (freesetfaces[i-1][2] == lpiu) )
             {
               /*
               (*testout) << "v1, v2, now = " << v1 << ", " << v2 << endl;
 
               // freeface has point
               (*testout) << "freesetface: "
-                         << freesetfaces.Get(i).i1 << " "
-                         << freesetfaces.Get(i).i2 << " "
-                         << freesetfaces.Get(i).i3 << " ";
+                         << freesetfaces.Get(i)[0] << " "
+                         << freesetfaces.Get(i)[1] << " "
+                         << freesetfaces.Get(i)[2] << " ";
               */
 
               Vec<3> a (freesetinequ.Get(i, 1),
@@ -585,9 +585,9 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
       int ff1 = 0, ff2 = 0;
       for (i = 1; i <= freesetfaces.Size(); i++)
         {
-          if (lpi[freesetfaces[i-1].i1-1] + 
-              lpi[freesetfaces[i-1].i2-1] + 
-              lpi[freesetfaces[i-1].i3-1] == 2)
+          if (lpi[freesetfaces[i-1][0]-1] + 
+              lpi[freesetfaces[i-1][1]-1] + 
+              lpi[freesetfaces[i-1][2]-1] == 2)
             {
               ff2 = ff1;
               ff1 = i;
@@ -624,9 +624,9 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
       
       for (i = 1; i <= freesetfaces.Size(); i++)
         {
-          if (lpi[freesetfaces[i-1].i1-1] + 
-              lpi[freesetfaces[i-1].i2-1] + 
-              lpi[freesetfaces[i-1].i3-1] == 3)
+          if (lpi[freesetfaces[i-1][0]-1] + 
+              lpi[freesetfaces[i-1][1]-1] + 
+              lpi[freesetfaces[i-1][2]-1] == 3)
             {
               return 0;
             }
@@ -1063,9 +1063,9 @@ int vnetrule :: TestOk () const
 
     for (i = 1; i <= freefaces.Size(); i++)
     {
-    cntpused[freefaces[i].i1]++;
-    cntpused[freefaces[i].i2]++;
-    cntpused[freefaces[i].i3]++;
+    cntpused[freefaces[i][0]]++;
+    cntpused[freefaces[i][1]]++;
+    cntpused[freefaces[i][2]]++;
     }
 
     for (i = 1; i <= cntpused.Size(); i++)
@@ -1083,18 +1083,18 @@ int vnetrule :: TestOk () const
     {
     if (j == 1)
     {
-    pi1 = freefaces[i].i1;
-    pi2 = freefaces[i].i2;
+    pi1 = freefaces[i][0];
+    pi2 = freefaces[i][1];
     }
     if (j == 2)
     {
-    pi1 = freefaces[i].i2;
-    pi2 = freefaces[i].i3;
+    pi1 = freefaces[i][1];
+    pi2 = freefaces[i][2];
     }
     if (j == 3)
     {
-    pi1 = freefaces[i].i3;
-    pi2 = freefaces[i].i1;
+    pi1 = freefaces[i][2];
+    pi2 = freefaces[i][0];
     }
 
     found = 0;

@@ -61,7 +61,7 @@ private:
   Point<3> maxextreal = Point<3>(0,0,0);
   Vec<3> elemsize = Vec<3>(0,0,0);  //size of one Hash-Element
 
-  threeint size; // size of Hashtable in each direction
+  IVec<3> size; // size of Hashtable in each direction
   int reset;
   int hashcount;
 };

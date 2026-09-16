@@ -547,8 +547,8 @@ int Meshing3 :: ApplyRules
                       // check mapedges:
                       for (int i = 1; i <= rule->GetNEd(); i++)
                         {
-                          IVec<2> in2(pmap[RuleP(rule->GetEdge(i).i1)].Nr0(),
-                                      pmap[RuleP(rule->GetEdge(i).i2)].Nr0());
+                          IVec<2> in2(pmap[RuleP(rule->GetEdge(i)[0])].Nr0(),
+                                      pmap[RuleP(rule->GetEdge(i)[1])].Nr0());
                           in2.Sort();
                           if (!ledges.Used (in2)) ok = 0;
                         }
@@ -916,15 +916,15 @@ int Meshing3 :: ApplyRules
                           // check orientation
                           for (int i = 1; i <= rule->GetNO() && ok; i++)
                             {
-                              const fourpoints * fouri;
+                              const IVec<4,RulePointIndex> * fouri;
                               
                               fouri = &rule->GetOrientation(i);
-                              Vec<3> v1 (lpoints[pmap[fouri->i1]], 
-                                        lpoints[pmap[fouri->i2]]);
-                              Vec<3> v2 (lpoints[pmap[fouri->i1]], 
-                                        lpoints[pmap[fouri->i3]]);
-                              Vec<3> v3 (lpoints[pmap[fouri->i1]], 
-                                        lpoints[pmap[fouri->i4]]);
+                              Vec<3> v1 (lpoints[pmap[(*fouri)[0]]], 
+                                        lpoints[pmap[(*fouri)[1]]]);
+                              Vec<3> v2 (lpoints[pmap[(*fouri)[0]]], 
+                                        lpoints[pmap[(*fouri)[2]]]);
+                              Vec<3> v3 (lpoints[pmap[(*fouri)[0]]], 
+                                        lpoints[pmap[(*fouri)[3]]]);
 
                               Vec<3> n;
                               Cross (v1, v2, n);

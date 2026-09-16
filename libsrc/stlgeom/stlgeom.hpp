@@ -89,8 +89,8 @@ namespace netgen
     void Write(ofstream& of) const;
     void Read(ifstream& ifs);
 
-    void BuildLineWithEdge(int ep1, int ep2, Array<twoint>& line);
-    void BuildClusterWithEdge(int ep1, int ep2, Array<twoint>& line);
+    void BuildLineWithEdge(int ep1, int ep2, Array<IVec<2>>& line);
+    void BuildClusterWithEdge(int ep1, int ep2, Array<IVec<2>>& line);
 
     int GetNEPPStat(int p, int status) const;
     int GetNConfCandEPP(int p) const;
@@ -114,10 +114,10 @@ namespace netgen
 
     Array<Vec<3>> normals; //normals belong to points!
 
-    Array<twoint> externaledges;
+    Array<IVec<2>> externaledges;
 
     int undoexternaledges;
-    Array<twoint> storedexternaledges;
+    Array<IVec<2>> storedexternaledges;
 
     unique_ptr<STLEdgeDataList> edgedata;
     //  STLEdgeDataList edgedata_store;
@@ -133,7 +133,7 @@ namespace netgen
     Array<int> vicinity; //is one, if a triangle belongs to vicinity (eg. of selecttrig)
     Array<int> markedtrigs; //is one, if a triangle belongs to marked triangles (calcdirtystrigs)
     Array<Point<3>> markedsegs; //every pointpair is a segment!!!  
-    Array<twoint> selectedmultiedge;
+    Array<IVec<2>> selectedmultiedge;
 
 
     //spiralpoints:
@@ -226,13 +226,13 @@ namespace netgen
         void RestoreEdgeData();
 
     //void ClearSelectedMultiEdge() {selectedmultiedge.SetSize(0);}
-    //void AddSelectedMultiEdge(twoint ep) {selectedmultiedge.Append(ep);}
+    //void AddSelectedMultiEdge(IVec<2> ep) {selectedmultiedge.Append(ep);}
     //int SelectedMultiEdgeSize() {return selectedmultiedge.Size();}
-    const Array<twoint>& SelectedMultiEdge() {return selectedmultiedge;}
-    twoint GetNearestSelectedDefinedEdge();
-    void BuildSelectedMultiEdge(twoint ep);
-    void BuildSelectedEdge(twoint ep);
-    void BuildSelectedCluster(twoint ep);
+    const Array<IVec<2>>& SelectedMultiEdge() {return selectedmultiedge;}
+    IVec<2> GetNearestSelectedDefinedEdge();
+    void BuildSelectedMultiEdge(IVec<2> ep);
+    void BuildSelectedEdge(IVec<2> ep);
+    void BuildSelectedCluster(IVec<2> ep);
 
         void ImportEdges();
         void AddEdges(const Array<Point<3> >& eps);
@@ -277,7 +277,7 @@ namespace netgen
     void DeleteExternalEdge(int p1, int p2);
     int IsExternalEdge(int p1, int p2);
     int NOExternalEdges() const {return externaledges.Size();}
-    twoint GetExternalEdge(int i) const {return externaledges[i-1];}
+    IVec<2> GetExternalEdge(int i) const {return externaledges[i-1];}
 
         void DestroyDirtyTrigs();
         void CalcNormalsFromGeometry();
@@ -419,7 +419,7 @@ namespace netgen
     STLChart & GetChart(ChartId nr) { return *atlas[nr];};
     int AtlasMade() const;
   
-    void GetInnerChartLimes(Array<twoint>& limes, ChartId chartnum);
+    void GetInnerChartLimes(Array<IVec<2>>& limes, ChartId chartnum);
 
     //FOR MESHING
     int GetMeshChartNr () { return meshchart; }

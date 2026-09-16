@@ -11,13 +11,6 @@ private:
   typedef struct tf 
   { float f1, f2, f3; }   threefloat;
   
-  class threeint 
-  { 
-  public: RulePointIndex i1, i2, i3; 
-    threeint() { } 
-    threeint(RulePointIndex ai1, RulePointIndex ai2, RulePointIndex ai3) 
-    { i1 = ai1; i2 = ai2; i3 = ai3; } 
-  };
 
 
   ///
@@ -44,7 +37,7 @@ private:
   ///
   Array<threefloat> linetolerances;
   ///
-  Array<threeint> orientations;
+  Array<IVec<3,RulePointIndex>> orientations;
   ///
   DenseMatrix oldutonewu, oldutofreearea, oldutofreearealimit;
   ///
@@ -96,7 +89,7 @@ public:
   ///
   const RuleElement2d & GetElement (int i) const { return elements[i-1]; }
   ///
-  const threeint & GetOrientation (int i) const { return orientations[i-1]; }
+  const IVec<3,RulePointIndex> & GetOrientation (int i) const { return orientations[i-1]; }
   ///
   int GetDelLine (int i) const { return dellines[i-1]; }
   ///

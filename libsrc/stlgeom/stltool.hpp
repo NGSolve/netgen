@@ -73,8 +73,8 @@ private:
   Array<STLTrigId> outertrigs; // trigs which belong to other charts
   BoxTree<3,STLTrigId> * searchtree; // ADT containing outer trigs
 
-  Array<twoint> olimit; //outer limit of outer chart
-  Array<twoint> ilimit; //outer limit of inner chart
+  Array<IVec<2>> olimit; //outer limit of outer chart
+  Array<IVec<2>> ilimit; //outer limit of inner chart
   const STLParameters& stlparam;
 
 
@@ -103,8 +103,8 @@ public:
   void GetTrianglesInBox (const Point<3> & pmin,
                           const Point<3> & pmax,
                           Array<STLTrigId> & trias) const;
-  void AddOLimit(twoint l) {olimit.Append(l);}
-  void AddILimit(twoint l) {ilimit.Append(l);}
+  void AddOLimit(IVec<2> l) {olimit.Append(l);}
+  void AddILimit(IVec<2> l) {ilimit.Append(l);}
 
   void ClearOLimit() {olimit.SetSize(0);}
   void ClearILimit() {ilimit.SetSize(0);}
@@ -112,8 +112,8 @@ public:
   size_t GetNOLimit() const {return olimit.Size();}
   size_t GetNILimit() const {return ilimit.Size();}
 
-  twoint GetOLimit(int i) const {return olimit[i-1];}
-  twoint GetILimit(int i) const {return ilimit[i-1];}
+  IVec<2> GetOLimit(int i) const {return olimit[i-1];}
+  IVec<2> GetILimit(int i) const {return ilimit[i-1];}
 
   //move triangles trigs (local chart-trig numbers) to outer chart
   void MoveToOuterChart(const Array<int>& trigs);
