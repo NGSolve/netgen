@@ -222,7 +222,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
 
       if (!any_grows)
         {
-          PrintMessage(1, "BLayer: skip interpolating growth vectors at edge ", edgenr + 1);
+          PrintMessage(5, "BLayer: skip interpolating growth vectors at edge ", edgenr + 1);
           continue;
         }
 
