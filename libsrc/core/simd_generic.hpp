@@ -908,7 +908,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<T,N> IfPos (SIMD<T,N> a, SIMD<T,N> b, SIMD<T,N> c)
     {
       if constexpr(N==1) return a.Data()>0.0 ? b : c;
-      else               return { IfPos(a.Lo(), b.Lo(), c.Lo()), IfPos(a.Hi(), b.Hi(), c.Hi())};
+      else               return SIMD<T,N>(IfPos(a.Lo(), b.Lo(), c.Lo()), IfPos(a.Hi(), b.Hi(), c.Hi()));
 
     }
 
@@ -916,7 +916,7 @@ namespace ngcore
   NETGEN_INLINE SIMD<T,N> IfZero (SIMD<T,N> a, SIMD<T,N> b, SIMD<T,N> c)
     {
       if constexpr(N==1) return a.Data()==0.0 ? b : c;
-      else               return { IfZero(a.Lo(), b.Lo(), c.Lo()), IfZero(a.Hi(), b.Hi(), c.Hi())};
+      else               return SIMD<T,N>(IfZero(a.Lo(), b.Lo(), c.Lo()), IfZero(a.Hi(), b.Hi(), c.Hi()));
 
     }
 
