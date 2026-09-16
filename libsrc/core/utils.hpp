@@ -279,7 +279,18 @@ namespace ngcore
   struct my_is_integral : std::is_integral<T> {};
   template <int N>
   struct my_is_integral<IC<N>> : std::true_type {};
+
+  template <typename T>
+  NETGEN_INLINE T RemoveConst (const T & x) { return x; }
 }
+
+// stack array of run-time size: VLA where available, aligned alloca otherwise
+#define aligned_alloca(size,align)  (( (size_t)alloca(size+align-1)+align-1) & -align)
+#if defined(NETGEN_VLA) || defined(VLA)
+#define STACK_ARRAY(TYPE,VAR,SIZE) TYPE VAR[SIZE]
+#else
+#define STACK_ARRAY(TYPE,VAR,SIZE) TYPE * VAR = (TYPE*)aligned_alloca((SIZE)*sizeof(TYPE), alignof(TYPE))
+#endif
 
 namespace std
 {
