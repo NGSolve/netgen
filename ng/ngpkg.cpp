@@ -1238,9 +1238,7 @@ namespace netgen
     mparam.autozrefine = atoi (Tcl_GetVar (interp, "::options.autozrefine", 0));
 
     // extern int printmessage_importance;
-    extern int printdots;
     printmessage_importance = atoi (Tcl_GetVar (interp, "::options.printmsg", 0));
-    printdots = (printmessage_importance >= 4);
 
     mparam.parallel_meshing = atoi (Tcl_GetVar (interp, "::options.parallel_meshing", 0));
     mparam.nthreads = atoi (Tcl_GetVar (interp, "::options.nthreads", 0));

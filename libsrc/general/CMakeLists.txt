@@ -5,7 +5,7 @@ target_sources(nglib PRIVATE
 
 install(FILES
   myadt.hpp
-  netgenout.hpp ngpython.hpp
+  ngpython.hpp
   table.hpp template.hpp
   gzstream.h
   DESTINATION ${NG_INSTALL_DIR_INCLUDE}/general COMPONENT netgen_devel

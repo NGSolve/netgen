@@ -5,7 +5,6 @@ namespace netgen
 {
   int printwarnings = 1;
   int printerrors = 1;
-  int printdots = 1;
   int printfnstart = 0;
 
   //the dots for progression of program
