@@ -56,7 +56,8 @@ namespace ngcore
     constexpr IVec () = default;
     constexpr NETGEN_INLINE IVec (const IVec & i1) : i(i1.i) { }
 
-    constexpr NETGEN_INLINE IVec (T ai1) : i(ai1) { }
+    /// broadcast, explicit to avoid silent int -> IVec conversions
+    explicit constexpr NETGEN_INLINE IVec (T ai1) : i(ai1) { }
     
     template <class... T2,
               std::enable_if_t<N==1+sizeof...(T2),bool> = true>
