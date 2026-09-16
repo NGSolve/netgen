@@ -103,8 +103,6 @@ class NGGUI_API VisualSceneSolution : public VisualScene
   string unit = "";
   string title = "";
 
-  NgLock *lock;
-
   VisualSelect select;
 #ifdef PARALLELGL
   Array<int> par_linelists;

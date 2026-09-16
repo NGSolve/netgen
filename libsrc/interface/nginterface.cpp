@@ -995,7 +995,7 @@ void Ng_SetSurfaceRefinementFlag (int ei, int flag)
 
 void Ng_Refine (NG_REFINEMENT_TYPE reftype)
 {
-  NgLock meshlock (mesh->MajorMutex(), 1);
+  std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
 
   BisectionOptions biopt;
   biopt.usemarkedelements = 1;
@@ -1118,7 +1118,7 @@ void Ng_SecondOrder ()
 void Ng_HPRefinement (int levels, double parameter, bool setorders,
                       bool ref_level)
 {
-  NgLock meshlock (mesh->MajorMutex(), true);
+  std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
   Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
   HPRefinement (*mesh, &ref, SPLIT_HP, levels, parameter, setorders, ref_level);
   /*
@@ -1138,7 +1138,7 @@ void Ng_HPRefinement (int levels, double parameter, bool setorders,
 
 void Ng_HighOrder (int order, bool rational)
 {
-  NgLock meshlock (mesh->MajorMutex(), true);
+  std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
   /*
   mesh -> GetCurvedElements().BuildCurvedElements 
     (&const_cast<Refinement&> (ng_geometry -> GetRefinement()),

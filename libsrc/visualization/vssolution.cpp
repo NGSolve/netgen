@@ -87,7 +87,7 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-    NgLock meshlock1 (mesh->MajorMutex(), 1);
+    std::lock_guard<std::mutex> meshlock1 (mesh->MajorMutex());
     int funcnr = -1;
     for (int i = 0; i < soldata.Size(); i++)
       {
@@ -370,8 +370,8 @@ namespace netgen
     // static NgLock mem_lock(mem_mutex);
     // mem_lock.Lock();
 
-    NgLock meshlock1 (mesh->MajorMutex(), true);
-    NgLock meshlock (mesh->Mutex(), true);
+    std::lock_guard<std::mutex> meshlock1 (mesh->MajorMutex());
+    std::lock_guard<std::mutex> meshlock (mesh->Mutex());
 
     BuildScene();
 
@@ -2656,11 +2656,11 @@ namespace netgen
               mutex min_mutex;
               mutex max_mutex;
 
-              ParallelFor(0, ne, [&] (int first, int next)
+              ngcore::ParallelForRange(IntRange(ne), [&] (IntRange r)
                 {
                   double minv_local = numeric_limits<double>::max();
                   double maxv_local = -numeric_limits<double>::max();
-                  for (int i=first; i<next; i++)
+                  for (int i : r)
                     {
                       double val;
                       if(!VolumeElementActive(sol, *mesh, (*mesh)[ElementIndex::FromNr0(i)]))

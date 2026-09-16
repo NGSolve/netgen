@@ -1084,7 +1084,7 @@ namespace netgen
 
   void Ngx_Mesh :: Curve (int order)
   {
-    NgLock meshlock (mesh->MajorMutex(), true);
+    std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
     mesh->BuildCurvedElements(order);
   }
 
@@ -1117,7 +1117,7 @@ namespace netgen
                            void (*task_manager)(function<void(int,int)>),
                            NgTracer tracer)
   {
-    NgLock meshlock (mesh->MajorMutex(), 1);
+    std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
     
     BisectionOptions biopt;
     biopt.usemarkedelements = 1;
@@ -1172,14 +1172,14 @@ namespace netgen
   void Ngx_Mesh::HPRefinement (int levels, double parameter, bool setorders,
                                bool ref_level)
   {
-    NgLock meshlock (mesh->MajorMutex(), true);
+    std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
     Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
     ::netgen::HPRefinement (*mesh, &ref, SPLIT_HP, levels, parameter, setorders, ref_level);
   }
 
   void Ngx_Mesh::SplitAlfeld ()
   {
-    NgLock meshlock (mesh->MajorMutex(), true);
+    std::lock_guard<std::mutex> meshlock (mesh->MajorMutex());
     Refinement & ref = const_cast<Refinement&> (mesh->GetGeometry()->GetRefinement());
     ::netgen::HPRefinement (*mesh, &ref, SPLIT_ALFELD, 1, 1.0 / (mesh->GetDimension()+1), true, true);
   }

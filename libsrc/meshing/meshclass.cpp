@@ -353,8 +353,7 @@ namespace netgen
 
   void Mesh :: DeleteMesh()
   {
-    NgLock lock(mutex);
-    lock.Lock();
+    std::lock_guard<std::mutex> lock(mutex);
     points.SetSize(0);
     segments.SetSize(0);
     surfelements.SetSize(0);
@@ -383,8 +382,6 @@ namespace netgen
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
-
-    lock.UnLock();
 
     timestamp = NextTimeStamp();
   }
@@ -417,10 +414,8 @@ namespace netgen
     PointIndex pi = *points.Range().end();
     if (points.Size() == points.AllocSize())
       {
-        NgLock lock(mutex);
-        lock.Lock();
+        std::lock_guard<std::mutex> lock(mutex);
         points.Append ( MeshPoint (p, layer, type) ); 
-        lock.UnLock();
       }
     else
       {
@@ -435,8 +430,7 @@ namespace netgen
 
   SegmentIndex Mesh :: AddSegment (const Segment & s)
   { 
-    NgLock lock(mutex); 
-    lock.Lock();
+    std::lock_guard<std::mutex> lock(mutex);
     timestamp = NextTimeStamp();
 
     // int maxn = max2 (s[0], s[1]);
@@ -473,8 +467,6 @@ namespace netgen
 
     SegmentIndex si = IndexBASE<SegmentIndex>() + segments.Size();
     segments.Append (s); 
-
-    lock.UnLock();
     return si;
   }
 
@@ -505,10 +497,8 @@ namespace netgen
     SurfaceElementIndex si = IndexBASE<SurfaceElementIndex>() + surfelements.Size();
     if (surfelements.AllocSize() == surfelements.Size())
       {
-        NgLock lock(mutex);
-        lock.Lock();
+        std::lock_guard<std::mutex> lock(mutex);
         surfelements.Append (el);
-        lock.UnLock();
       }
     else
       {
@@ -599,10 +589,8 @@ namespace netgen
 
     if (volelements.Size() == volelements.AllocSize())
       {
-        NgLock lock(mutex);
-        lock.Lock();
+        std::lock_guard<std::mutex> lock(mutex);
         volelements.Append (el);
-        lock.UnLock();
       }
     else
       {
@@ -4386,8 +4374,7 @@ namespace netgen
   void Mesh :: Compress ()
   {
     static Timer t("Mesh::Compress"); RegionTimer reg(t);
-    NgLock lock(mutex);
-    lock.Lock();
+    std::lock_guard<std::mutex> lock(mutex);
     
     Array<PointIndex,PointIndex> op2np(GetNP());
     Array<bool, PointIndex> pused(GetNP());
@@ -4596,7 +4583,6 @@ namespace netgen
 
     //  FindOpenElements();
     timestamp = NextTimeStamp();
-    lock.UnLock();
   }
 
   void Mesh :: OrderElements()

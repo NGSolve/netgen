@@ -1629,7 +1629,7 @@ py::arg("point_tolerance") = -1.)
     .def ("SplitAlfeld", FunctionPointer
           ([](Mesh & self)
            {
-            NgLock meshlock (self.MajorMutex(), true);
+            std::lock_guard<std::mutex> meshlock (self.MajorMutex());
             Refinement & ref = const_cast<Refinement&> (self.GetGeometry()->GetRefinement());
             ::netgen::HPRefinement (self, &ref, SPLIT_ALFELD, 1, 0.5, true, true);
            }
@@ -1637,7 +1637,7 @@ py::arg("point_tolerance") = -1.)
     .def ("SplitPowellSabin", FunctionPointer
           ([](Mesh & self)
            {
-            NgLock meshlock (self.MajorMutex(), true);
+            std::lock_guard<std::mutex> meshlock (self.MajorMutex());
             Refinement & ref = const_cast<Refinement&> (self.GetGeometry()->GetRefinement());
             ::netgen::HPRefinement (self, &ref, SPLIT_POWELL, 1, 0.5, true, true);
            }

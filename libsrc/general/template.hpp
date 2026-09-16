@@ -85,20 +85,6 @@ public: ///
   threeint(int ii1, int ii2, int ii3) {i1 = ii1; i2 = ii2; i3 = ii3;}
 };
 
-///
-class twodouble
-{
-public:
-  ///
-  double d1, d2;
-  ///
-  twodouble() {d1 = 0; d2 = 0;};
-  ///
-  twodouble(double id1, double id2) {d1 = id1; d2 = id2;}
-  ///
-  void Swap() {double x = d1; d1 = d2; d2 = x;}
-};
-
 class fourint { public: int i1, i2, i3, i4; fourint() {}; };
 
 

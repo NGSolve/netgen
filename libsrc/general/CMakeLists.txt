@@ -9,7 +9,6 @@ target_sources(nglib PRIVATE
 )
 
 install(FILES
-  autodiff.hpp
   myadt.hpp
   mystring.hpp netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp

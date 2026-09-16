@@ -2251,10 +2251,10 @@ int STLGeometry :: CheckGeometryOverlapping()
   {
     mutex inters_mutex;
     
-    ParallelFor( 1, GetNT()+1, [&] (int first, int next)
+    ngcore::ParallelForRange( IntRange(1, GetNT()+1), [&] (IntRange r)
                  {
                    Array<int> inters;
-                   for (int i=first; i<next; i++) {
+                   for (int i : r) {
                      const STLTriangle & tri = GetTriangle(i);
         
                      Point<3> tpmin = tri.box.PMin();

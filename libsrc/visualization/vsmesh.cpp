@@ -55,8 +55,6 @@ namespace netgen
         return;
       }
 
-    lock = NULL;
-
     static Timer timer("VSMesh::DrawScene");
 
     RegionTimer reg (timer);
@@ -257,12 +255,7 @@ namespace netgen
     DrawNetgenLogo ();
 
 
-    if (lock)
-      {
-        lock -> UnLock();
-        delete lock;
-        lock = NULL;
-      }
+    lock = {};
     
     glFinish();
 
@@ -331,8 +324,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     static Timer timer("VSMesh::BuildScene");
@@ -843,12 +835,7 @@ namespace netgen
         glEndList ();
       }
 
-    if (lock)
-      {
-        lock -> UnLock();
-        delete lock;
-        lock = NULL;
-      }
+    lock = {};
 
     vstimestamp = meshtimestamp;
 
@@ -1199,8 +1186,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     timestamp = NextTimeStamp();
@@ -1314,12 +1300,7 @@ namespace netgen
     if (id > 0)
       MyMPI_Send (list, 0, MPI_TAG_VIS);
 #endif
-    if(lock)
-      {
-        lock->UnLock();
-        delete lock;
-        lock = NULL;
-      }
+    lock = {};
 
   }
 
@@ -1367,8 +1348,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     linetimestamp = NextTimeStamp();
@@ -1614,8 +1594,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     if (edgetimestamp > max(mesh->GetTimeStamp(), subdivision_timestamp) && vispar.drawtetsdomain == 0
@@ -1799,8 +1778,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     tettimestamp = NextTimeStamp();
@@ -2128,8 +2106,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     prismtimestamp = NextTimeStamp();
@@ -2464,8 +2441,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     hextimestamp = NextTimeStamp();
@@ -2794,8 +2770,7 @@ namespace netgen
 
     if (!lock)
       {
-        lock = new NgLock (mesh->Mutex());
-        lock -> Lock();
+        lock = std::unique_lock<std::mutex> (mesh->Mutex());
       }
 
     pyramidtimestamp = NextTimeStamp();
@@ -3450,12 +3425,7 @@ namespace netgen
         user_me_handler -> DblClick (selelement-1, p[0], p[1], p[2]);
     }
 
-    if(lock)
-      {
-        lock->UnLock();
-        delete lock;
-        lock = NULL;
-      }
+    lock = {};
   }
 
 

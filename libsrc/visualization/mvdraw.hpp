@@ -216,7 +216,7 @@ namespace netgen
 
     MouseEventHandler * user_me_handler;
 
-    NgLock *lock;
+    std::unique_lock<std::mutex> lock;
 
     //  int selface, selelement;
     //  int selpoint, selpoint2, locpi;

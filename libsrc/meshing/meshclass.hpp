@@ -181,9 +181,9 @@ namespace netgen
     int majortimestamp;
 
     /// mesh access semaphores.
-    NgMutex mutex;
+    std::mutex mutex;
     /// mesh access semaphores.
-    NgMutex majormutex;
+    std::mutex majormutex;
 
     SymbolTable< Array<int>* > userdata_int;
     SymbolTable< Array<double>* > userdata_double;
@@ -945,8 +945,8 @@ namespace netgen
 
 
     /// return mutex
-    NgMutex & Mutex ()   { return mutex; }
-    NgMutex & MajorMutex ()   { return majormutex; }
+    std::mutex & Mutex ()   { return mutex; }
+    std::mutex & MajorMutex ()   { return majormutex; }
 
 
     DLL_HEADER shared_ptr<NetgenGeometry> GetGeometry() const;
