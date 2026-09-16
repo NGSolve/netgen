@@ -3448,21 +3448,21 @@ namespace netgen
                   oldid = mids[i-1];
                   
                   Array<PointIndices<2>> edges;
-                  edges.Append( {
+                  edges.Append( PointIndices<2> (
                       oldid.pnums[oldid.markededge],
-                      oldid.pnums[(oldid.markededge+1)%oldid.np] } );
-                  edges.Append( {
+                      oldid.pnums[(oldid.markededge+1)%oldid.np] ) );
+                  edges.Append( PointIndices<2> (
                       oldid.pnums[oldid.markededge + oldid.np],
-                      oldid.pnums[(oldid.markededge+1)%oldid.np + oldid.np] } );
+                      oldid.pnums[(oldid.markededge+1)%oldid.np + oldid.np] ) );
                   
                   if(oldid.np == 4)
                     {
-                      edges.Append( {
+                      edges.Append( PointIndices<2> (
                           oldid.pnums[(oldid.markededge+2)%oldid.np],
-                          oldid.pnums[(oldid.markededge+3)%oldid.np]} );
-                      edges.Append( {
+                          oldid.pnums[(oldid.markededge+3)%oldid.np]) );
+                      edges.Append( PointIndices<2> (
                           oldid.pnums[(oldid.markededge+2)%oldid.np + oldid.np],
-                          oldid.pnums[(oldid.markededge+3)%oldid.np + oldid.np] } );
+                          oldid.pnums[(oldid.markededge+3)%oldid.np + oldid.np] ) );
                     }
                   for (int j = 0; j < edges.Size(); j++)
                     {
