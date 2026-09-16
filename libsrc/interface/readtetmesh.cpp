@@ -289,9 +289,9 @@ namespace netgen
                         segnum_ng[j] = -segnum-1;
                         
                       if(neg[j])
-                        tris.Last()->PNum(j+1) = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[1]-1;
+                        (*tris.Last())[j] = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[1]-1;
                       else
-                        tris.Last()->PNum(j+1) = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[0]-1;
+                        (*tris.Last())[j] = IndexBASE<PointIndex>()+(*segmentdata[segnum_ng[j]])[0]-1;
 
                       tris.Last()->GeomInfoPi(j+1).trignum = trinum;
                     }
@@ -358,9 +358,9 @@ namespace netgen
                     
                   for(int j=0; j<3; j++)
                     {
-                      nodes1[j] = tris[tri1-1]->PNum(j+1);
+                      nodes1[j] = (*tris[tri1-1])[j];
                       sortval1[j] = Vec<3>(mesh[nodes1[j]])*randomvec;
-                      nodes2[j] = tris[tri2-1]->PNum(j+1);
+                      nodes2[j] = (*tris[tri2-1])[j];
                       sortval2[j] = Vec<3>(mesh[nodes2[j]])*randomvec;
                     }
 
@@ -472,9 +472,9 @@ namespace netgen
               for(int i = 0; i < nelts; i++)   // counter over the file records, not an element index
                 {
                   in >> dummyint;
-                  for(int j=1; j<=4; j++)
-                    in >> el.PNum(j);
-                  swap(el.PNum(1),el.PNum(2));
+                  for (int j = 0; j < 4; j++)
+                    in >> el[j];
+                  swap(el[0],el[1]);
                     
                   el.SetIndex(eldom[i]);
                   mesh.AddVolumeElement(el);

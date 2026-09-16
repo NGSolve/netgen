@@ -124,11 +124,11 @@ void WriteNeutralFormat (const Mesh & mesh,
             el.Invert();
           outfile.width(4);
           outfile << el.GetIndex() << "  ";
-          for (int j = 1; j <= el.GetNP(); j++)
+          for (int j = 0; j < el.GetNP(); j++)
             {
               outfile << " ";
               outfile.width(8);
-              outfile << el.PNum(j);
+              outfile << el[j];
             }
           outfile << "\n";
         }
@@ -146,11 +146,11 @@ void WriteNeutralFormat (const Mesh & mesh,
         el.Invert();
       outfile.width(4);
       outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "    ";
-      for (int j = 1; j <= el.GetNP(); j++)
+      for (int j = 0; j < el.GetNP(); j++)
         {
           outfile << " ";
           outfile.width(8);
-          outfile << el.PNum(j);
+          outfile << el[j];
         }
       outfile << "\n";
     }
@@ -260,9 +260,9 @@ void WriteSTLFormat (const Mesh & mesh,
   for (auto & sel : mesh.SurfaceElements())
     {
       *outfile << "facet normal ";
-      const Point<3>& p1 = mesh.Point(sel.PNum(1));
-      const Point<3>& p2 = mesh.Point(sel.PNum(2));
-      const Point<3>& p3 = mesh.Point(sel.PNum(3));
+      const Point<3>& p1 = mesh.Point(sel[0]);
+      const Point<3>& p2 = mesh.Point(sel[1]);
+      const Point<3>& p3 = mesh.Point(sel[2]);
 
       Vec<3> normal = Cross(p2-p1,p3-p1);
       if (normal.Length() != 0)
@@ -354,9 +354,9 @@ void WriteSTLExtFormat (const Mesh & mesh,
           for (int i = 0; i < faceSei.Size(); i++)
           {
                   *outfile << "facet normal ";
-                  const Point<3>& p1 = mesh.Point(mesh[faceSei[i]].PNum(1));
-                  const Point<3>& p2 = mesh.Point(mesh[faceSei[i]].PNum(2));
-                  const Point<3>& p3 = mesh.Point(mesh[faceSei[i]].PNum(3));
+                  const Point<3>& p1 = mesh.Point(mesh[faceSei[i]][0]);
+                  const Point<3>& p2 = mesh.Point(mesh[faceSei[i]][1]);
+                  const Point<3>& p3 = mesh.Point(mesh[faceSei[i]][2]);
 
                   Vec<3> normal = Cross(p2-p1,p3-p1);
                   if (normal.Length() != 0)
@@ -519,7 +519,7 @@ void WriteVRMLFormat (const Mesh & mesh,
               outfile << el.PNum(j)-1;
             }
           outfile.width(8);
-          outfile << el.PNum(1)-1;
+          outfile << el[0]-1;
           outfile << " -1 \n";
         }
 
@@ -752,11 +752,11 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile << el.GetIndex() << "  ";
       outfile.width(8);
       outfile << el.GetNP();
-      for (int j = 1; j <= el.GetNP(); j++)
+      for (int j = 0; j < el.GetNP(); j++)
         {
           outfile << " ";
           outfile.width(8);
-          outfile << el.PNum(j);
+          outfile << el[j];
         }
 
       // top->GetElementEdges(i,edges);
@@ -764,22 +764,22 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile << endl << "      ";
       outfile.width(8);
       outfile << eledges.Size();
-      for (int j=1; j <= eledges.Size(); j++)
+      for (int j = 0; j < eledges.Size(); j++)
         {
           outfile << " ";
           outfile.width(8);
-          outfile << eledges[j-1]+1;
+          outfile << eledges[j]+1;
         }
       outfile << "\n";
 
       // orientation:
       top->GetElementEdgeOrientations(i,edges);
       outfile << "              ";
-      for (int j=1; j <= edges.Size(); j++)
+      for (int j = 0; j < edges.Size(); j++)
         {
           outfile << " ";
           outfile.width(8);
-          outfile << edges[j-1];
+          outfile << edges[j];
         }
       outfile << "\n";
     }
@@ -796,11 +796,11 @@ void WriteEdgeElementFormat (const Mesh & mesh,
       outfile << mesh.GetFaceDescriptor (el.GetIndex()).BCProperty() << "  ";
       outfile.width(8);
       outfile << el.GetNP();
-      for (int j = 1; j <= el.GetNP(); j++)
+      for (int j = 0; j < el.GetNP(); j++)
         {
           outfile << " ";
           outfile.width(8);
-          outfile << el.PNum(j);
+          outfile << el[j];
         }
 
       // top->GetSurfaceElementEdges(i,edges);

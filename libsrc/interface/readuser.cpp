@@ -41,7 +41,7 @@ namespace netgen
       
         in >> reco;
         in >> np;
-        for (int i = 1; i <= np; i++)
+        for (int i = 0; i < np; i++)
           {
             Point<3> p;
             in >> p(0) >> p(1) >> p(2);
@@ -53,7 +53,7 @@ namespace netgen
       
         in >> nbe;
         //      int invert = globflags.GetDefineFlag ("invertsurfacemesh");
-        for (int i = 1; i <= nbe; i++)
+        for (int i = 0; i < nbe; i++)
           {
             Element2d el;
             el.SetIndex(1);
@@ -72,7 +72,7 @@ namespace netgen
               }
             /*
               if (invert)
-              swap (el.PNum(2), el.PNum(3));
+              swap (el[1], el[2]);
             */
           
             mesh.AddSurfaceElement (el);
@@ -632,9 +632,9 @@ namespace netgen
               el.SetIndex(3);
 
 
-            el.PNum(1) = PointIndex::FromNr1(p1);
-            el.PNum(2) = PointIndex::FromNr1(p2);
-            el.PNum(3) = PointIndex::FromNr1(p3);
+            el[0] = PointIndex::FromNr1(p1);
+            el[1] = PointIndex::FromNr1(p2);
+            el[2] = PointIndex::FromNr1(p3);
             mesh.AddSurfaceElement (el);
           }
 
@@ -659,9 +659,9 @@ namespace netgen
             p3 += np;
             Element2d el(TRIG);
             el.SetIndex(5);
-            el.PNum(1) = PointIndex::FromNr1(p1);
-            el.PNum(2) = PointIndex::FromNr1(p2);
-            el.PNum(3) = PointIndex::FromNr1(p3);
+            el[0] = PointIndex::FromNr1(p1);
+            el[1] = PointIndex::FromNr1(p2);
+            el[2] = PointIndex::FromNr1(p3);
             mesh.AddSurfaceElement (el);
           }
       }

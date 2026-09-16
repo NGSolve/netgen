@@ -590,11 +590,11 @@ namespace netgen
 
     grad = 0;
 
-    for (int j = 1; j <= ld.locelements.Size(); j++)
+    for (int j = 0; j < ld.locelements.Size(); j++)
       {
-        lpi = ld.locrots[j-1];
+        lpi = ld.locrots[j];
         const Element2d & bel = 
-          mesh[ld.locelements[j-1]];
+          mesh[ld.locelements[j]];
       
         gpi = bel.PNum(lpi);
 
@@ -823,18 +823,18 @@ namespace netgen
               
       locelements.Append (sei);
               
-      if (bel->PNum(1) == i)
+      if ((*bel)[0] == i)
       locrots.Append (1);
-      else if (bel->PNum(2) == i)
+      else if ((*bel)[1] == i)
       locrots.Append (2);
       else
       locrots.Append (3);
 
       if (uselocalh)
       {
-      Point<3> pmid = Center (mesh.Point(bel->PNum(1)),
-      mesh.Point(bel->PNum(2)),
-      mesh.Point(bel->PNum(3)));
+      Point<3> pmid = Center (mesh.Point((*bel)[0]),
+      mesh.Point((*bel)[1]),
+      mesh.Point((*bel)[2]));
       lochs.Append (mesh.GetH(pmid));
       }
       }

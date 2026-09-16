@@ -28,7 +28,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
       const Element2d & sel = othermesh[i];
       sel.GetBox(othermesh.Points(), otherbounds[i.Nr1()-1]);
 
-      double loch = othermesh.GetH (othermesh.Point (sel.PNum(1)));
+      double loch = othermesh.GetH (othermesh.Point (sel[0]));
       otherbounds[i.Nr1()-1].Increase(loch);
       if (loch > maxh) maxh = loch;
     }

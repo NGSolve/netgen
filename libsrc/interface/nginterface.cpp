@@ -330,7 +330,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
       int i;
       const Element & el = (*mesh)[ElementIndex::FromNr1(ei)];
       for (i = 0; i < el.GetNP(); i++)
-        epi[i] = PointNr(el.PNum(i+1));
+        epi[i] = PointNr(el[i]);
       
       if (np)
         *np = el.GetNP();
@@ -345,9 +345,9 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
           const int * map = NULL;
           int deg1 = 0, deg2 = 0, deg3 = 0;
           //int deg = 0;
-          if (el.PNum(1) == el.PNum(4)) { map = map1; deg1 = 1; }
-          if (el.PNum(2) == el.PNum(5)) { map = map2; deg2 = 1; }
-          if (el.PNum(3) == el.PNum(6)) { map = map3; deg3 = 1; }
+          if (el[0] == el[3]) { map = map1; deg1 = 1; }
+          if (el[1] == el[4]) { map = map2; deg2 = 1; }
+          if (el[2] == el[5]) { map = map3; deg3 = 1; }
           
           switch (deg1+deg2+deg3)
             {
@@ -366,9 +366,9 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
               {
                 if (printmessage_importance>0)
                   cout << "degenerated prism found, deg = 2" << endl;
-                if (!deg1) epi[3] = PointNr(el.PNum(4));
-                if (!deg2) epi[3] = PointNr(el.PNum(5));
-                if (!deg3) epi[3] = PointNr(el.PNum(6));
+                if (!deg1) epi[3] = PointNr(el[3]);
+                if (!deg2) epi[3] = PointNr(el[4]);
+                if (!deg3) epi[3] = PointNr(el[5]);
                 
                 if (np) *np = 4;
                 return NG_TET;
@@ -386,7 +386,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
     {
       const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
-        epi[i] = PointNr(el.PNum(i+1));      
+        epi[i] = PointNr(el[i]);      
 
       if (np) *np = el.GetNP();
       return NG_ELEMENT_TYPE (el.GetType());

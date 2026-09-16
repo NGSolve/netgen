@@ -340,8 +340,8 @@ void STLEdgeDataList :: Write(ofstream& of) const
       //if (edge.GetStatus() == ED_CONFIRMED)
       of << edge.GetStatus() << " ";
 
-      const Point<3> & p1 = geom.GetPoint (edge.PNum(1));
-      const Point<3> & p2 = geom.GetPoint (edge.PNum(2));
+      const Point<3> & p1 = geom.GetPoint (edge[0]);
+      const Point<3> & p2 = geom.GetPoint (edge[1]);
       of << p1(0) << " "
          << p1(1) << " "
          << p1(2) << " "
@@ -448,10 +448,10 @@ void STLEdgeDataList :: BuildLineWithEdge(int ep1, int ep2, Array<IVec<2>>& line
                   const STLTopEdge & e = Get(GetEdgePP(p,i));
                   if (GetEdgePP(p,i) != en && e.GetStatus() == status) 
                     {
-                      if (e.PNum(1) == p) 
-                        {pnew = e.PNum(2);}
+                      if (e[0] == p) 
+                        {pnew = e[1];}
                       else 
-                        {pnew = e.PNum(1);}
+                        {pnew = e[0];}
 
                       ennew = GetEdgePP(p,i);
                     }
@@ -513,10 +513,10 @@ void STLEdgeDataList :: BuildClusterWithEdge(int ep1, int ep2, Array<IVec<2>>& l
                   const STLTopEdge & e = Get(GetEdgePP(p,i));
                   if (GetEdgePP(p,i) != en && e.GetStatus() == status) 
                     {
-                      if (e.PNum(1) == p) 
-                        {pnew = e.PNum(2);}
+                      if (e[0] == p) 
+                        {pnew = e[1];}
                       else 
-                        {pnew = e.PNum(1);}
+                        {pnew = e[0];}
 
                       ennew = GetEdgePP(p,i);
                     }

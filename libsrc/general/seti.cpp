@@ -63,8 +63,8 @@ namespace netgen
 
   void IndexSet :: Clear ()
   {
-    for (int i = 1; i <= set.Size(); i++)
-      flags.Clear (set[i-1]);
+    for (int i = 0; i < set.Size(); i++)
+      flags.Clear (set[i]);
     set.SetSize (0);
   }
 }

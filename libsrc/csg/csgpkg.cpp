@@ -226,8 +226,8 @@ namespace netgen
     geometry->GetSolid (name)->GetPrimitive()->GetPrimitiveData (classname, coeffs);
 
     ostringstream vst;
-    for (int i = 1; i <= coeffs.Size(); i++)
-      vst << coeffs[i-1] << " ";
+    for (int i = 0; i < coeffs.Size(); i++)
+      vst << coeffs[i] << " ";
 
     cout << "GetPrimitiveData, name = " << name
          << ", classnamevar = " << classnamevar
@@ -511,8 +511,8 @@ namespace netgen
       }
 
     // double globh = mparam.maxh;
-    for (int i = 1; i <= geometry->singedges.Size(); i++)
-      geometry->singedges[i-1]->SetMeshSize (*mesh, 1e99 /* globh*/);
+    for (int i = 0; i < geometry->singedges.Size(); i++)
+      geometry->singedges[i]->SetMeshSize (*mesh, 1e99 /* globh*/);
     return TCL_OK;
   }
 
@@ -529,8 +529,8 @@ namespace netgen
       }
 
     // double globh = mparam.maxh;
-    for (int i = 1; i <= geometry->singpoints.Size(); i++)
-      geometry->singpoints[i-1]->SetMeshSize (*mesh, 1e99 /* globh */ );
+    for (int i = 0; i < geometry->singpoints.Size(); i++)
+      geometry->singpoints[i]->SetMeshSize (*mesh, 1e99 /* globh */ );
     return TCL_OK;
   }
 

@@ -335,31 +335,31 @@ void netrule :: LoadRule (istream & ist)
             {
               elements.Append (RuleElement2d(3));
 
-              ist >> elements.Last().PNum(1);
+              ist >> elements.Last()[0];
               ist >> ch;    // ','
           
               if (ch == COMMASIGN)
                 {
-                  ist >> elements.Last().PNum(2);
+                  ist >> elements.Last()[1];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
-                  ist >> elements.Last().PNum(3);
+                  ist >> elements.Last()[2];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
                   elements.Last().SetNP (4);
-                  ist >> elements.Last().PNum(4);
+                  ist >> elements.Last()[3];
                   ist >> ch;    // ','
                   
                   // const Element2d & el = elements.Last();
                   /*
-                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(1), el.PNum(2), el.PNum(3)));
-                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(2), el.PNum(3), el.PNum(4)));
-                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(3), el.PNum(4), el.PNum(1)));
-                  orientations.Append (IVec<3,RulePointIndex>(el.PNum(4), el.PNum(1), el.PNum(2)));
+                  orientations.Append (IVec<3,RulePointIndex>(el[0], el[1], el[2]));
+                  orientations.Append (IVec<3,RulePointIndex>(el[1], el[2], el[3]));
+                  orientations.Append (IVec<3,RulePointIndex>(el[2], el[3], el[0]));
+                  orientations.Append (IVec<3,RulePointIndex>(el[3], el[0], el[1]));
                   */
                 }
 

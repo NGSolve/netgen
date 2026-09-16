@@ -1064,8 +1064,8 @@ namespace netgen
   ostream & operator<<(ostream  & s, const Element2d & el)
   {
     s << "np = " << el.GetNP();
-    for (int j = 1; j <= el.GetNP(); j++)
-      s << " " << el.PNum(j);
+    for (int j = 0; j < el.GetNP(); j++)
+      s << " " << el[j];
     return s;
   }
 
@@ -1276,8 +1276,8 @@ namespace netgen
   void Element :: Print (ostream & ost) const
   {
     ost << np << " Points: ";
-    for (int i = 1; i <= np; i++)
-      ost << pnum[i-1] << " " << endl;
+    for (int i = 0; i < np; i++)
+      ost << pnum[i] << " " << endl;
   }
 
   void Element :: GetBox (const T_POINTS & points, Box3d & box) const
@@ -1407,11 +1407,11 @@ namespace netgen
     Array<ElementTet> loctets;
     GetTetsLocal (loctets);
     locels.SetSize (loctets.Size());
-    for (int i = 1; i <= loctets.Size(); i++)
+    for (int i = 0; i < loctets.Size(); i++)
       {
-        locels[i-1] = Element(4);
+        locels[i] = Element(4);
         for (int j = 1; j <= 4; j++)
-          locels[i-1].PNum(j) = PNum ( loctets[i-1].PNum(j) );
+          locels[i].PNum(j) = PNum ( loctets[i].PNum(j) );
       }
   }
 
@@ -1866,7 +1866,7 @@ namespace netgen
       {
         surftrigs[j] = ElementFace(3);
         for (int k = 0; k < 3; k++)
-          surftrigs[j].PNum(k+1) = ElementVertexIndex::FromNr1(fp[j][k]);
+          surftrigs[j][k] = ElementVertexIndex::FromNr1(fp[j][k]);
       }
   }
 

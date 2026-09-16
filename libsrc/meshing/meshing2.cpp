@@ -393,10 +393,10 @@ namespace netgen
           
           
           if (sel.GetNP() == 4)
-            trigarea += Cross (Vec<3> (mesh.Point (sel.PNum(1)),
-                                      mesh.Point (sel.PNum(3))),
-                               Vec<3> (mesh.Point (sel.PNum(1)),
-                                      mesh.Point (sel.PNum(4)))).Length() / 2;;
+            trigarea += Cross (Vec<3> (mesh.Point (sel[0]),
+                                      mesh.Point (sel[2])),
+                               Vec<3> (mesh.Point (sel[0]),
+                                      mesh.Point (sel[3]))).Length() / 2;;
           meshedarea += trigarea;
         }
       */
@@ -472,11 +472,11 @@ namespace netgen
         if (trials % 1000 == 0)
           {
             (*testout) << "\n";
-            for (int i = 1; i <= canuse.Size(); i++)
+            for (int i = 0; i < canuse.Size(); i++)
               {
-                (*testout) << foundmap[i-1] << "/" 
-                           << canuse[i-1] << "/"
-                           << ruleused[i-1] << " map/can/use rule " << rules[i-1]->Name() << "\n";
+                (*testout) << foundmap[i] << "/" 
+                           << canuse[i] << "/"
+                           << ruleused[i] << " map/can/use rule " << rules[i]->Name() << "\n";
               }
             (*testout) << "\n";
           }
@@ -816,19 +816,19 @@ namespace netgen
 
             if (mp.checkchartboundary)
               {
-                for (int i = 1; i <= chartboundpoints.Size(); i++)
+                for (int i = 0; i < chartboundpoints.Size(); i++)
                   {
                     pindex.Append(Front2PointIndex::INVALID);
-                    plainpoints.Append (chartboundpoints[i-1]);
-                    locpoints.Append (chartboundpoints3d[i-1]);
+                    plainpoints.Append (chartboundpoints[i]);
+                    locpoints.Append (chartboundpoints3d[i]);
                     legalpoints.Append (0);
                   }
               
 
-                for (int i = 1; i <= chartboundlines.Size(); i++)
+                for (int i = 0; i < chartboundlines.Size(); i++)
                   {
-                    IVec<2,LocalPointIndex> line (LocalPointIndex::FromNr0(chartboundlines[i-1][0]+oldnp-1),
-                                                  LocalPointIndex::FromNr0(chartboundlines[i-1][1]+oldnp-1));
+                    IVec<2,LocalPointIndex> line (LocalPointIndex::FromNr0(chartboundlines[i][0]+oldnp-1),
+                                                  LocalPointIndex::FromNr0(chartboundlines[i][1]+oldnp-1));
                     loclines.Append (line);
                     //        (*testout) << "line: " << line[0] << "-" << line[1] << endl;
                   }
@@ -868,9 +868,9 @@ namespace netgen
         RegionTimer reg3 (timer3);
 
 
-        for (int i = 1; i <= locelements.Size() && found; i++)
+        for (int i = 0; i < locelements.Size() && found; i++)
           {
-            const MiniElement2d & el = locelements[i-1];
+            const MiniElement2d & el = locelements[i];
 
             for (int j = 1; j <= el.GetNP(); j++)
               // if (el.PNum(j) <= oldnp && pindex[el.PNum(j)] == -1)
@@ -924,7 +924,7 @@ namespace netgen
           {
           for (i = 1; i <= locelements.Size(); i++)
           {
-          Point<3> pmin = locpoints[locelements.Get(i).PNum(1)];
+          Point<3> pmin = locpoints[locelements.Get(i)[0]];
           Point<3> pmax = pmin;
           for (j = 2; j <= 3; j++)
           {
@@ -964,14 +964,14 @@ namespace netgen
                   newedgemaxh = eh;
               }
 
-            for (int i = 1; i <= locelements.Size(); i++)
+            for (int i = 0; i < locelements.Size(); i++)
               {
-                Point<3> pmin = locpoints[locelements[i-1].PNum(1)];
+                Point<3> pmin = locpoints[locelements[i][0]];
                 Point<3> pmax = pmin;
-                for (int j = 2; j <= locelements[i-1].GetNP(); j++)
+                for (int j = 2; j <= locelements[i].GetNP(); j++)
                   {
                     const Point<3> & hp = 
-                      locpoints[locelements[i-1].PNum(j)];
+                      locpoints[locelements[i].PNum(j)];
                     SetToMin (pmin, hp);
                     SetToMax (pmax, hp);
                   }
@@ -980,9 +980,9 @@ namespace netgen
                   minh = eh;
               }
 
-            for (int i = 1; i <= locelements.Size(); i++)
-              for (int j = 1; j <= locelements[i-1].GetNP(); j++)
-                if (Dist2 (locpoints[locelements[i-1].PNum(j)], pmid) > hinner*hinner)
+            for (int i = 0; i < locelements.Size(); i++)
+              for (int j = 1; j <= locelements[i].GetNP(); j++)
+                if (Dist2 (locpoints[locelements[i].PNum(j)], pmid) > hinner*hinner)
                   found = 0;
 
             //    cout << "violate = " << newedgemaxh / minh << endl;
@@ -1045,9 +1045,9 @@ namespace netgen
 
 
             for (int i = 1; i <= locelements.Size(); i++)
-              for (int j = 1; j <= locelements[i-1].GetNP(); j++)
+              for (int j = 0; j < locelements[i-1].GetNP(); j++)
                 {
-                  LocalPointIndex pi = locelements[i-1].PNum(j);
+                  LocalPointIndex pi = locelements[i-1][j];
                   if (pi <= oldnp+IndexBASE<LocalPointIndex>()-1)
                     {
                     
@@ -1088,9 +1088,9 @@ namespace netgen
             Point<3> hullmax(-1e10, -1e10, -1e10);
           
             for (int i = 1; i <= locelements.Size(); i++)
-              for (int j = 1; j <= locelements[i-1].GetNP(); j++)
+              for (int j = 0; j < locelements[i-1].GetNP(); j++)
                 {
-                  const Point<3> & p = locpoints[locelements[i-1].PNum(j)];
+                  const Point<3> & p = locpoints[locelements[i-1][j]];
                   SetToMin (hullmin, p);
                   SetToMax (hullmax, p);
                 }
@@ -1103,14 +1103,14 @@ namespace netgen
             for (auto i : locpoints.Range().Modify(oldnp, 0))
               critpoints.Append (locpoints[i]);
 
-            for (int i = 1; i <= locelements.Size(); i++)
+            for (int i = 0; i < locelements.Size(); i++)
               {
-                const MiniElement2d & tri = locelements[i-1];
+                const MiniElement2d & tri = locelements[i];
                 if (tri.GetNP() == 3)
                   {
-                    const Point<3> & tp1 = locpoints[tri.PNum(1)];
-                    const Point<3> & tp2 = locpoints[tri.PNum(2)];
-                    const Point<3> & tp3 = locpoints[tri.PNum(3)];
+                    const Point<3> & tp1 = locpoints[tri[0]];
+                    const Point<3> & tp2 = locpoints[tri[1]];
+                    const Point<3> & tp3 = locpoints[tri[2]];
                   
                     Vec<3> tv1 (tp1, tp2);
                     Vec<3> tv2 (tp1, tp3);
@@ -1125,10 +1125,10 @@ namespace netgen
                   }
                 else if (tri.GetNP() == 4)
                   {
-                    const Point<3> & tp1 = locpoints[tri.PNum(1)];
-                    const Point<3> & tp2 = locpoints[tri.PNum(2)];
-                    const Point<3> & tp3 = locpoints[tri.PNum(3)];
-                    const Point<3> & tp4 = locpoints[tri.PNum(4)];
+                    const Point<3> & tp1 = locpoints[tri[0]];
+                    const Point<3> & tp2 = locpoints[tri[1]];
+                    const Point<3> & tp3 = locpoints[tri[2]];
+                    const Point<3> & tp4 = locpoints[tri[3]];
                   
                     double l1, l2;
                     for (l1 = 0.1; l1 <= 0.9; l1 += 0.1)
@@ -1175,9 +1175,9 @@ namespace netgen
             */
 
 
-            for (int i = 1; i <= critpoints.Size(); i++)
+            for (int i = 0; i < critpoints.Size(); i++)
               {
-                const Point<3> & p = critpoints[i-1];
+                const Point<3> & p = critpoints[i];
                  
                 for (int jj = 0; jj < intersecttrias.Size(); jj++)
                   {
@@ -1196,15 +1196,15 @@ namespace netgen
 
                         if (jl == 1)
                           {
-                            tp1 = mesh.Point(el.PNum(1));
-                            tp2 = mesh.Point(el.PNum(2));
-                            tp3 = mesh.Point(el.PNum(3));
+                            tp1 = mesh.Point(el[0]);
+                            tp2 = mesh.Point(el[1]);
+                            tp3 = mesh.Point(el[2]);
                           }
                         else
                           {
-                            tp1 = mesh.Point(el.PNum(1));
-                            tp2 = mesh.Point(el.PNum(3));
-                            tp3 = mesh.Point(el.PNum(4));
+                            tp1 = mesh.Point(el[0]);
+                            tp2 = mesh.Point(el[2]);
+                            tp3 = mesh.Point(el[3]);
                           }
 
                         int onchart = 0;
@@ -1368,9 +1368,9 @@ namespace netgen
                                     upgeominfo[loclines[i-1][0]],
                                     upgeominfo[loclines[i-1][1]]);
               }
-            for (int i = 1; i <= locelements.Size(); i++)
+            for (int i = 0; i < locelements.Size(); i++)
               {
-                const MiniElement2d & locel = locelements[i-1];
+                const MiniElement2d & locel = locelements[i];
                 Element2d mtri(locel.GetNP());
                 mtri.SetIndex (facenr);
 
@@ -1396,16 +1396,16 @@ namespace netgen
                 box.Add (mesh[mtri[2]]);
                 surfeltree.Insert (box, IndexBASE<SurfaceElementIndex>()+(mesh.GetNSE()-1));
 
-                const Point<3> & sep1 = mesh.Point (mtri.PNum(1));
-                const Point<3> & sep2 = mesh.Point (mtri.PNum(2));
-                const Point<3> & sep3 = mesh.Point (mtri.PNum(3));
+                const Point<3> & sep1 = mesh.Point (mtri[0]);
+                const Point<3> & sep2 = mesh.Point (mtri[1]);
+                const Point<3> & sep3 = mesh.Point (mtri[2]);
 
                 double trigarea = Cross (Vec<3> (sep1, sep2), 
                                          Vec<3> (sep1, sep3)).Length() / 2;
 
                 if (mtri.GetNP() == 4)
                   {
-                    const Point<3> & sep4 = mesh.Point (mtri.PNum(4));
+                    const Point<3> & sep4 = mesh.Point (mtri[3]);
                     trigarea += Cross (Vec<3> (sep1, sep3), 
                                        Vec<3> (sep1, sep4)).Length() / 2;
                   }
@@ -1453,8 +1453,8 @@ namespace netgen
                 //            if (trials > 100)         return;
               }
               
-            for (int i = 1; i <= dellines.Size(); i++)
-              adfront.DeleteLine (lindex[dellines[i-1]-1]);
+            for (int i = 0; i < dellines.Size(); i++)
+              adfront.DeleteLine (lindex[dellines[i]-1]);
               
             //    rname = rules.Get(rulenr)->Name();
 #ifdef MYGRAPH
@@ -1505,22 +1505,22 @@ namespace netgen
 
                 UpdateVisSurfaceMeshData(oldnl);
 
-                for (int i = 1; i <= loclines.Size(); i++)
+                for (int i = 0; i < loclines.Size(); i++)
                   {
                     (*testout) << "line ";
                     for (int j = 1; j <= 2; j++)
                       {
                         PointIndex hi = PointIndex::INVALID;
-                        if (pindex.Range().Contains(loclines[i-1][j-1]))
-                          hi = adfront.GetGlobalIndex (pindex[loclines[i-1][j-1]]);
+                        if (pindex.Range().Contains(loclines[i][j-1]))
+                          hi = adfront.GetGlobalIndex (pindex[loclines[i][j-1]]);
 
                         (*testout) << hi << " ";
                       }
                     (*testout) << " : " 
-                               << plainpoints[loclines[i-1][0]] << " - "
-                               << plainpoints[loclines[i-1][1]] << " 3d: "
-                               << locpoints[loclines[i-1][0]] << " - "
-                               << locpoints[loclines[i-1][1]] 
+                               << plainpoints[loclines[i][0]] << " - "
+                               << plainpoints[loclines[i][1]] << " 3d: "
+                               << locpoints[loclines[i][0]] << " - "
+                               << locpoints[loclines[i][1]] 
                                << endl;
                   }
 
@@ -1556,22 +1556,22 @@ namespace netgen
                   }
                 */
 
-                for (int i = 1; i <= loclines.Size(); i++)
+                for (int i = 0; i < loclines.Size(); i++)
                   {
                     (*testout) << "line ";
                     for (int j = 1; j <= 2; j++)
                       {
                         PointIndex hi = PointIndex::INVALID;
-                        if (pindex.Range().Contains(loclines[i-1][j-1]))
-                          hi = adfront.GetGlobalIndex (pindex[loclines[i-1][j-1]]);
+                        if (pindex.Range().Contains(loclines[i][j-1]))
+                          hi = adfront.GetGlobalIndex (pindex[loclines[i][j-1]]);
 
                         (*testout) << hi << " ";
                       }
                     (*testout) << " : " 
-                               << plainpoints[loclines[i-1][0]] << " - "
-                               << plainpoints[loclines[i-1][1]] << " 3d: "
-                               << locpoints[loclines[i-1][0]] << " - "
-                               << locpoints[loclines[i-1][1]] 
+                               << plainpoints[loclines[i][0]] << " - "
+                               << plainpoints[loclines[i][1]] << " 3d: "
+                               << locpoints[loclines[i][0]] << " - "
+                               << locpoints[loclines[i][1]] 
                                << endl;
                   }
 

@@ -61,9 +61,9 @@ namespace netgen
          auto face_colour = mesh.GetFaceDescriptor(i).SurfColour();
          bool col_found = false;
          
-         for(int j = 1; j <= face_colours.Size(); j++)
+         for (int j = 0; j < face_colours.Size(); j++)
          {
-            if(ColourMatch(face_colours[j-1],face_colour))
+            if(ColourMatch(face_colours[j],face_colour))
             {
                col_found = true;
                break;
@@ -76,9 +76,9 @@ namespace netgen
       if(printmessage_importance >= 3)
       {
          cout << endl << "-------- Face Colours --------" << endl;
-         for( int i = 1; i <= face_colours.Size(); i++)
+         for (int i = 0; i < face_colours.Size(); i++)
          {
-            cout << face_colours[i-1] << endl;
+            cout << face_colours[i] << endl;
          }
          cout << "------------------------------" << endl;
       }
@@ -187,9 +187,9 @@ namespace netgen
       // list will be given boundary condition numbers higher than this 
       // number
       int max_bcnum = DEFAULT_BCNUM;
-      for(int i = 1; i <= bc_num.Size();i++)
+      for (int i = 0; i < bc_num.Size(); i++)
       {
-         if(bc_num[i-1] > max_bcnum) max_bcnum = bc_num[i-1];
+         if(bc_num[i] > max_bcnum) max_bcnum = bc_num[i];
       }
 
       PrintMessage(3, "Highest boundary number in list = ",max_bcnum);
@@ -219,12 +219,12 @@ namespace netgen
             // does not exist in the list of colours in the profile file
             bool bc_assigned = false;
 
-            for(int col_index = 1; col_index <= bc_colours.Size(); col_index++)
+            for (int col_index = 0; col_index < bc_colours.Size(); col_index++)
             {
-               if((ColourMatch(face_colour,bc_colours[col_index-1])) && (!bc_assigned))
+               if((ColourMatch(face_colour,bc_colours[col_index])) && (!bc_assigned))
                {
-                  mesh.GetFaceDescriptor(face_index).SetBCProperty(bc_num[col_index-1]);
-                  bc_used[col_index-1] = true;
+                  mesh.GetFaceDescriptor(face_index).SetBCProperty(bc_num[col_index]);
+                  bc_used[col_index] = true;
                   bc_assigned = true;
                   break;
                }
@@ -292,11 +292,11 @@ namespace netgen
 
       // Delete the default colour from the list since it will be accounted 
       // for automatically
-      for(int i = 1; i <= all_colours.Size(); i++)
+      for (int i = 0; i < all_colours.Size(); i++)
       {
-        if(ColourMatch(all_colours[i-1],Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B,1.0)))
+        if(ColourMatch(all_colours[i],Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B,1.0)))
          {
-            all_colours.DeleteElement(i-1);
+            all_colours.DeleteElement(i);
             break;
          }
       }

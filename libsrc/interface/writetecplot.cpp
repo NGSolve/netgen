@@ -103,9 +103,9 @@ void WriteTecPlotFormat (const Mesh & mesh,
           const Element2d & el = mesh[i];
           if (j ==  mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr())
             /* FlaechenKnoten (3) */
-            outfile << sn[el.PNum(1)] << " " 
-                    << sn[el.PNum(2)] << " "
-                    << sn[el.PNum(3)] << endl;
+            outfile << sn[el[0]] << " " 
+                    << sn[el[1]] << " "
+                    << sn[el[2]] << endl;
               
           /// Hier soll noch die Ausgabe der Nummer des angrenzenden
               /// Vol.elements erfolgen !

@@ -47,15 +47,15 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
 
   geom.meshpoints.SetSize(0); //testing
   geom.meshlines.SetSize(0);  //testing
-  for (int i = 1; i <= meshpoints.Size(); i++)
+  for (int i = 0; i < meshpoints.Size(); i++)
     {
-      geom.meshpoints.Append(meshpoints[i-1]); //testing
-      mesh.AddPoint(meshpoints[i-1]);
+      geom.meshpoints.Append(meshpoints[i]); //testing
+      mesh.AddPoint(meshpoints[i]);
     }
   //(++++++++++++++testing
-  for (int i = 1; i <= geom.GetNLines(); i++)
+  for (int i = 0; i < geom.GetNLines(); i++)
     {
-      geom.meshlines.Append(meshlines[i-1]);
+      geom.meshlines.Append(meshlines[i]);
     }
   //++++++++++++++testing)
 
@@ -477,9 +477,9 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
           for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
             if (mesh[sei].BadElement())
               {
-                for (int j = 1; j <= 3; j++)
+                for (int j = 0; j < 3; j++)
                   {
-                    refpts.Append (mesh.Point (mesh[sei].PNum(j)));
+                    refpts.Append (mesh.Point (mesh[sei][j]));
                     refh.Append (mesh.GetH (refpts.Last()) / 2);
                   }
                 mesh.Delete(sei);
@@ -490,24 +490,24 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
             {
               const Element2d & el = mesh[sei];
               if (el.IsDeleted()) continue;
-              if (!el.PNum(1).IsValid()) continue;
+              if (!el[0].IsValid()) continue;
 
-              Vec<3> n = Cross (Vec<3> (mesh.Point(el.PNum(1)), 
-                                      mesh.Point(el.PNum(2))),
-                               Vec<3> (mesh.Point(el.PNum(1)), 
-                                      mesh.Point(el.PNum(3))));
+              Vec<3> n = Cross (Vec<3> (mesh.Point(el[0]), 
+                                      mesh.Point(el[1])),
+                               Vec<3> (mesh.Point(el[0]), 
+                                      mesh.Point(el[2])));
               Vec<3> ng = geom.GetTriangle(el.GeomInfoPi(1).trignum).Normal();
               if (n * ng < 0)
                 {
-                  refpts.Append (mesh.Point (mesh[sei].PNum(1)));
+                  refpts.Append (mesh.Point (mesh[sei][0]));
                   refh.Append (mesh.GetH (refpts.Last()) / 2);
                   mesh.Delete(sei);
                 }
             }
           // end comments
 
-          for (int i = 1; i <= refpts.Size(); i++)
-            mesh.RestrictLocalH (refpts[i-1], refh[i-1]);
+          for (int i = 0; i < refpts.Size(); i++)
+            mesh.RestrictLocalH (refpts[i], refh[i]);
 
           mesh.RemoveOneLayerSurfaceElements();
           // Open edge-segments will be refined !
@@ -845,15 +845,15 @@ void STLSurfaceOptimization (STLGeometry & geom,
   PrintMessage(5,"optimize string = ", mparam.optimize2d, " elsizew = ", mparam.elsizeweight);
 
   for (int i = 1; i <= mparam.optsteps2d; i++)
-    for (size_t j = 1; j <= mparam.optimize2d.length(); j++)
+    for (size_t j = 0; j < mparam.optimize2d.length(); j++)
       {
         if (multithread.terminate)
           break;
 
-        //(*testout) << "optimize, before, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
+        //(*testout) << "optimize, before, step = " << meshparam.optimize2d[j] << mesh.Point (3679) << endl;
 
         mesh.CalcSurfacesOfNode();
-        switch (mparam.optimize2d[j-1])
+        switch (mparam.optimize2d[j])
           {
           case 's': 
             {
@@ -892,7 +892,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
         //       }
         //     optmesh.SplitImprove();
         //   }
-        //(*testout) << "optimize, after, step = " << meshparam.optimize2d[j-1] << mesh.Point (3679) << endl;
+        //(*testout) << "optimize, after, step = " << meshparam.optimize2d[j] << mesh.Point (3679) << endl;
       }
 
   geom.surfaceoptimized = 1;

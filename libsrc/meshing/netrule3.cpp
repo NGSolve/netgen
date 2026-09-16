@@ -18,22 +18,22 @@ vnetrule :: ~vnetrule ()
 {
   // if (strlen(name)) 
   delete [] name;
-  for (int i = 1; i <= freefaces.Size(); i++)
-    delete freefaces[i-1];
-  for (int i = 1; i <= freesets.Size(); i++)
-    delete freesets[i-1];
-  for (int i = 1; i <= freeedges.Size(); i++)
-    delete freeedges[i-1];
-  for (int i = 1; i <= freefaceinequ.Size(); i++)
-    delete freefaceinequ[i-1];
+  for (int i = 0; i < freefaces.Size(); i++)
+    delete freefaces[i];
+  for (int i = 0; i < freesets.Size(); i++)
+    delete freesets[i];
+  for (int i = 0; i < freeedges.Size(); i++)
+    delete freeedges[i];
+  for (int i = 0; i < freefaceinequ.Size(); i++)
+    delete freefaceinequ[i];
   delete oldutofreezone;
   delete oldutofreezonelimit;
 }
 
 int vnetrule :: TestFlag (char flag) const
 {
-  for (int i = 1; i <= flags.Size(); i++)
-    if (flags[i-1] == flag) return 1;
+  for (int i = 0; i < flags.Size(); i++)
+    if (flags[i] == flag) return 1;
   return 0;
 }
 

@@ -197,7 +197,7 @@ Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
   SpecialPoint hsp1 = sp1;
   SpecialPoint hsp2 = sp2;
 
-  for (int i = 1; i <= 1; i++)
+  for (int i = 0; i < 1; i++)
     {
       //      Swap (hsp1, hsp2);
 
@@ -1306,16 +1306,16 @@ BuildSurfaceElements (Array<Segment> & segs,
 
                 if (n * ns < 0)
                   {
-                    Swap (el.PNum(1), el.PNum(2));
-                    Swap (el.PNum(3), el.PNum(4));
+                    Swap (el[0], el[1]);
+                    Swap (el[2], el[3]);
                   }
                              
                 mesh.AddSurfaceElement (el);
 //              (*testout) << "(id nr "<< nr <<") add rect element: "
-//                         << mesh.Point (el.PNum(1)) << " - "
-//                         << mesh.Point (el.PNum(2)) << " - "
-//                         << mesh.Point (el.PNum(3)) << " - "
-//                         << mesh.Point (el.PNum(4)) << endl;
+//                         << mesh.Point (el[0]) << " - "
+//                         << mesh.Point (el[1]) << " - "
+//                         << mesh.Point (el[2]) << " - "
+//                         << mesh.Point (el[3]) << endl;
                 found = true;
                 //foundseg[i1]=foundseg[i2] = true;
                 cntquads++;
@@ -1404,17 +1404,17 @@ BuildSurfaceElements2 (Array<Segment> & segs,
               // copy element
               Element2d newel(sel.GetType());
               newel.SetIndex (facei);
-              for (int k = 1; k <= sel.GetNP(); k++)
-                newel.PNum(k) = GetIdentifiedPoint (mesh, sel.PNum(k));
+              for (int k = 0; k < sel.GetNP(); k++)
+                newel[k] = GetIdentifiedPoint (mesh, sel[k]);
               
-              Vec<3> nt = Cross (Point<3> (mesh.Point (newel.PNum(2)))- 
-                                 Point<3> (mesh.Point (newel.PNum(1))),
-                                 Point<3> (mesh.Point (newel.PNum(3)))- 
-                                 Point<3> (mesh.Point (newel.PNum(1))));
+              Vec<3> nt = Cross (Point<3> (mesh.Point (newel[1]))- 
+                                 Point<3> (mesh.Point (newel[0])),
+                                 Point<3> (mesh.Point (newel[2]))- 
+                                 Point<3> (mesh.Point (newel[0])));
               Vec<3> nsurf;
-              nsurf = geom.GetSurface (surfnr)->GetNormalVector (mesh.Point(newel.PNum(1)));
+              nsurf = geom.GetSurface (surfnr)->GetNormalVector (mesh.Point(newel[0]));
               if (nsurf * nt < 0)
-                Swap (newel.PNum(2), newel.PNum(3));
+                Swap (newel[1], newel[2]);
               
               mesh.AddSurfaceElement (newel);
             }
@@ -1672,33 +1672,33 @@ BuildSurfaceElements (Array<Segment> & segs,
             mesh.GetIdentifications().Used (s1[1], s2[0]))
           {
             Element2d el(QUAD);
-            el.PNum(1) = s1[0];
-            el.PNum(2) = s1[1];
-            el.PNum(3) = s2[1];
-            el.PNum(4) = s2[0];
+            el[0] = s1[0];
+            el[1] = s1[1];
+            el[2] = s2[1];
+            el[3] = s2[0];
 
-            Vec<3> n = Cross (Point<3> (mesh.Point(el.PNum(2)))-
-                              Point<3> (mesh.Point(el.PNum(1))),
-                              Point<3> (mesh.Point(el.PNum(3)))-
-                              Point<3> (mesh.Point(el.PNum(1))));
+            Vec<3> n = Cross (Point<3> (mesh.Point(el[1]))-
+                              Point<3> (mesh.Point(el[0])),
+                              Point<3> (mesh.Point(el[2]))-
+                              Point<3> (mesh.Point(el[0])));
             Vec<3> ns;
-            ns = surf->GetNormalVector (mesh.Point(el.PNum(1)));
+            ns = surf->GetNormalVector (mesh.Point(el[0]));
             //(*testout) << "n = " << n << " ns = " << ns << endl;
             if (n * ns < 0)
               {
                 //(*testout) << "Swap the quad" << endl;
-                Swap (el.PNum(1), el.PNum(2));
-                Swap (el.PNum(3), el.PNum(4));
+                Swap (el[0], el[1]);
+                Swap (el[2], el[3]);
               }
                              
             
-            Swap (el.PNum(3), el.PNum(4));
+            Swap (el[2], el[3]);
             mesh.AddSurfaceElement (el);
 //          (*testout) << "add rect element: "
-//                     << mesh.Point (el.PNum(1)) << " - "
-//                     << mesh.Point (el.PNum(2)) << " - "
-//                     << mesh.Point (el.PNum(3)) << " - "
-//                     << mesh.Point (el.PNum(4)) << endl;
+//                     << mesh.Point (el[0]) << " - "
+//                     << mesh.Point (el[1]) << " - "
+//                     << mesh.Point (el[2]) << " - "
+//                     << mesh.Point (el[3]) << endl;
             found = 1;
           }
       }

@@ -909,8 +909,8 @@ namespace netgen
           area += Cross ( mesh[sel[1]]-mesh[sel[0]],
                           mesh[sel[2]]-mesh[sel[0]] ).Length() / 2;
         else
-          area += Cross (Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(3)]),
-                         Vec<3> (mesh[sel.PNum(1)], mesh[sel.PNum(4)])).Length() / 2;;
+          area += Cross (Vec<3> (mesh[sel[0]], mesh[sel[2]]),
+                         Vec<3> (mesh[sel[0]], mesh[sel[3]])).Length() / 2;;
       }
       void ReCalc ()
       {

@@ -253,23 +253,23 @@ namespace netgen
                 break;
               case TET:
               case TET10:
-                if (cluster_reps[el.PNum(1)-PI0] == 
-                    cluster_reps[el.PNum(2)-PI0])
+                if (cluster_reps[el[0]-PI0] == 
+                    cluster_reps[el[1]-PI0])
                   clustertab = tet_cluster12;
-                else if (cluster_reps[el.PNum(1)-PI0] == 
-                         cluster_reps[el.PNum(3)-PI0])
+                else if (cluster_reps[el[0]-PI0] == 
+                         cluster_reps[el[2]-PI0])
                   clustertab = tet_cluster13;
-                else if (cluster_reps[el.PNum(1)-PI0] == 
-                         cluster_reps[el.PNum(4)-PI0])
+                else if (cluster_reps[el[0]-PI0] == 
+                         cluster_reps[el[3]-PI0])
                   clustertab = tet_cluster14;
-                else if (cluster_reps[el.PNum(2)-PI0] == 
-                         cluster_reps[el.PNum(3)-PI0])
+                else if (cluster_reps[el[1]-PI0] == 
+                         cluster_reps[el[2]-PI0])
                   clustertab = tet_cluster23;
-                else if (cluster_reps[el.PNum(2)-PI0] == 
-                         cluster_reps[el.PNum(4)-PI0])
+                else if (cluster_reps[el[1]-PI0] == 
+                         cluster_reps[el[3]-PI0])
                   clustertab = tet_cluster24;
-                else if (cluster_reps[el.PNum(3)-PI0] == 
-                         cluster_reps[el.PNum(4)-PI0])
+                else if (cluster_reps[el[2]-PI0] == 
+                         cluster_reps[el[3]-PI0])
                   clustertab = tet_cluster34;
 
                 else

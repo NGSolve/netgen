@@ -494,14 +494,14 @@ namespace netgen
             MeshOptimize3d optmesh(mesh, mp, OPT_REST);
 
             const char * optstr = "mcmstmcmstmcmstmcm";
-            for (size_t j = 1; j <= strlen(optstr); j++)
+            for (size_t j = 0; j < strlen(optstr); j++)
             {
                mesh.FindOpenElements();
                mesh.CalcSurfacesOfNode();
                mesh.FreeOpenElementsEnvironment(2);
                mesh.CalcSurfacesOfNode();
 
-               switch (optstr[j-1])
+               switch (optstr[j])
                {
                case 'c': optmesh.CombineImprove(); break;
                case 'd': optmesh.SplitImprove(); break;

@@ -252,8 +252,8 @@ double BFGS (
       if (it % (5 * n) == 0)
         {
 
-          for (int i = 1; i <= n; i++)
-            d(i-1) = typf/ sqr (typx(i-1));   // 1;
+          for (int i = 0; i < n; i++)
+            d(i) = typf/ sqr (typx(i));   // 1;
           for (int i = 2; i <= n; i++)
             for (int j = 1; j < i; j++)
               l.Elem(i, j) = 0;
@@ -354,8 +354,8 @@ double BFGS (
 
       hd = eps * max2 (typf, fabs (f));
       a1crit = 1;
-      for (int i = 1; i <= n; i++)
-        if ( fabs (g(i-1)) * max2 (typx(i-1), fabs (x(i-1))) > hd)
+      for (int i = 0; i < n; i++)
+        if ( fabs (g(i)) * max2 (typx(i), fabs (x(i))) > hd)
           a1crit = 0;
 
 

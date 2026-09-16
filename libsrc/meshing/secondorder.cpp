@@ -325,8 +325,8 @@ namespace netgen
           }
 
 
-        for (int j = 1; j <= onp; j++)
-          newel.PNum(j) = el.PNum(j);
+        for (int j = 0; j < onp; j++)
+          newel[j] = el[j];
         int nnp = newel.GetNP();
 
         for (int j = 0; j < nnp-onp; j++)
@@ -505,8 +505,8 @@ namespace netgen
             const Element2d & sel = mesh.SurfaceElement(i);
         */
         for (auto & sel : mesh.SurfaceElements())
-          for (int j = 1; j <= sel.GetNP(); j++)
-            boundp.SetBit(sel.PNum(j));
+          for (int j = 0; j < sel.GetNP(); j++)
+            boundp.SetBit(sel[j]);
         // }
 
 

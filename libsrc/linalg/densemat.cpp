@@ -1070,15 +1070,15 @@ namespace netgen
         int w = Width();
         const double * mp = &Get(1, 1);
 
-        for (int i = 1; i <= h; i++)
+        for (int i = 0; i < h; i++)
           {
-            sum = b(i-1);
+            sum = b(i);
             const double * xp = &x(0);
 
             for (int j = 1; j <= w; ++j, ++mp, ++xp)
               sum -= *mp * *xp;
           
-            res(i-1) = sum;
+            res(i) = sum;
           }
       }
   }

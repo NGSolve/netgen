@@ -14,8 +14,8 @@ namespace netgen
       hpoints[pi.Nr0()+IndexBASE<PointIndex>()] = points[pi];
 
     Element2d hel(elem.GetNP());
-    for (int j = 1; j <= elem.GetNP(); j++)
-      hel.PNum(j) = elem.PNum(j).Nr0()+IndexBASE<PointIndex>();
+    for (int j = 0; j < elem.GetNP(); j++)
+      hel[j] = elem[j].Nr0()+IndexBASE<PointIndex>();
 
     return hel.CalcJacobianBadness (hpoints);
   }
@@ -30,9 +30,9 @@ namespace netgen
     double l12, l13, l23, cir, area;
     static const double c = sqrt(3.0) / 36;
 
-    v12 = points[elem.PNum(2)] - points[elem.PNum(1)];
-    v13 = points[elem.PNum(3)] - points[elem.PNum(1)];
-    v23 = points[elem.PNum(3)] - points[elem.PNum(2)];
+    v12 = points[elem[1]] - points[elem[0]];
+    v13 = points[elem[2]] - points[elem[0]];
+    v23 = points[elem[2]] - points[elem[1]];
 
     l12 = v12.Length();
     l13 = v13.Length();
@@ -647,20 +647,20 @@ namespace netgen
                           {
                             const RuleElement2d & rel = rule->GetElement(i);
                             MiniElement2d el(rel.GetNP());
-                            for (int j = 1; j <= rel.GetNP(); j++)
-                              el.PNum(j) = pmap[rel.PNum(j)];   // rule nr -> local nr
+                            for (int j = 0; j < rel.GetNP(); j++)
+                              el[j] = pmap[rel[j]];   // rule nr -> local nr
                             elements.Append (el);
                           }
 
 
                         double elerr = 0;
-                        for (int i = 1; i <= elements.Size(); i++)
+                        for (int i = 0; i < elements.Size(); i++)
                           {
                             double hf;
                             if (!mp.quad)
-                              hf = CalcElementBadness (lpoints, elements[i-1]);
+                              hf = CalcElementBadness (lpoints, elements[i]);
                             else
-                              hf = CalcJacobianBadness (elements[i-1], lpoints) * 5;
+                              hf = CalcJacobianBadness (elements[i], lpoints) * 5;
 #ifdef LOCDEBUG
                             if (loctestmode)
                               (*testout) << "r " << rule->Name() << "bad = " << hf << endl;

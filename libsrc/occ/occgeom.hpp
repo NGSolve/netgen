@@ -419,12 +419,12 @@ namespace netgen
 
     void LowLightAll()
     {
-      for (int i = 1; i <= fmap.Extent(); i++)
-        fvispar[i-1].Lowlight();
-      for (int i = 1; i <= emap.Extent(); i++)
-        evispar[i-1].Lowlight();
-      for (int i = 1; i <= vmap.Extent(); i++)
-        vvispar[i-1].Lowlight();
+      for (int i = 0; i < fmap.Extent(); i++)
+        fvispar[i].Lowlight();
+      for (int i = 0; i < emap.Extent(); i++)
+        evispar[i].Lowlight();
+      for (int i = 0; i < vmap.Extent(); i++)
+        vvispar[i].Lowlight();
     }
 
     void GetUnmeshedFaceInfo (stringstream & str);

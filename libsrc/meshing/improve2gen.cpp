@@ -240,9 +240,9 @@ namespace netgen
           for (PointIndex pi : el.PNums())
             rule.incelsonnode[pi]--;
 
-        for (int j = 1; j <= rule.newels.Size(); j++)
+        for (int j = 0; j < rule.newels.Size(); j++)
           {
-            const Element2d & el = rule.newels[j-1];
+            const Element2d & el = rule.newels[j];
             for (int k = 1; k <= el.GetNP(); k++)
               {
                 rule.incelsonnode[el.PNum(k)]++;
@@ -418,9 +418,9 @@ namespace netgen
                   bad1 += mesh[elmap[j]].CalcJacobianBadness (mesh.Points(), n);
                   
                 // check new element:
-                for (int j = 1; j <= rule.newels.Size(); j++)
+                for (int j = 0; j < rule.newels.Size(); j++)
                   {
-                    const Element2d & rnel = rule.newels[j-1];
+                    const Element2d & rnel = rule.newels[j];
                     Element2d nel(rnel.GetNP());
                     for (int k = 1; k <= rnel.GetNP(); k++)
                       nel.PNum(k) = pmap[rnel.PNum(k)];
@@ -434,9 +434,9 @@ namespace netgen
                   
 
                 // generate new element:
-                for (int j = 1; j <= rule.newels.Size(); j++)
+                for (int j = 0; j < rule.newels.Size(); j++)
                   {
-                    const Element2d & rnel = rule.newels[j-1];
+                    const Element2d & rnel = rule.newels[j];
                     Element2d nel(rnel.GetNP());
                     nel.SetIndex (faceindex);
                     for (int k = 1; k <= rnel.GetNP(); k++)

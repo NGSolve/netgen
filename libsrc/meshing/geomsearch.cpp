@@ -31,12 +31,12 @@ namespace netgen
 
   void GeomSearch3d :: ElemMaxExt(Point<3>& minp, Point<3>& maxp, const FrontElement2d& elem)
   {
-    maxp(0)=(*points)[elem.PNum(1)].P()(0);
-    maxp(1)=(*points)[elem.PNum(1)].P()(1);
-    maxp(2)=(*points)[elem.PNum(1)].P()(2);
-    minp(0)=(*points)[elem.PNum(1)].P()(0);
-    minp(1)=(*points)[elem.PNum(1)].P()(1);
-    minp(2)=(*points)[elem.PNum(1)].P()(2);
+    maxp(0)=(*points)[elem[0]].P()(0);
+    maxp(1)=(*points)[elem[0]].P()(1);
+    maxp(2)=(*points)[elem[0]].P()(2);
+    minp(0)=(*points)[elem[0]].P()(0);
+    minp(1)=(*points)[elem[0]].P()(1);
+    minp(2)=(*points)[elem[0]].P()(2);
   
     for (int i=2; i <= 3; i++)
       {
@@ -232,9 +232,9 @@ namespace netgen
                         cnt1++;
                         const FrontElement2d & face = faces->operator[](i-1).Face();
                       
-                        const Point<3> & p1 = (*points)[face.PNum(1)].P();
-                        const Point<3> & p2 = (*points)[face.PNum(2)].P();
-                        const Point<3> & p3 = (*points)[face.PNum(3)].P();
+                        const Point<3> & p1 = (*points)[face[0]].P();
+                        const Point<3> & p2 = (*points)[face[1]].P();
+                        const Point<3> & p3 = (*points)[face[2]].P();
                       
                         midp = Center (p1, p2, p3);
                       

@@ -644,8 +644,8 @@ template <typename TINDEX>
 inline ostream & operator<< (ostream & ost, const MiniElementT<TINDEX> & el)
 {
   ost << "np = " << el.GetNP();
-  for (int j = 1; j <= el.GetNP(); j++)
-    ost << " " << el.PNum(j);
+  for (int j = 0; j < el.GetNP(); j++)
+    ost << " " << el[j];
   return ost;
 }
 

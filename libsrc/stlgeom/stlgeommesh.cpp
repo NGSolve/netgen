@@ -766,7 +766,7 @@ void STLGeometry :: RestrictLocalHCurv(class Mesh & mesh, double gh, const STLPa
               //checken, ob ap1-ap2 eine Kante sind
               if (IsEdge(ap1,ap2)) continue;
               
-              p4 = trig.PNum(1) + trig.PNum(2) + trig.PNum(3) - ap1 - ap2;
+              p4 = trig[0] + trig[1] + trig[2] - ap1 - ap2;
               
               p1p = GetPoint(ap1); p2p = GetPoint(ap2); 
               p3p = GetPoint(p3); p4p = GetPoint(p4);
@@ -871,7 +871,7 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
               //checken, ob ap1-ap2 eine Kante sind
               if (IsEdge(ap1,ap2)) continue;
               
-              p4 = trig.PNum(1) + trig.PNum(2) + trig.PNum(3) - ap1 - ap2;
+              p4 = trig[0] + trig[1] + trig[2] - ap1 - ap2;
               
               p1p = GetPoint(ap1); p2p = GetPoint(ap2); 
               p3p = GetPoint(p3); p4p = GetPoint(p4);
@@ -1035,8 +1035,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
 
           if (GetNEPP(i) == 2 && !IsLineEndPoint(i))
             {
-              if (GetEdge(GetEdgePP(i,1)).PNum(2) == GetEdge(GetEdgePP(i,2)).PNum(1) ||
-                  GetEdge(GetEdgePP(i,1)).PNum(1) == GetEdge(GetEdgePP(i,2)).PNum(2))
+              if (GetEdge(GetEdgePP(i,1))[1] == GetEdge(GetEdgePP(i,2))[0] ||
+                  GetEdge(GetEdgePP(i,1))[0] == GetEdge(GetEdgePP(i,2))[1])
                 {
                   lp1 = 1; lp2 = 2;
                 }
@@ -1045,8 +1045,8 @@ void STLGeometry :: RestrictLocalH(class Mesh & mesh, double gh, const STLParame
                   lp1 = 2; lp2 = 1;
                 }
 
-              v1 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,1)).PNum(1)),
-                         GetPoint(GetEdge(GetEdgePP(i,1)).PNum(2)));
+              v1 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,1))[0]),
+                         GetPoint(GetEdge(GetEdgePP(i,1))[1]));
               v2 = Vec<3>(GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp1)),
                          GetPoint(GetEdge(GetEdgePP(i,2)).PNum(lp2)));
 
@@ -1299,9 +1299,9 @@ void STLGeometry :: RestrictHChartDistOneChart(ChartId chartnum, Array<int>& act
           stree.GetIntersecting (pmin, pmax, foundpts);
 
 
-          for (int kk = 1; kk <= foundpts.Size(); kk++)
+          for (int kk = 0; kk < foundpts.Size(); kk++)
             {
-              int k = foundpts[kk-1];
+              int k = foundpts[kk];
               double dist = Dist2(plimes1[j-1],plimes2[k-1]);
               if (dist < mindist) mindist = dist;
             }

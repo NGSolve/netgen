@@ -728,9 +728,9 @@ namespace netgen
 
         // exchange faces
         cnt_send = 0;
-        for (int face = 1; face <= nfa; face++)
+        for (int face = 0; face < nfa; face++)
           {
-            auto verts = topology.GetFaceVertices (face-1);
+            auto verts = topology.GetFaceVertices (face);
             for (int dest = 0; dest < ntasks; dest++)
               if (dest != id)
                 /*

@@ -38,13 +38,13 @@ namespace netgen
         fieldlines_startarea_parameter[5] = pmax(2);
       }
     
-    for (int i = 1; i <= startpoints.Size(); i++)
+    for (int i = 0; i < startpoints.Size(); i++)
       {
         Point<3> p (fieldlines_startarea_parameter[0] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[3]-fieldlines_startarea_parameter[0]),
                    fieldlines_startarea_parameter[1] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[4]-fieldlines_startarea_parameter[1]),
                    fieldlines_startarea_parameter[2] + double (rand()) / RAND_MAX * (fieldlines_startarea_parameter[5]-fieldlines_startarea_parameter[2]));
         
-        startpoints[i-1] = p;
+        startpoints[i] = p;
       }
   }
 
@@ -54,7 +54,7 @@ namespace netgen
     if (!mesh) return;
 
 
-    for (int i = 1; i <= startpoints.Size(); i++)
+    for (int i = 0; i < startpoints.Size(); i++)
       {
         double s = double (rand()) / RAND_MAX;
 
@@ -62,7 +62,7 @@ namespace netgen
                    fieldlines_startarea_parameter[1] + s * (fieldlines_startarea_parameter[4]-fieldlines_startarea_parameter[1]),
                    fieldlines_startarea_parameter[2] + s * (fieldlines_startarea_parameter[5]-fieldlines_startarea_parameter[2]));
         
-        startpoints[i-1] = p;
+        startpoints[i] = p;
       }
   }
 

@@ -320,8 +320,8 @@ namespace netgen
 
 
         int shortedge = 0;
-        for (int i = 1; i <= geometry.identifications.Size(); i++)
-          if (geometry.identifications[i-1]->ShortEdge(specpoints[hsp[pi1-1]], specpoints[hsp[ep-1]]))
+        for (int i = 0; i < geometry.identifications.Size(); i++)
+          if (geometry.identifications[i]->ShortEdge(specpoints[hsp[pi1-1]], specpoints[hsp[ep-1]]))
             shortedge = 1;
         // (*testout) << "shortedge = " << shortedge << endl;
 

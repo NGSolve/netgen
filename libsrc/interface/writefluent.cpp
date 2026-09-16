@@ -137,15 +137,15 @@ void WriteFluentFormat (const Mesh & mesh,
           if (eli2 > i.Nr1()) //don't write faces two times!
             {
               //i: left cell, eli: right cell
-              outfile << hex << face.PNum(2) << " "
-                << hex << face.PNum(1) << " "
-                << hex << face.PNum(3) << " "
+              outfile << hex << face[1] << " "
+                << hex << face[0] << " "
+                << hex << face[2] << " "
                 << hex << i.Nr1()  << " "
                 << hex << eli2 << "\n";
             }
           if (eli2 == 0) 
             {
-              surfaceelp.Append(PointIndices<3>(face.PNum(2),face.PNum(1),face.PNum(3)));
+              surfaceelp.Append(PointIndices<3>(face[1],face[0],face[2]));
               surfaceeli.Append(i.Nr1());
             }
         }

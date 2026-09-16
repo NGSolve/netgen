@@ -165,9 +165,9 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       Element2d el = (*mesh)[i];
 
       int drawel = 1;
-      for (int j = 1; j <= el.GetNP(); j++)
+      for (int j = 0; j < el.GetNP(); j++)
         {
-          if (!el.PNum(j).IsValid())
+          if (!el[j].IsValid())
             drawel = 0;
         }
 
@@ -186,9 +186,9 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
         {
           glBegin (GL_TRIANGLES);
           
-          const Point<3> & lp1 = mesh->Point (el.PNum(1));
-          const Point<3> & lp2 = mesh->Point (el.PNum(2));
-          const Point<3> & lp3 = mesh->Point (el.PNum(3));
+          const Point<3> & lp1 = mesh->Point (el[0]);
+          const Point<3> & lp2 = mesh->Point (el[1]);
+          const Point<3> & lp3 = mesh->Point (el[2]);
           Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
           n /= (n.Length()+1e-12);
           glNormal3d (n(0), n(1), n(2));
@@ -220,10 +220,10 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
         {
           glBegin (GL_QUADS);
           
-          const Point<3> & lp1 = mesh->Point (el.PNum(1));
-          const Point<3> & lp2 = mesh->Point (el.PNum(2));
-          const Point<3> & lp3 = mesh->Point (el.PNum(4));
-          const Point<3> & lp4 = mesh->Point (el.PNum(3));
+          const Point<3> & lp1 = mesh->Point (el[0]);
+          const Point<3> & lp2 = mesh->Point (el[1]);
+          const Point<3> & lp3 = mesh->Point (el[3]);
+          const Point<3> & lp4 = mesh->Point (el[2]);
           Vec<3> n = Cross (Vec<3> (lp1, lp2), 
                            Vec<3> (lp1, Center (lp3, lp4)));
           n /= (n.Length()+1e-12);
@@ -278,9 +278,9 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
       Element2d el = sel;
 
       int drawel = 1;
-      for (int j = 1; j <= el.GetNP(); j++)
+      for (int j = 0; j < el.GetNP(); j++)
         {
-          if (!el.PNum(j).IsValid())
+          if (!el[j].IsValid())
             drawel = 0;
         }
 
@@ -292,9 +292,9 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
         {
           glBegin (GL_TRIANGLES);
           
-          const Point<3> & lp1 = mesh->Point (el.PNum(1));
-          const Point<3> & lp2 = mesh->Point (el.PNum(2));
-          const Point<3> & lp3 = mesh->Point (el.PNum(3));
+          const Point<3> & lp1 = mesh->Point (el[0]);
+          const Point<3> & lp2 = mesh->Point (el[1]);
+          const Point<3> & lp3 = mesh->Point (el[2]);
           Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
           n /= (n.Length() + 1e-12);
           glNormal3d (n(0), n(1), n(2));
@@ -307,10 +307,10 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
         {
           glBegin (GL_QUADS);
           
-          const Point<3> & lp1 = mesh->Point (el.PNum(1));
-          const Point<3> & lp2 = mesh->Point (el.PNum(2));
-          const Point<3> & lp3 = mesh->Point (el.PNum(4));
-          const Point<3> & lp4 = mesh->Point (el.PNum(3));
+          const Point<3> & lp1 = mesh->Point (el[0]);
+          const Point<3> & lp2 = mesh->Point (el[1]);
+          const Point<3> & lp3 = mesh->Point (el[3]);
+          const Point<3> & lp4 = mesh->Point (el[2]);
           Vec<3> n = Cross (Vec<3> (lp1, lp2), 
                            Vec<3> (lp1, Center (lp3, lp4)));
           n /= (n.Length() + 1e-12);
@@ -325,12 +325,12 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
         {
           glBegin (GL_LINES);
           
-          const Point<3> & lp1 = mesh->Point (el.PNum(1));
-          const Point<3> & lp2 = mesh->Point (el.PNum(2));
-          const Point<3> & lp3 = mesh->Point (el.PNum(3));
-          const Point<3> & lp4 = mesh->Point (el.PNum(4));
-          const Point<3> & lp5 = mesh->Point (el.PNum(5));
-          const Point<3> & lp6 = mesh->Point (el.PNum(6));
+          const Point<3> & lp1 = mesh->Point (el[0]);
+          const Point<3> & lp2 = mesh->Point (el[1]);
+          const Point<3> & lp3 = mesh->Point (el[2]);
+          const Point<3> & lp4 = mesh->Point (el[3]);
+          const Point<3> & lp5 = mesh->Point (el[4]);
+          const Point<3> & lp6 = mesh->Point (el[5]);
 
           Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
           n /= (n.Length()+1e-12);

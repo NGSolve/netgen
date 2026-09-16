@@ -1447,8 +1447,8 @@ namespace netgen
 
             if (pvis[pi1] != pvis[pi2])
             {
-            Point<3> hp = Center (tams.GetPoint (tria.PNum (pi1+1)),
-            tams.GetPoint (tria.PNum (pi2+1)));
+            Point<3> hp = Center (tams.GetPoint (tria[pi1]),
+            tams.GetPoint (tria[pi2]));
 
             newpi[j] = tams.AddPoint (hp);
             Vec<3> n = tams.GetNormal (pi1);
@@ -1472,7 +1472,7 @@ namespace netgen
             int visj;
             for (j = 0; j < 3; j++)
             if (pvis[j]) visj = j;
-            int pivis = tria.PNum (visj+1);
+            int pivis = tria[visj];
             int pic1 = newpi[(visj+1)%3];
             int pic2 = newpi[(visj+2)%3];
                 

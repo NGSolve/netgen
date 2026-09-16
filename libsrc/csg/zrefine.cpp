@@ -18,9 +18,9 @@ namespace netgen
         //  continue; //!!!!
 
         const SingularEdge & se = *geom.singedges[i-1];
-        for (int j = 1; j <= se.segms.Size(); j++)
+        for (int j = 0; j < se.segms.Size(); j++)
           {
-            PointIndices<2> i2 = se.segms[j-1];
+            PointIndices<2> i2 = se.segms[j];
             singedges.Set (i2, 1);
           }
       }
@@ -64,12 +64,12 @@ namespace netgen
                   PointIndex p4 = el.PNum(pi4);
 
                   el.SetType(PRISM);
-                  el.PNum(1) = edge[0];
-                  el.PNum(2) = p3;
-                  el.PNum(3) = p4;
-                  el.PNum(4) = edge[1];
-                  el.PNum(5) = p3;
-                  el.PNum(6) = p4;
+                  el[0] = edge[0];
+                  el[1] = p3;
+                  el[2] = p4;
+                  el[3] = edge[1];
+                  el[4] = p3;
+                  el[5] = p4;
                 }
             }
       }
@@ -93,10 +93,10 @@ namespace netgen
                 PointIndex p2 = el.PNum(k);
 
                 el.SetType(QUAD);
-                el.PNum(1) = p2;
-                el.PNum(2) = p3;
-                el.PNum(3) = p3;
-                el.PNum(4) = p1;
+                el[0] = p2;
+                el[1] = p3;
+                el[2] = p3;
+                el[3] = p1;
               }
           }
       }
@@ -128,12 +128,12 @@ namespace netgen
                       PointIndex p4 = el.PNum(pi4);
                     
                       el.SetType(PRISM);
-                      el.PNum(1) = edge[0];
-                      el.PNum(2) = p3;
-                      el.PNum(3) = p4;
-                      el.PNum(4) = edge[1];
-                      el.PNum(5) = p3;
-                      el.PNum(6) = p4;
+                      el[0] = edge[0];
+                      el[1] = p3;
+                      el[2] = p4;
+                      el[3] = edge[1];
+                      el[4] = p3;
+                      el[5] = p4;
                     }
                 }
           }
@@ -148,7 +148,7 @@ namespace netgen
                 PointIndex pi2 = el.PNum( (j+1) % 4 + 1);
                 PointIndex pi3 = el.PNum( (j+2) % 4 + 1);
                 PointIndex pi4 = el.PNum( (j+3) % 4 + 1);
-                PointIndex pi5 = el.PNum(5);
+                PointIndex pi5 = el[4];
 
                 if (mesh.GetIdentifications().UsedSymmetric (pi1, pi4) &&
                     mesh.GetIdentifications().UsedSymmetric (pi2, pi3))
@@ -157,12 +157,12 @@ namespace netgen
                     //int p4 = el.PNum(pi4);
                   
                     el.SetType(PRISM);
-                    el.PNum(1) = pi1;
-                    el.PNum(2) = pi2;
-                    el.PNum(3) = pi5;
-                    el.PNum(4) = pi4;
-                    el.PNum(5) = pi3;
-                    el.PNum(6) = pi5;
+                    el[0] = pi1;
+                    el[1] = pi2;
+                    el[2] = pi5;
+                    el[3] = pi4;
+                    el[4] = pi3;
+                    el[5] = pi5;
                   }
               }
           }
@@ -184,10 +184,10 @@ namespace netgen
                 PointIndex p2 = el.PNum(k);
 
                 el.SetType(QUAD);
-                el.PNum(1) = p2;
-                el.PNum(2) = p3;
-                el.PNum(3) = p3;
-                el.PNum(4) = p1;
+                el[0] = p2;
+                el[1] = p3;
+                el[2] = p3;
+                el[3] = p1;
               }
           }
       }
@@ -386,7 +386,7 @@ namespace netgen
             for (int j = 1; j <= 3; j++)
               {
                 PointIndex pi1 = el.PNum(j);
-                PointIndex pi2 = el.PNum(j+3);
+                PointIndex pi2 = el[j+2];
                 const Point<3> & p1 = mesh[pi1];
                 const Point<3> & p2 = mesh[pi2];
 
@@ -438,7 +438,7 @@ namespace netgen
                 for (int j = 1; j <= 3; j++)
                   {
                     PointIndex pi1 = el.PNum(j);
-                    PointIndex pi2 = el.PNum(j+3);
+                    PointIndex pi2 = el[j+2];
                     if (pi1 != pi2)
                       {
                         SortedPointIndices<2> edge(pi1, pi2);
@@ -456,7 +456,7 @@ namespace netgen
                     for (int j = 1; j <= 3; j++)
                       {
                         PointIndex pi1 = el.PNum(j);
-                        PointIndex pi2 = el.PNum(j+3);
+                        PointIndex pi2 = el[j+2];
                         const Point<3> & p1 = mesh[pi1];
                         const Point<3> & p2 = mesh[pi2];
                       
@@ -542,7 +542,7 @@ namespace netgen
             for (int j = 1; j <= 3; j++)
               {
                 PointIndex pi1 = el.PNum(j);
-                PointIndex pi2 = el.PNum(j+3);
+                PointIndex pi2 = el[j+2];
 
                 if (pi1 == pi2)
                   npi[j-1] = pi1;
@@ -569,9 +569,9 @@ namespace netgen
                 for (int j = 1; j <= 3; j++)
                   {
                     nel1.PNum(j) = el.PNum(j);
-                    nel1.PNum(j+3) = npi[j-1];
+                    nel1[j+2] = npi[j-1];
                     nel2.PNum(j) = npi[j-1];
-                    nel2.PNum(j+3) = el.PNum(j+3);
+                    nel2[j+2] = el[j+2];
                   }
                 nel1.SetIndex (el.GetIndex());
                 nel2.SetIndex (el.GetIndex());
@@ -601,13 +601,13 @@ namespace netgen
 
                 if (j == 1)
                   {
-                    pi1 = el.PNum(1);
-                    pi2 = el.PNum(4);
+                    pi1 = el[0];
+                    pi2 = el[3];
                   }
                 else
                   {
-                    pi1 = el.PNum(2);
-                    pi2 = el.PNum(3);
+                    pi1 = el[1];
+                    pi2 = el[2];
                   }
 
                 if (pi1 == pi2)
@@ -627,22 +627,22 @@ namespace netgen
             if (npi[0].IsValid())
               {
                 Element2d nel1(QUAD), nel2(QUAD);
-                for (int j = 1; j <= 4; j++)
+                for (int j = 0; j < 4; j++)
                   {
-                    nel1.PNum(j) = el.PNum(j);
-                    nel2.PNum(j) = el.PNum(j);
+                    nel1[j] = el[j];
+                    nel2[j] = el[j];
                   }
-                nel1.PNum(3) = npi[1];
-                nel1.PNum(4) = npi[0];
-                nel2.PNum(1) = npi[0];
-                nel2.PNum(2) = npi[1];
+                nel1[2] = npi[1];
+                nel1[3] = npi[0];
+                nel2[0] = npi[0];
+                nel2[1] = npi[1];
                 /*
                   for (j = 1; j <= 2; j++)
                   {
                   nel1.PNum(j) = el.PNum(j);
-                  nel1.PNum(j+2) = npi[j-1];
+                  nel1[j+1] = npi[j-1];
                   nel2.PNum(j) = npi[j-1];
-                  nel2.PNum(j+2) = el.PNum(j+2);
+                  nel2[j+1] = el[j+1];
                   }
                 */
                 nel1.SetIndex (el.GetIndex());
@@ -679,18 +679,18 @@ namespace netgen
         Element& el = mesh.VolumeElement(ei);
         if(el.GetType() != PRISM)
           continue;
-        if(el.PNum(3) == el.PNum(6))
+        if(el[2] == el[5])
           {
-            if(el.PNum(2) == el.PNum(5))
+            if(el[1] == el[4])
               {
                 el.SetType(TET);
               }
             else
               {
                 el.SetType(PYRAMID);
-                PointIndex pnr5 = el.PNum(3);
-                el.PNum(3) = el.PNum(5);
-                el.PNum(5) = pnr5;
+                PointIndex pnr5 = el[2];
+                el[2] = el[4];
+                el[4] = pnr5;
               }
           }
       }

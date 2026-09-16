@@ -57,7 +57,7 @@ namespace netgen
       for (ElementIndex i : T_Range<ElementIndex>(ne)) {
         const Element & el = mesh[i];
 
-        outfile << "      <tetrahedron index=\""<<i.Nr1()-1<<"\" v0=\""<<el.PNum(1)-1<<"\" v1=\""<<el.PNum(2)-1<<"\" v2=\""<<el.PNum(3)-1<<"\" v3=\""<<el.PNum(4)-1<<"\"/>"<<endl; 
+        outfile << "      <tetrahedron index=\""<<i.Nr1()-1<<"\" v0=\""<<el[0]-1<<"\" v1=\""<<el[1]-1<<"\" v2=\""<<el[2]-1<<"\" v3=\""<<el[3]-1<<"\"/>"<<endl; 
       }
       outfile << "      </cells>"<<endl; 
     }

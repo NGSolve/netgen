@@ -418,12 +418,12 @@ namespace netgen
 
       // Clear lists
 
-      for (int i = 1; i <= linelists.Size(); i++)
-      glDeleteLists (linelists[i-1], 1);
+      for (int i = 0; i < linelists.Size(); i++)
+      glDeleteLists (linelists[i], 1);
       linelists.SetSize(0);
 
-      for (int i = 1; i <= trilists.Size(); i++)
-      glDeleteLists (trilists[i-1], 1);
+      for (int i = 0; i < trilists.Size(); i++)
+      glDeleteLists (trilists[i], 1);
       trilists.SetSize(0);
 
       // Total wireframe

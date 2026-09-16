@@ -43,13 +43,13 @@ namespace netgen
     // reset topology
     mesh.GetTopology() = MeshTopology(mesh);
     for (int i = 1; i <= optsteps; i++)
-      for (size_t j = 1; j <= strlen(optstr); j++)
+      for (size_t j = 0; j < strlen(optstr); j++)
         {
           if (multithread.terminate) break;
           MeshOptimize2d meshopt(mesh);
           meshopt.SetMetricWeight (mp.elsizeweight);
           meshopt.SetFaceIndex(faceindex);
-          switch (optstr[j-1])
+          switch (optstr[j])
             {
             case 's': 
               {  // topological swap
@@ -95,7 +95,7 @@ namespace netgen
                 break;
               }
             default:
-              cerr << "Optimization code " << optstr[j-1] << " not defined" << endl;
+              cerr << "Optimization code " << optstr[j] << " not defined" << endl;
             }  
         }
     mesh.Compress(); // better: compress in individual steps, if necessary

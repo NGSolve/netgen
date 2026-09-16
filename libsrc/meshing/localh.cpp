@@ -550,8 +550,8 @@ namespace netgen
           faceused2.Append (faceinds[j-1]);
       }
   
-    for (int j = 1; j <= faceused.Size(); j++)
-      faceinds[j-1] = faceused[j-1];
+    for (int j = 0; j < faceused.Size(); j++)
+      faceinds[j] = faceused[j];
     for (int j = 1; j <= facenotused.Size(); j++)
       faceinds[j+faceused.Size()-1] = facenotused[j-1];
 

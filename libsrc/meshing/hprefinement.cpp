@@ -1454,7 +1454,7 @@ namespace netgen
                   { 
                     Element2d el(hpel.np); 
                     for(int j=0;j<hpel.np;j++) 
-                      el.PNum(j+1) = hpel.pnums[j]; 
+                      el[j] = hpel.pnums[j]; 
                     el.SetHpElnr(i);
                     el.SetIndex(hpel.index);
                     if(setorders)
@@ -1472,7 +1472,7 @@ namespace netgen
                   { 
                     Element el(hpel.np); 
                     for(int j=0;j<hpel.np;j++) 
-                      el.PNum(j+1) = hpel.pnums[j]; 
+                      el[j] = hpel.pnums[j]; 
                     el.SetIndex(hpel.index); 
                     el.SetHpElnr(i);
                     if(setorders)

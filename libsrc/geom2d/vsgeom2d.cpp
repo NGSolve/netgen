@@ -54,9 +54,9 @@ namespace netgen
 
     Array<Point<2> > points, otherpoints;
 
-    for (int i = 1; i <= geometry2d->GetSplines().Size(); i++)
+    for (int i = 0; i < geometry2d->GetSplines().Size(); i++)
       {
-        geometry2d->GetSplines()[i-1]->GetPoints (200, points);
+        geometry2d->GetSplines()[i]->GetPoints (200, points);
       
         glBegin (GL_LINE_STRIP);
         for (int j = 0; j < points.Size(); j++)
@@ -66,12 +66,12 @@ namespace netgen
 
     glColor3f (1, 0, 0);
 
-    for (int i = 1; i <= geometry2d->GetSplines().Size(); i++)
+    for (int i = 0; i < geometry2d->GetSplines().Size(); i++)
       {
-        int other = geometry2d->GetSpline(i-1).copyfrom;
+        int other = geometry2d->GetSpline(i).copyfrom;
         if (other != -1)
           {
-            geometry2d->GetSplines()[i-1]->GetPoints (6, points);
+            geometry2d->GetSplines()[i]->GetPoints (6, points);
             geometry2d->GetSplines()[other-1]->GetPoints (6, otherpoints);
             glBegin (GL_LINES);
             for (int j = 1; j < 5; j++)

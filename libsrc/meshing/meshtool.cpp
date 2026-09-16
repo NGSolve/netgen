@@ -57,10 +57,10 @@ namespace netgen
         PrintDot ();
         for (int j = 1; j < i; j++)
           {
-            for (int k = 1; k <= 3; k++)
+            for (int k = 0; k < 3; k++)
               {
-                tri1[k-1] = &mesh.Point (mesh.OpenElement(i).PNum(k));
-                tri2[k-1] = &mesh.Point (mesh.OpenElement(j).PNum(k));
+                tri1[k] = &mesh.Point (mesh.OpenElement(i)[k]);
+                tri2[k] = &mesh.Point (mesh.OpenElement(j)[k]);
               }
             if (IntersectTriangleTriangle (&tri1[0], &tri2[0]))
               {
@@ -535,12 +535,12 @@ namespace netgen
     double CalcVolume (const Array<Point<3>> & points,
     const Element & el)
     {
-    Vec<3> v1 = points.Get(el.PNum(2)) - 
-    points.Get(el.PNum(1));
-    Vec<3> v2 = points.Get(el.PNum(3)) - 
-    points.Get(el.PNum(1));
-    Vec<3> v3 = points.Get(el.PNum(4)) - 
-    points.Get(el.PNum(1)); 
+    Vec<3> v1 = points.Get(el[1]) - 
+    points.Get(el[0]);
+    Vec<3> v2 = points.Get(el[2]) - 
+    points.Get(el[0]);
+    Vec<3> v3 = points.Get(el[3]) - 
+    points.Get(el[0]); 
          
     return -(Cross (v1, v2) * v3) / 6;   
     }  
@@ -573,8 +573,8 @@ namespace netgen
     double sum = 0;
     int nontet  = 0;
 
-    for (int i = 1; i <= incl.Size(); i++)
-      incl[i-1] = 0;
+    for (int i = 0; i < incl.Size(); i++)
+      incl[i] = 0;
 
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
@@ -668,13 +668,13 @@ namespace netgen
       {
 
         if (mesh.GetFaceDescriptor(el.GetIndex()).DomainOut() == 0)
-          outfile << el.PNum(1) << " "
-                  << el.PNum(2) << " "
-                  << el.PNum(3) << endl;
+          outfile << el[0] << " "
+                  << el[1] << " "
+                  << el[2] << endl;
         if (mesh.GetFaceDescriptor(el.GetIndex()).DomainIn() == 0)
-          outfile << el.PNum(1) << " "
-                  << el.PNum(3) << " "
-                  << el.PNum(2) << endl;
+          outfile << el[0] << " "
+                  << el[2] << " "
+                  << el[1] << endl;
       }
   }
 
@@ -704,8 +704,8 @@ namespace netgen
       {
         outfile << mesh2d.SurfaceElement(i).GetIndex() << "         ";
         outfile << mesh2d.SurfaceElement(i).GetNP() << " ";
-        for (int j = 1; j <= mesh2d.SurfaceElement(i).GetNP(); j++)
-          outfile << mesh2d.SurfaceElement(i).PNum(j) << " ";
+        for (int j = 0; j < mesh2d.SurfaceElement(i).GetNP(); j++)
+          outfile << mesh2d.SurfaceElement(i)[j] << " ";
         outfile << endl;
       }
 
@@ -804,7 +804,7 @@ namespace netgen
         if (mesh.GetFaceDescriptor(el.GetIndex()).DomainIn() == 0 ||
             mesh.GetFaceDescriptor(el.GetIndex()).DomainOut() == 0)
           {
-            faceused.Set ( { el.PNum(1), el.PNum(2), el.PNum(3) }, 1);
+            faceused.Set ( { el[0], el[1], el[2] }, 1);
           }
       }
   
@@ -832,7 +832,7 @@ namespace netgen
       {
         const Element2d & el = mesh[i];
 
-        SortedPointIndices<3> i3(el.PNum(1), el.PNum(2), el.PNum(3));
+        SortedPointIndices<3> i3(el[0], el[1], el[2]);
         int nel = faceused.Used(i3) ? faceused.Get(i3) : 0;
         if (nel != 2)
           {
@@ -897,9 +897,9 @@ namespace netgen
             const Element2d & el = mesh[i];
             (*testout) << setw(5) << i.Nr1() << ":" 
                        << setw(6) << el.GetIndex() 
-                       << setw(6) << el.PNum(1) 
-                       << setw(4) << el.PNum(2) 
-                       << setw(4) << el.PNum(3)  << endl;
+                       << setw(6) << el[0] 
+                       << setw(4) << el[1] 
+                       << setw(4) << el[2]  << endl;
           }
         (*testout) << "volelements: " << endl;
         for (ElementIndex ei : mesh.VolumeElements().Range())
@@ -938,8 +938,8 @@ namespace netgen
             const Element2d & sel = mesh.OpenElement(i);
             if (sel.GetIndex() == k)
               {
-                for (int j = 1; j <= sel.GetNP(); j++)
-                  ppoints[sel.PNum(j)] = true;
+                for (int j = 0; j < sel.GetNP(); j++)
+                  ppoints[sel[j]] = true;
               }
           }
 

@@ -250,12 +250,12 @@ namespace netgen
     hv(3) = 1;
     m.Mult (hv, res);
 
-    for (int i = 1; i <= res.Size(); i++)
+    for (int i = 0; i < res.Size(); i++)
       {
-        if (res(i-1) < 1e-10)
+        if (res(i) < 1e-10)
           badness += 1e24;
         else
-          badness += 1 / res(i-1);
+          badness += 1 / res(i);
       }
  
     return badness;
@@ -434,10 +434,10 @@ namespace netgen
         for (int k = 1; k <= 4; k++)
           if (el.PNum(k) == actpind)
             {
-              f += CalcTetBadnessGrad (points[el.PNum(1)], 
-                                       points[el.PNum(2)], 
-                                       points[el.PNum(3)], 
-                                       points[el.PNum(4)], -1, k, vgradi, mp);
+              f += CalcTetBadnessGrad (points[el[0]], 
+                                       points[el[1]], 
+                                       points[el[2]], 
+                                       points[el[3]], -1, k, vgradi, mp);
 
               vgrad += vgradi;
             }
@@ -462,7 +462,7 @@ namespace netgen
             {
               Element2d face(TRIG);
               el.GetFace (k, face);
-              Swap (face.PNum(2), face.PNum(3));
+              Swap (face[1], face[2]);
               faces.Append (face);
             }
       }
@@ -944,10 +944,10 @@ double Opti3EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
 
 int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 {
-  const Point<3> & p1 = points[el.PNum(1)];
-  const Point<3> & p2 = points[el.PNum(2)];
-  const Point<3> & p3 = points[el.PNum(3)];
-  const Point<3> & p4 = points[el.PNum(4)];
+  const Point<3> & p1 = points[el[0]];
+  const Point<3> & p2 = points[el[1]];
+  const Point<3> & p3 = points[el[2]];
+  const Point<3> & p4 = points[el[3]];
 
   Vec<3> v1(p1, p2);
   Vec<3> v2(p1, p3);

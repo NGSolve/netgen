@@ -150,12 +150,12 @@ namespace netgen
          meshtopo.GetElementFaces(elind,locfaces,true);
 
          // Loop through the faces
-         for(int i = 1; i <= locfaces.Size(); i++)
+         for (int i = 0; i < locfaces.Size(); i++)
          {
             // The absolute value of a face number (because the faces 
             // returned by the GetElementFaces function prepend it 
             // with a sign depending on the face orientation)
-            int absfacenr = abs(locfaces[i-1]);
+            int absfacenr = abs(locfaces[i]);
 
             // If the face already exists in the owner list, add 
             // the current cell into the neighbour list, in the 
@@ -223,7 +223,7 @@ namespace netgen
                // add the current cell into the owner list, and save 
                // the index location to be used later by the neighbour list
                owner_celllist[owner_ind-1] = elind;
-               owner_facelist[owner_ind-1] = locfaces[i-1];
+               owner_facelist[owner_ind-1] = locfaces[i];
                // Update the array to indicate that the face is already processed
                ownerfaces[absfacenr-1] = owner_ind;
 
@@ -236,7 +236,7 @@ namespace netgen
             {
                Element2d sel = mesh[SurfaceElementIndex::FromNr1(surfelem)];
                surfelem_bclist[bc_ind-1] = mesh.GetFaceDescriptor(sel.GetIndex()).BCProperty();
-               surfelem_lists[bc_ind-1] = IVec<2>(locfaces[i-1],elind);
+               surfelem_lists[bc_ind-1] = IVec<2>(locfaces[i],elind);
 
                bc_ind++;
             }
@@ -309,9 +309,9 @@ namespace netgen
       *outfile << "(\n";
 
       // Write the neighbour cells to file
-      for(int i = 1; i <= neighbour_celllist.Size(); i++)
+      for (int i = 0; i < neighbour_celllist.Size(); i++)
       {
-         *outfile << neighbour_celllist[i-1] - 1 << "\n";
+         *outfile << neighbour_celllist[i] - 1 << "\n";
       }
       *outfile << ")\n\n";
       WriteOpenFOAM15xDividerEnd(outfile);
@@ -343,16 +343,16 @@ namespace netgen
       *outfile << "(\n";
 
       // Write the owners of the internal cells to file
-      for(int i = 1; i <= owner_celllist.Size(); i++)
+      for (int i = 0; i < owner_celllist.Size(); i++)
       {
-         *outfile << owner_celllist[i-1] - 1 << "\n";
+         *outfile << owner_celllist[i] - 1 << "\n";
       }
 
       // Write the owners of the boundary cells to file
       // (Written in order of ascending boundary condition numbers)
-      for(int i = 1; i <= surfelem_lists.Size(); i++)
+      for (int i = 0; i < surfelem_lists.Size(); i++)
       {
-         *outfile << surfelem_lists[i-1][1] - 1 << "\n";
+         *outfile << surfelem_lists[i][1] - 1 << "\n";
       }
       *outfile << ")\n\n";
       WriteOpenFOAM15xDividerEnd(outfile);
@@ -391,9 +391,9 @@ namespace netgen
 
       // Write the faces in the order specified in the owners lists of the 
       // internal cells and the boundary cells
-      for(int i = 1; i <= owner_facelist.Size(); i++)
+      for (int i = 0; i < owner_facelist.Size(); i++)
       {
-         int face_w_orientation = owner_facelist[i-1];
+         int face_w_orientation = owner_facelist[i];
          int facenr = abs(face_w_orientation);
 
          meshtopo.GetFaceVertices(facenr,facepnts);
@@ -437,9 +437,9 @@ namespace netgen
       // Now append the faces of the surface elements (written in 
       // ascending order of boundary condition number) also into 
       // the faces file
-      for(int i = 1; i <= surfelem_lists.Size(); i++)
+      for (int i = 0; i < surfelem_lists.Size(); i++)
       {
-         int face_w_orientation = surfelem_lists[i-1][0];
+         int face_w_orientation = surfelem_lists[i][0];
          int facenr = abs(face_w_orientation);
 
          meshtopo.GetFaceVertices(facenr,facepnts);
@@ -579,15 +579,15 @@ namespace netgen
 
       int startface = 0;
 
-      for(int i = 1; i <= bcarray.Size(); i++)
+      for (int i = 0; i < bcarray.Size(); i++)
       {
-         startface = owner_celllist.Size() + bcarray[i-1][2];
+         startface = owner_celllist.Size() + bcarray[i][2];
 
-         *outfile << "    patch" << bcarray[i-1][0] << "\n"
+         *outfile << "    patch" << bcarray[i][0] << "\n"
                  << "    {\n"
                  << "        type            patch;\n"
                  << "        physicalType    patch;\n"
-                 << "        nFaces          " << bcarray[i-1][1] << ";\n"
+                 << "        nFaces          " << bcarray[i][1] << ";\n"
                  << "        startFace       " << startface << ";\n"
                  << "    }\n";
       }

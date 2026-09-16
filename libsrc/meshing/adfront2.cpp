@@ -443,8 +443,8 @@ namespace netgen
     // for (int i = lines.Begin(); i < lines.End(); i++)
     for (int i : lines.Range())
       if (lines[i].Valid())
-        for (int j = 1; j <= 2; j++)
-          points[lines[i].L()[j-1]].DecFrontNr(0);
+        for (int j = 0; j < 2; j++)
+          points[lines[i].L()[j]].DecFrontNr(0);
   }
 
 

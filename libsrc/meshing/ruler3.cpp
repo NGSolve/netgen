@@ -32,17 +32,17 @@ extern double minwithoutother;
                                     const LocalElement & elem)
 {
   if(elem.GetNP() == 4)
-    return TetBadnessFromPoints (points[elem.PNum(1)],
-                                 points[elem.PNum(2)],
-                                 points[elem.PNum(3)],
-                                 points[elem.PNum(4)]);
+    return TetBadnessFromPoints (points[elem[0]],
+                                 points[elem[1]],
+                                 points[elem[2]],
+                                 points[elem[3]]);
   if (elem.GetNP() == 5)
     {
-      auto p1 = points[elem.PNum(1)];
-      auto p2 = points[elem.PNum(2)];
-      auto p3 = points[elem.PNum(3)];
-      auto p4 = points[elem.PNum(4)];
-      auto p5 = points[elem.PNum(5)];
+      auto p1 = points[elem[0]];
+      auto p2 = points[elem[1]];
+      auto p3 = points[elem[2]];
+      auto p4 = points[elem[3]];
+      auto p5 = points[elem[4]];
       double a1 = TetBadnessFromPoints(p1,p2,p3,p5);
       double a2 = TetBadnessFromPoints(p1,p3,p4,p5);
       double splitA = std::max(a1,a2);
@@ -563,7 +563,7 @@ int Meshing3 :: ApplyRules
                               for (int j = 1; j <= 3; j++)
                                 {
                                   IVec<2> in2(pmap[el.PNum(j)].Nr0(),
-                                              pmap[el.PNum(j+3)].Nr0());      
+                                              pmap[el[j+2]].Nr0());      
                                   in2.Sort();
                                   if (!connectedpairs.Used (in2)) ok = 0;
                                 }
@@ -576,11 +576,11 @@ int Meshing3 :: ApplyRules
                                 {
                                   IVec<2> in2;
                                   if (j == 1)
-                                    in2 = IVec<2>(pmap[el.PNum(2)].Nr0(),
-                                                  pmap[el.PNum(3)].Nr0());
+                                    in2 = IVec<2>(pmap[el[1]].Nr0(),
+                                                  pmap[el[2]].Nr0());
                                   else
-                                    in2 = IVec<2>(pmap[el.PNum(1)].Nr0(),
-                                                  pmap[el.PNum(4)].Nr0());
+                                    in2 = IVec<2>(pmap[el[0]].Nr0(),
+                                                  pmap[el[3]].Nr0());
                                   in2.Sort();
                                   if (!connectedpairs.Used (in2)) 
                                     {
@@ -657,8 +657,8 @@ int Meshing3 :: ApplyRules
                         {
                           const Array<Point<3>> & fz = rule->GetTransFreeZone();
                           (*testout) << "Freezone: " << endl;
-                          for (int i = 1; i <= fz.Size(); i++)
-                            (*testout) << fz[i-1] << endl;
+                          for (int i = 0; i < fz.Size(); i++)
+                            (*testout) << fz[i] << endl;
                         }
                       
 
@@ -701,14 +701,14 @@ int Meshing3 :: ApplyRules
                                 triin = 0;
                               else
                                 {
-                                  for (int li = 1; li <= lfacei.GetNP(); li++)
+                                  for (int li = 0; li < lfacei.GetNP(); li++)
                                     {
                                       int lpii = 0;
-                                      LocalPointIndex pi = lfacei.PNum(li);
+                                      LocalPointIndex pi = lfacei[li];
                                       for (auto pj : pmap.Range().Modify(0, rule->GetNOldP()-pmap.Size()))
                                         if (pmap[pj] == pi)
                                           lpii = pj.Nr1();
-                                      lpi[li-1] = lpii;
+                                      lpi[li] = lpii;
                                     }
 
 
@@ -716,19 +716,19 @@ int Meshing3 :: ApplyRules
                                     {
                                       triin = rule->IsTriangleInFreeZone 
                                         (
-                                         lpoints[lfacei.PNum(1)],
-                                         lpoints[lfacei.PNum(2)],
-                                         lpoints[lfacei.PNum(3)], lpi, 1
+                                         lpoints[lfacei[0]],
+                                         lpoints[lfacei[1]],
+                                         lpoints[lfacei[2]], lpi, 1
                                          );
                                     }
                                   else
                                     {
                                       triin = rule->IsQuadInFreeZone 
                                         (
-                                         lpoints[lfacei.PNum(1)],
-                                         lpoints[lfacei.PNum(2)],
-                                         lpoints[lfacei.PNum(3)], 
-                                         lpoints[lfacei.PNum(4)], 
+                                         lpoints[lfacei[0]],
+                                         lpoints[lfacei[1]],
+                                         lpoints[lfacei[2]], 
+                                         lpoints[lfacei[3]], 
                                          lpi, 1
                                          );
                                     }
@@ -748,18 +748,18 @@ int Meshing3 :: ApplyRules
                                   if (loktestmode)
                                     {
                                       (*testout) << "El with " << lfaces[i-1].GetNP() << " points in freezone: "
-                                                 << lfaces[i-1].PNum(1) << " - " 
-                                                 << lfaces[i-1].PNum(2) << " - "
-                                                 << lfaces[i-1].PNum(3) << " - "
-                                                 << lfaces[i-1].PNum(4) << endl;
-                                      for (int lj = 1; lj <= lfaces[i-1].GetNP(); lj++)
-                                        (*testout) << lpoints[lfaces[i-1].PNum(lj)] << " ";
+                                                 << lfaces[i-1][0] << " - " 
+                                                 << lfaces[i-1][1] << " - "
+                                                 << lfaces[i-1][2] << " - "
+                                                 << lfaces[i-1][3] << endl;
+                                      for (int lj = 0; lj < lfaces[i-1].GetNP(); lj++)
+                                        (*testout) << lpoints[lfaces[i-1][lj]] << " ";
 
                                       (*testout) << endl;
 
                                       sprintf (problems.Elem(ri), "triangle (%d, %d, %d) in Freezone",
-                                               lfaces[i-1].PNum(1), lfaces[i-1].PNum(2),
-                                               lfaces[i-1].PNum(3));
+                                               lfaces[i-1][0], lfaces[i-1][1],
+                                               lfaces[i-1][2]);
                                     }
 #else
                                   if (loktestmode)
@@ -767,33 +767,33 @@ int Meshing3 :: ApplyRules
                                       if (lfacei.GetNP() == 3)
                                         {
                                           (*testout) << "Triangle in freezone: "
-                                                     << lfacei.PNum(1) << " - " 
-                                                     << lfacei.PNum(2) << " - "
-                                                     << lfacei.PNum(3) 
+                                                     << lfacei[0] << " - " 
+                                                     << lfacei[1] << " - "
+                                                     << lfacei[2] 
                                                      << ", or "
-                                                     << lpoints[lfacei.PNum(1)] << " - " 
-                                                     << lpoints[lfacei.PNum(2)] << " - "
-                                                     << lpoints[lfacei.PNum(3)] 
+                                                     << lpoints[lfacei[0]] << " - " 
+                                                     << lpoints[lfacei[1]] << " - "
+                                                     << lpoints[lfacei[2]] 
                                                      << endl;
                                           (*testout) << "lpi = " << lpi[0] << ", " 
                                                      << lpi[1] << ", " << lpi[2] << endl;
                                         }
                                       else
                                           (*testout) << "Quad in freezone: "
-                                                     << lfacei.PNum(1) << " - " 
-                                                     << lfacei.PNum(2) << " - "
-                                                     << lfacei.PNum(3) << " - "
-                                                     << lfacei.PNum(4) 
+                                                     << lfacei[0] << " - " 
+                                                     << lfacei[1] << " - "
+                                                     << lfacei[2] << " - "
+                                                     << lfacei[3] 
                                                      << ", or "
-                                                     << lpoints[lfacei.PNum(1)] << " - " 
-                                                     << lpoints[lfacei.PNum(2)] << " - "
-                                                     << lpoints[lfacei.PNum(3)] << " - "
-                                                     << lpoints[lfacei.PNum(4)] 
+                                                     << lpoints[lfacei[0]] << " - " 
+                                                     << lpoints[lfacei[1]] << " - "
+                                                     << lpoints[lfacei[2]] << " - "
+                                                     << lpoints[lfacei[3]] 
                                                      << endl;
 
-                                      problems[rim] = "triangle ("+ToString(lfaces[i-1].PNum(1))+", "
-                                        + ToString(lfaces[i-1].PNum(2)) + ", "
-                                        + ToString(lfaces[i-1].PNum(3)) + ") in Freezone";
+                                      problems[rim] = "triangle ("+ToString(lfaces[i-1][0])+", "
+                                        + ToString(lfaces[i-1][1]) + ", "
+                                        + ToString(lfaces[i-1][2]) + ") in Freezone";
                                     }   
 
                                   hc = 0;
@@ -829,20 +829,20 @@ int Meshing3 :: ApplyRules
                                       if (loktestmode)
                                         {
                                           (*testout) << "Triangle in freezone: "
-                                                     << lfaces[i-1].PNum(1) << " - " 
-                                                     << lfaces[i-1].PNum(2) << " - "
-                                                     << lfaces[i-1].PNum(3) << endl;
+                                                     << lfaces[i-1][0] << " - " 
+                                                     << lfaces[i-1][1] << " - "
+                                                     << lfaces[i-1][2] << endl;
 
                                           /*
                                           snprintf (problems.Elem(ri), 255, "triangle (%d, %d, %d) in Freezone",
-                                                   int (lfaces[i-1].PNum(1)), 
-                                                   int (lfaces[i-1].PNum(2)),
-                                                   int (lfaces[i-1].PNum(3)));
+                                                   int (lfaces[i-1][0]), 
+                                                   int (lfaces[i-1][1]),
+                                                   int (lfaces[i-1][2]));
                                           */
                                           problems[rim] = "triangle ("
-                                            + ToString(lfaces[i-1].PNum(1))+", "
-                                            + ToString(lfaces[i-1].PNum(2)) + ", "
-                                            + ToString(lfaces[i-1].PNum(3)) + ") in Freezone";
+                                            + ToString(lfaces[i-1][0])+", "
+                                            + ToString(lfaces[i-1][1]) + ", "
+                                            + ToString(lfaces[i-1][2]) + ") in Freezone";
                                           
                                         }
                                       ok = 0;
@@ -963,8 +963,8 @@ int Meshing3 :: ApplyRules
                               const RuleElement & rel = rule->GetElement(i);
                               LocalElement el;
                               el.SetType (rel.GetType());
-                              for (int j = 1; j <= rel.GetNP(); j++)
-                                el.PNum(j) = pmap[rel.PNum(j)];   // rule nr -> local nr
+                              for (int j = 0; j < rel.GetNP(); j++)
+                                el[j] = pmap[rel[j]];   // rule nr -> local nr
                               elements.Append (el);
                             }
                           
@@ -1145,11 +1145,11 @@ int Meshing3 :: ApplyRules
         lpoints.Append(p);
       /*
       for (i = 1; i <= tempnewfaces.Size(); i++)
-        if (tempnewfaces.Get(i).PNum(1))
+        if (tempnewfaces.Get(i)[0])
           lfaces.Append (tempnewfaces.Get(i));
       */
       for (int i : tempnewfaces.Range())
-        if (tempnewfaces[i].PNum(1).IsValid())
+        if (tempnewfaces[i][0].IsValid())
           lfaces.Append (tempnewfaces[i]);
       /*
       for (i = 1; i <= tempdelfaces.Size(); i++)

@@ -700,8 +700,8 @@ void VisualSceneSTLMeshing :: DrawScene ()
 
                       if (ed.Get(i).GetStatus() == ED_EXCLUDED && !stldoctor.showexcluded) continue;
 
-                      Point<3> p1 = stlgeometry->GetPoint(ed.Get(i).PNum(1));
-                      Point<3> p2 = stlgeometry->GetPoint(ed.Get(i).PNum(2));
+                      Point<3> p1 = stlgeometry->GetPoint(ed.Get(i)[0]);
+                      Point<3> p2 = stlgeometry->GetPoint(ed.Get(i)[1]);
                       glVertex3f(p1(0), p1(1), p1(2));
                       glVertex3f(p2(0), p2(1), p2(2));             
                     }
@@ -719,7 +719,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
                   for (int k = 1; k <= line->NP()-1; k++)
                     {
                       pn1 = line->PNum(k);
-                      pn2 = line->PNum(k+1);
+                      pn2 = (*line)[k];
 
                       Point<3> p1 = stlgeometry->GetPoint(pn1);
                       Point<3> p2 = stlgeometry->GetPoint(pn2);
@@ -746,7 +746,7 @@ void VisualSceneSTLMeshing :: DrawScene ()
                   for (int k = 1; k <= line->NP()-1; k++)
                     {
                       pn1 = line->PNum(k);
-                      pn2 = line->PNum(k+1);
+                      pn2 = (*line)[k];
 
                       Point<3> p1 = stlgeometry->meshpoints[pn1-1];
                       Point<3> p2 = stlgeometry->meshpoints[pn2-1];
@@ -1178,8 +1178,8 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
 
     CalcTransformationMatrices();
 
-    for (int i = 1; i <= trilists.Size(); i++)
-      glDeleteLists (trilists[i-1], 1);
+    for (int i = 0; i < trilists.Size(); i++)
+      glDeleteLists (trilists[i], 1);
     trilists.SetSize(0);
 
 
@@ -1194,10 +1194,10 @@ void VisualSceneSTLMeshing :: MouseDblClick (int px, int py)
         const Vec<3> & n = stlgeometry->GetTriangle(j).Normal();
         glNormal3f (n(0), n(1), n(2));
       
-        for (int k = 1; k <= 3; k++)
+        for (int k = 0; k < 3; k++)
           {
             const Point<3> & p = 
-              stlgeometry->GetPoint (stlgeometry -> GetTriangle(j).PNum(k));
+              stlgeometry->GetPoint (stlgeometry -> GetTriangle(j)[k]);
             glVertex3f (p(0),p(1), p(2));
           }
       }    

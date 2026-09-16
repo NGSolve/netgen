@@ -127,7 +127,7 @@ void Surface :: Project (Point<3> & p) const
   Vec<3> n;
   double val;
 
-  for (int i = 1; i <= 10; i++)
+  for (int i = 0; i < 10; i++)
     {
       val = CalcFunctionValue (p);
       if (fabs (val) < 1e-12) return;

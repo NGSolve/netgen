@@ -24,6 +24,8 @@ public:
   STLEdge (int v1, int v2) {pts[0] = v1; pts[1] = v2;}
   STLEdge () {pts[0]=0;pts[1]=0;}
   int PNum(int i) const {return pts[(i-1)];}
+  int operator[] (int i) const {return pts[i];}
+  int & operator[] (int i) {return pts[i];}
 
   int LeftTrig() const {return trigs[0];}
   int RightTrig() const {return trigs[1];}
@@ -157,6 +159,7 @@ public:
   STLLine(const STLGeometry * ageometry);
   void AddPoint(int i) {pts.Append(i);}
   int PNum(int i) const {return pts[i-1];}
+  int operator[] (int i) const {return pts[i];}
   int NP() const {return pts.Size();}
   int GetNS() const;
   void GetSeg(int nr, int& p1, int& p2) const;

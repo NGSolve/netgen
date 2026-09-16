@@ -78,7 +78,7 @@ namespace netgen
     infile >> n;   // number of surface elements
     cout << n << " Surface elements" << endl;
   
-    for (int i = 1; i <= n; i++)
+    for (int i = 0; i < n; i++)
       {
         SURFELEMENT sel;
         infile >> sel.snr >> sel.p1 >> sel.p2 >> sel.p3;
@@ -88,7 +88,7 @@ namespace netgen
     infile >> n;   // number of volume elements
     cout << n << " Volume elements" << endl;
   
-    for (int i = 1; i <= n; i++)
+    for (int i = 0; i < n; i++)
       {
         VOLELEMENT el;
         infile >> el.p1 >> el.p2 >> el.p3 >> el.p4;
@@ -98,7 +98,7 @@ namespace netgen
     infile >> n;   // number of points 
     cout << n << " Points" << endl;
   
-    for (int i = 1; i <= n; i++)
+    for (int i = 0; i < n; i++)
       {
         POINT3D p;
         infile >> p.x >> p.y >> p.z;
@@ -118,9 +118,9 @@ namespace netgen
         SURFELEMENT sel;
         const Element2d & el = mesh[i];
         sel.snr = el.GetIndex();
-        sel.p1 = el.PNum(1);
-        sel.p2 = el.PNum(2);
-        sel.p3 = el.PNum(3);
+        sel.p1 = el[0];
+        sel.p2 = el[1];
+        sel.p3 = el[2];
         surfelements.Append (sel);
       }
     
@@ -131,10 +131,10 @@ namespace netgen
       {
         VOLELEMENT el;
         const Element & nel = mesh[i];
-        el.p1 = nel.PNum(1);
-        el.p2 = nel.PNum(2);
-        el.p3 = nel.PNum(3);
-        el.p4 = nel.PNum(4);
+        el.p1 = nel[0];
+        el.p2 = nel[1];
+        el.p3 = nel[2];
+        el.p4 = nel[3];
         //      infile >> el.p1 >> el.p2 >> el.p3 >> el.p4;
         volelements.Append (el);
       }
@@ -165,9 +165,9 @@ namespace netgen
     // face j of a tet is the one opposite to its point j
     static const int facepoints[4][3] = { {1,2,3}, {0,2,3}, {0,1,3}, {0,1,2} };
 
-    for (int i = 1; i <= volelements.Size(); i++)
+    for (int i = 0; i < volelements.Size(); i++)
       {
-        const auto & vel = volelements[i-1];
+        const auto & vel = volelements[i];
         PointIndex vp[4] = { vel.p1, vel.p2, vel.p3, vel.p4 };
 
         for (int j = 0; j < 4; j++)
@@ -188,16 +188,16 @@ namespace netgen
                 faceindex.Set (i3, facei);
               }
 
-            volelements[i-1].faces[j] = facei;
+            volelements[i].faces[j] = facei;
           }
       }
 
     // edge j of a face is the one opposite to its point j
     static const int edgepoints[3][2] = { {1,2}, {0,2}, {0,1} };
 
-    for (int i = 1; i <= faces.Size(); i++)
+    for (int i = 0; i < faces.Size(); i++)
       {
-        PointIndex fp[3] = { faces[i-1].p1, faces[i-1].p2, faces[i-1].p3 };
+        PointIndex fp[3] = { faces[i].p1, faces[i].p2, faces[i].p3 };
 
         for (int j = 0; j < 3; j++)
           {
@@ -215,7 +215,7 @@ namespace netgen
                 edgeindex.Set (i2, edgei);
               }
 
-            faces[i-1].edges[j] = edgei;
+            faces[i].edges[j] = edgei;
           }
       }
   }

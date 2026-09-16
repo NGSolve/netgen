@@ -44,10 +44,10 @@ public:
   ///
   void Transform (const Point<3> & from, Point<3> & to) const
     {
-      for (int i = 1; i <= 3; i++)
+      for (int i = 0; i < 3; i++)
         {
-          to(i-1) = offset[i-1] + lin[i-1][0] * from(0) + 
-            lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
+          to(i) = offset[i] + lin[i][0] * from(0) + 
+            lin[i][1] * from(1) + lin[i][2] * from(2);
         }
     }
 
@@ -62,10 +62,10 @@ public:
   /// transform vector, apply only linear part, not offset
   void Transform (const Vec<3> & from, Vec<3> & to) const
     {
-      for (int i = 1; i <= 3; i++)
+      for (int i = 0; i < 3; i++)
         {
-          to(i-1) = lin[i-1][0] * from(0) + 
-            lin[i-1][1] * from(1) + lin[i-1][2] * from(2);
+          to(i) = lin[i][0] * from(0) + 
+            lin[i][1] * from(1) + lin[i][2] * from(2);
         }
     }
   friend ostream & operator<< (ostream & ost, Transformation3d & trans);

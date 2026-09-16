@@ -414,8 +414,8 @@ namespace netgen
 
              int elrev = el.Flags().reverse;
 
-             for (int j = 1; j <= 4; j++)
-               pnums[j-1] = el.PNum(j);
+             for (int j = 0; j < 4; j++)
+               pnums[j] = el[j];
              if (elrev)
              swap (pnums[2], pnums[3]);
 
@@ -474,14 +474,14 @@ namespace netgen
            for (int j = 0; j < 8; j++)
            {
              Element nel(TET);
-              for (int k = 1; k <= 4; k++)
-                nel.PNum(k) = pnums[reftab[j][k-1]-1];
+              for (int k = 0; k < 4; k++)
+                nel[k] = pnums[reftab[j][k]-1];
               nel.SetIndex(ind);
               nel.Flags().reverse = reverse[j];
               if (elrev)
               {
                 nel.Flags().reverse = !nel.Flags().reverse;
-                swap (nel.PNum(3), nel.PNum(4));
+                swap (nel[2], nel[3]);
               }
 
               if (j == 0)
@@ -545,8 +545,8 @@ namespace netgen
 
              pnums = PointIndex::INVALID;
 
-             for (int j = 1; j <= 8; j++)
-               pnums[j-1] = el.PNum(j);
+             for (int j = 0; j < 8; j++)
+               pnums[j] = el[j];
 
 
              for (int j = 0; j < 13; j++)
@@ -596,8 +596,8 @@ namespace netgen
            for (int j = 0; j < 8; j++)
            {
               Element nel(HEX);
-              for (int k = 1; k <= 8; k++)
-                nel.PNum(k) = pnums[reftab[j][k-1]-1];
+              for (int k = 0; k < 8; k++)
+                nel[k] = pnums[reftab[j][k]-1];
               nel.SetIndex(ind);
 
               if (j == 0)
@@ -645,8 +645,8 @@ namespace netgen
              //int elrev = el.flags.reverse;
            pnums = PointIndex::INVALID;
            
-           for (int j = 1; j <= 6; j++)
-             pnums[j-1] = el.PNum(j);
+           for (int j = 0; j < 6; j++)
+             pnums[j] = el[j];
             // if (elrev)
             // swap (pnums.Elem(3), pnums.Elem(4));
 
@@ -698,8 +698,8 @@ namespace netgen
            for (int j = 0; j < 8; j++)
            {
               Element nel(PRISM);
-              for (int k = 1; k <= 6; k++)
-                nel.PNum(k) = pnums[reftab[j][k-1]-1];
+              for (int k = 0; k < 6; k++)
+                nel[k] = pnums[reftab[j][k]-1];
               nel.SetIndex(ind);
 
 
@@ -707,7 +707,7 @@ namespace netgen
               //if (elrev)
              // {
                 //nel.flags.reverse = 1 - nel.flags.reverse;
-                //swap (nel.PNum(3), nel.PNum(4));
+                //swap (nel[2], nel[3]);
 
 
               if (j == 0)
@@ -827,10 +827,10 @@ namespace netgen
                   {
                     const Element & el = mesh.VolumeElement(ei);
                     if (el.Volume(mesh.Points()) < 0)
-                      for (int j = 1; j <= el.GetNP(); j++)
-                        free.SetBit (el.PNum(j));
+                      for (int j = 0; j < el.GetNP(); j++)
+                        free.SetBit (el[j]);
                   }
-                for (int k = 1; k <= 3; k++)
+                for (int k = 0; k < 3; k++)
                   {
                     fhelp.Clear();
                     // for (int i = 1; i <= mesh.GetNE(); i++) 
@@ -873,8 +873,8 @@ namespace netgen
                         wrongels++;
                         mesh.VolumeElement(ei).Flags().badel = 1;
                         (*testout) << "wrong el: ";
-                        for (int j = 1; j <= 4; j++)
-                          (*testout) << mesh.VolumeElement(ei).PNum(j) << " ";
+                        for (int j = 0; j < 4; j++)
+                          (*testout) << mesh.VolumeElement(ei)[j] << " ";
                         (*testout) << endl;
                       }
                     else

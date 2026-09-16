@@ -98,10 +98,10 @@ namespace netgen
                 {
                     const Element & el = mesh[i];
                     outfile << i.Nr1() 
-                            << " " << el.PNum(1) 
-                            << " " << el.PNum(2) 
-                            << " " << el.PNum(4) 
-                            << " " << el.PNum(3) << endl;
+                            << " " << el[0] 
+                            << " " << el[1] 
+                            << " " << el[3] 
+                            << " " << el[2] << endl;
                 }
             }
             else
@@ -111,16 +111,16 @@ namespace netgen
                 {
                     const Element & el = mesh[i];
                     outfile << i.Nr1() 
-                            << " " << el.PNum(1) 
-                            << " " << el.PNum(5) 
-                            << " " << el.PNum(2) 
-                            << " " << el.PNum(8) 
-                            << " " << el.PNum(3) 
-                            << " " << el.PNum(6) << endl << "& "
-                            << " " << el.PNum(7) 
-                            << " " << el.PNum(9) 
-                            << " " << el.PNum(10) 
-                            << " " << el.PNum(4) << endl;
+                            << " " << el[0] 
+                            << " " << el[4] 
+                            << " " << el[1] 
+                            << " " << el[7] 
+                            << " " << el[2] 
+                            << " " << el[5] << endl << "& "
+                            << " " << el[6] 
+                            << " " << el[8] 
+                            << " " << el[9] 
+                            << " " << el[3] << endl;
                 }
             }
             
@@ -133,9 +133,9 @@ namespace netgen
                 const Element2d & el = mesh[i];
                 if (el.GetNP() == 3)
                     outfile << "STRIA3"
-                            << " " << el.PNum(1) 
-                            << " " << el.PNum(2) 
-                            << " " << el.PNum(3) << endl;
+                            << " " << el[0] 
+                            << " " << el[1] 
+                            << " " << el[2] << endl;
             }    
             
             for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
@@ -143,10 +143,10 @@ namespace netgen
                 const Element2d & el = mesh[i];
                 if (el.GetNP() == 4)
                     outfile << "SQUAD4"
-                            << " " << el.PNum(1) 
-                            << " " << el.PNum(2) 
-                            << " " << el.PNum(3) 
-                            << " " << el.PNum(4) << endl;
+                            << " " << el[0] 
+                            << " " << el[1] 
+                            << " " << el[2] 
+                            << " " << el[3] << endl;
             }      
             
             for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
@@ -154,12 +154,12 @@ namespace netgen
                 const Element2d & el = mesh[i];
                 if (el.GetNP() == 6)
                     outfile << "STRIA6"
-                            << " " << el.PNum(1) 
-                            << " " << el.PNum(4) 
-                            << " " << el.PNum(2) 
-                            << " " << el.PNum(5) 
-                            << " " << el.PNum(3) 
-                            << " " << el.PNum(6) << endl;
+                            << " " << el[0] 
+                            << " " << el[3] 
+                            << " " << el[1] 
+                            << " " << el[4] 
+                            << " " << el[2] 
+                            << " " << el[5] << endl;
             }      
         }
         

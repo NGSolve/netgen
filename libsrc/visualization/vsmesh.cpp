@@ -576,16 +576,16 @@ namespace netgen
 
 
                 //        if ( (el.GetNP() == 4) || (el.GetNP() == 10))
-                if (el.PNum(1).IsValid())
+                if (el[0].IsValid())
                   {
                     glBegin (GL_TRIANGLES);
 
-                    for (int j = 1; j <= faces.Size(); j++)
+                    for (int j = 0; j < faces.Size(); j++)
                       {
-                        ElementFace & face = faces[j-1];
-                        const Point<3> & lp1 = mesh->Point (el.PNum(face.PNum(1)));
-                        const Point<3> & lp2 = mesh->Point (el.PNum(face.PNum(2)));
-                        const Point<3> & lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                        ElementFace & face = faces[j];
+                        const Point<3> & lp1 = mesh->Point (el.PNum(face[0]));
+                        const Point<3> & lp2 = mesh->Point (el.PNum(face[1]));
+                        const Point<3> & lp3 = mesh->Point (el.PNum(face[2]));
                         Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
                         n /= (n.Length()+1e-12);
                         glNormal3d (n(0), n(1), n(2));
@@ -611,7 +611,7 @@ namespace netgen
                   {
                     glBegin (GL_LINES);
                     glVertex3d (0,0,0);
-                    const Point<3> & p = mesh->Point(el.PNum(1));
+                    const Point<3> & p = mesh->Point(el[0]);
                     glVertex3d (p(0), p(1), p(2));
                     glEnd();
                   }
@@ -623,15 +623,15 @@ namespace netgen
           {
             Element el = mesh->VolumeElement (ei);
             int hascp = 0;
-            for (int j = 1; j <= el.GetNP(); j++)
-              if (el.PNum(j) == vispar.centerpoint)
+            for (int j = 0; j < el.GetNP(); j++)
+              if (el[j] == vispar.centerpoint)
                 hascp = 1;
 
             if (hascp)
               {
                 (*testout) << "draw el " << ei << " : ";
-                for (int j = 1; j <= el.GetNP(); j++)
-                  (*testout) << el.PNum(j) << " ";
+                for (int j = 0; j < el.GetNP(); j++)
+                  (*testout) << el[j] << " ";
                 (*testout) << endl;
 
                 if (el.GetNP() == 4)
@@ -694,8 +694,8 @@ namespace netgen
             if (el.IsDeleted()) continue;
             
             bool drawel = true;
-            for (int j = 1; j <= el.GetNP(); j++)
-              if (!el.PNum(j).IsValid())
+            for (int j = 0; j < el.GetNP(); j++)
+              if (!el[j].IsValid())
                 drawel = false;
 
             if (!drawel)
@@ -708,9 +708,9 @@ namespace netgen
                 {
                   glBegin (GL_TRIANGLES);
 
-                  Point<3> lp1 = mesh->Point (el.PNum(1));
-                  Point<3> lp2 = mesh->Point (el.PNum(2));
-                  Point<3> lp3 = mesh->Point (el.PNum(3));
+                  Point<3> lp1 = mesh->Point (el[0]);
+                  Point<3> lp2 = mesh->Point (el[1]);
+                  Point<3> lp3 = mesh->Point (el[2]);
                   Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
                   n /= (n.Length() + 1e-12);
                   glNormal3dv (&n(0));
@@ -724,10 +724,10 @@ namespace netgen
                 {
                   glBegin (GL_QUADS);
 
-                  const Point<3> & lp1 = mesh->Point (el.PNum(1));
-                  const Point<3> & lp2 = mesh->Point (el.PNum(2));
-                  const Point<3> & lp3 = mesh->Point (el.PNum(4));
-                  const Point<3> & lp4 = mesh->Point (el.PNum(3));
+                  const Point<3> & lp1 = mesh->Point (el[0]);
+                  const Point<3> & lp2 = mesh->Point (el[1]);
+                  const Point<3> & lp3 = mesh->Point (el[3]);
+                  const Point<3> & lp4 = mesh->Point (el[2]);
                   Vec<3> n = Cross (Vec<3> (lp1, lp2),
                                    Vec<3> (lp1, Center (lp3, lp4)));
                   n /= (n.Length() + 1e-12);
@@ -1025,10 +1025,10 @@ namespace netgen
                     {
                       glBegin (GL_QUADS);
 
-                      const Point<3> & lp1 = mesh->Point (el.PNum(1));
-                      const Point<3> & lp2 = mesh->Point (el.PNum(2));
-                      const Point<3> & lp3 = mesh->Point (el.PNum(4));
-                      const Point<3> & lp4 = mesh->Point (el.PNum(3));
+                      const Point<3> & lp1 = mesh->Point (el[0]);
+                      const Point<3> & lp2 = mesh->Point (el[1]);
+                      const Point<3> & lp3 = mesh->Point (el[3]);
+                      const Point<3> & lp4 = mesh->Point (el[2]);
 
                       Vec<3> n = Cross (lp2-lp1,  Center (lp3, lp4)-lp1);
                       n.Normalize();
@@ -1486,10 +1486,10 @@ namespace netgen
 
                 glBegin (GL_QUADS);
 
-                const Point<3> & lp1 = mesh->Point (el.PNum(1));
-                const Point<3> & lp2 = mesh->Point (el.PNum(2));
-                const Point<3> & lp3 = mesh->Point (el.PNum(4));
-                const Point<3> & lp4 = mesh->Point (el.PNum(3));
+                const Point<3> & lp1 = mesh->Point (el[0]);
+                const Point<3> & lp2 = mesh->Point (el[1]);
+                const Point<3> & lp3 = mesh->Point (el[3]);
+                const Point<3> & lp4 = mesh->Point (el[2]);
                 Vec<3> n = Cross (Vec<3> (lp1, lp2),
                                  Vec<3> (lp1, Center (lp3, lp4)));
                 glNormal3d (n(0), n(1), n(2));
@@ -1715,7 +1715,7 @@ namespace netgen
   static inline double Bernstein (int n, int i, double x)
   {
     double val = 1;
-    for (int j = 1; j <= i; j++)
+    for (int j = 0; j < i; j++)
       val *= x;
     for (int j = 1; j <= n-i; j++)
       val *= (1-x) * (j+i) / j;
@@ -2404,9 +2404,9 @@ namespace netgen
                 for (j = 1; j <= faces.Size(); j++)
                   {
                     ElementFace & face = faces[j-1];
-                    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-                    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-                    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                    Point<3> lp1 = mesh->Point (el.PNum(face[0]));
+                    Point<3> lp2 = mesh->Point (el.PNum(face[1]));
+                    Point<3> lp3 = mesh->Point (el.PNum(face[2]));
                     Vec<3> n = Cross (Vec<3> (lp1, lp3), Vec<3> (lp1, lp2));
                     n /= (n.Length()+1e-12);
                     glNormal3d (n(0), n(1), n(2));
@@ -2594,9 +2594,9 @@ namespace netgen
                 Point<3> c(0,0,0);
                 if (vispar.shrink < 1)
                   {
-                    for (int j = 1; j <= 8; j++)
+                    for (int j = 0; j < 8; j++)
                       {
-                        Point<3> p = mesh->Point(el.PNum(j));
+                        Point<3> p = mesh->Point(el[j]);
                         c(0) += p(0);
                         c(1) += p(1);
                         c(2) += p(2);
@@ -2609,12 +2609,12 @@ namespace netgen
                 glBegin (GL_TRIANGLES);
 
                 el.GetSurfaceTriangles (faces);
-                for (int j = 1; j <= faces.Size(); j++)
+                for (int j = 0; j < faces.Size(); j++)
                   {
-                    ElementFace & face = faces[j-1];
-                    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-                    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-                    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                    ElementFace & face = faces[j];
+                    Point<3> lp1 = mesh->Point (el.PNum(face[0]));
+                    Point<3> lp2 = mesh->Point (el.PNum(face[1]));
+                    Point<3> lp3 = mesh->Point (el.PNum(face[2]));
                     Vec<3> n = Cross (lp3-lp1, lp2-lp1);
                     n.Normalize();
                     glNormal3dv (n);
@@ -2706,9 +2706,9 @@ namespace netgen
                 Point<3> c(0,0,0);
                 if (vispar.shrink < 1)
                   {
-                    for (int j = 1; j <= 7; j++)
+                    for (int j = 0; j < 7; j++)
                       {
-                        Point<3> p = mesh->Point(el.PNum(j));
+                        Point<3> p = mesh->Point(el[j]);
                         c(0) += p(0);
                         c(1) += p(1);
                         c(2) += p(2);
@@ -2721,12 +2721,12 @@ namespace netgen
                 glBegin (GL_TRIANGLES);
 
                 el.GetSurfaceTriangles (faces);
-                for (int j = 1; j <= faces.Size(); j++)
+                for (int j = 0; j < faces.Size(); j++)
                   {
-                    ElementFace & face = faces[j-1];
-                    Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-                    Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-                    Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                    ElementFace & face = faces[j];
+                    Point<3> lp1 = mesh->Point (el.PNum(face[0]));
+                    Point<3> lp2 = mesh->Point (el.PNum(face[1]));
+                    Point<3> lp3 = mesh->Point (el.PNum(face[2]));
                     Vec<3> n = Cross (lp3-lp1, lp2-lp1);
                     n.Normalize();
                     glNormal3dv (n);
@@ -3063,9 +3063,9 @@ namespace netgen
                 Point<3> c(0,0,0);
                 if (vispar.shrink < 1)
                   {
-                    for (int j = 1; j <= 5; j++)
+                    for (int j = 0; j < 5; j++)
                       {
-                        Point<3> p = mesh->Point(el.PNum(j));
+                        Point<3> p = mesh->Point(el[j]);
                         c(0) += p(0) / 5;
                         c(1) += p(1) / 5;
                         c(2) += p(2) / 5;
@@ -3075,16 +3075,16 @@ namespace netgen
 
                 el.GetSurfaceTriangles (faces);
 
-                if (el.PNum(1).IsValid())
+                if (el[0].IsValid())
                   {
                     glBegin (GL_TRIANGLES);
 
-                    for (int j = 1; j <= faces.Size(); j++)
+                    for (int j = 0; j < faces.Size(); j++)
                       {
-                        ElementFace & face = faces[j-1];
-                        Point<3> lp1 = mesh->Point (el.PNum(face.PNum(1)));
-                        Point<3> lp2 = mesh->Point (el.PNum(face.PNum(2)));
-                        Point<3> lp3 = mesh->Point (el.PNum(face.PNum(3)));
+                        ElementFace & face = faces[j];
+                        Point<3> lp1 = mesh->Point (el.PNum(face[0]));
+                        Point<3> lp2 = mesh->Point (el.PNum(face[1]));
+                        Point<3> lp3 = mesh->Point (el.PNum(face[2]));
                         Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
                         n /= (n.Length()+1e-12);
                         n *= -1;
@@ -3171,9 +3171,9 @@ namespace netgen
           {
             glBegin (GL_TRIANGLES);
 
-            const Point<3> & lp1 = mesh->Point (el.PNum(1));
-            const Point<3> & lp2 = mesh->Point (el.PNum(2));
-            const Point<3> & lp3 = mesh->Point (el.PNum(3));
+            const Point<3> & lp1 = mesh->Point (el[0]);
+            const Point<3> & lp2 = mesh->Point (el[1]);
+            const Point<3> & lp3 = mesh->Point (el[2]);
             Vec<3> n = Cross (Vec<3> (lp1, lp2), Vec<3> (lp1, lp3));
             n /= ( fac * (n.Length()+1e-12));
             glNormal3d (n(0), n(1), n(2));
@@ -3190,10 +3190,10 @@ namespace netgen
           {
             glBegin (GL_QUADS);
 
-            const Point<3> & lp1 = mesh->Point (el.PNum(1));
-            const Point<3> & lp2 = mesh->Point (el.PNum(2));
-            const Point<3> & lp3 = mesh->Point (el.PNum(4));
-            const Point<3> & lp4 = mesh->Point (el.PNum(3));
+            const Point<3> & lp1 = mesh->Point (el[0]);
+            const Point<3> & lp2 = mesh->Point (el[1]);
+            const Point<3> & lp3 = mesh->Point (el[3]);
+            const Point<3> & lp4 = mesh->Point (el[2]);
             Vec<3> n = Cross (Vec<3> (lp1, lp2),
                              Vec<3> (lp1, Center (lp3, lp4)));
             n /= (fac * (n.Length()+1e-12));
@@ -3413,8 +3413,8 @@ namespace netgen
             }
             cout << "\tpoint: " << p << endl;;
             cout << "\tnodes: ";
-            for (int i = 1; i <= sel.GetNP(); i++)
-              cout << sel.PNum(i) << " ";
+            for (int i = 0; i < sel.GetNP(); i++)
+              cout << sel[i] << " ";
             cout << endl;
         }
       }

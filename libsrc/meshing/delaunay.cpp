@@ -989,10 +989,10 @@ namespace netgen
                 cout << "pmin, pmax = " << pmin << " - " << pmax << endl;
         */
 
-        for (int i = 1; i <= openels.Size(); i++)
+        for (int i = 0; i < openels.Size(); i++)
           {
             int fnr;
-            fnr = openels[i-1];
+            fnr = openels[i];
             if (fnr)
               {
                 const Element2d & tri = mesh.OpenElement(fnr);
@@ -1039,9 +1039,9 @@ namespace netgen
           
             //      for (j = 1; j <= mesh.GetNSE(); j++)
             //  {
-            for (int jj = 1; jj <= neartrias.Size(); jj++)
+            for (int jj = 0; jj < neartrias.Size(); jj++)
               {
-                int j = neartrias[jj-1];
+                int j = neartrias[jj];
               
                 const Element2d & tri = mesh.OpenElement(j);
                 const Point<3> *tripp[3];

@@ -2119,8 +2119,8 @@ namespace netgen
 
    bool OCCGeometry :: ErrorInSurfaceMeshing ()
    {
-      for (int i = 1; i <= fmap.Extent(); i++)
-         if (facemeshstatus[i-1] == -1)
+      for (int i = 0; i < fmap.Extent(); i++)
+         if (facemeshstatus[i] == -1)
             return true;
 
       return false;

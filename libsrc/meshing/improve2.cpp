@@ -837,8 +837,8 @@ namespace netgen
     {
     const Element2d & el = mesh.SurfaceElement(i);
     surfnr = mesh.GetFaceDescriptor (el.GetIndex()).SurfNr();
-    Vec<3> n = Cross (mesh.Point (el.PNum(1)) - mesh.Point (el.PNum(2)),
-    mesh.Point (el.PNum(1)) - mesh.Point (el.PNum(3)));
+    Vec<3> n = Cross (mesh.Point (el[0]) - mesh.Point (el[1]),
+    mesh.Point (el[0]) - mesh.Point (el[2]));
     n /= n.Length();
 
     for (j = 1; j <= el.GetNP(); j++)

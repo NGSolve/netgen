@@ -199,9 +199,9 @@ namespace nglib
       Mesh * m = (Mesh*)mesh;
       Element2d el (3);
       el.SetIndex (1);
-      el.PNum(1) = PointIndex::FromNr1(pi[0]);
-      el.PNum(2) = PointIndex::FromNr1(pi[1]);
-      el.PNum(3) = PointIndex::FromNr1(pi[2]);
+      el[0] = PointIndex::FromNr1(pi[0]);
+      el[1] = PointIndex::FromNr1(pi[1]);
+      el[2] = PointIndex::FromNr1(pi[2]);
       m->AddSurfaceElement (el);
    }
 
@@ -215,10 +215,10 @@ namespace nglib
       Mesh * m = (Mesh*)mesh;
       Element el (4);
       el.SetIndex (1);
-      el.PNum(1) = PointIndex::FromNr1(pi[0]);
-      el.PNum(2) = PointIndex::FromNr1(pi[1]);
-      el.PNum(3) = PointIndex::FromNr1(pi[2]);
-      el.PNum(4) = PointIndex::FromNr1(pi[3]);
+      el[0] = PointIndex::FromNr1(pi[0]);
+      el[1] = PointIndex::FromNr1(pi[1]);
+      el[2] = PointIndex::FromNr1(pi[2]);
+      el[3] = PointIndex::FromNr1(pi[3]);
       m->AddVolumeElement (el);
    }
 
@@ -568,11 +568,11 @@ namespace nglib
       for (i = 1; i <= geo->GetNT(); i++)
       {
          const STLTriangle& t = geo->GetTriangle(i);
-         p = geo->GetPoint(t.PNum(1));
+         p = geo->GetPoint(t[0]);
          p1[0] = p(0); p1[1] = p(1); p1[2] = p(2); 
-         p = geo->GetPoint(t.PNum(2));
+         p = geo->GetPoint(t[1]);
          p2[0] = p(0); p2[1] = p(1); p2[2] = p(2); 
-         p = geo->GetPoint(t.PNum(3));
+         p = geo->GetPoint(t[2]);
          p3[0] = p(0); p3[1] = p(1); p3[2] = p(2);
          normal = t.Normal();
          n[0] = normal(0); n[1] = normal(1); n[2] = normal(2);

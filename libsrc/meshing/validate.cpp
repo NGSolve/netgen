@@ -109,8 +109,8 @@ namespace netgen
       {
         working_elements.SetBit(bad_elements[i]);
         const Element & el = mesh[bad_elements[i]];
-        for(int j=1; j<=el.GetNP(); j++)
-          working_points.SetBit(el.PNum(j));
+        for (int j = 0; j < el.GetNP(); j++)
+          working_points.SetBit(el[j]);
       }
     
 
@@ -136,8 +136,8 @@ namespace netgen
             if(working_elements.Test(j))
               {
                 const Element & el = mesh[j];
-                for(int k=1; k<=el.GetNP(); k++)
-                  working_points.SetBit(el.PNum(k));
+                for (int k = 0; k < el.GetNP(); k++)
+                  working_points.SetBit(el[k]);
               }
           }
       }
@@ -305,12 +305,12 @@ namespace netgen
             */
             for (auto & sel : mesh.SurfaceElements())
               {
-                Vec<3> auxvec = Cross(mesh.Point(sel.PNum(2))-mesh.Point(sel.PNum(1)),
-                                      mesh.Point(sel.PNum(3))-mesh.Point(sel.PNum(1)));
+                Vec<3> auxvec = Cross(mesh.Point(sel[1])-mesh.Point(sel[0]),
+                                      mesh.Point(sel[2])-mesh.Point(sel[0]));
                 auxvec.Normalize();
-                for (int j = 1; j <= sel.GetNP(); j++)
-                  if(!isedgepoint.Test(sel.PNum(j)))
-                    *nv[sel.PNum(j) - IndexBASE<PointIndex>()] += auxvec;
+                for (int j = 0; j < sel.GetNP(); j++)
+                  if(!isedgepoint.Test(sel[j]))
+                    *nv[sel[j] - IndexBASE<PointIndex>()] += auxvec;
               }
             for(int i=0; i<nv.Size(); i++)
               nv[i]->Normalize();
@@ -529,8 +529,8 @@ namespace netgen
         for (int i = 1; i <= mesh.GetNSE(); i++)
           {
             const Element2d & sel = mesh.SurfaceElement(i);
-            Vec<3> auxvec = Cross(mesh.Point(sel.PNum(2))-mesh.Point(sel.PNum(1)),
-                                 mesh.Point(sel.PNum(3))-mesh.Point(sel.PNum(1)));
+            Vec<3> auxvec = Cross(mesh.Point(sel[1])-mesh.Point(sel[0]),
+                                 mesh.Point(sel[2])-mesh.Point(sel[0]));
             auxvec.Normalize();
             for (int j = 1; j <= sel.GetNP(); j++)
               if(!isedgepoint.Test(sel.PNum(j)))

@@ -63,14 +63,14 @@ void WriteDiffPackFormat (const Mesh & mesh,
           int BI=mesh.GetFaceDescriptor(mesh[i].GetIndex()).BCProperty();
           int nbi=BIname.Size();
           int found=0;
-          for (int j = 1; j <= nbi; j++)
-            if(BI == BIname[j-1]) found = 1;
+          for (int j = 0; j < nbi; j++)
+            if(BI == BIname[j]) found = 1;
           if( ! found ) BIname.Append(BI);                   
         }
       
       outfile << "  " << BIname.Size() <<  " Boundary indicators:  ";
-      for (int i =1 ; i <= BIname.Size(); i++)
-        outfile << BIname[i-1] << " ";
+      for (int i = 0; i < BIname.Size(); i++)
+        outfile << BIname[i] << " ";
       outfile << "\n\n\n";
       
       outfile << "  Nodal coordinates and nodal boundary indicators,\n"
@@ -115,9 +115,9 @@ void WriteDiffPackFormat (const Mesh & mesh,
               FlatArray<SurfaceElementIndex> sels = point2sel[PointIndex(i)];
               for (int jj = 0; jj < sels.Size(); jj++)
                 {
-                  for (int k = 1; k <= mesh[sels[jj]].GetNP(); k++) 
+                  for (int k = 0; k < mesh[sels[jj]].GetNP(); k++) 
                     {
-                      if(mesh[sels[jj]].PNum(k)==i) 
+                      if(mesh[sels[jj]][k]==i) 
                         {
                           int BC=mesh.GetFaceDescriptor(mesh[sels[jj]].GetIndex()).BCProperty();
                           int nbcsp=BCsinpoint.Size();
@@ -130,8 +130,8 @@ void WriteDiffPackFormat (const Mesh & mesh,
                 }
               int nbcsp = BCsinpoint.Size();
               outfile << "[" << nbcsp << "] ";
-              for (int j = 1; j <= nbcsp; j++)
-                outfile << BCsinpoint[j-1] << " ";
+              for (int j = 0; j < nbcsp; j++)
+                outfile << BCsinpoint[j] << " ";
               outfile << "\n";
             }
           else outfile << "[0]\n";
@@ -160,36 +160,36 @@ void WriteDiffPackFormat (const Mesh & mesh,
           if(el.GetNP()==10)
             {
               outfile.width(8);
-              outfile << el.PNum(1);
+              outfile << el[0];
               outfile.width(8);
-              outfile << el.PNum(3);
+              outfile << el[2];
               outfile.width(8);
-              outfile << el.PNum(2);
+              outfile << el[1];
               outfile.width(8);
-              outfile << el.PNum(4);
+              outfile << el[3];
               outfile.width(8);
-              outfile << el.PNum(6);
+              outfile << el[5];
               outfile.width(8);
-              outfile << el.PNum(8);
+              outfile << el[7];
               outfile.width(8);
-              outfile << el.PNum(5);
+              outfile << el[4];
               outfile.width(8);
-              outfile << el.PNum(7);
+              outfile << el[6];
               outfile.width(8);
-              outfile << el.PNum(10);
+              outfile << el[9];
               outfile.width(8);
-              outfile << el.PNum(9);
+              outfile << el[8];
             }
           else
             {
               outfile.width(8);
-              outfile << el.PNum(1);
+              outfile << el[0];
               outfile.width(8);
-              outfile << el.PNum(3);
+              outfile << el[2];
               outfile.width(8);
-              outfile << el.PNum(2);
+              outfile << el[1];
               outfile.width(8);
-              outfile << el.PNum(4);
+              outfile << el[3];
             }
           outfile << "\n";
         }
@@ -305,19 +305,19 @@ void WriteDiffPackFormat (const Mesh & mesh,
           outfile.width(12);
           outfile << el.GetIndex() << "    ";
           outfile.width(16);
-          outfile << el.PNum(1);
+          outfile << el[0];
           outfile.width(16);
-          outfile << el.PNum(2);
+          outfile << el[1];
           outfile.width(16);
-          outfile << el.PNum(3);
+          outfile << el[2];
           if(eldummy.GetNP()==6)
             {
              outfile.width(16);
-             outfile << el.PNum(6);
+             outfile << el[5];
              outfile.width(16);
-             outfile << el.PNum(4);
+             outfile << el[3];
              outfile.width(16);
-             outfile << el.PNum(5);
+             outfile << el[4];
             }
           outfile << "\n";
         }

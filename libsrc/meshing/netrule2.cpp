@@ -147,10 +147,10 @@ int netrule :: IsLineInFreeZone2 (const Point<2> & p1, const Point<2> & p2) cons
       bool allleft = true;
       bool allright = true;
 
-      for (int i = 1; i <= transfreezone.Size(); i++)
+      for (int i = 0; i < transfreezone.Size(); i++)
         {
-          bool left  = transfreezone[i-1][0] * nx + transfreezone[i-1][1] * ny + c <  1e-7;
-          bool right = transfreezone[i-1][0] * nx + transfreezone[i-1][1] * ny + c > -1e-7;
+          bool left  = transfreezone[i][0] * nx + transfreezone[i][1] * ny + c <  1e-7;
+          bool right = transfreezone[i][0] * nx + transfreezone[i][1] * ny + c > -1e-7;
           if (!left) allleft = false;
           if (!right) allright = false;
         }

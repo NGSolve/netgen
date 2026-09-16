@@ -703,8 +703,8 @@ void STLTopology :: FindNeighbourTrigs()
 
   trigsperpoint.SetSize(GetNP());
   for (int i = 1; i <= GetNT(); i++)
-    for (int j = 1; j <= 3; j++)
-      trigsperpoint.Add1(GetTriangle(i).PNum(j),i);
+    for (int j = 0; j < 3; j++)
+      trigsperpoint.Add1(GetTriangle(i)[j],i);
 
 
   //check trigs per point:
@@ -719,8 +719,8 @@ void STLTopology :: FindNeighbourTrigs()
   */
   topedgesperpoint.SetSize (GetNP());
   for (int i = 1; i <= ne; i++)
-    for (int j = 1; j <= 2; j++)
-      topedgesperpoint.Add1 (GetTopEdge (i).PNum(j), i);
+    for (int j = 0; j < 2; j++)
+      topedgesperpoint.Add1 (GetTopEdge (i)[j], i);
 
   PrintMessage(5,"point -> trig table generated");
 
@@ -824,11 +824,11 @@ void STLTopology :: FindNeighbourTrigs()
               return;
             }
           
-          for (int k = 1; k <= 3; k++)
+          for (int k = 0; k < 3; k++)
             {
-              for (int j = 1; j <= trigsperpoint.EntrySize(GetTriangle(i).PNum(k)); j++)
+              for (int j = 1; j <= trigsperpoint.EntrySize(GetTriangle(i)[k]); j++)
                 {
-                  tr = trigsperpoint.Get(GetTriangle(i).PNum(k),j);
+                  tr = trigsperpoint.Get(GetTriangle(i)[k],j);
                   if (i != tr && (GetTriangle(i).IsNeighbourFrom(GetTriangle(tr))
                                   || GetTriangle(i).IsWrongNeighbourFrom(GetTriangle(tr))))
                     {
@@ -918,9 +918,9 @@ void STLTopology :: AddTriangle(const STLTriangle& t)
 {
   trias.Append(t);
   
-  const Point<3> & p1 = GetPoint (t.PNum(1));
-  const Point<3> & p2 = GetPoint (t.PNum(2));
-  const Point<3> & p3 = GetPoint (t.PNum(3));
+  const Point<3> & p1 = GetPoint (t[0]);
+  const Point<3> & p2 = GetPoint (t[1]);
+  const Point<3> & p3 = GetPoint (t[2]);
 
   Box<3> box;
   box.Set (p1);

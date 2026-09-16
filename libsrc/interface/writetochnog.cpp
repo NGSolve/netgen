@@ -80,10 +80,10 @@ void WriteTochnogFormat (const Mesh & mesh,
               outfile << "element " << elemcnt << " -tet4 ";
               if (non == 4)
                 {
-                  outfile << el.PNum(1) << " ";
-                  outfile << el.PNum(2) << " ";
-                  outfile << el.PNum(4) << " ";
-                  outfile << el.PNum(3) << "\n";
+                  outfile << el[0] << " ";
+                  outfile << el[1] << " ";
+                  outfile << el[3] << " ";
+                  outfile << el[2] << "\n";
                 }
               else
                 {

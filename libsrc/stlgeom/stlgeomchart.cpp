@@ -299,9 +299,9 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
 
                                   chartbound.AddTriangle(GetTriangle(nt));
 
-                                  for (int k = 1; k <= 3; k++)
+                                  for (int k = 0; k < 3; k++)
                                     {
-                                      STLPointId pi = GetTriangle(nt).PNum(k);
+                                      STLPointId pi = GetTriangle(nt)[k];
                                       if (innerpointstochart[pi] != chartnum) 
                                         {
                                           innerpointstochart[pi] = chartnum;
@@ -445,9 +445,9 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
                           // NgProfiler::StartTimer (timer5csl);
                           
                           if (!accepted)
-                            for (int k = 1; k <= 3; k++)
+                            for (int k = 0; k < 3; k++)
                               {
-                                Point<3> pt = GetPoint(ntrig.PNum(k));                                    
+                                Point<3> pt = GetPoint(ntrig[k]);                                    
                                 double h2 = sqr(mesh.GetH(pt));
                                 /*
                                 for (int l = 1; l <= innerchartpoints.Size(); l++)
@@ -485,13 +485,13 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
                             {
                               chartbound.AddTriangle(GetTriangle(nt));
                               chart.AddOuterTrig(nt);
-                              for (int k = 1; k <= 3; k++)
+                              for (int k = 0; k < 3; k++)
                                 {
-                                  if (pointstochart[GetTriangle(nt).PNum(k)]
+                                  if (pointstochart[GetTriangle(nt)[k]]
                                       != chartnum) 
                                     {
-                                      pointstochart[GetTriangle(nt).PNum(k)] = chartnum;
-                                      chartpoints.Append(GetTriangle(nt).PNum(k));
+                                      pointstochart[GetTriangle(nt)[k]] = chartnum;
+                                      chartpoints.Append(GetTriangle(nt)[k]);
                                     }
                                 }
                             }
@@ -517,9 +517,9 @@ void STLGeometry :: MakeAtlas(Mesh & mesh, const MeshingParameters& mparam, cons
               //if all trigs would be eliminated -> leave 1 trig!
               dirtycharttrigs.SetSize(dirtycharttrigs.Size() - 1);
             }
-          for (int k = 1; k <= dirtycharttrigs.Size(); k++)
+          for (int k = 0; k < dirtycharttrigs.Size(); k++)
             {
-              STLTrigId tn = chart.GetChartTrig1(dirtycharttrigs[k-1]);
+              STLTrigId tn = chart.GetChartTrig1(dirtycharttrigs[k]);
               outermark[tn] = 0; //not necessary, for later use
               SetMarker(tn, 0); 
               markedtrigcnt--;
@@ -782,9 +782,9 @@ void STLGeometry :: GetDirtyChartTrigs(int chartnum, STLChart& chart,
       STLTrigId t = chart.GetChartTrig1(j); 
       const STLTriangle& tt = GetTriangle(t);
       
-      for (int k = 1; k <= 3; k++)
+      for (int k = 0; k < 3; k++)
         {
-          pn = tt.PNum(k);
+          pn = tt[k];
           //if (chartpointchecked.Get(pn) == chartnum)
           //{continue;}
           

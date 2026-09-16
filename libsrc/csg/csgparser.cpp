@@ -624,7 +624,7 @@ namespace netgen
               Transformation<3> ht;
 
               Solid * hsol = sol1;
-              for (int i = 1; i <= n; i++)
+              for (int i = 0; i < n; i++)
                 {
                   Solid * nsol = sol1 -> Copy(*geom);
 

@@ -61,21 +61,21 @@ Transformation3d (const Point<3> & c, double alpha,
 
 Transformation3d :: Transformation3d (const Point<3> ** pp)
 {
-  for (int i = 1; i <= 3; i++)
+  for (int i = 0; i < 3; i++)
     {
-      offset[i-1] = (*pp[0])(i-1);
+      offset[i] = (*pp[0])(i);
       for (int j = 1; j <= 3; j++)
-        lin[i-1][j-1] = (*pp[j])(i-1) - (*pp[0])(i-1);
+        lin[i][j-1] = (*pp[j])(i) - (*pp[0])(i);
     }
 }
 
 Transformation3d :: Transformation3d (const Point<3> pp[])
 {
-  for (int i = 1; i <= 3; i++)
+  for (int i = 0; i < 3; i++)
     {
-      offset[i-1] = pp[0](i-1);
+      offset[i] = pp[0](i);
       for (int j = 1; j <= 3; j++)
-        lin[i-1][j-1] = pp[j](i-1) - pp[0](i-1);
+        lin[i][j-1] = pp[j](i) - pp[0](i);
     }
 }
 

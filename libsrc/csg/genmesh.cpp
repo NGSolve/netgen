@@ -470,9 +470,9 @@ namespace netgen
 
         (*testout) << "num-segments " << segments.Size() << endl;
 
-        for (int i = 1; i <= geom.identifications.Size(); i++)
+        for (int i = 0; i < geom.identifications.Size(); i++)
           {
-            geom.identifications[i-1]->
+            geom.identifications[i]->
               BuildSurfaceElements(segments, mesh, surf);
           }
 
@@ -642,9 +642,9 @@ namespace netgen
                 }
               }
 
-            for (int i = 1; i <= geom.identifications.Size(); i++)
+            for (int i = 0; i < geom.identifications.Size(); i++)
               {
-                geom.identifications[i-1]->GetIdentifiedFaces (fpairs);
+                geom.identifications[i]->GetIdentifiedFaces (fpairs);
                 int found = 0;
                 for (int j = 1; j <= fpairs.Size(); j++)
                   if (fpairs[j-1][0] == k || fpairs[j-1][1] == k)
@@ -653,7 +653,7 @@ namespace netgen
                 if (!found)
                   continue;
 
-                geom.identifications[i-1]->
+                geom.identifications[i]->
                   BuildSurfaceElements(segments, mesh, surf);
                 if (!segments.Size())
                   break;

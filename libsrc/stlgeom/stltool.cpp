@@ -643,9 +643,9 @@ void STLChart :: AddChartTrig(STLTrigId i)
   charttrigs.Append(i);
   
   const STLTriangle & trig = geometry->GetTriangle(i);
-  const Point<3> & p1 = geometry->GetPoint (trig.PNum(1));
-  const Point<3> & p2 = geometry->GetPoint (trig.PNum(2));
-  const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
+  const Point<3> & p1 = geometry->GetPoint (trig[0]);
+  const Point<3> & p2 = geometry->GetPoint (trig[1]);
+  const Point<3> & p3 = geometry->GetPoint (trig[2]);
 
   /*
   Point<3> pmin(p1), pmax(p1);
@@ -675,9 +675,9 @@ void STLChart :: AddOuterTrig(STLTrigId i)
   outertrigs.Append(i);
 
   const STLTriangle & trig = geometry->GetTriangle(i);
-  const Point<3> & p1 = geometry->GetPoint (trig.PNum(1));
-  const Point<3> & p2 = geometry->GetPoint (trig.PNum(2));
-  const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
+  const Point<3> & p1 = geometry->GetPoint (trig[0]);
+  const Point<3> & p2 = geometry->GetPoint (trig[1]);
+  const Point<3> & p3 = geometry->GetPoint (trig[2]);
 
   Point<3> pmin(p1), pmax(p1);
   SetToMin (pmin, p2);
@@ -714,9 +714,9 @@ void STLChart :: GetTrianglesInBox (const Point<3> & pmin,
         {
           STLTrigId trignum = GetTrig1(i);
           const STLTriangle & trig = geometry->GetTriangle(trignum);
-          Box<3> box2(geometry->GetPoint (trig.PNum(1)),
-                      geometry->GetPoint (trig.PNum(2)),
-                      geometry->GetPoint (trig.PNum(3)));
+          Box<3> box2(geometry->GetPoint (trig[0]),
+                      geometry->GetPoint (trig[1]),
+                      geometry->GetPoint (trig[2]));
           
           if (box1.Intersect (box2))
             trias.Append (trignum);
@@ -728,11 +728,11 @@ void STLChart :: GetTrianglesInBox (const Point<3> & pmin,
 void STLChart :: MoveToOuterChart(const Array<int>& trigs)
 {
   if (!trigs.Size()) return;
-  for (int i = 1; i <= trigs.Size(); i++)
+  for (int i = 0; i < trigs.Size(); i++)
     {
-      if (charttrigs[trigs[i-1]-1] != -1) 
-        AddOuterTrig(charttrigs[trigs[i-1]-1]);
-      charttrigs[trigs[i-1]-1] = -1;
+      if (charttrigs[trigs[i]-1] != -1) 
+        AddOuterTrig(charttrigs[trigs[i]-1]);
+      charttrigs[trigs[i]-1] = -1;
     }
   DelChartTrigs(trigs);
 }
@@ -742,8 +742,8 @@ void STLChart :: DelChartTrigs(const Array<int>& trigs)
 {
   if (!trigs.Size()) return;
 
-  for (int i = 1; i <= trigs.Size(); i++)
-    charttrigs[trigs[i-1]-1] = -1;
+  for (int i = 0; i < trigs.Size(); i++)
+    charttrigs[trigs[i]-1] = -1;
 
   int cnt = 0;
   for (int i = 1; i <= charttrigs.Size(); i++)
@@ -767,9 +767,9 @@ void STLChart :: DelChartTrigs(const Array<int>& trigs)
       for (int i = 1; i <= charttrigs.Size(); i++)
         {
           const STLTriangle & trig = geometry->GetTriangle(i);
-          const Point<3> & p1 = geometry->GetPoint (trig.PNum(1));
-          const Point<3> & p2 = geometry->GetPoint (trig.PNum(2));
-          const Point<3> & p3 = geometry->GetPoint (trig.PNum(3));
+          const Point<3> & p1 = geometry->GetPoint (trig[0]);
+          const Point<3> & p2 = geometry->GetPoint (trig[1]);
+          const Point<3> & p3 = geometry->GetPoint (trig[2]);
           
           Point<3> pmin(p1), pmax(p1);
           SetToMin (pmin, p2);

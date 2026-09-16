@@ -2219,20 +2219,20 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
   switch (j)
   {
     case 0:
-      pi1 = elem.PNum(1); pi2 = elem.PNum(2);
-      pi3 = elem.PNum(3); pi4 = elem.PNum(4);
+      pi1 = elem[0]; pi2 = elem[1];
+      pi3 = elem[2]; pi4 = elem[3];
       break;
     case 1:
-      pi1 = elem.PNum(1); pi2 = elem.PNum(4);
-      pi3 = elem.PNum(2); pi4 = elem.PNum(3);
+      pi1 = elem[0]; pi2 = elem[3];
+      pi3 = elem[1]; pi4 = elem[2];
       break;
     case 2:
-      pi1 = elem.PNum(1); pi2 = elem.PNum(3);
-      pi3 = elem.PNum(4); pi4 = elem.PNum(2);
+      pi1 = elem[0]; pi2 = elem[2];
+      pi3 = elem[3]; pi4 = elem[1];
       break;
     case 3:
-      pi1 = elem.PNum(2); pi2 = elem.PNum(4);
-      pi3 = elem.PNum(3); pi4 = elem.PNum(1);
+      pi1 = elem[1]; pi2 = elem[3];
+      pi3 = elem[2]; pi4 = elem[0];
       break;
   }
 
@@ -2314,22 +2314,22 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
               if(mesh.BoundaryEdge (pi4, pi5))
                   bad1 += GetLegalPenalty();
 
-              el31.PNum(1) = pi1;
-              el31.PNum(2) = pi2;
-              el31.PNum(3) = pi5;
-              el31.PNum(4) = pi4;
+              el31[0] = pi1;
+              el31[1] = pi2;
+              el31[2] = pi5;
+              el31[3] = pi4;
               el31.SetIndex (mattyp);
 
-              el32.PNum(1) = pi2;
-              el32.PNum(2) = pi3;
-              el32.PNum(3) = pi5;
-              el32.PNum(4) = pi4;
+              el32[0] = pi2;
+              el32[1] = pi3;
+              el32[2] = pi5;
+              el32[3] = pi4;
               el32.SetIndex (mattyp);
 
-              el33.PNum(1) = pi3;
-              el33.PNum(2) = pi1;
-              el33.PNum(3) = pi5;
-              el33.PNum(4) = pi4;
+              el33[0] = pi3;
+              el33[1] = pi1;
+              el33[2] = pi5;
+              el33[3] = pi4;
               el33.SetIndex (mattyp);
 
               bad2 = CalcBad (mesh.Points(), el31, 0) +
@@ -2696,12 +2696,12 @@ void MeshOptimize3d :: SplitImprove2 ()
   if ( (i > eltyps.Size()) || (eltyps.Get(i) != FIXEDELEMENT) )
   {
   const Element & el = VolumeElement(i);
-  if (!el.PNum(1)) continue;
+  if (!el[0]) continue;
 
   for (j = 1; j <= 4; j++)
   {
   el.GetFace (j, face);
-  IVec<3> i3 (face.PNum(1), face.PNum(2), face.PNum(3));
+  IVec<3> i3 (face[0], face[1], face[2]);
   i3.Sort();
 
 
@@ -2740,7 +2740,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   for (i = 1; i <= GetNSE(); i++)
   {
   const Element2d & sface = SurfaceElement(i);
-  IVec<3> i3 (sface.PNum(1), sface.PNum(2), sface.PNum(3));
+  IVec<3> i3 (sface[0], sface[1], sface[2]);
   i3.Sort();
   IVec<2> i2(0,0);
   elsonface.Set (i3, i2);
@@ -2767,18 +2767,18 @@ void MeshOptimize3d :: SplitImprove2 ()
   int pi2 = i3[1];
   int pi3 = i3[2];
 
-  int pi4 = elem.PNum(1) + elem.PNum(2) + elem.PNum(3) + elem.PNum(4) - pi1 - pi2 - pi3;
-  int pi5 = elem2.PNum(1) + elem2.PNum(2) + elem2.PNum(3) + elem2.PNum(4) - pi1 - pi2 - pi3;
+  int pi4 = elem[0] + elem[1] + elem[2] + elem[3] - pi1 - pi2 - pi3;
+  int pi5 = elem2[0] + elem2[1] + elem2[2] + elem2[3] - pi1 - pi2 - pi3;
 
 
 
 
 
 
-  el31.PNum(1) = pi1;
-  el31.PNum(2) = pi2;
-  el31.PNum(3) = pi3;
-  el31.PNum(4) = pi4;
+  el31[0] = pi1;
+  el31[1] = pi2;
+  el31[2] = pi3;
+  el31[3] = pi4;
   el31.SetIndex (mattyp);
             
   if (WrongOrientation (points, el31))
@@ -2792,22 +2792,22 @@ void MeshOptimize3d :: SplitImprove2 ()
   //          bad1 += 1e4;
 
             
-  el31.PNum(1) = pi1;
-  el31.PNum(2) = pi2;
-  el31.PNum(3) = pi5;
-  el31.PNum(4) = pi4;
+  el31[0] = pi1;
+  el31[1] = pi2;
+  el31[2] = pi5;
+  el31[3] = pi4;
   el31.SetIndex (mattyp);
             
-  el32.PNum(1) = pi2;
-  el32.PNum(2) = pi3;
-  el32.PNum(3) = pi5;
-  el32.PNum(4) = pi4;
+  el32[0] = pi2;
+  el32[1] = pi3;
+  el32[2] = pi5;
+  el32[3] = pi4;
   el32.SetIndex (mattyp);
                       
-  el33.PNum(1) = pi3;
-  el33.PNum(2) = pi1;
-  el33.PNum(3) = pi5;
-  el33.PNum(4) = pi4;
+  el33[0] = pi3;
+  el33[1] = pi1;
+  el33[2] = pi5;
+  el33[3] = pi4;
   el33.SetIndex (mattyp);
             
   bad2 = CalcBad (points, el31, 0) + 

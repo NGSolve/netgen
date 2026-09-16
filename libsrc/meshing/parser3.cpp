@@ -177,16 +177,16 @@ void vnetrule :: LoadRule (istream & ist)
           while (ch == '(')
             {
               face.SetNP(3);
-              ist >> face.PNum(1);
+              ist >> face[0];
               ist >> ch;    // ','
-              ist >> face.PNum(2);
+              ist >> face[1];
               ist >> ch;    // ','
-              ist >> face.PNum(3);
+              ist >> face[2];
               ist >> ch;    // ')' or ','
               if (ch == COMMASIGN)
                 {
                   face.SetNP(4);
-                  ist >> face.PNum(4);
+                  ist >> face[3];
                   ist >> ch;    // ')' 
                 }
               faces.Append (face);
@@ -285,16 +285,16 @@ void vnetrule :: LoadRule (istream & ist)
           while (ch == '(')
             {
               face.SetNP(3);
-              ist >> face.PNum(1);
+              ist >> face[0];
               ist >> ch;    // ','
-              ist >> face.PNum(2);
+              ist >> face[1];
               ist >> ch;    // ','
-              ist >> face.PNum(3);
+              ist >> face[2];
               ist >> ch;    // ')' or ','
               if (ch == COMMASIGN)
                 {
                   face.SetNP(4);
-                  ist >> face.PNum(4);
+                  ist >> face[3];
                   ist >> ch;    // ')' 
                 }
               faces.Append (face);
@@ -496,40 +496,40 @@ void vnetrule :: LoadRule (istream & ist)
               elements.Append (RuleElement(4));
 
               //              elements.Last().SetNP(1);
-              ist >> elements.Last().PNum(1);
+              ist >> elements.Last()[0];
               ist >> ch;    // ','
 
               if (ch == COMMASIGN)
                 {
                   //              elements.Last().SetNP(2);
-                  ist >> elements.Last().PNum(2);
+                  ist >> elements.Last()[1];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
                   //              elements.Last().SetNP(3);
-                  ist >> elements.Last().PNum(3);
+                  ist >> elements.Last()[2];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
                   //              elements.Last().SetNP(4);
                   elements.Last().SetType(TET);
-                  ist >> elements.Last().PNum(4);
+                  ist >> elements.Last()[3];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
                   //              elements.Last().SetNP(5);
                   elements.Last().SetType(PYRAMID);
-                  ist >> elements.Last().PNum(5);
+                  ist >> elements.Last()[4];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
                   //              elements.Last().SetNP(6);
                   elements.Last().SetType(PRISM);
-                  ist >> elements.Last().PNum(6);
+                  ist >> elements.Last()[5];
                   ist >> ch;    // ','
                 }
               
@@ -537,23 +537,23 @@ void vnetrule :: LoadRule (istream & ist)
                 {
                   //              elements.Last().SetNP(6);
                   elements.Last().SetType(HEX);
-                  ist >> elements.Last().PNum(7);
+                  ist >> elements.Last()[6];
                   ist >> ch;    // ','
                 }
               if (ch == COMMASIGN)
                 {
                   //              elements.Last().SetNP(6);
                   elements.Last().SetType(HEX);
-                  ist >> elements.Last().PNum(8);
+                  ist >> elements.Last()[7];
                   ist >> ch;    // ','
                 }
 
               /*
               orientations.Append (IVec<4,RulePointIndex>());
-              orientations.Last()[0] = elements.Last().PNum(1);
-              orientations.Last()[1] = elements.Last().PNum(2);
-              orientations.Last()[2] = elements.Last().PNum(3);
-              orientations.Last()[3] = elements.Last().PNum(4);
+              orientations.Last()[0] = elements.Last()[0];
+              orientations.Last()[1] = elements.Last()[1];
+              orientations.Last()[2] = elements.Last()[2];
+              orientations.Last()[3] = elements.Last()[3];
               */
 
               ist >> ch;
@@ -683,24 +683,24 @@ void vnetrule :: LoadRule (istream & ist)
       if (elements[i-1].GetNP() == 4)
         {
           orientations.Append (IVec<4,RulePointIndex>());
-          orientations.Last()[0] = elements[i-1].PNum(1);
-          orientations.Last()[1] = elements[i-1].PNum(2);
-          orientations.Last()[2] = elements[i-1].PNum(3);
-          orientations.Last()[3] = elements[i-1].PNum(4);
+          orientations.Last()[0] = elements[i-1][0];
+          orientations.Last()[1] = elements[i-1][1];
+          orientations.Last()[2] = elements[i-1][2];
+          orientations.Last()[3] = elements[i-1][3];
         }
       if (elements[i-1].GetNP() == 5)
         {
           orientations.Append (IVec<4,RulePointIndex>());
-          orientations.Last()[0] = elements[i-1].PNum(1);
-          orientations.Last()[1] = elements[i-1].PNum(2);
-          orientations.Last()[2] = elements[i-1].PNum(3);
-          orientations.Last()[3] = elements[i-1].PNum(5);
+          orientations.Last()[0] = elements[i-1][0];
+          orientations.Last()[1] = elements[i-1][1];
+          orientations.Last()[2] = elements[i-1][2];
+          orientations.Last()[3] = elements[i-1][4];
 
           orientations.Append (IVec<4,RulePointIndex>());
-          orientations.Last()[0] = elements[i-1].PNum(1);
-          orientations.Last()[1] = elements[i-1].PNum(3);
-          orientations.Last()[2] = elements[i-1].PNum(4);
-          orientations.Last()[3] = elements[i-1].PNum(5);
+          orientations.Last()[0] = elements[i-1][0];
+          orientations.Last()[1] = elements[i-1][2];
+          orientations.Last()[2] = elements[i-1][3];
+          orientations.Last()[3] = elements[i-1][4];
         }
     }
 
@@ -723,13 +723,13 @@ void vnetrule :: LoadRule (istream & ist)
 
   if (quality < 100)
     {
-      for (int i = 1; i <= 3; i++)
+      for (int i = 0; i < 3; i++)
         {
           for (auto pj : points.Range())
-            vp(pj.Nr0()) = points[pj](i-1);
+            vp(pj.Nr0()) = points[pj](i);
           oldutofreezone->Mult(vp, vfp);
           for (int j = 1; j <= freezone.Size(); j++)
-            freezone[j-1](i-1) = vfp(j-1);
+            freezone[j-1](i) = vfp(j-1);
         }
       //      for (i = 1; i <= freezone.Size(); i++)
       //        (*testout) << "freepoint: " << freezone.Get(i) << endl;
@@ -837,7 +837,7 @@ void vnetrule :: LoadRule (istream & ist)
               for (j = 1; j <= 3; j++)
                 {
                   RulePointIndex pi1 = elements[i-1].PNum(j);
-                  RulePointIndex pi2 = elements[i-1].PNum(j+3);
+                  RulePointIndex pi2 = elements[i-1][j+2];
 
                   if (pnearness[pi1] > pnearness[pi2]+1)
                     {

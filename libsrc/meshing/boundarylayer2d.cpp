@@ -50,9 +50,9 @@ namespace netgen
 
       for (auto & el : mesh.SurfaceElements())
       {
-         for (int j = 1; j <= el.GetNP(); j++)
-            if (mapto[el.PNum(j)].IsValid())
-               el.PNum(j) = mapto[el.PNum(j)];
+         for (int j = 0; j < el.GetNP(); j++)
+            if (mapto[el[j]].IsValid())
+               el[j] = mapto[el[j]];
       }
 
 
@@ -70,10 +70,10 @@ namespace netgen
             if (!p4.IsValid()) p4 = p2;
 
             Element2d el(QUAD);
-            el.PNum(1) = p1;
-            el.PNum(2) = p2;
-            el.PNum(3) = p3;
-            el.PNum(4) = p4;
+            el[0] = p1;
+            el[1] = p2;
+            el[2] = p3;
+            el[3] = p4;
             el.SetIndex (2);
             mesh.AddSurfaceElement (el);
             nq++;

@@ -1832,8 +1832,8 @@ namespace netgen
         
     
         for (int i=1; i<=ne; i++)
-          for (int j=1; j<=npe; j++)
-            elmnts[(i-1)*npe+(j-1)] = VolumeElement(i).PNum(j)-1;
+          for (int j = 0; j < npe; j++)
+            elmnts[(i-1)*npe+(j)] = VolumeElement(i)[j]-1;
         
         int numflag = 0;
         int nparts = ntasks-1;
@@ -2075,11 +2075,11 @@ namespace netgen
     adjacency = new idxtype[xadj[ne]];
     cnt = 0;
 
-    for ( int face = 1; face <= nfaces; face++ )
+    for (int face = 0; face < nfaces; face++)
       {
         int e1, e2;
-        e1 = facevolels1[face-1];
-        e2 = facevolels2[face-1];
+        e1 = facevolels1[face];
+        e2 = facevolels2[face];
         if ( e2 == -1 ) continue;
         adjacency[ xadj[e1-1] + cnt[e1-1] ] = e2-1;
         adjacency[ xadj[e2-1] + cnt[e2-1] ] = e1-1;
