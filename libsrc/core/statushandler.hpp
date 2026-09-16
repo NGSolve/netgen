@@ -33,5 +33,15 @@ namespace ngcore
   extern NGCORE_API void PopStatus();
   extern NGCORE_API void SetThreadPercent(double percent);
   extern NGCORE_API void GetStatus(std::string & s, double & percentage);
+
+  inline bool ShouldTerminate() { return multithread.terminate; }
+
+  /// pushes a status message for the lifetime of the object
+  class StatusRegion
+  {
+  public:
+    StatusRegion (const std::string & s) { PushStatus(s); }
+    ~StatusRegion () { PopStatus(); }
+  };
 }
 #endif

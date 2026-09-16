@@ -1,3 +1,4 @@
+#include <mutex>
 #include "array.hpp"
 #include "statushandler.hpp"
 
@@ -24,6 +25,7 @@ namespace ngcore
   static Array<std::string> msgstatus_stack(0);
   static Array<double> threadpercent_stack(0);
   static std::string msgstatus = "";
+  static std::mutex status_mutex;
 
 
   void ResetStatus()
@@ -41,6 +43,7 @@ namespace ngcore
 
   void PushStatus(const std::string& s)
   {
+    std::lock_guard<std::mutex> lock(status_mutex);
     msgstatus_stack.Append(s);  
     SetStatMsg(s);
     threadpercent_stack.Append(0);
@@ -49,6 +52,7 @@ namespace ngcore
   
   void PopStatus()
   {
+    std::lock_guard<std::mutex> lock(status_mutex);
     if (msgstatus_stack.Size())
       {
         if (msgstatus_stack.Size() > 1)
