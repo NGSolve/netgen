@@ -2656,7 +2656,7 @@ namespace netgen
               mutex min_mutex;
               mutex max_mutex;
 
-              ngcore::ParallelForRange(IntRange(ne), [&] (IntRange r)
+              ParallelForRange(IntRange(ne), [&] (IntRange r)
                 {
                   double minv_local = numeric_limits<double>::max();
                   double maxv_local = -numeric_limits<double>::max();

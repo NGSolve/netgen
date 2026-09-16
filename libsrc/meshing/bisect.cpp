@@ -1706,8 +1706,7 @@ namespace netgen
 
   template <typename HASHTABLE_CUTEDGES>  
   int MarkHangingTets (T_MTETS & mtets, 
-                       const HASHTABLE_CUTEDGES & cutedges,
-                       NgTaskManager tm)                       
+                       const HASHTABLE_CUTEDGES & cutedges)                       
   {
     static Timer timer("MarkHangingTets");    
     RegionTimer reg (timer);    
@@ -1786,17 +1785,15 @@ namespace netgen
 
   template <typename HASHTABLE_CUTEDGES>
   bool MarkHangingTris (T_MTRIS & mtris, 
-                        const HASHTABLE_CUTEDGES & cutedges,
-                        NgTaskManager tm)
+                        const HASHTABLE_CUTEDGES & cutedges)
   {
     bool hanging = false;
     // for (int i = 1; i <= mtris.Size(); i++)
     // for (auto & tri : mtris)
-    ParallelForRange
-      (tm, mtris.Size(), [&] (size_t begin, size_t end)
+    ParallelForRange (mtris.Range(), [&] (auto myrange)
        {
          bool my_hanging = false;
-         for (size_t i = begin; i < end; i++)
+         for (auto i : myrange)
            {
              auto & tri = mtris[i];
              if (tri.marked)
@@ -2795,7 +2792,7 @@ namespace netgen
     
     RegionTimer reg1 (timer);
 
-    (*opt.tracer)("Bisect", false);
+    static Timer t_bisect("Bisect"); t_bisect.Start();
     
     timer1.Start();
     timer1a.Start();
@@ -3381,7 +3378,7 @@ namespace netgen
           {
             // refine volume elements
             timer_bisecttet.Start();
-            (*opt.tracer)("bisecttet", false);
+            static Timer t_bisecttet("bisecttet"); t_bisecttet.Start();
             size_t nel = mtets.Size();
             // for (size_t i = 0; i < nel; i++)
             for (auto ei : ngcore::T_Range<ElementIndex>(nel))
@@ -3412,7 +3409,7 @@ namespace netgen
                   mesh.mlparentelement.Append (ei);
                 }
             timer_bisecttet.Stop();
-            (*opt.tracer)("bisecttet", true);            
+            t_bisecttet.Stop();            
             int npr = mprisms.Size();
             for (int i = 1; i <= npr; i++)
               if (mprisms[i-1].marked)
@@ -3506,18 +3503,18 @@ namespace netgen
             
             //IdentifyCutEdges(mesh, cutedges);
             
-            (*opt.tracer)("mark elements", false);
+            static Timer t_mark_elements("mark elements"); t_mark_elements.Start();
 
             hangingvol = 
-              MarkHangingTets (mtets, cutedges, opt.task_manager) +
+              MarkHangingTets (mtets, cutedges) +
               MarkHangingPrisms (mprisms, cutedges) +
               MarkHangingIdentifications (mids, cutedges);
 
-            (*opt.tracer)("mark elements", true);
+            t_mark_elements.Stop();
 
             size_t nsel = mtris.Size();
             timer_bisecttrig.Start();
-            (*opt.tracer)("Bisect trigs", false);            
+            static Timer t_bisect_trigs("Bisect trigs"); t_bisect_trigs.Start();            
             for (size_t i = 0; i < nsel; i++)
               if (mtris[i].marked)
                 {
@@ -3560,7 +3557,7 @@ namespace netgen
                 }
 
             timer_bisecttrig.Stop();
-            (*opt.tracer)("Bisect trigs", true);                        
+            t_bisect_trigs.Stop();                        
             
             int nquad = mquads.Size();
             for (int i = 1; i <= nquad; i++)
@@ -3644,7 +3641,7 @@ namespace netgen
 
             timer1b.Start();
             hangingsurf = 
-              MarkHangingTris (mtris, cutedges, opt.task_manager) +
+              MarkHangingTris (mtris, cutedges) +
               MarkHangingQuads (mquads, cutedges);
 
             hangingedge = mesh.GetDimension() == 3 ? 0 : MarkHangingIdentifications(mids, cutedges);
@@ -3771,7 +3768,7 @@ namespace netgen
     mtris.SetAllocSize (mtris.Size());
     mquads.SetAllocSize (mquads.Size());
   
-    (*opt.tracer)("copy tets", false);
+    static Timer t_copy_tets("copy tets"); t_copy_tets.Start();
     mesh.ClearVolumeElements();
     mesh.VolumeElements().SetAllocSize (mtets.Size()+mprisms.Size());
     mesh.VolumeElements().SetSize(mtets.Size());
@@ -3802,7 +3799,7 @@ namespace netgen
           }
        });
 
-    (*opt.tracer)("copy tets", true);
+    t_copy_tets.Stop();
     
     for (int i = 1; i <= mprisms.Size(); i++)
       {
@@ -3881,9 +3878,9 @@ namespace netgen
     mesh.SurfaceElements().SetSize(mtris.Size());
     // for (size_t i = 0; i < mtris.Size(); i++)
     ParallelForRange
-      (opt.task_manager, mtris.Size(), [&] (size_t begin, size_t end)
+      (mtris.Range(), [&] (auto myrange)
        {
-         for (size_t i = begin; i < end; i++)
+         for (auto i : myrange)
           {
             Element2d el(TRIG);
             auto & trig = mtris[i];
@@ -4037,9 +4034,9 @@ namespace netgen
     mesh.ComputeNVertices();
     }
     
-    (*opt.tracer)("call RebuildSurfElList", false);
+    static Timer t_call_rebuildsurfellist("call RebuildSurfElList"); t_call_rebuildsurfellist.Start();
     mesh.RebuildSurfaceElementLists();
-    (*opt.tracer)("call RebuildSurfElList", true);
+    t_call_rebuildsurfellist.Stop();
   
     
     // update identification tables    
@@ -4101,7 +4098,7 @@ namespace netgen
           }
       }
     
-    (*opt.tracer)("Bisect", true);
+    t_bisect.Stop();
 
     // Repair works only for tets!
     bool do_repair = mesh.PureTetMesh ();
@@ -4236,9 +4233,9 @@ namespace netgen
     timer3.Start();
 
     timer3a.Start();
-    (*opt.tracer)("topology from bisect", false);
-    mesh.UpdateTopology(opt.task_manager, opt.tracer);
-    (*opt.tracer)("topology from bisect", true);
+    static Timer t_topology_from_bisect("topology from bisect"); t_topology_from_bisect.Start();
+    mesh.UpdateTopology();
+    t_topology_from_bisect.Stop();
     timer3a.Stop();
 
 

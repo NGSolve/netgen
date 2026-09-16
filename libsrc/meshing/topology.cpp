@@ -366,7 +366,7 @@ namespace netgen
   }
   
   
-  void MeshTopology :: Update (NgTaskManager tm_unused, NgTracer tracer)
+  void MeshTopology :: Update ()
   {
     static Timer timer("Topology::Update");
     static Timer timer_tables("Build vertex to element table");
@@ -397,7 +397,7 @@ namespace netgen
     (*testout) << "np   = " << np << endl;
     (*testout) << "nv   = " << nv << endl;
 
-    (*tracer) ("Topology::Update setup tables", false);
+    static Timer t_topology_update_setup_tables("Topology::Update setup tables"); t_topology_update_setup_tables.Start();
     Array<int, PointIndex> cnt(nv);
 
     /*
@@ -431,7 +431,7 @@ namespace netgen
       }
 
 
-    (*tracer) ("Topology::Update setup tables", true);
+    t_topology_update_setup_tables.Stop();
 
     
     if (buildedges)
@@ -1241,7 +1241,7 @@ namespace netgen
         // surf2volelement = IVec<2>(0,0);
         surf2volelement = { ElementIndex::INVALID, ElementIndex::INVALID };
 
-        (*tracer) ("Topology::Update build surf2vol", false);        
+        static Timer t_topology_update_build_surf2vol("Topology::Update build surf2vol"); t_topology_update_build_surf2vol.Start();        
         // for (int i = 0; i < ne; i++)
         ParallelFor (ne, [this](auto i)
                      {
@@ -1256,7 +1256,7 @@ namespace netgen
                                surf2volelement[sel][0] = ElementIndex::FromNr0(i); // +1;
                              }
                          }});
-        (*tracer) ("Topology::Update build surf2vol", true);        
+        t_topology_update_build_surf2vol.Stop();        
 
         face2vert.SetAllocSize (face2vert.Size());
 
@@ -1268,7 +1268,7 @@ namespace netgen
         // paralleltop.Reset ();
 #endif
 
-        (*tracer) ("Topology::Update count face_els", false);
+        static Timer t_topology_update_count_face_els("Topology::Update count face_els"); t_topology_update_count_face_els.Start();
         Array<short int> face_els(nfa), face_surfels(nfa);
         face_els = 0;
         face_surfels = 0;
@@ -1297,7 +1297,7 @@ namespace netgen
         */
         for (auto sei : Range(mesh->SurfaceElements()))
           face_surfels[GetFace(sei)]++;          
-        (*tracer) ("Topology::Update count face_els", true);
+        t_topology_update_count_face_els.Stop();
 
 
         if (ne)

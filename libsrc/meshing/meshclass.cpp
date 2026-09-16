@@ -7581,15 +7581,14 @@ namespace netgen
     return 1;
   }
 
-  void Mesh :: UpdateTopology (NgTaskManager tm,
-                               NgTracer tracer)
+  void Mesh :: UpdateTopology ()
   {
     static Timer t("Update Topology"); RegionTimer reg(t);
     ComputeNVertices();
-    topology.Update(tm, tracer);
-    (*tracer)("call update clusters", false);
+    topology.Update();
+    static Timer t_call_update_clusters("call update clusters"); t_call_update_clusters.Start();
     clusters->Update();
-    (*tracer)("call update clusters", true);
+    t_call_update_clusters.Stop();
 #ifdef PARALLEL
     if (paralleltop)
       {

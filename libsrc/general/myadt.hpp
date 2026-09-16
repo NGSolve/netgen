@@ -22,7 +22,6 @@ namespace netgen
   using namespace ngcore;
   using NgException = Exception;
 }
-#include "parthreads.hpp"
 
 #include "template.hpp"
 #include "table.hpp"

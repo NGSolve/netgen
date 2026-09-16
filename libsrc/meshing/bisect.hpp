@@ -2,7 +2,6 @@
 #define NETGEN_BISECT_HPP
 
 #include <mydefs.hpp>
-#include <general/parthreads.hpp>
 #include "basegeom.hpp"
 #include "meshclass.hpp"
 
@@ -21,8 +20,6 @@ public:
   bool refine_hp = false;
   bool refine_p = false;
   bool onlyonce = false;
-  NgTaskManager task_manager = &DummyTaskManager;
-  NgTracer tracer = &DummyTracer;
   DLL_HEADER BisectionOptions ();
 };
 

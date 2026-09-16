@@ -882,8 +882,7 @@ namespace netgen
     const MeshTopology & GetTopology () const { return topology; }
     MeshTopology & GetTopology () { return topology; }
 
-    DLL_HEADER void UpdateTopology (NgTaskManager tm = &DummyTaskManager,
-                                    NgTracer tracer = &DummyTracer);
+    DLL_HEADER void UpdateTopology ();
   
     class CurvedElements & GetCurvedElements () const
     { return *curvedelems; }

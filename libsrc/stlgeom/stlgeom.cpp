@@ -2251,7 +2251,7 @@ int STLGeometry :: CheckGeometryOverlapping()
   {
     mutex inters_mutex;
     
-    ngcore::ParallelForRange( IntRange(1, GetNT()+1), [&] (IntRange r)
+    ParallelForRange( IntRange(1, GetNT()+1), [&] (IntRange r)
                  {
                    Array<int> inters;
                    for (int i : r) {
