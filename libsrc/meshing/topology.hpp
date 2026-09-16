@@ -53,7 +53,7 @@ class MeshTopology
   
   Array<EdgeIndex,SegmentIndex> segedges;
   Array<FaceIndex,SurfaceElementIndex> surffaces;
-  // Array<INDEX_2, SurfaceElementIndex> surf2volelement;
+  // Array<IVec<2>, SurfaceElementIndex> surf2volelement;
   Array<std::array<ElementIndex,2>, SurfaceElementIndex> surf2volelement;
   Array<SurfaceElementIndex> face2surfel;
   

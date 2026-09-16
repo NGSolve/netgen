@@ -24,7 +24,7 @@ namespace netgen
       // maps from local (domain) mesh to global mesh
       Array<PointIndex, PointIndex> pmap;
 
-      // Array<INDEX_2> connected_pairs;
+      // Array<IVec<2>> connected_pairs;
 
       MeshingParameters mp;
 

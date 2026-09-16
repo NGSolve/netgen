@@ -1033,7 +1033,7 @@ IsLineVertexOnChart (const Point<3> & p1, const Point<3> & p2,
 void MeshingSTLSurface :: 
 GetChartBoundary (Array<Point<2>> & points, 
                   Array<Point<3>> & points3d,
-                  Array<INDEX_2> & lines, double h) const
+                  Array<IVec<2>> & lines, double h) const
 {
   points.SetSize (0);
   points3d.SetSize (0);

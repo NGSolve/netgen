@@ -97,8 +97,8 @@ namespace netgen
     ClosedHashTable<PointIndices<3>, int> facenumbers(2*(4*mesh.GetNE()+mesh.GetNSE())+8);
 
     Array<PointIndices<2>> edge2node;
-    Array<INDEX_3> face2edge;
-    Array<INDEX_4> element2face;
+    Array<IVec<3>> face2edge;
+    Array<IVec<4>> element2face;
 
     int numelems(0),numfaces(0),numedges(0),numnodes(0);
 
@@ -157,7 +157,7 @@ namespace netgen
             point_ids[elem[j]] = (version >= 2) ? bc : 0;
 
         PointIndices<2> i2a,i2b;
-        INDEX_3 f_to_n;
+        IVec<3> f_to_n;
         for(int j=0; j<3; j++)
           {
             i2a = PointIndices<2>(i3[j],i3[(j+1)%3]);
@@ -201,7 +201,7 @@ namespace netgen
           if(point_ids[el[j]] == -1)
             point_ids[el[j]] = (version >= 2) ? el.GetIndex() : 0;
 
-        INDEX_4 e_to_f;
+        IVec<4> e_to_f;
 
         for(int i = 0; i < 4; i++)
           {
@@ -240,7 +240,7 @@ namespace netgen
                   face_ids.Append(0);
 
                 PointIndices<2> i2a,i2b;
-                INDEX_3 f_to_n;
+                IVec<3> f_to_n;
                 for(int j=0; j<3; j++)
                   {
                     i2a = PointIndices<2>(i3a[j],i3a[(j+1)%3]);

@@ -892,10 +892,10 @@ void vnetrule :: LoadRule (istream & ist)
               INDEX ind = NeighbourTrianglePoint(freesetfaces[k-1], freesetfaces[l-1]);
               if (!ind) continue;
 
-              INDEX_3 f1(freesetfaces[k-1].i1, 
+              IVec<3> f1(freesetfaces[k-1].i1, 
                          freesetfaces[k-1].i2, 
                          freesetfaces[k-1].i3);
-              INDEX_3 f2(freesetfaces[l-1].i1, 
+              IVec<3> f2(freesetfaces[l-1].i1, 
                          freesetfaces[l-1].i2, 
                          freesetfaces[l-1].i3);
               IVec<2,RulePointIndex> ed(RulePointIndex::INVALID, RulePointIndex::INVALID);
@@ -904,12 +904,12 @@ void vnetrule :: LoadRule (istream & ist)
                   if (f11 != f12)
                     for (int f21 = 1; f21 <= 3; f21++)
                       for (int f22 = 1; f22 <= 3; f22++)                    
-                        if (f1.I(f11) == f2.I(f21) && f1.I(f12) == f2.I(f22))
+                        if (f1[f11-1] == f2[f21-1] && f1[f12-1] == f2[f22-1])
                         {
-                          ed[0] = RuleP(f1.I(f11));
-                          ed[1] = RuleP(f1.I(f12));
+                          ed[0] = RuleP(f1[f11-1]);
+                          ed[1] = RuleP(f1[f12-1]);
                         }
-              //              (*testout) << "ed = " << ed.I(1) << "-" << ed.I(2) << endl;
+              //              (*testout) << "ed = " << ed[0] << "-" << ed[1] << endl;
               //              (*testout) << "ind = " << ind << " ed = " << ed << endl;
               for (int eli = 1; eli <= GetNOldF(); eli++)
                 {
@@ -922,7 +922,7 @@ void vnetrule :: LoadRule (istream & ist)
                             {
                               /*
                               (*testout) << "ed is diagonal of rectangle" << endl;
-                              (*testout) << "ed = " << ed.I(1) << "-" << ed.I(2) << endl;
+                              (*testout) << "ed = " << ed[0] << "-" << ed[1] << endl;
                               (*testout) << "ind = " << ind << endl;
                               */
                               ind = 0;

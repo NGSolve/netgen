@@ -44,7 +44,7 @@ namespace netgen
    static Array<int> owner_celllist;
    static Array<int> neighbour_celllist;
    static Array<int> surfelem_bclist;
-   static Array<INDEX_2> surfelem_lists;
+   static Array<IVec<2>> surfelem_lists;
 
 
 
@@ -236,7 +236,7 @@ namespace netgen
             {
                Element2d sel = mesh[SurfaceElementIndex::FromNr1(surfelem)];
                surfelem_bclist[bc_ind-1] = mesh.GetFaceDescriptor(sel.GetIndex()).BCProperty();
-               surfelem_lists[bc_ind-1] = INDEX_2(locfaces[i-1],elind);
+               surfelem_lists[bc_ind-1] = IVec<2>(locfaces[i-1],elind);
 
                bc_ind++;
             }
@@ -264,8 +264,8 @@ namespace netgen
       for(int i = 1; i <= surfelem_bclist.Size(); i++)
       {
          dbg << "bc = " << surfelem_bclist.Elem(i) 
-              << " : face = " << surfelem_lists.Elem(i).I1()
-              << " : cell = " << surfelem_lists.Elem(i).I2() << "\n";
+              << " : face = " << surfelem_lists.Elem(i)[0]
+              << " : cell = " << surfelem_lists.Elem(i)[1] << "\n";
       }
 
       dbg << "\n ------- Owner / Face / Neighbour List ------- \n";
@@ -352,7 +352,7 @@ namespace netgen
       // (Written in order of ascending boundary condition numbers)
       for(int i = 1; i <= surfelem_lists.Size(); i++)
       {
-         *outfile << surfelem_lists[i-1].I2() - 1 << "\n";
+         *outfile << surfelem_lists[i-1][1] - 1 << "\n";
       }
       *outfile << ")\n\n";
       WriteOpenFOAM15xDividerEnd(outfile);
@@ -439,7 +439,7 @@ namespace netgen
       // the faces file
       for(int i = 1; i <= surfelem_lists.Size(); i++)
       {
-         int face_w_orientation = surfelem_lists[i-1].I1();
+         int face_w_orientation = surfelem_lists[i-1][0];
          int facenr = abs(face_w_orientation);
 
          meshtopo.GetFaceVertices(facenr,facepnts);
@@ -547,7 +547,7 @@ namespace netgen
       *outfile << "\n";
 
 
-      Array<INDEX_3> bcarray;
+      Array<IVec<3>> bcarray;
       int ind = 1;
 
       // Since the boundary conditions are already sorted in ascending 
@@ -557,18 +557,18 @@ namespace netgen
 
       bcarray.SetSize(bcmax+1);
 
-      bcarray[ind-1] = INDEX_3(surfelem_bclist[0],1,0);
+      bcarray[ind-1] = IVec<3>(surfelem_bclist[0],1,0);
             
       for(int i = 2; i <= surfelem_bclist.Size(); i++)
       {
-         if(surfelem_bclist[i-1] == bcarray[ind-1].I1())
+         if(surfelem_bclist[i-1] == bcarray[ind-1][0])
          {
-            bcarray[ind-1].I2() = bcarray[ind-1].I2()+1;
+            bcarray[ind-1][1] = bcarray[ind-1][1]+1;
          }
          else
          {
             ind++;
-            bcarray[ind-1] = INDEX_3(surfelem_bclist[i-1],1,i-1);
+            bcarray[ind-1] = IVec<3>(surfelem_bclist[i-1],1,i-1);
          }
       }
 
@@ -581,13 +581,13 @@ namespace netgen
 
       for(int i = 1; i <= bcarray.Size(); i++)
       {
-         startface = owner_celllist.Size() + bcarray[i-1].I3();
+         startface = owner_celllist.Size() + bcarray[i-1][2];
 
-         *outfile << "    patch" << bcarray[i-1].I1() << "\n"
+         *outfile << "    patch" << bcarray[i-1][0] << "\n"
                  << "    {\n"
                  << "        type            patch;\n"
                  << "        physicalType    patch;\n"
-                 << "        nFaces          " << bcarray[i-1].I2() << ";\n"
+                 << "        nFaces          " << bcarray[i-1][1] << ";\n"
                  << "        startFace       " << startface << ";\n"
                  << "    }\n";
       }

@@ -646,7 +646,7 @@ int AdFront3 :: GetLocals (int fstind,
                   if (pindex.Range().Contains(other) &&
                       pindex[other] == oi)
                     {
-                      // INDEX_2 coned(i, other);
+                      // IVec<2> coned(i, other);
                       // coned.Sort();
                       // (*testout) << "connected: " << locpoints.Get(i) << "-" << locpoints.Get(other) << endl;
                       getconnectedpairs.Set (IVec<2>(i.Nr0(),

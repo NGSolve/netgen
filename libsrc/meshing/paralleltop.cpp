@@ -517,8 +517,8 @@ namespace netgen
                         PointIndex v2 = mesh.mlbetweennodes[pi][1];
                         if (v1.IsValid())
                           {
-                            INDEX_2 re(recvarray[ii], recvarray[ii+1]);
-                            INDEX_2 es(loc2exchange[v1], loc2exchange[v2]);
+                            IVec<2> re(recvarray[ii], recvarray[ii+1]);
+                            IVec<2> es(loc2exchange[v1], loc2exchange[v2]);
                             // if (es == re && !IsExchangeVert(dest, pi))
                             if (es == re && !GetDistantProcs(pi).Contains(dest))
                               {

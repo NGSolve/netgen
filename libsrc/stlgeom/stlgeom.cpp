@@ -415,7 +415,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 
   // find critical:
 
-  Array<INDEX_2> critpairs;
+  Array<IVec<2>> critpairs;
   for (i = 1; i <= nt; i++)
     {
       const STLTriangle & trig = GetTriangle (i);
@@ -453,7 +453,7 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
                 {
                   SetMarkedTrig(i, 1);                  
                   SetMarkedTrig(nbt, 1);                
-                  critpairs.Append (INDEX_2 (i, nbt));
+                  critpairs.Append (IVec<2> (i, nbt));
                 }
             }
 
@@ -473,8 +473,8 @@ void STLGeometry :: SmoothNormals(const STLParameters& stlparam)
 
       for (i = 1; i <= critpairs.Size(); i++)
         {
-          int tnr1 = critpairs.Get(i).I1();
-          int tnr2 = critpairs.Get(i).I2();
+          int tnr1 = critpairs.Get(i)[0];
+          int tnr2 = critpairs.Get(i)[1];
           (*testout) << "t1 = " << tnr1 << ", t2 = " << tnr2
                      << " angle = " << Angle (GetTriangleNormal (tnr1),
                                               GetTriangleNormal (tnr2))

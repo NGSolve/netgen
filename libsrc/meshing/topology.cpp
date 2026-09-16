@@ -182,7 +182,7 @@ namespace netgen
                     {
                       nfa++;
                       vert2face.Set (face, nfa);
-                      INDEX_4 hface(face.I1(),face.I2(),face.I3(),0);
+                      IVec<4> hface(face[0],face[1],face[2],0);
                       face2vert.Append (hface);
                     }
                 }
@@ -225,7 +225,7 @@ namespace netgen
               
               func(face4, elnr, j, true);
                 /*
-              INDEX_3 face(face4.I1(), face4.I2(), face4.I3());
+              IVec<3> face(face4[0], face4[1], face4[2]);
               
               
               if (vert2face.Used (face))
@@ -239,7 +239,7 @@ namespace netgen
                   vert2face.Set (face, nfa);
                   facenum = nfa;
                   
-                  INDEX_4 hface(face4.I1(),face4.I2(),face4.I3(),face4.I4());
+                  IVec<4> hface(face4[0],face4[1],face4[2],face4[3]);
                   face2vert.Append (hface);
                 }
               
@@ -297,7 +297,7 @@ namespace netgen
               vert2face.Set (face, nfa);
               facenum = nfa;
               
-              INDEX_4 hface(face.I1(),face.I2(),face.I3(),0);
+              IVec<4> hface(face[0],face[1],face[2],0);
               face2vert.Append (hface);
               }
                 
@@ -342,7 +342,7 @@ namespace netgen
             if (face4[0] != v) continue;
             func(face4, elnr, 0, false);
             /*
-              INDEX_3 face(face4.I1(), face4.I2(), face4.I3());
+              IVec<3> face(face4[0], face4[1], face4[2]);
                 
               if (vert2face.Used (face))
               facenum = vert2face.Get(face);
@@ -352,7 +352,7 @@ namespace netgen
               vert2face.Set (face, nfa);
               facenum = nfa;
                     
-              INDEX_4 hface(face4.I1(),face4.I2(),face4.I3(),face4.I4());
+              IVec<4> hface(face4[0],face4[1],face4[2],face4[3]);
               face2vert.Append (hface);
               }
                 
@@ -595,10 +595,10 @@ namespace netgen
                                       v2eht.SetData (pos, 33);
                                     }
                                   /*
-                                  if (!v2eht.Used(edge.I2()))
+                                  if (!v2eht.Used(edge[1]))
                                     {
-                                      vertex2.Append (edge.I2());
-                                      v2eht.Set (edge.I2(), 33); 
+                                      vertex2.Append (edge[1]);
+                                      v2eht.Set (edge[1], 33); 
                                     }
                                   */
                                 });
@@ -1238,7 +1238,7 @@ namespace netgen
 
         
         surf2volelement.SetSize (nse);
-        // surf2volelement = INDEX_2(0,0);
+        // surf2volelement = IVec<2>(0,0);
         surf2volelement = { ElementIndex::INVALID, ElementIndex::INVALID };
 
         (*tracer) ("Topology::Update build surf2vol", false);        

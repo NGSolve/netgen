@@ -425,7 +425,7 @@ namespace netgen
     int GetMeshChartNr () { return meshchart; }
     void GetMeshChartBoundary (Array<Point<2>> & points,
                                Array<Point<3>> & points3d,
-                               Array<INDEX_2> & lines, double h);
+                               Array<IVec<2>> & lines, double h);
 
 
     Point<3> PointBetween(const Point<3> & p1, int t1, const Point<3> & p2, int t2);

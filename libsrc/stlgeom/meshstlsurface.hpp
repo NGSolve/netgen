@@ -54,7 +54,7 @@ protected:
 
   void GetChartBoundary (Array<Point<2>> & points, 
                          Array<Point<3>> & poitns3d,
-                         Array<INDEX_2> & lines, double h) const override;
+                         Array<IVec<2>> & lines, double h) const override;
 
   ///
   double CalcLocalH (const Point<3> & p, double gh) const override;

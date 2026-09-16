@@ -2791,7 +2791,7 @@ namespace netgen
     PointIndices<2> pair (pi1, pi2);
     identifiedpoints.Set (pair, identnr);
 
-    // INDEX_3 tripl (pi1, pi2, identnr);
+    // IVec<3> tripl (pi1, pi2, identnr);
     identifiedpoints_nr.Set ( { { pi1, pi2 }, identnr }, 1);
 
     if (identnr > maxidentnr) maxidentnr = identnr;
@@ -2858,7 +2858,7 @@ namespace netgen
         for (auto [hash, val] : identifiedpoints_nr)
             {
               /*
-              INDEX_3 i3;
+              IVec<3> i3;
               int dummy;
               identifiedpoints_nr.GetData (i, j, i3, dummy);
               */
@@ -2868,9 +2868,9 @@ namespace netgen
               if (hash_nr == identnr || !identnr)
                 {
                   /*
-                  identmap.Elem(i3.I1()) = i3.I2();
+                  identmap.Elem(i3[0]) = i3[1];
                   if(symmetric)
-                    identmap.Elem(i3.I2()) = i3.I1();
+                    identmap.Elem(i3[1]) = i3[0];
                   */
                   identmap[hash_pts[0]] = hash_pts[1];
                   if(symmetric)
@@ -2901,7 +2901,7 @@ namespace netgen
       for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
           {
-            INDEX_2 i2;
+            IVec<2> i2;
             int nr;
             identifiedpoints.GetData (i, j, i2, nr);
             identpairs.Append (i2);
@@ -2916,12 +2916,12 @@ namespace netgen
       for (int i = 1; i <= identifiedpoints_nr.GetNBags(); i++)
         for (int j = 1; j <= identifiedpoints_nr.GetBagSize(i); j++)
           {
-            INDEX_3 i3;
+            IVec<3> i3;
             int dummy;
             identifiedpoints_nr.GetData (i, j, i3 , dummy);
           
-            if (i3.I3() == identnr)
-              identpairs.Append (INDEX_2(i3.I1(), i3.I2()));
+            if (i3[2] == identnr)
+              identpairs.Append (IVec<2>(i3[0], i3[1]));
           }
         */
         for (auto [hash,val] : identifiedpoints_nr)
@@ -2940,13 +2940,13 @@ namespace netgen
     for (int i = 1; i <= identifiedpoints.GetNBags(); i++)
       for (int j = 1; j <= identifiedpoints.GetBagSize(i); j++)
         {
-          INDEX_2 i2;
+          IVec<2> i2;
           int nr;
           identifiedpoints.GetData (i, j, i2, nr);
         
-          if (i2.I1() > maxpnum || i2.I2() > maxpnum)
+          if (i2[0] > maxpnum || i2[1] > maxpnum)
             {
-              i2.I1() = i2.I2() = -1;
+              i2[0] = i2[1] = -1;
               identifiedpoints.SetData (i, j, i2, -1);      
             }
         }

@@ -1102,7 +1102,7 @@ namespace netgen
 
     // find connected tets (with no face between, and no hole due
     // to removed intersecting tets.
-    //  INDEX_3_HASHTABLE<INDEX_2> innerfaces(np);
+    //  INDEX_3_HASHTABLE<IVec<2>> innerfaces(np);
 
   
     ClosedHashTable<SortedPointIndices<3>, int> boundaryfaces(2*mesh.GetNOpenElements()+8);
@@ -1110,7 +1110,7 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
         const Element2d & tri = mesh.OpenElement(i);
-        INDEX_3 i3 (tri[0], tri[1], tri[2]);
+        IVec<3> i3 (tri[0], tri[1], tri[2]);
         i3.Sort();
         boundaryfaces.PrepareSet (i3);
       }
@@ -1139,8 +1139,8 @@ namespace netgen
       {
         PointIndices<4> i4(el[0], el[1], el[2], el[3]);
         i4.Sort();
-        elsonpoint.IncSizePrepare (i4.I1());
-        elsonpoint.IncSizePrepare (i4.I2());
+        elsonpoint.IncSizePrepare (i4[0]);
+        elsonpoint.IncSizePrepare (i4[1]);
       }
 
     elsonpoint.AllocateElementsOneBlock();
@@ -1150,8 +1150,8 @@ namespace netgen
         const DelaunayTet & el = tempels[i];
         PointIndices<4> i4(el[0], el[1], el[2], el[3]);
         i4.Sort();
-        elsonpoint.Add (i4.I1(), i+1);
-        elsonpoint.Add (i4.I2(), i+1);
+        elsonpoint.Add (i4[0], i+1);
+        elsonpoint.Add (i4[1], i+1);
       }
     */
 
@@ -1226,27 +1226,27 @@ namespace netgen
       const DelaunayTet & el = tempels.Get(i);
       for (j = 1; j <= 4; j++)
       {
-      INDEX_3 i3;
+      IVec<3> i3;
       Element2d face;
       el.GetFace1 (j, face);
       for (int kk = 1; kk <= 3; kk++)
-      i3.I(kk) = face.PNum(kk);
+      i3[kk-1] = face.PNum(kk);
 
       i3.Sort();
       if (!boundaryfaces.Used (i3))
       {
       if (innerfaces.Used(i3))
       {
-      INDEX_2 i2;
+      IVec<2> i2;
       i2 = innerfaces.Get(i3);
-      i2.I2() = i;
+      i2[1] = i;
       innerfaces.Set (i3, i2);
       }
       else
       {
-      INDEX_2 i2;
-      i2.I1() = i;
-      i2.I2() = 0;
+      IVec<2> i2;
+      i2[0] = i;
+      i2[1] = 0;
       innerfaces.Set (i3, i2);
       }
       }
@@ -1268,8 +1268,8 @@ namespace netgen
       for (i = 1; i <= innerfaces.GetNBags(); i++)
       for (j = 1; j <= innerfaces.GetBagSize(i); j++)
       {
-      INDEX_3 i3;
-      INDEX_2 i2;
+      IVec<3> i3;
+      IVec<2> i2;
       innerfaces.GetData (i, j, i3, i2);
       (*testout) << i2 << endl;
       }
@@ -1371,7 +1371,7 @@ namespace netgen
                     Element2d face;
                     tempels.Get(ei).GetFace(j, face);
                     for (int kk = 1; kk <= 3; kk++)
-                      i3.I(kk) = face.PNum(kk);
+                      i3[kk-1] = face.PNum(kk);
                     */
                     i3.Sort();
                   
@@ -1382,8 +1382,8 @@ namespace netgen
                     /*
                       if (innerfaces.Used(i3))
                       {
-                      INDEX_2 i2 = innerfaces.Get(i3);
-                      int other = i2.I1() + i2.I2() - ei;
+                      IVec<2> i2 = innerfaces.Get(i3);
+                      int other = i2[0] + i2[1] - ei;
 
                       if (other != tempels.Get(ei).NB1(j))
                       cerr << "different1 !!" << endl;
@@ -1466,15 +1466,15 @@ namespace netgen
     for (i = 1; i <= innerfaces.GetNBags(); i++)
     for (j = 1; j <= innerfaces.GetBagSize(i); j++)
     {
-    INDEX_3 i3;
-    INDEX_2 i2;
+    IVec<3> i3;
+    IVec<2> i2;
     innerfaces.GetData (i, j, i3, i2);
-    if (i2.I2())
+    if (i2[1])
     {
-    if (outer.Test(i2.I1()) != outer.Test(i2.I2()))
+    if (outer.Test(i2[0]) != outer.Test(i2[1]))
     {
-    tempmesh.AddVolumeElement (tempels.Get(i2.I1()));
-    tempmesh.AddVolumeElement (tempels.Get(i2.I2()));
+    tempmesh.AddVolumeElement (tempels.Get(i2[0]));
+    tempmesh.AddVolumeElement (tempels.Get(i2[1]));
     cerr << "outer flag different for connected els" << endl;
     }
     }

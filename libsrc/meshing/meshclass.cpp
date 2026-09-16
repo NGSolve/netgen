@@ -2493,9 +2493,9 @@ namespace netgen
         const Element2d & sel = openelements[i];
         for (int j = 0; j < sel.GetNP(); j++)
           {
-            INDEX_2 i2;
-            i2.I1() = sel.PNumMod(j+1);
-            i2.I2() = sel.PNumMod(j+2);
+            IVec<2> i2;
+            i2[0] = sel.PNumMod(j+1);
+            i2[1] = sel.PNumMod(j+2);
             i2.Sort();
             boundaryedges->Set (i2, 1);
 
@@ -2515,7 +2515,7 @@ namespace netgen
     for (int i = 0; i < GetNSeg(); i++)
       {
         const Segment & seg = segments[i];
-        INDEX_2 i2(seg[0], seg[1]);
+        IVec<2> i2(seg[0], seg[1]);
         i2.Sort();
 
         boundaryedges -> Set (i2, 2);
@@ -2707,10 +2707,10 @@ namespace netgen
       const Element2d & sel = surfelements[sei];
       if (sel.IsDeleted()) continue;
 
-      INDEX_3 i3;
-      i3.I1() = sel.PNum(1);
-      i3.I2() = sel.PNum(2);
-      i3.I3() = sel.PNum(3);
+      IVec<3> i3;
+      i3[0] = sel.PNum(1);
+      i3[1] = sel.PNum(2);
+      i3[2] = sel.PNum(3);
       i3.Sort();
       surfelementht -> PrepareSet (i3);
       }
@@ -2803,9 +2803,9 @@ namespace netgen
       const Element2d & sel = openelements[i];
       for (j = 0; j < sel.GetNP(); j++)
       {
-      INDEX_2 i2;
-      i2.I1() = sel.PNumMod(j+1);
-      i2.I2() = sel.PNumMod(j+2);
+      IVec<2> i2;
+      i2[0] = sel.PNumMod(j+1);
+      i2[1] = sel.PNumMod(j+2);
       i2.Sort();
       boundaryedges->Set (i2, 1);
 
@@ -2892,10 +2892,10 @@ namespace netgen
           {
             if (el.GetNP() == 4)
               {
-                INDEX_4 i4(el[0], el[1], el[2], el[3]);
+                IVec<4> i4(el[0], el[1], el[2], el[3]);
                 i4.Sort();
-                numonpoint[i4.I1()]++;
-                numonpoint[i4.I2()]++;
+                numonpoint[i4[0]]++;
+                numonpoint[i4[1]]++;
               }
             else
               for (int j = 0; j < el.GetNP(); j++)
@@ -2911,10 +2911,10 @@ namespace netgen
           {
             if (el.GetNP() == 4)
               {
-                INDEX_4 i4(el[0], el[1], el[2], el[3]);
+                IVec<4> i4(el[0], el[1], el[2], el[3]);
                 i4.Sort();
-                elsonpoint.Add (i4.I1(), ei);
-                elsonpoint.Add (i4.I2(), ei);
+                elsonpoint.Add (i4[0], ei);
+                elsonpoint.Add (i4[1], ei);
               }
             else
               for (int j = 0; j < el.GetNP(); j++)
@@ -3025,7 +3025,7 @@ namespace netgen
                   hel.NormalizeNumbering();
                   if (hel.PNum(1) == pi)
                     {
-                      INDEX_3 i3(hel[0], hel[1], hel[2]);
+                      IVec<3> i3(hel[0], hel[1], hel[2]);
                       tval i2;
                       i2.index = GetFaceDescriptor(ind).DomainIn();
                       i2.p4 = (hel.GetNP() == 3)
@@ -3041,7 +3041,7 @@ namespace netgen
                   hel.NormalizeNumbering();
                   if (hel.PNum(1) == pi)
                     {
-                      INDEX_3 i3(hel[0], hel[1], hel[2]);
+                      IVec<3> i3(hel[0], hel[1], hel[2]);
                       tval i2;
                       i2.index = GetFaceDescriptor(ind).DomainOut();
                       i2.p4 = (hel.GetNP() == 3)
@@ -3067,7 +3067,7 @@ namespace netgen
 
                       if (hel[0] == pi)
                         {
-                          INDEX_3 i3(hel[0], hel[1], hel[2]);
+                          IVec<3> i3(hel[0], hel[1], hel[2]);
 
                           if (faceht.Used (i3))
                             {
@@ -3088,7 +3088,7 @@ namespace netgen
                                       (*testout) << "face = " << i3 << endl;
                                       (*testout) << "points = " << endl;
                                       for (int jj = 1; jj <= 3; jj++)
-                                        (*testout) << "p = " << (*this)[PointIndex(i3.I(jj))] << endl;
+                                        (*testout) << "p = " << (*this)[PointIndex(i3[jj-1])] << endl;
                                     }
                                 }
                             }
@@ -3096,7 +3096,7 @@ namespace netgen
                             {
                               hel.Invert();
                               hel.NormalizeNumbering();
-                              INDEX_3 i3(hel[0], hel[1], hel[2]);
+                              IVec<3> i3(hel[0], hel[1], hel[2]);
                               
                               tval i2;
                               i2.index = el.GetIndex();
@@ -3113,15 +3113,15 @@ namespace netgen
           for (int i = 0; i < faceht.Size(); i++)
             if (faceht.UsedPos (i))
               {
-                INDEX_3 i3;
-                //INDEX_2 i2;
+                IVec<3> i3;
+                //IVec<2> i2;
                 tval i2;
                 faceht.GetData (i, i3, i2);
                 if (i2.index != PointIndex::BASE-1)
                   {
                     Element2d tri ( (i2.p4 == PointIndex::BASE-1) ? TRIG : QUAD);
                     for (int l = 0; l < 3; l++)
-                      tri[l] = i3.I(l+1);
+                      tri[l] = i3[l];
                     tri.PNum(4) = i2.p4;
                     tri.SetIndex (i2.index);
                     openelements.Append (tri);
@@ -3311,7 +3311,7 @@ namespace netgen
       for (i = 1; i <= GetNSeg(); i++)
       {
       const Segment & seg = LineSegment(i);
-      INDEX_2 i2(seg[0], seg[1]);
+      IVec<2> i2(seg[0], seg[1]);
       i2.Sort();
 
       if (!boundaryedges->Used (i2))
@@ -3380,7 +3380,7 @@ namespace netgen
 
         if (surfnr == 0 || seg.si == surfnr)
           {
-            INDEX_2 key(seg[1], seg[0]);
+            IVec<2> key(seg[1], seg[0]);
             if (!faceht.Used(key))
               {
                 cerr << "ERROR: Segment " << seg << " brother not used" << endl;
@@ -3416,17 +3416,17 @@ namespace netgen
                     /*
                     data = faceht.Get(seg);
                     
-                    if (data.I1() == el.GetIndex())
+                    if (data[0] == el.GetIndex())
                       {
-                        data.I1() = 0;
+                        data[0] = 0;
                         faceht.Set (seg, data);
                       }
                     else
                       {
                         // buggy = true;
                         PrintWarning ("hash table si not fitting for segment: ",
-                                       seg.I1(), "-", seg.I2(), " other = ",
-                                      data.I2(), ", surfnr = ", surfnr);
+                                       seg[0], "-", seg[1], " other = ",
+                                      data[1], ", surfnr = ", surfnr);
                       }
                     */
                   }
@@ -3455,7 +3455,7 @@ namespace netgen
             bout << "bag " << j << ":" << endl;
             for (int k = 1; k <= faceht.GetBagSize(j); k++)
               {
-                INDEX_2 i2, data;
+                IVec<2> i2, data;
                 faceht.GetData (j, k, i2, data);
                 bout << "key = " << i2 << ", data = " << data << endl;
               }
@@ -3566,9 +3566,9 @@ namespace netgen
     if (boundaryedges)
     for (j = 1; j <= sel.GetNP(); j++)
     {
-    INDEX_2 i2;
-    i2.I1() = sel.PNumMod(j);
-    i2.I2() = sel.PNumMod(j+1);
+    IVec<2> i2;
+    i2[0] = sel.PNumMod(j);
+    i2[1] = sel.PNumMod(j+1);
     i2.Sort();
     boundaryedges->Set (i2, 1);
     }
@@ -3883,8 +3883,8 @@ namespace netgen
                 const auto & p2 = points[el.PNumMod(j+1)];
 
                 /*
-                  INDEX_2 i21(el.PNumMod(j), el.PNumMod(j+1));
-                  INDEX_2 i22(el.PNumMod(j+1), el.PNumMod(j));
+                  IVec<2> i21(el.PNumMod(j), el.PNumMod(j+1));
+                  IVec<2> i22(el.PNumMod(j+1), el.PNumMod(j));
                   if (! identifiedpoints->Used (i21) &&
                   ! identifiedpoints->Used (i22) )
                 */
@@ -3928,8 +3928,8 @@ namespace netgen
         const auto & p1 = points[seg[0]];
         const auto & p2 = points[seg[1]];
         /*
-          INDEX_2 i21(seg[0], seg[1]);
-          INDEX_2 i22(seg[1], seg[0]);
+          IVec<2> i21(seg[0], seg[1]);
+          IVec<2> i22(seg[1], seg[0]);
           if (identifiedpoints)
           if (!identifiedpoints->Used (i21) && !identifiedpoints->Used (i22))
         */
@@ -4076,9 +4076,9 @@ namespace netgen
 
 
                 /*            
-                  (*testout) << "pi1,2, 3, 4 = " << i2.I1() << ", " << i2.I2() << ", " << pi3 << ", " << pi4
-                  << " p1 = " << Point(i2.I1()) 
-                  << ", p2 = " << Point(i2.I2()) 
+                  (*testout) << "pi1,2, 3, 4 = " << i2[0] << ", " << i2[1] << ", " << pi3 << ", " << pi4
+                  << " p1 = " << Point(i2[0]) 
+                  << ", p2 = " << Point(i2[1]) 
                   //                     << ", p3 = " << Point(pi3) 
                   //                     << ", p4 = " << Point(pi4) 
                   << ", rad = " << rad << endl;
@@ -4881,7 +4881,7 @@ namespace netgen
     //     //      Point<3> cp(0.5, 0.5, 0.5);
     //     for (i = 1; i <= 3; i++)
     //       {
-    //         INDEX_2 i2(el.PNumMod (i), el.PNumMod (i+1));
+    //         IVec<2> i2(el.PNumMod (i), el.PNumMod (i+1));
     //         i2.Sort();
     //         if (segmentht -> Used (i2))
     //           nseg++;
@@ -6754,7 +6754,7 @@ namespace netgen
         auto [hash_pts, hash_nr] = hash;
         if(hash_nr != nr)
           continue;
-        // auto& ipts = inserted_points[{p1p2.I1(), p1p2.I2()}];
+        // auto& ipts = inserted_points[{p1p2[0], p1p2[1]}];
         auto& ipts = inserted_points[ { hash_pts[0], hash_pts[1] }];
         auto p1 = Point(hash_pts[0]);
         auto p2 = Point(hash_pts[1]);
@@ -7117,7 +7117,7 @@ namespace netgen
   // #ifdef NONE
   //   void Mesh :: AddIdentification (int pi1, int pi2, int identnr)
   //   {
-  //     INDEX_2 pair(pi1, pi2);
+  //     IVec<2> pair(pi1, pi2);
   //     //  pair.Sort();
   //     identifiedpoints->Set (pair, identnr);
   //     if (identnr > maxidentnr)
@@ -7127,7 +7127,7 @@ namespace netgen
 
   //   int Mesh :: GetIdentification (int pi1, int pi2) const
   //   {
-  //     INDEX_2 pair(pi1, pi2);
+  //     IVec<2> pair(pi1, pi2);
   //     if (identifiedpoints->Used (pair))
   //       return identifiedpoints->Get(pair);
   //     else
@@ -7136,11 +7136,11 @@ namespace netgen
 
   //   int Mesh :: GetIdentificationSym (int pi1, int pi2) const
   //   {
-  //     INDEX_2 pair(pi1, pi2);
+  //     IVec<2> pair(pi1, pi2);
   //     if (identifiedpoints->Used (pair))
   //       return identifiedpoints->Get(pair);
 
-  //     pair = INDEX_2 (pi2, pi1);
+  //     pair = IVec<2> (pi2, pi1);
   //     if (identifiedpoints->Used (pair))
   //       return identifiedpoints->Get(pair);
 
@@ -7159,19 +7159,19 @@ namespace netgen
   //     for (i = 1; i <= identifiedpoints->GetNBags(); i++)
   //       for (j = 1; j <= identifiedpoints->GetBagSize(i); j++)
   //    {
-  //      INDEX_2 i2;
+  //      IVec<2> i2;
   //      int nr;
   //      identifiedpoints->GetData (i, j, i2, nr);
 
   //      if (nr == identnr)
   //        {
-  //          identmap.Elem(i2.I1()) = i2.I2();
+  //          identmap.Elem(i2[0]) = i2[1];
   //        }
   //    }
   //   }
 
 
-  //   void Mesh :: GetIdentificationPairs (int identnr, Array<INDEX_2> & identpairs) const
+  //   void Mesh :: GetIdentificationPairs (int identnr, Array<IVec<2>> & identpairs) const
   //   {
   //     int i, j;
 
@@ -7180,7 +7180,7 @@ namespace netgen
   //     for (i = 1; i <= identifiedpoints->GetNBags(); i++)
   //       for (j = 1; j <= identifiedpoints->GetBagSize(i); j++)
   //    {
-  //      INDEX_2 i2;
+  //      IVec<2> i2;
   //      int nr;
   //      identifiedpoints->GetData (i, j, i2, nr);
 

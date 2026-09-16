@@ -2017,7 +2017,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     bool Used (PointIndex pi1, PointIndex pi2)
     {
-      // return identifiedpoints.Used (INDEX_2 (pi1, pi2));
+      // return identifiedpoints.Used (IVec<2> (pi1, pi2));
       return identifiedpoints.Used (PointIndices<2>(pi1, pi2));
     }
 

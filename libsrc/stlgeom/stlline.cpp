@@ -306,7 +306,7 @@ void STLEdgeDataList :: ChangeStatus(int status1, int status2)
 /*
 void STLEdgeDataList :: Add(const STLEdgeData& ed, int i)
 {
-  INDEX_2 edge(ed.p1,ed.p2);
+  IVec<2> edge(ed.p1,ed.p2);
   edge.Sort();
   hashtab.Set(edge, i);
   Elem(i) = ed;

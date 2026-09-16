@@ -836,7 +836,7 @@ namespace netgen
     //   ///
     //   void GetIdentificationMap (int identnr, Array<int> & identmap) const;
     //   ///
-    //   void GetIdentificationPairs (int identnr, Array<INDEX_2> & identpairs) const;
+    //   void GetIdentificationPairs (int identnr, Array<IVec<2>> & identpairs) const;
     //   ///
     //   int GetMaxIdentificationNr () const
     //   { 

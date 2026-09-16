@@ -1637,25 +1637,25 @@ namespace netgen
         /*
         // check, if point has as least 3 different surfs:
 
-        Array<INDEX_3, PointIndex> surfonpoint(mesh.GetNP());
-        surfonpoint = INDEX_3(0,0,0);
+        Array<IVec<3>, PointIndex> surfonpoint(mesh.GetNP());
+        surfonpoint = IVec<3>(0,0,0);
 
         for (const Element2d & el : mesh.SurfaceElements())
           {
             int ind = el.GetIndex();
             for (int j = 0; j < el.GetNP(); j++)
               {
-                INDEX_3 & i3 = surfonpoint[el[j]];
-                if (ind != i3.I1() && ind != i3.I2() && ind != i3.I3())
+                IVec<3> & i3 = surfonpoint[el[j]];
+                if (ind != i3[0] && ind != i3[1] && ind != i3[2])
                   {
-                    i3.I1() = i3.I2();
-                    i3.I2() = i3.I3();
-                    i3.I3() = ind;
+                    i3[0] = i3[1];
+                    i3[1] = i3[2];
+                    i3[2] = ind;
                   }
               }
           }
         for (int i = 1; i <= mesh.GetNP(); i++)
-          if (surfonpoint.Get(i).I1())
+          if (surfonpoint.Get(i)[0])
             cornerpoint.Set(i);
         */
         cornerpoint.Clear();
@@ -1680,7 +1680,7 @@ namespace netgen
                 // before
               edges.Set (i2, 1);
               i2.Sort();   
-              PointIndices<2> i2s(i2.I2(), i2.I1());
+              PointIndices<2> i2s(i2[1], i2[0]);
               edges.Set (i2s, 1);
               */
 
@@ -1781,9 +1781,9 @@ namespace netgen
         // 2D case
 
         // check, if point has as least 3 different surfs:
-        Array<INDEX_3, PointIndex> surfonpoint(mesh.GetNP());
+        Array<IVec<3>, PointIndex> surfonpoint(mesh.GetNP());
 
-        surfonpoint = INDEX_3(0,0,0);
+        surfonpoint = IVec<3>(0,0,0);
         
         for (auto & seg : mesh.LineSegments())
           {
@@ -1832,12 +1832,12 @@ namespace netgen
                 for (int j = 0; j < 2; j++)
                   {
                     PointIndex pi = (j == 0) ? seg[0] : seg[1];
-                    INDEX_3 & i3 = surfonpoint[pi];
-                    if (ind != i3.I1() &&
-                        ind != i3.I2())
+                    IVec<3> & i3 = surfonpoint[pi];
+                    if (ind != i3[0] &&
+                        ind != i3[1])
                       {
-                        i3.I1() = i3.I2();
-                        i3.I2() = ind;
+                        i3[0] = i3[1];
+                        i3[1] = ind;
                       }
                   }
               }
@@ -1847,7 +1847,7 @@ namespace netgen
         for (PointIndex pi : mesh.Points().Range())
           {
             // mark points for refinement that are in corners between two anisotropic edges 
-            if (surfonpoint[pi].I1())
+            if (surfonpoint[pi][0])
               {
                 // cornerpoint.Set(i);    // disabled by JS, Aug 2009
                 edgepoint.SetBit(pi);

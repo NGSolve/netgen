@@ -376,11 +376,11 @@ namespace netgen
         for (int j = 1; j <= between.GetNBags(); j++)
           for (int k = 1; k <= between.GetBagSize(j); k++)
             {
-              INDEX_2 i2;
+              IVec<2> i2;
               int newpi;
               between.GetData (j, k, i2, newpi);
-              INDEX_2 oi2(identmap.Get(i2.I1()),
-                          identmap.Get(i2.I2()));
+              IVec<2> oi2(identmap.Get(i2[0]),
+                          identmap.Get(i2[1]));
               oi2.Sort();
               if (between.Used (oi2))
                 {
@@ -402,7 +402,7 @@ namespace netgen
     for (i = 1; i <= between.GetNBags(); i++)
       for (j = 1; j <= between.GetBagSize(i); j++)
         {
-          INDEX_2 oldp;
+          IVec<2> oldp;
           int newp;
           between.GetData (i, j, oldp, newp);
           mesh.mlbetweennodes.Elem(newp) = oldp;

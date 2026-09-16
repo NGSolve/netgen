@@ -30,7 +30,7 @@ namespace netgen
     const Solid *sol;
     double factor; 
     // Array<Point<3> > points;
-    // Array<INDEX_2> segms;
+    // Array<IVec<2>> segms;
   public:
     SingularFace (int adomnr, const Solid * asol, double sf)
       : domnr(adomnr), sol(asol), factor(sf) { ; }

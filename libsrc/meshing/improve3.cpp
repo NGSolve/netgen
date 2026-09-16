@@ -2675,7 +2675,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   double bad1, bad2;
 
 
-  INDEX_3_HASHTABLE<INDEX_2> elsonface (GetNE());
+  INDEX_3_HASHTABLE<IVec<2>> elsonface (GetNE());
 
   (*mycout) << "SwapImprove2 " << endl;
   (*testout) << "\n" << "Start SwapImprove2" << "\n";
@@ -2701,33 +2701,33 @@ void MeshOptimize3d :: SplitImprove2 ()
   for (j = 1; j <= 4; j++)
   {
   el.GetFace (j, face);
-  INDEX_3 i3 (face.PNum(1), face.PNum(2), face.PNum(3));
+  IVec<3> i3 (face.PNum(1), face.PNum(2), face.PNum(3));
   i3.Sort();
 
 
   int bnr, posnr;
   if (!elsonface.PositionCreate (i3, bnr, posnr))
   {
-  INDEX_2 i2;
+  IVec<2> i2;
   elsonface.GetData (bnr, posnr, i3, i2);
-  i2.I2() = i;
+  i2[1] = i;
   elsonface.SetData (bnr, posnr, i3, i2);
   }
   else
   {
-  INDEX_2 i2 (i, 0);
+  IVec<2> i2 (i, 0);
   elsonface.SetData (bnr, posnr, i3, i2);
   }
 
   //        if (elsonface.Used (i3))
   //          {
-  //            INDEX_2 i2 = elsonface.Get(i3);
-  //            i2.I2() = i;
+  //            IVec<2> i2 = elsonface.Get(i3);
+  //            i2[1] = i;
   //            elsonface.Set (i3, i2);
   //          }
   //        else
   //          {
-  //            INDEX_2 i2 (i, 0);
+  //            IVec<2> i2 (i, 0);
   //            elsonface.Set (i3, i2);
   //          }
 
@@ -2740,9 +2740,9 @@ void MeshOptimize3d :: SplitImprove2 ()
   for (i = 1; i <= GetNSE(); i++)
   {
   const Element2d & sface = SurfaceElement(i);
-  INDEX_3 i3 (sface.PNum(1), sface.PNum(2), sface.PNum(3));
+  IVec<3> i3 (sface.PNum(1), sface.PNum(2), sface.PNum(3));
   i3.Sort();
-  INDEX_2 i2(0,0);
+  IVec<2> i2(0,0);
   elsonface.Set (i3, i2);
   }
 
@@ -2750,22 +2750,22 @@ void MeshOptimize3d :: SplitImprove2 ()
   for (i = 1; i <= elsonface.GetNBags(); i++)
   for (j = 1; j <= elsonface.GetBagSize(i); j++)
   {
-  INDEX_3 i3;
-  INDEX_2 i2;
+  IVec<3> i3;
+  IVec<2> i2;
   elsonface.GetData (i, j, i3, i2);
 
 
-  int eli1 = i2.I1();
-  int eli2 = i2.I2();
+  int eli1 = i2[0];
+  int eli2 = i2[1];
 
   if (eli1 && eli2 && original.Test(eli1) && original.Test(eli2) )
   {
   Element & elem = volelements.Elem(eli1);
   Element & elem2 = volelements.Elem(eli2);
 
-  int pi1 = i3.I1();
-  int pi2 = i3.I2();
-  int pi3 = i3.I3();
+  int pi1 = i3[0];
+  int pi2 = i3[1];
+  int pi3 = i3[2];
 
   int pi4 = elem.PNum(1) + elem.PNum(2) + elem.PNum(3) + elem.PNum(4) - pi1 - pi2 - pi3;
   int pi5 = elem2.PNum(1) + elem2.PNum(2) + elem2.PNum(3) + elem2.PNum(4) - pi1 - pi2 - pi3;
@@ -2821,7 +2821,7 @@ void MeshOptimize3d :: SplitImprove2 ()
             
   int swap = (bad2 < bad1);
 
-  INDEX_2 hi2b(pi4, pi5);
+  IVec<2> hi2b(pi4, pi5);
   hi2b.Sort();
             
   if ( ((bad2 < 1e6) || (bad2 < 10 * bad1)) &&

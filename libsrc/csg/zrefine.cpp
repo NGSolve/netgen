@@ -225,7 +225,7 @@ namespace netgen
         for (int i = 1; i <= identpts.GetNBags(); i++)
           for (int j = 1; j <= identpts.GetBagSize(i); j++)
             {
-              INDEX_3 pair;
+              IVec<3> pair;
               int dummy;
               identpts.GetData(i, j, pair, dummy);
         */
@@ -246,9 +246,9 @@ namespace netgen
                         {
                           first_id.Clear(idnr);
                           /*
-                          ref_uniform.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels()));
-                          ref_singular.Append (INDEX_3 (pair.I1(), pair.I2(), csid->RefLevels1()));
-                          ref_singular.Append (INDEX_3 (pair.I2(), pair.I1(), csid->RefLevels2()));
+                          ref_uniform.Append (IVec<3> (pair[0], pair[1], csid->RefLevels()));
+                          ref_singular.Append (IVec<3> (pair[0], pair[1], csid->RefLevels1()));
+                          ref_singular.Append (IVec<3> (pair[1], pair[0], csid->RefLevels2()));
                           */
                           ref_uniform.Append ( { { pi1, pi2 }, csid->RefLevels() } );
                           ref_singular.Append ( { { pi1, pi2 }, csid->RefLevels1() } );

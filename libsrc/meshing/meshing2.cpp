@@ -242,7 +242,7 @@ namespace netgen
   void Meshing2 ::
   GetChartBoundary (Array<Point<2>> & points, 
                     Array<Point<3>> & points3d, 
-                    Array<INDEX_2> & lines, double h) const
+                    Array<IVec<2>> & lines, double h) const
   {
     points.SetSize (0);
     points3d.SetSize (0);
@@ -328,7 +328,7 @@ namespace netgen
 
     Array<Point<2>> chartboundpoints;
     Array<Point<3>> chartboundpoints3d;
-    Array<INDEX_2> chartboundlines;
+    Array<IVec<2>> chartboundlines;
 
     // illegal points: points with more then 50 elements per node
     int maxlegalpoint(-1), maxlegalline(-1);
@@ -827,10 +827,10 @@ namespace netgen
 
                 for (int i = 1; i <= chartboundlines.Size(); i++)
                   {
-                    IVec<2,LocalPointIndex> line (LocalPointIndex::FromNr0(chartboundlines[i-1].I1()+oldnp-1),
-                                                  LocalPointIndex::FromNr0(chartboundlines[i-1].I2()+oldnp-1));
+                    IVec<2,LocalPointIndex> line (LocalPointIndex::FromNr0(chartboundlines[i-1][0]+oldnp-1),
+                                                  LocalPointIndex::FromNr0(chartboundlines[i-1][1]+oldnp-1));
                     loclines.Append (line);
-                    //        (*testout) << "line: " << line.I1() << "-" << line.I2() << endl;
+                    //        (*testout) << "line: " << line[0] << "-" << line[1] << endl;
                   }
               }
 
@@ -1038,7 +1038,7 @@ namespace netgen
               for (i = 1; i <= dellines.Size(); i++)
               for (j = 1; j <= 2; j++)
               {
-              upgeominfo[loclines.Get(dellines.Get(i)).I(j)] =
+              upgeominfo[loclines.Get(dellines.Get(i))[j-1]] =
               adfront.GetLineGeomInfo (lindex.Get(dellines.Get(i)), j);
               }
             */
@@ -1306,7 +1306,7 @@ namespace netgen
           tpi1 = adfront.GetGlobalIndex (pindex[tpi1]);
           tpi2 = adfront.GetGlobalIndex (pindex[tpi2]);
 
-          if (doubleedge.Used (INDEX_2(tpi1, tpi2)))
+          if (doubleedge.Used (IVec<2>(tpi1, tpi2)))
           {
           if (debugparam.haltexistingline)
           debugflag = 1;
@@ -1314,7 +1314,7 @@ namespace netgen
           << tpi1 << " - " << tpi2 << " twice !!!" << endl;
           found = 0;
           }
-          doubleedge.Set (INDEX_2(tpi1, tpi2), 1);
+          doubleedge.Set (IVec<2>(tpi1, tpi2), 1);
           }
           }
           }

@@ -595,7 +595,7 @@ namespace netgen
 //      for (i = 1; i <= cntedges; i++)
 //        {
 //          (*testout) << "edge " << i << ": " 
-//                     << edges.Get(i).I1() << "-" << edges.Get(i).I2()
+//                     << edges.Get(i)[0] << "-" << edges.Get(i)[1]
 //                     << ", class = " << eclasses.Get(i) << endl;
 //        }
         
@@ -620,11 +620,11 @@ namespace netgen
           for (j = 1; j <= 3; j++)
           for (k = j+1; k <= 4; k++)
           {
-          INDEX_2 i2(el.PNum(j), el.PNum(k));
+          IVec<2> i2(el.PNum(j), el.PNum(k));
           i2.Sort();
                     
           int enr = edgenumber.Get(i2);
-          double elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          double elen = Dist (mesh.Point (i2[0]), mesh.Point (i2[1]));
           if (elen < edgelength.Get(enr))
           edgelength.Set (enr, elen);
           }
@@ -635,19 +635,19 @@ namespace netgen
           {
           k = (j % 3) + 1;
                   
-          INDEX_2 i2(el.PNum(j), el.PNum(k));
+          IVec<2> i2(el.PNum(j), el.PNum(k));
           i2.Sort();
                   
           int enr = edgenumber.Get(i2);
-          double elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          double elen = Dist (mesh.Point (i2[0]), mesh.Point (i2[1]));
           if (elen < edgelength.Get(enr))
           edgelength.Set (enr, elen);
                   
-          i2 = INDEX_2(el.PNum(j+3), el.PNum(k+3));
+          i2 = IVec<2>(el.PNum(j+3), el.PNum(k+3));
           i2.Sort();
                   
           enr = edgenumber.Get(i2);
-          elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          elen = Dist (mesh.Point (i2[0]), mesh.Point (i2[1]));
           if (elen < edgelength.Get(enr))
           edgelength.Set (enr, elen);
                   
@@ -656,11 +656,11 @@ namespace netgen
           cntedges++;
           edgenumber.Set(i2, cntedges);
           }
-          i2 = INDEX_2(el.PNum(j), el.PNum(j+3));
+          i2 = IVec<2>(el.PNum(j), el.PNum(j+3));
           i2.Sort();
                   
           enr = edgenumber.Get(i2);
-          elen = Dist (mesh.Point (i2.I1()), mesh.Point (i2.I2()));
+          elen = Dist (mesh.Point (i2[0]), mesh.Point (i2[1]));
           if (elen < edgelength.Get(enr))
           edgelength.Set (enr, elen);
           }
@@ -1666,7 +1666,7 @@ namespace netgen
         
         for(i = 0; i < el2d.GetNP(); i++)
           {
-            INDEX_2 e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
+            IVec<2> e1(el2d[i], el2d[(i+1) % el2d.GetNP()]);
             e1.Sort();
 
             if(!cutedges.Used(e1))
@@ -1675,11 +1675,11 @@ namespace netgen
             
             for(k = 0; k < idmaps.Size(); k++)
               {
-                INDEX_2 e2((*idmaps[k])[e1.I1()],
-                           (*idmaps[k])[e1.I2()]);
+                IVec<2> e2((*idmaps[k])[e1[0]],
+                           (*idmaps[k])[e1[1]]);
                 
-                if(!PointIndex(e2.I1()).IsValid() || !PointIndex(e2.I2()).IsValid() ||
-                   e1.I1() == e2.I1() || e1.I2() == e2.I2())
+                if(!PointIndex(e2[0]).IsValid() || !PointIndex(e2[1]).IsValid() ||
+                   e1[0] == e2[0] || e1[1] == e2[1])
                   continue;
                 
                 e2.Sort();
@@ -1687,8 +1687,8 @@ namespace netgen
                 if(cutedges.Used(e2))
                   continue;
 
-                Point<3> np = Center(mesh.Point(e2.I1()),
-                                    mesh.Point(e2.I2()));
+                Point<3> np = Center(mesh.Point(e2[0]),
+                                    mesh.Point(e2[1]));
                 int newp = mesh.AddPoint(np);
                 cutedges.Set(e2,newp);
                 (*testout) << "DAAA" << endl;
@@ -2067,7 +2067,7 @@ namespace netgen
         
         // INDEX_2_HASHTABLE<int> edgenumber(np);
         // INDEX_2_CLOSED_HASHTABLE<int> edgenumber(9*ne+4*nse);  
-        // ClosedHashTable<INDEX_2, int> edgenumber(9*ne+4*nse);
+        // ClosedHashTable<IVec<2>, int> edgenumber(9*ne+4*nse);
         ClosedHashTable<SortedPointIndices<2>, int> edgenumber(9*ne+4*nse);
         BTSortEdges (mesh, idmaps, edgenumber);
         
@@ -2330,7 +2330,7 @@ namespace netgen
           {
             for (j = 1; j <= 3; j++)
               {
-                INDEX_2 se(el.PNum(j), el.PNum(j+3));
+                IVec<2> se(el.PNum(j), el.PNum(j+3));
                 se.Sort();
                 shortedges.Set (se, 1);
               }
@@ -2360,7 +2360,7 @@ namespace netgen
               for (j = 1; j <= 3; j++)
                 for (k = j+1; k <= 4; k++)
                   {
-                    INDEX_2 se(el.PNum(j), el.PNum(k));
+                    IVec<2> se(el.PNum(j), el.PNum(k));
                     se.Sort();
                     if (shortedges.Used (se))
                       {
@@ -2429,7 +2429,7 @@ namespace netgen
               // eventually rotate
               MarkedPrism mp;
             
-              INDEX_2 se(el.PNum(1), el.PNum(2));
+              IVec<2> se(el.PNum(1), el.PNum(2));
               se.Sort();
               if (shortedges.Used (se))
                 {
@@ -2945,7 +2945,7 @@ namespace netgen
 
     // INDEX_2_HASHTABLE<int> cutedges(10 + 5 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     // INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
-    // ClosedHashTable<INDEX_2, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    // ClosedHashTable<IVec<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     ClosedHashTable<SortedPointIndices<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
 
     bool noprojection = false;
@@ -3572,9 +3572,9 @@ namespace netgen
                 
                   oldquad = mquads[i-1];
                   /*
-                  INDEX_2 edge1(oldquad.pnums[0],
+                  IVec<2> edge1(oldquad.pnums[0],
                                 oldquad.pnums[1]);
-                  INDEX_2 edge2(oldquad.pnums[2],
+                  IVec<2> edge2(oldquad.pnums[2],
                                 oldquad.pnums[3]);
                   */
                   PointIndices<2> edge1, edge2;
@@ -3922,8 +3922,8 @@ namespace netgen
         /*
         for (int i = 1; i <= np; i++)
           {
-            mesh.mlbetweennodes.Elem(i).I1() = 0;
-            mesh.mlbetweennodes.Elem(i).I2() = 0;
+            mesh.mlbetweennodes.Elem(i)[0] = 0;
+            mesh.mlbetweennodes.Elem(i)[1] = 0;
           }
         */
         for (auto i : mesh.mlbetweennodes.Range())
@@ -3937,7 +3937,7 @@ namespace netgen
       for (i = 1; i <= cutedges.GetNBags(); i++)
       for (j = 1; j <= cutedges.GetBagSize(i); j++)
       {
-      INDEX_2 edge;
+      IVec<2> edge;
       int newpi;
       cutedges.GetData (i, j, edge, newpi);
       mesh.mlbetweennodes.Elem(newpi) = edge;
@@ -3954,7 +3954,7 @@ namespace netgen
     for (int i = 0; i < cutedges.Size(); i++)
       if (cutedges.UsedPos0(i))
         {
-          INDEX_2 edge;
+          IVec<2> edge;
           PointIndex newpi;
           cutedges.GetData0 (i, edge, newpi);
           isnewpoint.SetBit(newpi);
@@ -4054,11 +4054,11 @@ namespace netgen
           for (j = 1; j <= cutedges.GetNBags(); j++)
           for (k = 1; k <= cutedges.GetBagSize(j); k++)
           {
-          INDEX_2 i2;
+          IVec<2> i2;
           int newpi;
           cutedges.GetData (j, k, i2, newpi);
-          INDEX_2 oi2(identmap.Get(i2.I1()),
-          identmap.Get(i2.I2()));
+          IVec<2> oi2(identmap.Get(i2[0]),
+          identmap.Get(i2[1]));
           oi2.Sort();
           if (cutedges.Used (oi2))
           {

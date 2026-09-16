@@ -265,7 +265,7 @@ namespace netgen
     for (int i = 1; i <= mesh.GetNFD(); i++)
       masterface[i-1] = i;
   
-    Array<INDEX_2> fpairs;
+    Array<IVec<2>> fpairs;
     bool changed;
     do
       {
@@ -276,19 +276,19 @@ namespace netgen
 
             for (int j = 0; j < fpairs.Size(); j++)
               {
-                if (masterface[fpairs[j].I1()-1] <
-                    masterface[fpairs[j].I2()-1])
+                if (masterface[fpairs[j][0]-1] <
+                    masterface[fpairs[j][1]-1])
                   {
                     changed = 1;
-                    masterface[fpairs[j].I2()-1] =
-                      masterface[fpairs[j].I1()-1];
+                    masterface[fpairs[j][1]-1] =
+                      masterface[fpairs[j][0]-1];
                   }
-                if (masterface[fpairs[j].I2()-1] <
-                    masterface[fpairs[j].I1()-1])
+                if (masterface[fpairs[j][1]-1] <
+                    masterface[fpairs[j][0]-1])
                   {
                     changed = 1;
-                    masterface[fpairs[j].I1()-1] =
-                      masterface[fpairs[j].I2()-1];
+                    masterface[fpairs[j][0]-1] =
+                      masterface[fpairs[j][1]-1];
                   }
               }
           }
@@ -647,7 +647,7 @@ namespace netgen
                 geom.identifications[i-1]->GetIdentifiedFaces (fpairs);
                 int found = 0;
                 for (int j = 1; j <= fpairs.Size(); j++)
-                  if (fpairs[j-1].I1() == k || fpairs[j-1].I2() == k)
+                  if (fpairs[j-1][0] == k || fpairs[j-1][1] == k)
                     found = 1;
 
                 if (!found)

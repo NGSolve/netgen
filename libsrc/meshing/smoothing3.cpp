@@ -231,11 +231,11 @@ namespace netgen
 
       for (j = 1; j <= faces.Size(); j++)
       {
-      const INDEX_3 & el = faces.Get(j);
+      const IVec<3> & el = faces.Get(j);
 
-      double bad = CalcTetBadness (points.Get(el.I1()), 
-      points.Get(el.I3()), 
-      points.Get(el.I2()), 
+      double bad = CalcTetBadness (points.Get(el[0]), 
+      points.Get(el[2]), 
+      points.Get(el[1]), 
       pp, 0);
       badness += bad;
       }

@@ -68,7 +68,7 @@ namespace netgen
                                       class Mesh & mesh);
 
     /// get list of identified faces
-    virtual void GetIdentifiedFaces (Array<INDEX_2> & idfaces) const;
+    virtual void GetIdentifiedFaces (Array<IVec<2>> & idfaces) const;
 
     friend ostream & operator<< (ostream & ost, Identification & ident);
   };

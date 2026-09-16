@@ -100,11 +100,11 @@ BuildVolumeElements (Array<class Element2d> & surfels,
 }
 
 void Identification :: 
-GetIdentifiedFaces (Array<INDEX_2> & idfaces) const
+GetIdentifiedFaces (Array<IVec<2>> & idfaces) const
 {
   idfaces.SetSize(0);
   for (auto [i2, val] : identfaces)
-    idfaces.Append (INDEX_2(i2[0], i2[1]));
+    idfaces.Append (IVec<2>(i2[0], i2[1]));
 }
 
 
@@ -1377,15 +1377,15 @@ BuildSurfaceElements2 (Array<Segment> & segs,
   for (int i = 1; i <= identfaces.GetNBags(); i++)
     for (int j = 1; j <= identfaces.GetBagSize(i); j++)
       {
-        INDEX_2 i2;
+        IVec<2> i2;
         int data;
         identfaces.GetData (i, j, i2, data);
-        if (i2.I1() == facei || i2.I2() == facei)
+        if (i2[0] == facei || i2[1] == facei)
           foundid = 1;
 
         (*testout) << "identface = " << i2 << endl;
-        (*testout) << "face " << i2.I1() << " = " << mesh.GetFaceDescriptor(i2.I1()) << endl;
-        (*testout) << "face " << i2.I2() << " = " << mesh.GetFaceDescriptor(i2.I2()) << endl;
+        (*testout) << "face " << i2[0] << " = " << mesh.GetFaceDescriptor(i2[0]) << endl;
+        (*testout) << "face " << i2[1] << " = " << mesh.GetFaceDescriptor(i2[1]) << endl;
       }
   */
 

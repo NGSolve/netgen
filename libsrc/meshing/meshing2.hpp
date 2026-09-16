@@ -146,7 +146,7 @@ protected:
    */
   virtual void GetChartBoundary (Array<Point<2>> & points, 
                                  Array<Point<3>> & points3d,
-                                 Array<INDEX_2> & lines, double p) const;
+                                 Array<IVec<2>> & lines, double p) const;
 
   virtual double Area () const;
 

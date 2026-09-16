@@ -302,7 +302,7 @@ void STLGeometry :: PrepareSurfaceMeshing()
 
 void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
                                         Array<Point<3>> & points3d,
-                                        Array<INDEX_2> & alines, double h)
+                                        Array<IVec<2>> & alines, double h)
 {
   twoint seg, newseg;
   int zone;
@@ -314,7 +314,7 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
   for (int i = 1; i <= chart.GetNOLimit(); i++)
     {
       seg = chart.GetOLimit(i);
-      INDEX_2 i2;
+      IVec<2> i2;
       for (int j = 1; j <= 2; j++)
         {
           int pi = (j == 1) ? seg.i1 : seg.i2;
@@ -334,7 +334,7 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
           else
             lpi = ha_points[pi-1];
 
-          i2.I(j) = lpi;
+          i2[j-1] = lpi;
         }
       alines.Append (i2);
 
@@ -351,7 +351,7 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
       ToPlane(GetPoint(seg.i2), 0, p2, h, zone, 0);
       points.Append(p2);
       points3d.Append (GetPoint(seg.i2));
-      lines.Append (INDEX_2 (points.Size()-1, points.Size()));
+      lines.Append (IVec<2> (points.Size()-1, points.Size()));
       */
     }
 
