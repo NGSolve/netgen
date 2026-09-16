@@ -88,8 +88,10 @@ build_win:
         Get-ChildItem -Force | Copy-Item -Destination $env:SRC_DIR -Recurse -Force
 
         python.exe -m pip install -U netgen-occt netgen-occt-devel ninja cmake
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Set-Location $env:SRC_DIR
         git submodule update --init --recursive
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         if (Test-Path $env:NETGEN_BUILD_DIR) {
           Remove-Item $env:NETGEN_BUILD_DIR -Recurse -Force
@@ -109,8 +111,10 @@ build_win:
           -DUSE_CCACHE=ON `
           -DENABLE_UNIT_TESTS=OFF `
           -DCMAKE_BUILD_TYPE=Release
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
         cmake --build . --target install --config Release
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 test_win:
   <<: *win
@@ -118,8 +122,10 @@ test_win:
   script:
     - |
         pip install pytest-check
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Set-Location (Join-Path $env:NETGEN_BUILD_DIR "netgen")
         ctest -C Release -V --output-on-failure
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Set-Location ..
   needs: ["build_win"]
 
@@ -129,8 +135,10 @@ generate_results:
   script:
     - |
         pip install pytest-check
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
         Set-Location "tests\pytest"
         python test_tutorials.py "new_results.json"
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
   needs: ["build_win"]
   when: manual
   artifacts:
