@@ -28,7 +28,6 @@ namespace netgen
 
 
 
-#include "optmem.hpp"
 
 // #include "mpi_interface.hpp"
 #include "netgenout.hpp"

@@ -4,6 +4,7 @@
 #include "archive.hpp"
 #include "array.hpp"
 #include "bitarray.hpp"
+#include "blockallocator.hpp"
 #include "exception.hpp"
 #include "flags.hpp"
 #include "table.hpp"
