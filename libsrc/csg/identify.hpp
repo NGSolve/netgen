@@ -39,8 +39,8 @@ namespace netgen
     /// can identify both special points (fixed direction)
     /// (identified points, same tangent)
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-                              const TABLE<int> & specpoint2solid,                         
-                              const TABLE<int> & specpoint2surface) const;
+                              const DynamicTable<int> & specpoint2solid,                         
+                              const DynamicTable<int> & specpoint2surface) const;
     ///
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     /// is it possible to identify sp1 with some other ?
@@ -93,8 +93,8 @@ namespace netgen
 
     //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-                              const TABLE<int> & specpoint2solid,
-                              const TABLE<int> & specpoint2surface) const override;
+                              const DynamicTable<int> & specpoint2solid,
+                              const DynamicTable<int> & specpoint2surface) const override;
 
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const override;
     virtual PointIndex GetIdentifiedPoint (class Mesh & mesh, PointIndex pi1) override;
@@ -148,8 +148,8 @@ namespace netgen
 
     //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-                              const TABLE<int> & specpoint2solid,
-                              const TABLE<int> & specpoint2surface) const;
+                              const DynamicTable<int> & specpoint2solid,
+                              const DynamicTable<int> & specpoint2surface) const;
     virtual int Identifiable (const Point<3> & p1, const Point<3> & sp2) const;
     virtual int IdentifiableCandidate (const SpecialPoint & sp1) const;
     virtual int ShortEdge (const SpecialPoint & sp1, const SpecialPoint & sp2) const;
@@ -198,8 +198,8 @@ namespace netgen
 
     //  virtual void IdentifySpecialPoints (Array<class SpecialPoint> & points);
     virtual int Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-                              const TABLE<int> & specpoint2solid,
-                              const TABLE<int> & specpoint2surface) const;
+                              const DynamicTable<int> & specpoint2solid,
+                              const DynamicTable<int> & specpoint2surface) const;
 
 
     virtual void IdentifyPoints (class Mesh & mesh);

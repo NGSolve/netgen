@@ -283,7 +283,7 @@ namespace netgen
       // num_segs_on_proc[(*this)[ei].GetPartition()]++;
       num_segs_on_proc[seg_partition[ei]]++;
 
-    TABLE<SegmentIndex> segs_of_proc (num_segs_on_proc);
+    DynamicTable<SegmentIndex> segs_of_proc (num_segs_on_proc);
     for (SegmentIndex ei : LineSegments().Range())
       segs_of_proc.Add (seg_partition[ei], ei);
 
@@ -426,7 +426,7 @@ namespace netgen
     
     tbuildvertexb.Start();    
     
-    TABLE<int> verts_of_proc (num_verts_on_proc);   // 0-based offsets into points
+    DynamicTable<int> verts_of_proc (num_verts_on_proc);   // 0-based offsets into points
     DynamicTable<int, PointIndex> procs_of_vert (GetNV());
     DynamicTable<PointIndex, PointIndex> loc_num_of_vert (GetNV());
     /** Write vertex/proc mappingfs to tables **/
@@ -514,7 +514,7 @@ namespace netgen
               }
           }
       }
-    TABLE<int> pp_data(ppd_sizes);
+    DynamicTable<int> pp_data(ppd_sizes);
     for(int dest = 0; dest < ntasks; dest++)
       pp_data.Add(dest, maxidentnr);
     for (int dest = 0; dest < ntasks; dest++)

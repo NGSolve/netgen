@@ -64,10 +64,6 @@ public:
     double * dp;
     
 #ifdef DEBUG
-    if (prod.Size() != height)
-      {
-        (*myerr) << "Mult: wrong vector size " << endl;
-      }
     if (!height) 
       {
         cout << "DenseMatrix::Mult height = 0" << endl;
@@ -78,14 +74,9 @@ public:
       }
     
     if (width != v.Size())
-      {
-        (*myerr) << "\nMatrix and Vector don't fit" << endl;
-      }
-    else if (Height() != prod.Size())
-      {
-        (*myerr) << "Base_Matrix::operator*(Vector): prod vector not ok" << endl;
-      }
-    else
+      throw Exception ("DenseMatrix::Mult: matrix and vector don't fit");
+    if (height != prod.Size())
+      throw Exception ("DenseMatrix::Mult: prod vector size not ok");
 #endif
       {      
         mp = data;

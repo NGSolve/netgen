@@ -680,9 +680,9 @@ namespace netgen
           }
 
 
-        TABLE<int> eclasstab(cntedges);
+        DynamicTable<int> eclasstab(cntedges);
         for (int i = 1; i <= cntedges; i++)
-          eclasstab.Add1 (eclasses[i-1], i-1);
+          eclasstab.Add (eclasses[i-1]-1, i-1);
 
 
         // sort edges:
@@ -694,8 +694,8 @@ namespace netgen
         for (int i = 1; i <= cntedges; i++)
           {
             int ii = sorted[i-1];
-            for (int j = 1; j <= eclasstab.EntrySize(ii); j++)
-              edgenumber.Set (edges[eclasstab.Get(ii, j)], ++cnt);
+            for (int e : eclasstab[ii-1])
+              edgenumber.Set (edges[e], ++cnt);
             
           }
         return cnt;
@@ -1872,22 +1872,6 @@ namespace netgen
     return hanging;
   }
 
-
-
-  void ConnectToNodeRec (int node, int tonode, 
-                         const TABLE<int> & conto, Array<int> & connecttonode)
-  {
-    //  (*testout) << "connect " << node << " to " << tonode << endl;
-    for (int i = 1; i <= conto.EntrySize(node); i++)
-      {
-        int n2 = conto.Get(node, i);
-        if (!connecttonode[n2-1])
-          {
-            connecttonode[n2-1] = tonode;
-            ConnectToNodeRec (n2, tonode, conto, connecttonode);
-          }
-      }
-  }
 
   BisectionInfo::BisectionInfo()
   {
@@ -3981,50 +3965,6 @@ namespace netgen
     */
 
 
-    /*
-
-    // find connected nodes (close nodes)
-    TABLE<int> conto(np);
-    for (i = 1; i <= mprisms.Size(); i++)
-    for (j = 1; j <= 6; j++)
-    {
-    int n1 = mprisms.Get(i).pnums[j-1];
-    int n2 = mprisms.Get(i).pnums[(j+2)%6];
-    //      if (n1 != n2)
-    {
-    int found = 0;
-    for (k = 1; k <= conto.EntrySize(n1); k++)
-    if (conto.Get(n1, k) == n2)
-    {
-    found = 1;
-    break;
-    }
-    if (!found)
-    conto.Add (n1, n2);
-    }
-    }
-    mesh.connectedtonode.SetSize(np);
-    for (i = 1; i <= np; i++)
-    mesh.connectedtonode.Elem(i) = 0;
-  
-
-    //       (*testout) << "connection table: " << endl;
-    //       for (i = 1; i <= np; i++)
-    //       {
-    //       (*testout) << "node " << i << ": ";
-    //    for (j = 1; j <= conto.EntrySize(i); j++)
-    //    (*testout) << conto.Get(i, j) << " ";
-    //    (*testout) << endl;
-    //  }
-
-  
-    for (i = 1; i <= np; i++)
-    if (mesh.connectedtonode.Elem(i) == 0)
-    {
-    mesh.connectedtonode.Elem(i) = i;
-    ConnectToNodeRec (i, i, conto, mesh.connectedtonode);
-    }
-    */  
 
     //  mesh.BuildConnectedNodes();
 

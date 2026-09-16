@@ -1132,29 +1132,6 @@ namespace netgen
       for (int j = 0; j < 4; j++)
         el.NB(j) = 0;
 
-    /*
-    TABLE<int,PointIndex::BASE> elsonpoint(mesh.GetNP());
-
-    for (const DelaunayTet & el : tempels)
-      {
-        PointIndices<4> i4(el[0], el[1], el[2], el[3]);
-        i4.Sort();
-        elsonpoint.IncSizePrepare (i4[0]);
-        elsonpoint.IncSizePrepare (i4[1]);
-      }
-
-    elsonpoint.AllocateElementsOneBlock();
-
-    for (int i = 0; i < tempels.Size(); i++)
-      {
-        const DelaunayTet & el = tempels[i];
-        PointIndices<4> i4(el[0], el[1], el[2], el[3]);
-        i4.Sort();
-        elsonpoint.Add (i4[0], i+1);
-        elsonpoint.Add (i4[1], i+1);
-      }
-    */
-
     TableCreator<int, PointIndex> creator(mesh.GetNP());
     while (!creator.Done())
       {

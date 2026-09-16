@@ -112,8 +112,7 @@ namespace netgen
     
     if (Height() != m2.Height() || Width() != m2.Width())
       {
-        (*myerr) << "DenseMatrix::Operator+=: Sizes don't fit" << endl;
-        return *this;
+        throw Exception ("DenseMatrix::operator+=: sizes don't fit");
       }
     
     if (data)
@@ -128,7 +127,7 @@ namespace netgen
           }
       }
     else
-      (*myerr) << "DenseMatrix::Operator+=: Matrix not allocated" << endl;
+      throw Exception ("DenseMatrix::operator+=: matrix not allocated");
 
     return *this;
   }
@@ -141,8 +140,7 @@ namespace netgen
 
     if (Height() != m2.Height() || Width() != m2.Width())
       {
-        (*myerr) << "DenseMatrix::Operator-=: Sizes don't fit" << endl;
-        return *this;
+        throw Exception ("DenseMatrix::operator-=: sizes don't fit");
       }
 
     if (data)
@@ -157,7 +155,7 @@ namespace netgen
           }
       }
     else
-      (*myerr) << "DenseMatrix::Operator-=: Matrix not allocated" << endl;
+      throw Exception ("DenseMatrix::operator-=: matrix not allocated");
 
     return *this;
   }
@@ -191,8 +189,7 @@ namespace netgen
   {
     if (width != height)
       {
-        (*myerr) << "DenseMatrix :: Det: width != height" << endl;
-        return 0;
+        throw Exception ("DenseMatrix::Det: width != height");
       }
 
     switch (width)
@@ -207,8 +204,7 @@ namespace netgen
           - data[2] * data[4] * data[6];
       default:
         {
-          (*myerr) << "Matrix :: Det:  general size not implemented (size=" << width << ")" << endl;
-          return 0;
+          throw Exception ("DenseMatrix::Det: general size not implemented (size=" + ToString(width) + ")");
         }
       }
   }
@@ -220,13 +216,11 @@ namespace netgen
 
     if (m1.Width() != m1.Height())
       {
-        (*myerr) << "CalcInverse: matrix not symmetric" << endl;
-        return;
+        throw Exception ("CalcInverse: matrix not square");
       }
     if (m1.Width() != m2.Width() || m1.Height() != m2.Height())
       {
-        (*myerr) << "CalcInverse: dim(m2) != dim(m1)" << endl;
-        return;
+        throw Exception ("CalcInverse: dim(m2) != dim(m1)");
       }
 
 
@@ -235,7 +229,6 @@ namespace netgen
         det = m1.Det();
         if (det == 0)
           {
-            (*myerr) << "CalcInverse: Matrix singular" << endl;
             (*testout) << "CalcInverse: Matrix singular" << endl;
             return;
           }
@@ -602,8 +595,7 @@ namespace netgen
 
     if (m2.Height() != n1 || m2.Width() != n1)
       {
-        (*myerr) << "CalcAAt: sizes don't fit" << endl;
-        return;
+        throw Exception ("CalcAAt: sizes don't fit");
       }
 
     for (i = 1; i <= n1; i++)
@@ -647,8 +639,7 @@ namespace netgen
 
     if (m2.Height() != n2 || m2.Width() != n2)
       {
-        (*myerr) << "CalcAtA: sizes don't fit" << endl;
-        return;
+        throw Exception ("CalcAtA: sizes don't fit");
       }
 
     for (i = 1; i <= n2; i++)
@@ -673,8 +664,7 @@ namespace netgen
 
     if (m2.Height() != n1 || m2.Width() != n3 || b.Width() != n2)
       {
-        (*myerr) << "CalcABt: sizes don't fit" << endl;
-        return;
+        throw Exception ("CalcABt: sizes don't fit");
       }
 
     double * pm2 = &m2.Elem(1, 1);
@@ -711,8 +701,7 @@ namespace netgen
 
     if (m2.Height() != n2 || m2.Width() != n3 || b.Height() != n1)
       {
-        (*myerr) << "CalcAtB: sizes don't fit" << endl;
-        return;
+        throw Exception ("CalcAtB: sizes don't fit");
       }
 
     for (i = 1; i <= n2 * n3; i++)
@@ -753,17 +742,8 @@ namespace netgen
     DenseMatrix temp (m1.Height(), m2.Width());
 
     if (m1.Width() != m2.Height())
-      {
-        (*myerr) << "DenseMatrix :: operator*: Matrix Size does not fit" << endl;
-      }
-    else if (temp.Height() != m1.Height())
-      {
-        (*myerr) << "DenseMatrix :: operator*: temp not allocated" << endl;
-      }
-    else
-      {
-        Mult (m1, m2, temp);
-      }
+      throw Exception ("DenseMatrix::operator*: matrix sizes don't fit");
+    Mult (m1, m2, temp);
     return temp;
   }
 
@@ -776,11 +756,9 @@ namespace netgen
     if (m1.Width() != m2.Height() || m1.Height() != m3.Height() ||
         m2.Width() != m3.Width() )
       {
-        (*myerr) << "DenseMatrix :: Mult: Matrix Size does not fit" << endl;
-        (*myerr) << "m1: " << m1.Height() << " x " << m1.Width() << endl;
-        (*myerr) << "m2: " << m2.Height() << " x " << m2.Width() << endl;
-        (*myerr) << "m3: " << m3.Height() << " x " << m3.Width() << endl;
-        return;
+        throw Exception ("DenseMatrix::Mult: matrix sizes don't fit, m1: " + ToString(m1.Height()) + " x " + ToString(m1.Width())
+                         + ", m2: " + ToString(m2.Height()) + " x " + ToString(m2.Width())
+                         + ", m3: " + ToString(m3.Height()) + " x " + ToString(m3.Width()));
       }
     /*
       else if (m1.Symmetric() || m2.Symmetric() || m3.Symmetric())
@@ -903,21 +881,10 @@ namespace netgen
     int i, j;
 
     if (m1.Width() != m2.Width() || m1.Height() != m2.Height())
-      {
-        (*myerr) << "BaseMatrix :: operator+: Matrix Size does not fit" << endl;
-      }
-    else if (temp.Height() != m1.Height())
-      {
-        (*myerr) << "BaseMatrix :: operator+: temp not allocated" << endl;
-      }
-    else
-      {
-        for (i = 1; i <= m1.Height(); i++)
-          for (j = 1; j <= m1.Width(); j++)
-            {
-              temp.Set(i, j, m1.Get(i, j) + m2.Get(i, j));
-            }
-      }
+      throw Exception ("DenseMatrix::operator+: matrix sizes don't fit");
+    for (i = 1; i <= m1.Height(); i++)
+      for (j = 1; j <= m1.Width(); j++)
+        temp.Set(i, j, m1.Get(i, j) + m2.Get(i, j));
     return temp;
   }
 
@@ -973,14 +940,9 @@ namespace netgen
     }
 
     if (m != v.Size())
-    {
-    (*myerr) << "\nMatrix and Vector don't fit" << endl;
-    }
-    else if (Height() != prod.Size())
-    {
-    (*myerr) << "Base_Matrix::operator*(Vector): prod vector not ok" << endl;
-    }
-    else
+      throw Exception ("DenseMatrix::Mult: matrix and vector don't fit");
+    if (Height() != prod.Size())
+      throw Exception ("DenseMatrix::Mult: prod vector size not ok");
     #endif
     {
     if (Symmetric())
@@ -1100,14 +1062,9 @@ namespace netgen
     res.SetSize (Height());
 
     if (Width() != x.Size() || Height() != b.Size())
-      {
-        (*myerr) << "\nMatrix and Vector don't fit" << endl;
-      }
-    else if (Height() != res.Size())
-      {
-        (*myerr) << "Base_Matrix::operator*(Vector): prod vector not ok" << endl;
-      }
-    else
+      throw Exception ("DenseMatrix::Residuum: matrix and vector don't fit");
+    if (Height() != res.Size())
+      throw Exception ("DenseMatrix::Residuum: res vector size not ok");
       {
         int h = Height(); 
         int w = Width();
@@ -1135,7 +1092,7 @@ namespace netgen
 
     if (Width() != hx.Size() || Height() != hx.Size())
       {
-        (*myerr) << "Matrix::EvaluateBilinearForm: sizes don't fit" << endl;
+        throw Exception ("DenseMatrix::EvaluateBilinearForm: sizes don't fit");
       }
     else
       {
@@ -1211,20 +1168,17 @@ namespace netgen
 
     if (Width() != Height())
       {
-        (*myerr) << "SolveDestroy: Matrix not square";
-        return;
+        throw Exception ("SolveDestroy: matrix not square");
       }
     if (Width() != v.Size())
       {
-        (*myerr) << "SolveDestroy: Matrix and Vector don't fit";
-        return;
+        throw Exception ("SolveDestroy: matrix and vector don't fit");
       }
 
     sol = v;
     if (Height() != sol.Size())
       {
-        (*myerr) << "SolveDestroy: Solution Vector not ok";
-        return;
+        throw Exception ("SolveDestroy: solution vector size not ok");
       }
 
 

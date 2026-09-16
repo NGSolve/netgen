@@ -37,8 +37,8 @@ void Identification :: IdentifySpecialPoints (Array<class SpecialPoint> & points
 
 int Identification :: 
 Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-              const TABLE<int> & specpoint2solid,
-              const TABLE<int> & specpoint2surface) const
+              const DynamicTable<int> & specpoint2solid,
+              const DynamicTable<int> & specpoint2surface) const
 {
   cout << "Identification::Identifiable called for base-class" << endl;
   return 0;
@@ -191,8 +191,8 @@ void PeriodicIdentification :: IdentifySpecialPoints
 
 int PeriodicIdentification :: 
 Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-              const TABLE<int> & specpoint2solid,
-              const TABLE<int> & specpoint2surface) const
+              const DynamicTable<int> & specpoint2solid,
+              const DynamicTable<int> & specpoint2surface) const
 {
   SpecialPoint hsp1 = sp1;
   SpecialPoint hsp2 = sp2;
@@ -684,8 +684,8 @@ void CloseSurfaceIdentification :: IdentifySpecialPoints
 
 int CloseSurfaceIdentification :: 
 Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-              const TABLE<int> & specpoint2solid,
-              const TABLE<int> & specpoint2surface) const
+              const DynamicTable<int> & specpoint2solid,
+              const DynamicTable<int> & specpoint2surface) const
 {
   //(*testout) << "identcheck: " << sp1.p << "; " << sp2.p << endl;
 
@@ -1564,8 +1564,8 @@ void CloseEdgesIdentification :: IdentifySpecialPoints
 
 int CloseEdgesIdentification :: 
 Identifiable (const SpecialPoint & sp1, const SpecialPoint & sp2,
-              const TABLE<int> & specpoint2solid,
-              const TABLE<int> & specpoint2surface) const
+              const DynamicTable<int> & specpoint2solid,
+              const DynamicTable<int> & specpoint2surface) const
 {
   int i;
   double val;

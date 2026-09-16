@@ -140,7 +140,7 @@ namespace netgen
 
     mesh.GetIdentifications().Delete();
     
-    TABLE<int> specpoint2surface(specpoints.Size());
+    DynamicTable<int> specpoint2surface(specpoints.Size());
     if (geometry.identifications.Size())
       {
         for (int i = 0; i < specpoints.Size(); i++)
@@ -149,7 +149,7 @@ namespace netgen
               specpoint2surface.Add (i, j);
       }
 
-    TABLE<int> specpoint2tlo(specpoints.Size());
+    DynamicTable<int> specpoint2tlo(specpoints.Size());
     if (geometry.identifications.Size())
       {
         for (int i = 0; i < specpoints.Size(); i++)

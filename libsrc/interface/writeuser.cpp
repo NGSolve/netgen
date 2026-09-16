@@ -314,7 +314,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
   int numBCs = 0;
 
   Array<int> faceBCs;
-  TABLE<int> faceBCMapping;
+  DynamicTable<int> faceBCMapping;
 
   faceBCs.SetSize(mesh.GetNFD());
   faceBCMapping.SetSize(mesh.GetNFD());
@@ -330,11 +330,11 @@ void WriteSTLExtFormat (const Mesh & mesh,
           {
         numBCs++;
                   faceBCs[numBCs-1] = bcNum;
-        faceBCMapping.Add1(numBCs,faceNr);        
+        faceBCMapping.Add(numBCs-1,faceNr);
           }
      else
      {
-        faceBCMapping.Add1(faceBCs.Pos(bcNum)+1,faceNr);
+        faceBCMapping.Add(faceBCs.Pos(bcNum),faceNr);
      }
   }
 
@@ -346,10 +346,10 @@ void WriteSTLExtFormat (const Mesh & mesh,
   {
       *outfile << "solid Boundary_" << faceBCs[bcInd-1] << "\n";
 
-      for(int faceNr = 1;faceNr <= faceBCMapping.EntrySize(bcInd); faceNr++)
+      for(int faceNr : faceBCMapping[bcInd-1])
       {
         Array<SurfaceElementIndex> faceSei;
-          mesh.GetSurfaceElementsOfFace(faceBCMapping.Get(bcInd,faceNr),faceSei);
+          mesh.GetSurfaceElementsOfFace(faceNr,faceSei);
 
           for (int i = 0; i < faceSei.Size(); i++)
           {
