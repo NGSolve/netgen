@@ -301,6 +301,9 @@ threads : int
 
 )raw_string");
 
+  m.def("GetNumThreads", &TaskManager::GetNumThreads,
+        "Number of threads of the active TaskManager (1 if none is active)");
+
   // local TaskManager class to be used as context manager in Python
   class ParallelContextManager {
       int num_threads;
