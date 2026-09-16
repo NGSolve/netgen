@@ -332,7 +332,7 @@ namespace netgen
         for (int j = starti; j < nstarti; j++)
           {
             int helind = insphere.GetArray()[j-1];
-            if (!closesphere.IsIn (helind))
+            if (!closesphere.Contains (helind))
               closesphere.Add (helind);
           }
 
@@ -343,7 +343,7 @@ namespace netgen
                               [&](int celind)
                               {
                                 if (tempels[celind-1][0] != PointIndex(PointIndex::INVALID) && 
-                                    !insphere.IsIn (celind))
+                                    !insphere.Contains (celind))
                                   {
                                     changed = true;
                                     insphere.Add (celind);
@@ -358,7 +358,7 @@ namespace netgen
               int helind = insphere.GetArray()[j-1];
               int nbind = meshnb.GetNB (helind, k);
 
-              if (nbind && !insphere.IsIn (nbind) )
+              if (nbind && !insphere.Contains (nbind) )
                 {
                   double d2 = Dist2 (centers[nbind-1], newp);
                   if (d2 < radi2[nbind-1] * (1+1e-8) )
@@ -405,7 +405,7 @@ namespace netgen
         {
           int nbind = meshnb.GetNB (celind, k);
 
-          if (!nbind || !insphere.IsIn (nbind))
+          if (!nbind || !insphere.Contains (nbind))
             {
               tempels[celind-1].GetFace (k, face);
                 
@@ -461,7 +461,7 @@ namespace netgen
     bool hasclose = false;
     for (int ind : closesphere.GetArray())
       {
-        if (!insphere.IsIn(ind) &&
+        if (!insphere.Contains (ind) &&
             fabs (Dist2 (centers[ind-1], newp) - radi2[ind-1]) < 1e-8 )
           hasclose = true;
       }
@@ -519,7 +519,7 @@ namespace netgen
           */
           for (int csameind : closesphere.GetArray())
             {
-              if (!insphere.IsIn(csameind) &&
+              if (!insphere.Contains (csameind) &&
                   fabs (r2 - radi2[csameind-1]) < 1e-10 && 
                   Dist2 (pc, centers[csameind-1]) < 1e-20)
                 {

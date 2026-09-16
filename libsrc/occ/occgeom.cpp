@@ -2074,13 +2074,14 @@ namespace netgen
          edgeLengths[i-1] = system.Mass();
       }
 
-      Sort (edgeLengths, order);
+      for (int i = 0; i < order.Size(); i++) order[i] = i;
+      std::stable_sort (order.begin(), order.end(), [&] (int a, int b) { return edgeLengths[a] < edgeLengths[b]; });
 
       str << "ShortestEdges {Shortest edges} ";
       for (i = 1; i <= min(20, emap.Extent()); i++)
       {
          str << "ShortestEdges/Edge" << i;
-         str << " {Edge " << order[i-1] << " (L=" << edgeLengths[order[i-1]-1] << ")} ";
+         str << " {Edge " << order[i-1]+1 << " (L=" << edgeLengths[order[i-1]] << ")} ";
       }
 
       str << flush;

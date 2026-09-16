@@ -8,6 +8,7 @@
 #include "flags.hpp"
 #include "table.hpp"
 #include "hashtable.hpp"
+#include "indexset.hpp"
 #include "localheap.hpp"
 #include "logging.hpp"
 // #include "mpi_wrapper.hpp"

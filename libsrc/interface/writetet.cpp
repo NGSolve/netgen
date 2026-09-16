@@ -10,6 +10,27 @@
 
 namespace netgen
 {
+
+  // elements of in1 also contained in in2 (and in3)
+  template <class T>
+  void Intersection (FlatArray<T> in1, FlatArray<T> in2,
+                     Array<T> & out)
+  {
+    out.SetSize(0);
+    for(int i=0; i<in1.Size(); i++)
+      if(in2.Contains(in1[i]))
+        out.Append(in1[i]);
+  }
+  template <class T>
+  void Intersection (FlatArray<T> in1, FlatArray<T> in2, FlatArray<T> in3,
+                     Array<T> & out)
+  {
+    out.SetSize(0);
+    for(int i=0; i<in1.Size(); i++)
+      if(in2.Contains(in1[i]) && in3.Contains(in1[i]))
+        out.Append(in1[i]);
+  }
+
   extern void ReadTETFormat (Mesh & mesh, const filesystem::path & filename);
   
   void WriteTETFormat (const Mesh & mesh,

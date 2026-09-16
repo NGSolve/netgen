@@ -28,9 +28,7 @@ namespace netgen
 
 
 
-#include "seti.hpp"
 #include "optmem.hpp"
-#include "sort.hpp"
 
 // #include "mpi_interface.hpp"
 #include "netgenout.hpp"

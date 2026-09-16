@@ -1588,6 +1588,40 @@ namespace ngcore
     QuickSortI (data, index, DefaultLessCl<T>());
   }
 
+  /// sort data, and apply the same permutation to index
+  template <class T, class S>
+  inline void QuickSortPairRec (FlatArray<T> data, FlatArray<S> index,
+                            int left, int right)
+  {
+    int i = left;
+    int j = right;
+    T midval = data[(left+right)/2];
+
+    do
+      {
+        while (data[i] < midval) i++;
+        while (midval < data[j]) j--;
+
+        if (i <= j)
+          {
+            Swap (data[i], data[j]);
+            Swap (index[i], index[j]);
+            i++; j--;
+          }
+      }
+    while (i <= j);
+    if (left < j) QuickSortPairRec (data, index, left, j);
+    if (i < right) QuickSortPairRec (data, index, i, right);
+  }
+
+  template <class T, class S>
+  inline void QuickSortPair (FlatArray<T> data, FlatArray<S> index)
+  {
+    if (data.Size() > 1)
+      QuickSortPairRec (data, index, 0, data.Size()-1);
+  }
+
+
 
 
 

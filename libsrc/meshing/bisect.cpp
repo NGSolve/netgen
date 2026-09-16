@@ -688,13 +688,13 @@ namespace netgen
         // sort edges:
         Array<int> sorted(cntedges);
       
-        QuickSort (edgelength, sorted);
+        for (int i = 0; i < cntedges; i++) sorted[i] = i;
+        QuickSortI (edgelength, sorted);
       
         int cnt = 0;
         for (int i = 0; i < cntedges; i++)
           {
-            int ii = sorted[i];
-            for (int e : eclasstab[ii-1])
+            for (int e : eclasstab[sorted[i]])
               edgenumber.Set (edges[e], ++cnt);
             
           }

@@ -91,7 +91,7 @@ target_link_libraries(ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_
 install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp memtracer.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
-  xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp ranges.hpp ngstream.hpp
+  xbool.hpp signal.hpp bitarray.hpp table.hpp hashtable.hpp indexset.hpp ranges.hpp ngstream.hpp
   simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_math.hpp simd_sse.hpp simd_arm64.hpp
   register_archive.hpp autodiff.hpp autodiffdiff.hpp
   ng_mpi.hpp ng_mpi_generated_declarations.hpp mpi4py_pycapi.h ng_mpi_native.hpp statushandler.hpp
