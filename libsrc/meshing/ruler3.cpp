@@ -25,7 +25,7 @@ extern double minwithoutother;
     double l6 = Dist(p3, p4);
     double l  = v1.Length() + v2.Length() + v3.Length() + l4 + l5 + l6;
 
-    return pow(l*l*l/vol, 1.0/3.0) / 12.0;
+    return cbrt(l*l*l/vol) / 12.0;
   }
 
   static double CalcElementBadness (const Array<Point<3>, LocalPointIndex> & points,

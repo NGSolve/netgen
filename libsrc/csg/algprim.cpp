@@ -1216,7 +1216,7 @@ namespace netgen
     cyz = 2 * (hvl(1) * hvl(2) + hvs(1) * hvs(2));
 
     Vec<3> va (a);
-    c1 = pow(va * hvl,2) + pow(va * hvs,2) - 1;
+    c1 = sqr(va * hvl) + sqr(va * hvs) - 1;
   
     Vec<3> v = -2 * (va * hvl) * hvl - 2 * (va * hvs) * hvs;
     cx = v(0);
@@ -1633,7 +1633,7 @@ void EllipticCone :: CalcData ()
   cy = v(1);
   cz = v(2);
 
-  c1 = pow(va*nvl,2) + ellipt2*pow(va*nvs,2) - t1*t1;
+  c1 = sqr(va*nvl) + ellipt2*sqr(va*nvs) - t1*t1;
 
   double lvltop = vlr*lvl;
   // double minlvl = (lvl < lvltop) ? lvl : lvltop;

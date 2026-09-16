@@ -6,6 +6,8 @@ import netgen.stl as stl
 import netgen.geom2d as geom2d
 from pyngcore import TaskManager
 import json
+import hashlib
+import numpy as np
 try:
     import netgen.occ as occ
     has_occ = occ.occ_version >= "7.4.0"
@@ -22,8 +24,32 @@ def round(x, digits=11):
         return [float(("{:."+str(digits)+"g}").format(y)) for y in x]
 
 
-def getData(mesh, mp):
+def saveNormalizedMesh(mesh, filename):
+    mesh.Save(filename)
+    with open(filename, 'rb') as f:
+        lines = f.read().replace(b'\r\n', b'\n').split(b'\n')
+    while lines and (lines[0].startswith(b'#') or lines[0].strip() == b''):
+        lines.pop(0)
+    data = b'\n'.join(lines)
+    with open(filename, 'wb') as f:
+        f.write(data)
+    return hashlib.sha256(data).hexdigest()
+
+def hashArray(a):
+    return hashlib.sha256(np.ascontiguousarray(a).tobytes()).hexdigest()
+
+def elementArray(elements):
+    # copy fields, the structured array contains uninitialized padding bytes
+    a = elements.NumPy()
+    return np.column_stack([a['nodes'], a['index']]).astype(np.int32)
+
+def getData(mesh, mp, vol_filename):
     out = {}
+    out['hash'] = saveNormalizedMesh(mesh, vol_filename)
+    out['hash_el1d'] = hashArray(elementArray(mesh.Elements1D()))
+    out['hash_el2d'] = hashArray(elementArray(mesh.Elements2D()))
+    out['hash_el3d'] = hashArray(elementArray(mesh.Elements3D()))
+    out['hash_points'] = hashArray(np.array(mesh.Coordinates(), dtype=np.float64))
     out['ne1d'] = len(mesh.Elements1D())
     out['ne2d'] = len(mesh.Elements2D())
     out['ne3d'] = len(mesh.Elements3D())
@@ -35,15 +61,17 @@ def getData(mesh, mp):
     out["quality_histogram"] = str(list(mesh.GetQualityHistogram()))
     return out
 
-def checkData(mesh, mp, ref):
-    data = getData(mesh, mp)
-    # assert ref['ne1d'] == pytest.approx(data['ne1d'], rel=1e-2)
-    # assert ref['ne2d'] == pytest.approx(data['ne2d'], rel=1e-2)
-    # assert ref['ne3d'] == pytest.approx(data['ne3d'], rel=1e-2)
-    # assert json.loads(ref['quality_histogram']) == pytest.approx(json.loads(data['quality_histogram']), abs=3, rel=0.4)
-    # assert ref['total_badness'] == pytest.approx(data['total_badness'], rel=1e-2)
-    # assert ref['angles_trig'] == pytest.approx(data['angles_trig'], rel=1e-3)
-    # assert ref['angles_tet'] == pytest.approx(data['angles_tet'], rel=1e-3)
+def checkData(mesh, mp, ref, vol_filename):
+    data = getData(mesh, mp, vol_filename)
+    assert ref['ne1d'] == data['ne1d']
+    assert ref['ne2d'] == data['ne2d']
+    assert ref['ne3d'] == data['ne3d']
+    assert json.loads(ref['quality_histogram']) == json.loads(data['quality_histogram'])
+    assert ref['total_badness'] == pytest.approx(data['total_badness'], rel=1e-10)
+    assert ref['angles_trig'] == pytest.approx(data['angles_trig'], rel=1e-10)
+    assert ref['angles_tet'] == pytest.approx(data['angles_tet'], rel=1e-10)
+    hash_keys = ['hash_el1d', 'hash_el2d', 'hash_el3d', 'hash_points', 'hash']
+    assert {k: ref[k] for k in hash_keys} == {k: data[k] for k in hash_keys}
 
 # get tutorials
 def getFiles(fileEnding):
@@ -62,6 +90,8 @@ def refdata():
 
 def getMeshingparameters(filename):
     standard = [MeshingParameters()] + [MeshingParameters(ms)  for ms in (meshsize.very_coarse, meshsize.coarse, meshsize.moderate, meshsize.fine, meshsize.very_fine)]
+    if filename == "plane.stl":
+        return [] # do not test this example cause it needs so long...
     if filename == "shell.geo":
         return [] # do not test this example cause it needs so long...
     if filename == "manyholes2.geo":
@@ -130,7 +160,7 @@ def test_geoFiles(filename, mp, i, refdata):
         mesh_par.Save(filename+'_par.vol.gz')
 
     assert filecmp.cmp(filename+'_seq.vol.gz', filename+'_par.vol.gz')
-    checkData(mesh, mp, ref[i])
+    checkData(mesh, mp, ref[i], f'{filename}_{i}.vol')
 
 
 def generateResultFile(output_file='results.json'):
@@ -144,13 +174,13 @@ def generateResultFile(output_file='results.json'):
             if not mps:
                 continue
             meshdata = []
-            for mp in mps:
+            for i, mp in enumerate(mps):
                 try:
                     mesh = generateMesh(_file, mp)
                 except Exception as e:
                     print("Meshingparameters: ", mp)
                     raise e
-                meshdata.append( getData(mesh, mp) )
+                meshdata.append( getData(mesh, mp, f'{_file}_{i}.vol') )
             data[_file] = meshdata
             print("needed", time.time() - start, "seconds")
         

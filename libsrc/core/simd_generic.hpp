@@ -1221,15 +1221,11 @@ namespace ngcore
 
   using std::atan2;
   template <int N>
-  NETGEN_INLINE ngcore::SIMD<double,N> atan2 (ngcore::SIMD<double,N> y, ngcore::SIMD<double,N> x) {
-    return ngcore::SIMD<double,N>([y,x](int i)->double { return atan2(y[i], x[i]); } );
-  }
+  SIMD<double,N> atan2 (ngcore::SIMD<double,N> y, ngcore::SIMD<double,N> x);
 
   using std::acos;
   template <int N>
-  NETGEN_INLINE ngcore::SIMD<double,N> acos (ngcore::SIMD<double,N> a) {
-    return ngcore::SIMD<double,N>([a](int i)->double { return acos(a[i]); } );
-  }
+  SIMD<double,N> acos (ngcore::SIMD<double,N> a);
 
   using std::asin;
   template <int N>

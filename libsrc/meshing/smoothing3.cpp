@@ -1227,7 +1227,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
       pointh = 0;
       for (Element & el : VolumeElements())
         {
-          double h = pow(el.Volume(points),1./3.);
+          double h = cbrt(el.Volume(points));
           for (PointIndex pi : el.PNums())
             if (h > pointh[pi])
               pointh[pi] = h;
@@ -1356,7 +1356,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
       pointh = 0;
       for (const Element & el : VolumeElements())
         {
-          double h = pow(el.Volume(points),1./3.);
+          double h = cbrt(el.Volume(points));
           for(int j=1; j<=el.GetNV(); j++)
             if(h > pointh[el.PNum(j)])
               pointh[el.PNum(j)] = h;
@@ -1512,7 +1512,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
       pointh = 0;
       for (const Element & el : VolumeElements())
         {
-          double h = pow(el.Volume(points),1./3.);
+          double h = cbrt(el.Volume(points));
           for(int j=1; j<=el.GetNV(); j++)
             if(h > pointh[el.PNum(j)])
               pointh[el.PNum(j)] = h;

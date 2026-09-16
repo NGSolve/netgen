@@ -719,7 +719,7 @@ namespace netgen
                     if(d1.Magnitude() > gp::Resolution())
                         d1 = d1.Normalized();
                     double cosalpha = fabs(d0*d1);
-                    if ((j == sections) || (cosalpha < cos(10.0/180.0*M_PI)))
+                    if ((j == sections) || (cosalpha < 0.98480775301220805937)) // 10 degrees
                       {
                         // count++;
                         gp_Pnt p0 = c->Value (s_start);

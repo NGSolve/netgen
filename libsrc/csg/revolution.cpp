@@ -15,7 +15,7 @@ namespace netgen
       {
         checklines_start.Append(new Point<2>(line->StartPI()));
         checklines_vec.Append(new Vec<2>(line->EndPI() - line->StartPI()));
-        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        (*checklines_vec.Last()) *= 1./sqr(checklines_vec.Last()->Length()); //!!
       }
     else if (spline3)
       {
@@ -23,11 +23,11 @@ namespace netgen
         checklines_start.Append(new Point<2>(spline3->TangentPoint()));
         checklines_start.Append(new Point<2>(spline3->StartPI()));
         checklines_vec.Append(new Vec<2>(spline3->StartPI() - spline3->EndPI()));
-        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        (*checklines_vec.Last()) *= 1./sqr(checklines_vec.Last()->Length()); //!!
         checklines_vec.Append(new Vec<2>(spline3->EndPI() - spline3->TangentPoint()));
-        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        (*checklines_vec.Last()) *= 1./sqr(checklines_vec.Last()->Length()); //!!
         checklines_vec.Append(new Vec<2>(spline3->TangentPoint() - spline3->StartPI()));
-        (*checklines_vec.Last()) *= 1./pow(checklines_vec.Last()->Length(),2); //!!
+        (*checklines_vec.Last()) *= 1./sqr(checklines_vec.Last()->Length()); //!!
         
       }
     
@@ -253,7 +253,7 @@ namespace netgen
       {
         const double dFdybar = 2.*spline_coefficient(1)*p(1) + spline_coefficient(2)*p(0) + spline_coefficient(4);
         
-        const double aux = -pow(p(1),-3);
+        const double aux = -(1.0 / (p(1) * p(1) * p(1)));
         const double aux0 = point_minus_p0(0) - v_axis(0)*p(0);
         const double aux1 = point_minus_p0(1) - v_axis(1)*p(0);
         const double aux2 = point_minus_p0(2) - v_axis(2)*p(0);
@@ -406,8 +406,8 @@ namespace netgen
           testt.Append(0.5);
         else
           {
-            double sD = sqrt(pow(s3->TangentPoint()(1) - s3->StartPI()(1),2)+
-                             pow(s3->TangentPoint()(1) - s3->EndPI()(1),2));
+            double sD = sqrt(sqr(s3->TangentPoint()(1) - s3->StartPI()(1))+
+                             sqr(s3->TangentPoint()(1) - s3->EndPI()(1)));
             testt.Append((s3->StartPI()(1)*(sqrt(2.)-1.) - sqrt(2.)*s3->TangentPoint()(1) + s3->EndPI()(1) + sD)/denom);
             testt.Append((s3->StartPI()(1)*(sqrt(2.)-1.) - sqrt(2.)*s3->TangentPoint()(1) + s3->EndPI()(1) - sD)/denom);
           }     
@@ -562,7 +562,7 @@ namespace netgen
               d = Dist(box.Center(),*checklines_start[(i+1)%3]);
             else
               d = Dist(box.Center(),(*checklines_start[i]) 
-                       + pow(checklines_vec[i]->Length(),2)*(*checklines_vec[i]));
+                       + sqr(checklines_vec[i]->Length())*(*checklines_vec[i]));
           }
         else 
           d = fabs(ncomp);

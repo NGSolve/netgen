@@ -433,7 +433,7 @@ namespace netgen
                     auto t_new = edge->GetTangent(t);
                     t_new.Normalize();
                     auto cosalpha = fabs(t_old * t_new);
-                    if((i == sections) || (cosalpha < cos(10./180 * M_PI)))
+                    if((i == sections) || (cosalpha < 0.98480775301220805937)) // 10 degrees
                       {
                         auto index = lines.Append({p_old, p_new});
                         searchtree.Insert(p_old, p_new, index);

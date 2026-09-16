@@ -14,6 +14,16 @@
 #include <core/ngcore.hpp>
 #define PACKAGE_VERSION "6.2-dev"
 
+namespace netgen
+{
+  // bit-reproducible math functions, hide the libm versions
+  using ngcore::math::sin;
+  using ngcore::math::cos;
+  using ngcore::math::atan2;
+  using ngcore::math::acos;
+  using ngcore::math::cbrt;
+}
+
 // #define DEBUG
 
 #if defined(nglib_EXPORTS)
