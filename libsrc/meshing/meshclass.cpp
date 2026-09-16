@@ -3276,10 +3276,9 @@ namespace netgen
     int cnt4 = openelements.Size() - cnt3;
 
 
-    MyStr treequad;
+    string treequad;
     if (cnt4)
-      treequad = MyStr(" (") + MyStr(cnt3) + MyStr (" + ") + 
-        MyStr(cnt4) + MyStr(")");
+      treequad = " (" + ToString(cnt3) + " + " + ToString(cnt4) + ")";
 
     PrintMessage (5, openelements.Size(), treequad, " open elements");
 

@@ -188,7 +188,7 @@ namespace netgen
     ////////////////////////////////////////////////////////////////////////////////// 
     int addComponent(string &strComp, string &strSitu, ofstream &out)
     {
-        if (strComp.size() > 12 || strSitu > 12) 
+        if (strComp.size() > 12 || strSitu.size() > 12) 
             return 1;
 
         if (0 == strComp.size()) 

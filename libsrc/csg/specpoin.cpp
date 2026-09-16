@@ -196,9 +196,7 @@ namespace netgen
 
     if (level >= 100)
       {
-        MyStr err =
-          MyStr("Problems in CalcSpecialPoints\nPoint: ") + MyStr (box.Center());
-        throw NgException (err.c_str());
+        throw NgException ("Problems in CalcSpecialPoints\nPoint: " + ToString(box.Center()));
       }
 
     if (level == 40 || level == 41 || level == 45)

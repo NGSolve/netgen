@@ -1,6 +1,5 @@
 target_sources(nglib PRIVATE
     gzstream.cpp
-    mystring.cpp
     optmem.cpp
     parthreads.cpp
     seti.cpp
@@ -10,7 +9,7 @@ target_sources(nglib PRIVATE
 
 install(FILES
   myadt.hpp
-  mystring.hpp netgenout.hpp ngpython.hpp
+  netgenout.hpp ngpython.hpp
   optmem.hpp parthreads.hpp seti.hpp sort.hpp
   table.hpp template.hpp
   gzstream.h

@@ -1912,12 +1912,6 @@ void Ng_SetThreadPercentage (double percent)
 
 void Ng_GetStatus (std::string & str, double & percent)
 {
-  /*
-  MyStr s;
-  GetStatus(s,percent);
-  *str = new char[s.Length()+1];
-  strcpy(*str,s.c_str());
-  */
   GetStatus (str, percent);
 }
 

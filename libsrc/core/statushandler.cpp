@@ -73,13 +73,6 @@ namespace ngcore
   
 
 
-  /*
-    void SetStatMsgF(const MyStr& s)
-    {
-    PrintFnStart(s);
-    SetStatMsg(s);
-    }
-  */
 
   void SetStatMsg(const std::string& s)
   {

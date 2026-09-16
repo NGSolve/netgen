@@ -12,6 +12,35 @@
 
 namespace netgen
 {
+  // read a string enclosed by encl, or a plain token
+  static void ReadEnclString(istream & in, string & str, const char encl)
+  {
+    char currchar;
+    str = "";
+
+    in.get(currchar);
+    while(in && (currchar == ' ' || currchar == '\t' || currchar == '\n') )
+      in.get(currchar);
+
+    if(currchar == encl)
+      {
+        in.get(currchar);
+        while(in && currchar != encl)
+          {
+            str += currchar;
+            in.get(currchar);
+          }
+      }
+    else
+      {
+        in.putback(currchar);
+        in >> str;
+      }
+  }
+}
+
+namespace netgen
+{
   class MarkedTet
   {
   public:

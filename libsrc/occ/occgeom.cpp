@@ -1693,7 +1693,7 @@ namespace netgen
         writer.Write (shape, c_filename);
       }
 
-    throw NgException ("Unknown target format: " + filename);
+    throw NgException ("Unknown target format: " + filename.string());
   }
 
   void OCCGeometry :: SaveToMeshFile (ostream & ost) const
