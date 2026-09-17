@@ -118,7 +118,7 @@ namespace netgen
 
 
 
-    double critval = cos (M_PI / 6);  // 30 degree
+    double critval = 0.86602540378443864676;  // 30 degree
     allowswap = allowswap &&
         (nv1 * nvp3 > critval) &&
         (nv1 * nvp4 > critval) &&

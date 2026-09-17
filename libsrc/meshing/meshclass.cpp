@@ -4979,7 +4979,11 @@ namespace netgen
 
          for (auto i : myrange)
            {
-             double elbad = pow (max2(CalcBad (points, volelements[i], 0, mp),1e-10), 1/teterrpow);
+             double bad = max2(CalcBad (points, volelements[i], 0, mp),1e-10);
+             double elbad;
+             if (teterrpow == 1) elbad = bad;
+             else if (teterrpow == 2) elbad = sqrt(bad);
+             else elbad = pow(bad, 1/teterrpow);
 
              int qualclass = int (n_classes / elbad + 1);
              if (qualclass < 1) qualclass = 1;

@@ -41,6 +41,7 @@ option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "build dependencies automatically" ON)
 option( TRACE_MEMORY     "Enable memory tracing" OFF)
+option( NG_FP_CONTRACT "allow contraction of a*b+c into fma in the mesher (OFF gives reproducible meshes across platforms)" OFF)
 
 set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")
 
@@ -557,6 +558,29 @@ add_subdirectory(nglib)
 add_subdirectory(tests)
 
 #######################################################################
+# Contraction of a*b+c into fma changes results by one ulp, which is enough to
+# flip decisions in degenerate geometric configurations - meshes then differ
+# between compilers and platforms.  Switch it off for netgen's own sources.
+# PRIVATE: nothing is imposed on projects using netgen.
+if(NOT NG_FP_CONTRACT)
+    if(MSVC)
+        message(STATUS "NG_FP_CONTRACT=OFF: /fp:precise does not contract, nothing to do")
+    else()
+        include(CheckCXXCompilerFlag)
+        check_cxx_compiler_flag("-ffp-contract=off" NG_HAS_FP_CONTRACT_OFF)
+        if(NG_HAS_FP_CONTRACT_OFF)
+            foreach(ng_target nglib nggui ngpy ngcore)
+                if(TARGET ${ng_target})
+                    target_compile_options(${ng_target} PRIVATE -ffp-contract=off)
+                endif()
+            endforeach()
+        else()
+            message(WARNING "NG_FP_CONTRACT=OFF: compiler does not accept -ffp-contract=off")
+        endif()
+    endif()
+endif()
+
+#######################################################################
 if(USE_NATIVE_ARCH)
     if(WIN32)
         include(CheckCXXSourceRuns)
@@ -750,6 +774,7 @@ message("
     GUI: ............... ${USE_GUI}
     MPI: ............... ${USE_MPI}
     PYTHON: ............ ${USE_PYTHON}
+    FP-CONTRACT: ....... ${NG_FP_CONTRACT}
 
 
   Building: ")

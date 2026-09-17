@@ -1147,7 +1147,8 @@ bool STLBoundary :: TestSeg(const Point<3>& p1, const Point<3> & p2, const Vec<3
       }
     
     cntsegs += NOSegments();
-    int cla = int (log (double(NOSegments()+1)) / log(2.0));
+    int cla = 0;
+    for (int n = NOSegments()+1; n > 1; n >>= 1) cla++;
     if (cla < 1) cla = 1;
     if (cla > cntclass.Size()) cla = cntclass.Size();
     cntclass.Elem(cla)++;

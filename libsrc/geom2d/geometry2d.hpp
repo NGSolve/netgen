@@ -114,7 +114,7 @@ namespace netgen
       Point<2> point;
       Vec<2> first, second;
       GetDerivatives (t, point, first, second);
-      double curv = fabs(first(0)*second(1)-first(1)*second(0)) / pow(first.Length(), 3);
+      double curv = fabs(first(0)*second(1)-first(1)*second(0)) / (first.Length() * first.Length() * first.Length());
       return curv;
     }
 

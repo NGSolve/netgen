@@ -57,7 +57,7 @@ namespace netgen
 
     const double c1 = a*a + b*b;
     const double c2 = 2. * ( a*(py-pm(1)) - b*(px-pm(0)));
-    const double c3 = pow(px-pm(0),2) + pow(py-pm(1),2) - pow(Radius(),2);
+    const double c3 = sqr(px-pm(0)) + sqr(py-pm(1)) - sqr(Radius());
     
     const double discr = c2*c2 - 4*c1*c3;
 
@@ -346,7 +346,7 @@ namespace netgen
             phi =  SplineSeg3<D> ::GetPoint(t1); d1 = Dist(phi,point);
             phi =  SplineSeg3<D> ::GetPoint(t2); d2 = Dist(phi,point);
 
-            double a = (2.*d0 - 4.*d1 +2.*d2)/pow(t2-t0,2);
+            double a = (2.*d0 - 4.*d1 +2.*d2)/sqr(t2-t0);
 
             if(a <= 0)
               {

@@ -2,6 +2,7 @@
 #define NETGEN_CORE_SIMD_MATH_HPP
 
 #include <tuple>
+#include <limits>
 
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
@@ -41,7 +42,7 @@ namespace ngcore
 
   // highly accurate on [-pi/4, pi/4]
   template <int N>
-  auto sincos_reduced (SIMD<double,N> x)
+  NETGEN_INLINE auto sincos_reduced (SIMD<double,N> x)
   {
     auto x2 = x*x;
   
@@ -76,7 +77,7 @@ namespace ngcore
   }
 
   template <int N>
-  auto sincos_reduced (SIMD<float,N> x)
+  NETGEN_INLINE auto sincos_reduced (SIMD<float,N> x)
   {
     auto x2 = x*x;
 
@@ -90,7 +91,7 @@ namespace ngcore
   }
 
   template <int N>
-  auto sincos (SIMD<float,N> x)
+  NETGEN_INLINE auto sincos (SIMD<float,N> x)
   {
     // Cody-Waite split of pi/2, from cephes sinf
     static constexpr float DP1 = 2*0.78515625f;
@@ -118,7 +119,7 @@ namespace ngcore
 
   
   template <int N>
-  SIMD<double,N> exp_reduced (SIMD<double,N> x)
+  NETGEN_INLINE SIMD<double,N> exp_reduced (SIMD<double,N> x)
   {
     static constexpr double P[] = {
       1.26177193074810590878E-4,
@@ -153,7 +154,7 @@ namespace ngcore
 
 
   template <int N>
-  SIMD<double,N> pow2_int64_to_float64(SIMD<int64_t,N> n)
+  NETGEN_INLINE SIMD<double,N> pow2_int64_to_float64(SIMD<int64_t,N> n)
   {
     // thx to deepseek
     
@@ -255,28 +256,85 @@ namespace ngcore
     return exp_reduced((x - r*C1) - r*C2) * pow2_1 * pow2_2;
   }
 
-  /*
-  inline auto Test1 (SIMD<double> x)
+  // atan: reduction to [0, tan(pi/8)] and rational approximation, Moshier Sec. 4.9
+  template <int N>
+  NETGEN_INLINE SIMD<double,N> atan2 (SIMD<double,N> y, SIMD<double,N> x)
   {
-    return myexp(x);
+    constexpr double T3P8 = 2.41421356237309504880;   // tan(3pi/8)
+    constexpr double TP8  = 0.41421356237309504880;   // tan(pi/8)
+    constexpr double pio2_hi = 1.57079632679489655800e+00, pio2_lo = 6.12323399573676603587e-17;
+    constexpr double pi_hi = 3.14159265358979311600e+00, pi_lo = 1.22464679914735317720e-16;
+    SIMD<double,N> zero(0.0), one(1.0), inf(std::numeric_limits<double>::infinity());
+
+    auto ysign = SIMD<int64_t,N>(0) > Reinterpret<int64_t>(y);
+    auto xsign = SIMD<int64_t,N>(0) > Reinterpret<int64_t>(x);
+    // inf/inf: use +-1/+-1, 0/0: use y/1 to keep the sign of zero
+    auto bothinf = (fabs(x) == inf) && (fabs(y) == inf);
+    auto bothzero = (x == zero) && (y == zero);
+    auto num = If(bothinf, If(ysign, -one, one), y);
+    auto den = If(bothinf, If(xsign, -one, one), If(bothzero, one, x));
+    auto t = num/den;
+
+    auto at = fabs(t);
+    auto big = at > SIMD<double,N>(T3P8);
+    auto mid = at > SIMD<double,N>(TP8);
+    auto xr = If(big, -one/at, If(mid, (at-one)/(at+one), at));
+    auto z = xr*xr;
+    auto p = ((-0.8409808780644997716001*z - 8.83860837023772394279)*z - 21.8476213081316705724)*z - 14.8307050340438946993;
+    auto q = (((z + 15.4974124675307267552)*z + 62.7906555762653017263)*z + 92.2381329856214406485)*z + 44.4921151021319438465;
+    auto r = xr + xr*z*(p/q);
+    r = If(big, SIMD<double,N>(pio2_hi), If(mid, SIMD<double,N>(0.5*pio2_hi), zero))
+      + (r + If(big, SIMD<double,N>(pio2_lo), If(mid, SIMD<double,N>(0.5*pio2_lo), zero)));
+    r = If(SIMD<int64_t,N>(0) > Reinterpret<int64_t>(t), -r, r);
+
+    // x < 0 (including -0): shift by +-pi
+    auto rx = If(ysign, (r - pi_hi) - pi_lo, (r + pi_hi) + pi_lo);
+    return If(xsign, rx, r);
   }
 
-  inline auto Test2 (SIMD<double> x)
+  template <int N>
+  NETGEN_INLINE SIMD<double,N> acos (SIMD<double,N> x)
   {
-    return sincos(x);
+    x = If(x > SIMD<double,N>(1.0), SIMD<double,N>(1.0), x);
+    x = If(SIMD<double,N>(-1.0) > x, SIMD<double,N>(-1.0), x);
+    return atan2(sqrt((1.0-x)*(1.0+x)), x);
   }
 
-  inline auto Test3 (SIMD<double,4> x)
+  template <int N>
+  NETGEN_INLINE SIMD<double,N> cbrt (SIMD<double,N> x)
   {
-    return myexp(x);
+    double mantissa[N], scale[N];
+    for (int i = 0; i < N; i++)
+      {
+        double a = x[i] < 0.0 ? -x[i] : x[i];
+        int correction = 0;
+        if (a < 0x1p-1022) { a *= 0x1p54; correction = -54; }
+        uint64_t bits = BitCast<uint64_t>(a);
+        int e = int((bits >> 52) & 2047) - 1023 + correction;
+        int q = (e + 1074) / 3 - 358;
+        mantissa[i] = BitCast<double>((bits & 0xfffffffffffffull)
+                                     | (uint64_t(1023 + e - 3*q) << 52));
+        scale[i] = BitCast<double>(uint64_t(1023 + q) << 52);
+      }
+    SIMD<double,N> a(mantissa), factor(scale);
+    auto r = (((((SIMD<double,N>(6.067507661319302e-05)*a + -0.0016718798884351356)*a + 0.018694798810849338)*a + -0.11290585995314265)*a + 0.4880841295041025)*a + 0.6105363149353815);
+    for (int i = 0; i < 3; i++)
+      r = r + (a/(r*r)-r)/3.0;
+    r = r*factor;
+    r = If(SIMD<double,N>(0.0) > x, -r, r);
+    r = If(fabs(x) == SIMD<double,N>(std::numeric_limits<double>::infinity()), x, r);
+    r = If(x == x, r, x);
+    return If(x == SIMD<double,N>(0.0), x, r);
   }
 
-  inline auto Test4 (SIMD<double,4> x)
+  namespace math
   {
-    return sincos(x);
+    inline double sin (double x) { return std::get<0>(sincos(SIMD<double,1>(x)))[0]; }
+    inline double cos (double x) { return std::get<1>(sincos(SIMD<double,1>(x)))[0]; }
+    inline double atan2 (double y, double x) { return ngcore::atan2(SIMD<double,1>(y), SIMD<double,1>(x))[0]; }
+    inline double acos (double x) { return ngcore::acos(SIMD<double,1>(x))[0]; }
+    inline double cbrt (double x) { return ngcore::cbrt(SIMD<double,1>(x))[0]; }
   }
-  */
-  
 }
 
 #endif

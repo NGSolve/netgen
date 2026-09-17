@@ -1043,7 +1043,7 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
                   if (fabs (n*direction) > 0.9)
                     {
                       Vec<3> p1p2 = p2-p1;
-                      double ndist = p1p2.Length2() - pow(p1p2*direction,2);
+                      double ndist = p1p2.Length2() - sqr(p1p2*direction);
                       if(ndist < mindist)
                         {
                           candi2 = i2;

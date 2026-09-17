@@ -367,7 +367,7 @@ namespace netgen
   double ExtrusionFace :: HesseNorm () const
   {
     return fabs(profile_spline_coeff(0) + profile_spline_coeff(1)) +
-      sqrt(pow(profile_spline_coeff(0)+profile_spline_coeff(1),2)+4.*pow(profile_spline_coeff(2),2));
+      sqrt(sqr(profile_spline_coeff(0)+profile_spline_coeff(1))+4.*sqr(profile_spline_coeff(2)));
   }
 
   double ExtrusionFace :: MaxCurvature () const

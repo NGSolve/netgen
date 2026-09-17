@@ -1372,6 +1372,15 @@ namespace netgen
 
   /* ***************************** HPRefinement ********************************** */
 
+  // largest k with fac1^k >= t, i.e. floor(log(t)/log(fac1)) for fac1 < 1
+  static int RefinementLevels (double t, double fac1)
+  {
+    int k = 0;
+    double f = fac1;
+    while (k < 1000 && f >= t) { k++; f *= fac1; }
+    return k;
+  }
+
   void HPRefinement (Mesh & mesh, Refinement * ref, SplittingType split,
                      int levels, double fac1, bool setorders, bool reflevels)
   {
@@ -1570,7 +1579,7 @@ namespace netgen
             
             int refi[3];  
             for(int j=0;j<3;j++) 
-              refi[j] = int(max(double(floor(log(dist[ord_dir[j]]/sqrt(2.))/log(fac1))),0.));   
+              refi[j] = RefinementLevels(dist[ord_dir[j]]/sqrt(2.), fac1);
             
             // cout << " ref " << refi[0] << "\t" << refi[1] << "\t" << refi[2] << endl; 
             // cout << " order " << act_ref +1 - refi[0] << "\t" << act_ref +1 - refi[1] << "\t" << act_ref +1 - refi[2] << endl; 
@@ -1615,7 +1624,7 @@ namespace netgen
             
             int refi[3]; 
             for(int j=0;j<3;j++) 
-              refi[j] = int(max(double(floor(log(dist[ord_dir[j]]/sqrt(2.))/log(fac1))),0.));   
+              refi[j] = RefinementLevels(dist[ord_dir[j]]/sqrt(2.), fac1);
             
             if(setorders)
               sel.SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 

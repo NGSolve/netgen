@@ -528,7 +528,7 @@ namespace ngcore
   
   NETGEN_INLINE SIMD<int64_t,2> lround (SIMD<double,2> x)
   {
-    return vcvtq_s64_f64(x.Data());
+    return vcvtnq_s64_f64(x.Data());
   }
 
 
