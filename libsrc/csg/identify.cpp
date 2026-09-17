@@ -356,7 +356,7 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
     if (mesh.HasEdgeDescriptor(s))
-      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
     return -1;
   };
 
@@ -464,7 +464,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
     if (mesh.HasEdgeDescriptor(s))
-      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
     return -1;
   };
 
@@ -481,7 +481,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 
       for (const Element2d & sel : mesh.SurfaceElements())
         {
-          IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
+          IVec<2> fpair = IVec<2>(facei, sel.GetIndex().Nr1()).Sort();
           if (identfaces.Used (fpair))
             {
               for (int k = 0; k < sel.GetNP(); k++)
@@ -497,11 +497,11 @@ BuildSurfaceElements (Array<Segment> & segs,
 
       for (const Element2d & sel : mesh.SurfaceElements())
         {
-          IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
+          IVec<2> fpair = IVec<2>(facei, sel.GetIndex().Nr1()).Sort();
           if (identfaces.Used (fpair))
             {
               found = 1;
-              fother = sel.GetIndex();
+              fother = sel.GetIndex().Nr1();
 
               // copy element
               Element2d newel(sel.GetType());
@@ -1088,7 +1088,7 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
     if (mesh.HasEdgeDescriptor(s))
-      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
     return -1;
   };
 
@@ -1245,7 +1245,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
     if (mesh.HasEdgeDescriptor(s))
-      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
     return -1;
   };
 
@@ -1349,7 +1349,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
     if (mesh.HasEdgeDescriptor(s))
-      return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+      return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
     return -1;
   };
 
@@ -1395,11 +1395,11 @@ BuildSurfaceElements2 (Array<Segment> & segs,
       // copy surface
       for (const Element2d & sel : mesh.SurfaceElements())
         {
-          IVec<2> fpair = IVec<2>(facei, sel.GetIndex()).Sort();
+          IVec<2> fpair = IVec<2>(facei, sel.GetIndex().Nr1()).Sort();
           if (identfaces.Used (fpair))
             {
               found = 1;
-              fother = sel.GetIndex();
+              fother = sel.GetIndex().Nr1();
               
               // copy element
               Element2d newel(sel.GetType());

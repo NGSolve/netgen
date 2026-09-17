@@ -241,7 +241,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment, Segmen
       if (!have_single_segments)
         {
           segments.Append(seg);
-          int face = mesh.HasEdgeDescriptor(seg) ? int(mesh.GetEdgeDescriptor(seg).GetIndex()) : seg.GetIndex().Nr1();
+          int face = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).GetIndex().Nr1() : seg.GetIndex().Nr1();
           seg_face.Append(face);
           continue;
         }
@@ -261,7 +261,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment, Segmen
             }
 
           segments.Append(seg);
-          seg_face.Append(sel.GetIndex());
+          seg_face.Append(sel.GetIndex().Nr1());
         }
     }
 }
@@ -372,7 +372,7 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
   face_done.Clear();
   for (const auto& sel : mesh.SurfaceElements())
     {
-      auto facei = sel.GetIndex();
+      auto facei = sel.GetIndex().Nr1();
       if (face_done.Test(facei))
         continue;
       bool point_moved = false;
@@ -422,11 +422,11 @@ void BoundaryLayerTool ::CalculateGrowthVectors ()
       for (auto sei : p2sel[pi])
         {
           const auto& sel = mesh[sei];
-          auto facei = sel.GetIndex();
+          auto facei = sel.GetIndex().Nr1();
           if (!par_surfid.Contains(facei))
             continue;
 
-          auto n = surfacefacs[sel.GetIndex()] * getNormal(sel);
+          auto n = surfacefacs[sel.GetIndex().Nr1()] * getNormal(sel);
 
           int itrig = sel.PNums().Pos(pi);
           itrig += sel.GetNP();
@@ -548,7 +548,7 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
   if (params.grow_edges)
     {
       for (const auto& sel : mesh.SurfaceElements())
-        if (is_boundary_projected.Test(sel.GetIndex()))
+        if (is_boundary_projected.Test(sel.GetIndex().Nr1()))
           {
             auto n = getNormal(sel);
             for (auto i : Range(sel.PNums()))
@@ -564,11 +564,11 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
                 v3.Normalize();
                 auto tol = v1.Length() * 1e-12;
                 if ((v1 * v3 > -tol) && (v2 * v3 > -tol))
-                  in_surface_direction.SetBit(sel.GetIndex());
+                  in_surface_direction.SetBit(sel.GetIndex().Nr1());
                 else
                   continue;
 
-                if (!par_project_boundaries.Contains(sel.GetIndex()))
+                if (!par_project_boundaries.Contains(sel.GetIndex().Nr1()))
                   continue;
                 auto& g = growthvectors[pi];
                 auto ng = n * g;
@@ -706,7 +706,7 @@ void BoundaryLayerTool ::InsertNewElements (
         if (ei >= 1 && ei <= mesh.GetNED())
           {
             new_ed = mesh.GetEdgeDescriptor(ei);
-            int old_fdi = new_ed.GetIndex();
+            int old_fdi = new_ed.GetIndex().Nr1();
             if (old_fdi >= 0 && old_fdi < si_map.Size())
               new_ed.SetIndex(si_map[old_fdi]);
           }
@@ -871,7 +871,7 @@ void BoundaryLayerTool ::InsertNewElements (
     if (n == 1)
       return 0;
     const auto& sel = mesh[sei];
-    auto groups = getGroups(pi, sel.GetIndex());
+    auto groups = getGroups(pi, sel.GetIndex().Nr1());
     if (groups.Size() == 1)
       return groups[0];
 
@@ -889,7 +889,7 @@ void BoundaryLayerTool ::InsertNewElements (
   for (SurfaceElementIndex si : T_Range<SurfaceElementIndex>(nse))
     {
       const auto sel = mesh[si];
-      const auto iface = sel.GetIndex();
+      const auto iface = sel.GetIndex().Nr1();
 
       if (moved_surfaces.Test(iface))
         {
@@ -996,7 +996,7 @@ void BoundaryLayerTool ::InsertNewElements (
           const auto& sel = mesh[sei];
           for (auto p : sel.PNums())
             if (p != special_pi)
-              close_group[sel.GetIndex()][getClosestGroup(special_pi, sei)].insert(
+              close_group[sel.GetIndex().Nr1()][getClosestGroup(special_pi, sei)].insert(
                 p);
         }
 
@@ -1014,7 +1014,7 @@ void BoundaryLayerTool ::InsertNewElements (
               auto new_special_pi1 = special_point.growth_groups[1].new_points.Last();
               for (auto sei : p2sel[pi_common])
                 {
-                  if (mesh[sei].GetIndex() == mapped_fi && mesh[sei].PNums().Contains(new_special_pi0))
+                  if (mesh[sei].GetIndex().Nr1() == mapped_fi && mesh[sei].PNums().Contains(new_special_pi0))
                     {
                       auto sel = mesh[sei];
                       sel.Invert();
@@ -1042,7 +1042,7 @@ void BoundaryLayerTool ::InsertNewElements (
           auto pi_new_other =
             special_point.growth_groups[1 - igroup].new_points.Last();
           for (auto sei : p2sel[pi_new])
-            faces.erase(mesh[sei].GetIndex());
+            faces.erase(mesh[sei].GetIndex().Nr1());
           for (auto face : faces)
             for (auto seg : new_segments)
               {
@@ -1053,7 +1053,7 @@ void BoundaryLayerTool ::InsertNewElements (
                     auto pi_other = seg[0] == pi_new ? seg[1] : seg[0];
                     for (auto sei : p2sel[pi_other])
                       {
-                        if (mesh[sei].GetIndex() == face)
+                        if (mesh[sei].GetIndex().Nr1() == face)
                           {
                             is_correct_face = true;
                             break;
@@ -1106,7 +1106,7 @@ void BoundaryLayerTool ::SetDomInOutSides ()
   for (auto sei : Range(mesh.SurfaceElements()))
     {
       auto& sel = mesh[sei];
-      auto index = sel.GetIndex();
+      auto index = sel.GetIndex().Nr1();
       if (done.Test(index))
         continue;
       done.SetBit(index);

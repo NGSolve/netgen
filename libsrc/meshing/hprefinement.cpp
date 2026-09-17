@@ -47,7 +47,7 @@ namespace netgen
 
   
   HPRefElement :: HPRefElement(Element2d & el) :
-    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
+    type(HP_NONE), index(el.GetIndex().Nr1()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     

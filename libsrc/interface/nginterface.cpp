@@ -426,8 +426,7 @@ int Ng_GetElementIndex (int ei)
     return (*mesh)[ElementIndex::FromNr1(ei)].GetIndex();
   else
     {
-      int ind = (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex(); 
-      ind = mesh->GetFaceDescriptor(ind).BCProperty();
+      int ind = mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)]).BCProperty();
       return ind;
     }
 }
@@ -454,8 +453,7 @@ const char * Ng_GetElementMaterial (int ei)
   // add astrid
   else
     {
-      int ind = (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex();
-      ind = mesh->GetFaceDescriptor(ind).BCProperty();
+      int ind = mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)]).BCProperty();
       const string * mat = mesh->GetMaterialPtr ( ind );
       if (mat)
         return mat->c_str();
@@ -553,7 +551,7 @@ int Ng_GetSurfaceElementSurfaceNumber (int ei)
 int Ng_GetSurfaceElementFDNumber (int ei)
 {
   if (mesh->GetDimension() == 3)
-    return (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex();
+    return (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex().Nr1();
   else
     return -1;
 }

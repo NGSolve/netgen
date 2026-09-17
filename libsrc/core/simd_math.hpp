@@ -264,13 +264,21 @@ namespace ngcore
     constexpr double TP8  = 0.41421356237309504880;   // tan(pi/8)
     constexpr double pio2_hi = 1.57079632679489655800e+00, pio2_lo = 6.12323399573676603587e-17;
     constexpr double pi_hi = 3.14159265358979311600e+00, pi_lo = 1.22464679914735317720e-16;
-    SIMD<double,N> zero(0.0), one(1.0), inf(std::numeric_limits<double>::infinity());
+    SIMD<double,N> zero(0.0), one(1.0);
 
     auto ysign = SIMD<int64_t,N>(0) > Reinterpret<int64_t>(y);
     auto xsign = SIMD<int64_t,N>(0) > Reinterpret<int64_t>(x);
-    // inf/inf: use +-1/+-1, 0/0: use y/1 to keep the sign of zero
-    auto bothinf = (fabs(x) == inf) && (fabs(y) == inf);
-    auto bothzero = (x == zero) && (y == zero);
+    // inf/inf: use +-1/+-1, 0/0: use y/1 to keep the sign of zero.
+    // Detect the special values from the bits: comparisons with infinity get folded under -ffast-math.
+    double isinf2[N], iszero2[N];
+    for (int i = 0; i < N; i++)
+      {
+        uint64_t bx = BitCast<uint64_t>(x[i]) << 1, by = BitCast<uint64_t>(y[i]) << 1;   // drop sign
+        isinf2[i]  = (bx == (0x7ffull << 53) && by == (0x7ffull << 53)) ? 1.0 : 0.0;
+        iszero2[i] = (bx == 0 && by == 0) ? 1.0 : 0.0;
+      }
+    auto bothinf = SIMD<double,N>(isinf2) > SIMD<double,N>(0.5);
+    auto bothzero = SIMD<double,N>(iszero2) > SIMD<double,N>(0.5);
     auto num = If(bothinf, If(ysign, -one, one), y);
     auto den = If(bothinf, If(xsign, -one, one), If(bothzero, one, x));
     auto t = num/den;
@@ -303,13 +311,15 @@ namespace ngcore
   template <int N>
   NETGEN_INLINE SIMD<double,N> cbrt (SIMD<double,N> x)
   {
-    double mantissa[N], scale[N];
+    double mantissa[N], scale[N], special[N];   // special: 0, inf, nan -> return x
     for (int i = 0; i < N; i++)
       {
         double a = x[i] < 0.0 ? -x[i] : x[i];
         int correction = 0;
         if (a < 0x1p-1022) { a *= 0x1p54; correction = -54; }
         uint64_t bits = BitCast<uint64_t>(a);
+        // exponent bits, not float comparisons: those get folded under -ffast-math
+        special[i] = (((bits >> 52) & 2047) == 2047 || (bits << 1) == 0) ? 1.0 : 0.0;
         int e = int((bits >> 52) & 2047) - 1023 + correction;
         int q = (e + 1074) / 3 - 358;
         mantissa[i] = BitCast<double>((bits & 0xfffffffffffffull)
@@ -322,9 +332,7 @@ namespace ngcore
       r = r + (a/(r*r)-r)/3.0;
     r = r*factor;
     r = If(SIMD<double,N>(0.0) > x, -r, r);
-    r = If(fabs(x) == SIMD<double,N>(std::numeric_limits<double>::infinity()), x, r);
-    r = If(x == x, r, x);
-    return If(x == SIMD<double,N>(0.0), x, r);
+    return If(SIMD<double,N>(special) > SIMD<double,N>(0.5), x, r);
   }
 
   namespace math

@@ -437,7 +437,7 @@ namespace netgen
           ed.SetDomainIn(refedges[i].domin);
           ed.SetDomainOut(refedges[i].domout);
           // fdindex staged with surface representant, FindEdges will overwrite with real FD index
-          ed.SetIndex(refedges[i].si);
+          ed.SetIndex(refedges[i].si);   // staged surface number, FindEdges sets the real face descriptor index
           auto edsi = mesh.AddEdgeDescriptor(ed);
           refedges[i].index_ = edsi.Nr1();
         }
@@ -1665,7 +1665,7 @@ namespace netgen
 #ifdef DEVELOP    
     auto seg_fdi = [&mesh](const Segment& s) -> int {
       if (mesh.HasEdgeDescriptor(s))
-        return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+        return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
       return -1;
     };
 #endif    
@@ -1799,7 +1799,7 @@ namespace netgen
   
     auto seg_fdi = [&mesh](const Segment& s) -> int {
       if (mesh.HasEdgeDescriptor(s))
-        return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+        return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
       return -1;
     };
 

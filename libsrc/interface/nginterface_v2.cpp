@@ -1159,7 +1159,7 @@ namespace netgen
   int Ngx_Mesh::GetSurfaceElementFDNumber (size_t ei) const
   {
     if (mesh->GetDimension() == 3)
-      return (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex();
+      return (*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex().Nr1();
     else
       return -1;
   }

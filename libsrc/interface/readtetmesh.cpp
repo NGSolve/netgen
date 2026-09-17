@@ -560,7 +560,7 @@ namespace netgen
                       (*testout) << "read " << dummyint << endl;
                       if(dummyint < 0) 
                         dummyint *= -1;
-                      int uid = tris[dummyint-1]->GetIndex();
+                      int uid = tris[dummyint-1]->GetIndex().Nr1();
 
                       if(port == 'P' || port == 'p')
                         {
@@ -670,13 +670,13 @@ namespace netgen
       {
         if(atof(version.c_str()) <= 1.999999)
           {
-            if(tris[i]->GetIndex() > 0)
+            if(tris[i]->GetIndex().IsValid())
               surfindices[i] = mesh.AddSurfaceElement(*tris[i]);
           }
         else
           {
-            if(tris[i]->GetIndex() > 0 &&
-               tris[i]->GetIndex() < minId3D)
+            if(tris[i]->GetIndex().IsValid() &&
+               tris[i]->GetIndex().Nr1() < minId3D)
               {
                 tris[i]->SetIndex(tris[i]->GetIndex()-minId2D+1);
                 surfindices[i] = mesh.AddSurfaceElement(*tris[i]);

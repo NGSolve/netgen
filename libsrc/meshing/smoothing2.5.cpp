@@ -156,7 +156,7 @@ namespace netgen
 
         Element2d & hel = mesh[elementsonpoint[pi][0]];
 
-        if(hel.GetIndex() != faceindex)
+        if(hel.GetIndex().Nr1() != faceindex)
           continue;
 
         cnt++;

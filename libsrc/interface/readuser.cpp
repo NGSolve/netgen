@@ -321,7 +321,7 @@ namespace netgen
                           if(dim == 3)
                           {
                             int bcpr = mesh.GetNFD();
-                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0));
+                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0)).Nr1();
                             mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
                             mesh.SetBCName(bcpr, name);
                             mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(fdnr);
@@ -330,7 +330,7 @@ namespace netgen
                           else if(dim == 2)
                           {
                             mesh.SetMaterial(matnr, name);
-                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(matnr, 0,0,0));
+                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(matnr, 0,0,0)).Nr1();
                             mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr);
                             mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
                             matnr++;

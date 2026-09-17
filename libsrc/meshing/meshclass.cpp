@@ -111,7 +111,7 @@ namespace netgen
           if(!faces[i].IsValid())
             continue;
           auto sel = mesh.SurfaceElement(faces[i]);
-          if(indices && indices->Size() > 0 && !indices->Contains(sel.GetIndex()))
+          if(indices && indices->Size() > 0 && !indices->Contains(sel.GetIndex().Nr1()))
             continue;
 
           auto & el = mesh[velement];
@@ -159,7 +159,7 @@ namespace netgen
 
         if(indices && indices->Size() > 0)
           {
-            bool contained = indices->Contains(mesh[ii].GetIndex());
+            bool contained = indices->Contains(mesh[ii].GetIndex().Nr1());
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
         if(mesh.PointContainedIn2DElement(p,lami,ii))
@@ -505,7 +505,7 @@ namespace netgen
         surfelements.Append (el);        
       }
 
-    if (el.index<=0 || el.index > facedecoding.Size())
+    if (!HasFaceDescriptor(el))
       cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
 
     surfelements.Last().next = facedecoding[el.index].firstelement;
@@ -540,7 +540,7 @@ namespace netgen
       }
 
     surfelements[sei] = el;
-    if (el.index > facedecoding.Size())
+    if (!HasFaceDescriptor(el))
       cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
 
     // add lock-free to list ... slow, call RebuildSurfaceElementLists later
@@ -660,7 +660,7 @@ namespace netgen
     /*
     auto seg_fdi = [this](const Segment& s) -> int {
       if (HasEdgeDescriptor(s))
-        { int fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi > 0) return fdi; }
+        { auto fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     */
@@ -707,7 +707,7 @@ namespace netgen
 
     for (auto & el : SurfaceElements())
       {
-        if (el.GetIndex())
+        if (el.GetIndex().IsValid())
           {
             outfile << " " << GetFaceDescriptor(el.GetIndex ()).SurfNr()+1;
             outfile << " " << GetFaceDescriptor(el.GetIndex ()).BCProperty();
@@ -1293,7 +1293,7 @@ namespace netgen
 
                 if (!faceind)
                   {
-                    faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0));
+                    faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0)).Nr1();
                     GetFaceDescriptor(faceind).SetBCProperty (bcp);
                   }
 
@@ -1540,7 +1540,7 @@ namespace netgen
               {
                 for (auto & el : SurfaceElements())
                   {
-                    if (el.GetIndex())
+                    if (el.GetIndex().IsValid())
                       {
                         int bcp = GetFaceDescriptor(el.GetIndex ()).BCProperty();
                         if ( bcp <= n )
@@ -1838,7 +1838,7 @@ namespace netgen
                     if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
                       {
                         int seg_si_val = seg_sis.Range().Contains(segi) ? seg_sis[segi] : -1;
-                        if (ed.GetIndex() > 0 && ed.GetIndex() == seg_si_val)
+                        if (ed.GetIndex().IsValid() && ed.GetIndex().Nr1() == seg_si_val)
                           { best = j; break; }  // exact match including index
                         if (best_no_fdi < 0)
                           best_no_fdi = j;  // surfnr match without fdindex
@@ -2206,7 +2206,7 @@ namespace netgen
 
                 if (!faceind)
                   {
-                    faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0));
+                    faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0)).Nr1();
                     if(GetDimension() == 2) bcp++;
                     GetFaceDescriptor(faceind).SetBCProperty (bcp);
                   }
@@ -2470,7 +2470,7 @@ namespace netgen
                     if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
                       {
                         int seg_si_val = merge_seg_sis.Range().Contains(segi) ? merge_seg_sis[segi] : -1;
-                        if (ed.GetIndex() > 0 && ed.GetIndex() == seg_si_val)
+                        if (ed.GetIndex().IsValid() && ed.GetIndex().Nr1() == seg_si_val)
                           { best = j; break; }
                         if (best_no_fdi < 0)
                           best_no_fdi = j;
@@ -2540,7 +2540,7 @@ namespace netgen
       {
         if (sel.IsDeleted()) continue;
 
-        // int si = sel.GetIndex();
+        // int si = sel.GetIndex().Nr1();
 
         if (sel.GetNP() <= 4)
           for (int j = 0; j < sel.GetNP(); j++)
@@ -2748,7 +2748,7 @@ namespace netgen
         {
         if (sel.IsDeleted()) continue;
 
-        int si = sel.GetIndex();
+        int si = sel.GetIndex().Nr1();
 
         /*
         for (int j = 0; j < sel.GetNP(); j++)
@@ -3011,7 +3011,7 @@ namespace netgen
     numonpoint = 0;
     for (SurfaceElementIndex sii : T_Range<SurfaceElementIndex>(nse))
       {
-        int ind = surfelements[sii].GetIndex();
+        auto ind = surfelements[sii].GetIndex();
         /*
           if (
           GetFaceDescriptor(ind).DomainIn() && 
@@ -3021,7 +3021,7 @@ namespace netgen
           (dom == 0 || dom == GetFaceDescriptor(ind).DomainOut())
           )
         */
-        if (hasface[ind-1])
+        if (hasface[ind.Nr0()])
           {
             /*
               Element2d hel = surfelements[i];
@@ -3040,7 +3040,7 @@ namespace netgen
     DynamicTable<SurfaceElementIndex, PointIndex> selsonpoint(np);
     for (SurfaceElementIndex sii : T_Range<SurfaceElementIndex>(nse))
       {
-        int ind = surfelements[sii].GetIndex();
+        auto ind = surfelements[sii].GetIndex();
 
         /*
           if (
@@ -3051,7 +3051,7 @@ namespace netgen
           (dom == 0 || dom == GetFaceDescriptor(ind).DomainOut())
           )
         */
-        if (hasface[ind-1])
+        if (hasface[ind.Nr0()])
           {
             /*
               Element2d hel = surfelements[i];
@@ -3089,7 +3089,7 @@ namespace netgen
             {
               Element2d hel = SurfaceElement(sei);
               if (hel.GetType() == TRIG6) hel.SetType(TRIG);
-              int ind = hel.GetIndex();   
+              auto ind = hel.GetIndex();   
 
               if (GetFaceDescriptor(ind).DomainIn() && 
                   (dom == 0 || dom == GetFaceDescriptor(ind).DomainIn()) )
@@ -3222,7 +3222,7 @@ namespace netgen
                 {
                   Element2d hel = SurfaceElement(sei);
                   if (hel.GetType() == TRIG6) hel.SetType(TRIG);
-                  int ind = hel.GetIndex();       
+                  auto ind = hel.GetIndex();       
 
                   if (GetFaceDescriptor(ind).DomainIn() && 
                       (dom == 0 || dom == GetFaceDescriptor(ind).DomainIn()) )
@@ -3412,7 +3412,7 @@ namespace netgen
   {
     auto seg_fdi = [this](const Segment& s) -> int {
       if (HasEdgeDescriptor(s))
-        { int fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi > 0) return fdi; }
+        { auto fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     // int i, j, k;
@@ -3472,12 +3472,12 @@ namespace netgen
         const Element2d & el = (*this)[i];
         if (el.IsDeleted()) continue;
 
-        if (surfnr == 0 || el.GetIndex() == surfnr)
+        if (surfnr == 0 || el.GetIndex().Nr1() == surfnr)
           {
             for (int j = 1; j <= el.GetNP(); j++)
               {
                 auto [pi1, pi2] = PointIndices<2>(el.PNumMod(j), el.PNumMod(j+1));
-                std::tuple<PointIndices<2>, int> seg { { pi1, pi2 }, el.GetIndex() };
+                std::tuple<PointIndices<2>, int> seg { { pi1, pi2 }, el.GetIndex().Nr1() };
 
                 if (!pi1.IsValid() || !pi2.IsValid())
                   cerr << "seg = " << pi1 << "-" << pi2 << endl;
@@ -3902,7 +3902,7 @@ namespace netgen
     n = 0;
     for (auto & el : SurfaceElements())
       {
-        if (surfnr == 0 || el.GetIndex() == surfnr)
+        if (surfnr == 0 || el.GetIndex().Nr1() == surfnr)
           {
             for (int j = 1; j <= 3; j++)
               {
@@ -4238,7 +4238,7 @@ namespace netgen
       case RESTRICTH_FACE:
         {
           for (const Element2d & sel : SurfaceElements())
-            if (sel.GetIndex() == nr)
+            if (sel.GetIndex().Nr1() == nr)
               RestrictLocalH (sel, loch);
           break;
         }
@@ -4390,7 +4390,7 @@ namespace netgen
             const Element2d & el = sel;
             if (el.IsDeleted() ) continue;
 
-            if (dom == -1 || el.GetIndex() == dom)
+            if (dom == -1 || el.GetIndex().Nr1() == dom)
               for (int j = 0; j < 3; j++)
                 grow ((*this)[el[j]]);
           }
@@ -6605,7 +6605,7 @@ namespace netgen
   {
     auto seg_fdi = [this](const Segment& s) -> int {
       if (HasEdgeDescriptor(s))
-        { int fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi > 0) return fdi; }
+        { auto fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     PrintMessage (3, "SplitSeparateFaces");
@@ -6676,7 +6676,7 @@ namespace netgen
                 if (!nface)
                   {
                     FaceDescriptor nfd = GetFaceDescriptor(fdi);
-                    nface = AddFaceDescriptor (nfd);
+                    nface = AddFaceDescriptor (nfd).Nr1();
                   }
 
                 el.SetIndex (nface);
@@ -6691,9 +6691,9 @@ namespace netgen
 
             for (int i = 0; i < els_of_face.Size(); i++)
               {
-                int ind = SurfaceElement(els_of_face[i]).GetIndex();
-                SurfaceElement(els_of_face[i]).next = facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement;
-                facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement = els_of_face[i];
+                auto ind = SurfaceElement(els_of_face[i]).GetIndex();
+                SurfaceElement(els_of_face[i]).next = facedecoding[ind].firstelement;
+                facedecoding[ind].firstelement = els_of_face[i];
               }
 
             // map the segments - also create per-face EDs so edsi stays in sync
@@ -6793,7 +6793,7 @@ namespace netgen
       if (!nface)
       {
       FaceDescriptor nfd = GetFaceDescriptor(fdi);
-      nface = AddFaceDescriptor (nfd);
+      nface = AddFaceDescriptor (nfd).Nr1();
       }
 
       el.SetIndex (nface);
@@ -6997,9 +6997,9 @@ namespace netgen
     for (int i = surfelements.Size()-1; i >= 0; i--)
       {
         SurfaceElementIndex sei = SurfaceElementIndex::FromNr0(i);
-        int ind = surfelements[sei].GetIndex();
-        surfelements[sei].next = facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement;
-        facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement = sei;
+        auto ind = surfelements[sei].GetIndex();
+        surfelements[sei].next = facedecoding[ind].firstelement;
+        facedecoding[ind].firstelement = sei;
       }
   }
 
@@ -7024,7 +7024,7 @@ namespace netgen
      SurfaceElementIndex si = facedecoding[FaceDescriptorIndex::FromNr1(facenr)].firstelement;
      while (si.IsValid())
      {
-       if ( (*this)[si].GetIndex () == facenr && (*this)[si][0].IsValid() &&
+       if ( (*this)[si].GetIndex().Nr1() == facenr && (*this)[si][0].IsValid() &&
             !(*this)[si].IsDeleted() )
         {
            sei.Append (si);
@@ -7538,7 +7538,7 @@ namespace netgen
       }
 
     for (SurfaceElementIndex i : SurfaceElements().Range())
-      if ((*this)[i].GetIndex() == faceindex &&
+      if ((*this)[i].GetIndex().Nr1() == faceindex &&
           (*this)[i].GetNP() != 3)
         return false;
     return true;
@@ -7614,7 +7614,7 @@ namespace netgen
         if(!eli0.IsValid())
           continue;
         auto & sel = (*this)[sei];
-        int face = sel.GetIndex();
+        int face = sel.GetIndex().Nr1();
         int domin = (*this)[eli0].GetIndex();
         int domout = eli1.IsValid() ? (*this)[eli1].GetIndex() : 0;
         if(domin < domout)
@@ -7698,11 +7698,11 @@ namespace netgen
       }
     }
 
-    auto filter_elements = [&keep_point](auto & elements, auto & keep_region)
+    auto filter_elements = [&keep_point](auto & elements, auto & keep_region, auto region_of)
     {
       for(auto & el : elements)
       {
-        if(keep_region[el.GetIndex()])
+        if(keep_region[region_of(el)])
           for (auto pi : el.PNums())
             keep_point.SetBit(pi);
         else
@@ -7710,8 +7710,9 @@ namespace netgen
       }
     };
 
-    filter_elements(mesh.VolumeElements(), keep_domain);
-    filter_elements(mesh.SurfaceElements(), keep_face);
+    filter_elements(mesh.VolumeElements(), keep_domain, [](const Element & el) { return el.GetIndex(); });
+    // keep_face is filled by BCProperty, tested here by descriptor number (they coincide for generated meshes)
+    filter_elements(mesh.SurfaceElements(), keep_face, [](const Element2d & el) { return el.GetIndex().Nr1(); });
 
     // Keep line segments only if all points are kept
     // Check them in reverse order because they are deleted from the end
@@ -8302,7 +8303,7 @@ namespace netgen
             fd.SetBCProperty(new_si);
             auto new_face = mesh.AddFaceDescriptor(fd);
             mesh.SetBCName(new_si - 1, "default");
-            doms_2_new_face[{dom0, dom1}] = new_face;
+            doms_2_new_face[{dom0, dom1}] = new_face.Nr1();
           }
           for(auto face : topo.GetFaces(ei0)) {
             auto verts = topo.GetFaceVertices(face);

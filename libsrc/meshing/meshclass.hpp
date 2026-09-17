@@ -689,6 +689,8 @@ namespace netgen
     DLL_HEADER void SetBCName ( int bcnr, const string & abcname );
 
     DLL_HEADER const string & GetBCName ( int bcnr ) const;
+    /// name of the boundary described by face descriptor fdi
+    const string & GetBCName (FaceDescriptorIndex fdi) const { return GetBCName(fdi.Nr0()); }
 
     DLL_HEADER void SetNCD2Names (int ncd2n);
     DLL_HEADER void SetCD2Name (int cd2nr, const string & abcname);
@@ -774,6 +776,12 @@ namespace netgen
 
     const FaceDescriptor & GetFaceDescriptor (const Element2d & el) const
     { return facedecoding[el.GetIndex()]; }
+    FaceDescriptor & GetFaceDescriptor (const Element2d & el)
+    { return facedecoding[el.GetIndex()]; }
+
+    /// surface element refers to an existing face descriptor
+    bool HasFaceDescriptor (const Element2d & el) const
+    { return facedecoding.Range().Contains(el.GetIndex()); }
     
     const FaceDescriptor & GetFaceDescriptor (FaceDescriptorIndex i) const
     { return facedecoding[i]; }

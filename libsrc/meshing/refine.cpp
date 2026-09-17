@@ -283,7 +283,7 @@ namespace netgen
                   { 3, 5, 4 },
                   { 6, 4, 5 } };
 
-              int ind = el.GetIndex();
+              auto ind = el.GetIndex();
               for (int j = 0; j < 4; j++)
                 {
                   Element2d nel(TRIG);
@@ -367,7 +367,7 @@ namespace netgen
                   { 8, 5, 2, 6 } };
 
               
-              int ind = el.GetIndex();
+              auto ind = el.GetIndex();
               for (int j = 0; j < 4; j++)
                 {
                   Element2d nel(QUAD);
@@ -470,7 +470,7 @@ namespace netgen
               false, false, false, false, false, true, false, true
            };
 
-           int ind = el.GetIndex();
+           auto ind = el.GetIndex();
            for (int j = 0; j < 8; j++)
            {
              Element nel(TET);
@@ -592,7 +592,7 @@ namespace netgen
               { 21, 25, 19, 26, 23, 16, 7, 14} };
 
 
-           int ind = el.GetIndex();
+           auto ind = el.GetIndex();
            for (int j = 0; j < 8; j++)
            {
               Element nel(HEX);
@@ -694,7 +694,7 @@ namespace netgen
               { 17, 15, 18, 11, 5, 12 } };
 
 
-           int ind = el.GetIndex();
+           auto ind = el.GetIndex();
            for (int j = 0; j < 8; j++)
            {
               Element nel(PRISM);

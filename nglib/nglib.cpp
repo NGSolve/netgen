@@ -461,7 +461,7 @@ namespace nglib
       }
 
       if (matnum)
-         *matnum = el.GetIndex();
+         *matnum = el.GetIndex().Nr1();
 
       return et;
    }

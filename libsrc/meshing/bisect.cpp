@@ -1047,7 +1047,7 @@ namespace netgen
       }
 
     mt.marked = 0;
-    mt.surfid = el.GetIndex();
+    mt.surfid = el.GetIndex().Nr1();
 
     mt.incorder = 0;
     mt.order = 1;
@@ -1110,7 +1110,7 @@ namespace netgen
 
     mq.marked = 0;
     mq.markededge = 0;
-    mq.surfid = el.GetIndex();
+    mq.surfid = el.GetIndex().Nr1();
   }
 
 

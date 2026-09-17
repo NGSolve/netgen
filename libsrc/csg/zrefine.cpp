@@ -593,7 +593,7 @@ namespace netgen
             if (el.GetType() != QUAD)
               continue;
 
-            int index = el.GetIndex();
+            auto index = el.GetIndex();
             PointIndex npi[2];
             for (int j = 1; j <= 2; j++)
               {

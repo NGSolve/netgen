@@ -3149,7 +3149,7 @@ namespace netgen
         if (!drawel)
           continue;
 
-        if (el.GetIndex() < 1 || el.GetIndex() > mesh->GetNFD())
+        if (!mesh->HasFaceDescriptor(el))
           continue;
         int domin = mesh->GetFaceDescriptor(el.GetIndex()).DomainIn();
         int domout = mesh->GetFaceDescriptor(el.GetIndex()).DomainOut();
@@ -3370,7 +3370,7 @@ namespace netgen
     if(selelement>0)
       {
         const Element2d & sel = (*GetMesh())[SurfaceElementIndex::FromNr1(selelement)];
-        SetSelectedFace(sel.GetIndex());
+        SetSelectedFace(sel.GetIndex().Nr1());
 
         auto pi_nearest = sel[0];
         double min_dist = 1e99;
@@ -3398,7 +3398,7 @@ namespace netgen
             if(mesh->GetDimension() == 3)
               name = mesh->GetFaceDescriptor(sel.GetIndex()).GetBCName();
             else
-              name = mesh->GetMaterial(sel.GetIndex());
+              name = mesh->GetMaterial(sel.GetIndex().Nr1());
 
             if(name != "")
               cout << " with name " << name;

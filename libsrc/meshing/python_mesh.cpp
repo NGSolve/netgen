@@ -486,7 +486,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::arg("index")=1,py::arg("vertices"), py::arg("uv")=std::nullopt,
          "create surface element"
          )
-    .def_property("index", [](const Element2d & self) { return int(self.GetIndex()); }, [](Element2d & self, int i) { self.SetIndex(i); })
+    .def_property("index", [](const Element2d & self) { return self.GetIndex().Nr1(); }, [](Element2d & self, int i) { self.SetIndex(i); })
     .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
     .def_property("uv",
@@ -766,8 +766,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("tlosurf", &EdgeDescriptor::TLOSurface, &EdgeDescriptor::SetTLOSurface)
     .def_property("domin", &EdgeDescriptor::DomainIn, &EdgeDescriptor::SetDomainIn)
     .def_property("domout", &EdgeDescriptor::DomainOut, &EdgeDescriptor::SetDomainOut)
-    .def_property("index", [](const EdgeDescriptor & self) { return int(self.GetIndex()); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
-    .def_property("fdindex", [](const EdgeDescriptor & self) { return int(self.GetIndex()); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
+    .def_property("index", [](const EdgeDescriptor & self) { return self.GetIndex().Nr1(); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
+    .def_property("fdindex", [](const EdgeDescriptor & self) { return self.GetIndex().Nr1(); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
 
     ;
 
@@ -787,7 +787,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   py::class_<FaceDescriptorIndex>(m, "FaceDescriptorIndex")
     .def(py::init([](int nr0) { return FaceDescriptorIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
     .def("__repr__", &ToString<FaceDescriptorIndex>)
-    .def("__int__", [](FaceDescriptorIndex i) { return int(i); })
+    .def("__int__", [](FaceDescriptorIndex i) { return i.Nr1(); })
     .def_property_readonly("nr0", [](FaceDescriptorIndex i) { return i.Nr0(); })
     .def_property_readonly("nr1", [](FaceDescriptorIndex i) { return i.Nr1(); });
   py::implicitly_convertible<int, FaceDescriptorIndex>();
@@ -1288,7 +1288,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def ("Add", [](Mesh & self, const FaceDescriptor & fd)
           {
-            return int(self.AddFaceDescriptor (fd));
+            return self.AddFaceDescriptor (fd).Nr1();
           })
 
     .def ("Add", [](Mesh & self, const EdgeDescriptor & ed)

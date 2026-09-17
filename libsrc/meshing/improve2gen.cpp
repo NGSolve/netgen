@@ -264,7 +264,7 @@ namespace netgen
       {
         const Element2d & el = mesh[sei];
 
-        if (el.GetIndex() == faceindex && !el.IsDeleted())
+        if (el.GetIndex().Nr1() == faceindex && !el.IsDeleted())
           {
             for (int j = 0; j < el.GetNP(); j++)
               elonnode.Add (el[j], sei);
@@ -279,7 +279,7 @@ namespace netgen
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
         const Element2d & el = mesh[sei];
-        if (el.GetIndex() == faceindex && !el.IsDeleted())
+        if (el.GetIndex().Nr1() == faceindex && !el.IsDeleted())
           {
             for (int j = 0; j < el.GetNP(); j++)
               {
@@ -322,7 +322,7 @@ namespace netgen
                 const Element2d & el0 = mesh[sei];
                 const Element2d & rel0 = rule.oldels[0];
 
-                if (el0.GetIndex() != faceindex) continue;
+                if (el0.GetIndex().Nr1() != faceindex) continue;
                 if (el0.IsDeleted()) continue;
                 if (el0.GetNP() != rel0.GetNP()) continue;
 

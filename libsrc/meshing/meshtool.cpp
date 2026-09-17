@@ -638,7 +638,7 @@ namespace netgen
       {
         const Segment * seg = &seg2;
 
-        int seg_face = mesh.HasEdgeDescriptor(*seg) ? int(mesh.GetEdgeDescriptor(*seg).GetIndex()) : -1;
+        int seg_face = mesh.HasEdgeDescriptor(*seg) ? mesh.GetEdgeDescriptor(*seg).GetIndex().Nr1() : -1;
         of << (*seg)[1] << " " << (*seg)[0] << " " << seg_face << "\n";
       }
    
@@ -742,7 +742,7 @@ namespace netgen
     outfile << mesh.GetNSE() << endl;
     for (auto & sel : mesh.SurfaceElements())
       {
-        if (sel.GetIndex())
+        if (sel.GetIndex().IsValid())
           outfile << mesh.GetFaceDescriptor(sel.GetIndex ()).SurfNr()
                   << "\t";
         else
@@ -936,7 +936,7 @@ namespace netgen
         for (int i = 1; i <= mesh.GetNOpenElements(); i++)
           {
             const Element2d & sel = mesh.OpenElement(i);
-            if (sel.GetIndex() == k)
+            if (sel.GetIndex().Nr1() == k)
               {
                 for (int j = 0; j < sel.GetNP(); j++)
                   ppoints[sel[j]] = true;

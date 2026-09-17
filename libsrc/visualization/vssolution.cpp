@@ -4732,13 +4732,13 @@ namespace netgen
           }
         else
           {
-            if (el.GetIndex() != vispar.drawdomainsurf)
+            if (el.GetIndex().Nr1() != vispar.drawdomainsurf)
               is_active = false;
           }
       }
 
     if(data->draw_surfaces) {
-      is_active = is_active && (*data->draw_surfaces)[el.GetIndex()-1];
+      is_active = is_active && (*data->draw_surfaces)[el.GetIndex().Nr0()];
     }
 
     return is_active;

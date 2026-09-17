@@ -99,8 +99,7 @@ namespace netgen
     for (int edi = 1; edi <= mesh.GetNED(); edi++)
       {
         auto & ed = mesh.GetEdgeDescriptor(edi);
-        int surf_rep = ed.GetIndex();  // staged surface representant from CalcEdges1
-        if (surf_rep < 0) continue;
+        int surf_rep = ed.GetIndex().Nr1();  // staged surface representant from CalcEdges1
         int ok = 0;
         for (int k = 1; k <= mesh.GetNFD(); k++)
           {
@@ -116,7 +115,7 @@ namespace netgen
 
         if (!ok)
           {
-            ok = mesh.AddFaceDescriptor (FaceDescriptor (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1));
+            ok = mesh.AddFaceDescriptor (FaceDescriptor (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1)).Nr1();
           }
 
         ed.SetIndex(ok);
@@ -458,7 +457,7 @@ namespace netgen
 
         for (auto & seg_i : mesh.LineSegments())
           {
-            int fdi = mesh.HasEdgeDescriptor(seg_i) ? int(mesh.GetEdgeDescriptor(seg_i).GetIndex()) : -1;
+            int fdi = mesh.HasEdgeDescriptor(seg_i) ? mesh.GetEdgeDescriptor(seg_i).GetIndex().Nr1() : -1;
             if (fdi == k)
             {
               segments.Append (seg_i);
@@ -641,7 +640,7 @@ namespace netgen
                 Segment * seg = &seg2;
                 {
                   int seg_face = mesh.HasEdgeDescriptor(*seg)
-                                 ? int(mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex()) : -1;
+                                 ? mesh.GetEdgeDescriptor(*seg).GetIndex().Nr1() : -1;
                   if (seg_face == k)
                     segments.Append (*seg);
                 }

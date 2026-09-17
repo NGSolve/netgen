@@ -520,6 +520,8 @@ namespace netgen
     constexpr FaceDescriptorIndex (int ai) : Index(ai) { }
   public:
     using Index::Index;
+    operator int () const = delete;    // use Nr1() / Nr0() / IsValid()
+    operator int & () = delete;
   };
 
   /**
@@ -535,7 +537,7 @@ namespace netgen
     operator int & () = delete;
   };
 
-  inline ostream & operator<< (ostream & ost, const FaceDescriptorIndex & i) { return ost << int(i); }
+  inline ostream & operator<< (ostream & ost, const FaceDescriptorIndex & i) { return ost << i.Nr1(); }
   inline ostream & operator<< (ostream & ost, const EdgeDescriptorIndex & i) { return ost << i.Nr1(); }
 
   inline ostream & operator<< (ostream & ost, const Front2PointIndex & fpi)
@@ -1675,7 +1677,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetIndex (int i) { index_ = i > 0 ? FaceDescriptorIndex::FromNr1(i) : FaceDescriptorIndex::INVALID; }
 
     // deprecated aliases
-    [[deprecated("use GetIndex()")]] int FDIndex () const { return int(index_); }
+    [[deprecated("use GetIndex()")]] int FDIndex () const { return index_.Nr1(); }
     [[deprecated("use SetIndex()")]] void SetFDIndex (int i) { SetIndex(i); }
 
     void DoArchive (Archive & ar)

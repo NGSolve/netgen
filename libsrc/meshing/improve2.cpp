@@ -59,7 +59,7 @@ namespace netgen
     if (mesh[t2].IsDeleted()) return false;
     if (mesh[t2].GetNP() != 3) return false;
 
-    const int faceindex = mesh[t1].GetIndex();
+    const auto faceindex = mesh[t1].GetIndex();
     const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
 
     PointIndex pi1 = mesh[t1].PNumMod(o1+1+1);
@@ -393,7 +393,7 @@ namespace netgen
         return 0.0;
 
     double loch = 0.5*(mesh.GetH(pi1) + mesh.GetH(pi2));
-    int faceindex = -1;
+    FaceDescriptorIndex faceindex = FaceDescriptorIndex::INVALID;
 
     for (SurfaceElementIndex sei2 : elementsonnode[pi1])
       {
@@ -630,7 +630,7 @@ namespace netgen
                 for (int k = 0; k < 3; k++)
                   if (hel[k] == pi)
                     {
-                      const int faceindex = hel.GetIndex();
+                      const auto faceindex = hel.GetIndex();
                       const int surfnr = mesh.GetFaceDescriptor (faceindex).SurfNr();
                       normals[pi] = geo.GetNormal (surfnr, mesh[pi], &hel.GeomInfoPi(k+1));
                       break;

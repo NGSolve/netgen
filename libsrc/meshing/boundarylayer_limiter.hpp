@@ -358,7 +358,7 @@ struct GrowthVectorLimiter
         auto sel = mesh[sei];
         if (sei.Nr0() >= tool.nse)
           continue;
-        if (!tool.moved_surfaces[sel.GetIndex()])
+        if (!tool.moved_surfaces[sel.GetIndex().Nr1()])
           continue;
         if (sel.GetNP() == 4)
           continue;

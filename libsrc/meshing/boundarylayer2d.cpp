@@ -954,7 +954,7 @@ namespace netgen
         n_edge_descriptors = min2(n_edge_descriptors, info.n_edge_descriptors);
 
         for(auto & sel : mesh.SurfaceElements())
-           if(sel.GetIndex() == info.new_domain)
+           if(sel.GetIndex() == FaceDescriptorIndex::FromNr1(info.new_domain))   // 2D: descriptor k <-> domain k
               sel.SetIndex(info.domain);
 
         // the segments in front of the layer are interior now

@@ -1409,8 +1409,8 @@ void MeshOptimize3d :: SwapImproveSurface (
     for(int j=0; j<mesh[sei].GetNP(); j++)
       {
         surfaceelementsonnode.Add(mesh[sei][j], sei);
-        if(!surfaceindicesonnode[mesh[sei][j]].Contains(mesh[sei].GetIndex()))
-          surfaceindicesonnode.Add(mesh[sei][j],mesh[sei].GetIndex());
+        if(!surfaceindicesonnode[mesh[sei][j]].Contains(mesh[sei].GetIndex().Nr1()))
+          surfaceindicesonnode.Add(mesh[sei][j],mesh[sei].GetIndex().Nr1());
       }
 
   bool periodic;

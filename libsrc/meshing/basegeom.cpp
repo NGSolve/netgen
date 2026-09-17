@@ -891,7 +891,7 @@ namespace netgen
 
     int max_index = mesh.GetNFD();
     for(const auto & sel : mesh.SurfaceElements())
-        max_index = max2(max_index, int(sel.GetIndex()));
+        max_index = max2(max_index, sel.GetIndex().Nr1());
     while(mesh.GetNFD() < max_index)
     {
         FaceDescriptor fd(mesh.GetNFD()+1, 0, 0, -1);
@@ -1229,7 +1229,7 @@ namespace netgen
     for(auto sei : mesh.SurfaceElements().Range())
       {
         auto sel = mesh[sei];
-        if(sel.GetIndex() != src.nr+1)
+        if(mesh.GetFaceDescriptor(sel).SurfNr() != src.nr+1)
           continue;
 
         auto sel_new = sel;

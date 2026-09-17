@@ -215,7 +215,7 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map
   base_index = max_index;
   fout << "Triangles\n" << mesh.GetNSE() << endl;
   for(const auto & sel : mesh.SurfaceElements())
-    fout << sel[0] << ' ' << sel[1] << ' ' << sel[2] << ' ' << getIndex(sel.GetIndex(), 2) << endl;
+    fout << sel[0] << ' ' << sel[1] << ' ' << sel[2] << ' ' << getIndex(sel.GetIndex().Nr1(), 2) << endl;
 
   base_index = max_index;
   fout << "Tetrahedra\n" << mesh.GetNE() << endl;

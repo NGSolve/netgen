@@ -81,7 +81,7 @@ namespace ngcore
     {
       const netgen::Element2d & el = mesh[_sei];
       sei = _sei.Nr0();
-      index = el.GetIndex();
+      index = el.GetIndex().Nr1();
       np = el.GetNP();
       for (int k : Range(1, np+1)) {
         auto & pnt = points[k-1];;
@@ -860,7 +860,7 @@ namespace netgen
                   {
                     segm_buf.Add (dest, segi.Nr0());
                     bool has_ed = HasEdgeDescriptor(seg);
-                    int fdi = has_ed ? int(GetEdgeDescriptor(seg.GetIndex()).GetIndex()) : -1;
+                    int fdi = has_ed ? GetEdgeDescriptor(seg).GetIndex().Nr1() : -1;
                     segm_buf.Add (dest, fdi);
                     segm_buf.Add (dest, seg[0].Nr0());
                     segm_buf.Add (dest, seg[1].Nr0());
@@ -1117,7 +1117,7 @@ namespace netgen
       comm.Recv (fddata, 0, NG_MPI_TAG_MESH+3);
       for (int i = 0; i < fddata.Size(); i += 6)
         {
-          int faceind = AddFaceDescriptor 
+          auto faceind = AddFaceDescriptor 
             (FaceDescriptor(int(fddata[i]), int(fddata[i+1]), int(fddata[i+2]), 0));
           GetFaceDescriptor(faceind).SetBCProperty (int(fddata[i+3]));
           GetFaceDescriptor(faceind).domin_singular = fddata[i+4];
@@ -1681,8 +1681,7 @@ namespace netgen
         const Element2d & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
         
         
-        int ind = el.GetIndex(); 
-        ind = GetFaceDescriptor(ind).BCProperty();
+        int ind = GetFaceDescriptor(el).BCProperty();
         if (surface_weights.Size()<ind)
             nwgt.Append(0);
         else

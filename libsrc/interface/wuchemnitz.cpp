@@ -117,7 +117,7 @@ namespace netgen
       {
         SURFELEMENT sel;
         const Element2d & el = mesh[i];
-        sel.snr = el.GetIndex();
+        sel.snr = el.GetIndex().Nr1();
         sel.p1 = el[0];
         sel.p2 = el[1];
         sel.p3 = el[2];

@@ -135,7 +135,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
           if (seg[0] < IndexBASE<PointIndex>() + p2sel.Size())
             {
               for (auto sei : p2sel[seg[0]])
-                if (moved_surfaces.Test(mesh[sei].GetIndex()) && p2sel[seg[1]].Contains(sei))
+                if (moved_surfaces.Test(mesh[sei].GetIndex().Nr1()) && p2sel[seg[1]].Contains(sei))
                   faces.Append(sei);
             }
 
@@ -153,7 +153,7 @@ void BoundaryLayerTool ::InterpolateGrowthVectors ()
         }
 
       if (no_angles && faces.Size() == 2 && have_material_map)
-        if (par_new_mat[mesh.GetBCName(mesh[faces[0]].GetIndex() - 1)] != par_new_mat[mesh.GetBCName(mesh[faces[1]].GetIndex() - 1)])
+        if (par_new_mat[mesh.GetBCName(mesh[faces[0]].GetIndex())] != par_new_mat[mesh.GetBCName(mesh[faces[1]].GetIndex())])
           no_angles = false;
 
       if (no_angles)
@@ -339,7 +339,7 @@ void BoundaryLayerTool ::InterpolateSurfaceGrowthVectors ()
   for (auto pi : points)
     {
       for (auto sei : p2sel[pi])
-        if (is_boundary_moved[mesh[sei].GetIndex()])
+        if (is_boundary_moved[mesh[sei].GetIndex().Nr1()])
           interpolate_tangent.SetBit(pi);
     }
 
@@ -434,7 +434,7 @@ void BoundaryLayerTool ::FixSurfaceElements ()
   for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
     {
       const auto& sel = mesh[sei];
-      if (sel.GetNP() == 3 && is_boundary_moved[sel.GetIndex()])
+      if (sel.GetNP() == 3 && is_boundary_moved[sel.GetIndex().Nr1()])
         for (auto pi : sel.PNums())
           if (point_types[pi] == SURFACEPOINT)
             points_set.insert(pi);
