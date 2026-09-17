@@ -452,15 +452,7 @@ const char * Ng_GetElementMaterial (int ei)
     }
   // add astrid
   else
-    {
-      int ind = mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)]).BCProperty();
-      const string * mat = mesh->GetMaterialPtr ( ind );
-      if (mat)
-        return mat->c_str();
-      else
-        return empty;
-    }
-  return 0;
+    return mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)]).GetBCName().c_str();
 }
 
 const char * Ng_GetDomainMaterial (int dom)
@@ -582,7 +574,7 @@ char * Ng_GetBCNumBCName (int bcnr)
 
 char * Ng_GetCD2NumCD2Name (int cd2nr)
 {
-  return const_cast<char *>(mesh->GetCD2Name(cd2nr).c_str());
+  return const_cast<char *>(mesh->GetRegionName(mesh->GetDimension()-2, cd2nr+1).data());
 }
 
 

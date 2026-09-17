@@ -340,32 +340,23 @@ namespace netgen
           }
       }
 
-    mesh.SetNBCNames( bccnt );
-
+    // names by bc number: a bc number can be shared by several face descriptors
+    Array<string> names(bccnt);
+    names = "default";
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
         FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
         const Surface * surf = geom.GetSurface(fd.SurfNr());
-        if (fd.TLOSurface() )
-          {
-            int bcp = fd.BCProperty();
-            string nextbcname = geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCName();
-            if ( nextbcname != "default" )
-              mesh.SetBCName ( bcp - 1 , nextbcname );
-          }
-        else // if (surf -> GetBCProperty() != -1)
-          {
-            int bcp = fd.BCProperty();
-            string nextbcname = surf->GetBCName();
-            if ( nextbcname != "default" )
-              mesh.SetBCName ( bcp - 1, nextbcname );
-          }
+        string nextbcname = fd.TLOSurface() ? geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCName() : surf->GetBCName();
+        int bcp = fd.BCProperty();
+        if (nextbcname != "default" && bcp >= 1 && bcp <= bccnt)
+          names[bcp-1] = nextbcname;
       }
-    
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
         FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
-        fd.SetBCName ( mesh.GetBCNamePtr ( fd.BCProperty() - 1 ) );
+        int bcp = fd.BCProperty();
+        fd.SetBCName ((bcp >= 1 && bcp <= bccnt) ? names[bcp-1] : "default");
       }
 
     //!!
@@ -384,9 +375,7 @@ namespace netgen
                 geom.bcmodifications[l].bcname != NULL
                 )
               {
-                int bcp = fd.BCProperty();
-                mesh.SetBCName ( bcp - 1, *(geom.bcmodifications[l].bcname) );
-                fd.SetBCName ( mesh.GetBCNamePtr ( bcp - 1) );
+                fd.SetBCName ( *(geom.bcmodifications[l].bcname) );
               }
           }
       }

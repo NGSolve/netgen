@@ -76,28 +76,13 @@ void WriteElmerFormat (const Mesh &mesh,
 
   for( auto codim : IntRange(0, mesh.GetDimension()-1) )
   {
-    if (codim == 2)
+    int dim = mesh.GetDimension() - codim;
+    for (auto i0 : Range(mesh.GetNRegions(dim)))
       {
-        for (auto i0 : Range(mesh.GetNCD2Names()))
-          {
-            string name = mesh.GetCD2Name(i0);
-            if(name == "" || name == "default")
-              continue;
-            outfile_names << "$" << name << "=" << i0+1 << "\n";
-          }
-      }
-    else
-      {
-        auto & names = const_cast<Mesh&>(mesh).GetRegionNamesCD(codim);
-        for (auto i0 : Range(names) )
-          {
-            if(names[i0] == nullptr)
-              continue;
-            string name = *names[i0];
-            if(name == "" || name == "default")
-              continue;
-            outfile_names << "$" << name << "=" << i0+1 << "\n";
-          }
+        string_view name = mesh.GetRegionName(dim, i0+1);
+        if(name == "" || name == "default")
+          continue;
+        outfile_names << "$" << name << "=" << i0+1 << "\n";
       }
   }
 

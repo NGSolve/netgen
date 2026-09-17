@@ -131,25 +131,11 @@ namespace netgen
     */
     Array<EdgeDescriptor, EdgeDescriptorIndex> edgedecoding;
 
-    Array<string*> region_name_cd[4];
-    Array<string*> & materials = region_name_cd[0];
-    Array<string*> & bcnames   = region_name_cd[1];
-    Array<string*> & cd2names  = region_name_cd[2];
-    Array<string*> & cd3names  = region_name_cd[3];
-
-    /*
-    /// sub-domain materials 
-    Array<string*> materials;
-
-    /// labels for boundary conditions
-    Array<string*> bcnames;
-
-    /// labels for co dim 2 bboundary conditions
-    Array<string*> cd2names;
-
-    /// labels for co dim 3 bbboundary conditions
-    Array<string*> cd3names;
-    */
+    /// names of 3D domains; nullopt = not set (reported as "default").
+    /// Faces and edges carry their names in their descriptors.
+    Array<optional<string>> materials;
+    /// names of 0D regions (vertices)
+    Array<optional<string>> vertexnames;
     
     /// Periodic surface, close surface, etc. identifications
     unique_ptr<Identifications> ident;
@@ -674,74 +660,61 @@ namespace netgen
     DLL_HEADER void SplitFacesByAdjacentDomains();
     DLL_HEADER shared_ptr<Mesh> GetSubMesh(string domains="", string faces="") const;
 
-    ///
+    /// name of domain domnr (1-based): materials in 3D, face descriptor in 2D, edge descriptor in 1D
     DLL_HEADER void SetMaterial (int domnr, const string & mat);
-    ///
     DLL_HEADER const string & GetMaterial (int domnr) const;
     DLL_HEADER static string defaultmat;
+    /// 3D domain name
     const string * GetMaterialPtr (int domnr) const // 1-based
     {
-      return domnr <= materials.Size() ? materials[domnr-1] : &defaultmat;
+      return (domnr >= 1 && domnr <= materials.Size() && materials[domnr-1]) ? &*materials[domnr-1] : &defaultmat;
     }
     
+    /// 1D meshes only (vertex names); a no-op otherwise
     DLL_HEADER void SetNBCNames ( int nbcn );
 
+    /// name of boundary region nr (0-based): face descriptor nr in 3D, edge descriptor nr in 2D, vertex nr in 1D.
+    /// Missing descriptors are created.
     DLL_HEADER void SetBCName ( int bcnr, const string & abcname );
-
     DLL_HEADER const string & GetBCName ( int bcnr ) const;
+    /// boundary names keyed by bc number, the layout of files and archives (empty if nothing is named)
+    DLL_HEADER Array<string> BCNamesByNumber () const;
     /// name of the boundary described by face descriptor fdi
-    const string & GetBCName (FaceDescriptorIndex fdi) const { return GetBCName(fdi.Nr0()); }
+    const string & GetBCName (FaceDescriptorIndex fdi) const { return facedecoding[fdi].GetBCName(); }
 
-    DLL_HEADER void SetNCD2Names (int ncd2n);
+    /// vertex names of 2D meshes (cd2nr 1-based); edge names of 3D meshes live in the edge descriptors
     DLL_HEADER void SetCD2Name (int cd2nr, const string & abcname);
-
     DLL_HEADER const string & GetCD2Name (int cd2nr ) const;
     DLL_HEADER static string cd2_default_name;
-    string * GetCD2NamePtr (int cd2nr ) const
-    {
-      if (dimension == 2)
-        {
-          if (cd2nr >= 0 && cd2nr < cd2names.Size() && cd2names[cd2nr])
-            return cd2names[cd2nr];
-        }
-      else
-        {
-          if (cd2nr >= 0 && cd2nr < edgedecoding.Size())
-            {
-              const auto & n = edgedecoding[EdgeDescriptorIndex::FromNr0(cd2nr)].GetName();
-              if (n != "default" && !n.empty())
-                return const_cast<string*>(&n);
-            }
-        }
-      return &cd2_default_name;
-    }
-    size_t GetNCD2Names() const
-    {
-      if (dimension == 2)
-        return cd2names.Size();
-      return edgedecoding.Size();
-    }
+    size_t GetNCD2Names() const { return dimension == 2 ? vertexnames.Size() : 0; }
+
+    /// edge descriptor nr (1-based); missing descriptors up to nr are created
+    DLL_HEADER EdgeDescriptor & EnsureEdgeDescriptor (int nr);
+  private:
+    void SetCD2NameCompat (int cd2nr, const string & name);
+  public:
 
     DLL_HEADER void SetNCD3Names (int ncd3n);
     DLL_HEADER void SetCD3Name (int cd3nr, const string & abcname);
     DLL_HEADER int AddCD3Name (const string & aname);
-
     DLL_HEADER const string & GetCD3Name (int cd3nr ) const;
     DLL_HEADER static string cd3_default_name;
-    string * GetCD3NamePtr (int cd3nr ) const
+    const string * GetCD3NamePtr (int cd3nr ) const
     {
-      if (cd3nr < cd3names.Size() && cd3names[cd3nr]) return cd3names[cd3nr];
+      if (cd3nr >= 0 && cd3nr < vertexnames.Size() && vertexnames[cd3nr]) return &*vertexnames[cd3nr];
       return &cd3_default_name;
     }
-    size_t GetNCD3Names() const { return cd3names.Size(); }
+    size_t GetNCD3Names() const { return dimension == 3 ? vertexnames.Size() : 0; }
 
     DLL_HEADER static string default_bc;
-    string * GetBCNamePtr (int bcnr) const
-    { return (bcnr < bcnames.Size() && bcnames[bcnr]) ? bcnames[bcnr] : &default_bc; }
-
-
-    DLL_HEADER Array<string*> & GetRegionNamesCD (int codim);
-    DLL_HEADER FlatArray<string*> GetRegionNamesCD (int codim) const;
+    const string * GetBCNamePtr (int bcnr) const
+    {
+      if (dimension == 3)
+        return (bcnr >= 0 && bcnr < facedecoding.Size()) ? &facedecoding[FaceDescriptorIndex::FromNr0(bcnr)].GetBCName() : &default_bc;
+      if (dimension == 2)
+        return (bcnr >= 0 && bcnr < edgedecoding.Size()) ? &edgedecoding[EdgeDescriptorIndex::FromNr0(bcnr)].GetName() : &default_bc;
+      return (bcnr >= 0 && bcnr < vertexnames.Size() && vertexnames[bcnr]) ? &*vertexnames[bcnr] : &default_bc;
+    }
 
     DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
     DLL_HEADER std::string_view GetRegionName(const Element2d & el) const;
@@ -752,16 +725,35 @@ namespace netgen
     std::string_view GetRegionName(ElementIndex ei) const { return GetRegionName((*this)[ei]); }
 
     DLL_HEADER static string_view defaultmat_sv;
-    std::string_view GetRegionName (int dim, int domnr) // 1-based domnr
+    /// number of regions of entity dimension dim (3D domains, faces, edges, vertices)
+    size_t GetNRegions (int dim) const
     {
-      domnr--;
-      int codim = dimension-dim;
-      if (codim == 2)
-        return GetCD2Name(domnr);
-      auto & names = region_name_cd[codim];
-      if (domnr < names.Size() && names[domnr]) return *names[domnr];
-      return defaultmat_sv;
+      switch (dim)
+        {
+        case 3: return materials.Size();
+        case 2: return facedecoding.Size();
+        case 1: return edgedecoding.Size();
+        default: return vertexnames.Size();
+        }
     }
+    /// name of region nr (1-based) of entity dimension dim
+    std::string_view GetRegionName (int dim, int nr) const
+    {
+      switch (dim)
+        {
+        case 3: return (nr >= 1 && nr <= materials.Size() && materials[nr-1]) ? string_view(*materials[nr-1]) : defaultmat_sv;
+        case 2: return (nr >= 1 && nr <= facedecoding.Size()) ? string_view(facedecoding[FaceDescriptorIndex::FromNr1(nr)].GetBCName()) : defaultmat_sv;
+        case 1: return (nr >= 1 && nr <= edgedecoding.Size()) ? string_view(edgedecoding[EdgeDescriptorIndex::FromNr1(nr)].GetName()) : defaultmat_sv;
+        default: return (nr >= 1 && nr <= vertexnames.Size() && vertexnames[nr-1]) ? string_view(*vertexnames[nr-1]) : defaultmat_sv;
+        }
+    }
+    const Array<optional<string>> & Materials () const { return materials; }
+    Array<optional<string>> & Materials () { return materials; }
+    const Array<optional<string>> & VertexNames () const { return vertexnames; }
+    Array<optional<string>> & VertexNames () { return vertexnames; }
+    /// domain names (dimension of the mesh) as array, the layout of files, archives and MPI messages
+    DLL_HEADER Array<optional<string>> DomainNames () const;
+    DLL_HEADER void SetDomainNames (Array<optional<string>> names);
     
     ///
     void ClearFaceDescriptors()
@@ -825,8 +817,6 @@ namespace netgen
     /// Recompute EdgeDescriptor::fdindex from segment si values or FD lookup
     void RebuildFDIndices();
 
-    /// Sync cd2names array from edgedecoding (for 3D) so GetRegionNamesCD(2) works
-    void SyncCD2Names();
 
 
     ///

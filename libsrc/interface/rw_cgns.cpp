@@ -217,7 +217,7 @@ namespace netgen::cg
 
     if(codim==0) name += mesh.GetMaterial(index+1);
     if(codim==1) name += *mesh.GetBCNamePtr(index);
-    if(codim==2) name += mesh.GetCD2Name(index);
+    if(codim==2) name += mesh.GetRegionName(mesh.GetDimension()-2, index+1);
 
     int ne = 0;
     Array<int> data;
@@ -407,9 +407,9 @@ namespace netgen::cg
         {
           static Timer tall("CGNS::ReadMesh-Zone"); RegionTimer rtall(tall);
           static Timer tsection("CGNS::ReadMesh-Section");
-          first_index_1d = mesh.GetNCD2Names();
-          first_index_2d = mesh.GetRegionNamesCD(1).Size();
-          first_index_3d = mesh.GetRegionNamesCD(0).Size();
+          first_index_1d = mesh.GetNED();
+          first_index_2d = mesh.GetNFD();
+          first_index_3d = mesh.GetNRegions(3);
 
           Array<double> x(nv), y(nv), z(nv);
           cgsize_t imin=1;
@@ -596,11 +596,9 @@ namespace netgen::cg
                 }
             }
 
-          mesh.SetNCD2Names(index_1d);
-          mesh.GetRegionNamesCD(1).SetSize(index_2d);
-          mesh.GetRegionNamesCD(0).SetSize(index_3d);
-          mesh.GetRegionNamesCD(1) = nullptr;
-          mesh.GetRegionNamesCD(0) = nullptr;
+          if (index_1d > 0) mesh.EnsureEdgeDescriptor(index_1d);
+          mesh.Materials().SetSize(index_3d);
+          mesh.Materials() = nullopt;
         }
 
       void SetNames( Mesh & mesh )
@@ -616,7 +614,7 @@ namespace netgen::cg
           else
           {
             for (auto i : Range(names_1d.Size()))
-              mesh.SetCD2Name(first_index_1d + i +1, names_1d[i]);
+              mesh.EnsureEdgeDescriptor(first_index_1d + i +1).SetName(names_1d[i]);
 
             for (auto i : Range(names_2d.Size()))
             {

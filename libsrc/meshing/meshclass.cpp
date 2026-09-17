@@ -251,8 +251,6 @@ namespace netgen
 
     geomtype = NO_GEOM;
 
-    bcnames.SetSize(0);
-
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
@@ -261,18 +259,10 @@ namespace netgen
 
   Mesh :: ~Mesh()
   {
-    for (int i = 0; i < materials.Size(); i++)
-      delete materials[i];
     for(int i = 0; i < userdata_int.Size(); i++)
       delete userdata_int[i];
     for(int i = 0; i < userdata_double.Size(); i++)
       delete userdata_double[i];
-
-    for (int i = 0; i < bcnames.Size(); i++ )
-      delete bcnames[i];
-
-    for (int i = 0; i < cd3names.Size(); i++)
-      delete cd3names[i];
 
     // #ifdef PARALLEL
     // delete paralleltop;
@@ -307,43 +297,8 @@ namespace netgen
     maxhdomain = mesh2.maxhdomain;
     pointelements = mesh2.pointelements;
 
-    // Remap string* values to new mesh
-    std::map<const string*, string*> names_map;
-    for (auto fi : Range(facedecoding))
-      names_map[&mesh2.facedecoding[fi].bcname] = &facedecoding[fi].bcname;
-
-    auto get_name = [&](const string *old_name) -> string* {
-      if (!old_name) return nullptr;
-      if (names_map.count(old_name)) return names_map[old_name];
-      return new string(*old_name);
-    };
-
-    materials.SetSize( mesh2.materials.Size() );
-    for ( int i = 0; i < mesh2.materials.Size(); i++ )
-    {
-      const string * old_name = mesh2.materials[i];
-      if ( old_name ) materials[i] = dimension == 2 ? get_name(old_name) : new string ( *old_name );
-      else materials[i] = 0;
-    }
-
-    bcnames.SetSize( mesh2.bcnames.Size() );
-    for ( int i = 0; i < mesh2.bcnames.Size(); i++ )
-    {
-      const string * old_name = mesh2.bcnames[i];
-      if ( old_name ) bcnames[i] = dimension == 3 ? get_name(old_name) : new string ( *old_name );
-      else bcnames[i] = 0;
-    }
-
-    // In 2D, cd2 names live in cd2names; in 3D, they live in edgedecoding (already copied above)
-    cd2names.SetSize(mesh2.cd2names.Size());
-    for (int i=0; i < mesh2.cd2names.Size(); i++)
-      if (mesh2.cd2names[i]) cd2names[i] = new string(*mesh2.cd2names[i]);
-      else cd2names[i] = 0;
-
-    cd3names.SetSize(mesh2.cd3names.Size());
-    for (int i=0; i < mesh2.cd3names.Size(); i++)
-      if (mesh2.cd3names[i]) cd3names[i] = new string(*mesh2.cd3names[i]);
-      else cd3names[i] = 0;
+    materials = mesh2.materials;
+    vertexnames = mesh2.vertexnames;
 
     numvertices = mesh2.numvertices;
 
@@ -375,8 +330,6 @@ namespace netgen
     curvedelems = make_unique<CurvedElements> (*this);
     clusters = make_unique<AnisotropicClusters> (*this);
 
-    for ( int i = 0; i < bcnames.Size(); i++ )
-      if ( bcnames[i] ) delete bcnames[i];
     edgedecoding.SetSize(0);
 
 #ifdef PARALLEL
@@ -874,37 +827,40 @@ namespace netgen
           }
       }
 
-    int cntmat = 0;
-    for (int i = 0; i < materials.Size(); i++)
-      if (materials[i] && materials[i]->length())
-        cntmat++;
+    {
+      auto domnames = DomainNames();
+      int cntmat = 0;
+      for (auto & n : domnames)
+        if (n && n->length())
+          cntmat++;
 
-    if (cntmat)
-      {
-        outfile << "materials" << endl;
-        outfile << cntmat << endl;
-        for (int i = 0; i < materials.Size(); i++)
-          if (materials[i] && materials[i]->length())
-            outfile << i+1 << " " << *materials[i] << endl;
-      }
+      if (cntmat)
+        {
+          outfile << "materials" << endl;
+          outfile << cntmat << endl;
+          for (int i = 0; i < domnames.Size(); i++)
+            if (domnames[i] && domnames[i]->length())
+              outfile << i+1 << " " << *domnames[i] << endl;
+        }
+    }
 
 
-    int cntbcnames = 0;
-    for ( int ii = 0; ii < bcnames.Size(); ii++ )
-      if ( bcnames[ii] ) cntbcnames++;
-
-    if ( cntbcnames )
-      {
-        outfile << "\n\nbcnames" << endl << bcnames.Size() << endl;
-        for ( int i = 0; i < bcnames.Size(); i++ )
-          outfile << i+1 << "\t" << GetBCName(i) << endl;
-        outfile << endl << endl;
-      }
-    int ncd2 = GetNCD2Names();
+    {
+      auto names = BCNamesByNumber();
+      if (names.Size())
+        {
+          outfile << "\n\nbcnames" << endl << names.Size() << endl;
+          for (int i = 0; i < names.Size(); i++)
+            outfile << i+1 << "\t" << names[i] << endl;
+          outfile << endl << endl;
+        }
+    }
+    // cd2names: edge names in 3D, vertex names in 2D
+    int ncd2 = GetNRegions(dimension-2);
     int cntcd2names = 0;
     for (int ii = 0; ii < ncd2; ii++)
       {
-        const auto & n = GetCD2Name(ii);
+        auto n = GetRegionName(dimension-2, ii+1);
         if (n != "default" && !n.empty()) cntcd2names++;
       }
 
@@ -912,7 +868,7 @@ namespace netgen
       {
         outfile << "\n\ncd2names" << endl << ncd2 << endl;
         for (int i=0; i<ncd2; i++)
-          outfile << i+1 << "\t" << GetCD2Name(i) << endl;
+          outfile << i+1 << "\t" << GetRegionName(dimension-2, i+1) << endl;
         outfile << endl << endl;
       }
 
@@ -932,14 +888,15 @@ namespace netgen
         outfile << endl << endl;
       }
 
+    int ncd3 = GetNCD3Names();
     int cntcd3names = 0;
-    for (int ii = 0; ii<cd3names.Size(); ii++)
-      if(cd3names[ii]) cntcd3names++;
+    for (int ii = 0; ii < ncd3; ii++)
+      if (vertexnames[ii]) cntcd3names++;
 
     if(cntcd3names)
       {
-        outfile << "\n\ncd3names" << endl << cd3names.Size() << endl;
-        for (int i=0; i<cd3names.Size(); i++)
+        outfile << "\n\ncd3names" << endl << ncd3 << endl;
+        for (int i=0; i<ncd3; i++)
           outfile << i+1 << "\t" << GetCD3Name(i) << endl;
         outfile << endl << endl;
       }
@@ -1527,31 +1484,29 @@ namespace netgen
         if ( strcmp (str, "bcnames" ) == 0 )
           {
             infile >> n;
-            Array<int> bcnrs(n);
-            SetNBCNames(n);
-            for ( auto i : Range(n) )
+            Array<string> names(n);
+            names = "default";
+            for ( [[maybe_unused]] auto i : Range(n) )
               {
+                int nr;
                 string nextbcname;
-                ReadNumberAndName( infile, bcnrs[i], nextbcname );
-                bcnames[bcnrs[i]-1] = new string(nextbcname);
+                ReadNumberAndName( infile, nr, nextbcname );
+                if (nr >= 1 && nr <= n) names[nr-1] = nextbcname;
               }
 
             if ( GetDimension() == 3 )
               {
+                // the file keys names by bc number
                 for (auto & el : SurfaceElements())
-                  {
-                    if (el.GetIndex().IsValid())
-                      {
-                        int bcp = GetFaceDescriptor(el.GetIndex ()).BCProperty();
-                        if ( bcp <= n )
-                          GetFaceDescriptor(el.GetIndex ()).SetBCName(bcnames[bcp-1]);
-                        else
-                          GetFaceDescriptor(el.GetIndex ()).SetBCName(0);
-
-                      }
-                  }
-
+                  if (el.GetIndex().IsValid())
+                    {
+                      int bcp = GetFaceDescriptor(el.GetIndex ()).BCProperty();
+                      GetFaceDescriptor(el.GetIndex ()).SetBCName((bcp >= 1 && bcp <= n) ? names[bcp-1] : "default");
+                    }
               }
+            else
+              for (auto i : Range(n))
+                SetBCName(i, names[i]);
           }
 
         if ( strcmp (str, "cd2names" ) == 0)
@@ -1562,7 +1517,7 @@ namespace netgen
               {
                 string nextcd2name;
                 ReadNumberAndName( infile, cd2nrs[i], nextcd2name );
-                SetCD2Name(cd2nrs[i], nextcd2name);  // dispatches on dimension
+                SetCD2NameCompat(cd2nrs[i], nextcd2name);
               }
             if (GetDimension() < 2)
               {
@@ -1620,7 +1575,7 @@ namespace netgen
               {
                 string nextcd3name;
                 ReadNumberAndName( infile, cd3nrs[i], nextcd3name );
-                cd3names[cd3nrs[i]-1] = new string(nextcd3name);
+                vertexnames[cd3nrs[i]-1] = nextcd3name;
               }
             if (GetDimension() < 3)
               {
@@ -1855,12 +1810,59 @@ namespace netgen
     // else: edgesegmentsgi3 - segments already have correct indices
 
     RebuildFDIndices();
-    SyncCD2Names();
 
     SetNextMajorTimeStamp();
     //  PrintMemInfo (cout);
   }
 
+
+  // names were archived as Array<string*>, keep that format: nullptr <-> nullopt.
+  // The archive identifies pointers by address, so output points at the array elements
+  // (no temporaries whose addresses could be reused), and input frees each pointer once.
+  static void ArchiveNames (Archive & archive, Array<optional<string>> & names)
+  {
+    Array<string*> tmp;
+    if (archive.Output())
+      {
+        tmp.SetSize(names.Size());
+        for (int i = 0; i < names.Size(); i++)
+          tmp[i] = names[i] ? &*names[i] : nullptr;
+        archive & tmp;
+      }
+    else
+      {
+        archive & tmp;
+        names.SetSize(tmp.Size());
+        std::set<string*> owned;
+        for (int i = 0; i < tmp.Size(); i++)
+          {
+            if (tmp[i]) { names[i] = *tmp[i]; owned.insert(tmp[i]); }
+            else names[i] = nullopt;
+          }
+        for (auto p : owned) delete p;
+      }
+  }
+
+  // bc names keyed by bc number, archived as Array<string*> like before; ignored on input,
+  // the face descriptors carry their names themselves
+  static void ArchiveBCNamesCompat (Archive & archive, Array<string> & names)
+  {
+    Array<string*> tmp;
+    if (archive.Output())
+      {
+        tmp.SetSize(names.Size());
+        for (int i = 0; i < names.Size(); i++)
+          tmp[i] = &names[i];
+        archive & tmp;
+      }
+    else
+      {
+        archive & tmp;
+        std::set<string*> owned;
+        for (auto p : tmp) if (p) owned.insert(p);
+        for (auto p : owned) delete p;
+      }
+  }
 
   void Mesh :: DoArchive (Archive & archive)
   {
@@ -2014,20 +2016,31 @@ namespace netgen
               Array<string*> cd2names_compat;
               if (archive.Output())
                 {
-                  int ncd2 = GetNCD2Names();
+                  int ncd2 = GetNRegions(dimension-2);
                   cd2names_compat.SetSize(ncd2);
                   for (int i = 0; i < ncd2; i++)
                     {
-                      const auto & n = GetCD2Name(i);
+                      auto n = GetRegionName(dimension-2, i+1);
                       cd2names_compat[i] = (n != "default" && !n.empty()) ? new string(n) : nullptr;
                     }
                 }
-              archive & materials & bcnames & cd2names_compat & cd3names;
+              Array<optional<string>> materials_compat, cd3names_compat;
+              if (archive.Output())
+                {
+                  materials_compat = DomainNames();
+                  if (dimension == 3) cd3names_compat = vertexnames;
+                }
+              ArchiveNames(archive, materials_compat);
+              { Array<string> bcnames_compat = BCNamesByNumber(); ArchiveBCNamesCompat(archive, bcnames_compat); }
+              archive & cd2names_compat;
+              ArchiveNames(archive, cd3names_compat);
               if (archive.Input())
                 {
+                  SetDomainNames(std::move(materials_compat));
+                  if (dimension == 3) vertexnames = std::move(cd3names_compat);
                   for (int i = 0; i < cd2names_compat.Size(); i++)
                     if (cd2names_compat[i])
-                      SetCD2Name(i+1, *cd2names_compat[i]);  // 1-based, dispatches on dimension
+                      SetCD2NameCompat(i+1, *cd2names_compat[i]);
                 }
               for (auto p : cd2names_compat) delete p;
             }
@@ -2068,20 +2081,31 @@ namespace netgen
       Array<string*> cd2names_compat;
       if (archive.Output())
         {
-          int ncd2 = GetNCD2Names();
+          int ncd2 = GetNRegions(dimension-2);
           cd2names_compat.SetSize(ncd2);
           for (int i = 0; i < ncd2; i++)
             {
-              const auto & n = GetCD2Name(i);
+              auto n = GetRegionName(dimension-2, i+1);
               cd2names_compat[i] = (n != "default" && !n.empty()) ? new string(n) : nullptr;
             }
         }
-      archive & materials & bcnames & cd2names_compat & cd3names;
+      Array<optional<string>> materials_compat, cd3names_compat;
+      if (archive.Output())
+        {
+          materials_compat = DomainNames();
+          if (dimension == 3) cd3names_compat = vertexnames;
+        }
+      ArchiveNames(archive, materials_compat);
+      { Array<string> bcnames_compat = BCNamesByNumber(); ArchiveBCNamesCompat(archive, bcnames_compat); }
+      archive & cd2names_compat;
+      ArchiveNames(archive, cd3names_compat);
       if (archive.Input())
         {
+          SetDomainNames(std::move(materials_compat));
+          if (dimension == 3) vertexnames = std::move(cd3names_compat);
           for (int i = 0; i < cd2names_compat.Size(); i++)
             if (cd2names_compat[i])
-              SetCD2Name(i+1, *cd2names_compat[i]);  // 1-based, dispatches on dimension
+              SetCD2NameCompat(i+1, *cd2names_compat[i]);
         }
       for (auto p : cd2names_compat) delete p;
     }
@@ -2117,7 +2141,6 @@ namespace netgen
         if (edgedecoding.Size() == 0)
           ReconstructEdgeDescriptors(nullptr, nullptr);
         RebuildFDIndices();
-        SyncCD2Names();
         
         CalcSurfacesOfNode ();
         if (ntasks == 1) // sequential run only
@@ -2486,7 +2509,6 @@ namespace netgen
       }
 
     RebuildFDIndices();
-    SyncCD2Names();
 
     SetNextMajorTimeStamp();
   }
@@ -2604,6 +2626,8 @@ namespace netgen
   void Mesh :: ReconstructEdgeDescriptors (const Array<std::pair<int,int>, SegmentIndex> * seg_surfnrs,
                                            const Array<int, SegmentIndex> * seg_edgenrs)
   {
+    Array<string> oldnames;   // names set before the reconstruction (readers name first)
+    for (const auto & ed : edgedecoding) oldnames.Append(ed.GetName());
     edgedecoding.SetSize(0);
 
     // find the max index value across all segments
@@ -2653,7 +2677,9 @@ namespace netgen
       }
     }
 
-    // cd2names removed - names already stored in edgedecoding
+    for (int i = 0; i < min(oldnames.Size(), edgedecoding.Size()); i++)
+      if (oldnames[i] != "default")
+        edgedecoding[EdgeDescriptorIndex::FromNr0(i)].SetName(oldnames[i]);
 
     RebuildFDIndices();
   }
@@ -2689,25 +2715,6 @@ namespace netgen
                   }
               }
           }
-      }
-  }
-
-  void Mesh :: SyncCD2Names ()
-  {
-    if (dimension == 2)
-      return;  // In 2D, cd2names is the primary store - nothing to sync
-
-    // In 3D, cd2 names live in edgedecoding. Populate cd2names so that
-    // GetRegionNamesCD(2) returns correct data for callers (e.g. writeelmer, python).
-    for (auto p : cd2names) delete p;
-    cd2names.SetSize(edgedecoding.Size());
-    for (int i = 0; i < edgedecoding.Size(); i++)
-      {
-        const auto & n = edgedecoding[EdgeDescriptorIndex::FromNr0(i)].GetName();
-        if (!n.empty() && n != "default")
-          cd2names[i] = new string(n);
-        else
-          cd2names[i] = nullptr;
       }
   }
 
@@ -5176,53 +5183,9 @@ namespace netgen
 
   void Mesh :: SetDimension (int dim)
   {
-    if (dimension == 3 && dim == 2)
-      {
-        // change mesh-dim from 3 to 2 (currently needed for OCC)
-        // materials ← bcnames
-        for (auto str : materials)
-          delete str;
-        materials.SetSize(0);
-        for (auto str : bcnames)
-          materials.Append(str);
-        bcnames.SetSize(0);
-
-        // bcnames ← edgedecoding names
-        for (int i = 0; i < edgedecoding.Size(); i++)
-          {
-            const auto & n = edgedecoding[EdgeDescriptorIndex::FromNr0(i)].GetName();
-            bcnames.Append((n != "default" && !n.empty()) ? new string(n) : nullptr);
-          }
-
-        for (auto str : cd2names)
-          delete str;
-        cd2names.SetSize(0);
-        for (auto str : cd3names)
-          cd2names.Append(str);
-        cd3names.SetSize(0);
-      }
-    if (dimension == 3 && dim == 1)
-      {
-        // materials ← edgedecoding names (old codim 2)
-        for(auto str : materials)
-          delete str;
-        materials.SetSize(0);
-        for (int i = 0; i < edgedecoding.Size(); i++)
-          {
-            const auto & n = edgedecoding[EdgeDescriptorIndex::FromNr0(i)].GetName();
-            materials.Append((n != "default" && !n.empty()) ? new string(n) : nullptr);
-          }
-        for (auto & ed : edgedecoding)
-          ed.SetName("default");
-
-        // bcnames ← cd3names
-        for(auto str : bcnames)
-          delete str;
-        bcnames.SetSize(0);
-        for(auto str : cd3names)
-          bcnames.Append(str);
-        cd3names.SetSize(0);
-      }
+    // domain names of 2D/1D meshes live in the face/edge descriptors, vertex names stay
+    if (dim != 3)
+      materials.SetSize(0);
     dimension = dim;
   }
 
@@ -7279,13 +7242,7 @@ namespace netgen
         // in 3d these are surface elements, in 2d segments
         SurfaceElementIndex sei = SurfaceElementIndex::FromNr0(nr);
         SegmentIndex segi = SegmentIndex::FromNr0(nr);
-        auto name = GetDimension() == 3 ? GetBCName(surfelements[sei].index-1) :
-          [&]() -> string_view {
-            int ednr = -1;
-            if (HasEdgeDescriptor(segments[segi]))
-              ednr = edgedecoding[segments[segi].GetIndex()].EdgeNr();
-            return GetBCName(ednr-1);
-          }();
+        string_view name = GetDimension() == 3 ? GetRegionName(surfelements[sei]) : GetRegionName(segments[segi]);
         if(name != s1)
           continue;
 
@@ -7744,269 +7701,236 @@ namespace netgen
 
   void Mesh :: SetMaterial (int domnr, const string & mat)
   {
-    if (domnr > materials.Size())
+    if (domnr < 1) throw RangeException("Illegal domain number ", domnr, 1, domnr);
+    if (dimension == 2)
       {
-        int olds = materials.Size();
-        materials.SetSize (domnr);
-        for (int i = olds; i < domnr-1; i++)
-          materials[i] = new string("default");
+        while (facedecoding.Size() < domnr)
+          {
+            FaceDescriptor fd(0, 0, 0, 0);
+            fd.SetBCProperty(facedecoding.Size()+1);
+            facedecoding.Append(fd);
+          }
+        facedecoding[FaceDescriptorIndex::FromNr1(domnr)].SetBCName(mat);
       }
-    /*
-    materials.Elem(domnr) = new char[strlen(mat)+1];
-    strcpy (materials.Elem(domnr), mat);
-    */
-    materials[domnr-1] = new string(mat);
+    else if (dimension == 1)
+      {
+        while (edgedecoding.Size() < domnr)
+          edgedecoding.Append(EdgeDescriptor());
+        edgedecoding[EdgeDescriptorIndex::FromNr1(domnr)].SetName(mat);
+      }
+    else
+      {
+        if (domnr > materials.Size())
+          {
+            int olds = materials.Size();
+            materials.SetSize (domnr);
+            for (int i = olds; i < domnr-1; i++)
+              materials[i] = "default";   // set, like the old code
+          }
+        materials[domnr-1] = mat;
+      }
   }
 
   string Mesh :: defaultmat = "default";
   string_view Mesh :: defaultmat_sv = "default";  
   const string & Mesh :: GetMaterial (int domnr) const
   {
-    if (domnr <= materials.Size() && materials[domnr-1])
-      return *materials[domnr-1];
-    static string emptystring("default");
-    return emptystring;
+    if (dimension == 2)
+      return (domnr >= 1 && domnr <= facedecoding.Size()) ? facedecoding[FaceDescriptorIndex::FromNr1(domnr)].GetBCName() : defaultmat;
+    if (dimension == 1)
+      return (domnr >= 1 && domnr <= edgedecoding.Size()) ? edgedecoding[EdgeDescriptorIndex::FromNr1(domnr)].GetName() : defaultmat;
+    return *GetMaterialPtr(domnr);
+  }
+
+  Array<optional<string>> Mesh :: DomainNames () const
+  {
+    Array<optional<string>> names;
+    if (dimension == 3) { names = materials; return names; }
+    if (dimension == 2)
+      for (const auto & fd : facedecoding) names.Append(fd.GetBCName());
+    else
+      for (const auto & ed : edgedecoding) names.Append(ed.GetName());
+    return names;
+  }
+
+  void Mesh :: SetDomainNames (Array<optional<string>> names)
+  {
+    if (dimension == 3) { materials = std::move(names); return; }
+    for (int i = 0; i < names.Size(); i++)
+      if (names[i]) SetMaterial(i+1, *names[i]);
   }
 
   void Mesh ::SetNBCNames ( int nbcn )
   {
-    if ( bcnames.Size() )
-      for ( int i = 0; i < bcnames.Size(); i++)
-        if ( bcnames[i] ) delete bcnames[i];
-    bcnames.SetSize(nbcn);
-    bcnames = 0;
+    if (dimension >= 2) return;   // boundary names live on the descriptors
+    vertexnames.SetSize(nbcn);
+    vertexnames = nullopt;
   }
 
   void Mesh ::SetBCName ( int bcnr, const string & abcname )
   {
-    if (bcnr >= bcnames.Size())
+    if (bcnr < 0) throw RangeException("Illegal bc number ", bcnr, 0, bcnr);
+    if (dimension == 3)
       {
-        int oldsize = bcnames.Size();
-        bcnames.SetSize (bcnr+1);  // keeps contents
-        for (int i = oldsize; i <= bcnr; i++)
-          bcnames[i] = new string("default");
+        while (facedecoding.Size() <= bcnr)
+          {
+            FaceDescriptor fd(0, 0, 0, 0);
+            fd.SetBCProperty(facedecoding.Size()+1);
+            facedecoding.Append(fd);
+          }
+        facedecoding[FaceDescriptorIndex::FromNr0(bcnr)].SetBCName(abcname);
       }
-
-    if ( bcnames[bcnr] ) delete bcnames[bcnr];
-    bcnames[bcnr] = new string ( abcname );
-
-    for (auto & fd : facedecoding)
-      if (fd.BCProperty() <= bcnames.Size())
-        fd.SetBCName (bcnames[fd.BCProperty()-1]);
+    else if (dimension == 2)
+      {
+        while (edgedecoding.Size() <= bcnr)
+          edgedecoding.Append(EdgeDescriptor());
+        edgedecoding[EdgeDescriptorIndex::FromNr0(bcnr)].SetName(abcname);
+      }
+    else
+      {
+        if (bcnr >= vertexnames.Size())
+          {
+            int oldsize = vertexnames.Size();
+            vertexnames.SetSize (bcnr+1);
+            for (int i = oldsize; i <= bcnr; i++)
+              vertexnames[i] = "default";
+          }
+        vertexnames[bcnr] = abcname;
+      }
   }
 
   const string & Mesh ::GetBCName ( int bcnr ) const
   {
-    static string defaultstring = "default";
-
-    if ( !bcnames.Size() )
-      return defaultstring;
-
-    if (bcnr < 0 || bcnr >= bcnames.Size())
-      throw RangeException("Illegal bc number ", bcnr, 0, bcnames.Size());
-
-    if ( bcnames[bcnr] )
-      return *bcnames[bcnr];
-    else
-      return defaultstring;
+    return *GetBCNamePtr(bcnr);
   }
 
-  void Mesh :: SetNCD2Names( int ncd2n )
+  // boundary names keyed by bc number (BCProperty), the format of files and archives:
+  // the name of the first face descriptor with that bc number, empty if nothing is named
+  Array<string> Mesh :: BCNamesByNumber () const
   {
-    if (dimension == 2)
+    Array<string> names;
+    if (dimension == 3)
       {
-        if (cd2names.Size())
-          for (int i = 0; i < cd2names.Size(); i++)
-            if (cd2names[i]) delete cd2names[i];
-        cd2names.SetSize(ncd2n);
-        cd2names = 0;
+        int nbc = 0;
+        bool named = false;
+        for (const auto & fd : facedecoding)
+          {
+            nbc = max(nbc, fd.BCProperty());
+            if (fd.GetBCName() != "default") named = true;
+          }
+        if (!named) return names;
+        names.SetSize(nbc);
+        names = "default";
+        Array<bool> done(nbc); done = false;
+        for (const auto & fd : facedecoding)
+          if (fd.BCProperty() >= 1 && !done[fd.BCProperty()-1])
+            { names[fd.BCProperty()-1] = fd.GetBCName(); done[fd.BCProperty()-1] = true; }
+      }
+    else if (dimension == 2)
+      {
+        for (const auto & ed : edgedecoding)
+          names.Append(ed.GetName());
       }
     else
-      {
-        // 3D: ensure edgedecoding is at least ncd2n entries, reset names
-        int oldsize = edgedecoding.Size();
-        if (ncd2n > oldsize)
-          {
-            edgedecoding.SetSize(ncd2n);
-            for (int i = oldsize; i < ncd2n; i++)
-              edgedecoding[EdgeDescriptorIndex::FromNr0(i)] = EdgeDescriptor();
-          }
-        for (int i = 0; i < edgedecoding.Size(); i++)
-          edgedecoding[EdgeDescriptorIndex::FromNr0(i)].SetName("default");
-      }
+      for (auto & n : vertexnames)
+        names.Append(n ? *n : "default");
+    return names;
+  }
+
+  EdgeDescriptor & Mesh :: EnsureEdgeDescriptor (int nr)
+  {
+    while (edgedecoding.Size() < nr)
+      edgedecoding.Append(EdgeDescriptor());
+    return edgedecoding[EdgeDescriptorIndex::FromNr1(nr)];
+  }
+
+  // cd2names of files and archives: edge names in 3D, vertex names in 2D
+  void Mesh :: SetCD2NameCompat (int cd2nr, const string & name)
+  {
+    if (dimension == 3)
+      EnsureEdgeDescriptor(cd2nr).SetName((name != "default" && !name.empty()) ? name : "default");
+    else
+      SetCD2Name(cd2nr, name);
   }
 
   void Mesh :: SetCD2Name ( int cd2nr, const string & abcname )
   {
+    if (dimension != 2) throw Exception("SetCD2Name names vertices of 2D meshes only");
     cd2nr--;
-    if (dimension == 2)
+    if (cd2nr >= vertexnames.Size())
       {
-        // In 2D, CD2 entities are points - store in cd2names, not edgedecoding
-        if (cd2nr >= cd2names.Size())
-          {
-            int oldsize = cd2names.Size();
-            cd2names.SetSize(cd2nr+1);
-            for (int i = oldsize; i <= cd2nr; i++)
-              cd2names[i] = new string("default");
-          }
-        if (cd2names[cd2nr]) delete cd2names[cd2nr];
-        if (abcname != "default" && abcname != "")
-          cd2names[cd2nr] = new string(abcname);
-        else
-          cd2names[cd2nr] = new string("default");
+        int oldsize = vertexnames.Size();
+        vertexnames.SetSize(cd2nr+1);
+        for (int i = oldsize; i <= cd2nr; i++)
+          vertexnames[i] = "default";
       }
-    else
-      {
-        (*testout) << "setCD2Name on edge " << cd2nr << " to " << abcname << endl;
-        if (cd2nr >= edgedecoding.Size())
-          {
-            int oldsize = edgedecoding.Size();
-            edgedecoding.SetSize(cd2nr+1);
-            for(int i = oldsize; i <= cd2nr; i++)
-              edgedecoding[EdgeDescriptorIndex::FromNr0(i)] = EdgeDescriptor();
-          }
-        if (abcname != "default" && abcname != "")
-          edgedecoding[EdgeDescriptorIndex::FromNr0(cd2nr)].SetName(abcname);
-        else
-          edgedecoding[EdgeDescriptorIndex::FromNr0(cd2nr)].SetName("default");
-      }
+    vertexnames[cd2nr] = abcname.empty() ? string("default") : abcname;
   }
 
   string Mesh :: cd2_default_name = "default";
   string Mesh :: default_bc = "default";
   const string & Mesh :: GetCD2Name (int cd2nr) const
   {
-    static string defaultstring  = "default";
-
-    if (dimension == 2)
-      {
-        if (cd2nr >= 0 && cd2nr < cd2names.Size() && cd2names[cd2nr])
-          return *cd2names[cd2nr];
-        return defaultstring;
-      }
-
-    if (cd2nr >= 0 && cd2nr < edgedecoding.Size())
-      return edgedecoding[EdgeDescriptorIndex::FromNr0(cd2nr)].GetName();
-
-    return defaultstring;
+    if (dimension == 2 && cd2nr >= 0 && cd2nr < vertexnames.Size() && vertexnames[cd2nr])
+      return *vertexnames[cd2nr];
+    return cd2_default_name;
   }
 
   void Mesh :: SetNCD3Names( int ncd3n )
   {
-    if (cd3names.Size())
-      for(int i=0; i<cd3names.Size(); i++)
-        if(cd3names[i]) delete cd3names[i];
-    cd3names.SetSize(ncd3n);
-    cd3names = 0;
+    vertexnames.SetSize(ncd3n);
+    vertexnames = nullopt;
   }
 
   void Mesh :: SetCD3Name ( int cd3nr, const string & abcname )
   {
     cd3nr--;
     (*testout) << "setCD3Name on vertex " << cd3nr << " to " << abcname << endl;
-    if (cd3nr >= cd3names.Size())
+    if (cd3nr >= vertexnames.Size())
       {
-        int oldsize = cd3names.Size();
-        cd3names.SetSize(cd3nr+1);
+        int oldsize = vertexnames.Size();
+        vertexnames.SetSize(cd3nr+1);
         for(int i= oldsize; i<= cd3nr; i++)
-          cd3names[i] = nullptr;
+          vertexnames[i] = nullopt;
       }
-    if (abcname != "default")
-      cd3names[cd3nr] = new string(abcname);
-    else
-      cd3names[cd3nr] = nullptr;
+    if (abcname != "default") vertexnames[cd3nr] = abcname; else vertexnames[cd3nr] = nullopt;
   }
   
   int Mesh :: AddCD3Name (const string & aname)
   {
-    for (int i = 0; i < cd3names.Size(); i++)
-      if (*cd3names[i] == aname)
+    for (int i = 0; i < vertexnames.Size(); i++)
+      if (vertexnames[i] && *vertexnames[i] == aname)
         return i;
-    cd3names.Append (new string(aname));
-    return cd3names.Size()-1;
+    vertexnames.Append (aname);
+    return vertexnames.Size()-1;
   }
   
   string Mesh :: cd3_default_name = "default";
   static string defaultstring  = "default";
   const string & Mesh :: GetCD3Name (int cd3nr) const
   {
-    if (!cd3names.Size())
+    if (cd3nr < 0 || cd3nr >= vertexnames.Size())
       return defaultstring;
-
-    if (cd3nr < 0 || cd3nr >= cd3names.Size())
-      return defaultstring;
-
-    if (cd3names[cd3nr])
-      return *cd3names[cd3nr];
-    else
-      return defaultstring;
-  }
-
-
-  Array<string*> & Mesh :: GetRegionNamesCD (int codim)
-  {
-    switch (codim)
-      {
-      case 0: return materials;
-      case 1: return bcnames;
-      case 2: return region_name_cd[2]; // 2D: populated directly; 3D: synced from edgedecoding via SyncCD2Names()
-      case 3: return cd3names;
-      default: throw Exception("don't have regions of co-dimension "+ToString(codim));
-      }
-  }
-  
-  FlatArray<string*> Mesh :: GetRegionNamesCD (int codim) const
-  {
-    switch (codim)
-      {
-      case 0: return materials;
-      case 1: return bcnames;
-      case 2: return region_name_cd[2]; // cd2names removed; array kept empty for ABI compat
-      case 3: return cd3names;
-      default: throw Exception("don't have regions of co-dimension "+ToString(codim));
-      }
+    return vertexnames[cd3nr] ? *vertexnames[cd3nr] : defaultstring;
   }
 
   std::string_view Mesh :: GetRegionName (const Segment & el) const
   {
-    if (GetDimension() == 3)
-      {
-        // codim 2 names are in edgedecoding
-        if (HasEdgeDescriptor(el))
-          return edgedecoding[el.GetIndex()].GetName();
-        return defaultmat_sv;
-      }
-    // for 2D/1D, use the standard codim lookup
-    int codim = GetDimension()-1;
-    int ednr = -1;
     if (HasEdgeDescriptor(el))
-      ednr = edgedecoding[el.GetIndex()].EdgeNr();
-    auto & names = const_cast<Mesh&>(*this).GetRegionNamesCD(codim);
-    if (ednr-1 >= 0 && ednr-1 < names.Size() && names[ednr-1])
-      return *names[ednr-1];
+      return edgedecoding[el.GetIndex()].GetName();
     return defaultmat_sv;
   }
 
   std::string_view Mesh :: GetRegionName (const Element2d & el) const
   {
-    // return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-2)[GetFaceDescriptor(el).BCProperty()-1];
-
-    auto ind = GetFaceDescriptor(el).BCProperty()-1;
-    auto names = this->GetRegionNamesCD(GetDimension()-2);
-
-    if (!names.Range().Contains(ind))
-      return defaultstring;
-    if (!names[ind])
-      return defaultstring;
-    return *names[ind];
+    if (HasFaceDescriptor(el))
+      return GetFaceDescriptor(el).GetBCName();
+    return defaultmat_sv;
   }
 
   std::string_view Mesh :: GetRegionName (const Element & el) const
   {
-    const auto& names = const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-3);
-    if(names.Size() <= el.GetIndex())
-      return defaultstring;
-    return *const_cast<Mesh&>(*this).GetRegionNamesCD(GetDimension()-3)[el.GetIndex()-1];
+    return GetRegionName(3, el.GetIndex());
   }
   
 

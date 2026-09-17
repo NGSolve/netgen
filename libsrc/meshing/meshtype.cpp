@@ -2659,14 +2659,6 @@ namespace netgen
   }
   */
 
-  void FaceDescriptor :: SetBCName (string * bcn)
-  {
-    if (bcn)
-      bcname = *bcn;
-    else
-      bcname = "default";
-  }
-  
   void FaceDescriptor :: DoArchive (Archive & ar)
   {
     ar & surfnr & domin & domout & tlosurf & bcprop

@@ -522,14 +522,6 @@ namespace netgen
     for (int i = 1; i <= maxdomnr; i++)
       mesh->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
 
-    // set Array<string*> bcnames... 
-    // number of bcnames
-    int maxsegmentindex = 0;
-    for (auto & seg : mesh->LineSegments())
-      if ( seg.GetIndex().Nr1() > maxsegmentindex) maxsegmentindex = seg.GetIndex().Nr1();
-
-    mesh->SetNBCNames(maxsegmentindex);
-
     for (int edi = 1; edi <= mesh->GetNED(); edi++)
       {
         auto & ed = mesh->GetEdgeDescriptor(edi);
@@ -537,7 +529,6 @@ namespace netgen
         if (enr < 1 || enr > geometry.GetNSplines())
           continue;  // not from the geometry, e.g. in front of a boundary layer
         ed.SetName(geometry.GetBCName(geometry.GetSpline(enr-1).bc));
-        mesh->SetBCName(edi-1, ed.GetName());
       }
 
     t_h.Stop();
@@ -754,13 +745,6 @@ namespace netgen
         if (material)
           mesh->SetMaterial (domnr, material);
       }
-    // SetBCName overwrites the facedescriptor names, so correct it here again:
-    for (int i = 1; i <= maxdomnr; i++)
-      {
-        auto & fd = mesh->GetFaceDescriptor(i);
-        fd.SetBCName(mesh->GetMaterial(i));
-      }
-
     mesh->Compress();
 
     mp.quad = hquad;

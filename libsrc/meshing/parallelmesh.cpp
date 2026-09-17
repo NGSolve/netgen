@@ -917,9 +917,14 @@ namespace netgen
     /** Send bc/mat/cd*-names **/
     // nr of names
     std::array<int,4> nnames{0,0,0,0};
+    auto bcnames_by_number = BCNamesByNumber();   // face names keyed by bc number, applied via BCProperty on receive
+    auto materials = DomainNames();
+    Array<string> cd2names_by_number;   // edge names in 3D, vertex names in 2D
+    for (int k = 0; k < GetNRegions(dimension-2); k++)
+      cd2names_by_number.Append(string(GetRegionName(dimension-2, k+1)));
     nnames[0] = materials.Size();
-    nnames[1] = bcnames.Size();
-    nnames[2] = GetNCD2Names();
+    nnames[1] = bcnames_by_number.Size();
+    nnames[2] = cd2names_by_number.Size();
     nnames[3] = GetNCD3Names();
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
 
@@ -927,10 +932,10 @@ namespace netgen
     requ += comm.IBcast (nnames);
     
     auto iterate_names = [&](auto func) {
-      for (int k = 0; k < nnames[0]; k++) func(materials[k]);
-      for (int k = 0; k < nnames[1]; k++) func(bcnames[k]);
-      for (int k = 0; k < nnames[2]; k++) func(GetCD2NamePtr(k));
-      for (int k = 0; k < nnames[3]; k++) func(cd3names[k]);
+      for (int k = 0; k < nnames[0]; k++) func(materials[k] ? &*materials[k] : nullptr);
+      for (int k = 0; k < nnames[1]; k++) func(&bcnames_by_number[k]);
+      for (int k = 0; k < nnames[2]; k++) func(&cd2names_by_number[k]);
+      for (int k = 0; k < nnames[3]; k++) func(vertexnames[k] ? &*vertexnames[k] : nullptr);
     };
     // sizes of names
     Array<int> name_sizes(tot_nn);
@@ -1241,10 +1246,10 @@ namespace netgen
     comm.IBcast (nnames).Wait();
     
     // cout << "nnames = " << FlatArray(nnames) << endl;
-    materials.SetSize(nnames[0]);
-    bcnames.SetSize(nnames[1]);
+    Array<optional<string>> materials(nnames[0]);
+    Array<optional<string>> bcnames_by_number(nnames[1]);
     // edgedecoding already populated from ED data message
-    cd3names.SetSize(nnames[3]);
+    Array<optional<string>> cd3names(nnames[3]);
 
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     Array<int> name_sizes(tot_nn);
@@ -1269,13 +1274,25 @@ namespace netgen
     auto write_names = [&] (auto & array) {
       for (int k = 0; k < array.Size(); k++) {
         int s = name_sizes[tot_nn];
-        array[k] = s ? new string(&compiled_names[tot_size], s) : new string("");
+        array[k] = s ? string(&compiled_names[tot_size], s) : string("");
         tot_nn++;
         tot_size += s;
       }
     };
     write_names(materials);
-    write_names(bcnames);
+    SetDomainNames(std::move(materials));
+    write_names(bcnames_by_number);
+    if (GetDimension() == 3)
+      {
+        for (auto & fd : facedecoding)
+          {
+            int bcp = fd.BCProperty();
+            fd.SetBCName((bcp >= 1 && bcp <= nnames[1] && bcnames_by_number[bcp-1]) ? *bcnames_by_number[bcp-1] : "default");
+          }
+      }
+    else
+      for (int k = 0; k < nnames[1]; k++)
+        if (bcnames_by_number[k]) SetBCName(k, *bcnames_by_number[k]);
     {
       // cd2 names: for 3D stored on edgedecoding, for 2D may differ from ED count
       for (int k = 0; k < nnames[2]; k++) {
@@ -1288,6 +1305,7 @@ namespace netgen
       }
     }
     write_names(cd3names);
+    if (GetDimension() == 3) vertexnames = std::move(cd3names);
     
     comm.Barrier();
 

@@ -329,8 +329,8 @@ namespace netgen
                           }
                           else if(dim == 2)
                           {
-                            mesh.SetMaterial(matnr, name);
                             fdnr = mesh.AddFaceDescriptor(FaceDescriptor(matnr, 0,0,0)).Nr1();
+                            mesh.SetMaterial(matnr, name);
                             mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr);
                             mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
                             matnr++;
@@ -342,12 +342,11 @@ namespace netgen
                         {
                          if(dim == 3)
                           {
-                            int bcpr = mesh.GetNCD2Names()+1;
+                            int bcpr = mesh.GetNED()+1;
                             auto ed = EdgeDescriptor();
                             ed.SetSurfNr(0,bcpr);//?
-                            // ednr =
+                            ed.SetName(name);
                             mesh.AddEdgeDescriptor(ed);
-                            mesh.SetCD2Name(bcpr, name);
                             // auto nr = 
                             mesh.AddSegment(tmp_segments[get<0>(element_map[index])-1]);
                           }

@@ -555,10 +555,10 @@ namespace netgen
         mesh->AddSegment(seg);
       }
 
-    mesh->SetCD2Name(1, "bottom");
-    mesh->SetCD2Name(2, "right");
-    mesh->SetCD2Name(3, "top");
-    mesh->SetCD2Name(4, "left");
+    mesh->EnsureEdgeDescriptor(1).SetName("bottom");
+    mesh->EnsureEdgeDescriptor(2).SetName("right");
+    mesh->EnsureEdgeDescriptor(3).SetName("top");
+    mesh->EnsureEdgeDescriptor(4).SetName("left");
 
     for (int i = 0; i < bbbpts.Size(); i++)
       {
