@@ -445,9 +445,9 @@ namespace netgen
      Point number in the advancing front (AdFront3), not a mesh point number.
      AdFront3::GetGlobalIndex maps it to the PointIndex of the mesh.
   */
-  class Front3PointIndex : public Index<int,Front3PointIndex,1>
+  class Front3PointIndex : public Index<int,Front3PointIndex,0>
   {
-    friend class Index<int,Front3PointIndex,1>;
+    friend class Index<int,Front3PointIndex,0>;
     constexpr Front3PointIndex (int ai) : Index(ai) { }   // use IndexBASE<Front3PointIndex>()+nr
   public:
     using Index::Index;
@@ -473,9 +473,9 @@ namespace netgen
      Point number in the local numbering of AdFront3::GetLocals,
      i.e. an index into the local point array handed to the meshing rules.
   */
-  class LocalPointIndex : public Index<int,LocalPointIndex,1>
+  class LocalPointIndex : public Index<int,LocalPointIndex,0>
   {
-    friend class Index<int,LocalPointIndex,1>;
+    friend class Index<int,LocalPointIndex,0>;
     constexpr LocalPointIndex (int ai) : Index(ai) { }   // use IndexBASE<LocalPointIndex>()+nr
   public:
     using Index::Index;
