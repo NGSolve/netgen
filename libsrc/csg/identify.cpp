@@ -355,7 +355,7 @@ void PeriodicIdentification :: IdentifyPoints (class Mesh & mesh)
 void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
-    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+    if (mesh.HasEdgeDescriptor(s))
       return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
     return -1;
   };
@@ -463,7 +463,7 @@ BuildSurfaceElements (Array<Segment> & segs,
                       Mesh & mesh, const Surface * surf)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
-    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+    if (mesh.HasEdgeDescriptor(s))
       return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
     return -1;
   };
@@ -1087,7 +1087,7 @@ void CloseSurfaceIdentification :: IdentifyPoints (Mesh & mesh)
 void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
-    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+    if (mesh.HasEdgeDescriptor(s))
       return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
     return -1;
   };
@@ -1244,7 +1244,7 @@ BuildSurfaceElements (Array<Segment> & segs,
                       Mesh & mesh, const Surface * surf)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
-    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+    if (mesh.HasEdgeDescriptor(s))
       return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
     return -1;
   };
@@ -1348,7 +1348,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
                        Mesh & mesh, const Surface * surf)
 {
   auto seg_fdi = [&mesh](const Segment& s) -> int {
-    if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+    if (mesh.HasEdgeDescriptor(s))
       return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
     return -1;
   };

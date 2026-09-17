@@ -431,7 +431,7 @@ namespace netgen
       ed.SetSingEdgeLeft(singedge_left_val);
       ed.SetSingEdgeRight(singedge_right_val);
 
-      int edsi = mesh->AddEdgeDescriptor(ed);
+      auto edsi = mesh->AddEdgeDescriptor(ed);
       mesh->GetEdgeDescriptor(edsi).SetIndex(1);
       seg.SetIndex(edsi);
     }
@@ -467,7 +467,7 @@ namespace netgen
       ed.SetSingEdgeLeft(singedge_left_val);
       ed.SetSingEdgeRight(singedge_right_val);
 
-      int edsi = mesh->AddEdgeDescriptor(ed);
+      auto edsi = mesh->AddEdgeDescriptor(ed);
       mesh->GetEdgeDescriptor(edsi).SetIndex(2);
       seg.SetIndex(edsi);
     }
@@ -503,7 +503,7 @@ namespace netgen
       ed.SetSingEdgeLeft(singedge_left_val);
       ed.SetSingEdgeRight(singedge_right_val);
 
-      int edsi = mesh->AddEdgeDescriptor(ed);
+      auto edsi = mesh->AddEdgeDescriptor(ed);
       mesh->GetEdgeDescriptor(edsi).SetIndex(3);
       seg.SetIndex(edsi);
     }
@@ -539,7 +539,7 @@ namespace netgen
       ed.SetSingEdgeLeft(singedge_left_val);
       ed.SetSingEdgeRight(singedge_right_val);
 
-      int edsi = mesh->AddEdgeDescriptor(ed);
+      auto edsi = mesh->AddEdgeDescriptor(ed);
       mesh->GetEdgeDescriptor(edsi).SetIndex(4);
       seg.SetIndex(edsi);
     }

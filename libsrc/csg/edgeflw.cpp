@@ -438,8 +438,8 @@ namespace netgen
           ed.SetDomainOut(refedges[i].domout);
           // fdindex staged with surface representant, FindEdges will overwrite with real FD index
           ed.SetIndex(refedges[i].si);
-          int edsi = mesh.AddEdgeDescriptor(ed);
-          refedges[i].index_ = edsi;
+          auto edsi = mesh.AddEdgeDescriptor(ed);
+          refedges[i].index_ = edsi.Nr1();
         }
 
 #ifdef DEVELOP
@@ -601,7 +601,7 @@ namespace netgen
     for (SegmentIndex si : mesh.LineSegments().Range())
       {
         const Segment & seg = mesh[si];
-        const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+        const int seg_ednr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
           osedges[seg_ednr-1]--;
       }
@@ -613,7 +613,7 @@ namespace netgen
     for (SegmentIndex si : mesh.LineSegments().Range())
       {
         const Segment & seg = mesh[si];
-        const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+        const int seg_ednr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
           {
             if (osedges[seg_ednr-1])
@@ -679,7 +679,7 @@ namespace netgen
     for (SegmentIndex si : T_Range<SegmentIndex>(nseg))
       {
         const Segment & seg = mesh[si];
-        const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+        const int seg_ednr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         if (seg_seginfo[si] && seg_ednr >= 1 && seg_ednr <= cntedge)
           {
             SortedPointIndices<2> i2(seg[0], seg[1]);
@@ -706,7 +706,7 @@ namespace netgen
     for (SegmentIndex si : T_Range<SegmentIndex>(nseg))
       {
         Segment & seg = mesh[si];
-        const int seg_ednr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+        const int seg_ednr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         if (seg_ednr >= 1 && seg_ednr <= cntedge)
           {
             if (edgenewp[seg_ednr-1].IsValid())
@@ -1664,7 +1664,7 @@ namespace netgen
 
 #ifdef DEVELOP    
     auto seg_fdi = [&mesh](const Segment& s) -> int {
-      if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      if (mesh.HasEdgeDescriptor(s))
         return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
       return -1;
     };
@@ -1730,7 +1730,7 @@ namespace netgen
       {
         // real copy, since array might be reallocated !!
         const Segment oldseg = mesh[i];
-        int oldseg_ednr = (oldseg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(oldseg.GetIndex()).EdgeNr() : -1;
+        int oldseg_ednr = mesh.HasEdgeDescriptor(oldseg) ? mesh.GetEdgeDescriptor(oldseg).EdgeNr() : -1;
         if (oldseg_ednr != copyfromedge)
           continue;
         if (seg_seginfo[i] == 0)
@@ -1798,7 +1798,7 @@ namespace netgen
     // if there is no special point at a sphere, one has to add a segment pair
   
     auto seg_fdi = [&mesh](const Segment& s) -> int {
-      if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
+      if (mesh.HasEdgeDescriptor(s))
         return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
       return -1;
     };
@@ -1910,7 +1910,7 @@ namespace netgen
                 ed.SetTLOSurface(-1);
                 ed.SetDomainIn(domin);
                 ed.SetDomainOut(domout);
-                int edsi = mesh.AddEdgeDescriptor(ed);
+                auto edsi = mesh.AddEdgeDescriptor(ed);
                 mesh.GetEdgeDescriptor(edsi).SetIndex(i);
                 seg1.SetIndex(edsi);
                 seg2.SetIndex(edsi);

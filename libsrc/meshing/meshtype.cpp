@@ -243,13 +243,13 @@ namespace netgen
     pnums[0] = PointIndex::INVALID;
     pnums[1] = PointIndex::INVALID;
     pnums[2] = PointIndex::INVALID;
-    index = 0;
+    index = EdgeDescriptorIndex::INVALID;
   }    
 
   void Segment :: DoArchive (Archive & ar)
   {
     string * bcname_dummy = nullptr;
-    int index_compat = ar.Output() ? GetIndex() : 0; // archive stores 1-based
+    int index_compat = ar.Output() ? GetIndex().Nr1() : 0; // archive stores 1-based
     int domin_compat = -1, domout_compat = -1;
     int tlosurf_compat = -1;
     double singedge_left_compat = 0, singedge_right_compat = 0;
@@ -287,7 +287,7 @@ namespace netgen
         geominfo[i].trignum = 0;
       }
     np = 3;
-    index = 0;
+    index = FaceDescriptorIndex::INVALID;
     badel = 0;
     deleted = 0;
     visible = 1;
@@ -306,7 +306,7 @@ namespace netgen
         geominfo[i].trignum = 0;
       }
     np = anp;
-    index = 0;
+    index = FaceDescriptorIndex::INVALID;
     badel = 0;
     deleted = 0;
     visible = 1;
@@ -333,7 +333,7 @@ namespace netgen
 
     SetType (atyp);
 
-    index = 0;
+    index = FaceDescriptorIndex::INVALID;
     badel = 0;
     deleted = 0;
     visible = 1;
@@ -358,7 +358,7 @@ namespace netgen
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
-    index = 0;
+    index = FaceDescriptorIndex::INVALID;
     badel = 0;
     refflag = 1;
     strongrefflag = false;
@@ -382,7 +382,7 @@ namespace netgen
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
-    index = 0;
+    index = FaceDescriptorIndex::INVALID;
     badel = 0;
     refflag = 1;
     strongrefflag = false;

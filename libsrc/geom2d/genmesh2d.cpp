@@ -126,7 +126,7 @@ namespace netgen
     ed.SetSingEdgeLeft(spline.hpref_left);
     ed.SetSingEdgeRight(spline.hpref_right);
 
-    int edsi = mesh.AddEdgeDescriptor(ed);
+    auto edsi = mesh.AddEdgeDescriptor(ed);
     mesh.GetEdgeDescriptor(edsi).SetIndex(spline.bc);
 
     CalcPartition (spline, mp, mesh, elto0, curvepoints);
@@ -356,7 +356,7 @@ namespace netgen
   
     for (const auto& seg : mesh.LineSegments())
       {
-        if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
+        if (mesh.HasEdgeDescriptor(seg) && mesh.GetEdgeDescriptor(seg).EdgeNr() == from)
           {
             mappoints[seg[0]] = seg[0];   // mark as to be mapped
             param[seg[0]] = seg.EPGeomInfo(0).dist;
@@ -404,14 +404,14 @@ namespace netgen
     ed.SetDomainOut(GetSpline(to-1).rightdom);
     ed.SetName(GetSpline(to-1).GetBCName());
 
-    int copy_edsi = mesh.AddEdgeDescriptor(ed);
+    auto copy_edsi = mesh.AddEdgeDescriptor(ed);
     mesh.GetEdgeDescriptor(copy_edsi).SetIndex(GetSpline(to-1).bc);
 
     // copy segments
     for (SegmentIndex i : mesh.LineSegments().Range())
       {
         const Segment & seg = mesh[i];
-        if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() == from)
+        if (mesh.HasEdgeDescriptor(seg) && mesh.GetEdgeDescriptor(seg).EdgeNr() == from)
           {
             Segment nseg;
             nseg[0] = mappoints[seg[0]];
@@ -526,7 +526,7 @@ namespace netgen
     // number of bcnames
     int maxsegmentindex = 0;
     for (auto & seg : mesh->LineSegments())
-      if ( seg.GetIndex() > maxsegmentindex) maxsegmentindex = seg.GetIndex();
+      if ( seg.GetIndex().Nr1() > maxsegmentindex) maxsegmentindex = seg.GetIndex().Nr1();
 
     mesh->SetNBCNames(maxsegmentindex);
 
@@ -574,7 +574,7 @@ namespace netgen
 
               nextpi[p1] = p2;       // counter-clockwise
               
-              int index = seg.GetIndex();
+              int index = seg.GetIndex().Nr1();
               if (si1[p1] != index && si2[p1] != index)
                 { si2[p1] = si1[p1]; si1[p1] = index; }
               if (si1[p2] != index && si2[p2] != index)

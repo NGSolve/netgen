@@ -540,7 +540,7 @@ int Ng_GetSurfaceElementIndex (int ei)
   if (mesh->GetDimension() == 3)
     return mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).BCProperty();
   else
-    return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex();
+    return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex().Nr1();
 }
 
 int Ng_GetSurfaceElementSurfaceNumber (int ei)
@@ -548,7 +548,7 @@ int Ng_GetSurfaceElementSurfaceNumber (int ei)
   if (mesh->GetDimension() == 3)
     return mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).SurfNr();
   else
-    return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex();
+    return (*mesh)[SegmentIndex::FromNr1(ei)].GetIndex().Nr1();
 }
 int Ng_GetSurfaceElementFDNumber (int ei)
 {
@@ -564,7 +564,7 @@ char * Ng_GetSurfaceElementBCName (int ei)
   if ( mesh->GetDimension() == 3 )
     return const_cast<char *>(mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)].GetIndex()).GetBCName().c_str());
   else
-    return const_cast<char *>(mesh->GetBCName((*mesh)[SegmentIndex::FromNr1(ei)].GetIndex()).c_str());
+    return const_cast<char *>(mesh->GetBCName((*mesh)[SegmentIndex::FromNr1(ei)].GetIndex().Nr1()).c_str());
 }
 
 

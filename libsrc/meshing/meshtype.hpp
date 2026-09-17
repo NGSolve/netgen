@@ -510,6 +510,34 @@ namespace netgen
     operator int & () = delete;
   };
 
+  /**
+     1-based index into Mesh::facedecoding. INVALID (= 0) means unset.
+     Converts to int, but is only constructed via FromNr0/FromNr1.
+  */
+  class FaceDescriptorIndex : public Index<int,FaceDescriptorIndex,1>
+  {
+    friend class Index<int,FaceDescriptorIndex,1>;
+    constexpr FaceDescriptorIndex (int ai) : Index(ai) { }
+  public:
+    using Index::Index;
+  };
+
+  /**
+     1-based index into Mesh::edgedecoding. INVALID (= 0) means unset.
+  */
+  class EdgeDescriptorIndex : public Index<int,EdgeDescriptorIndex,1>
+  {
+    friend class Index<int,EdgeDescriptorIndex,1>;
+    constexpr EdgeDescriptorIndex (int ai) : Index(ai) { }
+  public:
+    using Index::Index;
+    operator int () const = delete;    // use Nr1() / Nr0() / IsValid()
+    operator int & () = delete;
+  };
+
+  inline ostream & operator<< (ostream & ost, const FaceDescriptorIndex & i) { return ost << int(i); }
+  inline ostream & operator<< (ostream & ost, const EdgeDescriptorIndex & i) { return ost << i.Nr1(); }
+
   inline ostream & operator<< (ostream & ost, const Front2PointIndex & fpi)
   {
     return ost << (fpi - IndexBASE<Front2PointIndex>());
@@ -731,8 +759,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// geom info of points
     PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
 
-    /// surface nr
-    int index;
+    /// face descriptor index (1-based)
+    FaceDescriptorIndex index = FaceDescriptorIndex::INVALID;
     ///
     ELEMENT_TYPE typ;
     /// number of points
@@ -922,9 +950,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 #endif
     
 
-    void SetIndex (int si) { index = si; }
+    void SetIndex (FaceDescriptorIndex si) { index = si; }
+    void SetIndex (int si) { index = si > 0 ? FaceDescriptorIndex::FromNr1(si) : FaceDescriptorIndex::INVALID; }
     ///
-    int GetIndex () const { return index; }
+    FaceDescriptorIndex GetIndex () const { return index; }
 
     int GetOrder () const { return orderx; }
     void SetOrder (int aorder) { orderx = ordery = aorder; }
@@ -1453,8 +1482,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   PointIndex pnums[3];
   EdgePointGeomInfo epgeominfo[2]; // combines PointGeomInfo + dist
   int hp_elnr;
-  /// 1-based edge descriptor index into mesh.edgedecoding (0 = invalid)
-  int index = 0;
+  /// 1-based edge descriptor index into mesh.edgedecoding (INVALID = 0)
+  EdgeDescriptorIndex index = EdgeDescriptorIndex::INVALID;
 
   public:
     ///
@@ -1480,8 +1509,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int GetHpElnr () const { return hp_elnr; }
     void SetHpElnr (int nr) { hp_elnr = nr; }
 
-    int GetIndex() const { return index; }
-    void SetIndex (int i) { index = i; }
+    EdgeDescriptorIndex GetIndex() const { return index; }
+    void SetIndex (EdgeDescriptorIndex i) { index = i; }
+    void SetIndex (int i) { index = i > 0 ? EdgeDescriptorIndex::FromNr1(i) : EdgeDescriptorIndex::INVALID; }
 
     void DoArchive (Archive & ar);
 #ifdef PARALLEL
@@ -1605,7 +1635,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int domin = -1, domout = -1;
 
     /// transient index: face descriptor index (1-based) in 3D, not serialized - recomputed by RebuildFDIndices()
-    int index_ = -1;
+    FaceDescriptorIndex index_ = FaceDescriptorIndex::INVALID;
 
   public:
     EdgeDescriptor () = default;
@@ -1639,13 +1669,14 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int DomainOut () const { return domout; }
     void SetDomainOut (int nr) { domout = nr; }
 
-    /// face descriptor index (1-based), -1 if not yet set. Transient, recomputed by RebuildFDIndices().
-    int GetIndex () const { return index_; }
-    void SetIndex (int i) { index_ = i; }
+    /// face descriptor index (1-based), INVALID if not yet set. Transient, recomputed by RebuildFDIndices().
+    FaceDescriptorIndex GetIndex () const { return index_; }
+    void SetIndex (FaceDescriptorIndex i) { index_ = i; }
+    void SetIndex (int i) { index_ = i > 0 ? FaceDescriptorIndex::FromNr1(i) : FaceDescriptorIndex::INVALID; }
 
     // deprecated aliases
-    [[deprecated("use GetIndex()")]] int FDIndex () const { return index_; }
-    [[deprecated("use SetIndex()")]] void SetFDIndex (int i) { index_ = i; }
+    [[deprecated("use GetIndex()")]] int FDIndex () const { return int(index_); }
+    [[deprecated("use SetIndex()")]] void SetFDIndex (int i) { SetIndex(i); }
 
     void DoArchive (Archive & ar)
     {
@@ -2087,6 +2118,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 namespace ngcore
 {
   template <> struct MPI_typetrait<netgen::PointIndex> {
+    static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
+  };
+  template <> struct MPI_typetrait<netgen::FaceDescriptorIndex> {
+    static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
+  };
+  template <> struct MPI_typetrait<netgen::EdgeDescriptorIndex> {
     static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
   };
 

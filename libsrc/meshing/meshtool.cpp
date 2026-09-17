@@ -638,7 +638,7 @@ namespace netgen
       {
         const Segment * seg = &seg2;
 
-        int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
+        int seg_face = mesh.HasEdgeDescriptor(*seg) ? int(mesh.GetEdgeDescriptor(*seg).GetIndex()) : -1;
         of << (*seg)[1] << " " << (*seg)[0] << " " << seg_face << "\n";
       }
    

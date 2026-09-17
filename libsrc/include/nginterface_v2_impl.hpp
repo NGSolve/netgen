@@ -25,7 +25,7 @@ NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<1> (size_t nr) const
   else
     return mesh->LineSegments()[nr].si;
   */
-  return (*mesh)[SegmentIndex::FromNr0(nr)].GetIndex();
+  return (*mesh)[SegmentIndex::FromNr0(nr)].GetIndex().Nr1();
 }
   
 template <>
@@ -105,7 +105,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
   else
     ret.index = el.si;
   */
-  ret.index = el.GetIndex();
+  ret.index = el.GetIndex().Nr1();
 
   
   /*
@@ -156,7 +156,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
     }
 
   // ret.is_curved = mesh->GetCurvedElements().IsCurved(SegmentIndex::FromNr0(nr));
-  ret.is_curved = el.GetIndex() >= 1 && el.GetIndex() <= mesh->GetNED() && mesh->GetEdgeDescriptor(el.GetIndex()).EdgeNr() > 0;
+  ret.is_curved = mesh->HasEdgeDescriptor(el) && mesh->GetEdgeDescriptor(el).EdgeNr() > 0;
 
   return ret;
 }

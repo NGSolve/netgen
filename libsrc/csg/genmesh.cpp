@@ -458,7 +458,7 @@ namespace netgen
 
         for (auto & seg_i : mesh.LineSegments())
           {
-            int fdi = (seg_i.GetIndex() >= 1 && seg_i.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg_i.GetIndex()).GetIndex() : -1;
+            int fdi = mesh.HasEdgeDescriptor(seg_i) ? int(mesh.GetEdgeDescriptor(seg_i).GetIndex()) : -1;
             if (fdi == k)
             {
               segments.Append (seg_i);
@@ -640,8 +640,8 @@ namespace netgen
               {
                 Segment * seg = &seg2;
                 {
-                  int seg_face = (seg->GetIndex() >= 1 && seg->GetIndex() <= mesh.GetNED())
-                                 ? mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex() : -1;
+                  int seg_face = mesh.HasEdgeDescriptor(*seg)
+                                 ? int(mesh.GetEdgeDescriptor(seg->GetIndex()).GetIndex()) : -1;
                   if (seg_face == k)
                     segments.Append (*seg);
                 }

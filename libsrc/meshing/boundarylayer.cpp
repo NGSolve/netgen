@@ -153,7 +153,7 @@ Vec<3> BoundaryLayerTool ::getEdgeTangent (PointIndex pi, int index, FlatArray<S
   for (auto* p_seg : segs)
     {
       auto& seg = *p_seg;
-      if (seg.GetIndex() != index)
+      if (seg.GetIndex().Nr1() != index)
         continue;
       PointIndex other = seg[0] - pi + seg[1];
       if (!pts.Contains(other))
@@ -229,7 +229,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment, Segmen
   for (auto segi : Range(mesh.LineSegments()))
     {
       auto seg = mesh[segi];
-      if (seg.GetIndex() >= 1 && seg.GetIndex() <= mesh.GetNED())
+      if (mesh.HasEdgeDescriptor(seg))
         {
           const auto & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
           if (ed.DomainIn() == ed.DomainOut() && ed.DomainIn() > 0)
@@ -241,7 +241,7 @@ void BuildSegments (Mesh& mesh, bool have_single_segments, Array<Segment, Segmen
       if (!have_single_segments)
         {
           segments.Append(seg);
-          int face = (seg.GetIndex() >= 1 && seg.GetIndex() <= mesh.GetNED()) ? mesh.GetEdgeDescriptor(seg.GetIndex()).GetIndex() : seg.GetIndex();
+          int face = mesh.HasEdgeDescriptor(seg) ? int(mesh.GetEdgeDescriptor(seg).GetIndex()) : seg.GetIndex().Nr1();
           seg_face.Append(face);
           continue;
         }
@@ -392,7 +392,7 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
           const auto& fd = mesh.GetFaceDescriptor(facei);
           // auto isIn = domains.Test(fd.DomainIn());
           // auto isOut = domains.Test(fd.DomainOut());
-          int si = params.sides_keep_surfaceindex ? facei : -1;
+          int si = params.sides_keep_surfaceindex ? int(facei) : -1;
           // domin and domout can only be set later
           FaceDescriptor new_fd(si, -1, -1, si);
           new_fd.SetBCProperty(new_si);
@@ -497,7 +497,7 @@ BoundaryLayerTool ::BuildSegMap ()
       segs_done.SetBit(si);
       segmap[si].Append(make_pair(si, 0));
       moved_segs.Append(si);
-      is_edge_moved.SetBit(segi.GetIndex());
+      is_edge_moved.SetBit(segi.GetIndex().Nr1());
       for (auto sj : Range(segments))
         {
           if (segs_done.Test(sj))
@@ -711,7 +711,7 @@ void BoundaryLayerTool ::InsertNewElements (
               new_ed.SetIndex(si_map[old_fdi]);
           }
         new_ed.SetEdgeNr(++new_edge_nr);
-        edge_map[ei] = mesh.AddEdgeDescriptor(new_ed);
+        edge_map[ei] = mesh.AddEdgeDescriptor(new_ed).Nr1();
       }
     return edge_map[ei];
   };
@@ -734,7 +734,7 @@ void BoundaryLayerTool ::InsertNewElements (
                     s[2] = PointIndex::INVALID;
                     [[maybe_unused]] auto pair =
                       s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
-                    s.SetIndex(getIndex(segj.GetIndex()));
+                    s.SetIndex(getIndex(segj.GetIndex().Nr1()));
                     new_segments.Append(s);
                     return s;
                   };
@@ -805,14 +805,14 @@ void BoundaryLayerTool ::InsertNewElements (
                       s1[1] = p3;
                       s1[2] = PointIndex::INVALID;
                       auto pair = make_pair(p2, p3);
-                      s1.SetIndex(getIndex(segj.GetIndex()));
+                      s1.SetIndex(getIndex(segj.GetIndex().Nr1()));
                       // new_segments.Append(s1);
                       Segment s2;
                       s2[0] = p4;
                       s2[1] = p1;
                       s2[2] = PointIndex::INVALID;
                       pair = make_pair(p1, p4);
-                      s2.SetIndex(getIndex(segj.GetIndex()));
+                      s2.SetIndex(getIndex(segj.GetIndex().Nr1()));
                       // new_segments.Append(s2);
                       p1 = p4;
                       p2 = p3;
@@ -822,7 +822,7 @@ void BoundaryLayerTool ::InsertNewElements (
                   s3[1] = p4;
                   s3[2] = PointIndex::INVALID;
                   // auto pair = p3 < p4 ? make_pair(p3, p4) : make_pair(p4, p3);
-                  s3.SetIndex(getIndex(segj.GetIndex()));
+                  s3.SetIndex(getIndex(segj.GetIndex().Nr1()));
                   new_segments.Append(s3);
                   if (type == 3)
                     new_segments_on_moved_bnd.Append(s0);
@@ -963,9 +963,8 @@ void BoundaryLayerTool ::InsertNewElements (
                 p = newPoint(p);
                 if (params.disable_curving)
                   {
-                    int edsi = seg.GetIndex();
-                    if (edsi >= 1 && edsi <= mesh.GetNED())
-                      mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
+                    if (mesh.HasEdgeDescriptor(seg))
+                      mesh.GetEdgeDescriptor(seg).SetEdgeNr(-1);
                   }
               }
         }
@@ -1177,9 +1176,8 @@ void BoundaryLayerTool ::AddSegments ()
           for (auto& seg : old_segments)
             if (is_mapped(seg[0]) || is_mapped(seg[1]))
               {
-                int edsi = seg.GetIndex();
-                if (edsi >= 1 && edsi <= mesh.GetNED())
-                  mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
+                if (mesh.HasEdgeDescriptor(seg))
+                  mesh.GetEdgeDescriptor(seg).SetEdgeNr(-1);
               }
         }
     }
@@ -1195,24 +1193,21 @@ void BoundaryLayerTool ::AddSegments ()
       for (auto& seg : segments)
         if (is_mapped(seg[0]) || is_mapped(seg[1]))
           {
-            int edsi = seg.GetIndex();
-            if (edsi >= 1 && edsi <= mesh.GetNED())
-              mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
+            if (mesh.HasEdgeDescriptor(seg))
+              mesh.GetEdgeDescriptor(seg).SetEdgeNr(-1);
           }
 
       for (auto& seg : segments)
-        if (seg.GetIndex() < is_edge_moved.Size() && is_edge_moved[seg.GetIndex()])
+        if (seg.GetIndex().Nr1() < is_edge_moved.Size() && is_edge_moved[seg.GetIndex().Nr1()])
           {
-            int edsi = seg.GetIndex();
-            if (edsi >= 1 && edsi <= mesh.GetNED())
-              mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
+            if (mesh.HasEdgeDescriptor(seg))
+              mesh.GetEdgeDescriptor(seg).SetEdgeNr(-1);
           }
 
       for (auto& seg : new_segs)
         {
-          int edsi = seg.GetIndex();
-          if (edsi >= 1 && edsi <= mesh.GetNED())
-            mesh.GetEdgeDescriptor(edsi).SetEdgeNr(-1);
+          if (mesh.HasEdgeDescriptor(seg))
+            mesh.GetEdgeDescriptor(seg).SetEdgeNr(-1);
         }
     }
 
@@ -1356,8 +1351,8 @@ void BoundaryLayerTool ::ProcessParameters ()
 
   max_edge_nr = -1;
   for (const auto& seg : mesh.LineSegments())
-    if (seg.GetIndex() > max_edge_nr)
-      max_edge_nr = seg.GetIndex();
+    if (seg.GetIndex().Nr1() > max_edge_nr)
+      max_edge_nr = seg.GetIndex().Nr1();
 
   int ndom = mesh.GetNDomains();
   ndom_old = ndom;

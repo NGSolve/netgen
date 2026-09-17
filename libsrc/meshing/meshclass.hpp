@@ -122,14 +122,14 @@ namespace netgen
        the face-index of the surface element maps into
        this table.
     */
-    Array<FaceDescriptor> facedecoding;
+    Array<FaceDescriptor, FaceDescriptorIndex> facedecoding;
 
   
     /**
        the edge-index of the line element maps into
        this table.
     */
-    Array<EdgeDescriptor> edgedecoding;
+    Array<EdgeDescriptor, EdgeDescriptorIndex> edgedecoding;
 
     Array<string*> region_name_cd[4];
     Array<string*> & materials = region_name_cd[0];
@@ -662,11 +662,11 @@ namespace netgen
                                Array<ElementIndex> & locels) const;
 
     ///
-    int AddFaceDescriptor(const FaceDescriptor& fd)
-    { facedecoding.Append(fd); return facedecoding.Size(); }
+    FaceDescriptorIndex AddFaceDescriptor(const FaceDescriptor& fd)
+    { return facedecoding.Append(fd); }
 
-    int AddEdgeDescriptor(const EdgeDescriptor & fd)
-    { edgedecoding.Append(fd); return edgedecoding.Size(); }
+    EdgeDescriptorIndex AddEdgeDescriptor(const EdgeDescriptor & fd)
+    { return edgedecoding.Append(fd); }
 
     auto & GetCommunicator() const { return this->comm; }
     void SetCommunicator(NgMPI_Comm acomm);
@@ -706,9 +706,9 @@ namespace netgen
         {
           if (cd2nr >= 0 && cd2nr < edgedecoding.Size())
             {
-              const auto & n = edgedecoding[cd2nr].GetName();
+              const auto & n = edgedecoding[EdgeDescriptorIndex::FromNr0(cd2nr)].GetName();
               if (n != "default" && !n.empty())
-                return const_cast<string*>(&edgedecoding[cd2nr].GetName());
+                return const_cast<string*>(&n);
             }
         }
       return &cd2_default_name;
@@ -766,29 +766,41 @@ namespace netgen
     { facedecoding.SetSize(0); }
 
     void FreeFaceDescriptors()
-    { facedecoding = Array<FaceDescriptor>(); }
+    { facedecoding = Array<FaceDescriptor, FaceDescriptorIndex>(); }
 
     ///
     int GetNFD () const
     { return facedecoding.Size(); }
 
     const FaceDescriptor & GetFaceDescriptor (const Element2d & el) const
-    { return facedecoding[el.GetIndex()-1]; }
+    { return facedecoding[el.GetIndex()]; }
     
+    const FaceDescriptor & GetFaceDescriptor (FaceDescriptorIndex i) const
+    { return facedecoding[i]; }
+    /// 1-based
     const FaceDescriptor & GetFaceDescriptor (int i) const
-    { return facedecoding[i-1]; }      
-    // { return facedecoding.Get(i); }
+    { return facedecoding[FaceDescriptorIndex::FromNr1(i)]; }
 
     auto & FaceDescriptors () const { return facedecoding; }
 
+    const EdgeDescriptor & GetEdgeDescriptor (EdgeDescriptorIndex i) const
+    { return edgedecoding[i]; }
+    EdgeDescriptor & GetEdgeDescriptor (EdgeDescriptorIndex i)
+    { return edgedecoding[i]; }
+    /// 1-based
     const EdgeDescriptor & GetEdgeDescriptor (int i) const
-    { return edgedecoding[i-1]; }
-
+    { return edgedecoding[EdgeDescriptorIndex::FromNr1(i)]; }
     EdgeDescriptor & GetEdgeDescriptor (int i)
-    { return edgedecoding[i-1]; }
+    { return edgedecoding[EdgeDescriptorIndex::FromNr1(i)]; }
 
     const EdgeDescriptor & GetEdgeDescriptor (const Segment & seg) const
-    { return edgedecoding[seg.GetIndex()-1]; }
+    { return edgedecoding[seg.GetIndex()]; }
+    EdgeDescriptor & GetEdgeDescriptor (const Segment & seg)
+    { return edgedecoding[seg.GetIndex()]; }
+
+    /// segment refers to an existing edge descriptor
+    bool HasEdgeDescriptor (const Segment & seg) const
+    { return edgedecoding.Range().Contains(seg.GetIndex()); }
 
     int GetNED () const
     { return edgedecoding.Size(); }
@@ -810,9 +822,11 @@ namespace netgen
 
 
     ///
+    FaceDescriptor & GetFaceDescriptor (FaceDescriptorIndex i)
+    { return facedecoding[i]; }
+    /// 1-based
     FaceDescriptor & GetFaceDescriptor (int i)
-    { return facedecoding[i-1]; }      
-    // { return facedecoding.Elem(i); }
+    { return facedecoding[FaceDescriptorIndex::FromNr1(i)]; }
 
     int IdentifyPeriodicBoundaries(const string& id_name,
                                    const string& s1,

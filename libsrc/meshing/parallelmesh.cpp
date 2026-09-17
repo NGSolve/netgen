@@ -636,7 +636,7 @@ namespace netgen
     Array<double> eddata (8 * ned);
     for (int edi = 0; edi < ned; edi++)
       {
-        auto & ed = edgedecoding[edi];
+        auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(edi)];
         eddata[8*edi+0] = ed.EdgeNr();
         eddata[8*edi+1] = ed.SurfNr(0);
         eddata[8*edi+2] = ed.SurfNr(1);
@@ -859,8 +859,8 @@ namespace netgen
     iterate_segs2([&](auto segi, const auto & seg, int dest)
                   {
                     segm_buf.Add (dest, segi.Nr0());
-                    bool has_ed = seg.GetIndex() >= 1 && seg.GetIndex() <= GetNED();
-                    int fdi = has_ed ? GetEdgeDescriptor(seg.GetIndex()).GetIndex() : -1;
+                    bool has_ed = HasEdgeDescriptor(seg);
+                    int fdi = has_ed ? int(GetEdgeDescriptor(seg.GetIndex()).GetIndex()) : -1;
                     segm_buf.Add (dest, fdi);
                     segm_buf.Add (dest, seg[0].Nr0());
                     segm_buf.Add (dest, seg[1].Nr0());
@@ -869,7 +869,7 @@ namespace netgen
                     segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(0) : -1);
                     segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(1) : -1);
                     segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
-                    segm_buf.Add (dest, seg.GetIndex());
+                    segm_buf.Add (dest, seg.GetIndex().Nr1());
                     segm_buf.Add (dest, seg.EPGeomInfo(0).dist);
                     segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
                     segm_buf.Add (dest, seg.EPGeomInfo(1).dist);
@@ -1132,7 +1132,7 @@ namespace netgen
       edgedecoding.SetSize(ned);
       for (int edi = 0; edi < ned; edi++)
         {
-          auto & ed = edgedecoding[edi];
+          auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(edi)];
           ed.SetEdgeNr(int(eddata[8*edi+0]));
           ed.SetSurfNr(0, int(eddata[8*edi+1]));
           ed.SetSurfNr(1, int(eddata[8*edi+2]));
@@ -1282,7 +1282,7 @@ namespace netgen
         int s = name_sizes[tot_nn];
         string nm = s ? string(&compiled_names[tot_size], s) : string("");
         if (k < edgedecoding.Size())
-          edgedecoding[k].SetName(nm);
+          edgedecoding[EdgeDescriptorIndex::FromNr0(k)].SetName(nm);
         tot_nn++;
         tot_size += s;
       }
@@ -1698,7 +1698,7 @@ namespace netgen
         
         const Segment & el = (*this)[SegmentIndex::FromNr1(i+1)];       
         
-        int ind = el.GetIndex();
+        int ind = el.GetIndex().Nr1();
         if (segment_weights.Size()<ind)
             nwgt.Append(0);
         else

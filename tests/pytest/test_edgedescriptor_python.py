@@ -228,6 +228,6 @@ def test_fdindex_python_property():
     """EdgeDescriptor.fdindex is readable and writable from Python."""
     from netgen.meshing import EdgeDescriptor
     ed = EdgeDescriptor()
-    assert ed.fdindex == -1, "default fdindex should be -1"
+    assert ed.fdindex == 0, "default fdindex is invalid (0)"
     ed.fdindex = 42
     assert ed.fdindex == 42

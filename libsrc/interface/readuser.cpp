@@ -416,7 +416,7 @@ namespace netgen
                 // loop through segments to assign default BC to unmarked edges
                 int bccounter_tmp = bccounter;
                 for (auto & seg : mesh.LineSegments()){
-                        if(seg.GetIndex() <= 0){
+                        if(!seg.GetIndex().IsValid()){
                                   seg.SetIndex(bccounter + 1);
                           if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
                           bccounter_tmp++;

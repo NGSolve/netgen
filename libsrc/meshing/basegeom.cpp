@@ -781,7 +781,7 @@ namespace netgen
             seg.EPGeomInfo(1).dist = params[i+1];
             mesh.AddSegment(seg);
         }
-        mesh.SetCD2Name(edsi, edge->properties.GetName());
+        mesh.SetCD2Name(edsi.Nr1(), edge->properties.GetName());
     }
 
     for (auto & edge : edges)
@@ -891,7 +891,7 @@ namespace netgen
 
     int max_index = mesh.GetNFD();
     for(const auto & sel : mesh.SurfaceElements())
-        max_index = max2(max_index, sel.GetIndex());
+        max_index = max2(max_index, int(sel.GetIndex()));
     while(mesh.GetNFD() < max_index)
     {
         FaceDescriptor fd(mesh.GetNFD()+1, 0, 0, -1);

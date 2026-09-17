@@ -63,10 +63,10 @@ namespace netgen
 
   HPRefElement :: HPRefElement(Segment & el, const Mesh & mesh) :
     type(HP_NONE), levelx(0), levely(0), levelz(0), np(2),
-    domin( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).DomainIn() : -1 ),
-    domout( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).DomainOut() : -1 ),
-    singedge_left( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).SingEdgeLeft() : 0 ),
-    singedge_right( (el.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(el.GetIndex()).SingEdgeRight() : 0 )
+    domin( mesh.HasEdgeDescriptor(el) ? mesh.GetEdgeDescriptor(el).DomainIn() : -1 ),
+    domout( mesh.HasEdgeDescriptor(el) ? mesh.GetEdgeDescriptor(el).DomainOut() : -1 ),
+    singedge_left( mesh.HasEdgeDescriptor(el) ? mesh.GetEdgeDescriptor(el).SingEdgeLeft() : 0 ),
+    singedge_right( mesh.HasEdgeDescriptor(el) ? mesh.GetEdgeDescriptor(el).SingEdgeRight() : 0 )
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -665,8 +665,8 @@ namespace netgen
         hpel.coarse_elnr = i; 
         hpel.type = HP_SEGM; 
         // hpel.index = seg.edgenr + 10000*seg.si;
-        hpel.index = seg.GetIndex();
-        hpel.edgenr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1;
+        hpel.index = seg.GetIndex().Nr1();
+        hpel.edgenr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         /*
         if(seg.edgenr >= 10000)
           {

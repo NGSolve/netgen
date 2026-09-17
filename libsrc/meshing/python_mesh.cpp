@@ -486,7 +486,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::arg("index")=1,py::arg("vertices"), py::arg("uv")=std::nullopt,
          "create surface element"
          )
-    .def_property("index", &Element2d::GetIndex, &Element2d::SetIndex)
+    .def_property("index", [](const Element2d & self) { return int(self.GetIndex()); }, [](Element2d & self, int i) { self.SetIndex(i); })
     .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
     .def_property("uv",
@@ -613,7 +613,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("index",
                   [](const Segment &self)
                   {
-                    return self.GetIndex();
+                    return self.GetIndex().Nr1();
                   },
                   [](Segment& self, int index)
                   {
@@ -766,8 +766,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("tlosurf", &EdgeDescriptor::TLOSurface, &EdgeDescriptor::SetTLOSurface)
     .def_property("domin", &EdgeDescriptor::DomainIn, &EdgeDescriptor::SetDomainIn)
     .def_property("domout", &EdgeDescriptor::DomainOut, &EdgeDescriptor::SetDomainOut)
-    .def_property("index", &EdgeDescriptor::GetIndex, &EdgeDescriptor::SetIndex)
-    .def_property("fdindex", &EdgeDescriptor::GetIndex, &EdgeDescriptor::SetIndex)
+    .def_property("index", [](const EdgeDescriptor & self) { return int(self.GetIndex()); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
+    .def_property("fdindex", [](const EdgeDescriptor & self) { return int(self.GetIndex()); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
 
     ;
 
@@ -784,8 +784,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<Segment,SegmentIndex>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex>(m);
-  ExportArray<FaceDescriptor>(m);
-  ExportArray<EdgeDescriptor>(m);
+  py::class_<FaceDescriptorIndex>(m, "FaceDescriptorIndex")
+    .def(py::init([](int nr0) { return FaceDescriptorIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
+    .def("__repr__", &ToString<FaceDescriptorIndex>)
+    .def("__int__", [](FaceDescriptorIndex i) { return int(i); })
+    .def_property_readonly("nr0", [](FaceDescriptorIndex i) { return i.Nr0(); })
+    .def_property_readonly("nr1", [](FaceDescriptorIndex i) { return i.Nr1(); });
+  py::implicitly_convertible<int, FaceDescriptorIndex>();
+  py::class_<EdgeDescriptorIndex>(m, "EdgeDescriptorIndex")
+    .def(py::init([](int nr0) { return EdgeDescriptorIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
+    .def("__repr__", &ToString<EdgeDescriptorIndex>)
+    .def("__int__", [](EdgeDescriptorIndex i) { return i.Nr1(); })
+    .def_property_readonly("nr0", [](EdgeDescriptorIndex i) { return i.Nr0(); })
+    .def_property_readonly("nr1", [](EdgeDescriptorIndex i) { return i.Nr1(); });
+  py::implicitly_convertible<int, EdgeDescriptorIndex>();
+  ExportArray<FaceDescriptor, FaceDescriptorIndex>(m);
+  ExportArray<EdgeDescriptor, EdgeDescriptorIndex>(m);
 
 
 
@@ -1211,7 +1225,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            return self.GetEdgeDescriptor(i);
          }, py::arg("i"), py::return_value_policy::reference)
     .def("EdgeDescriptors",
-         static_cast<Array<EdgeDescriptor>&(Mesh::*)()>(&Mesh::EdgeDescriptors),
+         static_cast<Array<EdgeDescriptor, EdgeDescriptorIndex>&(Mesh::*)()>(&Mesh::EdgeDescriptors),
          py::return_value_policy::reference)
     
     
@@ -1274,12 +1288,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
     .def ("Add", [](Mesh & self, const FaceDescriptor & fd)
           {
-            return self.AddFaceDescriptor (fd);
+            return int(self.AddFaceDescriptor (fd));
           })
 
     .def ("Add", [](Mesh & self, const EdgeDescriptor & ed)
           {
-            return self.AddEdgeDescriptor (ed);
+            return self.AddEdgeDescriptor (ed).Nr1();
           })
 
     .def ("AddSingularity", [](Mesh & self, PointIndex pi, double factor)

@@ -67,7 +67,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
       (*testout) << "store line " << i << endl;
 
       // Create EdgeDescriptor for this edge
-      int edsi_left, edsi_right = -1;
+      EdgeDescriptorIndex edsi_left, edsi_right = EdgeDescriptorIndex::INVALID;
       {
         int lt = line->GetLeftTrig(1);
         int rt = line->GetRightTrig(1);

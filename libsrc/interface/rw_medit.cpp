@@ -210,7 +210,7 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map
   base_index = max_index;
   fout << "Edges\n" << mesh.GetNSeg() << endl;
   for(const auto & seg : mesh.LineSegments())
-    fout << seg[0] << ' ' << seg[1] << ' ' << getIndex((seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1, 1) << endl;
+    fout << seg[0] << ' ' << seg[1] << ' ' << getIndex(mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1, 1) << endl;
 
   base_index = max_index;
   fout << "Triangles\n" << mesh.GetNSE() << endl;

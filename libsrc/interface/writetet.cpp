@@ -134,7 +134,7 @@ namespace netgen
         edgenumbers.Set(i2,numedges);
         edge2node.Append(i2);
 
-        int edgenr = (seg.GetIndex() >= 1) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
+        int edgenr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         edge_ids.Append(edgenr);
 
         if(point_ids[seg[0]] == -1)
