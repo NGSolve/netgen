@@ -32,16 +32,6 @@ Meshing3 :: Meshing3 (const string & rulefilename)
   canuse.SetSize (rules.Size());
   ruleused.SetSize (rules.Size());
 
-  /*
-  for (int i = 1; i <= rules.Size(); i++)
-    {
-      problems.Elem(i) = new char[255];
-      foundmap.Elem(i) = 0;
-      canuse.Elem(i) = 0;
-      ruleused.Elem(i) = 0;
-    }
-  */
-
   foundmap = 0;
   canuse = 0;
   ruleused = 0;
@@ -60,15 +50,6 @@ Meshing3 :: Meshing3 (const char ** rulep)
   canuse.SetSize (rules.Size());
   ruleused.SetSize (rules.Size());
 
-  /*
-  for (int i = 0; i < rules.Size(); i++)
-    {
-      problems[i] = new char[255];
-      foundmap[i] = 0;
-      canuse[i]   = 0;
-      ruleused[i] = 0;
-    }
-  */
   foundmap = 0;
   canuse = 0;
   ruleused = 0;
@@ -76,14 +57,6 @@ Meshing3 :: Meshing3 (const char ** rulep)
 
 Meshing3 :: ~Meshing3 ()
 {
-  // delete adfront;
-  /*
-  for (int i = 0; i < rules.Size(); i++)
-    {
-      delete [] problems[i];
-      delete rules[i];
-    }
-  */
 }
 
 
@@ -185,16 +158,6 @@ MESHING3_RESULT Meshing3 ::
 GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
 {
   static Timer t("Meshing3::GenerateMesh"); RegionTimer reg(t);
-  // static Timer meshing3_timer_a("Meshing3::GenerateMesh a", 2);
-  // static Timer meshing3_timer_b("Meshing3::GenerateMesh b", 2);
-  // static Timer meshing3_timer_c("Meshing3::GenerateMesh c", 1);
-  // static Timer meshing3_timer_d("Meshing3::GenerateMesh d", 2);
-  // static int meshing3_timer = NgProfiler::CreateTimer ("Meshing3::GenerateMesh");
-  // static int meshing3_timer_a = NgProfiler::CreateTimer ("Meshing3::GenerateMesh a");
-  // static int meshing3_timer_b = NgProfiler::CreateTimer ("Meshing3::GenerateMesh b");
-  // static int meshing3_timer_c = NgProfiler::CreateTimer ("Meshing3::GenerateMesh c");
-  // static int meshing3_timer_d = NgProfiler::CreateTimer ("Meshing3::GenerateMesh d");
-  // RegionTimer reg (meshing3_timer);
 
 
   Array<Point<3>, LocalPointIndex> locpoints;      // local points
@@ -309,13 +272,11 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       double hinner = hmax * (1 + stat.qualclass);
       double houter = hmax * (1 + 2 * stat.qualclass);
 
-      // meshing3_timer_a.Start();
       stat.qualclass =
         adfront -> GetLocals (baseelem, locpoints, locfaces, 
                               pindex, findex, connectedpairs,
                               houter, hinner,
                               locfacesplit);
-      // meshing3_timer_a.Stop();
 
       // (*testout) << "locfaces = " << endl << locfaces << endl;
 
@@ -372,7 +333,6 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
       if (stat.qualclass >= mp.starshapeclass &&
           mp.baseelnp != 4)   
         {
-          // RegionTimer reg1 (meshing3_timer_b);
           // star-shaped domain removing
 
           grouppoints.SetSize (0);
@@ -495,8 +455,6 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
               (*testout) << endl;
             }
 
-          // NgProfiler::StartTimer (meshing3_timer_c);
-          // meshing3_timer_c.Start();
 
           found = ApplyRules (plainpoints, allowpoint, 
                               locfaces, locfacesplit, connectedpairs,
@@ -506,12 +464,9 @@ GenerateMesh (Mesh & mesh, const MeshingParameters & mp)
           if (found >= 0) impossible = 0;
           if (found < 0) found = 0;
 
-          // meshing3_timer_c.Stop();
-          // NgProfiler::StopTimer (meshing3_timer_c);    
 
           if (!found) loktestmode = 0;
 
-          // RegionTimer reg2 (meshing3_timer_d);         
           
           if (loktestmode)
             {
