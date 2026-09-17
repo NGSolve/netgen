@@ -1,5 +1,9 @@
 
+#ifdef CATCH2_v3
+#include "catch2/catch_all.hpp"
+#else
 #include <catch2/catch.hpp>
+#endif
 #include <../core/ngcore.hpp>
 #include <core/register_archive.hpp>
 #include <core/logging.hpp>
@@ -354,7 +358,11 @@ void testArchive(Archive& in, Archive& out)
   SECTION("Not registered")
     {
       SharedPtrAndPtrHolder* p = new NotRegisteredForArchive;
+#ifdef CATCH2_v3
+      REQUIRE_THROWS(out & p, Catch::Matchers::ContainsSubstring("not registered for archive"));
+#else
       REQUIRE_THROWS(out & p, Catch::Contains("not registered for archive"));
+#endif
     }
   SECTION("Non-default constructor")
     {
