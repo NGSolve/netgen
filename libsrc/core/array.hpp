@@ -244,6 +244,17 @@ namespace ngcore
   };
 
   constexpr IndexFromEnd END(0);
+
+  class IndexFromBegin
+  {
+    ptrdiff_t i;
+  public:
+    constexpr IndexFromBegin (ptrdiff_t ai) : i(ai) { }
+    IndexFromBegin operator+ (ptrdiff_t inc) const { return i+inc; }
+    ptrdiff_t Value() const { return i; }
+  };
+
+  constexpr IndexFromBegin BEGIN(0);
   
   
   template <class T, class IndexType = size_t> class FlatArray;
@@ -325,6 +336,13 @@ namespace ngcore
   NETGEN_INLINE T_Range<T> Range (T a, T b)
   {
     return T_Range<T>(a,b);
+  }
+
+  /// range from the first index of type T (plus offset) to next
+  template <typename T>
+  NETGEN_INLINE T_Range<T> Range (IndexFromBegin b, T next)
+  {
+    return T_Range<T>(T(IndexBASE<T>()+int(b.Value())), next);
   }
 
   template<typename T>
@@ -652,6 +670,18 @@ namespace ngcore
     NETGEN_INLINE FlatArray<T> Range (IndexType from, IndexFromEnd indend) const
     {
       return Range(from, Range().Next()+int(indend.Value()));
+    }
+
+    /// from the first index (plus offset) to next
+    NETGEN_INLINE FlatArray<T> Range (IndexFromBegin b, IndexType next) const
+    {
+      return Range(T_Range<IndexType>(IndexType(BASE+int(b.Value())), next));
+    }
+
+    /// from the first index (plus offset) to the end (plus offset)
+    NETGEN_INLINE FlatArray<T> Range (IndexFromBegin b, IndexFromEnd indend) const
+    {
+      return Range(IndexType(BASE+int(b.Value())), indend);
     }
 
     /// takes range starting from position start of end-start elements
