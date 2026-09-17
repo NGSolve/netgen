@@ -75,10 +75,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
   target_compile_definitions(ngcore PUBLIC NETGEN_ENABLE_CHECK_RANGE)
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
 
-if(TRACE_MEMORY)
-  target_compile_definitions(ngcore PUBLIC NETGEN_TRACE_MEMORY)
-endif(TRACE_MEMORY)
-
 if(USE_NUMA)
     find_library(NUMA_LIBRARY libnuma.so)
     target_compile_definitions(ngcore PUBLIC USE_NUMA)
@@ -89,7 +85,7 @@ install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
 target_link_libraries(ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_THREAD_LIBS_INIT})
 
-install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp memtracer.hpp
+install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp memtracer.hpp memtrace.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
   xbool.hpp signal.hpp bitarray.hpp blockallocator.hpp table.hpp hashtable.hpp indexset.hpp ranges.hpp ngstream.hpp

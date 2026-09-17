@@ -13,7 +13,7 @@
 
 #include "array.hpp"
 #include "bitarray.hpp"
-#include "memtracer.hpp"
+#include "memtrace.hpp"
 #include "ngcore_api.hpp"
 #include "profiler.hpp"
 
@@ -145,7 +145,7 @@ namespace ngcore
     {
       for (size_t i : IntRange(size+1))
         index[i] = i*entrysize;
-      mt.Alloc(GetMemUsage());
+      TraceAlloc();
     }
 
     /// Construct table of variable entrysize
@@ -157,7 +157,7 @@ namespace ngcore
       index = TablePrefixSum (FlatArray<TI> (entrysize.Size(), entrysize.Data()));
       size_t cnt = index[size];
       data = new T[cnt];
-      mt.Alloc(GetMemUsage());
+      TraceAlloc();
     }
 
     explicit NETGEN_INLINE Table (const FlatTable<T,IndexType> & tab2)
@@ -174,7 +174,7 @@ namespace ngcore
       size_t cnt = index[size];
       data = new T[cnt];
       this->AsArray() = tab2.AsArray();
-      mt.Alloc(GetMemUsage());
+      TraceAlloc();
       /*
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
@@ -196,13 +196,12 @@ namespace ngcore
       for (size_t i = 0; i < cnt; i++)
         data[i] = tab2.data[i];
 
-      mt.Alloc(GetMemUsage());
+      TraceAlloc();
     }
 
     NETGEN_INLINE Table (Table && tab2)
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
-      mt = std::move(tab2.mt);
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -217,20 +216,19 @@ namespace ngcore
       if(ar.Input())
         {
           index = new IndexType[size+1];
-          mt.Alloc(sizeof(IndexType) * (size+1));
+          MemTraceAlloc(index, sizeof(IndexType) * (size+1));
         }
       ar.Do(index, size+1);
       if(ar.Input())
         {
           data = new T[index[size]];
-          mt.Alloc(sizeof(T) * index[size]);
+          MemTraceAlloc(data, sizeof(T) * index[size]);
         }
       ar.Do(data, index[size]);
     }
 
     NETGEN_INLINE Table & operator= (Table && tab2)
     {
-      mt = std::move(tab2.mt);
       Swap (size, tab2.size);
       Swap (index, tab2.index);
       Swap (data, tab2.data);
@@ -242,7 +240,7 @@ namespace ngcore
     /// Delete data
     NETGEN_INLINE ~Table ()
     {
-      mt.Free(GetMemUsage());
+      TraceFree();
       delete [] data;
       delete [] index;
     }
@@ -255,15 +253,18 @@ namespace ngcore
 
     using FlatTable<T,IndexType>::operator[];
 
-    NETGEN_INLINE void StartMemoryTracing (int /* mem_id */)
-    {
-      mt.Alloc(GetMemUsage());
-    }
-    const MemoryTracer& GetMemoryTracer() const { return mt; }
-
   private:
-    NETGEN_INLINE size_t GetMemUsage() const { return size == 0 ? 0 : sizeof(T)*index[size] + sizeof(IndexType) * size+1; }
-    MemoryTracer mt;
+    NETGEN_INLINE void TraceAlloc() const
+    {
+      MemTraceAlloc(index, sizeof(IndexType)*(size+1));
+      MemTraceAlloc(data, sizeof(T)*index[size]);
+    }
+    NETGEN_INLINE void TraceFree() const
+    {
+      if(!index) return;
+      MemTraceFree(index, sizeof(IndexType)*(size+1));
+      MemTraceFree(data, sizeof(T)*index[size]);
+    }
   };
 
 

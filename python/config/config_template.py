@@ -11,7 +11,6 @@ ENABLE_CPP_CORE_GUIDELINES_CHECK  = _cmake_to_bool("@ENABLE_CPP_CORE_GUIDELINES_
 ENABLE_UNIT_TESTS   = _cmake_to_bool("@ENABLE_UNIT_TESTS@")
 INSTALL_PROFILES    = _cmake_to_bool("@INSTALL_PROFILES@")
 INTEL_MIC           = _cmake_to_bool("@INTEL_MIC@")
-TRACE_MEMORY        = _cmake_to_bool("@TRACE_MEMORY@")
 USE_CCACHE          = _cmake_to_bool("@USE_CCACHE@")
 USE_CGNS            = _cmake_to_bool("@USE_CGNS@")
 USE_GUI             = _cmake_to_bool("@USE_GUI@")

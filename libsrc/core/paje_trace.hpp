@@ -2,6 +2,7 @@
 #define NETGEN_CORE_PAJE_TRACE_HPP
 
 #include <algorithm>
+#include <cstdint>
 #include <limits>
 #include <vector>
 
@@ -27,18 +28,16 @@ namespace ngcore
       NGCORE_API static bool mem_tracing_enabled;
       NGCORE_API static bool write_paje_file;
 
+      NGCORE_API static size_t mem_trace_threshold;
+
       bool tracing_enabled;
       TTimePoint start_time;
       int nthreads;
-      size_t n_memory_events_at_start;
 
     public:
       NGCORE_API void Write();
       NGCORE_API void WritePajeFile( const std::string & filename );
       NGCORE_API void WriteTimingChart();
-#ifdef NETGEN_TRACE_MEMORY
-      NGCORE_API void WriteMemoryChart( std::string fname );
-#endif // NETGEN_TRACE_MEMORY
 
       // Approximate number of events to trace. Tracing will
       // be stopped if any thread reaches this number of events
@@ -47,6 +46,11 @@ namespace ngcore
       static void SetTraceMemory( bool trace_memory )
         {
           mem_tracing_enabled = trace_memory;
+        }
+
+      static void SetMemoryTraceThreshold( size_t bytes )
+        {
+          mem_trace_threshold = bytes;
         }
 
       static void SetTraceThreads( bool atrace_threads )
@@ -129,11 +133,9 @@ namespace ngcore
       struct MemoryEvent
         {
           TTimePoint time;
-          size_t size;
-          int id;
-          bool is_alloc;
-
-          bool operator < (const MemoryEvent & other) const { return time < other.time; }
+          size_t bytes;
+          uintptr_t addr;
+          unsigned char kind;   // 0 host alloc, 1 host free, 2 device alloc, 3 device free
         };
 
       std::vector<std::vector<Task> > tasks;
@@ -143,7 +145,7 @@ namespace ngcore
       std::vector<std::tuple<std::string, int>> user_containers;
       std::vector<TimerEvent> gpu_events;
       std::vector<std::vector<ThreadLink> > links;
-      NGCORE_API static std::vector<MemoryEvent> memory_events;
+      std::vector<std::vector<MemoryEvent> > memory_events;   // per thread
 
     public:
       NGCORE_API void StopTracing();
@@ -215,25 +217,8 @@ namespace ngcore
           timer_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
         }
 
-      void AllocMemory(int id, size_t size)
-        {
-          if(!mem_tracing_enabled) return;
-          memory_events.push_back(MemoryEvent{GetTimeCounter(), size, id, true});
-        }
-
-      void FreeMemory(int id, size_t size)
-        {
-          if(!mem_tracing_enabled) return;
-          memory_events.push_back(MemoryEvent{GetTimeCounter(), size, id, false});
-        }
-
-      void ChangeMemory(int id, long long size)
-        {
-          if(size>0)
-            AllocMemory(id, size);
-          if(size<0)
-            FreeMemory(id, -size);
-        }
+      // called through the MemTrace* hooks in memtrace.hpp
+      NGCORE_API void AddMemoryEvent(const void * p, size_t bytes, unsigned char kind);
 
 
       int StartTask(int thread_id, int id, int id_type = Task::ID_NONE, int additional_value = -1)
