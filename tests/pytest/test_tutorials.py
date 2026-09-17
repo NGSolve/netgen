@@ -140,7 +140,10 @@ def isSlowTest(filename):
 def getParameters():
     res = []
     for f in _geofiles + _additional_testfiles:
-        for i,mp in enumerate(getMeshingparameters(f)):
+        parameters = getMeshingparameters(f)
+        if os.environ.get("BUILD_TYPE") == "Debug":
+            parameters = parameters[:1]
+        for i,mp in enumerate(parameters):
             if isSlowTest(f):
                 res.append( pytest.param(f, mp, i, marks=pytest.mark.slow ) )
             else:
