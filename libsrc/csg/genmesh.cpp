@@ -599,7 +599,7 @@ namespace netgen
     
     // remove auxiliary segments of smooth surfaces
     for (auto & seg : mesh.LineSegments())
-      if (seg.GetIndex() >= 1 && mesh.GetEdgeDescriptor(seg.GetIndex()).EdgeNr() < 0)
+      if (mesh.HasEdgeDescriptor(seg) && mesh.GetEdgeDescriptor(seg).EdgeNr() < 0)
         seg.SetIndex(0);
 
     mesh.Compress();
