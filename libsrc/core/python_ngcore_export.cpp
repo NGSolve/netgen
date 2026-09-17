@@ -3,6 +3,7 @@
 #include "bitarray.hpp"
 #include "taskmanager.hpp"
 #include "mpi_wrapper.hpp"
+#include "memtracer.hpp"
 
 using namespace ngcore;
 using namespace std;
@@ -356,18 +357,16 @@ threads : int
               "size in Megabytes"
         )
     .def("__enter__", [](PajeTrace & self) { })
-    .def("__exit__", [](PajeTrace & self, py::args) { trace = nullptr; })
+    .def("__exit__", [](PajeTrace & self, py::args) { trace = nullptr; memtrace = nullptr; })
     .def_static("SetTraceThreads", &PajeTrace::SetTraceThreads)
     .def_static("SetTraceThreadCounter", &PajeTrace::SetTraceThreadCounter)
     .def_static("SetMaxTracefileSize", &PajeTrace::SetMaxTracefileSize)
-#ifdef NETGEN_TRACE_MEMORY
-    .def_static("WriteMemoryChart", [](string filename){ if(trace) trace->WriteMemoryChart(filename); }, py::arg("filename")="memory" )
-#endif // NETGEN_TRACE_MEMORY
+    .def_static("SetTraceMemory", &PajeTrace::SetTraceMemory)
+    .def_static("SetMemoryTraceThreshold", &PajeTrace::SetMemoryTraceThreshold, py::arg("bytes"),
+                "host allocations below this size (bytes) are not traced, default 4096")
     ;
 
-    m.def("GetTotalMemory", MemoryTracer::GetTotalMemory);
-    m.def("GetTotalMemory", MemoryTracer::GetTotalMemory);
-    m.def("GetRSSMemory", MemoryTracer::GetRSSMemory);
+    m.def("GetRSSMemory", GetRSSMemory);
     m.def("PrintMemoryUsage", [](std::filesystem::path log_file = "", std::string msg = "", int n_frames=0) {
         auto inspect = py::module::import("inspect");
         auto frame = inspect.attr("currentframe")();
@@ -378,10 +377,10 @@ threads : int
         if(log_file != "")
         {
             ofstream out(log_file, std::ios::app);
-            MemoryTracer::PrintMemoryUsage(filename.c_str(), line, msg, out);
+            PrintMemoryUsage(filename.c_str(), line, msg, out);
         }
         else
-            MemoryTracer::PrintMemoryUsage(filename.c_str(), line, msg);
+            PrintMemoryUsage(filename.c_str(), line, msg);
     }, py::arg("log_file") = "", py::arg("msg") = "", py::arg("n_frames") = 0,
         "Parameters:\n\nlog_file : str\n    If given, memory usage information is appended to this file, otherwise printed to stdout\nmsg : str\n    Additional message to be printed together with memory usage information\nn_frames : int\n    Number of stack frames to go back to get the filename and line number for the log message, set it to 1 if you have a wrapper function that calls this function");
 

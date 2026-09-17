@@ -13,6 +13,7 @@
 #include <cmath>
 #include <ostream>
 #include <thread>
+#include <mutex>
 
 #include "array.hpp"
 #include "paje_trace.hpp"

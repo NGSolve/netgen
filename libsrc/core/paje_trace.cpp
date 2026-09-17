@@ -6,10 +6,12 @@
 #include <thread>
 
 #include "archive.hpp"           // for Demangle
+#include "memtrace.hpp"
 #include "paje_trace.hpp"
 #include "ng_mpi.hpp"
 #include "profiler.hpp"
 #include "mpi_wrapper.hpp"
+#include "taskmanager.hpp"
 
 extern const char *header;
 
@@ -31,8 +33,6 @@ namespace ngcore
 #endif // PARALLEL
   }
 
-  std::vector<PajeTrace::MemoryEvent> PajeTrace::memory_events;
-
   // Produce no traces by default
   size_t PajeTrace::max_tracefile_size = 0;
 
@@ -42,6 +42,7 @@ namespace ngcore
   bool PajeTrace::trace_threads = true;
   bool PajeTrace::mem_tracing_enabled = true;
   bool PajeTrace::write_paje_file = true;
+  size_t PajeTrace::mem_trace_threshold = 4096;
 
   PajeTrace :: PajeTrace(int anthreads, std::string aname)
   {
@@ -69,7 +70,11 @@ namespace ngcore
     jobs.reserve(reserve_size);
     timer_events.reserve(reserve_size);
     gpu_events.reserve(reserve_size);
-    memory_events.reserve(1024*1024);
+
+    memory_events.resize(nthreads);
+    if(mem_tracing_enabled)
+      for(auto & m : memory_events)
+        m.reserve(std::min(100000U, max_num_events_per_thread));
 
     // sync start time when running in parallel
 #ifdef PARALLEL
@@ -83,12 +88,15 @@ namespace ngcore
 
     start_time = GetTimeCounter();
     tracing_enabled = true;
-    mem_tracing_enabled = true;
-    n_memory_events_at_start = memory_events.size();
+    if(mem_tracing_enabled)
+      memtrace = this;
   }
 
   PajeTrace :: ~PajeTrace()
   {
+    if(memtrace == this)
+      memtrace = nullptr;
+
     // timer events on thread 0 are moved to the timer_events array for a tree-like view of hierachical timers at the bottom
     std::vector<Task> new_tasks0;
     for(const auto & task : tasks[0])
@@ -126,8 +134,9 @@ namespace ngcore
         for(auto & link : llink)
             link.time -= start_time;
 
-    for(auto i : IntRange(n_memory_events_at_start, memory_events.size()))
-      memory_events[i].time -= start_time;
+    for(auto & levents : memory_events)
+        for(auto & event : levents)
+            event.time -= start_time;
 
     NgMPI_Comm comm;
   #ifdef PARALLEL
@@ -162,6 +171,26 @@ namespace ngcore
           logger->warn("Maximum number of traces reached, tracing is stopped now.");
         }
       tracing_enabled = false;
+      if(memtrace == this)
+        memtrace = nullptr;
+    }
+
+  void PajeTrace::AddMemoryEvent(const void * p, size_t bytes, unsigned char kind)
+    {
+      if(!tracing_enabled) return;
+      if(kind < 2 && bytes < mem_trace_threshold) return;
+      int tid = TaskManager::GetThreadId();
+      if(tid < 0 || tid >= nthreads) tid = 0;
+      auto & events = memory_events[tid];
+      if(unlikely(events.size() == max_num_events_per_thread))
+        StopTracing();
+      events.push_back(MemoryEvent{GetTimeCounter(), bytes, reinterpret_cast<uintptr_t>(p), kind});
+    }
+
+  void MemTraceRecord (const void * p, size_t bytes, unsigned char kind)
+    {
+      if(auto t = memtrace)
+        t->AddMemoryEvent(p, bytes, kind);
     }
 
   class PajeFile
@@ -327,10 +356,10 @@ namespace ngcore
           return alias;
         }
 
-      //       int DefineEventType ()
-      //         {
-      //           Write("event not implemented");
-      //         }
+      void DefineMemoryEventType ( int container_type )
+        {
+          fprintf( ctrace_stream, "%d\tM\ta%d\t\"memory\"\t\"1.0 1.0 1.0\"\n", PajeDefineEventType, container_type ); // NOLINT
+        }
 
       int DefineLinkType (int parent_container_type, int start_container_type, int stop_container_type, const std::string & name)
         {
@@ -417,8 +446,11 @@ namespace ngcore
           events.emplace_back( PajeEvent(  PajeEndLink, ConvertTime(time), type, container, value, end_container, key ) );
         }
 
-      void NewEvent ()
-        {}
+      void MemoryEvent ( TTimePoint time, int container, unsigned char kind, size_t bytes, uintptr_t addr )
+        {
+          static const char * kinds[] = { "ha", "hf", "da", "df" };
+          fprintf( ctrace_stream, "%d\t%.15g\tM\ta%d\t%s\t%zu\t0x%llx\n", PajeMemoryEvent, ConvertTime(time), container, kinds[kind], bytes, static_cast<unsigned long long>(addr) ); // NOLINT
+        }
 
       void WriteEvents()
         {
@@ -454,20 +486,19 @@ namespace ngcore
           PajeResetState = 14,
           PajeStartLink = 15,
           PajeEndLink = 16,
-          PajeNewEvent = 17
+          PajeNewEvent = 17,
+          PajeMemoryEvent = 20
         };
 
     };
 
   NGCORE_API PajeTrace *trace;
+  NGCORE_API PajeTrace *memtrace = nullptr;
 
   void PajeTrace::Write( )
     {
       if(write_paje_file) WritePajeFile( tracefile_name );
       WriteTimingChart();
-#ifdef NETGEN_TRACE_MEMORY
-      WriteMemoryChart("");
-#endif // NETGEN_TRACE_MEMORY
     }
 
   void PajeTrace::WritePajeFile( const std::string & filename )
@@ -475,6 +506,8 @@ namespace ngcore
       auto n_events = jobs.size() + timer_events.size() + gpu_events.size() + user_events.size();
       for(auto & vtasks : tasks)
         n_events += vtasks.size();
+      for(auto & vevents : memory_events)
+        n_events += vevents.size();
 
       logger->info("{} events traced",  n_events);
 
@@ -496,11 +529,11 @@ namespace ngcore
       const int container_type_thread = paje.DefineContainerType( container_type_task_manager, "Thread");
       const int container_type_timer = container_type_thread; //paje.DefineContainerType( container_type_task_manager, "Timers");
       const int container_type_jobs = paje.DefineContainerType( container_type_task_manager, "Jobs");
-      const int container_type_memory = paje.DefineContainerType( container_type_task_manager, "Memory usage");
 
       const int state_type_job = paje.DefineStateType( container_type_jobs, "Job" );
       const int state_type_task = paje.DefineStateType( container_type_thread, "Task" );
       const int state_type_timer = paje.DefineStateType( container_type_timer, "Timer state" );
+      paje.DefineMemoryEventType( container_type_thread );
 
       int variable_type_active_threads = 0;
       if(trace_thread_counter)
@@ -524,13 +557,6 @@ namespace ngcore
         }
 
       const int container_jobs = paje.CreateContainer( container_type_jobs, container_task_manager, "Jobs" );
-
-      int variable_type_memory = 0;
-      const int container_memory = paje.CreateContainer( container_type_memory, container_task_manager, "Memory" );
-      if(mem_tracing_enabled)
-      {
-        variable_type_memory = paje.DefineVariableType( container_type_task_manager, "Memory [MB]" );
-      }
 
 
       int num_nodes = 1; //task_manager ? task_manager->GetNumNodes() : 1;
@@ -576,14 +602,10 @@ namespace ngcore
         for(int i=0; i<num_nodes; i++)
           container_nodes.emplace_back( paje.CreateContainer( container_type_node, container_task_manager, "Node " + ToString(i)) );
 
-        thread_aliases.reserve(nthreads);
-        if(trace_threads)
-          for (int i=0; i<nthreads; i++)
-          {
-            auto name = "Thread " + ToString(i);
-            if(tasks[i].size())
-              thread_aliases.emplace_back( paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], name ) );
-          }
+        thread_aliases.resize(nthreads, 0);
+        for (int i=0; i<nthreads; i++)
+          if((trace_threads && tasks[i].size()) || memory_events[i].size())
+            thread_aliases[i] = paje.CreateContainer( container_type_thread, container_nodes[i*num_nodes/nthreads], "Thread " + ToString(i) );
       }
 
       std::map<const std::type_info *, int> job_map;
@@ -602,30 +624,6 @@ namespace ngcore
           paje.PushState( j.start_time, state_type_job, container_jobs, job_map[j.type] );
           paje.PopState( j.stop_time, state_type_job, container_jobs );
         }
-
-      size_t memory_at_start = 0;
-
-      for(const auto & i : IntRange(0, n_memory_events_at_start))
-      {
-        if(memory_events[i].is_alloc)
-            memory_at_start += memory_events[i].size;
-        else
-            memory_at_start -= memory_events[i].size;
-      }
-
-      paje.SetVariable( 0, variable_type_memory, container_memory, 1.0*memory_at_start/(1024*1024));
-
-      for(const auto & i : IntRange(n_memory_events_at_start, memory_events.size()))
-      {
-        auto & m = memory_events[i];
-        if(m.size==0)
-            continue;
-        double size = 1.0*m.size/(1024*1024);
-        if(m.is_alloc)
-          paje.AddVariable( m.time, variable_type_memory, container_memory, size);
-        else
-          paje.SubVariable( m.time, variable_type_memory, container_memory, size);
-      }
 
       std::set<int> timer_ids;
       std::map<int,int> timer_aliases;
@@ -877,6 +875,12 @@ namespace ngcore
             }
         }
       paje.WriteEvents();
+
+      // memory events, in time order per thread
+      if(comm.Size()==1)
+        for(auto t : Range(memory_events.size()))
+          for(auto & ev : memory_events[t])
+            paje.MemoryEvent( ev.time, thread_aliases[t], ev.kind, ev.bytes, ev.addr );
     }
 
   void PajeTrace::SendData( )
@@ -1069,135 +1073,6 @@ namespace ngcore
 
 
   }
-
-#ifdef NETGEN_TRACE_MEMORY
-  void PajeTrace::WriteMemoryChart( std::string fname )
-  {
-    if(fname=="")
-      fname = tracefile_name + "_memory";
-    size_t mem_allocated = 0;
-    size_t max_mem_allocated = 0;
-    size_t imax_mem_allocated = 0;
-
-    const auto & names = MemoryTracer::GetNames();
-    const auto & parents = MemoryTracer::GetParents();
-    size_t N = names.size();
-
-    Array<size_t> mem_allocated_id;
-    mem_allocated_id.SetSize(N);
-    mem_allocated_id = 0;
-
-    // Find point with maximum memory allocation, check for missing allocs/frees
-    for(auto i : IntRange(memory_events.size()))
-    {
-      const auto & ev = memory_events[i];
-
-      if(ev.is_alloc)
-      {
-        mem_allocated += ev.size;
-        mem_allocated_id[ev.id] += ev.size;
-        if(mem_allocated > max_mem_allocated && i>=n_memory_events_at_start)
-        {
-          imax_mem_allocated = i;
-          max_mem_allocated = mem_allocated;
-        }
-      }
-      else
-      {
-        if(ev.size > mem_allocated)
-          {
-            std::cerr << "Error in memory tracer: have total allocated memory < 0" << std::endl;
-            mem_allocated = 0;
-          }
-        else
-          mem_allocated -= ev.size;
-        if(ev.size > mem_allocated_id[ev.id])
-          {
-            std::cerr << "Error in memory tracer: have allocated memory < 0 in tracer " << names[ev.id] << std::endl;
-            mem_allocated_id[ev.id] = 0;
-          }
-        else
-          mem_allocated_id[ev.id] -= ev.size;
-      }
-    }
-
-    // reconstruct again the memory consumption after event imax_mem_allocated
-    mem_allocated_id = 0;
-    for(auto i : IntRange(imax_mem_allocated+1))
-    {
-      const auto & ev = memory_events[i];
-
-      if(ev.is_alloc)
-        mem_allocated_id[ev.id] += ev.size;
-      else
-        {
-          if(ev.size > mem_allocated_id[ev.id])
-            mem_allocated_id[ev.id] = 0;
-          else
-            mem_allocated_id[ev.id] -= ev.size;
-        }
-    }
-
-    TreeNode root;
-    root.name="all";
-
-    Array<TreeNode*> nodes;
-    nodes.SetSize(N);
-    nodes = nullptr;
-    nodes[0] = &root;
-    Array<Array<int>> children(N);
-
-    Array<size_t> sorting; // topological sorting (parents before children)
-    sorting.SetAllocSize(N);
-
-    for(auto i : IntRange(1, N))
-        children[parents[i]].Append(i);
-
-    ArrayMem<size_t, 100> stack;
-    sorting.Append(0);
-    stack.Append(0);
-
-    while(stack.Size())
-    {
-      auto current = stack.Last();
-      stack.DeleteLast();
-
-      for(const auto child : children[current])
-      {
-        sorting.Append(child);
-        if(children[child].Size())
-          stack.Append(child);
-      }
-    }
-
-    for(auto i : sorting)
-    {
-      if(i==0)
-          continue;
-
-      TreeNode * parent = nodes[parents[i]];
-
-      auto & node = parent->children[i];
-      nodes[i] = &node;
-      node.id = i;
-      node.chart_size = mem_allocated_id[i];
-      node.size = mem_allocated_id[i];
-      node.name = names[i];
-    }
-
-    for(auto i_ : Range(sorting))
-    {
-      // reverse topological order to accumulate total memory usage of all children
-      auto i = sorting[sorting.Size()-1-i_];
-      if(i==0)
-          continue;
-      nodes[parents[i]]->size += nodes[i]->size;
-    }
-
-    WriteSunburstHTML( root, fname, false );
-
-  }
-#endif // NETGEN_TRACE_MEMORY
 
   void PajeTrace::WriteTimingChart( )
   {
@@ -1402,4 +1277,12 @@ const char *header =
         "%       Type string \n"
         "%       Container string \n"
         "%       Value string \n"
+        "%EndEventDef\n"
+        "%EventDef PajeNewEvent 20\n"
+        "%       Time date\n"
+        "%       Type string\n"
+        "%       Container string\n"
+        "%       Value string\n"
+        "%       Size double\n"
+        "%       Address hex\n"
         "%EndEventDef\n";
