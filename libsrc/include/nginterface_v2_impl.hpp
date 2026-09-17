@@ -369,9 +369,10 @@ NGX_INLINE DLL_HEADER Ng_Buffer<int[2]> Ngx_Mesh :: GetPeriodicVertices(int idnr
 
 NGX_INLINE void Ngx_Mesh :: GetParentNodes (int ni, int * parents) const
 {
-  if (ni < mesh->mlbetweennodes.Size())
+  auto pi = PointIndex::FromNr0(ni);
+  if (mesh->mlbetweennodes.Range().Contains(pi))
     for (int j = 0; j < 2; j++)
-      parents[j] = mesh->mlbetweennodes[IndexBASE<PointIndex>()+ni][j] - IndexBASE<PointIndex>();
+      parents[j] = mesh->mlbetweennodes[pi][j].Nr0();
   else
     parents[0] = parents[1] = -1;
 }
@@ -383,12 +384,14 @@ inline bool Ngx_Mesh :: HasParentEdges() const
 
 inline tuple<int, std::array<int,3>> Ngx_Mesh :: GetParentEdges (int enr) const
 {
-  return mesh->GetTopology().GetParentEdges(enr);
+  auto [info, nrs] = mesh->GetTopology().GetParentEdges(EdgeIndex::FromNr0(enr));
+  return { info, { nrs[0].Nr0(), nrs[1].Nr0(), nrs[2].Nr0() } };
 }
 
 inline tuple<int, std::array<int,4>> Ngx_Mesh :: GetParentFaces (int fnr) const
 {
-  return mesh->GetTopology().GetParentFaces(fnr);
+  auto [info, nrs] = mesh->GetTopology().GetParentFaces(FaceIndex::FromNr0(fnr));
+  return { info, { nrs[0].Nr0(), nrs[1].Nr0(), nrs[2].Nr0(), nrs[3].Nr0() } };
 }
 
 

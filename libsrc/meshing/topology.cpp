@@ -517,7 +517,7 @@ namespace netgen
                   v < end+IndexBASE<PointIndex>(); v++)
                {
                  v2eht.DeleteData();
-                 for (int ednr : vert2edge[v])
+                 for (EdgeIndex ednr : vert2edge[v])
                    {
                      PointIndex v2 = edge2vert[ednr][1];
                      v2eht.Set (v2, ednr);
@@ -572,7 +572,7 @@ namespace netgen
                  v2eht.DeleteData();            
                  vertex2.SetSize0 ();
                  
-                 for (int ednr : vert2edge[v])
+                 for (EdgeIndex ednr : vert2edge[v])
                    {
                      PointIndex v2 = edge2vert[ednr][1];
                      v2eht.Set (v2, ednr);
@@ -647,15 +647,15 @@ namespace netgen
           static Timer t("build_hierarchy"); RegionTimer reg(t);
           cnt = 0;
           for (auto verts : edge2vert) cnt[verts[0]]++;
-          DynamicTable<int, PointIndex> vert2edge (nv);
+          DynamicTable<EdgeIndex, PointIndex> vert2edge (nv);
           for (auto i : edge2vert.Range())
             vert2edge.Add (edge2vert[i][0], i);
 
           // build edge hierarchy:
           parent_edges.SetSize (ned);
-          parent_edges = { -1, { -1, -1, -1 } };
+          parent_edges = { -1, { EdgeIndex::INVALID, EdgeIndex::INVALID, EdgeIndex::INVALID } };
 
-          for (size_t i = 0; i < ned; i++)
+          for (auto i : parent_edges.Range())
           {
             auto verts = edge2vert[i];  // 2 vertices of edge
 
@@ -685,11 +685,11 @@ namespace netgen
               if (paedge[0] > paedge[1]) 
                 Swap (paedge[0], paedge[1]);
 
-              for (int ednr : vert2edge[paedge[0]])
+              for (EdgeIndex ednr : vert2edge[paedge[0]])
                 if (auto cverts = edge2vert[ednr]; cverts[1] == paedge[1])
                 {
                   int orient = (paedge[0] == verts[0] || paedge[1] == verts[1]) ? 1 : 0;
-                  parent_edges[i] = { orient, { ednr, -1, -1 } };                         
+                  parent_edges[i] = { orient, { ednr, EdgeIndex::INVALID, EdgeIndex::INVALID } };                         
                 }
             }
             else
@@ -725,25 +725,26 @@ namespace netgen
                 if ( !paedge1[0].IsValid() || !paedge2[0].IsValid() )
                   continue;
 
-                int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1, orient1 = 0, orient2 = 0;
-                for (int ednr : vert2edge[paedge1[0]])
+                EdgeIndex paedgenr1 = EdgeIndex::INVALID, paedgenr2 = EdgeIndex::INVALID, paedgenr3 = EdgeIndex::INVALID;
+                int orient1 = 0, orient2 = 0;
+                for (EdgeIndex ednr : vert2edge[paedge1[0]])
                   if (auto cverts = edge2vert[ednr]; cverts[1] == paedge1[1])
                   {
                     paedgenr1 = ednr;
                     orient1 = (paedge1[0] == verts[0] || paedge1[1] == verts[1]) ? 1 : 0;
                   }
-                for (int ednr : vert2edge[paedge2[0]])
+                for (EdgeIndex ednr : vert2edge[paedge2[0]])
                   if (auto cverts = edge2vert[ednr]; cverts[1] == paedge2[1])
                   {
                     paedgenr2 = ednr;
                     orient2 = (paedge2[0] == verts[0] || paedge2[1] == verts[1]) ? 1 : 0;
                   }
 
-                for (int ednr : vert2edge[paedge3[0]])
+                for (EdgeIndex ednr : vert2edge[paedge3[0]])
                   if (auto cverts = edge2vert[ednr]; cverts[1] == paedge3[1])
                     paedgenr3 = ednr;
 
-                if (paedgenr1 != -1 && paedgenr2 != -1){
+                if (paedgenr1.IsValid() && paedgenr2.IsValid()){
                   bisect_edge = true;
                   parent_edges[i] = { orient1+2*orient2+4*orient_inner, { paedgenr1, paedgenr2, paedgenr3 } };
                 }
@@ -802,15 +803,15 @@ namespace netgen
                   }
                 }
 
-                int paedgenr1=-1, paedgenr2=-1, paedgenr3=-1;
-                for (int ednr : vert2edge[paedge1[0]])
+                EdgeIndex paedgenr1 = EdgeIndex::INVALID, paedgenr2 = EdgeIndex::INVALID, paedgenr3 = EdgeIndex::INVALID;
+                for (EdgeIndex ednr : vert2edge[paedge1[0]])
                   if (auto cverts = edge2vert[ednr]; cverts[1] == paedge1[1])
                     paedgenr1 = ednr;
-                for (int ednr : vert2edge[paedge2[0]])
+                for (EdgeIndex ednr : vert2edge[paedge2[0]])
                   if (auto cverts = edge2vert[ednr]; cverts[1] == paedge2[1])
                     paedgenr2 = ednr;
 
-                for (int ednr : vert2edge[paedge3[0]])
+                for (EdgeIndex ednr : vert2edge[paedge3[0]])
                   if (auto cverts = edge2vert[ednr]; cverts[1] == paedge3[1])
                     paedgenr3 = ednr;
 
@@ -1372,7 +1373,7 @@ namespace netgen
 
             // cout << "f2v = " << face2vert << endl;
             
-            ngcore::ClosedHashTable<PointIndices<3>, int> v2f(nv);
+            ngcore::ClosedHashTable<PointIndices<3>, FaceIndex> v2f(nv);
             for (auto i : Range(face2vert))
               {
                 auto face = face2vert[i];
@@ -1384,9 +1385,9 @@ namespace netgen
             // cout << "v2f:" << endl << v2f << endl;
             
             parent_faces.SetSize (nfa);
-            parent_faces = { -1, { -1, -1, -1, -1 } };
+            parent_faces = { -1, { FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
 
-            for (auto i : Range(nfa))
+            for (auto i : parent_faces.Range())
               {
                 IVec<3,PointIndex> f3(face2vert[i][0], face2vert[i][1], face2vert[i][2]);
 
@@ -1441,9 +1442,9 @@ namespace netgen
 
                               if (v2f.Used(parentverts))
                               {
-                                int pafacenr = v2f[parentverts];
+                                FaceIndex pafacenr = v2f[parentverts];
                                 // cout << "parent-face = " << pafacenr << endl;
-                                parent_faces[i] = { classnr, { pafacenr, -1, -1, -1 } };
+                                parent_faces[i] = { classnr, { pafacenr, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
                               }
                               else
                               {
@@ -1509,7 +1510,7 @@ namespace netgen
                           parentverts3.Sort();
                         PointIndices<3> parentverts4(v0, v1, v3);
                           parentverts4.Sort();
-                        int pafacenr1=-1, pafacenr2=-1, pafacenr3=-1, pafacenr4=-1;
+                        FaceIndex pafacenr1 = FaceIndex::INVALID, pafacenr2 = FaceIndex::INVALID, pafacenr3 = FaceIndex::INVALID, pafacenr4 = FaceIndex::INVALID;
                         if (v2f.Used(parentverts1))
                         {
                           pafacenr1 = v2f[parentverts1];
@@ -1601,10 +1602,10 @@ namespace netgen
                               continue;
                             }
                                         
-                          int pafacenr1 = v2f[parentverts1];
-                          int pafacenr2 = v2f[parentverts2];
-                          int pafacenr3 = v2f[parentverts3];
-                          int pafacenr4 = v2f[parentverts4];
+                          FaceIndex pafacenr1 = v2f[parentverts1];
+                          FaceIndex pafacenr2 = v2f[parentverts2];
+                          FaceIndex pafacenr3 = v2f[parentverts3];
+                          FaceIndex pafacenr4 = v2f[parentverts4];
 
                           
                           parent_faces[i] = { classnr, { pafacenr1, pafacenr2,
@@ -1615,7 +1616,7 @@ namespace netgen
                     }
 
                 auto [info, nrs] = parent_faces[i];
-                if (nrs[0] == -1){
+                if (!nrs[0].IsValid()){
                   // hacking for tet red refinements
                   PointIndex v0 = f3[0];
                   auto pa0 = mesh->mlbetweennodes[v0];
@@ -1625,18 +1626,18 @@ namespace netgen
                   if (v0==pa1[0] || v0==pa1[1]){
                     if (pa1[0]==v0){// type 0: bottom left corner
                       PointIndices<3> parentverts(v0, pa1[1], pa2[1]);
-                      int pafacenr = v2f[parentverts];
-                      parent_faces[i] = { 16, { pafacenr, -1, -1, -1} };
+                      FaceIndex pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 16, { pafacenr, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "A" <<endl;
                     }else if (pa2[0]==v0) {// type 1: bottom right corner
                       PointIndices<3> parentverts(pa1[0], v0, pa2[1]);
-                      int pafacenr = v2f[parentverts];
-                      parent_faces[i] = { 17, { pafacenr, -1, -1, -1} };
+                      FaceIndex pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 17, { pafacenr, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "B" <<endl;
                     }else if (pa1[1]==v0){// type 2: top left corner
                       PointIndices<3> parentverts(pa1[0], pa2[0], v0);
-                      int pafacenr = v2f[parentverts];
-                      parent_faces[i] = { 18, { pafacenr, -1, -1, -1} };
+                      FaceIndex pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 18, { pafacenr, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "C" <<endl;
                     }else{
                       cout << "************************** unhandled parent-face case **********************" << endl;
@@ -1646,11 +1647,11 @@ namespace netgen
                     // Here we only work with boundary fff face
                     if (pa0[0]==pa1[0] && pa0[1]==pa2[0] && pa1[1]==pa2[1]){//type 3 bdry face
                       PointIndices<3> parentverts(pa0[0], pa0[1], pa1[1]);
-                      int pafacenr = v2f[parentverts];
-                      parent_faces[i] = { 19, { pafacenr, -1, -1, -1} };
+                      FaceIndex pafacenr = v2f[parentverts];
+                      parent_faces[i] = { 19, { pafacenr, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
                       //cout << "f "<<i<<":pf "<< pafacenr<< "D" <<endl;
                     }else{// this is an interior face FIXME 
-                      parent_faces[i] = { 20, { -1, -1, -1, -1} };
+                      parent_faces[i] = { 20, { FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID, FaceIndex::INVALID } };
                       //cout << "face "<< i << ":"<< f3 <<" is an int face"<< endl;
                     }
                   }

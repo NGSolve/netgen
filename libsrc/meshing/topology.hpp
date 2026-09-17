@@ -44,8 +44,8 @@ class MeshTopology
   bool build_parent_faces = false; // may be changed to default = false
   static bool static_buildedges, static_buildfaces, static_buildvertex2element;
 
-  Array<std::array<PointIndex,2>> edge2vert;
-  Array<std::array<PointIndex,4>> face2vert;
+  Array<std::array<PointIndex,2>, EdgeIndex> edge2vert;
+  Array<std::array<PointIndex,4>, FaceIndex> face2vert;
 
   Array<std::array<EdgeIndex,12>, ElementIndex> edges;
   Array<std::array<FaceIndex,6>, ElementIndex> faces;
@@ -211,14 +211,14 @@ public:
   void ClearFaces() { face2vert.SetSize0(); }
 
 private:
-  Array<std::tuple<int, std::array<int,3>>> parent_edges;
+  Array<std::tuple<int, std::array<EdgeIndex,3>>, EdgeIndex> parent_edges;
   void BuildParentEdges ();
 
-  Array<std::tuple<int, std::array<int,4>>> parent_faces;
+  Array<std::tuple<int, std::array<FaceIndex,4>>, FaceIndex> parent_faces;
   void BuildParentFaces ();
 public:
-  auto GetParentEdges (int enr) const { return parent_edges[enr]; }
-  auto GetParentFaces (int fnr) const { return parent_faces[fnr]; }
+  auto GetParentEdges (EdgeIndex enr) const { return parent_edges[enr]; }
+  auto GetParentFaces (FaceIndex fnr) const { return parent_faces[fnr]; }
 };
 
 
