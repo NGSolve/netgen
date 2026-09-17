@@ -1219,9 +1219,10 @@ namespace netgen
     bool endmesh = false;
 
     bool has_facedescriptors = false;
-    Array<std::pair<int,int>> seg_surfnrs;
-    Array<int> seg_edgenrs;
-    Array<int> seg_sis;
+    // per-segment data read alongside the segments (edgesegmentsgi2 format)
+    Array<std::pair<int,int>, SegmentIndex> seg_surfnrs;
+    Array<int, SegmentIndex> seg_edgenrs;
+    Array<int, SegmentIndex> seg_sis;
     
 
     while (infile.good() && !endmesh)
@@ -1816,15 +1817,15 @@ namespace netgen
         // the redundant per-segment data that was saved alongside.
         // With per-refedge EDs, multiple EDs can share the same edgenr,
         // so we match by (edgenr, surfnr1, surfnr2) using the temp surfnr data.
-        for (int si = 0; si < segments.Size(); si++)
+        for (auto segi : segments.Range())
           {
-            auto & seg = segments[SegmentIndex::FromNr0(si)];
-            int seg_edgenr = (si < seg_edgenrs.Size()) ? seg_edgenrs[si] : -1;
+            auto & seg = segments[segi];
+            int seg_edgenr = seg_edgenrs.Range().Contains(segi) ? seg_edgenrs[segi] : -1;
             int snr1 = -1, snr2 = -1;
-            if (si < seg_surfnrs.Size())
+            if (seg_surfnrs.Range().Contains(segi))
               {
-                snr1 = seg_surfnrs[si].first;
-                snr2 = seg_surfnrs[si].second;
+                snr1 = seg_surfnrs[segi].first;
+                snr2 = seg_surfnrs[segi].second;
               }
             // Find matching ED: prefer exact (edgenr, surfnr1, surfnr2, fdindex) match
             int best = -1;
@@ -1836,7 +1837,7 @@ namespace netgen
                   {
                     if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
                       {
-                        int seg_si_val = (si < seg_sis.Size()) ? seg_sis[si] : -1;
+                        int seg_si_val = seg_sis.Range().Contains(segi) ? seg_sis[segi] : -1;
                         if (ed.GetIndex() > 0 && ed.GetIndex() == seg_si_val)
                           { best = j; break; }  // exact match including index
                         if (best_no_fdi < 0)
@@ -2146,15 +2147,22 @@ namespace netgen
     char str[100];
     int n;
 
-    Array<std::pair<int,int>> merge_seg_surfnrs;
-    Array<int> merge_seg_edgenrs;
-    Array<int> merge_seg_sis;
+    // per-segment data read alongside the merged segments, aligned with segments
+    SegmentIndex first_new_seg = segments.Range().Next();
+    Array<std::pair<int,int>, SegmentIndex> merge_seg_surfnrs(segments.Size());
+    Array<int, SegmentIndex> merge_seg_edgenrs(segments.Size());
+    Array<int, SegmentIndex> merge_seg_sis(segments.Size());
+    merge_seg_surfnrs = std::pair<int,int>{-1,-1};
+    merge_seg_edgenrs = -1;
+    merge_seg_sis = -1;
 
     int inverttets = 0;  // globflags.GetDefineFlag ("inverttets");
 
     int oldnp = GetNP();
     int oldne = GetNSeg();
     int oldnd = GetNDomains();
+    int oldned = edgedecoding.Size();
+    bool merge_has_gi2 = false;
 
     for (auto & el : SurfaceElements())
       for(int j=1; j<=el.GetNP(); j++) el.GeomInfoPi(j).trignum = -1;
@@ -2301,6 +2309,69 @@ namespace netgen
                 merge_seg_surfnrs.Append({surfnr1_tmp, surfnr2_tmp});
                 merge_seg_sis.Append(si_tmp);
                 AddSegment (seg);
+                merge_has_gi2 = true;
+              }
+          }
+
+        if (strcmp (str, "edgesegmentsgi3") == 0)
+          {
+            infile >> n;
+            PrintMessage (3, n, " curve elements (gi3)");
+            for (int i = 0; i < n; i++)
+              {
+                Segment seg;
+                int edsi;
+                infile >> seg[0] >> seg[1]
+                       >> seg.GeomInfo(0).trignum
+                       >> seg.GeomInfo(1).trignum
+                       >> seg.EPGeomInfo(0).dist
+                       >> seg.EPGeomInfo(1).dist
+                       >> edsi;
+                // index refers to the merged file's edge descriptors, appended below
+                seg.SetIndex(edsi + 1 + oldned);
+                seg[0] = seg[0] + oldnp;
+                seg[1] = seg[1] + oldnp;
+                AddSegment (seg);
+              }
+          }
+
+        if (strcmp (str, "edgedescriptors") == 0)
+          {
+            infile >> n;
+            for (int ii = 0; ii < n; ii++)
+              {
+                EdgeDescriptor ed;
+                int ednr, s0, s1, tlo;
+                double sl, sr;
+                infile >> ednr >> s0 >> s1 >> sl >> sr >> tlo;
+                if (ednr >= 0) ednr += oldne;
+                if (s0 >= 0) s0 += max_surfnr;
+                if (s1 >= 0) s1 += max_surfnr;
+                ed.SetEdgeNr(ednr);
+                ed.SetSurfNr(0, s0);
+                ed.SetSurfNr(1, s1);
+                ed.SetSingEdgeLeft(sl);
+                ed.SetSingEdgeRight(sr);
+                ed.SetTLOSurface(tlo);
+                int di;
+                if (infile >> di)
+                  {
+                    int dout;
+                    string nm;
+                    infile >> dout >> nm;
+                    ed.SetDomainIn(di > 0 ? di + oldnd : di);
+                    ed.SetDomainOut(dout > 0 ? dout + oldnd : dout);
+                    ed.SetName(nm);
+                    { string rest; getline(infile, rest); }
+                  }
+                else
+                  {
+                    infile.clear();
+                    string nm;
+                    infile >> nm;
+                    ed.SetName(nm);
+                  }
+                edgedecoding.Append(ed);
               }
           }
 
@@ -2374,20 +2445,20 @@ namespace netgen
 
     if (edgedecoding.Size() == 0)
       ReconstructEdgeDescriptors(&merge_seg_surfnrs, &merge_seg_edgenrs);
-    else
+    else if (merge_has_gi2)
       {
         // edgedescriptors were loaded from file; match each segment to its ED
         // With per-refedge EDs, multiple EDs can share the same edgenr,
         // so we match by (edgenr, surfnr1, surfnr2) using the temp surfnr data.
-        for (int si = 0; si < segments.Size(); si++)
+        for (auto segi : Range(first_new_seg, segments.Range().Next()))
           {
-            auto & seg = segments[SegmentIndex::FromNr0(si)];
-            int seg_edgenr = (si < merge_seg_edgenrs.Size()) ? merge_seg_edgenrs[si] : -1;
+            auto & seg = segments[segi];
+            int seg_edgenr = merge_seg_edgenrs.Range().Contains(segi) ? merge_seg_edgenrs[segi] : -1;
             int snr1 = -1, snr2 = -1;
-            if (si < merge_seg_surfnrs.Size())
+            if (merge_seg_surfnrs.Range().Contains(segi))
               {
-                snr1 = merge_seg_surfnrs[si].first;
-                snr2 = merge_seg_surfnrs[si].second;
+                snr1 = merge_seg_surfnrs[segi].first;
+                snr2 = merge_seg_surfnrs[segi].second;
               }
             int best = -1;
             int best_no_fdi = -1;
@@ -2398,7 +2469,7 @@ namespace netgen
                   {
                     if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
                       {
-                        int seg_si_val = (si < merge_seg_sis.Size()) ? merge_seg_sis[si] : -1;
+                        int seg_si_val = merge_seg_sis.Range().Contains(segi) ? merge_seg_sis[segi] : -1;
                         if (ed.GetIndex() > 0 && ed.GetIndex() == seg_si_val)
                           { best = j; break; }
                         if (best_no_fdi < 0)
@@ -2530,7 +2601,8 @@ namespace netgen
 
   }
 
-  void Mesh :: ReconstructEdgeDescriptors (const Array<std::pair<int,int>> * seg_surfnrs, const Array<int> * seg_edgenrs)
+  void Mesh :: ReconstructEdgeDescriptors (const Array<std::pair<int,int>, SegmentIndex> * seg_surfnrs,
+                                           const Array<int, SegmentIndex> * seg_edgenrs)
   {
     edgedecoding.SetSize(0);
 
@@ -2549,9 +2621,9 @@ namespace netgen
     Array<bool> used(maxindex);
     used = false;
 
-    for (int si = 0; si < segments.Size(); si++)
+    for (auto segi : segments.Range())
     {
-      auto & seg = segments[SegmentIndex::FromNr0(si)];
+      auto & seg = segments[segi];
       int idx = seg.GetIndex();
       if (idx < 1 || idx > maxindex) continue;
 
@@ -2561,15 +2633,15 @@ namespace netgen
       {
         used[idx-1] = true;
         int snr1 = -1, snr2 = -1;
-        if (seg_surfnrs && si < seg_surfnrs->Size())
+        if (seg_surfnrs && seg_surfnrs->Range().Contains(segi))
           {
-            snr1 = (*seg_surfnrs)[si].first;
-            snr2 = (*seg_surfnrs)[si].second;
+            snr1 = (*seg_surfnrs)[segi].first;
+            snr2 = (*seg_surfnrs)[segi].second;
           }
         auto & ed = edgedecoding[idx-1];
         int ednr = -1;
-        if (seg_edgenrs && si < seg_edgenrs->Size())
-          ednr = (*seg_edgenrs)[si];
+        if (seg_edgenrs && seg_edgenrs->Range().Contains(segi))
+          ednr = (*seg_edgenrs)[segi];
         ed.SetEdgeNr(ednr);
         ed.SetSurfNr(0, snr1);
         ed.SetSurfNr(1, snr2);
@@ -4389,32 +4461,24 @@ namespace netgen
       (*testout) << "np: " << GetNP() << endl;
     */
 
-    for (int i = 0; i < volelements.Size(); i++)
-      if (!volelements[ElementIndex::FromNr0(i)][0].IsValid() ||
-          volelements[ElementIndex::FromNr0(i)].IsDeleted())
-        {
-          volelements.DeleteElement(ElementIndex::FromNr0(i));
-          i--;
-        }
+    // DeleteElement moves the last element into the hole, so re-check the slot
+    for (auto ei = volelements.Range().First(); ei < volelements.Range().Next(); )
+      if (!volelements[ei][0].IsValid() || volelements[ei].IsDeleted())
+        volelements.DeleteElement(ei);
+      else
+        ei++;
 
+    for (auto sei = surfelements.Range().First(); sei < surfelements.Range().Next(); )
+      if (surfelements[sei].IsDeleted())
+        surfelements.DeleteElement(sei);
+      else
+        sei++;
 
-    for (int i = 0; i < surfelements.Size(); i++)
-      if (surfelements[SurfaceElementIndex::FromNr0(i)].IsDeleted())
-        {
-          surfelements.DeleteElement(SurfaceElementIndex::FromNr0(i));
-          i--;
-        }
-
-    for (int i = 0; i < segments.Size(); i++)
-      if (!segments[SegmentIndex::FromNr0(i)][0].IsValid())
-        {
-          segments.DeleteElement(SegmentIndex::FromNr0(i));
-          i--;
-        }
-
-    for(int i=0; i < segments.Size(); i++)
-      if(segments[SegmentIndex::FromNr0(i)].GetIndex() < 1)
-          segments.DeleteElement(SegmentIndex::FromNr0(i--));
+    for (auto si = segments.Range().First(); si < segments.Range().Next(); )
+      if (!segments[si][0].IsValid() || segments[si].GetIndex() < 1)
+        segments.DeleteElement(si);
+      else
+        si++;
 
     pused = false;
     /*
@@ -4902,7 +4966,7 @@ namespace netgen
     tets_in_qualclass.SetSize(n_classes);
     tets_in_qualclass = 0;
 
-    ParallelForRange( IntRange(volelements.Size()), [&] (auto myrange)
+    ParallelForRange( volelements.Range(), [&] (auto myrange)
        {
          double local_sum = 0.0;
          double teterrpow = mp.opterrpow;
@@ -4915,7 +4979,7 @@ namespace netgen
 
          for (auto i : myrange)
            {
-             double elbad = pow (max2(CalcBad (points, volelements[ElementIndex::FromNr0(i)], 0, mp),1e-10), 1/teterrpow);
+             double elbad = pow (max2(CalcBad (points, volelements[i], 0, mp),1e-10), 1/teterrpow);
 
              int qualclass = int (n_classes / elbad + 1);
              if (qualclass < 1) qualclass = 1;

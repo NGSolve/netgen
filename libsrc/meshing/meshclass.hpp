@@ -799,7 +799,8 @@ namespace netgen
     void ClearEdgeDescriptors()
     { edgedecoding.SetSize(0); }
 
-    void ReconstructEdgeDescriptors(const Array<std::pair<int,int>> * seg_surfnrs = nullptr, const Array<int> * seg_edgenrs = nullptr);
+    void ReconstructEdgeDescriptors(const Array<std::pair<int,int>, SegmentIndex> * seg_surfnrs = nullptr,
+                                    const Array<int, SegmentIndex> * seg_edgenrs = nullptr);
 
     /// Recompute EdgeDescriptor::fdindex from segment si values or FD lookup
     void RebuildFDIndices();
