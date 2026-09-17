@@ -507,7 +507,7 @@ namespace netgen
             for (ElementIndex ei : Range(mesh->VolumeElements()))
               {
                 netgen::Point<3> p;
-                const Element & el = mesh->VolumeElement (ei);
+                auto el = mesh->VolumeElement (ei);
                 auto P = [&] (int j) -> const netgen::Point<3> & { return mesh->Point(el.PNum(j)); };
 
                 switch (el.GetNV())
@@ -569,7 +569,7 @@ namespace netgen
                 (ei-IndexBASE(ei) == vispar.drawelement))
               {
                 // copy to be thread-safe
-                Element el = mesh->VolumeElement (ei);
+                Element el (mesh->VolumeElement (ei));
                 el.GetSurfaceTriangles (faces);
 
                 glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, badelcol);
@@ -601,12 +601,12 @@ namespace netgen
 
 
 
-        for (auto & el2 : mesh->VolumeElements())
+        for (auto el2 : mesh->VolumeElements())
           {
             if (el2.Flags().badel)
               {
                 // copy to be thread-safe
-                Element el = el2;
+                Element el (el2);
                 if ( (el.GetNP() == 4) || (el.GetNP() == 10))
                   {
                     glBegin (GL_LINES);
@@ -621,7 +621,7 @@ namespace netgen
 
         for (ElementIndex ei : Range(mesh->VolumeElements()))
           {
-            Element el = mesh->VolumeElement (ei);
+            Element el (mesh->VolumeElement (ei));
             int hascp = 0;
             for (int j = 0; j < el.GetNP(); j++)
               if (el[j] == vispar.centerpoint)
@@ -1859,7 +1859,7 @@ namespace netgen
             if (vispar.drawtetsdomain != tetid) continue;
           }
 
-        const Element & el = (*mesh)[ei];
+        auto el = (*mesh)[ei];
 
         if ((el.GetType() == TET || el.GetType() == TET10) && !el.IsDeleted())
           {
@@ -2130,7 +2130,7 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-        const Element & el = (*mesh)[ei];
+        auto el = (*mesh)[ei];
         if (el.GetType() == PRISM && !el.IsDeleted())
           {
             bool visible = true;
@@ -2462,7 +2462,7 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-        const Element & el = (*mesh)[ei];
+        auto el = (*mesh)[ei];
         if (el.GetType() == HEX && !el.IsDeleted())
           {
             bool visible = true;
@@ -2639,7 +2639,7 @@ namespace netgen
     static float hex7col[] = { 1.0f, 0.65f, 0.0f, 1.0f };
     glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, hex7col);
 
-    for (auto & el : mesh->VolumeElements())
+    for (auto el : mesh->VolumeElements())
       {
         if (el.GetType() == HEX7 && !el.IsDeleted())
           {
@@ -2792,7 +2792,7 @@ namespace netgen
 
     for (ElementIndex ei : mesh->VolumeElements().Range())
       {
-        const Element & el = (*mesh)[ei];
+        auto el = (*mesh)[ei];
         if ((el.GetType() == PYRAMID || el.GetType() == PYRAMID13) && !el.IsDeleted())
           {
             bool visible = true;

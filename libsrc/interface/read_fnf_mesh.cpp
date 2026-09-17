@@ -349,7 +349,7 @@ namespace netgen
                                 int elnr = fnums[j];
                                 int fnr = fnums[j+1];
                                 
-                                const Element & el = mesh[ElementIndex::FromNr1(elnr)];
+                                auto el = mesh[ElementIndex::FromNr1(elnr)];
                                 if(j == 0)
                                   mesh.GetFaceDescriptor(nr).SetDomainIn(el.GetIndex());
                                 Element2d el2d;

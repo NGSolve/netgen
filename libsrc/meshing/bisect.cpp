@@ -344,7 +344,7 @@ namespace netgen
       
         // enumerate edges:
 
-        for (const Element & el : mesh.VolumeElements())
+        for (auto el : mesh.VolumeElements())
           {
             static int tetedges[6][2] =
               { { 1, 2 },
@@ -477,7 +477,7 @@ namespace netgen
             go_on = false;
             for (auto ei : mesh.VolumeElements().Range())
               {
-                const Element & el = mesh[ei];
+                auto el = mesh[ei];
               
                 if (el.GetType() != PRISM &&
                     el.GetType() != PRISM12 &&
@@ -723,7 +723,7 @@ namespace netgen
             // for (int i = 1; i <= mesh.GetNE(); i++)
             for (auto ei : mesh.VolumeElements().Range())
               {
-                const Element & el = mesh[ei]; // .VolumeElement (i);
+                auto el = mesh[ei]; // .VolumeElement (i);
                 int ned;
                 int tetedges[6][2] =
                   { { 1, 2 },
@@ -804,7 +804,7 @@ namespace netgen
                     //for (int i = 1; i <= mesh.GetNE(); i++)
                     for (auto ei : mesh.VolumeElements().Range())
                       {
-                        const Element & el = mesh[ei]; // .VolumeElement (i);         
+                        auto el = mesh[ei]; // .VolumeElement (i);         
                         if (el.GetNP() != 6) continue;
 
                         int prismpairs[3][4] =
@@ -873,7 +873,7 @@ namespace netgen
 
 
   template <typename T_EDGENUMBER>
-  void BTDefineMarkedTet (const Element & el,
+  void BTDefineMarkedTet (const ElementRef & el,
                           T_EDGENUMBER & edgenumber,
                           MarkedTet & mt)
   {
@@ -930,7 +930,7 @@ namespace netgen
 
 
   template <typename T_EDGENUMBER>  
-  void BTDefineMarkedPrism (const Element & el,
+  void BTDefineMarkedPrism (const ElementRef & el,
                             T_EDGENUMBER & edgenumber,
                             MarkedPrism & mp)
   {
@@ -2031,7 +2031,7 @@ namespace netgen
         // for (int i = 1; i <= ne; i++)
         for (auto ei : mesh.VolumeElements().Range())
           {
-            const Element & el = mesh[ei];
+            auto el = mesh[ei];
             if (el.GetType() == PRISM ||
                 el.GetType() == PRISM12)
               {
@@ -2056,7 +2056,7 @@ namespace netgen
         // for (int i = 1; i <= ne; i++)
         for (auto ei : mesh.VolumeElements().Range())
           {
-            const Element & el = mesh[ei];
+            auto el = mesh[ei];
             
             switch (el.GetType())
               {
@@ -2098,7 +2098,7 @@ namespace netgen
                             if (cnt % 2)
                               Swap (p3, p4);
                             
-                            Element hel = el;
+                            Element hel (el);
                             hel[0] = el.PNum(j);
                             hel[1] = el.PNum(k);
                             hel[2] = el.PNum(p3);
@@ -2128,7 +2128,7 @@ namespace netgen
                   se.Sort();
                   if (shortedges.Used (se))
                     {
-                      Element hel = el;
+                      Element hel (el);
                       hel[0] = el[1];
                       hel[1] = el[2];
                       hel[2] = el[3];
@@ -2599,7 +2599,7 @@ namespace netgen
         const Element & el = mesh[ei];
     */
 
-    for (const Element & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       {
         //int pos = elements_before[el[0]]->Pos(el);
         //int elnum = (pos >= 0) ? (*markedelts_num[el[0]])[pos] : -1;
@@ -3012,7 +3012,7 @@ namespace netgen
                             // for(ElementIndex ei = 0; ei < mesh.GetNE(); ei++)
                             for (auto ei : mesh.VolumeElements().Range())
                               {
-                                const Element & el = mesh[ei];
+                                auto el = mesh[ei];
                                 
                                 //
                                 Point<3> center(0,0,0);

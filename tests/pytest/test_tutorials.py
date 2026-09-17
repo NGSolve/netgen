@@ -38,17 +38,22 @@ def saveNormalizedMesh(mesh, filename):
 def hashArray(a):
     return hashlib.sha256(np.ascontiguousarray(a).tobytes()).hexdigest()
 
-def elementArray(elements):
+def elementArray(elements, ncols=None):
     # copy fields, the structured array contains uninitialized padding bytes
     a = elements.NumPy()
-    return np.column_stack([a['nodes'], a['index']]).astype(np.int32)
+    nodes = a['nodes']
+    if ncols is not None and nodes.shape[1] < ncols:
+        # elements store only as many node slots as needed, pad to the reference width
+        from netgen.meshing import PointId
+        nodes = np.pad(nodes, ((0, 0), (0, ncols - nodes.shape[1])), constant_values=PointId.base - 1)
+    return np.column_stack([nodes, a['index']]).astype(np.int32)
 
 def getData(mesh, mp, vol_filename):
     out = {}
     out['hash'] = saveNormalizedMesh(mesh, vol_filename)
     out['hash_el1d'] = hashArray(elementArray(mesh.Elements1D()))
     out['hash_el2d'] = hashArray(elementArray(mesh.Elements2D()))
-    out['hash_el3d'] = hashArray(elementArray(mesh.Elements3D()))
+    out['hash_el3d'] = hashArray(elementArray(mesh.Elements3D(), 20))
     out['hash_points'] = hashArray(np.array(mesh.Coordinates(), dtype=np.float64))
     out['ne1d'] = len(mesh.Elements1D())
     out['ne2d'] = len(mesh.Elements2D())

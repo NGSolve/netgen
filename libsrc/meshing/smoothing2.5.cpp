@@ -112,7 +112,7 @@ namespace netgen
     TBitArray<PointIndex> badnodes(np);
     badnodes.Clear();
 
-    for (auto & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       {
         double bad = el.CalcJacobianBadness (mesh.Points());
         if (bad > 1)

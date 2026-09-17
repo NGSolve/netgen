@@ -212,7 +212,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
 {
-  const Element & el = (*mesh)[ElementIndex::FromNr0(nr)];
+  auto el = (*mesh)[ElementIndex::FromNr0(nr)];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());

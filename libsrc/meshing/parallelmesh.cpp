@@ -589,7 +589,7 @@ namespace netgen
     // for (int ei = 1; ei <= GetNE(); ei++)
     for (ElementIndex ei : VolumeElements().Range())
       {
-        const Element & el = VolumeElement (ei);
+        auto el = VolumeElement (ei);
         // int dest = el.GetPartition();
         int dest = vol_partition[ei];
         elarraysize[dest] += 3 + el.GetNP();
@@ -599,7 +599,7 @@ namespace netgen
     
     for (ElementIndex ei : VolumeElements().Range())    
       {
-        const Element & el = VolumeElement (ei);
+        auto el = VolumeElement (ei);
         int dest = vol_partition[ei];
         
         elementarrays.Add (dest, ei.Nr1());
@@ -962,7 +962,7 @@ namespace netgen
     auto & self = const_cast<Mesh&>(*this);
     self.points = T_POINTS(0);
     self.surfelements = Array<Element2d>(0);
-    self.volelements = Array<Element>(0);
+    self.volelements = T_VOLELEMENTS();
     self.segments = Array<Segment>(0);
     self.pointelements = Array<Element0d>(0);
     self.lockedpoints = Array<PointIndex>(0);
@@ -1367,7 +1367,7 @@ namespace netgen
     for (int i = 0; i < GetNE(); i++)
       {
         eptr.Append (eind.Size());
-        const Element & el = (*this)[ElementIndex::FromNr1(i+1)];
+        auto el = (*this)[ElementIndex::FromNr1(i+1)];
         for (int j = 0; j < el.GetNP(); j++)
           eind.Append (el[j].Nr0());
       }
@@ -1465,7 +1465,7 @@ namespace netgen
     auto loop_els_3d = [&](auto f) {
       for (ElementIndex ei : VolumeElements().Range())
         {
-          const Element & el = (*this)[ei];
+          auto el = (*this)[ei];
           for (int j = 0; j < el.GetNP(); j++)
             f(el[j], ei);
         }
@@ -1506,7 +1506,7 @@ namespace netgen
             
             for (int j = 0; j < els.Size(); j++)
               {
-                const Element & el = (*this)[ElementIndex::FromNr0(els[j])];
+                auto el = (*this)[ElementIndex::FromNr0(els[j])];
                 
                 bool hasall = true;
                 
@@ -1544,7 +1544,7 @@ namespace netgen
             
             for (int j = 0; j < els.Size(); j++)
               {
-                const Element & el = (*this)[ElementIndex::FromNr0(els[j])];
+                auto el = (*this)[ElementIndex::FromNr0(els[j])];
                 
                 bool haspi[9] = { false };  // max surfnp
                 
@@ -1664,7 +1664,7 @@ namespace netgen
       {
         eptr.Append (eind.Size());
         
-        const Element & el = (*this)[ElementIndex::FromNr1(i+1)];
+        auto el = (*this)[ElementIndex::FromNr1(i+1)];
         
         int ind = el.GetIndex();        
         if (volume_weights.Size()<ind)

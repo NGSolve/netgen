@@ -18,7 +18,7 @@ inline void AppendEdges( const Element2d & elem, PointIndex pi, Array<std::tuple
   }
 }
 
-inline void AppendEdges( const Element & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
+inline void AppendEdges( const ElementRef & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
 {
   static constexpr int tetedges[6][2] =
   { { 0, 1 }, { 0, 2 }, { 0, 3 },

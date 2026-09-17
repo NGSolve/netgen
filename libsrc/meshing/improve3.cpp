@@ -39,7 +39,7 @@ static inline bool NotTooBad(double bad1, double bad2)
 }
 
 // Calc badness of new element where pi1 and pi2 are replaced by pnew
-double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const Element & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
+double CalcBadReplacePoints (const Mesh::T_POINTS & points, const MeshingParameters & mp, const ElementRef & elem, double h, PointIndex &pi1, PointIndex &pi2, MeshPoint &pnew)
   {
     if (elem.GetType() != TET) return 0;
 
@@ -166,7 +166,7 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
     int bad_elements_local = 0;
     for (ElementIndex ei : myrange)
     {
-      auto & el = mesh[ei];
+      auto el = mesh[ei];
       if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) continue;
       if(!el.BadnessValid())
         el.SetBadness(CalcBad(mesh.Points(), el, 0));
@@ -234,7 +234,7 @@ double MeshOptimize3d :: CombineImproveEdge (
 
   for (auto ei : elements_of_point[pi0] )
   {
-      Element & elem = mesh[ei];
+      auto elem = mesh[ei];
       if (elem.IsDeleted()) return false;
       if(elem.GetType() != TET) return false; // TODO: implement case where pi0 or pi1 is top of a pyramid
 
@@ -252,7 +252,7 @@ double MeshOptimize3d :: CombineImproveEdge (
 
   for (auto ei : elements_of_point[pi1] )
   {
-      Element & elem = mesh[ei];
+      auto elem = mesh[ei];
       if (elem.IsDeleted()) return false;
       if(elem.GetType() != TET) return false; // TODO: implement case where pi0 or pi1 is top of a pyramid
 
@@ -278,7 +278,7 @@ double MeshOptimize3d :: CombineImproveEdge (
     std::set<PointIndex> edges_before, edges_after;
 
     for (auto ei : has_one_point) {
-        const auto el = mesh[ei];
+        const auto el = Copy(mesh[ei]);
         for(auto i : Range(6)) {
           auto e0 = el[tetedges[i][0]];
           auto e1 = el[tetedges[i][1]];
@@ -302,7 +302,7 @@ double MeshOptimize3d :: CombineImproveEdge (
   double badness_new = 0;
   for (auto i : Range(has_one_point))
   {
-      const Element & elem = mesh[has_one_point[i]];
+      auto elem = mesh[has_one_point[i]];
       double badness = CalcBadReplacePoints (mesh.Points(), mp, elem, 0, pi0, pi1, pnew);
       badness_new += badness;
       one_point_badness[i] = badness;
@@ -313,7 +313,7 @@ double MeshOptimize3d :: CombineImproveEdge (
   {
       for (auto ei : has_one_point)
       {
-          Element elem = mesh[ei];
+          Element elem (mesh[ei]);
           // int l;
           for (int l = 0; l < 4; l++)
               if (elem[l] == pi1)
@@ -338,7 +338,7 @@ double MeshOptimize3d :: CombineImproveEdge (
 
       for (auto ei : elements_of_point[pi1])
       {
-          Element & elem = mesh[ei];
+          auto elem = mesh[ei];
           if (elem.IsDeleted()) continue;
 
           for (int l = 0; l < elem.GetNP(); l++)
@@ -473,7 +473,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
 
   for (ElementIndex ei : elementsonnode[pi1])
     {
-      Element & el = mesh[ei];
+      auto el = mesh[ei];
 
       if(el.IsDeleted()) return 0.0;
 
@@ -523,7 +523,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
   locfaces.SetSize(0);
   for (ElementIndex ei : hasbothpoints)
     {
-      const Element & el = mesh[ei];
+      auto el = mesh[ei];
 
       for (int l = 0; l < 4; l++)
           if (el[l] == pi1 || el[l] == pi2)
@@ -570,9 +570,9 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
 
   for (int k = 0; k < hasbothpoints.Size(); k++)
     {
-      Element & oldel = mesh[hasbothpoints[k]];
-      Element newel1 = oldel;
-      Element newel2 = oldel;
+      auto oldel = mesh[hasbothpoints[k]];
+      Element newel1 (oldel);
+      Element newel2 (oldel);
 
       newel1.Touch();
       newel2.Touch();
@@ -614,9 +614,9 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
 
       for (ElementIndex ei : hasbothpoints)
         {
-          Element & oldel = mesh[ei];
-          Element newel1 = oldel;
-          Element newel2 = oldel;
+          auto oldel = mesh[ei];
+          Element newel1 (oldel);
+          Element newel2 (oldel);
 
           newel1.Touch();
           newel2.Touch();
@@ -750,7 +750,7 @@ double MeshOptimize3d :: SwapImproveEdge (
   for (ElementIndex elnr : elementsonnode[pi1])
     {
       bool has1 = 0, has2 = 0;
-      const Element & elem = mesh[elnr];
+      auto elem = mesh[elnr];
 
       if (elem.IsDeleted()) return 0.0;
 
@@ -840,7 +840,7 @@ double MeshOptimize3d :: SwapImproveEdge (
     {
       PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID), pi5(PointIndex::INVALID);
 
-      Element & elem = mesh[hasbothpoints[0]];
+      auto elem = mesh[hasbothpoints[0]];
       for (int l = 0; l < 4; l++)
           if (elem[l] != pi1 && elem[l] != pi2)
             {
@@ -859,7 +859,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       pi5.Invalidate();
       for (int k = 0; k < 3; k++)   // JS, 201212
         {
-          const Element & elemk = mesh[hasbothpoints[k]];
+          auto elemk = mesh[hasbothpoints[k]];
           bool has1 = false;
           for (int l = 0; l < 4; l++)
               if (elemk[l] == pi4)
@@ -930,7 +930,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       PointIndex pi3(PointIndex::INVALID), pi4(PointIndex::INVALID);
       PointIndex pi5(PointIndex::INVALID), pi6(PointIndex::INVALID);
 
-      const Element & elem1 = mesh[hasbothpoints[0]];
+      auto elem1 = mesh[hasbothpoints[0]];
       for (int l = 0; l < 4; l++)
           if (elem1[l] != pi1 && elem1[l] != pi2)
             {
@@ -950,7 +950,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       pi5.Invalidate();
       for (int k = 0; k < 4; k++)
         {
-          const Element & elem = mesh[hasbothpoints[k]];
+          auto elem = mesh[hasbothpoints[k]];
           bool has1 = elem.PNums().Contains(pi4);
           if (has1)
             {
@@ -963,7 +963,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       pi6.Invalidate();
       for (int k = 0; k < 4; k++)
         {
-          const Element & elem = mesh[hasbothpoints[k]];
+          auto elem = mesh[hasbothpoints[k]];
           bool has1 = elem.PNums().Contains(pi3);
           if (has1)
             {
@@ -1043,7 +1043,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       ArrayMem<PointIndex, 50> suroundpts(nsuround);
       ArrayMem<bool, 50> tetused(nsuround);
 
-      Element & elem = mesh[hasbothpoints[0]];
+      auto elem = mesh[hasbothpoints[0]];
 
       for (int l = 0; l < 4; l++)
           if (elem[l] != pi1 && elem[l] != pi2)
@@ -1072,7 +1072,7 @@ double MeshOptimize3d :: SwapImproveEdge (
           for (int k = 0; k < nsuround && !newpi.IsValid(); k++)
               if (!tetused[k])
                 {
-                  const Element & nel = mesh[hasbothpoints[k]];
+                  auto nel = mesh[hasbothpoints[k]];
                   for (int k2 = 0; k2 < 4 && !newpi.IsValid(); k2++)
                       if (nel[k2] == oldpi)
                         {
@@ -1193,7 +1193,7 @@ double MeshOptimize3d :: SwapImproveEdge (
 
           for (int k = 0; k < nsuround; k++)
             {
-              Element & rel = mesh[hasbothpoints[k]];
+              auto rel = mesh[hasbothpoints[k]];
               /*
                  (*testout) << nsuround << "-swap, old el = "
                  << rel << endl;
@@ -1317,7 +1317,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
 
       for (ElementIndex ei : mesh.VolumeElements().Range().Modify(num_elements_before, 0))
       {
-          const Element & el = mesh[ei];
+          auto el = mesh[ei];
           for (auto i : Range(1,5))
           {
               Element2d sel;
@@ -1440,7 +1440,7 @@ void MeshOptimize3d :: SwapImproveSurface (
       if (goal == OPT_LEGAL && mesh.LegalTet (mesh[ei]))
         continue;
 
-      const Element & elemi = mesh[ei];
+      auto elemi = mesh[ei];
       //Element elemi = mesh[ei];
       if (elemi.IsDeleted()) continue;
 
@@ -1509,7 +1509,7 @@ void MeshOptimize3d :: SwapImproveSurface (
             {
               bool has1 = false, has2 = false;
               ElementIndex elnr = elementsonnode[pi1][k];
-              const Element & elem = mesh[elnr];
+              auto elem = mesh[elnr];
               
               if (elem.IsDeleted()) continue;
               
@@ -1569,7 +1569,7 @@ void MeshOptimize3d :: SwapImproveSurface (
                 {
                   bool has1 = false, has2 = false;
                   ElementIndex elnr = elementsonnode[pi1other][k];
-                  const Element & elem = mesh[elnr];
+                  auto elem = mesh[elnr];
               
                   if (elem.IsDeleted()) continue;
               
@@ -2211,7 +2211,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
   double bad1, bad2;
   double d_badness = 0.0;
 
-  Element & elem = mesh[eli1];
+  auto elem = mesh[eli1];
   if (elem.IsDeleted()) return 0.0;
 
   int mattyp = elem.GetIndex();
@@ -2283,7 +2283,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
 
       if ( eli1 != eli2 )
       {
-          Element & elem2 = mesh[eli2];
+          auto elem2 = mesh[eli2];
           if (elem2.GetType() != TET)
               continue;
 
@@ -2481,7 +2481,7 @@ double MeshOptimize3d :: SplitImprove2Element (
                             const Table<ElementIndex, PointIndex> & elements_of_point,
                             bool check_only)
 {
-  auto & el = mesh[ei];
+  auto el = mesh[ei];
   if(el.GetType() != TET)
     return false;
 
@@ -2538,7 +2538,7 @@ double MeshOptimize3d :: SplitImprove2Element (
   // find all tets with edge (pi0,pi1) or (pi2,pi3)
   for (auto ei0 : elements_of_point[pi0] )
   {
-    Element & elem = mesh[ei0];
+    auto elem = mesh[ei0];
     if (elem.IsDeleted()) return false;
     if (ei0 == ei) continue;
     if (elem.GetType() != TET) return false;
@@ -2550,7 +2550,7 @@ double MeshOptimize3d :: SplitImprove2Element (
 
   for (auto ei1 : elements_of_point[pi2] )
   {
-    Element & elem = mesh[ei1];
+    auto elem = mesh[ei1];
     if (elem.IsDeleted()) return false;
     if (ei1 == ei) continue;
     if (elem.GetType() != TET) return false;
@@ -2568,14 +2568,14 @@ double MeshOptimize3d :: SplitImprove2Element (
     if(mesh[ei0].GetType()!=TET)
       return false;
     badness_before += mesh[ei0].GetBadness();
-    badness_after += SplitElementBadness (mesh.Points(), mp, mesh[ei0], pi0, pi1, pnew);
+    badness_after += SplitElementBadness (mesh.Points(), mp, Copy(mesh[ei0]), pi0, pi1, pnew);
   }
   for (auto ei1 : has_both_points1)
   {
     if(mesh[ei1].GetType()!=TET)
       return false;
     badness_before += mesh[ei1].GetBadness();
-    badness_after += SplitElementBadness (mesh.Points(), mp, mesh[ei1], pi2, pi3, pnew);
+    badness_after += SplitElementBadness (mesh.Points(), mp, Copy(mesh[ei1]), pi2, pi3, pnew);
   }
 
   if(check_only)
@@ -2589,14 +2589,14 @@ double MeshOptimize3d :: SplitImprove2Element (
 
     for (auto ei1 : has_both_points0)
     {
-      auto new_els = SplitElement(mesh[ei1], pi0, pi1, pinew);
+      auto new_els = SplitElement(Copy(mesh[ei1]), pi0, pi1, pinew);
       for(const auto & el : new_els)
         mesh.AddVolumeElement(el);
       mesh[ei1].Delete();
     }
     for (auto ei1 : has_both_points1)
     {
-      auto new_els = SplitElement(mesh[ei1], pi2, pi3, pinew);
+      auto new_els = SplitElement(Copy(mesh[ei1]), pi2, pi3, pinew);
       for(const auto & el : new_els)
         mesh.AddVolumeElement(el);
       mesh[ei1].Delete();

@@ -52,7 +52,7 @@ void WriteTochnogFormat (const Mesh & mesh,
   while (!finished)
     {
       int actcnt = 0;
-      const Element & el1 = mesh[ElementIndex::FromNr1(1)];
+      auto el1 = mesh[ElementIndex::FromNr1(1)];
       int non = el1.GetNP();
       if (non == 4)
         {
@@ -65,7 +65,7 @@ void WriteTochnogFormat (const Mesh & mesh,
 
       for (ElementIndex i : T_Range<ElementIndex>(ne))
         {
-          const Element & el = mesh[i];
+          auto el = mesh[i];
               
           if (el.GetIndex() == indcnt)
             {

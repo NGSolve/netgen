@@ -118,7 +118,7 @@ void WriteNeutralFormat (const Mesh & mesh,
         {
           Element el = mesh.VolumeElement(i);
       */
-      for (Element el : mesh.VolumeElements())
+      for (auto el : mesh.VolumeElements())
         {
           if (inverttets)
             el.Invert();
@@ -614,7 +614,7 @@ void WriteFEPPFormat (const Mesh & mesh,
         {
           const Element & el = mesh.VolumeElement(i);
       */
-      for (const Element & el : mesh.VolumeElements())
+      for (auto el : mesh.VolumeElements())
         {
           outfile.width(4);
           outfile << el.GetIndex() << " ";
@@ -744,7 +744,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
     {
       int i = ei-IndexBASE(ei)+1;
       
-      Element el = mesh.VolumeElement(ei);
+      Element el (mesh.VolumeElement(ei));
 
       if (inverttets)
         el.Invert();

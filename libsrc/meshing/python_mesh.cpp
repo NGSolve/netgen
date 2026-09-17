@@ -353,7 +353,29 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   [](MeshPoint & pnt, double sing) { pnt.Singularity(sing); })
     ;
 
-  py::class_<Element>(m, "Element3D")
+  py::class_<ElementRef>(m, "Element3DRef", "handle to a volume element stored in a mesh")
+    .def("__repr__", [] (const ElementRef & self) { return ToString(self); })
+    .def_property("index", &ElementRef::GetIndex, &ElementRef::SetIndex)
+    .def_property("curved", &ElementRef::IsCurved, &ElementRef::SetCurved)
+    .def_property("refine", [] (const ElementRef & self) { return bool(self.TestRefinementFlag()); },
+                  [] (ElementRef & self, bool refine) { self.SetRefinementFlag(refine); })
+    .def_property_readonly("vertices", [] (const ElementRef & self) -> py::list
+                           {
+                             py::list li;
+                             for (int i = 0; i < self.GetNV(); i++)
+                               li.append (py::cast(self[i]));
+                             return li;
+                           })
+    .def_property_readonly("points", [] (const ElementRef & self) -> py::list
+                           {
+                             py::list li;
+                             for (int i = 0; i < self.GetNP(); i++)
+                               li.append (py::cast(self[i]));
+                             return li;
+                           })
+    ;
+
+  py::class_<Element, ElementRef>(m, "Element3D")
     .def(py::init([](int index, std::vector<PointIndex> vertices)
                   {
                     int np = vertices.size();
@@ -382,56 +404,58 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           py::arg("index")=1,py::arg("vertices"),
          "create volume element"
          )
-    .def("__repr__", &ToString<Element>)
-    .def_property("index", &Element::GetIndex, &Element::SetIndex)
-    .def_property("curved", &Element::IsCurved, &Element::SetCurved)
-    .def_property("refine", &Element::TestRefinementFlag, &Element::SetRefinementFlag)
-    .def_property_readonly("vertices", 
-                  FunctionPointer ([](const Element & self) -> py::list
-                                   {
-                                     py::list li;
-                                     for (int i = 0; i < self.GetNV(); i++)
-                                       li.append (py::cast(self[i]));
-                                     return li;
-                                   }))
-    .def_property_readonly("points", 
-                  FunctionPointer ([](const Element & self) -> py::list
-                                   {
-                                     py::list li;
-                                     for (int i = 0; i < self.GetNP(); i++)
-                                       li.append (py::cast(self[i]));
-                                     return li;
-                                   }))
+    .def(py::init([] (const ElementRef & el) { return new Element(el); }), "copy of a stored element")
     ;
+  py::implicitly_convertible<ElementRef, Element>();
 
-  if(ngcore_have_numpy)
-  {
-    auto data_layout = Element::GetDataLayout();
-
-    py::detail::npy_format_descriptor<Element>::register_dtype({
-        py::detail::field_descriptor {
-          "nodes", data_layout["pnum"],
-          ELEMENT_MAXPOINTS * sizeof(PointIndex),
-          py::format_descriptor<int[ELEMENT_MAXPOINTS]>::format(),
-          py::detail::npy_format_descriptor<int[ELEMENT_MAXPOINTS]>::dtype() },
-        py::detail::field_descriptor {
-          "index", data_layout["index"], sizeof(int),
-          py::format_descriptor<int>::format(),
-          py::detail::npy_format_descriptor<int>::dtype() },
-        py::detail::field_descriptor {
-          "np", data_layout["np"], sizeof(int8_t),
-          py::format_descriptor<signed char>::format(),
-            pybind11::dtype("int8") },
-        py::detail::field_descriptor {
-          "refine", data_layout["refine"], sizeof(bool),
-          py::format_descriptor<bool>::format(),
-          py::detail::npy_format_descriptor<bool>::dtype() },            
-        py::detail::field_descriptor {
-          "curved", data_layout["curved"], sizeof(bool),
-          py::format_descriptor<bool>::format(),
-          py::detail::npy_format_descriptor<bool>::dtype()}            
-      });
-  }
+  py::class_<T_VOLELEMENTS> (m, "VolumeElementArray", py::buffer_protocol())
+    .def ("__len__", [] (T_VOLELEMENTS & self) { return self.Size(); })
+    .def ("__getitem__",
+          [] (T_VOLELEMENTS & self, ElementIndex i) -> ElementRef
+          {
+            auto reli = i - IndexBASE<ElementIndex>();
+            if (reli < 0 || reli >= self.Size())
+              throw py::index_error();
+            return self[i];
+          }, py::keep_alive<0,1>())
+    .def ("__setitem__",
+          [] (T_VOLELEMENTS & self, ElementIndex i, const ElementRef & el)
+          {
+            auto reli = i - IndexBASE<ElementIndex>();
+            if (reli < 0 || reli >= self.Size())
+              throw py::index_error();
+            if (size_t(el.GetNP()) > self.Width())
+              self.SetWidth (el.GetNP());
+            self[i] = el;
+          })
+    .def ("__iter__", [] (T_VOLELEMENTS & self)
+          { return py::make_iterator (self.begin(), self.end()); }, py::keep_alive<0,1>())
+    .def ("__str__", [] (T_VOLELEMENTS & self)
+          {
+            std::stringstream str;
+            for (auto el : self) str << el << endl;
+            return str.str();
+          })
+    .def_buffer ([] (T_VOLELEMENTS & self)
+                 {
+                   return py::buffer_info (self.Data(), 1, "B", 1,
+                                           { ssize_t(self.Size()*self.Stride()) }, { ssize_t(1) });
+                 })
+    .def ("NumPy", [] (py::object self)
+          {
+            auto & els = self.cast<T_VOLELEMENTS&>();
+            py::list names, formats, offsets;
+            auto add = [&] (const char * name, py::dtype format, py::ssize_t offset)
+            { names.append (name); formats.append (format); offsets.append (offset); };
+            add ("nodes", py::dtype ("(" + ToString(els.Width()) + ",)i4"), els.GetLayout().offset[0]);
+            add ("index", py::dtype ("i4"), offsetof(ElementHeader, index));
+            add ("np", py::dtype ("i1"), offsetof(ElementHeader, np));
+            add ("refine", py::dtype ("?"), offsetof(ElementHeader, flags));
+            add ("curved", py::dtype ("?"), offsetof(ElementHeader, is_curved));
+            py::dtype dt (names, formats, offsets, els.Stride());
+            return py::module::import("numpy").attr("frombuffer")(self, dt);
+          })
+    ;
 
   py::class_<Element2d>(m, "Element2D")
     .def(py::init ([](int index, std::vector<PointIndex> vertices,
@@ -779,7 +803,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   PYBIND11_NUMPY_DTYPE(ElementIndex, i);
   ExportArray<ElementIndex, ElementIndex>(m);
   
-  ExportArray<Element,ElementIndex>(m);
   ExportArray<Element2d,SurfaceElementIndex>(m);
   ExportArray<Segment,SegmentIndex>(m);
   ExportArray<Element0d>(m);
@@ -1152,9 +1175,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
-    .def("Elements3D", 
-         static_cast<Array<Element,ElementIndex>&(Mesh::*)()> (&Mesh::VolumeElements),
-         py::return_value_policy::reference)
+    .def("Elements3D",
+         [] (Mesh & self) -> T_VOLELEMENTS & { return self.VolumeElements(); },
+         py::return_value_policy::reference_internal)
 
     .def("Elements2D", 
          static_cast<Array<Element2d,SurfaceElementIndex>&(Mesh::*)()> (&Mesh::SurfaceElements),
@@ -1254,7 +1277,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.AddPoint (Point<3>(p));
           })
           
-    .def ("Add", [](Mesh & self, const Element & el)
+    .def ("Add", [](Mesh & self, const ElementRef & el)
           {
             return self.AddVolumeElement (el);
           })

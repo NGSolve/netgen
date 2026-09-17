@@ -533,7 +533,7 @@ namespace netgen
   
   /*
     double CalcVolume (const Array<Point<3>> & points,
-    const Element & el)
+    const ElementRef & el)
     {
     Vec<3> v1 = points.Get(el[1]) - 
     points.Get(el[0]);
@@ -808,7 +808,7 @@ namespace netgen
           }
       }
   
-    for (auto & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       {
 
         for (int j = 1; j <= 4; j++)
@@ -845,7 +845,7 @@ namespace netgen
   
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        const Element & el = mesh[ei];
+        auto el = mesh[ei];
 
         for (int j = 1; j <= 4; j++)
           {
@@ -904,7 +904,7 @@ namespace netgen
         (*testout) << "volelements: " << endl;
         for (ElementIndex ei : mesh.VolumeElements().Range())
           {
-            const Element & el = mesh[ei];
+            auto el = mesh[ei];
             (*testout) << setw(5) << ei << ":" 
                        << setw(6) << el.GetIndex() 
                        << setw(6) << el[0] << setw(4) << el[1]
@@ -943,7 +943,7 @@ namespace netgen
               }
           }
 
-        for (auto & el : mesh.VolumeElements())
+        for (auto el : mesh.VolumeElements())
           {
             if (el.GetIndex() == k)
               {

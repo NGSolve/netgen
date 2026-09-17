@@ -47,7 +47,7 @@ namespace netgen
     // for (int i = 1; i <= mesh.GetNE(); i++)
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        Element & el = mesh.VolumeElement(ei);
+        auto el = mesh.VolumeElement(ei);
         if (el.GetType() != TET) continue;
 
         for (int j = 1; j <= 3; j++)
@@ -111,7 +111,7 @@ namespace netgen
     // int i, j, k;
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        Element & el = mesh.VolumeElement(ei);
+        auto el = mesh.VolumeElement(ei);
         if (el.GetType() == TET)
           {
             for (int j = 1; j <= 3; j++)
@@ -379,7 +379,7 @@ namespace netgen
 
         for (ElementIndex ei : mesh.VolumeElements().Range())
           {
-            Element & el = mesh.VolumeElement (ei);
+            auto el = mesh.VolumeElement (ei);
             if (el.GetType() != PRISM)
               continue;
 
@@ -430,7 +430,7 @@ namespace netgen
             change = 0;
             for (ElementIndex ei : mesh.VolumeElements().Range())
               {
-                Element & el = mesh.VolumeElement (ei);
+                auto el = mesh.VolumeElement (ei);
                 if (el.GetType() != PRISM)
                   continue;
               
@@ -534,7 +534,7 @@ namespace netgen
         // refining are not visited
         for (ElementIndex ei : mesh.VolumeElements().Range())
           {
-            Element & el = mesh.VolumeElement (ei);
+            auto el = mesh.VolumeElement (ei);
             if (el.GetNP() != 6)
               continue;
 
@@ -676,7 +676,7 @@ namespace netgen
   {
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        Element& el = mesh.VolumeElement(ei);
+        auto el = mesh.VolumeElement(ei);
         if(el.GetType() != PRISM)
           continue;
         if(el[2] == el[5])

@@ -166,7 +166,7 @@ namespace netgen
         for (int i = 0; i < index0.Size(); i++)
           inv_index[PointIndex::FromNr0(index0[i])] = PointIndex::FromNr0(i);
         
-        for (auto & el : mesh.VolumeElements())
+        for (auto el : mesh.VolumeElements())
           for (PointIndex & pi : el.PNums())
             pi = inv_index[pi];
         for (auto & el : mesh.SurfaceElements())

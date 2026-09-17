@@ -73,7 +73,7 @@ void WriteFEAPFormat (const Mesh & mesh,
 
   for (ElementIndex i : mesh.VolumeElements().Range())
     {
-      Element el = mesh[i];
+      Element el (mesh[i]);
       if (inverttets)
         el.Invert();
 

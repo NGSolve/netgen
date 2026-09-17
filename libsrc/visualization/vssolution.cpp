@@ -287,7 +287,7 @@ namespace netgen
           cntverts += 1 + (*mesh)[ei].GetNP();
 
         ost << "\nCELLS " << mesh->GetNE() << " " << cntverts << "\n";
-        for (auto & el : mesh->VolumeElements())
+        for (auto el : mesh->VolumeElements())
           {
             ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
@@ -295,7 +295,7 @@ namespace netgen
             ost << "\n";
           }
         ost << "\nCELL_TYPES " << mesh->GetNE() << "\n";
-        for (auto & el : mesh->VolumeElements())
+        for (auto el : mesh->VolumeElements())
           {
             switch (el.GetType())
               {
@@ -1924,7 +1924,7 @@ namespace netgen
         // if(vispar.clipdomain > 0 && vispar.clipdomain != (*mesh)[ei].GetIndex()) continue;
         // if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
 
-        const Element & el = (*mesh)[ei];
+        auto el = (*mesh)[ei];
         if(!VolumeElementActive(sol, *mesh, el))
           continue;
 
@@ -2820,7 +2820,7 @@ namespace netgen
         }
       case SOL_NODAL:
         {
-          const Element & el = (*mesh)[elnr];
+          auto el = (*mesh)[elnr];
 
           double lami[8] = { 0.0 };
           int np = 0;
@@ -2871,7 +2871,7 @@ namespace netgen
 
       case SOL_NONCONTINUOUS:
         {
-          const Element & el = (*mesh)[elnr];
+          auto el = (*mesh)[elnr];
 
           double lami[8] = { 0.0 };
           int np = 0;
@@ -2991,7 +2991,7 @@ namespace netgen
         }
       case SOL_NODAL:
         {
-          const Element & el = (*mesh)[elnr];
+          auto el = (*mesh)[elnr];
 
           double lami[8] = { 0.0 };
           int np = 0;
@@ -3041,7 +3041,7 @@ namespace netgen
 
       case SOL_NONCONTINUOUS:
         {
-          const Element & el = (*mesh)[elnr];
+          auto el = (*mesh)[elnr];
 
           double lami[8] = { 0.0 };
           int np = 0;
@@ -3997,7 +3997,7 @@ namespace netgen
       {
         // NgProfiler::RegionTimer reg1a (timer1a);
 
-        const Element & el = (*mesh)[ei];
+        auto el = (*mesh)[ei];
         if(!VolumeElementActive(sol, *mesh, el))
           continue;
 
@@ -4745,7 +4745,7 @@ namespace netgen
   }
 
   bool VisualSceneSolution ::
-  VolumeElementActive(const SolData *data, const Mesh & mesh, const Element & el) const
+  VolumeElementActive(const SolData *data, const Mesh & mesh, const ElementRef & el) const
   {
     bool is_active = true;
     if(data->draw_volumes)

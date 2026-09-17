@@ -81,7 +81,7 @@ namespace netgen
     /// surface elements, 2d-inner elements
     Array<Element2d, SurfaceElementIndex> surfelements;
     /// volume elements
-    Array<Element, ElementIndex> volelements;
+    T_VOLELEMENTS volelements;
     /// points will be fixed forever
     Array<PointIndex> lockedpoints;
 
@@ -341,19 +341,19 @@ namespace netgen
     DLL_HEADER void RebuildSurfaceElementLists ();
     DLL_HEADER void GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const;
 
-    DLL_HEADER ElementIndex AddVolumeElement (const Element & el);
+    DLL_HEADER ElementIndex AddVolumeElement (const ElementRef & el);
     // write to pre-allocated container, thread-safe
-    DLL_HEADER void SetVolumeElement (ElementIndex sei, const Element & el);
+    DLL_HEADER void SetVolumeElement (ElementIndex sei, const ElementRef & el);
 
     auto GetNE () const { return volelements.Size(); }
 
     // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
-    Element & VolumeElement(ElementIndex i) { return volelements[i]; }
+    ElementRef VolumeElement(ElementIndex i) { return volelements[i]; }
     // [[deprecated("Use mesh[](VolumeElementIndex) instead !")]]
-    const Element & VolumeElement(ElementIndex i) const { return volelements[i]; }
+    const ElementRef VolumeElement(ElementIndex i) const { return volelements[i]; }
 
-    const Element & operator[] (ElementIndex ei) const { return volelements[ei]; }
-    Element & operator[] (ElementIndex ei) { return volelements[ei]; }
+    const ElementRef operator[] (ElementIndex ei) const { return volelements[ei]; }
+    ElementRef operator[] (ElementIndex ei) { return volelements[ei]; }
 
     ELEMENTTYPE ElementType (ElementIndex i) const 
     { return (volelements[i].Flags().fixed) ? FIXEDELEMENT : FREEELEMENT; }
@@ -579,14 +579,14 @@ namespace netgen
     FlatArray<int> GetQualityHistogram() { return tets_in_qualclass; }
 
     ///
-    bool LegalTet (Element & el) const
+    bool LegalTet (ElementRef el) const
     {
       if (el.IllegalValid())
         return !el.Illegal();
       return LegalTet2 (el);
     }
     ///
-    bool LegalTet2 (Element & el) const;
+    bool LegalTet2 (ElementRef el) const;
 
 
     ///
@@ -745,7 +745,7 @@ namespace netgen
 
     DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
     DLL_HEADER std::string_view GetRegionName(const Element2d & el) const;
-    DLL_HEADER std::string_view GetRegionName(const Element & el) const;
+    DLL_HEADER std::string_view GetRegionName(const ElementRef & el) const;
 
     std::string_view GetRegionName(SegmentIndex ei) const { return GetRegionName((*this)[ei]); }
     std::string_view GetRegionName(SurfaceElementIndex ei) const { return GetRegionName((*this)[ei]); }
