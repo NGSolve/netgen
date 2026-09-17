@@ -201,8 +201,8 @@ namespace netgen::cg
   int WriteCGNSRegion( const Mesh & mesh, int dim, int index, int fn, int base, int zone, int ne_before )
   {
     auto seg_fdi = [&mesh](const Segment& s) -> int {
-        if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
-          return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+        if (mesh.HasEdgeDescriptor(s))
+          return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
         return -1;
     };
     int meshdim = mesh.GetDimension();
@@ -232,7 +232,7 @@ namespace netgen::cg
 
     if(dim==2)
       for(const auto el : mesh.SurfaceElements())
-        if(el.GetIndex()==index)
+        if(el.GetIndex().Nr1()==index)
         {
           ne++;
           WriteCGNSElement(el, data);
@@ -760,11 +760,11 @@ namespace netgen
 
       int imax2 = 0;
       for(const auto & el : mesh.SurfaceElements())
-        imax2 = max(imax2, el.GetIndex());
+        imax2 = max(imax2, el.GetIndex().Nr1());
 
       auto seg_fdi = [&mesh](const Segment& s) -> int {
-          if (s.GetIndex() >= 1 && s.GetIndex() <= mesh.GetNED())
-            return mesh.GetEdgeDescriptor(s.GetIndex()).GetIndex();
+          if (mesh.HasEdgeDescriptor(s))
+            return mesh.GetEdgeDescriptor(s).GetIndex().Nr1();
           return -1;
       };
       int imax1 = 0;

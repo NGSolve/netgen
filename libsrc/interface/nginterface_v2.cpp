@@ -323,9 +323,9 @@ namespace netgen
   DLL_HEADER int Ng_GetElementIndex<1> (int nr)
   {
     const auto& seg = (*mesh)[SegmentIndex(nr)];
-    if (seg.GetIndex() >= 1 && seg.GetIndex() <= mesh->GetNED())
-      { int fdi = mesh->GetEdgeDescriptor(seg.GetIndex()).GetIndex(); if (fdi > 0) return fdi; }
-    return seg.GetIndex();
+    if (mesh->HasEdgeDescriptor(seg))
+      { auto fdi = mesh->GetEdgeDescriptor(seg).GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
+    return seg.GetIndex().Nr1();
   }
   
   template <>
