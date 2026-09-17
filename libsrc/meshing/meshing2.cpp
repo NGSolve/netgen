@@ -89,10 +89,9 @@ namespace netgen
     Front2PointIndex fpi = adfront.AddPoint (p, globind, mgi, pointonsurface);
     if (globind >= glob2front.Range().Next())
       {
-        size_t oldsize = glob2front.Size();
-        glob2front.SetSize (globind+1-IndexBASE<PointIndex>());
-        for (PointIndex pi = PointIndex::FromNr0(oldsize); pi < glob2front.Range().Next(); pi++)
-          glob2front[pi] = Front2PointIndex::INVALID;
+        PointIndex oldnext = glob2front.Range().Next();
+        glob2front.SetSize (globind.Nr0()+1);
+        glob2front.Range(oldnext, END) = Front2PointIndex::INVALID;
       }
     glob2front[globind] = fpi;
     return fpi;

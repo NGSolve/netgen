@@ -638,6 +638,22 @@ namespace ngcore
       return FlatArray<T> (range.Size(), data+Ind0(range.First()));
     }
 
+    /// indices [from,next) of own index type give a 0-based sub-array
+    template <typename TI = IndexType,
+              typename = std::enable_if_t<!std::is_same_v<TI,size_t>>>
+    NETGEN_INLINE FlatArray<T> Range (IndexType from, IndexType next) const
+    {
+      return Range(T_Range<IndexType>(from, next));
+    }
+
+    /// indices [from, end+indend) of own index type give a 0-based sub-array
+    template <typename TI = IndexType,
+              typename = std::enable_if_t<!std::is_same_v<TI,size_t>>>
+    NETGEN_INLINE FlatArray<T> Range (IndexType from, IndexFromEnd indend) const
+    {
+      return Range(from, Range().Next()+int(indend.Value()));
+    }
+
     /// takes range starting from position start of end-start elements
     NETGEN_INLINE const FlatArray<T> operator[] (T_Range<IndexType> range) const
     {

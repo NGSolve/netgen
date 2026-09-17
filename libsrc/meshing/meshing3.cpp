@@ -160,10 +160,9 @@ Front3PointIndex Meshing3 :: AddPoint (const Point<3> & p, PointIndex globind)
   Front3PointIndex fpi = adfront -> AddPoint (p, globind);
   if (globind >= glob2front.Range().Next())
     {
-      size_t oldsize = glob2front.Size();
-      glob2front.SetSize (globind+1-IndexBASE<PointIndex>());
-      for (PointIndex pi = PointIndex::FromNr0(oldsize); pi < glob2front.Range().Next(); pi++)
-        glob2front[pi] = Front3PointIndex::INVALID;
+      PointIndex oldnext = glob2front.Range().Next();
+      glob2front.SetSize (globind.Nr0()+1);
+      glob2front.Range(oldnext, END) = Front3PointIndex::INVALID;
     }
   glob2front[globind] = fpi;
   return fpi;
