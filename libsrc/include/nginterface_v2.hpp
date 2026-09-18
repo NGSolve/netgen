@@ -40,7 +40,7 @@ namespace netgen
   using namespace ngcore;
   
   
-  static constexpr int POINTINDEX_BASE = 1;
+  static constexpr int POINTINDEX_BASE = NETGEN_POINTINDEX_BASE;
 
   typedef int T_EDGE2; 
   typedef int T_FACE2; 

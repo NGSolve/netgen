@@ -230,9 +230,9 @@ namespace netgen
 
 
   
-  class PointIndex : public Index<int,PointIndex,1>
+  class PointIndex : public Index<int,PointIndex,NETGEN_POINTINDEX_BASE>
   {
-    friend class Index<int,PointIndex,1>;
+    friend class Index<int,PointIndex,NETGEN_POINTINDEX_BASE>;
     constexpr PointIndex (int ai) : Index(ai) { }   // use IndexBASE<PointIndex>()+nr
   public:
     using Index::Index;
