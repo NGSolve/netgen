@@ -24,7 +24,7 @@ namespace netgen
           mesh.Point(pi) = Center (mesh.Point(mesh.mlbetweennodes[pi][0]),
                                    mesh.Point(mesh.mlbetweennodes[pi][1]));
       }
-    for (auto & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       {
         double bad = el.CalcJacobianBadness (mesh.Points());
         for(int j=0; j<el.GetNP(); j++)
@@ -108,7 +108,7 @@ namespace netgen
     for(int i=0; i<bad_elements.Size(); i++)
       {
         working_elements.SetBit(bad_elements[i]);
-        const Element & el = mesh[bad_elements[i]];
+        auto el = mesh[bad_elements[i]];
         for (int j = 0; j < el.GetNP(); j++)
           working_points.SetBit(el[j]);
       }
@@ -120,7 +120,7 @@ namespace netgen
           {
             if(!working_elements.Test(j))
               {  
-                const Element & el = mesh[j];
+                auto el = mesh[j];
                 bool set_active = false;
                 
                 for(int k=1; !set_active && k<=el.GetNP(); k++)
@@ -135,7 +135,7 @@ namespace netgen
           {
             if(working_elements.Test(j))
               {
-                const Element & el = mesh[j];
+                auto el = mesh[j];
                 for (int k = 0; k < el.GetNP(); k++)
                   working_points.SetBit(el[k]);
               }

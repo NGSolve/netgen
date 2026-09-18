@@ -2847,7 +2847,7 @@ namespace netgen
         return mesh.coarsemesh->GetCurvedElements().IsCurved (ElementIndex(hpref_el.coarse_elnr));
       }
 
-    const Element & el = mesh[elnr];
+    auto el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     int nfaces = MeshTopology::GetNFaces (type);
@@ -2899,7 +2899,7 @@ namespace netgen
         return mesh.coarsemesh->GetCurvedElements().IsElementHighOrder (ElementIndex(hpref_el.coarse_elnr));
       }
 
-    const Element & el = mesh[elnr];
+    auto el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     ElementInfo info;
@@ -2970,7 +2970,7 @@ namespace netgen
       }
 
 
-    const Element & el = mesh[elnr];
+    auto el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     ElementInfo hinfo;
@@ -3065,7 +3065,7 @@ namespace netgen
   template <typename T>
   void CurvedElements :: CalcElementShapes (ElementInfo & info, Point<3,T> xi, TFlatVector<T> shapes) const
   {
-    const Element & el = mesh[info.elnr];
+    auto el = mesh[info.elnr];
 
     if (rational && info.order >= 2)
       {
@@ -3446,7 +3446,7 @@ namespace netgen
   {
     // static int timer = NgProfiler::CreateTimer ("calcelementdshapes");
     
-    const Element & el = mesh[info.elnr];
+    auto el = mesh[info.elnr];
 
     // dshapes.SetSize(info.ndof);
     // if ( (long int)(&dshapes(0,0)) % alignof(T) != 0)
@@ -4203,7 +4203,7 @@ namespace netgen
   bool CurvedElements ::
   EvaluateMapping (ElementInfo & info, Point<3,T> xi, Point<3,T> & mx, Mat<3,3,T> & jac) const
   {
-    const Element & el = mesh[info.elnr];
+    auto el = mesh[info.elnr];
     if (rational && info.order >= 2) return false; // not supported     
 
     AutoDiff<3,T> x(xi(0), 0);
@@ -4569,7 +4569,7 @@ namespace netgen
   void CurvedElements :: 
   GetCoefficients (ElementInfo & info, Vec<3> * coefs) const
   {
-    const Element & el = mesh[info.elnr];
+    auto el = mesh[info.elnr];
 
     for (int i = 0; i < info.nv; i++)
       coefs[i] = Vec<3> (mesh[el[i]]);
@@ -5257,7 +5257,7 @@ namespace netgen
     // NgProfiler::StartTimer (timer2);
 
 
-    const Element & el = mesh[elnr];
+    auto el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
 

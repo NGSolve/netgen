@@ -130,7 +130,7 @@ namespace netgen
     for (ElementIndex i : T_Range<ElementIndex>(n))
       {
         VOLELEMENT el;
-        const Element & nel = mesh[i];
+        auto nel = mesh[i];
         el.p1 = nel[0];
         el.p2 = nel[1];
         el.p3 = nel[2];

@@ -138,7 +138,7 @@ namespace netgen
            int i = ei-IndexBASE(ei)+1;
             int elType = 0;
 
-            Element el = mesh[ei];
+            Element el (mesh[ei]);
             if (inverttets) el.Invert();
 
             if(el.GetNP() == 4) elType = GMSH_TET;    //// GMSH Element type for 4 node tetrahedron

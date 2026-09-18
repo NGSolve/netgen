@@ -91,7 +91,7 @@ void WriteFluentFormat (const Mesh & mesh,
             }
         }
 
-      Element el = mesh[i];
+      Element el (mesh[i]);
       //if (inverttets)
       //  el.Invert();
           
@@ -119,7 +119,7 @@ void WriteFluentFormat (const Mesh & mesh,
               
           for (auto locind : locels)
             {
-              Element el2 = mesh[locind];
+              Element el2 (mesh[locind]);
               //if (inverttets)
               //  el2.Invert();
 

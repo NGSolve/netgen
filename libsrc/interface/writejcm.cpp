@@ -44,7 +44,7 @@ void WriteJCMFormat (const Mesh & mesh,
   int nprisms = 0;
   for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh[i];
+    Element el (mesh[i]);
     if (el.GetNP() == 4)
     {
       ntets++;
@@ -101,7 +101,7 @@ void WriteJCMFormat (const Mesh & mesh,
   pointsOnTetras = 0;
   for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh[i];
+    Element el (mesh[i]);
     if (el.GetNP() == 4)
     {
       for (j = 1; j <= 4; j++)
@@ -167,7 +167,7 @@ void WriteJCMFormat (const Mesh & mesh,
   counter = 0;
   for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh[i];
+    Element el (mesh[i]);
     if (el.GetNP() == 4)
     {
       counter++;
@@ -206,7 +206,7 @@ void WriteJCMFormat (const Mesh & mesh,
   counter = 0;
   for (ElementIndex i : T_Range<ElementIndex>(ne))
   {
-    Element el = mesh[i];
+    Element el (mesh[i]);
     if (el.GetNP() == 6)
     {
       counter++;

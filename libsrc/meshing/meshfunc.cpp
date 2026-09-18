@@ -182,7 +182,7 @@ namespace netgen
             for(auto & pi : sel.PNums())
               pi = imap[pi];
 
-          for (auto & el : m.VolumeElements())
+          for (auto el : m.VolumeElements())
             for(auto & pi : el.PNums())
               pi = imap[pi];
 
@@ -478,7 +478,7 @@ namespace netgen
          mp.sloppy = 5;
          meshing.GenerateMesh (mesh, mp);
          
-         for (auto & el : mesh.VolumeElements().Range(oldne, END))
+         for (auto el : mesh.VolumeElements().Range(oldne, END))
            el.SetIndex (domain);
          
 
@@ -862,7 +862,7 @@ namespace netgen
       }
 
       // split tet into 4 new tests, with new point inside
-      auto el = mesh[ei_max_inside];
+      auto el = Copy(mesh[ei_max_inside]);
       if(el.GetNP() != 4) {
         PrintMessage(3, "Only tet elements are supported to split around free segments");
         return;

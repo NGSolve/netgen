@@ -107,7 +107,7 @@ namespace netgen
             throw NgException ("currently refinement for quad-elements is not supported");
           }
       }
-    for (auto & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       {
         switch (el.GetType())
           {
@@ -397,7 +397,7 @@ namespace netgen
     mesh.VolumeElements().SetAllocSize(8*oldne);
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        const Element & el = mesh[ei];
+        auto el = mesh[ei];
         switch (el.GetType())
           {
           case TET:
@@ -765,7 +765,7 @@ namespace netgen
     int cnttrials = 10;
     int wrongels = 0;
 
-    for (auto & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       if (el.Volume(mesh.Points()) < 0)
         {
           wrongels++;
@@ -825,7 +825,7 @@ namespace netgen
                 // for (int i = 1; i <= mesh.GetNE(); i++)
                 for (ElementIndex ei : mesh.VolumeElements().Range())
                   {
-                    const Element & el = mesh.VolumeElement(ei);
+                    auto el = mesh.VolumeElement(ei);
                     if (el.Volume(mesh.Points()) < 0)
                       for (int j = 0; j < el.GetNP(); j++)
                         free.SetBit (el[j]);
@@ -834,7 +834,7 @@ namespace netgen
                   {
                     fhelp.Clear();
                     // for (int i = 1; i <= mesh.GetNE(); i++) 
-                    for (const Element & el : mesh.VolumeElements())
+                    for (auto el : mesh.VolumeElements())
                       {
                         // const Element & el = mesh.VolumeElement(i);
                         int freeel = 0;

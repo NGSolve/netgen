@@ -8,6 +8,7 @@
 #include "exception.hpp"
 #include "flags.hpp"
 #include "table.hpp"
+#include "dynstridearray.hpp"
 #include "hashtable.hpp"
 #include "indexset.hpp"
 #include "localheap.hpp"

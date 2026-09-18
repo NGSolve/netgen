@@ -302,7 +302,7 @@ namespace netgen
   {
   public:
     Mesh::T_POINTS & points;
-    const Array<Element, ElementIndex> & elements;
+    const T_VOLELEMENTS & elements;
     Table<ElementIndex, PointIndex> &elementsonpoint;
     bool own_elementsonpoint;
     const MeshingParameters & mp;
@@ -379,7 +379,7 @@ namespace netgen
 
     for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[ei];
+        auto el = elements[ei];
         badness += CalcTetBadness (points[el[0]], points[el[1]], 
                                    points[el[2]], points[el[3]], -1, mp);
       }
@@ -399,7 +399,7 @@ namespace netgen
 
     for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[ei];
+        auto el = elements[ei];
         for (int k = 0; k < 4; k++)
           if (el[k] == actpind)
             {
@@ -429,7 +429,7 @@ namespace netgen
 
     for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[ei];
+        auto el = elements[ei];
 
         for (int k = 1; k <= 4; k++)
           if (el.PNum(k) == actpind)
@@ -455,7 +455,7 @@ namespace netgen
   
     for (auto ei : elementsonpoint[actpind])
       {
-        const Element & el = elements[ei];
+        auto el = elements[ei];
       
         for (int k = 1; k <= 4; k++)
           if (el.PNum(k) == actpind)
@@ -533,7 +533,7 @@ namespace netgen
         pi2 = PointIndex::INVALID;
         pi3 = PointIndex::INVALID;
 
-        const Element & el = elements[elementsonpoint[actpind][i]];
+        auto el = elements[elementsonpoint[actpind][i]];
         for (int j = 1; j <= 4; j++)
           if (el.PNum(j) != actpind)
             {
@@ -942,7 +942,7 @@ double Opti3EdgeMinFunction :: FuncGrad (const Vector & x, Vector & grad) const
 
 
 
-int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
+int WrongOrientation (const Mesh::T_POINTS & points, const ElementRef & el)
 {
   const Point<3> & p1 = points[el[0]];
   const Point<3> & p2 = points[el[1]];
@@ -996,7 +996,7 @@ int WrongOrientation (const Mesh::T_POINTS & points, const Element & el)
 
 JacobianPointFunction :: 
 JacobianPointFunction (Mesh::T_POINTS & apoints, 
-                       const Array<Element, ElementIndex> & aelements)
+                       const T_VOLELEMENTS & aelements)
   : points(apoints), elements(aelements)
 {
   elementsonpoint = ngcore::CreateSortedTable<ElementIndex, PointIndex>
@@ -1059,7 +1059,7 @@ FuncGrad (const Vector & x, Vector & g) const
 
   for (auto ei : elementsonpoint[actpind])
     {
-      const Element & el = elements[ei];
+      auto el = elements[ei];
 
       lpi = 0;
       for (int k = 1; k <= el.GetNP(); k++)
@@ -1130,7 +1130,7 @@ FuncDeriv (const Vector & x, const Vector & dir, double & deriv) const
 
   for (auto ei : elementsonpoint[actpind])
     {
-      const Element & el = elements[ei];
+      auto el = elements[ei];
 
       lpi = 0;
       for (int k = 1; k <= el.GetNP(); k++)
@@ -1225,7 +1225,7 @@ void Mesh :: ImproveMesh (const MeshingParameters & mp, OPTIMIZEGOAL goal)
   else
     {
       pointh = 0;
-      for (Element & el : VolumeElements())
+      for (auto el : VolumeElements())
         {
           double h = cbrt(el.Volume(points));
           for (PointIndex pi : el.PNums())
@@ -1336,7 +1336,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
 
   for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = (*this)[i];
+      auto el = (*this)[i];
       double bad = el.CalcJacobianBadness (Points());
       if (bad > 1)
         for (int j = 1; j <= el.GetNP(); j++)
@@ -1354,7 +1354,7 @@ void Mesh :: ImproveMeshJacobian (const MeshingParameters & mp,
   else
     {
       pointh = 0;
-      for (const Element & el : VolumeElements())
+      for (auto el : VolumeElements())
         {
           double h = cbrt(el.Volume(points));
           for(int j=1; j<=el.GetNV(); j++)
@@ -1492,7 +1492,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
 
   for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = (*this)[i];
+      auto el = (*this)[i];
       double bad = el.CalcJacobianBadness (Points());
       if (bad > 1)
         for (int j = 1; j <= el.GetNP(); j++)
@@ -1510,7 +1510,7 @@ void Mesh :: ImproveMeshJacobianOnSurface (const MeshingParameters & mp,
   else
     {
       pointh = 0;
-      for (const Element & el : VolumeElements())
+      for (auto el : VolumeElements())
         {
           double h = cbrt(el.Volume(points));
           for(int j=1; j<=el.GetNV(); j++)

@@ -149,13 +149,13 @@ namespace netgen
         Element hel;
         int blocklen[] = { ELEMENT_MAXPOINTS, 1, 1, 1 };
         NG_MPI_Aint displ[] =
-          { (char*)&hel.pnum[0] - (char*)&hel,
-            (char*)&hel.index - (char*)&hel,
-            (char*)&hel.typ - (char*)&hel,
-            (char*)&hel.np - (char*)&hel
+          { (char*)&hel[0] - (char*)&hel,
+            (char*)&hel.Header().index - (char*)&hel,
+            (char*)&hel.Header().typ - (char*)&hel,
+            (char*)&hel.Header().np - (char*)&hel
           };
-        NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
-                                 GetMPIType(hel.typ), GetMPIType(hel.np) };
+        NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.Header().index),
+                                 GetMPIType(hel.Header().typ), GetMPIType(hel.Header().np) };
         // *testout << "displ = " << displ[0] << ", " << displ[1] << ", " << displ[2] << endl;
         // *testout << "sizeof = " << sizeof (MeshPoint) << endl;
         NG_MPI_Type_create_struct (4, blocklen, displ, types, &htype);
@@ -1070,7 +1070,7 @@ namespace netgen
   }
 
 
-  ostream & operator<<(ostream  & s, const Element & el)
+  ostream & operator<<(ostream  & s, const ElementRef & el)
   {
     s << "np = " << el.GetNP();
     for (int j = 0; j < el.GetNP(); j++)
@@ -1104,75 +1104,69 @@ namespace netgen
   }
   */
 
+  Element :: Element ()
+    : ElementRef(&hstore, pnstore, ELEMENT_MAXPOINTS)
+  { }
+
   Element :: Element (int anp)
+    : ElementRef(&hstore, pnstore, ELEMENT_MAXPOINTS)
   {
-    np = anp;
+    h->np = anp;
     for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
-        pnum[i].Invalidate();
-    index = 0;
-    flags.marked = 1;
-    flags.badel = 0;
-    flags.reverse = 0;
-    flags.illegal = 0;
-    flags.illegal_valid = 0;
-    flags.badness_valid = 0;
-    flags.refflag = 1;
-    flags.strongrefflag = false;
-    flags.deleted = 0;
-    flags.fixed = 0;
+        pn[i].Invalidate();
+    h->index = 0;
+    h->flags.marked = 1;
+    h->flags.badel = 0;
+    h->flags.reverse = 0;
+    h->flags.illegal = 0;
+    h->flags.illegal_valid = 0;
+    h->flags.badness_valid = 0;
+    h->flags.refflag = 1;
+    h->flags.strongrefflag = false;
+    h->flags.deleted = 0;
+    h->flags.fixed = 0;
 
-    switch (np)
+    switch (h->np)
       {
-      case 4: typ = TET; break;
-      case 5: typ = PYRAMID; break;
-      case 6: typ = PRISM; break;
-      case 7: typ = HEX7; break;
-      case 8: typ = HEX; break;
-      case 10: typ = TET10; break;
-      case 13: typ = PYRAMID13; break;
-      case 15: typ = PRISM15; break;
-      case 20: typ = HEX20; break;
-      default: cerr << "Element::Element: unknown element with " << np << " points" << endl;
+      case 4: h->typ = TET; break;
+      case 5: h->typ = PYRAMID; break;
+      case 6: h->typ = PRISM; break;
+      case 7: h->typ = HEX7; break;
+      case 8: h->typ = HEX; break;
+      case 10: h->typ = TET10; break;
+      case 13: h->typ = PYRAMID13; break;
+      case 15: h->typ = PRISM15; break;
+      case 20: h->typ = HEX20; break;
+      default: cerr << "Element::Element: unknown element with " << h->np << " points" << endl;
       }
-    orderx = ordery = orderz = 1;
-    is_curved = typ != TET; // false;
-  }
-
-  void Element :: SetOrder (const int aorder) 
-  { 
-    orderx = aorder; 
-    ordery = aorder; 
-    orderz = aorder;
+    h->orderx = h->ordery = h->orderz = 1;
+    h->is_curved = h->typ != TET; // false;
   }
 
 
-  void Element :: SetOrder (const int ox, const int oy, const int oz) 
-  { 
-    orderx = ox; 
-    ordery = oy;
-    orderz = oz; 
-  }
+
 
 
   Element :: Element (ELEMENT_TYPE type)
+    : ElementRef(&hstore, pnstore, ELEMENT_MAXPOINTS)
   {
     SetType (type);
 
     for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
-        pnum[i].Invalidate();
-    index = 0;
-    flags.marked = 1;
-    flags.badel = 0;
-    flags.reverse = 0;
-    flags.illegal = 0;
-    flags.illegal_valid = 0;
-    flags.badness_valid = 0;
-    flags.refflag = 1;
-    flags.strongrefflag = false;
-    flags.deleted = 0;
-    flags.fixed = 0;
-    orderx = ordery = orderz = 1;
-    is_curved =  typ != TET; // false;
+        pn[i].Invalidate();
+    h->index = 0;
+    h->flags.marked = 1;
+    h->flags.badel = 0;
+    h->flags.reverse = 0;
+    h->flags.illegal = 0;
+    h->flags.illegal_valid = 0;
+    h->flags.badness_valid = 0;
+    h->flags.refflag = 1;
+    h->flags.strongrefflag = false;
+    h->flags.deleted = 0;
+    h->flags.fixed = 0;
+    h->orderx = h->ordery = h->orderz = 1;
+    h->is_curved =  h->typ != TET; // false;
     // #ifdef PARALLEL
     // partitionNumber = -1;
     // #endif
@@ -1182,72 +1176,116 @@ namespace netgen
 
 
   /*
-  Element & Element :: operator= (const Element & el2)
+  Element & ElementRef :: operator= (const Element & el2)
   {
-    typ = el2.typ;
-    np = el2.np;
+    h->typ = el2.typ;
+    h->np = el2.np;
     for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
-      pnum[i] = el2.pnum[i];
-    index = el2.index;
+      pn[i] = el2.pnum[i];
+    h->index = el2.index;
     flags = el2.flags;
-    orderx = el2.orderx;
-    ordery = el2.ordery;
-    orderz = el2.orderz;
-    hp_elnr = el2.hp_elnr;
+    h->orderx = el2.orderx;
+    h->ordery = el2.ordery;
+    h->orderz = el2.orderz;
+    h->hp_elnr = el2.hp_elnr;
     flags = el2.flags;
-    is_curved = el2.is_curved;
+    h->is_curved = el2.is_curved;
     return *this;
   }
   */
 
 
-  void Element :: SetNP (int anp)
+  ElementRef & ElementRef :: operator= (const ElementRef & el2)
   {
-    np = anp; 
-    switch (np)
+    if (el2.GetNP() > maxnp)
+      throw Exception ("ElementRef: element with " + ToString(el2.GetNP()) + " points does not fit into " +
+                       ToString(maxnp) + " slots, use Mesh::SetVolumeElement");
+    *h = *el2.h;
+    for (int i = 0; i < el2.GetNP(); i++) pn[i] = el2.pn[i];
+    return *this;
+  }
+
+  void ElementRef :: DoArchive (Archive & ar)
+  {
+    short _np, _typ;
+    bool _curved;
+    if (ar.Output())
+      { _np = h->np; _typ = h->typ; _curved = h->is_curved; }
+    ar.DoPacked (_np, _typ, h->index, _curved);
+
+    if (ar.Input())
       {
-      case 4: typ = TET; break;
-      case 5: typ = PYRAMID; break;
-      case 6: typ = PRISM; break;
-      case 7: typ = HEX7; break;
-      case 8: typ = HEX; break;
-      case 10: typ = TET10; break;
-      case 13: typ = PYRAMID13; break;
-      case 15: typ = PRISM15; break;
-      case 20: typ = HEX20; break;
+        h->np = _np;
+        h->typ = ELEMENT_TYPE(_typ);
+        h->is_curved = _curved;
+        h->flags.marked = 1;
+        h->flags.badel = 0;
+        h->flags.reverse = 0;
+        h->flags.illegal = 0;
+        h->flags.illegal_valid = 0;
+        h->flags.badness_valid = 0;
+        h->flags.refflag = 1;
+        h->flags.strongrefflag = false;
+        h->flags.deleted = 0;
+        h->flags.fixed = 0;
+      }
+
+    // archive stores 1-based point numbers, independent of BASE
+    int nr1[ELEMENT_MAXPOINTS];
+    if (ar.Output())
+      for (int k = 0; k < h->np; k++) nr1[k] = pn[k].Nr1();
+    ar.Do (nr1, h->np);
+    if (ar.Input())
+      for (int k = 0; k < h->np; k++) pn[k] = PointIndex::FromNr1(nr1[k]);
+  }
+
+  void ElementRef :: SetNP (int anp)
+  {
+    h->np = anp; 
+    switch (h->np)
+      {
+      case 4: h->typ = TET; break;
+      case 5: h->typ = PYRAMID; break;
+      case 6: h->typ = PRISM; break;
+      case 7: h->typ = HEX7; break;
+      case 8: h->typ = HEX; break;
+      case 10: h->typ = TET10; break;
+      case 13: h->typ = PYRAMID13; break;
+      case 15: h->typ = PRISM15; break;
+      case 20: h->typ = HEX20; break;
         // 
       default: break;
-        cerr << "Element::SetNP unknown element with " << np << " points" << endl;
+        cerr << "Element::SetNP unknown element with " << h->np << " points" << endl;
       }
   }
 
 
 
-  void Element :: SetType (ELEMENT_TYPE atyp)
+  void ElementRef :: SetType (ELEMENT_TYPE atyp)
   {
-    typ = atyp;
+    h->typ = atyp;
     switch (atyp)
       {
-      case TET: np = 4; break;
-      case PYRAMID: np = 5; break;
-      case PRISM: np = 6; break;
-      case HEX7: np = 7; break;
-      case HEX: np = 8; break;
-      case TET10: np = 10; break;
-      case PYRAMID13: np = 13; break;
-      case PRISM12: np = 12; break;
-      case PRISM15: np = 15; break;
-      case HEX20: np = 20; break;
+      case TET: h->np = 4; break;
+      case PYRAMID: h->np = 5; break;
+      case PRISM: h->np = 6; break;
+      case HEX7: h->np = 7; break;
+      case HEX: h->np = 8; break;
+      case TET10: h->np = 10; break;
+      case PYRAMID13: h->np = 13; break;
+      case PRISM12: h->np = 12; break;
+      case PRISM15: h->np = 15; break;
+      case HEX20: h->np = 20; break;
 
       default: break;
-        cerr << "Element::SetType unknown type  " << int(typ) << endl;
+        cerr << "Element::SetType unknown type  " << int(h->typ) << endl;
       }
-    is_curved = (np > 4); 
+    h->is_curved = (h->np > 4); 
   }
 
 
 
-  void Element :: Invert()
+  void ElementRef :: Invert()
   {
     switch (GetNP())
       {
@@ -1273,14 +1311,14 @@ namespace netgen
   }
 
 
-  void Element :: Print (ostream & ost) const
+  void ElementRef :: Print (ostream & ost) const
   {
-    ost << np << " Points: ";
-    for (int i = 0; i < np; i++)
-      ost << pnum[i] << " " << endl;
+    ost << h->np << " Points: ";
+    for (int i = 0; i < h->np; i++)
+      ost << pn[i] << " " << endl;
   }
 
-  void Element :: GetBox (const T_POINTS & points, Box3d & box) const
+  void ElementRef :: GetBox (const T_POINTS & points, Box3d & box) const
   {
     box.SetPoint (points[PNum(1)]);
     box.AddPoint (points[PNum(2)]);
@@ -1288,7 +1326,7 @@ namespace netgen
     box.AddPoint (points[PNum(4)]);
   }
 
-  double Element :: Volume (const T_POINTS & points) const
+  double ElementRef :: Volume (const T_POINTS & points) const
   {
     Vec<3> v1 = points[PNum(2)] - points[PNum(1)];
     Vec<3> v2 = points[PNum(3)] - points[PNum(1)];
@@ -1298,7 +1336,7 @@ namespace netgen
   }  
 
 
-  void Element :: GetFace2 (int i, Element2d & face) const
+  void ElementRef :: GetFace2 (int i, Element2d & face) const
   {
     static const int tetfaces[][5] = 
       { { 3, 2, 3, 4, 0 },
@@ -1348,7 +1386,7 @@ namespace netgen
         { 4, 3, 4, 8, 7 }
       };
 
-    switch (np)
+    switch (h->np)
       {
       case 4: // tet
         {
@@ -1402,7 +1440,7 @@ namespace netgen
 
 
 
-  void Element :: GetTets (Array<Element> & locels) const
+  void ElementRef :: GetTets (Array<Element> & locels) const
   {
     Array<ElementTet> loctets;
     GetTetsLocal (loctets);
@@ -1415,7 +1453,7 @@ namespace netgen
       }
   }
 
-  void Element :: GetTetsLocal (Array<ElementTet> & locels) const
+  void ElementRef :: GetTetsLocal (Array<ElementTet> & locels) const
   {
     int i, j;
     locels.SetSize(0);
@@ -1512,10 +1550,10 @@ namespace netgen
       }
   }
 
-  bool Element :: operator==(const Element & el2) const
+  bool ElementRef :: operator==(const ElementRef & el2) const
   {
-    bool retval = (el2.GetNP() == np);
-    for(int i= 0; retval && i<np; i++)
+    bool retval = (el2.GetNP() == h->np);
+    for(int i= 0; retval && i<h->np; i++)
       retval = (el2[i] == (*this)[i]);
 
     return retval;
@@ -1523,7 +1561,7 @@ namespace netgen
 
 
 #ifdef OLD
-  void Element :: GetNodesLocal (Array<Point<3>> & points) const
+  void ElementRef :: GetNodesLocal (Array<Point<3>> & points) const
   {
     const static double tetpoints[4][3] =
       { { 0, 0, 0 },
@@ -1623,7 +1661,7 @@ namespace netgen
 
 
 
-  void Element :: GetNodesLocalNew (Array<Point<3> > & points) const
+  void ElementRef :: GetNodesLocalNew (Array<Point<3> > & points) const
   {
     const static double tetpoints[4][3] =
       {      
@@ -1740,7 +1778,7 @@ namespace netgen
 
 
 
-  void Element :: GetSurfaceTriangles (Array<ElementFace> & surftrigs) const
+  void ElementRef :: GetSurfaceTriangles (Array<ElementFace> & surftrigs) const
   {
     static int tet4trigs[][3] = 
       { { 2, 3, 4 },
@@ -1879,10 +1917,10 @@ namespace netgen
 
 
 
-  int Element :: GetNIP () const
+  int ElementRef :: GetNIP () const
   {
     int nip;
-    switch (typ)
+    switch (h->typ)
       {
       case TET: nip = 1; break;
       case TET10: nip = 8; break;
@@ -1891,7 +1929,7 @@ namespace netgen
     return nip;
   }
 
-  void Element :: 
+  void ElementRef :: 
   GetIntegrationPoint (int ip, Point<3> & p, double & weight) const
   {
     static double eltetqp[1][4] =
@@ -1912,7 +1950,7 @@ namespace netgen
       };
     
     double * pp = NULL;
-    switch (typ)
+    switch (h->typ)
       {
       case TET: pp = &eltetqp[0][0]; break;
       case TET10: pp = &eltet10qp[ip-1][0]; break;
@@ -1926,7 +1964,7 @@ namespace netgen
     weight = pp[3];
   }
 
-  void Element :: 
+  void ElementRef :: 
   GetTransformation (int ip, const T_POINTS & points,
                      DenseMatrix & trans) const
   {
@@ -1952,13 +1990,13 @@ namespace netgen
     */
   }
 
-  void Element :: 
+  void ElementRef :: 
   GetTransformation (int ip, class DenseMatrix & pmat,
                      class DenseMatrix & trans) const
   {
     int np = GetNP();
 
-    if (pmat.Width() != np || pmat.Height() != 3)
+    if (pmat.Width() != h->np || pmat.Height() != 3)
       {
         (*testout) << "GetTransofrmation: pmat doesn't fit" << endl;
         return;
@@ -1971,14 +2009,14 @@ namespace netgen
       case TET: dshapep = &ipdtet[ip-1]->dshape; break;
       case TET10: dshapep = &ipdtet10[ip-1]->dshape; break;
       default:
-        PrintSysError ("Element::GetTransformation, illegal type ", int(typ));
+        PrintSysError ("Element::GetTransformation, illegal type ", int(h->typ));
       }
   
     CalcABt (pmat, *dshapep, trans);
   }
 
 
-  void Element :: GetShape (const Point<3> & hp, Vector & shape) const
+  void ElementRef :: GetShape (const Point<3> & hp, Vector & shape) const
   {
     if (shape.Size() != GetNP())
       {
@@ -1986,7 +2024,7 @@ namespace netgen
         return;
       }
 
-    switch (typ)
+    switch (h->typ)
       {
       case TET:
         {
@@ -2046,7 +2084,7 @@ namespace netgen
 
 
   template <typename T>
-  void Element :: GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const
+  void ElementRef :: GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const
   {
     /*
       if (shape.Size() < GetNP())
@@ -2056,7 +2094,7 @@ namespace netgen
       }
     */
 
-    switch (typ)
+    switch (h->typ)
       {
       case TET:
         {
@@ -2236,7 +2274,7 @@ namespace netgen
 
 
 
-  void Element :: 
+  void ElementRef :: 
   GetDShape (const Point<3> & hp, DenseMatrix & dshape) const
   {
     int np = GetNP();
@@ -2263,10 +2301,10 @@ namespace netgen
   }
 
   template <typename T>
-  void Element :: 
+  void ElementRef :: 
   GetDShapeNew (const Point<3,T> & p, MatrixFixWidth<3,T> & dshape) const
   {
-    switch (typ)
+    switch (h->typ)
       {
       case TET:
         {
@@ -2327,10 +2365,10 @@ namespace netgen
           AutoDiff<3,T> ady(p(1), 1);
           AutoDiff<3,T> adz(p(2), 2);
           Point<3,AutoDiff<3,T>> adp{adx, ady, adz};
-          ArrayMem<AutoDiff<3,T>,100> mem(np);
-          TFlatVector<AutoDiff<3,T>> adshape(np, &mem[0]);
+          ArrayMem<AutoDiff<3,T>,100> mem(h->np);
+          TFlatVector<AutoDiff<3,T>> adshape(h->np, &mem[0]);
           GetShapeNew (adp, adshape);
-          for (int j = 0; j < np; j++)
+          for (int j = 0; j < h->np; j++)
             for (int k = 0; k < 3; k++)
               dshape(j,k) = adshape(j).DValue(k);
         }
@@ -2344,19 +2382,19 @@ namespace netgen
   template void Element2d::GetDShapeNew<SIMD<double>> (const Point<2,SIMD<double>> &, MatrixFixWidth<2,SIMD<double>> &) const;
 
 
-  template DLL_HEADER void Element :: GetShapeNew (const Point<3,double> & p, TFlatVector<double> shape) const;
-  template DLL_HEADER void Element :: GetShapeNew (const Point<3,SIMD<double>> & p, TFlatVector<SIMD<double>> shape) const;
+  template DLL_HEADER void ElementRef :: GetShapeNew (const Point<3,double> & p, TFlatVector<double> shape) const;
+  template DLL_HEADER void ElementRef :: GetShapeNew (const Point<3,SIMD<double>> & p, TFlatVector<SIMD<double>> shape) const;
   
-  template void Element::GetDShapeNew<double> (const Point<3> &, MatrixFixWidth<3> &) const;
-  template void Element::GetDShapeNew<SIMD<double>> (const Point<3,SIMD<double>> &, MatrixFixWidth<3,SIMD<double>> &) const;
+  template void ElementRef::GetDShapeNew<double> (const Point<3> &, MatrixFixWidth<3> &) const;
+  template void ElementRef::GetDShapeNew<SIMD<double>> (const Point<3,SIMD<double>> &, MatrixFixWidth<3,SIMD<double>> &) const;
 
 
-  void Element :: 
+  void ElementRef :: 
   GetPointMatrix (const T_POINTS & points,
                   DenseMatrix & pmat) const
   {
     int np = GetNP();
-    for (int i = 1; i <= np; i++)
+    for (int i = 1; i <= h->np; i++)
       {
         const auto& p = points[PNum(i)];
         pmat.Elem(1, i) = p[0];
@@ -2368,7 +2406,7 @@ namespace netgen
 
 
 
-  double Element :: CalcJacobianBadness (const T_POINTS & points) const
+  double ElementRef :: CalcJacobianBadness (const T_POINTS & points) const
   {
     int nip = GetNIP();
     DenseMatrix trans(3,3);
@@ -2401,7 +2439,7 @@ namespace netgen
     return err;
   }
 
-  double Element :: 
+  double ElementRef :: 
   CalcJacobianBadnessDirDeriv (const T_POINTS & points,
                                int pi, Vec<3> & dir, double & dd) const
   {
@@ -2415,7 +2453,7 @@ namespace netgen
 
     GetPointMatrix (points, pmat);
   
-    for (i = 1; i <= np; i++)
+    for (i = 1; i <= h->np; i++)
       for (j = 1; j <= 3; j++)
         vmat.Elem(j, i) = 0;
     for (j = 1; j <= 3; j++)
@@ -2477,7 +2515,7 @@ namespace netgen
     return err;
   }
 
-  double Element :: 
+  double ElementRef :: 
   CalcJacobianBadnessGradient (const T_POINTS & points,
                                int pi, Vec<3> & grad) const
   {
@@ -2490,7 +2528,7 @@ namespace netgen
 
     GetPointMatrix (points, pmat);
   
-    for (int i = 1; i <= np; i++)
+    for (int i = 1; i <= h->np; i++)
       for (int j = 1; j <= 3; j++)
         vmat.Elem(j, i) = 0;
     for (int j = 1; j <= 3; j++)
@@ -2565,14 +2603,14 @@ namespace netgen
 
 
 
-  void Element :: ComputeIntegrationPointData () const
+  void ElementRef :: ComputeIntegrationPointData () const
   {
     switch (GetType())
       {
       case TET: if (ipdtet.Size()) return; break;
       case TET10: if (ipdtet10.Size()) return; break;
       default:
-        PrintSysError ("Element::ComputeIntegrationPoint, illegal type ", int(typ));
+        PrintSysError ("Element::ComputeIntegrationPoint, illegal type ", int(h->typ));
       }
 
     switch (GetType())
@@ -2580,7 +2618,7 @@ namespace netgen
       case TET: ipdtet.SetSize(GetNIP()); break;
       case TET10: ipdtet10.SetSize(GetNIP()); break;
       default:
-        PrintSysError ("Element::ComputeIntegrationPoint, illegal type2 ", int(typ));
+        PrintSysError ("Element::ComputeIntegrationPoint, illegal type2 ", int(h->typ));
       }
 
 
@@ -2599,7 +2637,7 @@ namespace netgen
           case TET: ipdtet[i-1].reset(ipd); break;
           case TET10: ipdtet10[i-1].reset(ipd); break;
           default:
-            PrintSysError ("Element::ComputeIntegrationPoint(2), illegal type ", int(typ));
+            PrintSysError ("Element::ComputeIntegrationPoint(2), illegal type ", int(h->typ));
           }
       }
   }

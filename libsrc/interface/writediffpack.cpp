@@ -47,7 +47,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
       outfile.setf (ios::fixed, ios::floatfield);
       outfile.setf (ios::showpoint);
 
-      const Element & eldummy = mesh[ElementIndex::FromNr1((int)1)];
+      auto eldummy = mesh[ElementIndex::FromNr1((int)1)];
       outfile << "\n\n"
         "Finite element mesh (GridFE):\n\n"
         "  Number of space dim. =   3\n"
@@ -149,7 +149,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 
       for (ElementIndex i : T_Range<ElementIndex>(ne))
         {
-          const Element & el = mesh[i];
+          auto el = mesh[i];
           outfile.width(5);
           if(el.GetNP()==4)
             outfile << i.Nr1() << "  ElmT4n3D ";

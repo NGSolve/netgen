@@ -328,7 +328,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
   if (mesh->GetDimension() == 3)
     {
       int i;
-      const Element & el = (*mesh)[ElementIndex::FromNr1(ei)];
+      auto el = (*mesh)[ElementIndex::FromNr1(ei)];
       for (i = 0; i < el.GetNP(); i++)
         epi[i] = PointNr(el[i]);
       
@@ -2246,7 +2246,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
         int cnt = 0;
         if (nodeset & 1)  // Vertices
           {
-            const Element & el = (*mesh)[ElementIndex::FromNr1(nodenr)];
+            auto el = (*mesh)[ElementIndex::FromNr1(nodenr)];
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;

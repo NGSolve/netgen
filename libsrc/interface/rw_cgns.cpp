@@ -159,7 +159,7 @@ namespace netgen::cg
           verts.Append(el[i].Nr1());
     }
 
-  void WriteCGNSElement( const Element & el, Array<cgsize_t> & verts )
+  void WriteCGNSElement( const ElementRef & el, Array<cgsize_t> & verts )
     {
       static constexpr int map_tet4[]   = {0,2,1,3};
       static constexpr int map_prism6[] = {0,2,1,3,5,4};

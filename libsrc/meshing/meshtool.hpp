@@ -68,7 +68,7 @@ extern double CalcTetBadnessGrad (const Point<3> & p1, const Point<3> & p2,
   The volume of the tetrahedron el is computed
  */
 // extern double CalcVolume (const Array<Point<3>> & points,
-//        const Element & el);  
+//        const ElementRef & el);  
 
 /** The total volume of all elements is computed.
   This function calculates the volume of the mesh */

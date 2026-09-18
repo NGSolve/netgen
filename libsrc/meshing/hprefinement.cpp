@@ -31,7 +31,7 @@ namespace netgen
     Reset();
   }
 
-  HPRefElement :: HPRefElement(Element & el) :
+  HPRefElement :: HPRefElement(const ElementRef & el) :
     type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
@@ -1512,7 +1512,7 @@ namespace netgen
     if(act_ref>=1)
       { 
         // for(ElementIndex i=0;i<mesh.GetNE(); i++)
-        for (auto & el : mesh.VolumeElements())
+        for (auto el : mesh.VolumeElements())
           { 
             // Element el = el ;
             HPRefElement & hpel = hpelements[el.GetHpElnr()];
@@ -1708,7 +1708,7 @@ namespace netgen
         // for (int i = 1; i <= mesh.GetNE(); i++)
         for (auto ei : mesh.VolumeElements().Range())
           {
-            const Element & el = mesh[ei]; 
+            auto el = mesh[ei]; 
             const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (el.GetType());
             int nedges = MeshTopology::GetNEdges (el.GetType());
             for (int j = 0; j < nedges; j++)
