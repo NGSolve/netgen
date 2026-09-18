@@ -439,13 +439,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_buffer ([] (T_VOLELEMENTS & self)
                  {
                    return py::buffer_info (self.Data(), 1, "B", 1,
-                                           { ssize_t(self.Size()*self.Stride()) }, { ssize_t(1) });
+                                           { std::ptrdiff_t(self.Size()*self.Stride()) }, { std::ptrdiff_t(1) });
                  })
     .def ("NumPy", [] (py::object self)
           {
             auto & els = self.cast<T_VOLELEMENTS&>();
             py::list names, formats, offsets;
-            auto add = [&] (const char * name, py::dtype format, py::ssize_t offset)
+            auto add = [&] (const char * name, py::dtype format, std::ptrdiff_t offset)
             { names.append (name); formats.append (format); offsets.append (offset); };
             add ("nodes", py::dtype ("(" + ToString(els.Width()) + ",)i4"), els.GetLayout().offset[0]);
             add ("index", py::dtype ("i4"), offsetof(ElementHeader, index));
