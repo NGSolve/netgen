@@ -1390,7 +1390,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   class ElementRefArray : public BASE
   {
   public:
-    using BASE::BASE;
+    ElementRefArray () { }
+    explicit ElementRefArray (size_t awidth) : BASE(awidth) { }
+    ElementRefArray (size_t asize, size_t awidth) : BASE(asize, awidth) { }
     ElementRefArray (const BASE & b) : BASE(b) { }
 
     ElementRef operator[] (typename BASE::index_type i) { return ElementRef (BASE::operator[] (i)); }
@@ -1426,7 +1428,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   {
     typedef ElementRefArray<T_VOLELEMENTS_BASE> BASE;
   public:
-    using BASE::BASE;
+    VolumeElementArray () { }
+    explicit VolumeElementArray (size_t awidth) : BASE(awidth) { }
+    VolumeElementArray (size_t asize, size_t awidth) : BASE(asize, awidth) { }
     using BASE::Append;
 
     // grows the width to the element's number of points if needed
