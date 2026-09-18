@@ -1443,6 +1443,21 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     void DoArchive (Archive & ar)
     {
+      constexpr const char * width_version = "v6.2.2607-105";
+      if (ar.Input() && ar.GetVersion("netgen") < width_version)
+        {
+          size_t s;
+          ar & s;
+          SetSize (0);
+          for (size_t i = 0; i < s; i++)
+            {
+              Element el;
+              el.DoArchive (ar);
+              Append (el);
+            }
+          return;
+        }
+      ar.NeedsVersion ("netgen", width_version);
       size_t s = Size(), w = Width();
       ar & s & w;
       if (ar.Input()) { SetWidth (w); SetSize (s); }
