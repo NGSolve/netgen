@@ -1816,52 +1816,26 @@ namespace netgen
   }
 
 
-  // names were archived as Array<string*>, keep that format: nullptr <-> nullopt.
-  // The archive identifies pointers by address, so output points at the array elements
-  // (no temporaries whose addresses could be reused), and input frees each pointer once.
-  static void ArchiveNames (Archive & archive, Array<optional<string>> & names)
-  {
-    Array<string*> tmp;
-    if (archive.Output())
-      {
-        tmp.SetSize(names.Size());
-        for (int i = 0; i < names.Size(); i++)
-          tmp[i] = names[i] ? &*names[i] : nullptr;
-        archive & tmp;
-      }
-    else
-      {
-        archive & tmp;
-        names.SetSize(tmp.Size());
-        std::set<string*> owned;
-        for (int i = 0; i < tmp.Size(); i++)
-          {
-            if (tmp[i]) { names[i] = *tmp[i]; owned.insert(tmp[i]); }
-            else names[i] = nullopt;
-          }
-        for (auto p : owned) delete p;
-      }
-  }
+  static const string names_in_descriptors_version = "v6.2.2607-105";
 
-  // bc names keyed by bc number, archived as Array<string*> like before; ignored on input,
-  // the face descriptors carry their names themselves
-  static void ArchiveBCNamesCompat (Archive & archive, Array<string> & names)
+  static std::array<Array<optional<string>>, 4> ReadRegionNamesCompat (Archive & archive)
   {
-    Array<string*> tmp;
-    if (archive.Output())
+    std::array<Array<string*>, 4> tmp;
+    for (auto & t : tmp)
+      archive & t;
+    std::array<Array<optional<string>>, 4> names;
+    std::set<string*> owned;
+    for (int k = 0; k < 4; k++)
       {
-        tmp.SetSize(names.Size());
-        for (int i = 0; i < names.Size(); i++)
-          tmp[i] = &names[i];
-        archive & tmp;
+        names[k].SetSize(tmp[k].Size());
+        for (int i = 0; i < tmp[k].Size(); i++)
+          {
+            if (tmp[k][i]) { names[k][i] = *tmp[k][i]; owned.insert(tmp[k][i]); }
+            else names[k][i] = nullopt;
+          }
       }
-    else
-      {
-        archive & tmp;
-        std::set<string*> owned;
-        for (auto p : tmp) if (p) owned.insert(p);
-        for (auto p : owned) delete p;
-      }
+    for (auto p : owned) delete p;
+    return names;
   }
 
   void Mesh :: DoArchive (Archive & archive)
@@ -2012,38 +1986,8 @@ namespace netgen
         if (comm.Rank() == 0)
           {
             archive & facedecoding;
-            {
-              Array<string*> cd2names_compat;
-              if (archive.Output())
-                {
-                  int ncd2 = GetNRegions(dimension-2);
-                  cd2names_compat.SetSize(ncd2);
-                  for (int i = 0; i < ncd2; i++)
-                    {
-                      auto n = GetRegionName(dimension-2, i+1);
-                      cd2names_compat[i] = (n != "default" && !n.empty()) ? new string(n) : nullptr;
-                    }
-                }
-              Array<optional<string>> materials_compat, cd3names_compat;
-              if (archive.Output())
-                {
-                  materials_compat = DomainNames();
-                  if (dimension == 3) cd3names_compat = vertexnames;
-                }
-              ArchiveNames(archive, materials_compat);
-              { Array<string> bcnames_compat = BCNamesByNumber(); ArchiveBCNamesCompat(archive, bcnames_compat); }
-              archive & cd2names_compat;
-              ArchiveNames(archive, cd3names_compat);
-              if (archive.Input())
-                {
-                  SetDomainNames(std::move(materials_compat));
-                  if (dimension == 3) vertexnames = std::move(cd3names_compat);
-                  for (int i = 0; i < cd2names_compat.Size(); i++)
-                    if (cd2names_compat[i])
-                      SetCD2NameCompat(i+1, *cd2names_compat[i]);
-                }
-              for (auto p : cd2names_compat) delete p;
-            }
+            archive.NeedsVersion("netgen", names_in_descriptors_version);
+            archive & materials & vertexnames;
             auto mynv = numglob;
             archive & mynv;   // numvertices;
             archive & *ident;
@@ -2077,38 +2021,26 @@ namespace netgen
     archive & segments;
     archive & pointelements;
     archive & facedecoding;
-    {
-      Array<string*> cd2names_compat;
-      if (archive.Output())
-        {
-          int ncd2 = GetNRegions(dimension-2);
-          cd2names_compat.SetSize(ncd2);
-          for (int i = 0; i < ncd2; i++)
-            {
-              auto n = GetRegionName(dimension-2, i+1);
-              cd2names_compat[i] = (n != "default" && !n.empty()) ? new string(n) : nullptr;
-            }
-        }
-      Array<optional<string>> materials_compat, cd3names_compat;
-      if (archive.Output())
-        {
-          materials_compat = DomainNames();
-          if (dimension == 3) cd3names_compat = vertexnames;
-        }
-      ArchiveNames(archive, materials_compat);
-      { Array<string> bcnames_compat = BCNamesByNumber(); ArchiveBCNamesCompat(archive, bcnames_compat); }
-      archive & cd2names_compat;
-      ArchiveNames(archive, cd3names_compat);
-      if (archive.Input())
-        {
-          SetDomainNames(std::move(materials_compat));
-          if (dimension == 3) vertexnames = std::move(cd3names_compat);
-          for (int i = 0; i < cd2names_compat.Size(); i++)
-            if (cd2names_compat[i])
-              SetCD2NameCompat(i+1, *cd2names_compat[i]);
-        }
-      for (auto p : cd2names_compat) delete p;
-    }
+    if (archive.GetVersion("netgen") >= names_in_descriptors_version)
+      {
+        archive.NeedsVersion("netgen", names_in_descriptors_version);
+        archive & materials & vertexnames;
+      }
+    else
+      {
+        PrintWarning("Mesh archive written by netgen ", archive.GetVersion("netgen"),
+                     " uses the old layout of region names. It is converted now, but loading it might not be",
+                     " supported by future versions. Save it again to update the file.");
+        auto [mats, bcnames, cd2names, cd3names] = ReadRegionNamesCompat(archive);
+        SetDomainNames(std::move(mats));
+        if (dimension == 1)
+          vertexnames = std::move(bcnames);   // bc names of 1D meshes are the vertex names
+        if (dimension == 3)
+          vertexnames = std::move(cd3names);
+        for (int i = 0; i < cd2names.Size(); i++)
+          if (cd2names[i])
+            SetCD2NameCompat(i+1, *cd2names[i]);
+      }
     archive & numvertices;
 
     archive & *ident;
@@ -7849,7 +7781,7 @@ namespace netgen
   {
     if (dimension == 3)
       EnsureEdgeDescriptor(cd2nr).SetName((name != "default" && !name.empty()) ? name : "default");
-    else
+    else if (dimension == 2)
       SetCD2Name(cd2nr, name);
   }
 
