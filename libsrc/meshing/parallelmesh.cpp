@@ -914,23 +914,17 @@ namespace netgen
     paralleltop -> EnumeratePointsGlobally();
     PrintMessage ( 3, "Sending names");
 
-    /** Send bc/mat/cd*-names **/
-    // nr of names
-    std::array<int,4> nnames{0,0,0,0};
-    nnames[0] = materials.Size();
-    nnames[1] = bcnames.Size();
-    nnames[2] = GetNCD2Names();
-    nnames[3] = GetNCD3Names();
+    std::array<int,4> nnames{ int(materials.Size()), int(GetNFD()), int(GetNED()), int(vertexnames.Size()) };
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
 
     NgMPI_Requests requ;
     requ += comm.IBcast (nnames);
     
     auto iterate_names = [&](auto func) {
-      for (int k = 0; k < nnames[0]; k++) func(materials[k]);
-      for (int k = 0; k < nnames[1]; k++) func(bcnames[k]);
-      for (int k = 0; k < nnames[2]; k++) func(GetCD2NamePtr(k));
-      for (int k = 0; k < nnames[3]; k++) func(cd3names[k]);
+      for (auto & n : materials) func(n ? &*n : nullptr);
+      for (auto & fd : facedecoding) func(&fd.GetBCName());
+      for (auto & ed : edgedecoding) func(&ed.GetName());
+      for (auto & n : vertexnames) func(n ? &*n : nullptr);
     };
     // sizes of names
     Array<int> name_sizes(tot_nn);
@@ -1240,12 +1234,6 @@ namespace netgen
     */
     comm.IBcast (nnames).Wait();
     
-    // cout << "nnames = " << FlatArray(nnames) << endl;
-    materials.SetSize(nnames[0]);
-    bcnames.SetSize(nnames[1]);
-    // edgedecoding already populated from ED data message
-    cd3names.SetSize(nnames[3]);
-
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
     Array<int> name_sizes(tot_nn);
     // NG_MPI_Recv(&name_sizes[0], tot_nn, NG_MPI_INT, 0, NG_MPI_TAG_MESH+7, comm, NG_MPI_STATUS_IGNORE);
@@ -1266,28 +1254,31 @@ namespace netgen
     comm.IBcast (compiled_names).Wait();
     
     tot_nn = tot_size = 0;
-    auto write_names = [&] (auto & array) {
-      for (int k = 0; k < array.Size(); k++) {
-        int s = name_sizes[tot_nn];
-        array[k] = s ? new string(&compiled_names[tot_size], s) : new string("");
-        tot_nn++;
-        tot_size += s;
-      }
+    auto next_name = [&] () -> optional<string> {
+      int s = name_sizes[tot_nn++];
+      optional<string> name;
+      if (s) name = string(&compiled_names[tot_size], s);
+      tot_size += s;
+      return name;
     };
-    write_names(materials);
-    write_names(bcnames);
-    {
-      // cd2 names: for 3D stored on edgedecoding, for 2D may differ from ED count
-      for (int k = 0; k < nnames[2]; k++) {
-        int s = name_sizes[tot_nn];
-        string nm = s ? string(&compiled_names[tot_size], s) : string("");
-        if (k < edgedecoding.Size())
-          edgedecoding[EdgeDescriptorIndex::FromNr0(k)].SetName(nm);
-        tot_nn++;
-        tot_size += s;
+    materials.SetSize(nnames[0]);
+    for (auto & n : materials)
+      n = next_name();
+    for (int k = 0; k < nnames[1]; k++)
+      {
+        auto n = next_name();
+        if (k < facedecoding.Size())
+          facedecoding[FaceDescriptorIndex::FromNr0(k)].SetBCName(n ? *n : "default");
       }
-    }
-    write_names(cd3names);
+    for (int k = 0; k < nnames[2]; k++)
+      {
+        auto n = next_name();
+        if (k < edgedecoding.Size())
+          edgedecoding[EdgeDescriptorIndex::FromNr0(k)].SetName(n ? *n : "default");
+      }
+    vertexnames.SetSize(nnames[3]);
+    for (auto & n : vertexnames)
+      n = next_name();
     
     comm.Barrier();
 

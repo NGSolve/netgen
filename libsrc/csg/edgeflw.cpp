@@ -523,12 +523,12 @@ namespace netgen
           auto ptr = geometry.named_edges.find(tuple(sp1, sp2));
           if (ptr != geometry.named_edges.end())
             for (int i = 0; i < refedges.Size(); i++)
-              mesh.SetCD2Name(refedges[i].edgenr, ptr->second);
+              mesh.EnsureEdgeDescriptor(refedges[i].edgenr).SetName(ptr->second);
           
           ptr = geometry.named_edges.find(tuple(sp2, sp1));
           if (ptr != geometry.named_edges.end())
             for (int i = 0; i < refedges.Size(); i++)
-              mesh.SetCD2Name(refedges[i].edgenr, ptr->second);
+              mesh.EnsureEdgeDescriptor(refedges[i].edgenr).SetName(ptr->second);
         }
         
         for(int i=0; i<refedges.Size(); i++)
@@ -537,7 +537,7 @@ namespace netgen
             if(splinesurface)
               {
                 auto name = splinesurface->GetBCNameOf(specpoints[startpoints[refedges[i].edgenr-1]].p,specpoints[endpoints[refedges[i].edgenr-1]].p);
-                mesh.SetCD2Name(refedges[i].edgenr,name);
+                mesh.EnsureEdgeDescriptor(refedges[i].edgenr).SetName(name.empty() ? "default" : name);
               }
             else
               {
@@ -545,7 +545,7 @@ namespace netgen
             if(splinesurface2)
               {
                 auto name = splinesurface2->GetBCNameOf(specpoints[startpoints[refedges[i].edgenr-1]].p,specpoints[endpoints[refedges[i].edgenr-1]].p);
-                mesh.SetCD2Name(refedges[i].edgenr,name);
+                mesh.EnsureEdgeDescriptor(refedges[i].edgenr).SetName(name.empty() ? "default" : name);
               }
                 
               }
@@ -559,9 +559,9 @@ namespace netgen
           ed.SetSurfNr(0, refedges[0].surfnr1);
           ed.SetSurfNr(1, refedges[0].surfnr2);
           int ednr = refedges[0].edgenr;
-          if (ednr > 0 && ednr-1 < mesh.GetNCD2Names())
+          if (ednr > 0 && ednr <= mesh.GetNED())
             {
-              const string & name = mesh.GetCD2Name(ednr-1);
+              const string & name = mesh.GetEdgeDescriptor(EdgeDescriptorIndex::FromNr1(ednr)).GetName();
               if (name != "default")
                 ed.SetName(name);
             }

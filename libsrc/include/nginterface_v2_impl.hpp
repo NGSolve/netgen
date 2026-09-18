@@ -75,15 +75,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   ret.facets.base = POINTINDEX_BASE;
   ret.facets.ptr = (int*)&el.pnum;
 
-  /*
-  if (mesh->GetDimension() == 1)
-    ret.mat = *(mesh->GetBCNamePtr(el.index-1));
-  else if (mesh->GetDimension() == 2)
-    ret.mat = *(mesh->GetCD2NamePtr(el.index-1));
-  else
-    ret.mat = *(mesh->GetCD3NamePtr(el.index-1));
-  */
-  ret.mat = mesh->GetRegionName(0, el.index);
+  auto & vnames = mesh->VertexNames();
+  ret.mat = (el.index >= 1 && el.index <= vnames.Size() && vnames[el.index-1]) ? string_view(*vnames[el.index-1]) : Mesh::defaultmat_sv;
     
   ret.is_curved = false;
   return ret;
@@ -99,27 +92,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
 
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
-  /*
-  if(mesh->GetDimension()==3)
-    ret.index = el.edgenr;
-  else
-    ret.index = el.si;
-  */
   ret.index = el.GetIndex().Nr1();
-
-  
-  /*
-  if (mesh->GetDimension() == 2)
-    ret.mat = *(mesh->GetBCNamePtr(el.si-1));
-  else
-    {
-      if (mesh->GetDimension() == 3)
-        ret.mat = *(mesh->GetCD2NamePtr(el.edgenr-1));
-      else
-        ret.mat = *(mesh->GetMaterialPtr(el.si));
-    }
-  */
-  ret.mat = mesh->GetRegionName(1, ret.index);
+  ret.mat = mesh->HasEdgeDescriptor(el) ? string_view(mesh->GetEdgeDescriptor(el).GetName()) : Mesh::defaultmat_sv;
 
   ret.points.num = el.GetNP();
   ret.points.ptr = (int*)&(el[0]);
@@ -168,12 +142,8 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
-  const FaceDescriptor & fd = mesh->GetFaceDescriptor(el); // .GetIndex());
-  ret.index = fd.BCProperty();
-  if (mesh->GetDimension() == 3)
-    ret.mat = fd.GetBCName();
-  else
-    ret.mat = *(mesh -> GetMaterialPtr(ret.index));
+  ret.index = el.GetIndex().Nr1();   // region = face descriptor
+  ret.mat = mesh->GetFaceDescriptor(el).GetBCName();
   ret.points.num = el.GetNP();
   ret.points.ptr  = (int*)&el[0];
 
@@ -261,13 +231,13 @@ string_view Ngx_Mesh :: GetMaterialCD<0> (int region_nr) const
 template <> NGX_INLINE DLL_HEADER
 string_view Ngx_Mesh :: GetMaterialCD<1> (int region_nr) const
 {
-  return mesh->GetBCName(region_nr);
+  return mesh->GetRegionName(mesh->GetDimension()-1, region_nr+1);
 }
 
 template <> NGX_INLINE DLL_HEADER
 string_view Ngx_Mesh :: GetMaterialCD<2> (int region_nr) const
 {
-  return mesh->GetCD2Name(region_nr);
+  return mesh->GetRegionName(mesh->GetDimension()-2, region_nr+1);
 }
 
 template <> NGX_INLINE DLL_HEADER

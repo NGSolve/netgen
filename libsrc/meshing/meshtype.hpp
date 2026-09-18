@@ -1645,8 +1645,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetDomainIn (int di) { domin = di; }
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
-    DLL_HEADER void SetBCName (string * bcn); //  { bcname = bcn; }
-    void SetBCName (const string & bcn) { bcname = bcn; }    
+    void SetBCName (const string & bcn) { bcname = bcn; }
     // Philippose - 06/07/2009
     // Set the surface colour
     void SetSurfColour (Vec<4> colour) { surfcolour = colour; }

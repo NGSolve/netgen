@@ -734,7 +734,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("bc", &FaceDescriptor::BCProperty, &FaceDescriptor::SetBCProperty)
     .def_property("bcname",
                   [](FaceDescriptor & self) -> string { return self.GetBCName(); },
-                  [](FaceDescriptor & self, string name) { self.SetBCName(new string(name)); } // memleak
+                  [](FaceDescriptor & self, string name) { self.SetBCName(name); }
                   )
     .def_property("color",
                   [](const FaceDescriptor& self)
@@ -1261,7 +1261,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                                                   return py::make_tuple(elnr1.Nr1(), elnr2.Nr1());
                                                 }, "Returns element nrs of volume element connected to surface element, -1 if no volume element")
 
-    .def("GetNCD2Names", &Mesh::GetNCD2Names)
+    .def("GetNCD2Names", [](Mesh & self) { return self.GetNRegions(self.GetDimension()-2); })
     .def("GetNED", &Mesh::GetNED)
     
 
@@ -1486,25 +1486,28 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           
     .def ("AddRegion", [] (Mesh & self, string name, int dim) -> int
          {
-           int codim = self.GetDimension()-dim;
-           if (codim == 2)
+           switch (dim)
              {
-               EdgeDescriptor ed;
-               ed.SetName(name);
-               self.AddEdgeDescriptor(ed);
-               return self.GetNCD2Names();
+             case 3:
+               self.Materials().Append(name);
+               return self.Materials().Size();
+             case 2:
+               {
+                 FaceDescriptor fd;
+                 fd.SetBCName(name);
+                 fd.SetBCProperty(self.GetNFD()+1);
+                 return self.AddFaceDescriptor(fd).Nr1();
+               }
+             case 1:
+               {
+                 EdgeDescriptor ed;
+                 ed.SetName(name);
+                 return self.AddEdgeDescriptor(ed).Nr1();
+               }
+             default:
+               self.VertexNames().Append(name);
+               return self.VertexNames().Size();
              }
-           auto & regionnames = self.GetRegionNamesCD(codim);
-           regionnames.Append (new string(name));
-           int idx = regionnames.Size();
-           if (dim == 2)
-             {
-               FaceDescriptor fd;
-               fd.SetBCName(regionnames.Last());
-               fd.SetBCProperty(idx);
-               self.AddFaceDescriptor(fd);
-             }
-           return idx;
          }, py::arg("name"), py::arg("dim"))
 
     .def ("GetRegionNames", [] (Mesh & self, optional<int> optdim, optional<int> optcodim)
@@ -1517,23 +1520,17 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             else
               throw Exception("either 'dim' or 'codim' must be specified");
             
+            int dim = self.GetDimension() - codim;
             std::vector<string> names;
-            if (codim == 2)
+            if (dim == 3 || dim == 0)
               {
-                for (size_t i = 0; i < self.GetNCD2Names(); i++)
-                  names.push_back(string(self.GetCD2Name(i)));
+                // arrays: unset entries are reported as ""
+                for (const auto & name : (dim == 0 ? self.VertexNames() : self.Materials()))
+                  names.push_back(name ? *name : "");
               }
             else
-              {
-                Array<string*> & codimnames = self.GetRegionNamesCD (codim);
-                for (auto name : codimnames)
-                  {
-                    if (name)
-                      names.push_back(*name);
-                    else
-                      names.push_back("");
-                  }
-              }
+              for (size_t i = 0; i < self.GetNRegions(dim); i++)
+                names.push_back(string(self.GetRegionName(dim, i+1)));
             return names;               
           }, py::arg("dim")=nullopt, py::arg("codim")=nullopt)
     
@@ -1544,8 +1541,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def ("GetMaterial", FunctionPointer([](Mesh & self, int domnr)
                                          { return string(self.GetMaterial(domnr)); }))
 
-    .def ("GetCD2Name", &Mesh::GetCD2Name)
-    .def ("SetCD2Name", &Mesh::SetCD2Name)
+    // codim-2 names: edge descriptors in 3D, vertex names in 2D
+    .def ("GetCD2Name", [](Mesh & self, int nr) { return string(self.GetRegionName(self.GetDimension()-2, nr+1)); })
+    .def ("SetCD2Name", [](Mesh & self, int nr, const string & name)
+          {
+            if (self.GetDimension() == 3)
+              self.EnsureEdgeDescriptor(nr).SetName((name != "default" && !name.empty()) ? name : "default");
+            else
+              self.SetCD2Name(nr, name);
+          })
 
     .def ("GetCD3Name", &Mesh::GetCD3Name)
     .def ("SetCD3Name", &Mesh::SetCD3Name)
