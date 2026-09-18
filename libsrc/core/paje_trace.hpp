@@ -238,18 +238,19 @@ namespace ngcore
           tasks[thread_id].push_back( Task{thread_id, id, id_type, 0, GetTimeCounter(), false} );
         }
 
-      void StartJob(int job_id, const std::type_info & type)
+      int StartJob(int job_id, const std::type_info & type)
         {
-          if(!tracing_enabled) return;
+          if(!tracing_enabled) return -1;
           if(jobs.size() == max_num_events_per_thread)
             StopTracing();
           jobs.push_back( Job{job_id, &type, GetTimeCounter()} );
+          return jobs.size()-1;
         }
 
-      void StopJob()
+      void StopJob(int index)
         {
-          if(tracing_enabled)
-            jobs.back().stop_time = GetTimeCounter();
+          if(tracing_enabled && index >= 0)
+            jobs[index].stop_time = GetTimeCounter();
         }
 
       void StartLink(int thread_id, int key)
