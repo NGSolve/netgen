@@ -1180,6 +1180,7 @@ namespace netgen
     Array<std::pair<int,int>, SegmentIndex> seg_surfnrs;
     Array<int, SegmentIndex> seg_edgenrs;
     Array<int, SegmentIndex> seg_sis;
+    Array<string> bcnames2d;
     
 
     while (infile.good() && !endmesh)
@@ -1504,6 +1505,8 @@ namespace netgen
                       GetFaceDescriptor(el.GetIndex ()).SetBCName((bcp >= 1 && bcp <= n) ? names[bcp-1] : "default");
                     }
               }
+            else if ( GetDimension() == 2 )
+              bcnames2d = std::move(names);
             else
               for (auto i : Range(n))
                 SetBCName(i, names[i]);
@@ -1809,6 +1812,9 @@ namespace netgen
       }
     // else: edgesegmentsgi3 - segments already have correct indices
 
+    for (auto i : Range(bcnames2d))
+      SetBCName(i, bcnames2d[i]);
+
     RebuildFDIndices();
 
     SetNextMajorTimeStamp();
@@ -2021,6 +2027,7 @@ namespace netgen
     archive & segments;
     archive & pointelements;
     archive & facedecoding;
+    Array<optional<string>> bcnames2d_compat;
     if (archive.GetVersion("netgen") >= names_in_descriptors_version)
       {
         archive.NeedsVersion("netgen", names_in_descriptors_version);
@@ -2035,6 +2042,8 @@ namespace netgen
         SetDomainNames(std::move(mats));
         if (dimension == 1)
           vertexnames = std::move(bcnames);   // bc names of 1D meshes are the vertex names
+        if (dimension == 2)
+          bcnames2d_compat = std::move(bcnames);
         if (dimension == 3)
           vertexnames = std::move(cd3names);
         for (int i = 0; i < cd2names.Size(); i++)
@@ -2072,6 +2081,9 @@ namespace netgen
         RebuildSurfaceElementLists();
         if (edgedecoding.Size() == 0)
           ReconstructEdgeDescriptors(nullptr, nullptr);
+        for (int i = 0; i < bcnames2d_compat.Size(); i++)
+          if (bcnames2d_compat[i])
+            SetBCName(i, *bcnames2d_compat[i]);
         RebuildFDIndices();
         
         CalcSurfacesOfNode ();
