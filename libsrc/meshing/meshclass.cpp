@@ -7709,7 +7709,7 @@ namespace netgen
 
     auto filter_elements = [&keep_point](auto & elements, auto & keep_region, auto region_of)
     {
-      for (auto el : elements)
+      for (auto && el : elements)
       {
         if(keep_region[region_of(el)])
           for (auto pi : el.PNums())
