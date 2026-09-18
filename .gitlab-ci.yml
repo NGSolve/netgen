@@ -10,7 +10,7 @@ workflow:
 
 stages:
   - build
-  - test_ngsolve
+  - pip
 
 push_github:
   stage: build
@@ -206,10 +206,8 @@ linux_mpi:
 
 test_build_ngsolve:
   extends: .template_ubuntu
-  stage: test_ngsolve
+  stage: build
   when: manual
-  allow_failure: true
-  needs: ["linux_mpi"]
   script:
     - git clone https://github.com/NGSolve/ngsolve.git $CI_PROJECT_DIR/ngsolve_src
     - mkdir -p build/ngsolve
@@ -272,7 +270,7 @@ mac:
 ############################################
 pip_linux:
   image: cerbsim/manylinux_2_28_x86_64_cuda_12.9
-  stage: build
+  stage: pip
   tags:
     - pip
     - linux
@@ -281,7 +279,7 @@ pip_linux:
     - ./tests/build_pip.sh
 
 pip_windows:
-  stage: build
+  stage: pip
   tags:
     - pip
     - windows
@@ -291,7 +289,7 @@ pip_windows:
     - .\tests\build_pip.ps1
 
 pip_macos:
-  stage: build
+  stage: pip
   tags:
     - pip
     - macosx
