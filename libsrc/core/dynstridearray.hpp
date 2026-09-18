@@ -14,7 +14,7 @@
 #include <type_traits>
 
 #include "array.hpp"
-#include "memtracer.hpp"
+#include "memtrace.hpp"
 
 namespace ngcore
 {
@@ -261,7 +261,6 @@ namespace ngcore
     using FLAT::size;
     size_t allocsize = 0;   // in slots
     Layout ownlayout;
-    MemoryTracer mt;
 
   public:
     DynStrideArray () : FLAT(0, nullptr, &ownlayout) { }
@@ -347,7 +346,7 @@ namespace ngcore
       data = ndata;
       allocsize = nalloc;
       ownlayout = nlayout;
-      if (allocsize) mt.Alloc (allocsize*ownlayout.stride);
+      if (allocsize) MemTraceAlloc (data, allocsize*ownlayout.stride);
     }
 
     // append default-initialized slot, returns its index
@@ -417,9 +416,6 @@ namespace ngcore
       size = 0;
     }
 
-    const MemoryTracer & GetMemoryTracer () const { return mt; }
-    void StartMemoryTracing () const { mt.Alloc (allocsize*ownlayout.stride); }
-
   private:
     static char * AllocBytes (size_t nbytes)
     {
@@ -434,14 +430,14 @@ namespace ngcore
     {
       allocsize = nalloc;
       data = nalloc ? AllocBytes (nalloc*ownlayout.stride) : nullptr;
-      if (nalloc) mt.Alloc (nalloc*ownlayout.stride);
+      if (nalloc) MemTraceAlloc (data, nalloc*ownlayout.stride);
     }
 
     void Free ()
     {
       if (data)
         {
-          mt.Free (allocsize*ownlayout.stride);
+          MemTraceFree (data, allocsize*ownlayout.stride);
           FreeBytes (data);
         }
       data = nullptr;
@@ -459,7 +455,7 @@ namespace ngcore
         }
       data = ndata;
       allocsize = nsize;
-      mt.Alloc (allocsize*ownlayout.stride);
+      MemTraceAlloc (data, allocsize*ownlayout.stride);
     }
 
     // default-construct header and tails of slots [first, next)
