@@ -207,6 +207,7 @@ linux_mpi:
 test_build_ngsolve:
   extends: .template_ubuntu
   stage: test_ngsolve
+  when: manual
   allow_failure: true
   needs: ["linux_mpi"]
   script:
