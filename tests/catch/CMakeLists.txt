@@ -29,6 +29,8 @@ add_unit_test(archive archive.cpp)
 # RegisterForArchive needs Python.h if built with Python
 target_link_libraries(test_archive netgen_python)
 add_unit_test(array array.cpp)
+add_unit_test(dynstridearray dynstridearray.cpp)
+add_unit_test(element element.cpp)
 add_unit_test(libm libm.cpp)
 if(NOT MSVC)
   target_compile_options(test_libm PRIVATE -ffp-contract=off)

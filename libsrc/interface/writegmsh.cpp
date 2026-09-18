@@ -99,7 +99,7 @@ void WriteGmshFormat (const Mesh & mesh,
 
          for (ElementIndex i : T_Range<ElementIndex>(ne))
              {
-             Element el = mesh[i];
+             Element el (mesh[i]);
              if (inverttets) el.Invert();
              outfile << nse + i.Nr1(); /// element number
              outfile << " ";

@@ -72,12 +72,8 @@ if(CHECK_RANGE)
 endif(CHECK_RANGE)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-  target_compile_definitions(ngcore PUBLIC _DEBUG NETGEN_ENABLE_CHECK_RANGE)
+  target_compile_definitions(ngcore PUBLIC NETGEN_ENABLE_CHECK_RANGE)
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug" OR CMAKE_BUILD_TYPE STREQUAL "DEBUG")
-
-if(TRACE_MEMORY)
-  target_compile_definitions(ngcore PUBLIC NETGEN_TRACE_MEMORY)
-endif(TRACE_MEMORY)
 
 if(USE_NUMA)
     find_library(NUMA_LIBRARY libnuma.so)
@@ -89,10 +85,11 @@ install(TARGETS ngcore DESTINATION ${NG_INSTALL_DIR} COMPONENT netgen)
 
 target_link_libraries(ngcore PRIVATE "$<BUILD_INTERFACE:netgen_python>" ${CMAKE_THREAD_LIBS_INIT})
 
-install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp memtracer.hpp
+install(FILES ngcore.hpp archive.hpp type_traits.hpp version.hpp ngcore_api.hpp logging.hpp memtracer.hpp memtrace.hpp
   exception.hpp symboltable.hpp paje_trace.hpp utils.hpp profiler.hpp mpi_wrapper.hpp
   array.hpp taskmanager.hpp concurrentqueue.h localheap.hpp python_ngcore.hpp flags.hpp
   xbool.hpp signal.hpp bitarray.hpp blockallocator.hpp table.hpp hashtable.hpp indexset.hpp ranges.hpp ngstream.hpp
+  dynstridearray.hpp
   simd.hpp simd_avx.hpp simd_avx512.hpp simd_generic.hpp simd_math.hpp simd_sse.hpp simd_arm64.hpp
   register_archive.hpp autodiff.hpp autodiffdiff.hpp
   ng_mpi.hpp ng_mpi_generated_declarations.hpp mpi4py_pycapi.h ng_mpi_native.hpp statushandler.hpp

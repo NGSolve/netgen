@@ -511,7 +511,7 @@ namespace netgen
   }
 
 
-  ElementIndex Mesh :: AddVolumeElement (const Element & el)
+  ElementIndex Mesh :: AddVolumeElement (const ElementRef & el)
   { 
     /*
     int maxn = el[0];
@@ -561,7 +561,7 @@ namespace netgen
     return ve;
   }
 
-  void Mesh :: SetVolumeElement (ElementIndex ei, const Element & el)
+  void Mesh :: SetVolumeElement (ElementIndex ei, const ElementRef & el)
   {
     /*
     int maxn = el[0];
@@ -571,6 +571,8 @@ namespace netgen
     maxn += 1-PointIndex::BASE;
     */
 
+    if (size_t(el.GetNP()) > volelements.Width())
+      volelements.SetWidth (el.GetNP());
     volelements[ei]  = el;
     volelements[ei].Touch();
     volelements[ei].Flags().fixed = 0;
@@ -702,12 +704,12 @@ namespace netgen
     outfile << "volumeelements" << "\n";
     outfile << GetNE() << "\n";
 
-    for (auto & el2 : VolumeElements())
+    for (auto el2 : VolumeElements())
       {
         outfile << el2.GetIndex();
         outfile << " " << el2.GetNP();
 
-        Element el = el2;
+        Element el (el2);
         if (inverttets) el.Invert();
 
         for (int j = 0; j < el.GetNP(); j++)
@@ -1926,20 +1928,27 @@ namespace netgen
 
         // sending volume elements
         auto copy_el3d  (volelements);
-        for (auto & el : copy_el3d)
+        for (auto el : copy_el3d)
           for (auto & pi : el.PNums())
             pi = globnum[pi];
 
+        // strided slots are trivially copyable: send width, size and raw bytes
         if (comm.Rank() > 0)
-          comm.Send(copy_el3d, 0, 200);
+          {
+            Array<size_t> shape { copy_el3d.Width(), copy_el3d.Size() };
+            comm.Send(FlatArray<size_t>(shape), 0, 200);
+            comm.Send(FlatArray<char>(copy_el3d.Size()*copy_el3d.Stride(), copy_el3d.Data()), 0, 200);
+          }
         else
           {
-            Array<Element, ElementIndex> el3di;
             for (int j = 1; j < comm.Size(); j++)
               {
-                comm.Recv(el3di, j, 200);
-                for (auto & el : el3di)
-                  copy_el3d += el;
+                Array<size_t> shape(2);
+                comm.Recv(FlatArray<size_t>(shape), j, 200);
+                T_VOLELEMENTS el3di(shape[1], shape[0]);
+                comm.Recv(FlatArray<char>(el3di.Size()*el3di.Stride(), el3di.Data()), j, 200);
+                for (auto el : el3di)
+                  copy_el3d.Append (el);
               }
             archive & copy_el3d;
           }
@@ -2889,7 +2898,7 @@ namespace netgen
     auto elsonpoint = ngcore::CreateSortedTable<ElementIndex, PointIndex>( volelements.Range(),
            [&](auto & table, ElementIndex ei)
            {
-             const Element & el = (*this)[ei];
+             auto el = (*this)[ei];
              if(el.IsDeleted()) return;
              if (dom == 0 || dom == el.GetIndex())
                {
@@ -3214,7 +3223,7 @@ namespace netgen
               
               for (ElementIndex ei : elsonpoint[pi])
                 {
-                  const Element & el = VolumeElement(ei);
+                  auto el = VolumeElement(ei);
                   if(el.IsDeleted()) continue;
                   
                   if (dom == 0 || el.GetIndex() == dom)
@@ -3687,7 +3696,7 @@ namespace netgen
         {
           const Element & el = VolumeElement(i);
       */
-      for (auto & el : VolumeElements())
+      for (auto el : VolumeElements())
         {
           if (!el[0].IsValid() || el.IsDeleted()) continue;
 
@@ -3710,7 +3719,7 @@ namespace netgen
       {
         Element & el = VolumeElement(i);
     */
-    for (auto & el : VolumeElements())
+    for (auto el : VolumeElements())
       {
         if (!el[0].IsValid() || el.IsDeleted()) continue;
 
@@ -4380,7 +4389,7 @@ namespace netgen
 
   double Mesh :: ElementError (int eli, const MeshingParameters & mp) const
   {
-    const Element & el = volelements[ElementIndex::FromNr1(eli)];
+    auto el = volelements[ElementIndex::FromNr1(eli)];
     return CalcTetBadness (points[el[0]], points[el[1]],
                            points[el[2]], points[el[3]], -1, mp);
   }
@@ -4453,7 +4462,7 @@ namespace netgen
     ParallelForRange
       (volelements.Range(), [&] (auto myrange)
        {
-         for (const Element & el : volelements.Range(myrange))
+         for (auto el : volelements.Range(myrange))
            for (PointIndex pi : el.PNums())
              pused[pi] = true;
        });
@@ -4540,7 +4549,7 @@ namespace netgen
     ParallelForRange
       (volelements.Range(), [&] (auto myrange)
        {
-         for (Element & el : volelements.Range(myrange))
+         for (auto el : volelements.Range(myrange))
            for (PointIndex & pi : el.PNums())
              pi = op2np[pi];
        });
@@ -4621,7 +4630,7 @@ namespace netgen
             }
       }
 
-    for (auto & el : volelements)
+    for (auto el : volelements)
       if (el.GetType() == TET)
         {
           // lowest index first ...
@@ -4823,7 +4832,7 @@ namespace netgen
     PrintMessage (5, "elements: ", ne);
     for (ElementIndex i : T_Range<ElementIndex>(ne))
       {
-        Element & el = (Element&) (*this)[i];
+        auto el = const_cast<Mesh&>(*this)[i];
         el.Flags().badel = 0;
         int nip = el.GetNIP();
         for (int j = 1; j <= nip; j++)
@@ -4961,7 +4970,7 @@ namespace netgen
 
 
   ///
-  bool Mesh :: LegalTet2 (Element & el) const
+  bool Mesh :: LegalTet2 (ElementRef el) const
   {
     // static int timer1 = NgProfiler::CreateTimer ("Legaltet2");
 
@@ -5229,7 +5238,7 @@ namespace netgen
     int oldne = GetNE(); 
     for (ElementIndex i : T_Range<ElementIndex>(oldne))
       {
-        Element el = (*this)[i];
+        Element el ((*this)[i]);
 
         if (el.GetType() == PRISM)
           {
@@ -5540,7 +5549,7 @@ namespace netgen
 
     else
       {
-        for (auto & el : VolumeElements())
+        for (auto el : VolumeElements())
           {
             const auto & p1 = Point (el[0]);
             const auto & p2 = Point (el[1]);
@@ -6169,7 +6178,7 @@ namespace netgen
 
     //if(!curvedelems->IsCurved(ei))
     //  return PointContainedIn3DElementOld(p,lami,ei);
-    const Element & el = volelements[ei];
+    auto el = volelements[ei];
 
     netgen::Point<3> lam = 0.0;
 
@@ -6884,7 +6893,7 @@ namespace netgen
 
             for(auto i : Range(nmapped))
               {
-                Element nel = el;
+                Element nel (el);
                 for(auto& pi : nel.PNums())
                   if(mapped_points.count(pi))
                     pi = mapped_points[pi][i];
@@ -6959,7 +6968,7 @@ namespace netgen
       {
         int badel = 0;
 
-        Element & el = VolumeElement(ei);
+        auto el = VolumeElement(ei);
 
         if (el.GetType() != TET)
           {
@@ -7085,7 +7094,7 @@ namespace netgen
     ParallelForRange( Range(volelements), [&] (auto myrange)
     {
       int cnt_local = 0;
-      for(auto & el : volelements.Range(myrange))
+      for (auto el : volelements.Range(myrange))
         if ((domain==0 || el.GetIndex() == domain) && !LegalTet (el))
           cnt_local++;
       cnt += cnt_local;
@@ -7605,7 +7614,7 @@ namespace netgen
 
     auto filter_elements = [&keep_point](auto & elements, auto & keep_region, auto region_of)
     {
-      for(auto & el : elements)
+      for (auto && el : elements)
       {
         if(keep_region[region_of(el)])
           for (auto pi : el.PNums())
@@ -7615,7 +7624,7 @@ namespace netgen
       }
     };
 
-    filter_elements(mesh.VolumeElements(), keep_domain, [](const Element & el) { return el.GetIndex(); });
+    filter_elements(mesh.VolumeElements(), keep_domain, [](const ElementRef & el) { return el.GetIndex(); });
     // keep_face is filled by BCProperty, tested here by descriptor number (they coincide for generated meshes)
     filter_elements(mesh.SurfaceElements(), keep_face, [](const Element2d & el) { return el.GetIndex().Nr1(); });
 
@@ -7876,7 +7885,7 @@ namespace netgen
     return defaultmat_sv;
   }
 
-  std::string_view Mesh :: GetRegionName (const Element & el) const
+  std::string_view Mesh :: GetRegionName (const ElementRef & el) const
   {
     return GetRegionName(3, el.GetIndex());
   }
@@ -8046,7 +8055,7 @@ namespace netgen
           }
       }
     
-    for(auto & el : nm.VolumeElements())
+    for (auto el : nm.VolumeElements())
       for(auto i : Range(el.GetNP()))
         el[i] = point_map1[el[i]];
     for(auto & el : nm.SurfaceElements())
@@ -8056,7 +8065,7 @@ namespace netgen
       for(auto i : Range(el.GetNP()))
         el[i] = point_map1[el[i]];
     
-    for(auto & el : VolumeElements())
+    for (auto el : VolumeElements())
       {
         auto nel = el;
         for(auto i : Range(el.GetNP()))

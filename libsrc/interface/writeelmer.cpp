@@ -117,10 +117,10 @@ void WriteElmerFormat (const Mesh &mesh,
 
   for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = mesh[i];
+      auto el = mesh[i];
 
       // getface not working for second order elements -> reconstruct linear element here
-      Element linear_el = el;
+      Element linear_el (el);
       linear_el.SetNP(el.GetNV()); // GetNV returns 8 for HEX20 for instance
 
       for (auto j : Range(1,el.GetNFaces()+1))
@@ -150,7 +150,7 @@ void WriteElmerFormat (const Mesh &mesh,
 
   for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      Element el = mesh[i];
+      Element el (mesh[i]);
       if (inverttets) el.Invert();
       auto eltype = el.GetType();
       elcount[eltype]++;

@@ -51,7 +51,7 @@ public:
   void ImproveMesh() { mesh.ImproveMesh(mp, goal); }
 
   double 
-  CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h)
+  CalcBad (const Mesh::T_POINTS & points, const ElementRef & elem, double h)
   {
     if (elem.GetType() == TET)
       return CalcTetBadness (points[elem[0]], points[elem[1]],  
@@ -69,7 +69,7 @@ public:
 
 
 inline double 
-CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h, const MeshingParameters & mp)
+CalcBad (const Mesh::T_POINTS & points, const ElementRef & elem, double h, const MeshingParameters & mp)
 {
   if (elem.GetType() == TET)
     return CalcTetBadness (points[elem[0]], points[elem[1]],  
@@ -79,7 +79,7 @@ CalcBad (const Mesh::T_POINTS & points, const Element & elem, double h, const Me
 
 
 
-extern int WrongOrientation (const Mesh::T_POINTS & points, const Element & el);
+extern int WrongOrientation (const Mesh::T_POINTS & points, const ElementRef & el);
 
 
 /* Functional depending of inner point inside triangular surface */
@@ -127,7 +127,7 @@ class JacobianPointFunction : public MinFunction
 {
 public:
   Mesh::T_POINTS & points;
-  const Array<Element, ElementIndex> & elements;
+  const T_VOLELEMENTS & elements;
   Table<ElementIndex, PointIndex> elementsonpoint;
   PointIndex actpind;
 
@@ -136,7 +136,7 @@ public:
   
 public:
   JacobianPointFunction (Mesh::T_POINTS & apoints, 
-                         const Array<Element, ElementIndex> & aelements);
+                         const T_VOLELEMENTS & aelements);
   virtual ~JacobianPointFunction () { ; }
   virtual void SetPointIndex (PointIndex aactpind);
   virtual double Func (const Vector & x) const;

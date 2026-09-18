@@ -216,7 +216,7 @@ namespace netgen
     // for (int i = 1; i <= mesh.GetNE(); i++)
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        const Element & el = mesh.VolumeElement(ei);
+        auto el = mesh.VolumeElement(ei);
         int onp = 0;
 
         Element newel(TET);
@@ -347,7 +347,7 @@ namespace netgen
               }
           }
 
-        mesh.VolumeElement (ei) = newel;
+        mesh.SetVolumeElement (ei, newel);
       }
 
 
@@ -428,7 +428,7 @@ namespace netgen
       { p[0].Invalidate(); p[1].Invalidate(); }
 
     // for (int i = 1; i <= ne; i++)
-    for (auto & el : mesh.VolumeElements())
+    for (auto el : mesh.VolumeElements())
       {
         if (el.GetType() == TET10)
           {
@@ -554,7 +554,7 @@ namespace netgen
                         CalcJacobianBadness(mesh.Points()) > 1e10)
                       {
                         wrongels++;
-                        Element & el = mesh[i];
+                        auto el = mesh[i];
                         el.Flags().badel = 1;
                      
                       

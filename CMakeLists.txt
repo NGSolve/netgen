@@ -40,7 +40,6 @@ option( BUILD_STUB_FILES "Build stub files for better autocompletion" ON)
 option( BUILD_FOR_CONDA "Link python libraries only to executables" OFF)
 
 option( USE_SUPERBUILD       "build dependencies automatically" ON)
-option( TRACE_MEMORY     "Enable memory tracing" OFF)
 option( NG_FP_CONTRACT "allow contraction of a*b+c into fma in the mesher (OFF gives reproducible meshes across platforms)" OFF)
 
 set(NG_COMPILE_FLAGS "" CACHE STRING "Additional compile flags")

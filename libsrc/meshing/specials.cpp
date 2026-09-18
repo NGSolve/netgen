@@ -43,7 +43,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
       Box3d box;
       int remove = 0;
 
-      const Element & el = mesh[i];
+      auto el = mesh[i];
       el.GetBox(mesh.Points(), box);
 
       if (i.Nr1() % 10000 == 0)
@@ -73,7 +73,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   do
     {
       changed = 0;
-      for (auto & el : mesh.VolumeElements())
+      for (auto el : mesh.VolumeElements())
         {
           int has = 0, hasnot = 0;
           if (el[0].IsValid())
@@ -98,7 +98,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   while (changed);
   cout << endl;
 
-  for (auto & el : mesh.VolumeElements())
+  for (auto el : mesh.VolumeElements())
     {
       int hasnot = 0;
       if (el[0].IsValid())

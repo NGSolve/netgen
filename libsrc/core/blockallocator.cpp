@@ -1,4 +1,5 @@
 #include "blockallocator.hpp"
+#include "memtrace.hpp"
 
 namespace ngcore
 {
@@ -10,7 +11,10 @@ namespace ngcore
   {
     std::lock_guard<std::mutex> guard(mut);
     for (char * block : bablocks)
-      delete [] block;
+      {
+        MemTraceFree(block, size * blocks);
+        delete [] block;
+      }
     bablocks.SetSize(0);
   }
 
@@ -20,6 +24,7 @@ namespace ngcore
     if (!freelist)
       {
         char * hcp = new char [size * blocks];
+        MemTraceAlloc(hcp, size * blocks);
         bablocks.Append (hcp);
         for (size_t i = 0; i < blocks-1; i++)
           *(void**)&(hcp[i * size]) = &(hcp[(i+1) * size]);

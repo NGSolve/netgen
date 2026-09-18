@@ -204,7 +204,7 @@ namespace netgen
     
     for (ElementIndex ei : mesh.VolumeElements().Range())
       {
-        const Element & el = mesh[ei];
+        auto el = mesh[ei];
 
         if(el.IsDeleted())
           continue;

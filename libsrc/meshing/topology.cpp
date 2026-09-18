@@ -97,7 +97,7 @@ namespace netgen
   {
     for (ElementIndex elnr : top.GetVertexElements(v))
       {
-        const Element & el = mesh[elnr];
+        auto el = mesh[elnr];
 
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
@@ -150,7 +150,7 @@ namespace netgen
   {
     for (ElementIndex elnr : top.GetVertexElements(v))
       {
-        const Element & el = mesh[elnr];
+        auto el = mesh[elnr];
         
         int nelfaces = MeshTopology::GetNFaces (el.GetType());
         const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
@@ -2061,7 +2061,7 @@ namespace netgen
   {
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
     
-    const Element & el = mesh->VolumeElement (ei);
+    auto el = mesh->VolumeElement (ei);
     const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
 
     int k = locedgenr;
@@ -2074,7 +2074,7 @@ namespace netgen
   int MeshTopology :: GetElementFaceOrientation (int elnr, int locfacenr) const
   {
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
-    const Element & el = mesh->VolumeElement (ei);
+    auto el = mesh->VolumeElement (ei);
     
     const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
 
@@ -2261,7 +2261,7 @@ namespace netgen
     // find one element having all vertices of the face
     for (int i = 0; i < els.Size(); i++)
       {
-        const Element & el = (*mesh)[els[i]];
+        auto el = (*mesh)[els[i]];
         int nref_faces = GetNFaces (el.GetType());
         const ELEMENT_FACE * ref_faces = GetFaces1 (el.GetType());
         int nfa_ref_edges = GetNEdges (GetFaceType0(fnr-1));

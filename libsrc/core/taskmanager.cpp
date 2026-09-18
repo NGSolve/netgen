@@ -355,16 +355,17 @@ namespace ngcore
 
     class StartStop
     {
+      int index = -1;
     public:
       StartStop(const function<void(TaskInfo&)> & afunc)
       {
         if (trace)
-          trace->StartJob(GetTaskManager()->jobnr, afunc.target_type());
+          index = trace->StartJob(GetTaskManager()->jobnr, afunc.target_type());
       }
       ~StartStop()
       {
         if (trace)
-          trace->StopJob();
+          trace->StopJob(index);
       }
     };
     

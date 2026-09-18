@@ -96,7 +96,7 @@ namespace netgen
                 outfile << "$ELEMENT TYPE = TET4  ESET = ALLTET" << endl;
                 for (ElementIndex i : T_Range<ElementIndex>(ne))
                 {
-                    const Element & el = mesh[i];
+                    auto el = mesh[i];
                     outfile << i.Nr1() 
                             << " " << el[0] 
                             << " " << el[1] 
@@ -109,7 +109,7 @@ namespace netgen
                 outfile << "$ELEMENT TYPE = TET10  ESET = ALLTET" << endl;
                 for (ElementIndex i : T_Range<ElementIndex>(ne))
                 {
-                    const Element & el = mesh[i];
+                    auto el = mesh[i];
                     outfile << i.Nr1() 
                             << " " << el[0] 
                             << " " << el[4] 

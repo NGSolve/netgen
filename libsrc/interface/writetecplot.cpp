@@ -40,7 +40,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
   for (ElementIndex i : T_Range<ElementIndex>(ne))
     {
-      const Element & el = mesh[i];
+      auto el = mesh[i];
       PointIndices<3> i3;
       int l;
       for (j = 1; j <= 4; j++)   // loop over faces of tet

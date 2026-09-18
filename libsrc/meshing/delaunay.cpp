@@ -21,7 +21,7 @@ namespace netgen
   public:
     DelaunayTet () = default;
 
-    DelaunayTet (const Element & el)
+    DelaunayTet (const ElementRef & el)
     {
       for (int i = 0; i < 4; i++)
         pnums[i] = el[i];
@@ -1561,7 +1561,6 @@ namespace netgen
       // improve delaunay - mesh by swapping !!!!
 
       Mesh tempmesh;
-      tempmesh.GetMemoryTracer().SetName("delaunay-tempmesh");
 
       for (auto & meshpoint : mesh.Points())
         tempmesh.AddPoint (meshpoint);
@@ -1649,7 +1648,7 @@ namespace netgen
     
       tempels.SetSize(tempmesh.GetNE());
       tempels.SetSize(0);
-      for (auto & el : tempmesh.VolumeElements())
+      for (auto el : tempmesh.VolumeElements())
         tempels.Append (el);
     }
 

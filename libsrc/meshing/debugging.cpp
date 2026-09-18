@@ -20,7 +20,7 @@ namespace netgen
             for (auto i : el.PNums())
                 interesting_points[i] = true;
 
-        for (auto & el : mesh->VolumeElements())
+        for (auto el : mesh->VolumeElements())
         {
             int num_interesting_points = 0;
 
@@ -157,7 +157,7 @@ namespace netgen
           tetused = false;
           tetused[0] = true;
 
-          auto el = mesh[hasbothpoints[0]];
+          auto el = Copy(mesh[hasbothpoints[0]]);
           PointIndex pi2 = PointIndex::INVALID;
           PointIndex pi3 = PointIndex::INVALID;
           for (auto pi : el.PNums())
@@ -177,7 +177,7 @@ namespace netgen
               for (int k = 0; k < nsuround && !newpi.IsValid(); k++)
                 if (!tetused[k])
                   {
-                    const Element& nel = mesh[hasbothpoints[k]];
+                    auto nel = mesh[hasbothpoints[k]];
                     for (int k2 = 0; k2 < 4 && !newpi.IsValid(); k2++)
                       if (nel[k2] == oldpi)
                         {
