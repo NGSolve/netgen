@@ -118,8 +118,9 @@ void WriteNeutralFormat (const Mesh & mesh,
         {
           Element el = mesh.VolumeElement(i);
       */
-      for (auto el : mesh.VolumeElements())
+      for (auto elref : mesh.VolumeElements())
         {
+          Element el (elref);
           if (inverttets)
             el.Invert();
           outfile.width(4);
