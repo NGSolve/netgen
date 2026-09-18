@@ -1561,7 +1561,6 @@ namespace netgen
       // improve delaunay - mesh by swapping !!!!
 
       Mesh tempmesh;
-      tempmesh.GetMemoryTracer().SetName("delaunay-tempmesh");
 
       for (auto & meshpoint : mesh.Points())
         tempmesh.AddPoint (meshpoint);

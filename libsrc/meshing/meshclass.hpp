@@ -1046,16 +1046,6 @@ namespace netgen
     Array<int, SegmentIndex> seg_partition;
 
     shared_ptr<Mesh> Mirror( netgen::Point<3> p, Vec<3> n );
-
-    private:
-    MemoryTracer mem_tracer = {"Mesh",
-      points, "points",
-      segments, "segments",
-      surfelements, "surfelements",
-      volelements, "volelements"
-    };
-    public:
-    const MemoryTracer & GetMemoryTracer() { return mem_tracer; }
   };
 
   inline ostream& operator<<(ostream& ost, const Mesh& mesh)
