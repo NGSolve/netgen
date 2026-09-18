@@ -855,8 +855,7 @@ namespace netgen
           outfile << endl << endl;
         }
     }
-    // cd2names: edge names in 3D, vertex names in 2D
-    int ncd2 = GetNRegions(dimension-2);
+    int ncd2 = dimension >= 2 ? GetNRegions(dimension-2) : 0;
     int cntcd2names = 0;
     for (int ii = 0; ii < ncd2; ii++)
       {
@@ -984,26 +983,31 @@ namespace netgen
             outfile << pi << "\t" << (*this)[pi].Singularity() << endl;
       }
 
+    auto sing_left = [&](SegmentIndex si)
+    { return HasEdgeDescriptor(segments[si]) ? GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() : 0.0; };
+    auto sing_right = [&](SegmentIndex si)
+    { return HasEdgeDescriptor(segments[si]) ? GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight() : 0.0; };
+
     cnt_sing = 0;
     for (SegmentIndex si : LineSegments().Range())
-      if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() ) cnt_sing++;
+      if (sing_left(si)) cnt_sing++;
     if (cnt_sing)
       {
         outfile << "singular_edge_left" << endl << cnt_sing << endl;
         for (SegmentIndex si : LineSegments().Range())
-          if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() )
-            outfile << si << "\t" << GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeLeft() << endl;
+          if (sing_left(si))
+            outfile << si << "\t" << sing_left(si) << endl;
       }
 
     cnt_sing = 0;
     for (SegmentIndex si : LineSegments().Range())
-      if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight() ) cnt_sing++;
+      if (sing_right(si)) cnt_sing++;
     if (cnt_sing)
       {
         outfile << "singular_edge_right" << endl << cnt_sing << endl;
         for (SegmentIndex si : LineSegments().Range())
-          if ( GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight()  )
-            outfile << si << "\t" << GetEdgeDescriptor(segments[si].GetIndex()).SingEdgeRight() << endl;
+          if (sing_right(si))
+            outfile << si << "\t" << sing_right(si) << endl;
       }
 
 
