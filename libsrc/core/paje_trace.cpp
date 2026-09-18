@@ -678,7 +678,7 @@ namespace ngcore
               timerdepth++;
               maxdepth = timerdepth>maxdepth ? timerdepth : maxdepth;
             }
-          else
+          else if(timerdepth > 0)
             timerdepth--;
         }
 
@@ -695,7 +695,7 @@ namespace ngcore
         {
           if(event.is_start)
             paje.PushState( event.time, state_type_timer, timer_container_aliases[timerdepth++], timer_aliases[event.timer_id], event.custom_value );
-          else
+          else if(timerdepth > 0)
             paje.PopState( event.time, state_type_timer, timer_container_aliases[--timerdepth] );
         }
 

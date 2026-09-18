@@ -3742,7 +3742,7 @@ namespace netgen
           }
       }
 
-    timer2.Stop();
+    timer2.Start();
 
     timer2a.Start();
     
