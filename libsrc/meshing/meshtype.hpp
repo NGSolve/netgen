@@ -1386,21 +1386,20 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   typedef DynStrideArray<ElementHeader, TailList<PointIndex>, ElementIndex> T_VOLELEMENTS_BASE;
 
   /// adds ElementRef access and iteration to a (flat or owning) strided element array
-  template <class BASE>
-  class ElementRefArray : public BASE
+  // the template parameter must not be called BASE: the strided array has a static member of that name
+  template <class TBASE>
+  class ElementRefArray : public TBASE
   {
   public:
-    ElementRefArray () { }
-    explicit ElementRefArray (size_t awidth) : BASE(awidth) { }
-    ElementRefArray (size_t asize, size_t awidth) : BASE(asize, awidth) { }
-    ElementRefArray (const BASE & b) : BASE(b) { }
+    using TBASE::TBASE;
+    ElementRefArray (const TBASE & b) : TBASE(b) { }
 
-    ElementRef operator[] (typename BASE::index_type i) { return ElementRef (BASE::operator[] (i)); }
-    const ElementRef operator[] (typename BASE::index_type i) const { return ElementRef (BASE::operator[] (i)); }
-    ElementRef First () { return ElementRef (BASE::First()); }
-    const ElementRef First () const { return ElementRef (BASE::First()); }
-    ElementRef Last () { return ElementRef (BASE::Last()); }
-    const ElementRef Last () const { return ElementRef (BASE::Last()); }
+    ElementRef operator[] (typename TBASE::index_type i) { return ElementRef (TBASE::operator[] (i)); }
+    const ElementRef operator[] (typename TBASE::index_type i) const { return ElementRef (TBASE::operator[] (i)); }
+    ElementRef First () { return ElementRef (TBASE::First()); }
+    const ElementRef First () const { return ElementRef (TBASE::First()); }
+    ElementRef Last () { return ElementRef (TBASE::Last()); }
+    const ElementRef Last () const { return ElementRef (TBASE::Last()); }
 
     template <class IT>
     class Iterator
@@ -1413,25 +1412,23 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       bool operator!= (const Iterator & it2) const { return it != it2.it; }
       bool operator== (const Iterator & it2) const { return it == it2.it; }
     };
-    auto begin () { return Iterator<decltype(BASE::begin())> (BASE::begin()); }
-    auto end () { return Iterator<decltype(BASE::end())> (BASE::end()); }
-    auto begin () const { return Iterator<decltype(BASE::begin())> (BASE::begin()); }
-    auto end () const { return Iterator<decltype(BASE::end())> (BASE::end()); }
+    auto begin () { return Iterator<decltype(TBASE::begin())> (TBASE::begin()); }
+    auto end () { return Iterator<decltype(TBASE::end())> (TBASE::end()); }
+    auto begin () const { return Iterator<decltype(TBASE::begin())> (TBASE::begin()); }
+    auto end () const { return Iterator<decltype(TBASE::end())> (TBASE::end()); }
 
-    auto Range () const { return BASE::Range(); }
+    auto Range () const { return TBASE::Range(); }
     template <typename... ARGS>
     auto Range (ARGS... args) const
-    { return ElementRefArray<FlatDynStrideArray<ElementHeader, TailList<PointIndex>, size_t>> (BASE::Range (args...)); }
+    { return ElementRefArray<FlatDynStrideArray<ElementHeader, TailList<PointIndex>, size_t>> (TBASE::Range (args...)); }
   };
 
   class VolumeElementArray : public ElementRefArray<T_VOLELEMENTS_BASE>
   {
-    typedef ElementRefArray<T_VOLELEMENTS_BASE> BASE;
+    typedef ElementRefArray<T_VOLELEMENTS_BASE> TBASE;
   public:
-    VolumeElementArray () { }
-    explicit VolumeElementArray (size_t awidth) : BASE(awidth) { }
-    VolumeElementArray (size_t asize, size_t awidth) : BASE(asize, awidth) { }
-    using BASE::Append;
+    using TBASE::TBASE;
+    using TBASE::Append;
 
     // grows the width to the element's number of points if needed
     ElementIndex Append (const ElementRef & el)
