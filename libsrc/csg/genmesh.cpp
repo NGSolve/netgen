@@ -40,7 +40,7 @@ namespace netgen
         if (index == -1)
           index = mesh.AddCD3Name (up.GetName())+1;
         // cout << "adding 0d element, pnum = " << pnum << ", material index = " << index << endl;
-        mesh.pointelements.Append (Element0d(pnum, index));
+        mesh.pointelements.Append (Element0d(pnum, VertexRegionIndex::FromNr1(index)));
       }
 
     SpecialPointCalculation spc;
@@ -103,7 +103,7 @@ namespace netgen
         int ok = 0;
         for (int k = 1; k <= mesh.GetNFD(); k++)
           {
-            const auto & fd = mesh.GetFaceDescriptor(k);
+            const auto & fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(k));
             if (fd.SurfNr() == surf_rep &&
                 fd.DomainIn() == ed.DomainIn()+1 &&
                 fd.DomainOut() == ed.DomainOut()+1 &&
@@ -118,13 +118,13 @@ namespace netgen
             ok = mesh.AddFaceDescriptor (FaceRegion (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1)).Nr1();
           }
 
-        ed.SetIndex(ok);
+        ed.SetIndex(FaceRegionIndex::FromNr1(ok));
       }
 
     for(int k = 1; k<=mesh.GetNFD(); k++)
       {
         *testout << "face: " << k << endl
-                 << "FD: " << mesh.GetFaceDescriptor(k) << endl;
+                 << "FD: " << mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(k)) << endl;
       }
 
     if (geom.identifications.Size())
@@ -299,7 +299,7 @@ namespace netgen
     for (int k = 0; k < geom.GetNSurf(); k++)
       bccnt = max2 (bccnt, geom.GetSurface(k)->GetBCProperty());
 
-    for (int k = 1; k <= mesh.GetNFD(); k++)
+    for (auto k : mesh.FaceDescriptors().Range())
       {
         bool increased = false;
 
@@ -343,7 +343,7 @@ namespace netgen
     // names by bc number: a bc number can be shared by several face descriptors
     Array<string> names(bccnt);
     names = "default";
-    for (int k = 1; k <= mesh.GetNFD(); k++)
+    for (auto k : mesh.FaceDescriptors().Range())
       {
         FaceRegion & fd = mesh.GetFaceDescriptor(k);
         const Surface * surf = geom.GetSurface(fd.SurfNr());
@@ -352,7 +352,7 @@ namespace netgen
         if (nextbcname != "default" && bcp >= 1 && bcp <= bccnt)
           names[bcp-1] = nextbcname;
       }
-    for (int k = 1; k <= mesh.GetNFD(); k++)
+    for (auto k : mesh.FaceDescriptors().Range())
       {
         FaceRegion & fd = mesh.GetFaceDescriptor(k);
         int bcp = fd.BCProperty();
@@ -361,7 +361,7 @@ namespace netgen
 
     //!!
     
-    for (int k = 1; k <= mesh.GetNFD(); k++)
+    for (auto k : mesh.FaceDescriptors().Range())
       {
         FaceRegion & fd = mesh.GetFaceDescriptor(k);
         //const Surface * surf = geom.GetSurface(fd.SurfNr());
@@ -394,7 +394,7 @@ namespace netgen
         Array<int> surfs;
         geom.GetIndependentSurfaceIndices (geom.singfaces[j]->GetSolid(),
                                            geom.BoundingBox(), surfs);
-        for (int k = 1; k <= mesh.GetNFD(); k++)
+        for (auto k : mesh.FaceDescriptors().Range())
           {
             FaceRegion & fd = mesh.GetFaceDescriptor(k);
             for (int l = 0; l < surfs.Size(); l++)
@@ -419,7 +419,7 @@ namespace netgen
         if (masterface[k-1] != k)
           continue;
 
-        FaceRegion & fd = mesh.GetFaceDescriptor(k);
+        FaceRegion & fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(k));
 
         (*testout) << "Surface " << k << endl;
         (*testout) << "Face Descriptor: " << fd << endl;
@@ -428,7 +428,7 @@ namespace netgen
         int oldnf = mesh.GetNSE();
       
         const Surface * surf =
-          geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
+          geom.GetSurface((mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(k)).SurfNr()));
 
 
         Meshing2Surfaces meshing(geom, *surf, mparam, geom.BoundingBox());
@@ -512,7 +512,7 @@ namespace netgen
         if (multithread.terminate) return;
         
         for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
-          mesh[sei].SetIndex (k);
+          mesh[sei].SetIndex (FaceRegionIndex::FromNr1(k));
 
         auto n_illegal_trigs = mesh.FindIllegalTrigs();
         PrintMessage (3, n_illegal_trigs, " illegal triangles");
@@ -534,7 +534,7 @@ namespace netgen
                 
                 {
                   MeshOptimize2d meshopt(mesh);
-                  meshopt.SetFaceIndex (k);
+                  meshopt.SetFaceIndex (FaceRegionIndex::FromNr1(k));
                   meshopt.SetImproveEdges (0);
                   meshopt.SetMetricWeight (mparam.elsizeweight);
                   meshopt.SetWriteStatus (0);
@@ -547,7 +547,7 @@ namespace netgen
                   //            mesh.CalcSurfacesOfNode();
                 
                   MeshOptimize2d meshopt(mesh);
-                  meshopt.SetFaceIndex (k);
+                  meshopt.SetFaceIndex (FaceRegionIndex::FromNr1(k));
                   meshopt.SetImproveEdges (0);
                   meshopt.SetMetricWeight (mparam.elsizeweight);
                   meshopt.SetWriteStatus (0);
@@ -557,7 +557,7 @@ namespace netgen
                 
                 {
                   MeshOptimize2d meshopt(mesh);
-                  meshopt.SetFaceIndex (k);
+                  meshopt.SetFaceIndex (FaceRegionIndex::FromNr1(k));
                   meshopt.SetImproveEdges (0);
                   meshopt.SetMetricWeight (mparam.elsizeweight);
                   meshopt.SetWriteStatus (0);
@@ -569,7 +569,7 @@ namespace netgen
                 if (multithread.terminate) return;
                 {
                   MeshOptimize2d meshopt(mesh);
-                  meshopt.SetFaceIndex (k);
+                  meshopt.SetFaceIndex (FaceRegionIndex::FromNr1(k));
                   meshopt.SetImproveEdges (0);
                   meshopt.SetMetricWeight (mparam.elsizeweight);
                   meshopt.SetWriteStatus (0);
@@ -588,7 +588,7 @@ namespace netgen
     // remove auxiliary segments of smooth surfaces
     for (auto & seg : mesh.LineSegments())
       if (mesh.HasEdgeDescriptor(seg) && mesh.GetEdgeDescriptor(seg).EdgeNr() < 0)
-        seg.SetIndex(0);
+        seg.SetIndex(EdgeRegionIndex::INVALID);
 
     mesh.Compress();
 
@@ -602,7 +602,7 @@ namespace netgen
             if (masterface[k-1] == k)
               continue;
 
-            FaceRegion & fd = mesh.GetFaceDescriptor(k);
+            FaceRegion & fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(k));
 
             (*testout) << "Surface " << k << endl;
             (*testout) << "Face Descriptor: " << fd << endl;
@@ -611,7 +611,7 @@ namespace netgen
             int oldnf = mesh.GetNSE();
       
             const Surface * surf =
-              geom.GetSurface((mesh.GetFaceDescriptor(k).SurfNr()));
+              geom.GetSurface((mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(k)).SurfNr()));
 
             /*
               if (surf -> GetBCProperty() != -1)
@@ -656,7 +656,7 @@ namespace netgen
             if (multithread.terminate) return;
 
             for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
-              mesh[sei].SetIndex (k);
+              mesh[sei].SetIndex (FaceRegionIndex::FromNr1(k));
 
 
             if (!segments.Size())

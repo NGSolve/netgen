@@ -278,7 +278,7 @@ namespace netgen
                         Element el(pnums.Size());
                         for (int j = 0; j < pnums.Size(); j++)
                           el[pe2ng[j]] = PointIndex::FromNr1(pnums[j]);
-                        el.SetIndex (matid);
+                        el.SetIndex (VolumeRegionIndex::FromNr1(matid));
                         mesh.AddVolumeElement (el);
                       }
                     else if (token == "%END_SECT")
@@ -351,10 +351,10 @@ namespace netgen
                                 
                                 auto el = mesh[ElementIndex::FromNr1(elnr)];
                                 if(j == 0)
-                                  mesh.GetFaceDescriptor(nr).SetDomainIn(el.GetIndex().Nr1());
+                                  mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(nr)).SetDomainIn(el.GetIndex().Nr1());
                                 Element2d el2d;
                                 el.GetFace (fnr, el2d);
-                                el2d.SetIndex (nr);
+                                el2d.SetIndex (FaceRegionIndex::FromNr1(nr));
                                   
                                 mesh.AddSurfaceElement (el2d);
                               }

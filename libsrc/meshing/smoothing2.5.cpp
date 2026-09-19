@@ -25,17 +25,18 @@ namespace netgen
   void MeshOptimize2d :: ImproveVolumeMesh ()
   {
     
-    if (!faceindex)
+    if (!faceindex.IsValid())
       {
         PrintMessage (3, "Smoothing");
 
-        for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
+        for (auto fi : mesh.Regions<2>().Range())
           {
+            faceindex = fi;
             ImproveVolumeMesh ();
             if (multithread.terminate)
               throw NgException ("Meshing stopped");
           }
-        faceindex = 0;
+        faceindex = FaceRegionIndex::INVALID;
         return;
       }
       
@@ -156,7 +157,7 @@ namespace netgen
 
         Element2d & hel = mesh[elementsonpoint[pi][0]];
 
-        if(hel.GetIndex().Nr1() != faceindex)
+        if(hel.GetIndex() != faceindex)
           continue;
 
         cnt++;

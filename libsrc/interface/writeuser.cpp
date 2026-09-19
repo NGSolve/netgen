@@ -325,7 +325,7 @@ void WriteSTLExtFormat (const Mesh & mesh,
   // Collect the BC numbers used in the mesh
   for(int faceNr = 1; faceNr <= mesh.GetNFD(); faceNr++)
   {
-          int bcNum = mesh.GetFaceDescriptor(faceNr).BCProperty();
+          int bcNum = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(faceNr)).BCProperty();
 
           if(!faceBCs.Contains(bcNum))
           {

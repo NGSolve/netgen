@@ -365,8 +365,8 @@ void PeriodicIdentification :: IdentifyFaces (class Mesh & mesh)
   for (i = 1; i <= mesh.GetNFD(); i++)
     for (j = 1; j <= mesh.GetNFD(); j++)
       {
-        int surfi = mesh.GetFaceDescriptor(i).SurfNr();
-        int surfj = mesh.GetFaceDescriptor(j).SurfNr();
+        int surfi = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfNr();
+        int surfj = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).SurfNr();
         if (surfi == surfj)
           continue;
         
@@ -472,7 +472,7 @@ BuildSurfaceElements (Array<Segment> & segs,
   int fother = -1;
 
   int facei = seg_fdi(segs[0]);
-  int surfnr = mesh.GetFaceDescriptor(facei).SurfNr();
+  int surfnr = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei)).SurfNr();
 
   if (geom.GetSurface(surfnr) == s1 ||
       geom.GetSurface(surfnr) == s2)
@@ -505,7 +505,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 
               // copy element
               Element2d newel(sel.GetType());
-              newel.SetIndex (facei);
+              newel.SetIndex (FaceRegionIndex::FromNr1(facei));
               for (int k = 0; k < sel.GetNP(); k++)
                 newel[k] = GetIdentifiedPoint (mesh, sel[k]);
 
@@ -1111,20 +1111,20 @@ void CloseSurfaceIdentification :: IdentifyFaces (class Mesh & mesh)
   
   for (int i = 1; i <= mesh.GetNFD(); i++)
     {
-      auto & fdi = mesh.GetFaceDescriptor(i);
-      int surfi = mesh.GetFaceDescriptor(i).SurfNr();
+      auto & fdi = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i));
+      int surfi = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfNr();
       if (s1rep != surfi) continue;
 
 
       if (domain &&
-          domain != geom.GetTopLevelObject (mesh.GetFaceDescriptor(i).DomainIn()-1) &&
-          domain != geom.GetTopLevelObject (mesh.GetFaceDescriptor(i).DomainOut()-1))
+          domain != geom.GetTopLevelObject (mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).DomainIn()-1) &&
+          domain != geom.GetTopLevelObject (mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).DomainOut()-1))
         continue;
 
       for (int j = 1; j <= mesh.GetNFD(); j++)
         {
-          auto & fdj = mesh.GetFaceDescriptor(j);          
-          int surfj = mesh.GetFaceDescriptor(j).SurfNr();
+          auto & fdj = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(j));          
+          int surfj = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).SurfNr();
 
           if (surfi == surfj) continue;
           if (s2rep != surfj) continue;
@@ -1299,7 +1299,7 @@ BuildSurfaceElements (Array<Segment> & segs,
                 if (nst1 * dvec < 0) continue;
                 
                 Element2d el(s1[0], s1[1], s2[0], s2[1]);
-                el.SetIndex(seg_fdi(s1));
+                el.SetIndex(seg_fdi(s1) > 0 ? FaceRegionIndex::FromNr1(seg_fdi(s1)) : FaceRegionIndex::INVALID);
 
                 Vec<3> n = Cross (mesh[el[1]] - mesh[el[0]],
                                   mesh[el[3]] - mesh[el[0]]);
@@ -1365,7 +1365,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
   int fother = -1;
 
   int facei = seg_fdi(segs[0]);
-  int surfnr = mesh.GetFaceDescriptor(facei).SurfNr();
+  int surfnr = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei)).SurfNr();
 
   
   bool foundid = 0;
@@ -1403,7 +1403,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
               
               // copy element
               Element2d newel(sel.GetType());
-              newel.SetIndex (facei);
+              newel.SetIndex (FaceRegionIndex::FromNr1(facei));
               for (int k = 0; k < sel.GetNP(); k++)
                 newel[k] = GetIdentifiedPoint (mesh, sel[k]);
               

@@ -779,7 +779,7 @@ namespace netgen
         int facenr = atoi (argv[2]);
         int bcnr = atoi (argv[3]);
         if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
-          mesh->GetFaceDescriptor (facenr).SetBCProperty (bcnr);
+          mesh->GetFaceDescriptor (FaceRegionIndex::FromNr1(facenr)).SetBCProperty (bcnr);
       }
 
     if (strcmp (argv[1], "setall") == 0)
@@ -787,9 +787,8 @@ namespace netgen
         int bcnr = atoi (argv[2]);
         if (mesh)
           {
-            int nfd = mesh->GetNFD();
-            for (int i = 1; i <= nfd; i++)
-              mesh->GetFaceDescriptor (i).SetBCProperty (bcnr);
+            for (auto & fd : mesh->FaceDescriptors())
+              fd.SetBCProperty (bcnr);
           }
       }
 
@@ -798,7 +797,7 @@ namespace netgen
         int facenr = atoi (argv[2]);
         if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
           {
-            snprintf (buf, size(buf),  "%d", mesh->GetFaceDescriptor(facenr).BCProperty());
+            snprintf (buf, size(buf),  "%d", mesh->GetFaceDescriptor(FaceRegionIndex::FromNr1(facenr)).BCProperty());
           }
         else
           {
@@ -812,7 +811,7 @@ namespace netgen
         int facenr = atoi (argv[2]);
         if (mesh && facenr >= 1 && facenr <= mesh->GetNFD())
           {
-            snprintf (buf, size(buf),  "%s", mesh->GetFaceDescriptor(facenr).GetBCName().c_str());
+            snprintf (buf, size(buf),  "%s", mesh->GetFaceDescriptor(FaceRegionIndex::FromNr1(facenr)).GetBCName().c_str());
           }
         else
           {
@@ -2524,7 +2523,7 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     {
       int j;
       Element2d tri(TRIG);
-      tri.SetIndex(1); //faceind
+      tri.SetIndex(FaceRegionIndex::FromNr1(1)); //faceind
       
       for (j = 1; j <= 3; j++)
         infile >> tri.PNum(j);

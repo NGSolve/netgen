@@ -717,7 +717,7 @@ namespace netgen
           Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
-           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
+           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()))
            {
               for(int j = 0; j < surfElems.Size(); j++)
               {
@@ -741,7 +741,7 @@ namespace netgen
            Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
-           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
+           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()))
            {
               for(int j = 0; j < surfElems.Size(); j++)
               {
@@ -765,7 +765,7 @@ namespace netgen
            Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
-           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
+           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()))
            {
               for(int j = 0; j < surfElems.Size(); j++)
               {
@@ -796,7 +796,7 @@ namespace netgen
            Array<SurfaceElementIndex> surfElems;
            mesh->GetSurfaceElementsOfFace(i,surfElems);
 
-           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(i).SurfColour()))
+           if(ColourMatch(face_colours[colourind],mesh->GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()))
            {
               for(int j = 0; j < surfElems.Size(); j++)
               {

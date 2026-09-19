@@ -95,7 +95,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
             if (faces.Used (i3))
               {
                 int domnr = faces.Get(i3);
-                if (domnr == -1 || domnr == el.GetIndex())
+                if (domnr == -1 || domnr == el.GetIndex().Nr1())
                   isface[l] = true;
               }
           }
@@ -123,7 +123,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
             if (face_edges.Used (i2))
               {
                 int domnr = face_edges.Get(i2);
-                if (domnr == -1 || domnr == el.GetIndex())
+                if (domnr == -1 || domnr == el.GetIndex().Nr1())
                   {
                     switch (l)
                       {
@@ -158,7 +158,7 @@ HPREF_ELEMENT_TYPE ClassifyTet(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
               case 3: pti = el.pnums[pi4]; break;
               }
             int domnr = facepoint[pti];
-            if (domnr == -1 || domnr == el.GetIndex())
+            if (domnr == -1 || domnr == el.GetIndex().Nr1())
               {
                 switch (l)
                   {
@@ -622,7 +622,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
         { 
           if(cornerpoint.Test(el.PNum(p[j])))  { point_sing[p[j]-1]=3;}
           else if(edgepoint.Test(el.PNum(p[j]))) point_sing[p[j]-1]=2;
-          else if (facepoint[el.PNum(p[j])] == -1 || facepoint[el.PNum(p[j])] == el.GetIndex())
+          else if (facepoint[el.PNum(p[j])] == -1 || facepoint[el.PNum(p[j])] == el.GetIndex().Nr1())
             point_sing[p[j]-1] = 1;  
         }
       
@@ -653,7 +653,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
           if (faces.Used (i3))
             {
               int domnr = faces.Get(i3); 
-              if (domnr == -1 || domnr == el.GetIndex())
+              if (domnr == -1 || domnr == el.GetIndex().Nr1())
                 face_sing[k] = 1; 
               
             } 
@@ -1068,10 +1068,10 @@ HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
 
       if (dim == 2)
         {
-          ep1 = edgepoint_dom.Used ( { el.GetIndex(), el.PNumMod(j) } );
-          ep2 = edgepoint_dom.Used ( { el.GetIndex(), el.PNumMod(j+1) } );
-          ep3 = edgepoint_dom.Used ( { el.GetIndex(), el.PNumMod(j+2) });
-          ep4 = edgepoint_dom.Used ( { el.GetIndex(), el.PNumMod(j+3) });
+          ep1 = edgepoint_dom.Used ( { el.GetIndex().Nr1(), el.PNumMod(j) } );
+          ep2 = edgepoint_dom.Used ( { el.GetIndex().Nr1(), el.PNumMod(j+1) } );
+          ep3 = edgepoint_dom.Used ( { el.GetIndex().Nr1(), el.PNumMod(j+2) });
+          ep4 = edgepoint_dom.Used ( { el.GetIndex().Nr1(), el.PNumMod(j+3) });
         }
 
       cp1 = cornerpoint.Test (el.PNumMod (j));
@@ -1434,7 +1434,7 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
               spoint++; 
             }
           else if(edgepoint.Test(el.PNum(p[l]))) point_sing[p[l]-1]=2;
-          else if (facepoint[el.PNum(p[l])] == -1 || facepoint[el.PNum(p[l])] == el.GetIndex())
+          else if (facepoint[el.PNum(p[l])] == -1 || facepoint[el.PNum(p[l])] == el.GetIndex().Nr1())
             point_sing[p[l]-1] = 1;   
         
         for(int k=0;k<12;k++)
@@ -1461,7 +1461,7 @@ HPREF_ELEMENT_TYPE ClassifyHex(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT
               {
               
                 int domnr = faces.Get(i3); 
-                if (domnr == -1 || domnr == el.GetIndex())
+                if (domnr == -1 || domnr == el.GetIndex().Nr1())
                   {
                     face_sing[k] = 1;
                     sface++;
@@ -1629,7 +1629,7 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
           else if(edgepoint.Test(el.pnums[p[l]]))
             point_sing[l]=2;
           
-          else if (facepoint[el.pnums[p[l]]] == -1 || facepoint[el.pnums[p[l]]] == el.GetIndex())
+          else if (facepoint[el.pnums[p[l]]] == -1 || facepoint[el.pnums[p[l]]] == el.GetIndex().Nr1())
             point_sing[l] = 1;   
           
           spoint += point_sing[l]; 
@@ -1674,7 +1674,7 @@ HPREF_ELEMENT_TYPE ClassifyPyramid(HPRefElement & el, HT_EDGES & edges, HT_EDGEP
             {
               
               int domnr = faces.Get(i3); 
-              if (domnr == -1 || domnr == el.GetIndex())
+              if (domnr == -1 || domnr == el.GetIndex().Nr1())
                 face_sing[k] = 1;
             } 
           sface +=face_sing[k]; 

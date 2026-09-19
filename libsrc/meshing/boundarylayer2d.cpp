@@ -74,7 +74,7 @@ namespace netgen
             el[1] = p2;
             el[2] = p3;
             el[3] = p4;
-            el.SetIndex (2);
+            el.SetIndex (FaceRegionIndex::FromNr1(2));
             mesh.AddSurfaceElement (el);
             nq++;
          }
@@ -732,7 +732,7 @@ namespace netgen
         {
            Segment s = line_segments[wsegs[0]];
            // all but the last piece are under the layer
-           s.SetIndex(i+2 < newpts.Size() ? bl_ed_idx : ed_idx);
+           s.SetIndex(EdgeRegionIndex::FromNr1(i+2 < newpts.Size() ? bl_ed_idx : ed_idx));
            int a = forward ? 0 : 1;
            s[a] = newpts[i];
            s[1-a] = newpts[i+1];
@@ -784,7 +784,7 @@ namespace netgen
           edge_to_new_edge[seg.GetIndex().Nr1()] = mesh.AddEdgeDescriptor(ed).Nr1();
         }
 
-        s.SetIndex(edge_to_new_edge[seg.GetIndex().Nr1()]);
+        s.SetIndex(EdgeRegionIndex::FromNr1(edge_to_new_edge[seg.GetIndex().Nr1()]));
         // auto pair = s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
         mesh.AddSegment(s);
 
@@ -825,7 +825,7 @@ namespace netgen
            newel[1] = pi1;
            newel[2] = pi2;
            newel[3] = pi3;
-           newel.SetIndex(new_domain);
+           newel.SetIndex(FaceRegionIndex::FromNr1(new_domain));
            newel.GeomInfo() = PointGeomInfo{};
 
             if(swap)
@@ -955,7 +955,7 @@ namespace netgen
 
         for(auto & sel : mesh.SurfaceElements())
            if(sel.GetIndex() == FaceRegionIndex::FromNr1(info.new_domain))   // 2D: descriptor k <-> domain k
-              sel.SetIndex(info.domain);
+              sel.SetIndex(FaceRegionIndex::FromNr1(info.domain));
 
         // the segments in front of the layer are interior now
         for(auto segi : Range(mesh.LineSegments()))
@@ -969,7 +969,7 @@ namespace netgen
         for(auto i : Range(info.bl_edge_descriptors))
            for(auto segi : Range(mesh.LineSegments()))
               if(mesh[segi].GetIndex().Nr1() == info.bl_edge_descriptors[i])
-                 mesh[segi].SetIndex(info.bl_edge_descriptors_orig[i]);
+                 mesh[segi].SetIndex(EdgeRegionIndex::FromNr1(info.bl_edge_descriptors_orig[i]));
 
         for(auto edi : info.moved_edge_descriptors)
         {

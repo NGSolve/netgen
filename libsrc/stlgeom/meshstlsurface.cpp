@@ -79,7 +79,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
         ed_left.SetSurfNr(0, left_face);
         if (rt != 0) ed_left.SetSurfNr(1, right_face);
         edsi_left = mesh.AddEdgeDescriptor(ed_left);
-        mesh.GetEdgeDescriptor(edsi_left).SetIndex(left_face);
+        mesh.GetEdgeDescriptor(edsi_left).SetIndex(FaceRegionIndex::FromNr1(left_face));
 
         if (rt != 0) {
           EdgeRegion ed_right;
@@ -87,7 +87,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
           ed_right.SetSurfNr(0, right_face);
           ed_right.SetSurfNr(1, left_face);
           edsi_right = mesh.AddEdgeDescriptor(ed_right);
-          mesh.GetEdgeDescriptor(edsi_right).SetIndex(right_face);
+          mesh.GetEdgeDescriptor(edsi_right).SetIndex(FaceRegionIndex::FromNr1(right_face));
         } else {
           edsi_right = edsi_left;
         }
@@ -317,7 +317,7 @@ int STLSurfaceMeshing (STLGeometry & geom, class Mesh & mesh, const MeshingParam
                     }
 
                   MeshOptimize2d optmesh(mesh);
-                  optmesh.SetFaceIndex (0);
+                  optmesh.SetFaceIndex (FaceRegionIndex::INVALID);
                   optmesh.SetImproveEdges (0);
                   optmesh.SetMetricWeight (0);
                   
@@ -838,7 +838,7 @@ void STLSurfaceOptimization (STLGeometry & geom,
 
   MeshOptimize2d optmesh(mesh);
 
-  optmesh.SetFaceIndex (0);
+  optmesh.SetFaceIndex (FaceRegionIndex::INVALID);
   optmesh.SetImproveEdges (0);
   optmesh.SetMetricWeight (mparam.elsizeweight);
 

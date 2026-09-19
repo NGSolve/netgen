@@ -144,7 +144,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
       Element2d tri = sel;
       for (j = 1; j <= 3; j++)
         tri.PNum(j) = pmat[tri.PNum(j)];
-      tri.SetIndex(fnum);
+      tri.SetIndex(FaceRegionIndex::FromNr1(fnum));
       mesh.AddSurfaceElement (tri);
     }
 

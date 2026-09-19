@@ -329,7 +329,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors ()
   // create new FaceDescriptors
   for (auto i : Range(1, nfd_old + 1))
     {
-      const auto& fd = mesh.GetFaceDescriptor(i);
+      const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i));
       string name = fd.GetBCName();
       if (par_surfid.Contains(i))
         {
@@ -355,7 +355,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors ()
           // curvature through layers.
           // Therefore we disable curving for these surfaces.
           if (params.disable_curving)
-            mesh.GetFaceDescriptor(i).SetSurfNr(-1);
+            mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SetSurfNr(-1);
         }
     }
 
@@ -389,7 +389,7 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
       if (point_moved && !moved_surfaces.Test(facei))
         {
           int new_si = mesh.GetNFD() + 1;
-          const auto& fd = mesh.GetFaceDescriptor(facei);
+          const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei));
           // auto isIn = domains.Test(fd.DomainIn());
           // auto isOut = domains.Test(fd.DomainOut());
           int si = params.sides_keep_surfaceindex ? int(facei) : -1;
@@ -512,14 +512,14 @@ BoundaryLayerTool ::BuildSegMap ()
                   type = 0;
                   moved_segs.Append(sj);
                 }
-              else if (const auto& fd = mesh.GetFaceDescriptor(seg_face[sj]);
+              else if (const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(seg_face[sj]));
                        domains.Test(fd.DomainIn()) && domains.Test(fd.DomainOut()))
                 {
                   type = 2;
                   if (fd.DomainIn() == 0 || fd.DomainOut() == 0)
                     is_boundary_projected.SetBit(seg_face[sj]);
                 }
-              else if (const auto& fd = mesh.GetFaceDescriptor(seg_face[sj]);
+              else if (const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(seg_face[sj]));
                        !domains.Test(fd.DomainIn()) && !domains.Test(fd.DomainOut()))
                 {
                   type = 3;
@@ -708,7 +708,7 @@ void BoundaryLayerTool ::InsertNewElements (
             new_ed = mesh.GetEdgeDescriptor(ei);
             int old_fdi = new_ed.GetIndex().Nr1();
             if (old_fdi >= 0 && old_fdi < si_map.Size())
-              new_ed.SetIndex(si_map[old_fdi]);
+              new_ed.SetIndex(FaceRegionIndex::FromNr1(si_map[old_fdi]));
           }
         new_ed.SetEdgeNr(++new_edge_nr);
         edge_map[ei] = mesh.AddEdgeDescriptor(new_ed).Nr1();
@@ -734,7 +734,7 @@ void BoundaryLayerTool ::InsertNewElements (
                     s[2] = PointIndex::INVALID;
                     [[maybe_unused]] auto pair =
                       s[0] < s[1] ? make_pair(s[0], s[1]) : make_pair(s[1], s[0]);
-                    s.SetIndex(getIndex(segj.GetIndex().Nr1()));
+                    s.SetIndex(EdgeRegionIndex::FromNr1(getIndex(segj.GetIndex().Nr1())));
                     new_segments.Append(s);
                     return s;
                   };
@@ -795,7 +795,7 @@ void BoundaryLayerTool ::InsertNewElements (
                         }
                       identifications.Add(p1, p4, identnr);
                       identifications.Add(p2, p3, identnr);
-                      sel.SetIndex(si_map[seg_face[sej]]);
+                      sel.SetIndex(FaceRegionIndex::FromNr1(si_map[seg_face[sej]]));
                       new_sels.Append(sel);
                       new_sels_on_moved_bnd.Append(sel);
 
@@ -805,14 +805,14 @@ void BoundaryLayerTool ::InsertNewElements (
                       s1[1] = p3;
                       s1[2] = PointIndex::INVALID;
                       auto pair = make_pair(p2, p3);
-                      s1.SetIndex(getIndex(segj.GetIndex().Nr1()));
+                      s1.SetIndex(EdgeRegionIndex::FromNr1(getIndex(segj.GetIndex().Nr1())));
                       // new_segments.Append(s1);
                       Segment s2;
                       s2[0] = p4;
                       s2[1] = p1;
                       s2[2] = PointIndex::INVALID;
                       pair = make_pair(p1, p4);
-                      s2.SetIndex(getIndex(segj.GetIndex().Nr1()));
+                      s2.SetIndex(EdgeRegionIndex::FromNr1(getIndex(segj.GetIndex().Nr1())));
                       // new_segments.Append(s2);
                       p1 = p4;
                       p2 = p3;
@@ -822,7 +822,7 @@ void BoundaryLayerTool ::InsertNewElements (
                   s3[1] = p4;
                   s3[2] = PointIndex::INVALID;
                   // auto pair = p3 < p4 ? make_pair(p3, p4) : make_pair(p4, p3);
-                  s3.SetIndex(getIndex(segj.GetIndex().Nr1()));
+                  s3.SetIndex(EdgeRegionIndex::FromNr1(getIndex(segj.GetIndex().Nr1())));
                   new_segments.Append(s3);
                   if (type == 3)
                     new_segments_on_moved_bnd.Append(s0);
@@ -855,7 +855,7 @@ void BoundaryLayerTool ::InsertNewElements (
                         }
                       identifications.Add(p1, p4, identnr);
                       identifications.Add(p2, p3, identnr);
-                      sel.SetIndex(si_map[seg_face[sej]]);
+                      sel.SetIndex(FaceRegionIndex::FromNr1(si_map[seg_face[sej]]));
                       new_sels.Append(sel);
                       new_sels_on_moved_bnd.Append(sel);
                       p1 = p4;
@@ -910,7 +910,7 @@ void BoundaryLayerTool ::InsertNewElements (
           auto new_index = new_mat_nrs[iface];
           if (new_index == -1)
             throw Exception("Boundary " + ToString(iface) + " with name " + mesh.GetBCName(iface - 1) + " extruded, but no new material specified for it!");
-          el.SetIndex(new_index);
+          el.SetIndex(VolumeRegionIndex::FromNr1(new_index));
 
           for (auto j : Range(par_heights))
             {
@@ -939,7 +939,7 @@ void BoundaryLayerTool ::InsertNewElements (
             newel[i] = newPoint(points[i], -1, groups[i]);
           if (surfacefacs[iface] > 0)
             Swap(newel[0], newel[2]); // swap back
-          newel.SetIndex(si_map[iface]);
+          newel.SetIndex(FaceRegionIndex::FromNr1(si_map[iface]));
           new_sels.Append(newel);
         }
       if (is_boundary_moved.Test(iface))
@@ -1065,7 +1065,7 @@ void BoundaryLayerTool ::InsertNewElements (
                         sel[0] = seg[1];
                         sel[1] = seg[0];
                         sel[2] = pi_new_other;
-                        sel.SetIndex(face);
+                        sel.SetIndex(FaceRegionIndex::FromNr1(face));
                         new_sels.Append(sel);
                       }
                   }
@@ -1081,12 +1081,12 @@ void BoundaryLayerTool ::SetDomInOut ()
   for (auto i : Range(1, nfd_old + 1))
     if (moved_surfaces.Test(i))
       {
-        if (auto dom = mesh.GetFaceDescriptor(si_map[i]).DomainIn();
+        if (auto dom = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(si_map[i])).DomainIn();
             dom > ndom_old)
-          mesh.GetFaceDescriptor(i).SetDomainOut(dom);
+          mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SetDomainOut(dom);
         else
-          mesh.GetFaceDescriptor(i).SetDomainIn(
-            mesh.GetFaceDescriptor(si_map[i]).DomainOut());
+          mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SetDomainIn(
+            mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(si_map[i])).DomainOut());
       }
 }
 
@@ -1112,7 +1112,7 @@ void BoundaryLayerTool ::SetDomInOutSides ()
       done.SetBit(index);
       if (index < nfd_old && moved_surfaces.Test(index))
         continue;
-      auto& fd = mesh.GetFaceDescriptor(index);
+      auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(index));
       if (fd.DomainIn() != -1)
         continue;
 
@@ -1127,7 +1127,7 @@ void BoundaryLayerTool ::SetDomInOutSides ()
       if (e2.IsValid())
         dom[1] = mesh[e2].GetIndex().Nr1();
 
-      const auto& fd_old = mesh.GetFaceDescriptor(inv_si_map[index]);
+      const auto& fd_old = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(inv_si_map[index]));
       int dom_old[2] = {fd_old.DomainIn(), fd_old.DomainOut()};
 
       for (auto i : Range(2))
@@ -1236,7 +1236,7 @@ void BoundaryLayerTool ::ProcessParameters ()
   if (int* bc = get_if<int>(&params.boundary); bc)
     {
       for (int i = 1; i <= mesh.GetNFD(); i++)
-        if (mesh.GetFaceDescriptor(i).BCProperty() == *bc)
+        if (mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).BCProperty() == *bc)
           par_surfid.Append(i);
     }
   else if (string* s = get_if<string>(&params.boundary); s)
@@ -1246,7 +1246,7 @@ void BoundaryLayerTool ::ProcessParameters ()
       boundaries.Clear();
       for (int i = 1; i <= mesh.GetNFD(); i++)
         {
-          auto& fd = mesh.GetFaceDescriptor(i);
+          auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i));
           if (regex_match(fd.GetBCName(), pattern))
             {
               boundaries.SetBit(i);
@@ -1303,7 +1303,7 @@ void BoundaryLayerTool ::ProcessParameters ()
         {
           regex pattern(*s);
           for (int i = 1; i <= mesh.GetNFD(); i++)
-            if (regex_match(mesh.GetFaceDescriptor(i).GetBCName(), pattern))
+            if (regex_match(mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).GetBCName(), pattern))
               par_project_boundaries.Append(i);
         }
       else
@@ -1363,7 +1363,7 @@ void BoundaryLayerTool ::ProcessParameters ()
     {
       for (auto i : Range(1, mesh.GetNFD() + 1))
         {
-          auto& fd = mesh.GetFaceDescriptor(i);
+          auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i));
           auto domin = fd.DomainIn();
           auto domout = fd.DomainOut();
           for (int dom : {domin, domout})
@@ -1388,7 +1388,7 @@ void BoundaryLayerTool ::ProcessParameters ()
           regex pattern(bcname);
           for (auto i : Range(1, mesh.GetNFD() + 1))
             {
-              auto& fd = mesh.GetFaceDescriptor(i);
+              auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i));
               if (regex_match(fd.GetBCName(), pattern))
                 new_mat_nrs[i] = ndom;
             }

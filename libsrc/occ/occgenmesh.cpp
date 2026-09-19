@@ -463,7 +463,7 @@ namespace netgen
     }
 
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
-      mesh[sei].SetIndex (k);
+      mesh[sei].SetIndex (FaceRegionIndex::FromNr1(k));
 
     auto n_illegal_trigs = mesh.FindIllegalTrigs();
     PrintMessage (3, n_illegal_trigs, " illegal triangles");

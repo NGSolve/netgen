@@ -305,7 +305,7 @@ namespace netgen
                   if(i==0 || faceid < minId2D)
                     minId2D = faceid;
                     
-                  tris.Last()->SetIndex(faceid);
+                  tris.Last()->SetIndex(FaceRegionIndex::FromNr1(faceid));
 
                   if(faceid > 0)
                     {
@@ -476,7 +476,7 @@ namespace netgen
                     in >> el[j];
                   swap(el[0],el[1]);
                     
-                  el.SetIndex(eldom[i]);
+                  el.SetIndex(VolumeRegionIndex::FromNr1(eldom[i]));
                   mesh.AddVolumeElement(el);
                 }       
             }     
@@ -759,7 +759,7 @@ namespace netgen
             seg[0] = IndexBASE<PointIndex>()+(*segmentdata[i])[0]-1;
             seg[1] = IndexBASE<PointIndex>()+(*segmentdata[i])[1]-1;
             // (*segmentdata[i])[2] was edgenr, no longer stored in EPGeomInfo
-            seg.SetIndex((*segmentdata[i])[3]-minId2D + 1);
+            seg.SetIndex(EdgeRegionIndex::FromNr0((*segmentdata[i])[3]-minId2D));
 
             seg.GeomInfo(0).trignum = (*segmentdata[i])[5];
             seg.GeomInfo(1).trignum = (*segmentdata[i])[5];
@@ -767,7 +767,7 @@ namespace netgen
 
             seg[0] = IndexBASE<PointIndex>()+(*segmentdata[i])[1]-1;
             seg[1] = IndexBASE<PointIndex>()+(*segmentdata[i])[0]-1;
-            seg.SetIndex((*segmentdata[i])[4]-minId2D + 1);
+            seg.SetIndex(EdgeRegionIndex::FromNr0((*segmentdata[i])[4]-minId2D));
 
             seg.GeomInfo(0).trignum = (*segmentdata[i])[6];
             seg.GeomInfo(1).trignum = (*segmentdata[i])[6];

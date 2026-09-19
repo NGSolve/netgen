@@ -267,10 +267,10 @@ namespace netgen
 
 
     DLL_HEADER SegmentIndex AddSegment (const Segment & s);
-    void DeleteSegment (int segnr)
+    void DeleteSegment (SegmentIndex si)
     {
-      segments[SegmentIndex::FromNr1(segnr)][0].Invalidate();
-      segments[SegmentIndex::FromNr1(segnr)][1].Invalidate();
+      segments[si][0].Invalidate();
+      segments[si][1].Invalidate();
     }
 
     int GetNSeg () const { return segments.Size(); }
@@ -312,7 +312,10 @@ namespace netgen
 
     
     DLL_HEADER void RebuildSurfaceElementLists ();
-    DLL_HEADER void GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const;
+    /// surface elements of face fi; INVALID: all surface elements
+    DLL_HEADER void GetSurfaceElementsOfFace (FaceRegionIndex fi, Array<SurfaceElementIndex> & sei) const;
+    void GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const
+    { GetSurfaceElementsOfFace (FaceRegionIndex::FromNr1(facenr), sei); }
 
     DLL_HEADER ElementIndex AddVolumeElement (const ElementRef & el);
     // write to pre-allocated container, thread-safe
@@ -798,9 +801,6 @@ namespace netgen
     
     const FaceRegion & GetFaceDescriptor (FaceRegionIndex i) const
     { return Regions<2>()[i]; }
-    /// 1-based
-    const FaceRegion & GetFaceDescriptor (int i) const
-    { return Regions<2>()[FaceRegionIndex::FromNr1(i)]; }
 
     auto & FaceDescriptors () const { return Regions<2>(); }
 
@@ -843,9 +843,6 @@ namespace netgen
     ///
     FaceRegion & GetFaceDescriptor (FaceRegionIndex i)
     { return Regions<2>()[i]; }
-    /// 1-based
-    FaceRegion & GetFaceDescriptor (int i)
-    { return Regions<2>()[FaceRegionIndex::FromNr1(i)]; }
 
     int IdentifyPeriodicBoundaries(const string& id_name,
                                    const string& s1,
@@ -907,7 +904,9 @@ namespace netgen
     DLL_HEADER Table<ElementIndex, PointIndex> CreatePoint2ElementTable(std::optional<TBitArray<PointIndex>> points = std::nullopt, int domain = 0) const;
     // DLL_HEADER Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
     DLL_HEADER Table<SurfaceElementIndex, PointIndex> CreatePoint2SurfaceElementTable( int faceindex=0 ) const;
-    DLL_HEADER CompressedTable<SurfaceElementIndex, PointIndex> CreateCompressedPoint2SurfaceElementTable( int faceindex=0 ) const;
+    DLL_HEADER CompressedTable<SurfaceElementIndex, PointIndex> CreateCompressedPoint2SurfaceElementTable( FaceRegionIndex fi = FaceRegionIndex::INVALID ) const;
+    CompressedTable<SurfaceElementIndex, PointIndex> CreateCompressedPoint2SurfaceElementTable( int faceindex ) const
+    { return CreateCompressedPoint2SurfaceElementTable (FaceRegionIndex::FromNr1(faceindex)); }
 
     DLL_HEADER bool PureTrigMesh (int faceindex = 0) const;
     DLL_HEADER bool PureTetMesh () const;

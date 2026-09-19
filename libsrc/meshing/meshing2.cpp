@@ -1371,7 +1371,7 @@ namespace netgen
               {
                 const MiniElement2d & locel = locelements[i];
                 Element2d mtri(locel.GetNP());
-                mtri.SetIndex (facenr);
+                mtri.SetIndex (FaceRegionIndex::FromNr1(facenr));
 
                 // compute triangle geominfo:
                 for (int j = 1; j <= locel.GetNP(); j++)

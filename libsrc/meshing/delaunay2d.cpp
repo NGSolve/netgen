@@ -340,7 +340,7 @@ namespace netgen
         if (n(2) < 0) Swap (trig[1], trig[2]);
 
         Element2d el(trig[0], trig[1], trig[2]);
-        el.SetIndex (1);
+        el.SetIndex (FaceRegionIndex::FromNr1(1));
         m.AddSurfaceElement (el);
       }
       m.Compress();
@@ -711,7 +711,7 @@ namespace netgen
       if (!trig[0].IsValid()) continue;
 
       Element2d el(trig[0], trig[1], trig[2]);
-      el.SetIndex (1);
+      el.SetIndex (FaceRegionIndex::FromNr1(1));
       tempmesh.AddSurfaceElement (el);
     }
 
@@ -893,7 +893,7 @@ namespace netgen
         el[0] = compress[el[0]];
         el[1] = compress[el[1]];
         el[2] = compress[el[2]];
-        el.SetIndex(domainnr);
+        el.SetIndex(FaceRegionIndex::FromNr1(domainnr));
         mesh.AddSurfaceElement(el);
       }
     }

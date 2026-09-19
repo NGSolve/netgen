@@ -609,7 +609,7 @@ namespace netgen
         mesh[pi].Singularity(vert->properties.hpref);
         mesh[pi].SetType(FIXEDPOINT);
         
-        Element0d el(pi, pi.Nr1());
+        Element0d el(pi, VertexRegionIndex::FromNr1(pi.Nr1()));
         el.name = vert->properties.GetName();
         mesh.SetCD3Name(pi.Nr1(), el.name);
         mesh.pointelements.Append (el);
@@ -767,7 +767,7 @@ namespace netgen
         ed.SetSurfNr(1, edge->domout+1);
         ed.SetDomainIn(edge->domin+1);
         ed.SetDomainOut(edge->domout+1);
-        ed.SetIndex(fdi);
+        ed.SetIndex(FaceRegionIndex::FromNr1(fdi));
         auto edsi = mesh.AddEdgeDescriptor(ed);
 
         for(auto i : Range(pnums.Size()-1))
@@ -868,7 +868,7 @@ namespace netgen
     MESHING2_RESULT res = meshing.GenerateMesh(mesh, mparam, mparam.maxh, k+1, face.properties.layer);
 
     for(SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(noldsurfels, 0))
-      mesh[sei].SetIndex(k+1);
+      mesh[sei].SetIndex(FaceRegionIndex::FromNr0(k));
     return res != MESHING2_OK;
   }
 
@@ -1067,7 +1067,7 @@ namespace netgen
                             gis[i+2].v = s_other.GeomInfo(i_other).v;
                         }
 
-                        sel.SetIndex(face.nr+1);
+                        sel.SetIndex(FaceRegionIndex::FromNr0(face.nr));
                         mesh.AddSurfaceElement(sel);
                     }
                 }
@@ -1234,7 +1234,7 @@ namespace netgen
           continue;
 
         auto sel_new = sel;
-        sel_new.SetIndex(dst.nr+1);
+        sel_new.SetIndex(FaceRegionIndex::FromNr0(dst.nr));
         for(auto i : Range(sel.PNums()))
           {
             auto pi = sel[i];
@@ -1323,10 +1323,10 @@ namespace netgen
     RegionTimer reg(timer_opt2d);
     auto meshopt = MeshOptimize2d(mesh);
     for(auto i : Range(mparam.optsteps2d))
-    for(auto k : Range(mesh.GetNFD()))
+    for(auto fi : mesh.Regions<2>().Range())
       {
         PrintMessage(3, "Optimization step ", i);
-        meshopt.SetFaceIndex(k+1);
+        meshopt.SetFaceIndex(fi);
         meshopt.SetMetricWeight (mparam.elsizeweight);
         int innerstep = 0;
         for(auto optstep : mparam.optimize2d)

@@ -198,7 +198,7 @@ namespace nglib
    {
       Mesh * m = (Mesh*)mesh;
       Element2d el (3);
-      el.SetIndex (1);
+      el.SetIndex (FaceRegionIndex::FromNr1(1));
       el[0] = PointIndex::FromNr1(pi[0]);
       el[1] = PointIndex::FromNr1(pi[1]);
       el[2] = PointIndex::FromNr1(pi[2]);
@@ -214,7 +214,7 @@ namespace nglib
    {
       Mesh * m = (Mesh*)mesh;
       Element el (4);
-      el.SetIndex (1);
+      el.SetIndex (VolumeRegionIndex::FromNr1(1));
       el[0] = PointIndex::FromNr1(pi[0]);
       el[1] = PointIndex::FromNr1(pi[1]);
       el[2] = PointIndex::FromNr1(pi[2]);

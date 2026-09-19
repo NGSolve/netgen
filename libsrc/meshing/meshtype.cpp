@@ -265,7 +265,7 @@ namespace netgen
       & epgi_edgenr_compat & epgi_edgenr_compat;
     if (!ar.Output())
       {
-        SetIndex(index_compat); // archive stores 1-based, same as in-memory
+        SetIndex(EdgeRegionIndex::FromNr1(index_compat)); // archive stores 1-based, same as in-memory
       }
   }
 

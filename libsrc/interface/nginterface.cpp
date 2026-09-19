@@ -433,7 +433,7 @@ int Ng_GetElementIndex (int ei)
 
 void Ng_SetElementIndex(const int ei, const int index)
 {
-  (*mesh)[ElementIndex::FromNr1(ei)].SetIndex(index);
+  (*mesh)[ElementIndex::FromNr1(ei)].SetIndex(VolumeRegionIndex::FromNr1(index));
 }
 
 const char * Ng_GetElementMaterial (int ei)

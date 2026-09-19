@@ -54,9 +54,9 @@ namespace netgen
   void GetFaceColours(Mesh & mesh, Array<Vec<4>> & face_colours)
    {
       face_colours.SetSize(1);
-      face_colours[0] = mesh.GetFaceDescriptor(1).SurfColour();
+      face_colours[0] = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(1)).SurfColour();
       
-      for(int i = 1; i <= mesh.GetNFD(); i++)
+      for (auto i : mesh.FaceDescriptors().Range())
       {
          auto face_colour = mesh.GetFaceDescriptor(i).SurfColour();
          bool col_found = false;
@@ -211,7 +211,7 @@ namespace netgen
       for(int face_index = 1; face_index <= nfd; face_index++)
       {
          // Get the colour of the face being currently processed
-         auto face_colour = mesh.GetFaceDescriptor(face_index).SurfColour();
+         auto face_colour = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SurfColour();
          if(!ColourMatch(face_colour,Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B, 1.0)))
          {
             // Boolean variable to check if the boundary condition was applied 
@@ -223,7 +223,7 @@ namespace netgen
             {
                if((ColourMatch(face_colour,bc_colours[col_index])) && (!bc_assigned))
                {
-                  mesh.GetFaceDescriptor(face_index).SetBCProperty(bc_num[col_index]);
+                  mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SetBCProperty(bc_num[col_index]);
                   bc_used[col_index] = true;
                   bc_assigned = true;
                   break;
@@ -239,13 +239,13 @@ namespace netgen
                bc_colours.Append(face_colour);
                bc_used.Append(true);
 
-               mesh.GetFaceDescriptor(face_index).SetBCProperty(max_bcnum);
+               mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SetBCProperty(max_bcnum);
             }
          }
          else
          {
             // Set the boundary condition number to the default one
-            mesh.GetFaceDescriptor(face_index).SetBCProperty(DEFAULT_BCNUM);
+            mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SetBCProperty(DEFAULT_BCNUM);
          }
       }
 
@@ -339,7 +339,7 @@ namespace netgen
           
          mesh.GetSurfaceElementsOfFace(face_index, se_face);
 
-         auto face_colour = mesh.GetFaceDescriptor(face_index).SurfColour();
+         auto face_colour = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SurfColour();
          if(!ColourMatch(face_colour,Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B,1.0)))
          {
             for(int i = 1; i <= all_colours.Size(); i++)
@@ -369,7 +369,7 @@ namespace netgen
       // Now actually assign the BC Property to the respective faces
       for(int face_index = 1; face_index <= nfd; face_index++)
       {
-         auto face_colour = mesh.GetFaceDescriptor(face_index).SurfColour();
+         auto face_colour = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SurfColour();
          if(!ColourMatch(face_colour,Vec<4>(DEFAULT_R,DEFAULT_G,DEFAULT_B, 1.0)))
          {
             for(int i = 0; i < colours_sorted.Size(); i++)
@@ -379,16 +379,16 @@ namespace netgen
 
                if(ColourMatch(face_colour, ref_colour))
                {
-                  mesh.GetFaceDescriptor(face_index).SetBCProperty(i + DEFAULT_BCNUM);
+                  mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SetBCProperty(i + DEFAULT_BCNUM);
                }
             }
          }
          else
          {
-            mesh.GetFaceDescriptor(face_index).SetBCProperty(DEFAULT_BCNUM);
+            mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).SetBCProperty(DEFAULT_BCNUM);
          }
 
-         PrintMessage(4,"Face number: ",face_index," ; BC Property = ",mesh.GetFaceDescriptor(face_index).BCProperty());
+         PrintMessage(4,"Face number: ",face_index," ; BC Property = ",mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(face_index)).BCProperty());
       }
 
       // User Information of the results of the operation
