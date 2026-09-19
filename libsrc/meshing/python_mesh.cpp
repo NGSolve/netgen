@@ -34,7 +34,7 @@ namespace netgen
 {
   extern bool netgen_executable_started;
   extern shared_ptr<NetgenGeometry> ng_geometry;
-  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex=0);
+  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, FaceRegionIndex faceindex = FaceRegionIndex::INVALID);
 #ifdef NG_CGNS
   extern tuple<shared_ptr<Mesh>, vector<string>, vector<Array<double>>, vector<int>> ReadCGNSFile(const filesystem::path & filename, int base);
   extern void WriteCGNSFile(shared_ptr<Mesh> mesh, const filesystem::path & filename, vector<string> fields, vector<Array<double>> values, vector<int> locations);
@@ -355,7 +355,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<ElementRef>(m, "Element3DRef", "handle to a volume element stored in a mesh")
     .def("__repr__", [] (const ElementRef & self) { return ToString(self); })
-    .def_property("index", [](const ElementRef & self) { return self.GetIndex().Nr1(); }, [](ElementRef & self, int i) { self.SetIndex(i); })
+    .def_property("index", [](const ElementRef & self) { return self.GetIndex().Nr1(); }, [](ElementRef & self, int i) { self.SetIndex(VolumeRegionIndex::FromNr1(i)); })
     .def_property("curved", &ElementRef::IsCurved, &ElementRef::SetCurved)
     .def_property("refine", [] (const ElementRef & self) { return bool(self.TestRefinementFlag()); },
                   [] (ElementRef & self, bool refine) { self.SetRefinementFlag(refine); })
@@ -398,7 +398,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     auto newel = new Element(et);
                     for(int i=0; i<np; i++)
                       (*newel)[i] = vertices[i];
-                    newel->SetIndex(index);
+                    newel->SetIndex(VolumeRegionIndex::FromNr1(index));
                     return newel;
                   }),
           py::arg("index")=1,py::arg("vertices"),
@@ -467,28 +467,28 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                          newel = new Element2d(TRIG);
                          for (int i = 0; i < 3; i++)
                            (*newel)[i] = vertices[i];
-                         newel->SetIndex(index);
+                         newel->SetIndex(FaceRegionIndex::FromNr1(index));
                        }
                      else if (vertices.size() == 4)
                        {
                          newel = new Element2d(QUAD);
                          for (int i = 0; i < 4; i++)
                            (*newel)[i] = vertices[i];
-                         newel->SetIndex(index);
+                         newel->SetIndex(FaceRegionIndex::FromNr1(index));
                        }
                      else if (vertices.size() == 6)
                        {
                          newel = new Element2d(TRIG6);
                          for(int i = 0; i<6; i++)
                            (*newel)[i] = vertices[i];
-                         newel->SetIndex(index);
+                         newel->SetIndex(FaceRegionIndex::FromNr1(index));
                        }
                      else if (vertices.size() == 8)
                        {
                          newel = new Element2d(QUAD8);
                          for(int i = 0; i<8; i++)
                            (*newel)[i] = vertices[i];
-                         newel->SetIndex(index);
+                         newel->SetIndex(FaceRegionIndex::FromNr1(index));
                        }
                      else 
                        throw NgException("Inconsistent number of vertices in Element2D");
@@ -510,7 +510,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::arg("index")=1,py::arg("vertices"), py::arg("uv")=std::nullopt,
          "create surface element"
          )
-    .def_property("index", [](const Element2d & self) { return self.GetIndex().Nr1(); }, [](Element2d & self, int i) { self.SetIndex(i); })
+    .def_property("index", [](const Element2d & self) { return self.GetIndex().Nr1(); }, [](Element2d & self, int i) { self.SetIndex(FaceRegionIndex::FromNr1(i)); })
     .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
     .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
     .def_property("uv",
@@ -595,7 +595,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     Segment * newel = new Segment();
                     for (int i = 0; i < 2; i++)
                       (*newel)[i] = py::extract<PointIndex>(vertices[i])();
-                    newel -> SetIndex(index);
+                    newel -> SetIndex(EdgeRegionIndex::FromNr1(index));
                     for(auto i : Range(len(trignums)))
                       newel->GeomInfo(i).trignum = py::cast<int>(trignums[i]);
                     if (len(surfaces))
@@ -641,7 +641,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   },
                   [](Segment& self, int index)
                   {
-                    self.SetIndex(index);
+                    self.SetIndex(EdgeRegionIndex::FromNr1(index));
                   })
     .def_property("edgenr",
                   [](const Segment & self) -> int
@@ -686,7 +686,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     Element0d * instance = new Element0d;
                     instance->pnum = vertex;
-                    instance->SetIndex(index);
+                    instance->SetIndex(VertexRegionIndex::FromNr1(index));
                     return instance;
                   }),
          py::arg("vertex"),
@@ -790,8 +790,8 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def_property("tlosurf", &EdgeRegion::TLOSurface, &EdgeRegion::SetTLOSurface)
     .def_property("domin", &EdgeRegion::DomainIn, &EdgeRegion::SetDomainIn)
     .def_property("domout", &EdgeRegion::DomainOut, &EdgeRegion::SetDomainOut)
-    .def_property("index", [](const EdgeRegion & self) { return self.GetIndex().Nr1(); }, [](EdgeRegion & self, int i) { self.SetIndex(i); })
-    .def_property("fdindex", [](const EdgeRegion & self) { return self.GetIndex().Nr1(); }, [](EdgeRegion & self, int i) { self.SetIndex(i); })
+    .def_property("index", [](const EdgeRegion & self) { return self.GetIndex().Nr1(); }, [](EdgeRegion & self, int i) { self.SetIndex(FaceRegionIndex::FromNr1(i)); })
+    .def_property("fdindex", [](const EdgeRegion & self) { return self.GetIndex().Nr1(); }, [](EdgeRegion & self, int i) { self.SetIndex(FaceRegionIndex::FromNr1(i)); })
 
     ;
 
@@ -1231,7 +1231,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         }
       throw Exception ("MacroElementNr not implemented for dim");
     }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")
-    .def("FaceDescriptor", static_cast<FaceRegion&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
+    .def("FaceDescriptor", [](Mesh & self, int i) -> FaceRegion & { return self.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)); },
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
 
@@ -1387,7 +1387,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     Segment el;
                     for (int j = 0; j < np; j++)
                       el[j] = PointIndex::FromNr0(ptr[j]-base);
-                    el.SetIndex(index);
+                    el.SetIndex(EdgeRegionIndex::FromNr1(index));
 
                     if(project_geometry)
                       {
@@ -1423,13 +1423,13 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     Element2d el(type);
                     for (int j = 0; j < np; j++)
                       el[j] = PointIndex::FromNr0(ptr[j]-base);
-                    el.SetIndex(index);
+                    el.SetIndex(FaceRegionIndex::FromNr1(index));
                     if(project_geometry)
                       {
                         // find some point in the mid of trig/quad for
                         // quick + stable uv-projection of all points
                         auto startp = Center(self[el[0]], self[el[1]], self[el[2]]);
-                        int surfnr = self.GetFaceDescriptor(index).SurfNr();
+                        int surfnr = self.GetFaceDescriptor(FaceRegionIndex::FromNr1(index)).SurfNr();
                         PointGeomInfo gi = self.GetGeometry()->ProjectPoint(surfnr,
                                                                             startp);
                         for(auto i : Range(np))
@@ -1464,7 +1464,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                     Element el(type);
                     for (int j = 0; j < np;j ++)
                       el[j] = PointIndex::FromNr0(ptr[j]-base);
-                    el.SetIndex(index);
+                    el.SetIndex(VolumeRegionIndex::FromNr1(index));
                     self.AddVolumeElement (el);
                     ptr += info.strides[0]/sizeof(int);
                   }
@@ -1633,7 +1633,7 @@ py::arg("point_tolerance") = -1.)
             else mp.optsteps2d = 5;
             if(!self.GetGeometry())
               throw Exception("Cannot optimize surface mesh without geometry!");
-            Optimize2d (self, mp, faceindex);
+            Optimize2d (self, mp, FaceRegionIndex::FromNr1(faceindex));
           }, py::arg("mp")=nullptr, py::arg("faceindex")=0, py::call_guard<py::gil_scoped_release>())
     
     .def ("Refine", FunctionPointer

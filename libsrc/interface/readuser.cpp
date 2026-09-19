@@ -56,7 +56,7 @@ namespace netgen
         for (int i = 0; i < nbe; i++)
           {
             Element2d el;
-            el.SetIndex(1);
+            el.SetIndex(FaceRegionIndex::FromNr1(1));
 
             for (int j = 1; j <= 3; j++)
               {
@@ -96,7 +96,7 @@ namespace netgen
 
         mesh.ClearFaceDescriptors();
         mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
-        mesh.GetFaceDescriptor(1).SetBCProperty (1);
+        mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(1)).SetBCProperty (1);
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
         int dim = 3;
@@ -207,7 +207,7 @@ namespace netgen
                             element_map[label] = std::make_tuple(nr+1, 2);
                           }
                           else if(dim == 2){
-                            el.SetIndex(-1);
+                            el.SetIndex(EdgeRegionIndex::INVALID);
                             auto nr = mesh.AddSegment(el);
                             element_map[label] = std::make_tuple(nr.Nr1(), 2);
                           }
@@ -227,7 +227,7 @@ namespace netgen
                             element_map[label] = std::make_tuple(nr+1, 2);
                           }
                           else if(dim == 2){
-                            el.SetIndex(-1);
+                            el.SetIndex(EdgeRegionIndex::INVALID);
                             auto nr = mesh.AddSegment(el);
                             element_map[label] = std::make_tuple(nr.Nr1(), 2);
                           }
@@ -237,7 +237,7 @@ namespace netgen
                       case 41: // TRIG
                         {
                           Element2d el (TRIG);
-                          el.SetIndex (1);
+                          el.SetIndex (FaceRegionIndex::FromNr1(1));
                           for (int j = 0; j < nnodes; j++)
                             el[j] = PointIndex::FromNr1(nodes[j]);
                           auto nr = mesh.AddSurfaceElement (el);
@@ -247,7 +247,7 @@ namespace netgen
                       case 42: // TRIG6
                         {
                           Element2d el(TRIG6);
-                          el.SetIndex(1);
+                          el.SetIndex(FaceRegionIndex::FromNr1(1));
                           int jj = 0;
                           for(auto j : {0,2,4,3,5,1})
                               el[jj++] = PointIndex::FromNr1(nodes[j]);
@@ -258,7 +258,7 @@ namespace netgen
                       case 111: // TET
                         {
                           Element el (TET);
-                          el.SetIndex (1);
+                          el.SetIndex (VolumeRegionIndex::FromNr1(1));
                           for (int j = 0; j < nnodes; j++)
                             el[j] = PointIndex::FromNr1(nodes[j]);
                           auto nr = mesh.AddVolumeElement (el);
@@ -268,7 +268,7 @@ namespace netgen
                       case 118: // TET10
                         {
                           Element el(TET10);
-                          el.SetIndex(1);
+                          el.SetIndex(VolumeRegionIndex::FromNr1(1));
                           int jj = 0;
                           for(auto j : {0,2,4,9,1,5,6,3,7,8})
                             el[jj++] = PointIndex::FromNr1(nodes[j]);
@@ -313,7 +313,7 @@ namespace netgen
                       case 0:
                         {
                           mesh.SetMaterial(++matnr, name);
-                          mesh[ElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr);
+                          mesh[ElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(VolumeRegionIndex::FromNr1(matnr));
                           break;
                         }
                       case 1:
@@ -322,17 +322,17 @@ namespace netgen
                           {
                             int bcpr = mesh.GetNFD();
                             fdnr = mesh.AddFaceDescriptor(FaceRegion(bcpr, 0,0,0)).Nr1();
-                            mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
+                            mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(fdnr)).SetBCProperty(bcpr+1);
                             mesh.SetBCName(bcpr, name);
-                            mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(fdnr);
+                            mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(FaceRegionIndex::FromNr1(fdnr));
                             bccounter++;
                           }
                           else if(dim == 2)
                           {
                             fdnr = mesh.AddFaceDescriptor(FaceRegion(matnr, 0,0,0)).Nr1();
                             mesh.SetMaterial(matnr, name);
-                            mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr);
-                            mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
+                            mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(FaceRegionIndex::FromNr1(matnr));
+                            mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(fdnr)).SetBCProperty(matnr);
                             matnr++;
                           }
                           break;
@@ -353,7 +353,7 @@ namespace netgen
                           else if(dim == 2)
                           {
                             Segment & seg = mesh[SegmentIndex::FromNr1(get<0>(element_map[index]))];
-                            seg.SetIndex(bccounter + 1);
+                            seg.SetIndex(EdgeRegionIndex::FromNr0(bccounter));
                             mesh.SetBCName(bccounter, name);
                             bccounter++;
                           }
@@ -372,13 +372,13 @@ namespace netgen
                         switch (codim)
                           {
                           case 0:
-                            mesh[ElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr);
+                            mesh[ElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(VolumeRegionIndex::FromNr1(matnr));
                             break;
                           case 1:
-                            if(dim == 3) mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(fdnr);
+                            if(dim == 3) mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(FaceRegionIndex::FromNr1(fdnr));
                             else if (dim == 2){
-                                    mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr-1);
-                                    mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
+                                    mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(FaceRegionIndex::FromNr1(matnr-1));
+                                    mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(fdnr)).SetBCProperty(matnr);
                             }
                             break;
                           case 2:
@@ -390,7 +390,7 @@ namespace netgen
                             else if(dim == 2)
                             {
                                     Segment & seg = mesh[SegmentIndex::FromNr1(get<0>(element_map[index]))];
-                                    seg.SetIndex(bccounter);
+                                    seg.SetIndex(EdgeRegionIndex::FromNr1(bccounter));
                             }
                             break;
                           default:
@@ -416,7 +416,7 @@ namespace netgen
                 int bccounter_tmp = bccounter;
                 for (auto & seg : mesh.LineSegments()){
                         if(!seg.GetIndex().IsValid()){
-                                  seg.SetIndex(bccounter + 1);
+                                  seg.SetIndex(EdgeRegionIndex::FromNr0(bccounter));
                           if(bccounter_tmp == bccounter) mesh.SetBCName(bccounter, "default"); // could be more efficient
                           bccounter_tmp++;
                         }
@@ -476,7 +476,7 @@ namespace netgen
             int mat, nelp;
             in >> mat >> nelp;
             Element2d el (nelp == 3 ? TRIG : QUAD);
-            el.SetIndex (mat);
+            el.SetIndex (FaceRegionIndex::FromNr1(mat));
             for (j = 1; j <= nelp; j++)
               in >> el.PNum(j);
             mesh.AddSurfaceElement (el);
@@ -519,7 +519,7 @@ namespace netgen
                 int mat;
                 in >> mat;
                 Element el (4);
-                el.SetIndex (mat);
+                el.SetIndex (VolumeRegionIndex::FromNr1(mat));
                 for (j = 1; j <= 4; j++)
                   in >> el.PNum(j);
                 mesh.AddVolumeElement (el);
@@ -534,7 +534,7 @@ namespace netgen
                 int mat; // , nelp;
                 in >> mat;
                 Element2d el (TRIG);
-                el.SetIndex (mat);
+                el.SetIndex (FaceRegionIndex::FromNr1(mat));
                 while(nfd<mat)
                   {
                     ++nfd;
@@ -587,15 +587,15 @@ namespace netgen
 
         mesh.ClearFaceDescriptors();
         mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
-        mesh.GetFaceDescriptor(1).SetBCProperty (1);
+        mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(1)).SetBCProperty (1);
         mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
-        mesh.GetFaceDescriptor(2).SetBCProperty (2);
+        mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(2)).SetBCProperty (2);
         mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
-        mesh.GetFaceDescriptor(3).SetBCProperty (3);
+        mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(3)).SetBCProperty (3);
         mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
-        mesh.GetFaceDescriptor(4).SetBCProperty (4);
+        mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(4)).SetBCProperty (4);
         mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
-        mesh.GetFaceDescriptor(5).SetBCProperty (5);
+        mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(5)).SetBCProperty (5);
 
         int p1, p2, p3;
         double value;
@@ -623,12 +623,12 @@ namespace netgen
             if (bcprop == 1)
               {
                 if (values[p1-1] < -69999)
-                  el.SetIndex(1);
+                  el.SetIndex(FaceRegionIndex::FromNr1(1));
                 else
-                  el.SetIndex(2);
+                  el.SetIndex(FaceRegionIndex::FromNr1(2));
               }
             else
-              el.SetIndex(3);
+              el.SetIndex(FaceRegionIndex::FromNr1(3));
 
 
             el[0] = PointIndex::FromNr1(p1);
@@ -657,7 +657,7 @@ namespace netgen
             p2 += np;
             p3 += np;
             Element2d el(TRIG);
-            el.SetIndex(5);
+            el.SetIndex(FaceRegionIndex::FromNr1(5));
             el[0] = PointIndex::FromNr1(p1);
             el[1] = PointIndex::FromNr1(p2);
             el[2] = PointIndex::FromNr1(p3);
@@ -700,7 +700,7 @@ namespace netgen
           for (auto i : IntRange(3))
             el[i] = PointIndex::FromNr1(int((*geom)[STLTrigId(ti+IndexBASE<netgen::STLTrigId>())][i]));
 
-          el.SetIndex(1);
+          el.SetIndex(FaceRegionIndex::FromNr1(1));
 
           mesh.AddSurfaceElement(el);
         }

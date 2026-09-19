@@ -401,9 +401,9 @@ namespace netgen
 
                   if (strcmp(argv[1], "deletemarkedsegments") == 0)
                   {
-                          for (i = 1; i <= mesh->GetNSeg(); i++)
-                                  if (vsmeshdoc.IsSegmentMarked(i))
-                                          mesh->DeleteSegment(i);
+                          for (auto si : mesh->LineSegments().Range())
+                                  if (vsmeshdoc.IsSegmentMarked(si.Nr1()))
+                                          mesh->DeleteSegment(si);
 
                           //      for (i = 1; i <= mesh->GetNSE(); i++)
                           //        mesh->SurfaceElement(i).SetIndex (1);

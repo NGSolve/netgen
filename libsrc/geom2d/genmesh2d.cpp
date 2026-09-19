@@ -6,7 +6,7 @@ namespace netgen
 {
   // extern DLL_HEADER MeshingParameters mparam;
 
-  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex=0);
+  extern void Optimize2d (Mesh & mesh, MeshingParameters & mp, FaceRegionIndex faceindex = FaceRegionIndex::INVALID);
 
 
 
@@ -127,7 +127,7 @@ namespace netgen
     ed.SetSingEdgeRight(spline.hpref_right);
 
     auto edsi = mesh.AddEdgeDescriptor(ed);
-    mesh.GetEdgeDescriptor(edsi).SetIndex(spline.bc);
+    mesh.GetEdgeDescriptor(edsi).SetIndex(FaceRegionIndex::FromNr1(spline.bc));
 
     CalcPartition (spline, mp, mesh, elto0, curvepoints);
 
@@ -282,7 +282,7 @@ namespace netgen
           Point<3> newp(point(0), point(1), 0);
           PointIndex npi = mesh2d.AddPoint (newp, 1, FIXEDPOINT);
           mesh2d.AddLockedPoint(npi);
-          Element0d el(npi, npi.Nr1());
+          Element0d el(npi, VertexRegionIndex::FromNr1(npi.Nr1()));
           el.name = point.name;
           mesh2d.SetCD2Name(npi.Nr1(), point.name);
           mesh2d.pointelements.Append (el);
@@ -309,7 +309,7 @@ namespace netgen
                 npi = mesh2d.AddPoint (newp, layer);
                 searchtree.Insert (newp, npi);
                 mesh2d.AddLockedPoint(npi);
-                Element0d el(npi, npi.Nr1());
+                Element0d el(npi, VertexRegionIndex::FromNr1(npi.Nr1()));
                 el.name = "";
                 mesh2d.SetCD2Name(npi.Nr1(), "");
                 mesh2d.pointelements.Append (el);
@@ -405,7 +405,7 @@ namespace netgen
     ed.SetName(GetSpline(to-1).GetBCName());
 
     auto copy_edsi = mesh.AddEdgeDescriptor(ed);
-    mesh.GetEdgeDescriptor(copy_edsi).SetIndex(GetSpline(to-1).bc);
+    mesh.GetEdgeDescriptor(copy_edsi).SetIndex(FaceRegionIndex::FromNr1(GetSpline(to-1).bc));
 
     // copy segments
     for (SegmentIndex i : mesh.LineSegments().Range())
@@ -625,7 +625,7 @@ namespace netgen
                 el[1] = pts[i*(nex+1)+j+1];
                 el[2] = pts[(i+1)*(nex+1)+j+1];
                 el[3] = pts[(i+1)*(nex+1)+j];
-                el.SetIndex (domnr);
+                el.SetIndex (FaceRegionIndex::FromNr1(domnr));
 
                 mesh -> AddSurfaceElement (el);
               }
@@ -737,7 +737,7 @@ namespace netgen
         }
         
         for (SurfaceElementIndex sei : mesh->SurfaceElements().Range().Modify(oldnf, 0))
-          (*mesh)[sei].SetIndex (domnr);
+          (*mesh)[sei].SetIndex (FaceRegionIndex::FromNr1(domnr));
 
         // astrid
         char * material;

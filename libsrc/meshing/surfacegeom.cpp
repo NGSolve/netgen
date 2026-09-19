@@ -364,7 +364,7 @@ namespace netgen
                     el[i] = pids[pnum[i]];
                     el.GeomInfoPi(i+1) = pgis[pnum[i]];
                   }
-                el.SetIndex(1);
+                el.SetIndex(FaceRegionIndex::FromNr1(1));
             
                 mesh->AddSurfaceElement(el);
               }
@@ -397,7 +397,7 @@ namespace netgen
                     el[i] = pids[pnum1[i]];
                     el.GeomInfoPi(i+1) = pgis[pnum1[i]];
                   }
-                el.SetIndex(1);
+                el.SetIndex(FaceRegionIndex::FromNr1(1));
             
                 mesh->AddSurfaceElement(el);
                 for (int i = 0; i < 3; i++)
@@ -432,7 +432,7 @@ namespace netgen
       ed.SetSingEdgeRight(singedge_right_val);
 
       auto edsi = mesh->AddEdgeDescriptor(ed);
-      mesh->GetEdgeDescriptor(edsi).SetIndex(1);
+      mesh->GetEdgeDescriptor(edsi).SetIndex(FaceRegionIndex::FromNr1(1));
       seg.SetIndex(edsi);
     }
     for(int i=0; i < numx; i++)
@@ -468,7 +468,7 @@ namespace netgen
       ed.SetSingEdgeRight(singedge_right_val);
 
       auto edsi = mesh->AddEdgeDescriptor(ed);
-      mesh->GetEdgeDescriptor(edsi).SetIndex(2);
+      mesh->GetEdgeDescriptor(edsi).SetIndex(FaceRegionIndex::FromNr1(2));
       seg.SetIndex(edsi);
     }
     for(int i=0; i<numy; i++)
@@ -504,7 +504,7 @@ namespace netgen
       ed.SetSingEdgeRight(singedge_right_val);
 
       auto edsi = mesh->AddEdgeDescriptor(ed);
-      mesh->GetEdgeDescriptor(edsi).SetIndex(3);
+      mesh->GetEdgeDescriptor(edsi).SetIndex(FaceRegionIndex::FromNr1(3));
       seg.SetIndex(edsi);
     }
     for(int i=0; i<numx; i++)
@@ -540,7 +540,7 @@ namespace netgen
       ed.SetSingEdgeRight(singedge_right_val);
 
       auto edsi = mesh->AddEdgeDescriptor(ed);
-      mesh->GetEdgeDescriptor(edsi).SetIndex(4);
+      mesh->GetEdgeDescriptor(edsi).SetIndex(FaceRegionIndex::FromNr1(4));
       seg.SetIndex(edsi);
     }
     for(int i=0; i<numy; i++)
@@ -564,7 +564,7 @@ namespace netgen
       {
         Element0d el;
         el.pnum = indbbbpts[i];
-        el.SetIndex(i+1);
+        el.SetIndex(VertexRegionIndex::FromNr0(i));
         mesh->pointelements.Append(el);
         mesh->SetCD3Name(i+1, bbbnames[i]);
       }

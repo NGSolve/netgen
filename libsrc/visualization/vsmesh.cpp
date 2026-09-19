@@ -853,11 +853,11 @@ namespace netgen
     // build color texture
     glBindTexture(GL_TEXTURE_2D, colors.texture);
     Array<float> data;
-    for(auto fdi : Range(1, mesh->GetNFD()+1))
+    for(auto fdi : mesh->FaceDescriptors().Range())
     {
       auto c = mesh->GetFaceDescriptor(fdi).SurfColour();
       ArrayMem<float, 4> cf{float(c[0]), float(c[1]), float(c[2]), float(c[3])};
-      if(fdi==selface)
+      if(fdi.Nr1()==selface)
         cf = {1.0f, 0.0f, 0.0f, 1.0f};
       data.Append(cf);
     }

@@ -514,6 +514,8 @@ namespace netgen
      1-based index into the regions of entity dimension D, Mesh::Regions<D>().
      INVALID (= 0) means unset. Only constructed via FromNr0/FromNr1.
   */
+  class AnyRegionIndex;
+
   template <int D>
   class RegionIndex : public Index<int,RegionIndex<D>,1>
   {
@@ -522,6 +524,8 @@ namespace netgen
     constexpr RegionIndex (int ai) : TBase(ai) { }
   public:
     using TBase::TBase;
+    /// narrowing from AnyRegionIndex - the dimension is fixed by the context
+    constexpr RegionIndex (AnyRegionIndex ai);
     operator int () const = delete;    // use Nr1() / Nr0() / IsValid()
     operator int & () = delete;
   };
@@ -535,8 +539,32 @@ namespace netgen
   using FaceDescriptorIndex = FaceRegionIndex;
   using EdgeDescriptorIndex = EdgeRegionIndex;
 
+  /**
+     A region index whose dimension (vertex, edge, face or volume region) is
+     fixed by the context, not by the value - e.g. HPRefElement::index.
+     Converts implicitly from and to the four RegionIndex<D>.
+  */
+  class AnyRegionIndex : public Index<int,AnyRegionIndex,1>
+  {
+  public:
+    using Index::Index;
+    template <int D>
+    constexpr AnyRegionIndex (RegionIndex<D> ri) : Index(ri.Nr1()) { }
+    operator int () const = delete;
+    operator int & () = delete;
+  };
+
+  template <int D>
+  constexpr RegionIndex<D>::RegionIndex (AnyRegionIndex ai)
+    : TBase(ai.Nr1()) { }
+
   template <int D>
   inline ostream & operator<< (ostream & ost, const RegionIndex<D> & i) { return ost << i.Nr1(); }
+  template <int D>
+  inline istream & operator>> (istream & ist, RegionIndex<D> & i)
+  {
+    int nr; ist >> nr; i = RegionIndex<D>::FromNr1(nr); return ist;
+  }
 
   inline ostream & operator<< (ostream & ost, const Front2PointIndex & fpi)
   {
@@ -951,7 +979,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     
 
     void SetIndex (FaceRegionIndex si) { index = si; }
-    void SetIndex (int si) { index = si > 0 ? FaceRegionIndex::FromNr1(si) : FaceRegionIndex::INVALID; }
     ///
     FaceRegionIndex GetIndex () const { return index; }
 
@@ -1212,7 +1239,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void DoArchive (Archive & ar);
 
     void SetIndex (VolumeRegionIndex si) { h->index = si; }
-    void SetIndex (int si) { h->index = si > 0 ? VolumeRegionIndex::FromNr1(si) : VolumeRegionIndex::INVALID; }
     VolumeRegionIndex GetIndex () const { return h->index; }
 
     int GetOrder () const { return h->orderx; }
@@ -1553,7 +1579,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     EdgeRegionIndex GetIndex() const { return index; }
     void SetIndex (EdgeRegionIndex i) { index = i; }
-    void SetIndex (int i) { index = i > 0 ? EdgeRegionIndex::FromNr1(i) : EdgeRegionIndex::INVALID; }
 
     void DoArchive (Archive & ar);
 #ifdef PARALLEL
@@ -1576,12 +1601,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     Element0d () = default;
     Element0d (PointIndex _pnum, VertexRegionIndex _index)
       : pnum(_pnum), index(_index) { ; }
-    Element0d (PointIndex _pnum, int _index)
-      : pnum(_pnum) { SetIndex(_index); }
 
     VertexRegionIndex GetIndex () const { return index; }
     void SetIndex (VertexRegionIndex i) { index = i; }
-    void SetIndex (int i) { index = i > 0 ? VertexRegionIndex::FromNr1(i) : VertexRegionIndex::INVALID; }
 
 #ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType();
@@ -1746,11 +1768,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// face descriptor index (1-based), INVALID if not yet set. Transient, recomputed by RebuildFDIndices().
     FaceRegionIndex GetIndex () const { return index_; }
     void SetIndex (FaceRegionIndex i) { index_ = i; }
-    void SetIndex (int i) { index_ = i > 0 ? FaceRegionIndex::FromNr1(i) : FaceRegionIndex::INVALID; }
 
     // deprecated aliases
     [[deprecated("use GetIndex()")]] int FDIndex () const { return index_.Nr1(); }
-    [[deprecated("use SetIndex()")]] void SetFDIndex (int i) { SetIndex(i); }
 
     void DoArchive (Archive & ar)
     {

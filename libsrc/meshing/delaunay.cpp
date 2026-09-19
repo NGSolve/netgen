@@ -1571,7 +1571,7 @@ namespace netgen
           for (int j = 0; j < 4; j++)
             el[j] = tempel[j];
 
-          el.SetIndex (1);
+          el.SetIndex (VolumeRegionIndex::FromNr1(1));
 
           const Point<3> & lp1 = mesh.Point (el[0]);
           const Point<3> & lp2 = mesh.Point (el[1]);
@@ -1600,7 +1600,7 @@ namespace netgen
       for (int i = 1; i <= mesh.GetNOpenElements(); i++)
         {
           Element2d sel = mesh.OpenElement(i);
-          sel.SetIndex(1);
+          sel.SetIndex(FaceRegionIndex::FromNr1(1));
           tempmesh.AddSurfaceElement (sel);
           swap (sel[1], sel[2]);
           tempmesh.AddSurfaceElement (sel);
@@ -1610,7 +1610,7 @@ namespace netgen
       for (int i = 1; i <= 4; i++)
         {
           Element2d self(TRIG);
-          self.SetIndex (1);
+          self.SetIndex (FaceRegionIndex::FromNr1(1));
           startel.GetFace (i-1, self);
           tempmesh.AddSurfaceElement (self);
         }

@@ -499,7 +499,7 @@ namespace netgen::cg
                             names_1d.Append(ngname);
                           }
                           auto el = ReadCGNSElement1D(type, vertices.Range(vi, vertices.Size()));
-                          el.SetIndex(index_1d);
+                          el.SetIndex(EdgeRegionIndex::FromNr1(index_1d));
                           mesh.AddSegment(el);
                           vi += el.GetNP();
                           ne_1d++;
@@ -515,7 +515,7 @@ namespace netgen::cg
                             names_2d.Append(ngname);
                           }
                           auto el = ReadCGNSElement2D(type, vertices.Range(vi, vertices.Size()));
-                          el.SetIndex(index_2d);
+                          el.SetIndex(FaceRegionIndex::FromNr1(index_2d));
                           mesh.AddSurfaceElement(el);
                           vi += el.GetNP();
                           ne_2d++;
@@ -531,7 +531,7 @@ namespace netgen::cg
                           }
 
                           auto el = ReadCGNSElement3D(type, vertices.Range(vi, vertices.Size()));
-                          el.SetIndex(index_3d);
+                          el.SetIndex(VolumeRegionIndex::FromNr1(index_3d));
                           mesh.AddVolumeElement(el);
                           vi += el.GetNP();
                           ne_3d++;
@@ -561,7 +561,7 @@ namespace netgen::cg
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement1D(type, vertices.Range(np*i, np*(i+1)));
-                          el.SetIndex(index_1d);
+                          el.SetIndex(EdgeRegionIndex::FromNr1(index_1d));
                           mesh.AddSegment(el);
                         }
                       ne_1d += ne_section;
@@ -575,7 +575,7 @@ namespace netgen::cg
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement2D(type, vertices.Range(np*i, np*(i+1)));
-                          el.SetIndex(index_2d);
+                          el.SetIndex(FaceRegionIndex::FromNr1(index_2d));
                           mesh.AddSurfaceElement(el);
                         }
                       ne_2d += ne_section;
@@ -588,7 +588,7 @@ namespace netgen::cg
                       for(auto i : Range(ne_section))
                         {
                           auto el = ReadCGNSElement3D(type, vertices.Range(np*i, np*(i+1)));
-                          el.SetIndex(index_3d);
+                          el.SetIndex(VolumeRegionIndex::FromNr1(index_3d));
                           mesh.AddVolumeElement(el);
                         }
                       ne_3d += ne_section;
@@ -618,7 +618,7 @@ namespace netgen::cg
             for (auto i : Range(names_2d.Size()))
             {
               mesh.SetBCName(first_index_2d + i, names_2d[i]);
-              mesh.GetFaceDescriptor(first_index_2d + i +1).SetDomainIn(first_index_3d+1);
+              mesh.GetFaceDescriptor(FaceRegionIndex::FromNr0(first_index_2d + i)).SetDomainIn(first_index_3d+1);
             }
 
             for (auto i : Range(names_3d.Size()))

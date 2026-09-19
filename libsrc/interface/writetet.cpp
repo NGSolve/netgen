@@ -94,8 +94,8 @@ namespace netgen
           if(i.Nr0()==0 || mesh[i].GetIndex().Nr1() < mindomain)
             mindomain = mesh[i].GetIndex().Nr1();
         for(int i=1; i<=mesh.GetNFD(); i++)
-          if(i==1 || mesh.GetFaceDescriptor(i).BCProperty() > maxbc)
-            maxbc = mesh.GetFaceDescriptor(i).BCProperty();
+          if(i==1 || mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).BCProperty() > maxbc)
+            maxbc = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).BCProperty();
         
         if(maxbc >= mindomain)
           {

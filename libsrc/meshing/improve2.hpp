@@ -100,7 +100,7 @@ public:
 ///
 class MeshOptimize2d
 {
-  int faceindex = 0;
+  FaceRegionIndex faceindex = FaceRegionIndex::INVALID;   // INVALID: all faces
   int improveedges = 0;
   double metricweight = 0.;
   int writestatus = 1;
@@ -127,7 +127,7 @@ public:
   DLL_HEADER void GenericImprove ();
 
 
-  void SetFaceIndex (int fi) { faceindex = fi; }
+  void SetFaceIndex (FaceRegionIndex fi) { faceindex = fi; }
   void SetImproveEdges (int ie) { improveedges = ie; }
   void SetMetricWeight (double mw) { metricweight = mw; }
   void SetWriteStatus (int ws) { writestatus = ws; }

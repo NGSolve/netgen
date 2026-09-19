@@ -706,7 +706,7 @@ namespace netgen
     Array<MeshPoint, PointIndex> savepoints(mesh.GetNP());
 
     Table<PointIndex> color_table;
-    if(faceindex)
+    if(faceindex.IsValid())
       {
         Array<SurfaceElementIndex> seia;
         mesh.GetSurfaceElementsOfFace (faceindex, seia);

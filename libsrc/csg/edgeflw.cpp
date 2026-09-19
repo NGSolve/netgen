@@ -437,7 +437,7 @@ namespace netgen
           ed.SetDomainIn(refedges[i].domin);
           ed.SetDomainOut(refedges[i].domout);
           // fdindex staged with surface representant, FindEdges will overwrite with real FD index
-          ed.SetIndex(refedges[i].si);   // staged surface number, FindEdges sets the real face descriptor index
+          ed.SetIndex(FaceRegionIndex::FromNr1(refedges[i].si));   // staged surface number, FindEdges sets the real face descriptor index
           auto edsi = mesh.AddEdgeDescriptor(ed);
           refedges[i].index_ = edsi.Nr1();
         }
@@ -1472,7 +1472,7 @@ namespace netgen
                 seg[0] = thispi;
                 seg[1] = lastpi;
               }
-            seg.SetIndex(refedges[k-1].GetIndex());
+            seg.SetIndex(EdgeRegionIndex::FromNr1(refedges[k-1].GetIndex()));
             char si_val = 0;
             if (k == 1) si_val = (refedgesinv[k-1]) ? 2 : 1;
             mesh.AddSegment (seg);
@@ -1635,7 +1635,7 @@ namespace netgen
             seg[1] = pi1;
           }
 
-        seg.SetIndex(refedges[k-1].GetIndex());
+        seg.SetIndex(EdgeRegionIndex::FromNr1(refedges[k-1].GetIndex()));
         char si_val = 0;
         if (k == 1) si_val = (refedgesinv[k-1]) ? 2 : 1;
         mesh.AddSegment (seg);
@@ -1768,7 +1768,7 @@ namespace netgen
                 seg[0] = npi2;
                 seg[1] = npi1;
               }
-            seg.SetIndex(refedges[k-1].GetIndex());
+            seg.SetIndex(EdgeRegionIndex::FromNr1(refedges[k-1].GetIndex()));
             char si_val = 0;
             if (k == 1) si_val = refedgesinv[k-1] ? 2 : 1;
             mesh.AddSegment (seg);
@@ -1911,7 +1911,7 @@ namespace netgen
                 ed.SetDomainIn(domin);
                 ed.SetDomainOut(domout);
                 auto edsi = mesh.AddEdgeDescriptor(ed);
-                mesh.GetEdgeDescriptor(edsi).SetIndex(i);
+                mesh.GetEdgeDescriptor(edsi).SetIndex(FaceRegionIndex::FromNr1(i));
                 seg1.SetIndex(edsi);
                 seg2.SetIndex(edsi);
                 mesh.AddSegment (seg1);

@@ -274,7 +274,7 @@ namespace netgen
               if(n*(mesh[el[np]]-p0) < 0.0)
                   continue;
 
-              el.SetIndex(md.domain);
+              el.SetIndex(VolumeRegionIndex::FromNr1(md.domain));
               mesh.AddVolumeElement(el);
               if(el.NP()==8)
               {
@@ -370,7 +370,7 @@ namespace netgen
            
            // for (int i = oldne + 1; i <= mesh.GetNE(); i++)
            for (ElementIndex i : mesh.VolumeElements().Range().Modify(oldne, 0))
-             mesh.VolumeElement(i).SetIndex (domain);
+             mesh.VolumeElement(i).SetIndex (VolumeRegionIndex::FromNr1(domain));
            
            (*testout) 
              << "mesh has " << mesh.GetNE() << " prism/pyramid elements" << endl;
@@ -418,7 +418,7 @@ namespace netgen
 
       // for (int i = oldne + 1; i <= mesh.GetNE(); i++)
       for (ElementIndex i : mesh.VolumeElements().Range().Modify(oldne, 0))
-         mesh.VolumeElement(i).SetIndex (domain);
+         mesh.VolumeElement(i).SetIndex (VolumeRegionIndex::FromNr1(domain));
 
       PrintMessage (3, mesh.GetNP(), " points, ",
          mesh.GetNE(), " elements");
@@ -479,7 +479,7 @@ namespace netgen
          meshing.GenerateMesh (mesh, mp);
          
          for (auto el : mesh.VolumeElements().Range(oldne, END))
-           el.SetIndex (domain);
+           el.SetIndex (VolumeRegionIndex::FromNr1(domain));
          
 
          mesh.CalcSurfacesOfNode();
@@ -580,7 +580,7 @@ namespace netgen
          {
              for (auto i : Range(el.GetNP()))
                  el[i] = pmap[el[i]];
-             el.SetIndex(m_.domain);
+             el.SetIndex(VolumeRegionIndex::FromNr1(m_.domain));
              mesh.AddVolumeElement(el);
          }
          // for(const auto& [p1p2, dummy] : m.GetIdentifications().GetIdentifiedPoints())

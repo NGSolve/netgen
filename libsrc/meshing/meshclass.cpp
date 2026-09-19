@@ -1052,13 +1052,13 @@ namespace netgen
        for(int i = 1; i <= cnt_facedesc; i++)
        {
           outfile.width(8);
-          outfile << GetFaceDescriptor(i).SurfNr()+1 << " ";
+          outfile << GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfNr()+1 << " ";
           outfile.width(12);
-          outfile << GetFaceDescriptor(i).SurfColour()[0] << " ";
+          outfile << GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()[0] << " ";
           outfile.width(12);
-          outfile << GetFaceDescriptor(i).SurfColour()[1] << " ";
+          outfile << GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()[1] << " ";
           outfile.width(12);
-          outfile << GetFaceDescriptor(i).SurfColour()[2];
+          outfile << GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()[2];
           outfile << endl;
        }
 
@@ -1066,9 +1066,9 @@ namespace netgen
        for(int i = 1; i <= cnt_facedesc; i++)
          {
            outfile.width(8);
-           outfile << GetFaceDescriptor(i).SurfNr()+1 << " ";
+           outfile << GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfNr()+1 << " ";
            outfile.width(12);
-           outfile << GetFaceDescriptor(i).SurfColour()[3] << endl;
+           outfile << GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SurfColour()[3] << endl;
          }
     }
 
@@ -1243,10 +1243,10 @@ namespace netgen
                 */
                 
                 for (int j = 1; j <= Regions<2>().Size(); j++)
-                  if (GetFaceDescriptor(j).SurfNr() == surfnr &&
-                      GetFaceDescriptor(j).BCProperty() == bcp &&
-                      GetFaceDescriptor(j).DomainIn() == domin &&
-                      GetFaceDescriptor(j).DomainOut() == domout)
+                  if (GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).SurfNr() == surfnr &&
+                      GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).BCProperty() == bcp &&
+                      GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).DomainIn() == domin &&
+                      GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).DomainOut() == domout)
                     faceind = j;
 
                 // if (Regions<2>().Size()) faceind = 1;   // for timing 
@@ -1254,14 +1254,14 @@ namespace netgen
                 if (!faceind)
                   {
                     faceind = AddFaceDescriptor (FaceRegion(surfnr, domin, domout, 0)).Nr1();
-                    GetFaceDescriptor(faceind).SetBCProperty (bcp);
+                    GetFaceDescriptor(FaceRegionIndex::FromNr1(faceind)).SetBCProperty (bcp);
                   }
 
                 infile >> nep;
                 if (!nep) nep = 3;
 
                 Element2d tri(nep);
-                tri.SetIndex(faceind);
+                tri.SetIndex(FaceRegionIndex::FromNr1(faceind));
 
                 for (int j = 1; j <= nep; j++)
                   infile >> tri.PNum(j);
@@ -1292,7 +1292,7 @@ namespace netgen
                 int hi, nep;
                 infile >> hi;
                 if (hi == 0) hi = 1;
-                el.SetIndex(hi);
+                el.SetIndex(VolumeRegionIndex::FromNr1(hi));
                 infile >> nep;
                 el.SetNP(nep);
                 el.SetCurved (nep != 4);
@@ -1317,7 +1317,7 @@ namespace netgen
                 int hi;
                 int si_tmp;
                 infile >> si_tmp >> hi >> seg[0] >> seg[1];
-                seg.SetIndex(si_tmp);
+                seg.SetIndex(EdgeRegionIndex::FromNr1(si_tmp));
                 AddSegment (seg);
               }
           }
@@ -1336,7 +1336,7 @@ namespace netgen
                 infile >> si_tmp >> hi >> seg[0] >> seg[1]
                        >> seg.GeomInfo(0).trignum
                        >> seg.GeomInfo(1).trignum;
-                seg.SetIndex(si_tmp);
+                seg.SetIndex(EdgeRegionIndex::FromNr1(si_tmp));
                 AddSegment (seg);
               }
           }
@@ -1368,11 +1368,11 @@ namespace netgen
                        >> seg.EPGeomInfo(1).dist;
 
                 if (geomtype == GEOM_OCC)
-                  seg.SetIndex(edgenr_tmp);
+                  seg.SetIndex(EdgeRegionIndex::FromNr1(edgenr_tmp));
                 else if (geomtype == GEOM_CSG)
-                  seg.SetIndex(edgenr_tmp);
+                  seg.SetIndex(EdgeRegionIndex::FromNr1(edgenr_tmp));
                 else
-                  seg.SetIndex(si_tmp);
+                  seg.SetIndex(EdgeRegionIndex::FromNr1(si_tmp));
 
                 surfnr1_tmp--;
                 surfnr2_tmp--;
@@ -1400,7 +1400,7 @@ namespace netgen
                        >> seg.EPGeomInfo(0).dist
                        >> seg.EPGeomInfo(1).dist
                        >> edsi;
-                seg.SetIndex(edsi + 1);
+                seg.SetIndex(EdgeRegionIndex::FromNr0(edsi));
                 AddSegment (seg);
               }
           }
@@ -1432,7 +1432,7 @@ namespace netgen
                 Element0d el;
                 int index;
                 infile >> el.pnum >> index;
-                el.SetIndex(index);
+                el.SetIndex(VertexRegionIndex::FromNr1(index));
                 pointelements.Append (el);
               }
             PrintMessage (3, n, " pointelements done");
@@ -1681,15 +1681,15 @@ namespace netgen
 
                  if(has_facedescriptors)
                  {
-                    GetFaceDescriptor(i).SetSurfColour(surfcolour);
+                    GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).SetSurfColour(surfcolour);
                  }
                  else if(surfnr > 0)
                  {
                     for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
                     {
-                       if(surfnr == GetFaceDescriptor(facedesc).SurfNr())
+                       if(surfnr == GetFaceDescriptor(FaceRegionIndex::FromNr1(facedesc)).SurfNr())
                        {
-                          GetFaceDescriptor(facedesc).SetSurfColour(surfcolour);
+                          GetFaceDescriptor(FaceRegionIndex::FromNr1(facedesc)).SetSurfColour(surfcolour);
                        }
                     }
                  }
@@ -1712,7 +1712,7 @@ namespace netgen
                     surfnr--;
                     if(has_facedescriptors)
                     {
-                       auto& fd = GetFaceDescriptor(index);
+                       auto& fd = GetFaceDescriptor(FaceRegionIndex::FromNr1(index));
                        auto scol = fd.SurfColour();
                        scol[3] = transp;
                        fd.SetSurfColour(scol);
@@ -1721,9 +1721,9 @@ namespace netgen
                       {
                         for(int facedesc = 1; facedesc <= cnt_facedesc; facedesc++)
                           {
-                            if(surfnr == GetFaceDescriptor(facedesc).SurfNr())
+                            if(surfnr == GetFaceDescriptor(FaceRegionIndex::FromNr1(facedesc)).SurfNr())
                               {
-                                auto& fd = GetFaceDescriptor(facedesc);
+                                auto& fd = GetFaceDescriptor(FaceRegionIndex::FromNr1(facedesc));
                                 auto scol = fd.SurfColour();
                                 scol[3] = transp;
                                 fd.SetSurfColour(scol);
@@ -1811,7 +1811,7 @@ namespace netgen
               }
             if (best < 0) best = best_no_fdi;
             if (best >= 0)
-              seg.SetIndex(best + 1);
+              seg.SetIndex(EdgeRegionIndex::FromNr0(best));
           }
       }
     // else: edgesegmentsgi3 - segments already have correct indices
@@ -2148,7 +2148,7 @@ namespace netgen
       for(int j=1; j<=el.GetNP(); j++) el.GeomInfoPi(j).trignum = -1;
 
     int max_surfnr = 0;
-    for (int i = 1; i <= GetNFD(); i++)
+    for (auto i : FaceDescriptors().Range())
       max_surfnr = max2 (max_surfnr, GetFaceDescriptor(i).SurfNr());
     max_surfnr++;
 
@@ -2178,24 +2178,24 @@ namespace netgen
 
 
                 for (int j = 1; j <= Regions<2>().Size(); j++)
-                  if (GetFaceDescriptor(j).SurfNr() == surfnr &&
-                      GetFaceDescriptor(j).BCProperty() == bcp &&
-                      GetFaceDescriptor(j).DomainIn() == domin &&
-                      GetFaceDescriptor(j).DomainOut() == domout)
+                  if (GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).SurfNr() == surfnr &&
+                      GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).BCProperty() == bcp &&
+                      GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).DomainIn() == domin &&
+                      GetFaceDescriptor(FaceRegionIndex::FromNr1(j)).DomainOut() == domout)
                     faceind = j;
 
                 if (!faceind)
                   {
                     faceind = AddFaceDescriptor (FaceRegion(surfnr, domin, domout, 0)).Nr1();
                     if(GetDimension() == 2) bcp++;
-                    GetFaceDescriptor(faceind).SetBCProperty (bcp);
+                    GetFaceDescriptor(FaceRegionIndex::FromNr1(faceind)).SetBCProperty (bcp);
                   }
 
                 infile >> nep;
                 if (!nep) nep = 3;
 
                 Element2d tri(nep);
-                tri.SetIndex(faceind);
+                tri.SetIndex(FaceRegionIndex::FromNr1(faceind));
 
                 for (int j = 1; j <= nep; j++)
                   {
@@ -2225,7 +2225,7 @@ namespace netgen
                 int hi;
                 int si_tmp;
                 infile >> si_tmp >> hi >> seg[0] >> seg[1];
-                seg.SetIndex(si_tmp);
+                seg.SetIndex(EdgeRegionIndex::FromNr1(si_tmp));
                 seg[0] = seg[0] + oldnp;
                 seg[1] = seg[1] + oldnp;
                 AddSegment (seg);
@@ -2245,7 +2245,7 @@ namespace netgen
                 infile >> si_tmp >> hi >> seg[0] >> seg[1]
                        >> seg.GeomInfo(0).trignum
                        >> seg.GeomInfo(1).trignum;
-                seg.SetIndex(si_tmp);
+                seg.SetIndex(EdgeRegionIndex::FromNr1(si_tmp));
                 seg[0] = seg[0] + oldnp;
                 seg[1] = seg[1] + oldnp;
                 AddSegment (seg);
@@ -2272,7 +2272,7 @@ namespace netgen
                        >> seg.EPGeomInfo(0).dist
                        >> epgi_edgenr_tmp
                        >> seg.EPGeomInfo(1).dist;
-                seg.SetIndex(si_tmp);
+                seg.SetIndex(EdgeRegionIndex::FromNr1(si_tmp));
 
                 surfnr1_tmp--;
                 surfnr2_tmp--;
@@ -2308,7 +2308,7 @@ namespace netgen
                        >> seg.EPGeomInfo(1).dist
                        >> edsi;
                 // index refers to the merged file's edge descriptors, appended below
-                seg.SetIndex(edsi + 1 + oldned);
+                seg.SetIndex(EdgeRegionIndex::FromNr1(edsi + 1 + oldned));
                 seg[0] = seg[0] + oldnp;
                 seg[1] = seg[1] + oldnp;
                 AddSegment (seg);
@@ -2365,7 +2365,7 @@ namespace netgen
                 int hi, nep;
                 infile >> hi;
                 if (hi == 0) hi = 1;
-                el.SetIndex(hi+oldnd);
+                el.SetIndex(VolumeRegionIndex::FromNr1(hi+oldnd));
                 infile >> nep;
                 el.SetNP(nep);
 
@@ -2461,7 +2461,7 @@ namespace netgen
               }
             if (best < 0) best = best_no_fdi;
             if (best >= 0)
-              seg.SetIndex(best + 1);
+              seg.SetIndex(EdgeRegionIndex::FromNr0(best));
           }
       }
 
@@ -2608,7 +2608,7 @@ namespace netgen
       int idx = seg.GetIndex().Nr1();
       if (idx < 1 || idx > maxindex) continue;
 
-      seg.SetIndex(idx);
+      seg.SetIndex(EdgeRegionIndex::FromNr1(idx));
 
       if (!used[idx-1])
       {
@@ -2648,7 +2648,7 @@ namespace netgen
       {
         auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(edi)];
         ed.SetIndex(FaceRegionIndex::INVALID);
-        for (int k = 1; k <= GetNFD(); k++)
+        for (auto k : FaceDescriptors().Range())
           {
             const auto & fd = GetFaceDescriptor(k);
             if ((fd.SurfNr() == ed.SurfNr(0) || fd.SurfNr() == ed.SurfNr(1)) &&
@@ -2662,7 +2662,7 @@ namespace netgen
         // fallback: match surfnr only (OCC, STL - domin/domout may be unset)
         if (!ed.GetIndex().IsValid())
           {
-            for (int k = 1; k <= GetNFD(); k++)
+            for (auto k : FaceDescriptors().Range())
               {
                 const auto & fd = GetFaceDescriptor(k);
                 if (fd.SurfNr() == ed.SurfNr(0) || fd.SurfNr() == ed.SurfNr(1))
@@ -2965,8 +2965,8 @@ namespace netgen
 
     for (int i = 1; i <= GetNFD(); i++)
       {
-        int domin = GetFaceDescriptor(i).DomainIn();
-        int domout = GetFaceDescriptor(i).DomainOut();
+        int domin = GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).DomainIn();
+        int domout = GetFaceDescriptor(FaceRegionIndex::FromNr1(i)).DomainOut();
         hasface[i-1] = 
           ( dom == 0 && (domin != 0 || domout != 0) ) ||
           ( dom != 0 && (domin == dom || domout == dom) );
@@ -3292,7 +3292,7 @@ namespace netgen
                         for (int l = 0; l < 3; l++)
                           tri[l] = i3[l];
                         tri[3] = i2.p4;
-                        tri.SetIndex (i2.index);
+                        tri.SetIndex (FaceRegionIndex::FromNr1(i2.index));
                         thread_openelements[ti.task_nr].Append (tri);
                       }
                   }
@@ -6435,7 +6435,7 @@ namespace netgen
         for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
           if (!surfused.Test(i.Nr1()))
             {
-              (*this)[i].SetIndex (dom);
+              (*this)[i].SetIndex (FaceRegionIndex::FromNr1(dom));
               for (int j = 0; j < 3; j++)
                 pused.SetBit ((*this)[i][j]);
               found = 1;
@@ -6472,7 +6472,7 @@ namespace netgen
                     if (!surfused.Test(i.Nr1()))
                       {
                         surfused.SetBit(i.Nr1());
-                        (*this)[i].SetIndex (dom);
+                        (*this)[i].SetIndex (FaceRegionIndex::FromNr1(dom));
                         cntd++;
                       }
                   }
@@ -6497,7 +6497,7 @@ namespace netgen
 
                 if (is)
                   {
-                    (*this)[i].SetIndex (dom);
+                    (*this)[i].SetIndex (VolumeRegionIndex::FromNr1(dom));
                   }
               }
           }
@@ -6597,11 +6597,11 @@ namespace netgen
               {
                 if (!nface)
                   {
-                    FaceRegion nfd = GetFaceDescriptor(fdi);
+                    FaceRegion nfd = GetFaceDescriptor(FaceRegionIndex::FromNr1(fdi));
                     nface = AddFaceDescriptor (nfd).Nr1();
                   }
 
-                el.SetIndex (nface);
+                el.SetIndex (FaceRegionIndex::FromNr1(nface));
               }
           }
 
@@ -6631,12 +6631,12 @@ namespace netgen
                           auto it = split_ed_cache.find(key);
                           if (it != split_ed_cache.end())
                             {
-                              seg.SetIndex(it->second);
+                              seg.SetIndex(EdgeRegionIndex::FromNr1(it->second));
                             }
                           else
                             {
                               EdgeRegion new_ed = Regions<1>()[seg.GetIndex()];
-                              new_ed.SetIndex(nface);
+                              new_ed.SetIndex(FaceRegionIndex::FromNr1(nface));
                               auto new_edsi = AddEdgeDescriptor(new_ed);
                               split_ed_cache[key] = new_edsi.Nr1();
                               seg.SetIndex(new_edsi);
@@ -6925,12 +6925,12 @@ namespace netgen
       }
   }
 
-  void Mesh :: GetSurfaceElementsOfFace (int facenr, Array<SurfaceElementIndex> & sei) const
+  void Mesh :: GetSurfaceElementsOfFace (FaceRegionIndex fi, Array<SurfaceElementIndex> & sei) const
   {
     static Timer timer("GetSurfaceElementsOfFace");
     RegionTimer reg (timer);
 
-    if(facenr==0)
+    if(!fi.IsValid())
     {
         sei.SetSize(GetNSE());
         ParallelForRange( IntRange(GetNSE()), [&sei] (auto myrange)
@@ -6943,10 +6943,10 @@ namespace netgen
 
      sei.SetSize(0);
 
-     SurfaceElementIndex si = Regions<2>()[FaceRegionIndex::FromNr1(facenr)].firstelement;
+     SurfaceElementIndex si = Regions<2>()[fi].firstelement;
      while (si.IsValid())
      {
-       if ( (*this)[si].GetIndex().Nr1() == facenr && (*this)[si][0].IsValid() &&
+       if ( (*this)[si].GetIndex() == fi && (*this)[si][0].IsValid() &&
             !(*this)[si].IsDeleted() )
         {
            sei.Append (si);
@@ -7404,13 +7404,13 @@ namespace netgen
   }
 
 
-  CompressedTable<SurfaceElementIndex, PointIndex> Mesh :: CreateCompressedPoint2SurfaceElementTable( int faceindex ) const
+  CompressedTable<SurfaceElementIndex, PointIndex> Mesh :: CreateCompressedPoint2SurfaceElementTable( FaceRegionIndex fi ) const
   {
     static Timer timer("Mesh::CreatePoint2SurfaceElementTable"); RegionTimer rt(timer);
 
     CompressedTableCreator<SurfaceElementIndex, PointIndex> creator;
     
-    if(faceindex==0)
+    if(!fi.IsValid())
       {
         for ( ; !creator.Done(); creator++)
           for (auto sei : SurfaceElements().Range())
@@ -7420,7 +7420,7 @@ namespace netgen
     else
       {
         Array<SurfaceElementIndex> face_els;
-        GetSurfaceElementsOfFace(faceindex, face_els);
+        GetSurfaceElementsOfFace(fi, face_els);
 
         for ( ; !creator.Done(); creator++)
           for (auto sei : face_els)
@@ -7562,7 +7562,7 @@ namespace netgen
             }
             first_visit[face-1] = false;
           }
-          sel.SetIndex(face_doms_2_new_face[key]);
+          sel.SetIndex(FaceRegionIndex::FromNr1(face_doms_2_new_face[key]));
       }
     SetNextMajorTimeStamp();
     RebuildSurfaceElementLists ();
@@ -8172,7 +8172,7 @@ namespace netgen
             auto verts = topo.GetFaceVertices(face);
             if(verts.Contains(openel[0]) && verts.Contains(openel[1]) && verts.Contains(openel[2])) {
               Element2d sel(static_cast<int>(verts.Size()));
-              sel.SetIndex(doms_2_new_face[{dom0, dom1}]);
+              sel.SetIndex(FaceRegionIndex::FromNr1(doms_2_new_face[{dom0, dom1}]));
 
               for(auto j : Range(verts.Size()))
                 sel[j] = verts[j];

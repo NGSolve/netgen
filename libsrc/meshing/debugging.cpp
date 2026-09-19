@@ -30,7 +30,7 @@ namespace netgen
 
             if(num_interesting_points==0)
                 el.Delete();
-            el.SetIndex(num_interesting_points);
+            el.SetIndex(VolumeRegionIndex::FromNr1(num_interesting_points));
         }
 
         mesh->SetMaterial(1, "1_point");

@@ -32,7 +32,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(const ElementRef & el) :
-    type(HP_NONE), index(el.GetIndex().Nr1()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -47,7 +47,7 @@ namespace netgen
 
   
   HPRefElement :: HPRefElement(Element2d & el) :
-    type(HP_NONE), index(el.GetIndex().Nr1()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
+    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     
@@ -665,7 +665,7 @@ namespace netgen
         hpel.coarse_elnr = i; 
         hpel.type = HP_SEGM; 
         // hpel.index = seg.edgenr + 10000*seg.si;
-        hpel.index = seg.GetIndex().Nr1();
+        hpel.index = seg.GetIndex();
         hpel.edgenr = mesh.HasEdgeDescriptor(seg) ? mesh.GetEdgeDescriptor(seg).EdgeNr() : -1;
         /*
         if(seg.edgenr >= 10000)
@@ -1482,7 +1482,7 @@ namespace netgen
                     Element el(hpel.np); 
                     for(int j=0;j<hpel.np;j++) 
                       el[j] = hpel.pnums[j]; 
-                    el.SetIndex(hpel.index); 
+                    el.SetIndex(hpel.index);
                     el.SetHpElnr(i);
                     if(setorders)
                       el.SetOrder(act_ref+1,act_ref+1,act_ref+1);
@@ -1976,7 +1976,7 @@ namespace netgen
           case HP_TRIG: 
             {
               int dim = mesh.GetDimension(); 
-              const FaceRegion & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
+              const FaceRegion & fd = mesh.GetFaceDescriptor (FaceRegionIndex(hpel.GetIndex()));
 
               if (split == SPLIT_HP)
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
@@ -1992,7 +1992,7 @@ namespace netgen
           case HP_QUAD: 
             { 
               int dim = mesh.GetDimension(); 
-              const FaceRegion & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
+              const FaceRegion & fd = mesh.GetFaceDescriptor (FaceRegionIndex(hpel.GetIndex()));
               hpel.type = ClassifyQuad(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                   faces, face_edges, surf_edges, facepoint, dim, fd);    
               dd = 2; 

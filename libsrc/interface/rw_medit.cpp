@@ -71,7 +71,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
         int edgenr_tmp;
         fin >> edgenr_tmp;
         edgenr_tmp = getIndex(1, edgenr_tmp);
-        seg.SetIndex(edgenr_tmp);
+        seg.SetIndex(EdgeRegionIndex::FromNr1(edgenr_tmp));
         mesh.AddSegment(seg);
       }
     }
@@ -83,7 +83,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
         for(auto i : Range(3))
           fin >> sel[i];
         fin >> index;
-        sel.SetIndex(getIndex(2, index));
+        sel.SetIndex(FaceRegionIndex::FromNr1(getIndex(2, index)));
         mesh.AddSurfaceElement(sel);
       }
     }
@@ -95,7 +95,7 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
         for(auto i : Range(4))
           fin >> el[i];
         fin >> index;
-        el.SetIndex(getIndex(3, index));
+        el.SetIndex(VolumeRegionIndex::FromNr1(getIndex(3, index)));
         el.Invert();
         mesh.AddVolumeElement(el);
       }

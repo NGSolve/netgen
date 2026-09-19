@@ -99,7 +99,7 @@ namespace ngcore
       }
     }
     void Unpack (netgen::Element2d & el) const {
-        el.SetIndex(index);
+        el.SetIndex(netgen::FaceRegionIndex::FromNr1(index));
         for (int k : Range(1, np + 1)) {
           auto & pnt = points[k-1];
           el.PNum(k) = pnt.num;
@@ -619,12 +619,13 @@ namespace netgen
     Array<double> fddata (6 * GetNFD());
     for (int fdi = 1; fdi <= GetNFD(); fdi++)
       {
-        fddata[6*fdi-6] = GetFaceDescriptor(fdi).SurfNr();
-        fddata[6*fdi-5] = GetFaceDescriptor(fdi).DomainIn();    
-        fddata[6*fdi-4] = GetFaceDescriptor(fdi).DomainOut();
-        fddata[6*fdi-3] = GetFaceDescriptor(fdi).BCProperty();
-        fddata[6*fdi-2] = GetFaceDescriptor(fdi).domin_singular;
-        fddata[6*fdi-1] = GetFaceDescriptor(fdi).domout_singular;
+        const auto & fd = GetFaceDescriptor(FaceRegionIndex::FromNr1(fdi));
+        fddata[6*fdi-6] = fd.SurfNr();
+        fddata[6*fdi-5] = fd.DomainIn();    
+        fddata[6*fdi-4] = fd.DomainOut();
+        fddata[6*fdi-3] = fd.BCProperty();
+        fddata[6*fdi-2] = fd.domin_singular;
+        fddata[6*fdi-1] = fd.domout_singular;
         
       }
     for (int dest = 1; dest < ntasks; dest++)
@@ -1097,7 +1098,7 @@ namespace netgen
 
           int index = elarray[ind++];
           Element el(elarray[ind++]);          
-          el.SetIndex(index);
+          el.SetIndex(VolumeRegionIndex::FromNr1(index));
           
           for ( int j = 0; j < el.GetNP(); j++)
             el[j] = glob2loc_vert_ht.Get (elarray[ind++]); 
@@ -1188,7 +1189,7 @@ namespace netgen
           ii++; // surfnr1 (on EdgeRegion)
           ii++; // surfnr2 (on EdgeRegion)
           ii++; // edgenr (on EdgeRegion)
-          seg.SetIndex(int ( segmbuf[ii++]));
+          seg.SetIndex(EdgeRegionIndex::FromNr1(int ( segmbuf[ii++])));
           seg.EPGeomInfo(0).dist = segmbuf[ii++];
           ii++; // edgenr (now on EdgeRegion)
           seg.EPGeomInfo(1).dist = segmbuf[ii++];
@@ -1213,7 +1214,7 @@ namespace netgen
       for (auto k : Range(pointelements)) {
         auto & el = pointelements[k];
         el.pnum = glob2loc_vert_ht.Get(zdes[k].pnum.Nr0());
-        el.SetIndex(zdes[k].index);
+        el.SetIndex(VertexRegionIndex::FromNr1(zdes[k].index));
       }
     }
 

@@ -11,7 +11,7 @@ TEST_CASE("ElementRef")
 
   Element tet(TET);
   for (int i = 0; i < 4; i++) tet[i] = PointIndex::FromNr0(10+i);
-  tet.SetIndex(3);
+  tet.SetIndex(VolumeRegionIndex::FromNr1(3));
   CHECK (tet.MaxNP() == ELEMENT_MAXPOINTS);
 
   // a value copy is independent, a handle copy aliases
@@ -37,7 +37,7 @@ TEST_CASE("ElementRef")
 
   // mutate through the handle, read back as value
   v[0] = PointIndex::FromNr0(99);
-  v.SetIndex(7);
+  v.SetIndex(VolumeRegionIndex::FromNr1(7));
   v.SetRefinementFlag(false);
   v.SetOrder(2,3,4);
   Element back (els[ei]);

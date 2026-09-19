@@ -47,7 +47,7 @@ namespace netgen
     /// pnums of tet
     PointIndex pnums[4];
     /// material number
-    int matindex;
+    VolumeRegionIndex matindex;
     /// element marked for refinement
     /// marked = 1: marked by element marker, marked = 2 due to closure
     unsigned int marked:2;
@@ -131,7 +131,7 @@ namespace netgen
     /// 6 point numbers
     PointIndex pnums[6];
     /// material number
-    int matindex;
+    VolumeRegionIndex matindex;
     /// marked for refinement
     int marked;
     /// edge without node k (0,1,2)
@@ -222,7 +222,7 @@ namespace netgen
     /// edge without node k
     int markededge;
     /// surface id
-    int surfid;
+    FaceRegionIndex surfid;
 
     bool incorder;
     unsigned int order:6;
@@ -265,7 +265,7 @@ namespace netgen
     /// marked edge: 0/2 = vertical, 1/3 = horizontal
     int markededge;
     /// surface id
-    int surfid;
+    FaceRegionIndex surfid;
 
     bool incorder;
     unsigned int order:6;
@@ -1047,7 +1047,7 @@ namespace netgen
       }
 
     mt.marked = 0;
-    mt.surfid = el.GetIndex().Nr1();
+    mt.surfid = el.GetIndex();
 
     mt.incorder = 0;
     mt.order = 1;
@@ -1110,7 +1110,7 @@ namespace netgen
 
     mq.marked = 0;
     mq.markededge = 0;
-    mq.surfid = el.GetIndex().Nr1();
+    mq.surfid = el.GetIndex();
   }
 
 
@@ -2106,7 +2106,7 @@ namespace netgen
                             
                             MarkedPrism mp;
                             BTDefineMarkedPrism (hel, edgenumber, mp);
-                            mp.matindex = el.GetIndex().Nr1();
+                            mp.matindex = el.GetIndex();
                             mprisms.Append (mp);
                           }
                       }
@@ -2114,7 +2114,7 @@ namespace netgen
                     {
                       MarkedTet mt;
                       BTDefineMarkedTet (el, edgenumber, mt);
-                      mt.matindex = el.GetIndex().Nr1();
+                      mt.matindex = el.GetIndex();
                       mtets.Append (mt);
                     }
                   break;
@@ -2140,7 +2140,7 @@ namespace netgen
                       BTDefineMarkedPrism (el, edgenumber, mp);
                     }
                   
-                  mp.matindex = el.GetIndex().Nr1();
+                  mp.matindex = el.GetIndex();
                   mprisms.Append (mp);
                   break;
                 }
@@ -2149,7 +2149,7 @@ namespace netgen
                 {
                   MarkedPrism mp;
                   BTDefineMarkedPrism (el, edgenumber, mp);
-                  mp.matindex = el.GetIndex().Nr1();
+                  mp.matindex = el.GetIndex();
                   mprisms.Append (mp);
                   break;
                 }
@@ -2617,7 +2617,7 @@ namespace netgen
               // {
               MarkedTet mt;
               BTDefineMarkedTet (el, edgenumber, mt);
-              mt.matindex = el.GetIndex().Nr1();
+              mt.matindex = el.GetIndex();
               
               mtets.Append (mt);
             

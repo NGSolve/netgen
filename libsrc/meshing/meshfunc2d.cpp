@@ -4,7 +4,7 @@
 namespace netgen
 {
 
-  DLL_HEADER void Optimize2d (Mesh & mesh, MeshingParameters & mp, int faceindex)
+  DLL_HEADER void Optimize2d (Mesh & mesh, MeshingParameters & mp, FaceRegionIndex faceindex)
   {
     static Timer timer("optimize2d"); RegionTimer reg(timer);
 
@@ -34,7 +34,7 @@ namespace netgen
         optimize_swap_separate_faces = true;
     }
 
-    if(faceindex)
+    if(faceindex.IsValid())
       optimize_swap_separate_faces = false;
 
     const char * optstr = mp.optimize2d.c_str();
@@ -56,9 +56,9 @@ namespace netgen
 
                 if(optimize_swap_separate_faces)
                 {
-                  for(auto i : Range(1, mesh.GetNFD()+1))
+                  for(auto fi : mesh.Regions<2>().Range())
                   {
-                    meshopt.SetFaceIndex(i);
+                    meshopt.SetFaceIndex(fi);
                     meshopt.EdgeSwapping (0);
                   }
                 }
@@ -72,9 +72,9 @@ namespace netgen
               {  // metric swap
                 if(optimize_swap_separate_faces)
                 {
-                  for(auto i : Range(1, mesh.GetNFD()+1))
+                  for(auto fi : mesh.Regions<2>().Range())
                   {
-                    meshopt.SetFaceIndex(i);
+                    meshopt.SetFaceIndex(fi);
                     meshopt.EdgeSwapping (1);
                   }
                 }

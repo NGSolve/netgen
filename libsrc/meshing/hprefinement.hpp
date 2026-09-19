@@ -331,7 +331,7 @@ public:
   HPREF_ELEMENT_TYPE type;
   PointIndex pnums[8];
   double param[8][3];
-  int index;
+  AnyRegionIndex index;
   // int si;
   int edgenr;
   int levelx;
@@ -346,7 +346,7 @@ public:
   PointIndex & operator[](int i) { return(pnums[i]);}
   PointIndex & PNumMod(int i) { return pnums[(i-1) % np]; };
   PointIndex & PNum(int i) {return pnums[(i-1)]; };
-  int GetIndex () const { return index; }; 
+  AnyRegionIndex GetIndex () const { return index; }
   double singedge_left, singedge_right; 
   auto PNums() const { return FlatArray<const PointIndex>(np, &pnums[0]); }
 

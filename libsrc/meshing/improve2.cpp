@@ -221,7 +221,7 @@ namespace netgen
     static const double minangle[] = { 0, 1.481, 2.565, 3.627, 4.683, 5.736, 7, 9 };
 
 
-    if(faceindex == 0)
+    if(!faceindex.IsValid())
       {
         ParallelFor( Range(pangle), [&] (auto i) NETGEN_LAMBDA_INLINE
             {
@@ -672,20 +672,21 @@ namespace netgen
 
   void MeshOptimize2d :: SplitImprove()
   {
-    if (!faceindex)
+    if (!faceindex.IsValid())
       {
         PrintMessage (3, "Split improve");
 
         mesh.CalcSurfacesOfNode(); // TODO: needed?
-        for (faceindex = 1; faceindex <= mesh.GetNFD(); faceindex++)
+        for (auto fi : mesh.Regions<2>().Range())
           {
+            faceindex = fi;
             SplitImprove();
 
             if (multithread.terminate)
                 throw NgException ("Meshing stopped");
           }
 
-        faceindex = 0;
+        faceindex = FaceRegionIndex::INVALID;
         mesh.Compress(); // TODO: needed?
         return;
       }
@@ -786,7 +787,7 @@ namespace netgen
         PointGeomInfo gi5;
 
         geo.PointBetween(mesh[pi1], mesh[pi2], 0.5,
-                         faceindex,
+                         faceindex.Nr1(),
                          gi1, gi2, p5, gi5);
 
         pi5 = mesh.AddPoint(p5);

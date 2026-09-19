@@ -816,7 +816,7 @@ double MeshOptimize3d :: SwapImproveEdge (
     el[1] = pi1;
     el[2] = pi2;
     el[3] = pi3;
-    el.SetIndex (mattyp);
+    el.SetIndex (VolumeRegionIndex::FromNr1(mattyp));
     // fix_orientation(el);
     return el;
   };
@@ -1914,8 +1914,8 @@ void MeshOptimize3d :: SwapImproveSurface (
                   //(*testout) << "j " << j << " newel1 " << newel1[0] << " "<< newel1[1] << " "<< newel1[2] << " "<< newel1[3] << endl
                   //     << " newel2 " << newel2[0] << " "<< newel2[1] << " "<< newel2[2] << " "<< newel2[3] << endl;
                   
-                  newel1.SetIndex(mattype);
-                  newel2.SetIndex(mattype);
+                  newel1.SetIndex(VolumeRegionIndex::FromNr1(mattype));
+                  newel2.SetIndex(VolumeRegionIndex::FromNr1(mattype));
 
                 }
 
@@ -1997,8 +1997,8 @@ void MeshOptimize3d :: SwapImproveSurface (
                   //(*testout) << "j " << j << " newel1 " << newel1[0] << " "<< newel1[1] << " "<< newel1[2] << " "<< newel1[3] << endl
                   //         << " newel2 " << newel2[0] << " "<< newel2[1] << " "<< newel2[2] << " "<< newel2[3] << endl;
                   
-                  newel1.SetIndex(othermattype);
-                  newel2.SetIndex(othermattype);
+                  newel1.SetIndex(VolumeRegionIndex::FromNr1(othermattype));
+                  newel2.SetIndex(VolumeRegionIndex::FromNr1(othermattype));
 
                 }
 
@@ -2318,19 +2318,19 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
               el31[1] = pi2;
               el31[2] = pi5;
               el31[3] = pi4;
-              el31.SetIndex (mattyp);
+              el31.SetIndex (VolumeRegionIndex::FromNr1(mattyp));
 
               el32[0] = pi2;
               el32[1] = pi3;
               el32[2] = pi5;
               el32[3] = pi4;
-              el32.SetIndex (mattyp);
+              el32.SetIndex (VolumeRegionIndex::FromNr1(mattyp));
 
               el33[0] = pi3;
               el33[1] = pi1;
               el33[2] = pi5;
               el33[3] = pi4;
-              el33.SetIndex (mattyp);
+              el33.SetIndex (VolumeRegionIndex::FromNr1(mattyp));
 
               bad2 = CalcBad (mesh.Points(), el31, 0) +
                 CalcBad (mesh.Points(), el32, 0) +
