@@ -752,7 +752,7 @@ namespace netgen
         }
 
         // create edge descriptor for this geometric edge
-        EdgeDescriptor ed;
+        EdgeRegion ed;
         ed.SetEdgeNr(edgenr+1);
         ed.SetName(edge->properties.GetName());
         ed.SetSingEdgeLeft(edge->properties.hpref);
@@ -883,7 +883,7 @@ namespace netgen
     for(auto k : Range(faces))
     {
         auto & face = *faces[k];
-        FaceDescriptor fd(k+1, face.domin+1, face.domout+1, k+1);
+        FaceRegion fd(k+1, face.domin+1, face.domout+1, k+1);
         if(face.properties.col)
           fd.SetSurfColour(*face.properties.col);
         mesh.AddFaceDescriptor(fd);
@@ -895,7 +895,7 @@ namespace netgen
         max_index = max2(max_index, sel.GetIndex().Nr1());
     while(mesh.GetNFD() < max_index)
     {
-        FaceDescriptor fd(mesh.GetNFD()+1, 0, 0, -1);
+        FaceRegion fd(mesh.GetNFD()+1, 0, 0, -1);
         mesh.AddFaceDescriptor(fd);
     }
 

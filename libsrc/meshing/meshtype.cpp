@@ -243,7 +243,7 @@ namespace netgen
     pnums[0] = PointIndex::INVALID;
     pnums[1] = PointIndex::INVALID;
     pnums[2] = PointIndex::INVALID;
-    index = EdgeDescriptorIndex::INVALID;
+    index = EdgeRegionIndex::INVALID;
   }    
 
   void Segment :: DoArchive (Archive & ar)
@@ -287,7 +287,7 @@ namespace netgen
         geominfo[i].trignum = 0;
       }
     np = 3;
-    index = FaceDescriptorIndex::INVALID;
+    index = FaceRegionIndex::INVALID;
     badel = 0;
     deleted = 0;
     visible = 1;
@@ -306,7 +306,7 @@ namespace netgen
         geominfo[i].trignum = 0;
       }
     np = anp;
-    index = FaceDescriptorIndex::INVALID;
+    index = FaceRegionIndex::INVALID;
     badel = 0;
     deleted = 0;
     visible = 1;
@@ -333,7 +333,7 @@ namespace netgen
 
     SetType (atyp);
 
-    index = FaceDescriptorIndex::INVALID;
+    index = FaceRegionIndex::INVALID;
     badel = 0;
     deleted = 0;
     visible = 1;
@@ -358,7 +358,7 @@ namespace netgen
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
-    index = FaceDescriptorIndex::INVALID;
+    index = FaceRegionIndex::INVALID;
     badel = 0;
     refflag = 1;
     strongrefflag = false;
@@ -382,7 +382,7 @@ namespace netgen
   
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       geominfo[i].trignum = 0;
-    index = FaceDescriptorIndex::INVALID;
+    index = FaceRegionIndex::INVALID;
     badel = 0;
     refflag = 1;
     strongrefflag = false;
@@ -1114,7 +1114,7 @@ namespace netgen
     h->np = anp;
     for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
         pn[i].Invalidate();
-    h->index = 0;
+    h->index = VolumeRegionIndex::INVALID;
     h->flags.marked = 1;
     h->flags.badel = 0;
     h->flags.reverse = 0;
@@ -1154,7 +1154,7 @@ namespace netgen
 
     for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
         pn[i].Invalidate();
-    h->index = 0;
+    h->index = VolumeRegionIndex::INVALID;
     h->flags.marked = 1;
     h->flags.badel = 0;
     h->flags.reverse = 0;
@@ -2648,7 +2648,9 @@ namespace netgen
 
 
 
-  FaceDescriptor ::  FaceDescriptor()
+  const string RegionBase :: default_name = "default";
+
+  Region<2> :: Region()
   { 
     surfnr = domin = domout  = bcprop = 0; 
     domin_singular = domout_singular = 0.;
@@ -2656,21 +2658,20 @@ namespace netgen
     // Initialise surface colour
     surfcolour = Vec<4>(0.0,1.0,0.0,1.0);
     tlosurf = -1; 
-    // bcname = 0;
     firstelement = SurfaceElementIndex::INVALID;
   }
 
-  FaceDescriptor ::  FaceDescriptor(const FaceDescriptor& other)
-    : surfnr(other.surfnr), domin(other.domin), domout(other.domout),
+  Region<2> :: Region(const Region& other)
+    : RegionBase(other),
+      surfnr(other.surfnr), domin(other.domin), domout(other.domout),
       tlosurf(other.tlosurf), bcprop(other.bcprop), 
-      surfcolour(other.surfcolour), bcname(other.bcname),
+      surfcolour(other.surfcolour),
       domin_singular(other.domin_singular), domout_singular(other.domout_singular)
   { 
     firstelement = SurfaceElementIndex::INVALID;
   }
 
-  FaceDescriptor :: 
-  FaceDescriptor(int surfnri, int domini, int domouti, int tlosurfi)
+  Region<2> :: Region(int surfnri, int domini, int domouti, int tlosurfi)
   { 
     surfnr = surfnri; 
     domin = domini; 
@@ -2681,33 +2682,22 @@ namespace netgen
     tlosurf = tlosurfi; 
     bcprop = surfnri;
     domin_singular = domout_singular = 0.;
-    // bcname = 0;
     firstelement = SurfaceElementIndex::INVALID;
   }
 
-
-
-  // string FaceDescriptor :: default_bcname = "default";
-  /*
-  const string & FaceDescriptor :: GetBCName () const
+  void Region<2> :: DoArchive (Archive & ar)
   {
-    static string defaultstring = "default";
-    if (bcname) return *bcname;
-    return defaultstring;
-  }
-  */
-
-  void FaceDescriptor :: DoArchive (Archive & ar)
-  {
+    string bcname = GetName();
     ar & surfnr & domin & domout & tlosurf & bcprop
       & surfcolour & bcname   
       & domin_singular & domout_singular ;
-      // don't need:  firstelement
+    // don't need:  firstelement
+    if (ar.Input()) SetName(bcname);
   }
   
 
   
-  ostream & operator<<(ostream  & s, const FaceDescriptor & fd)
+  ostream & operator<<(ostream  & s, const FaceRegion & fd)
   {
     s << "surfnr = " << fd.SurfNr() 
       << ", domin = " << fd.DomainIn()

@@ -511,34 +511,32 @@ namespace netgen
   };
 
   /**
-     1-based index into Mesh::facedecoding. INVALID (= 0) means unset.
-     Converts to int, but is only constructed via FromNr0/FromNr1.
+     1-based index into the regions of entity dimension D, Mesh::Regions<D>().
+     INVALID (= 0) means unset. Only constructed via FromNr0/FromNr1.
   */
-  class FaceDescriptorIndex : public Index<int,FaceDescriptorIndex,1>
+  template <int D>
+  class RegionIndex : public Index<int,RegionIndex<D>,1>
   {
-    friend class Index<int,FaceDescriptorIndex,1>;
-    constexpr FaceDescriptorIndex (int ai) : Index(ai) { }
+    typedef Index<int,RegionIndex<D>,1> TBase;
+    friend class Index<int,RegionIndex<D>,1>;
+    constexpr RegionIndex (int ai) : TBase(ai) { }
   public:
-    using Index::Index;
+    using TBase::TBase;
     operator int () const = delete;    // use Nr1() / Nr0() / IsValid()
     operator int & () = delete;
   };
 
-  /**
-     1-based index into Mesh::edgedecoding. INVALID (= 0) means unset.
-  */
-  class EdgeDescriptorIndex : public Index<int,EdgeDescriptorIndex,1>
-  {
-    friend class Index<int,EdgeDescriptorIndex,1>;
-    constexpr EdgeDescriptorIndex (int ai) : Index(ai) { }
-  public:
-    using Index::Index;
-    operator int () const = delete;    // use Nr1() / Nr0() / IsValid()
-    operator int & () = delete;
-  };
+  using VertexRegionIndex = RegionIndex<0>;
+  using EdgeRegionIndex = RegionIndex<1>;
+  using FaceRegionIndex = RegionIndex<2>;
+  using VolumeRegionIndex = RegionIndex<3>;
 
-  inline ostream & operator<< (ostream & ost, const FaceDescriptorIndex & i) { return ost << i.Nr1(); }
-  inline ostream & operator<< (ostream & ost, const EdgeDescriptorIndex & i) { return ost << i.Nr1(); }
+  // old names
+  using FaceDescriptorIndex = FaceRegionIndex;
+  using EdgeDescriptorIndex = EdgeRegionIndex;
+
+  template <int D>
+  inline ostream & operator<< (ostream & ost, const RegionIndex<D> & i) { return ost << i.Nr1(); }
 
   inline ostream & operator<< (ostream & ost, const Front2PointIndex & fpi)
   {
@@ -762,7 +760,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
 
     /// face descriptor index (1-based)
-    FaceDescriptorIndex index = FaceDescriptorIndex::INVALID;
+    FaceRegionIndex index = FaceRegionIndex::INVALID;
     ///
     ELEMENT_TYPE typ;
     /// number of points
@@ -952,10 +950,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 #endif
     
 
-    void SetIndex (FaceDescriptorIndex si) { index = si; }
-    void SetIndex (int si) { index = si > 0 ? FaceDescriptorIndex::FromNr1(si) : FaceDescriptorIndex::INVALID; }
+    void SetIndex (FaceRegionIndex si) { index = si; }
+    void SetIndex (int si) { index = si > 0 ? FaceRegionIndex::FromNr1(si) : FaceRegionIndex::INVALID; }
     ///
-    FaceDescriptorIndex GetIndex () const { return index; }
+    FaceRegionIndex GetIndex () const { return index; }
 
     int GetOrder () const { return orderx; }
     void SetOrder (int aorder) { orderx = ordery = aorder; }
@@ -1094,7 +1092,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int8_t np;
     int8_t newest_vertex = -1; // from refinement via bisection
     /// sub-domain index
-    int index;
+    VolumeRegionIndex index;
     /// order for hp-FEM
     unsigned int orderx:6;
     unsigned int ordery:6;
@@ -1213,8 +1211,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     DLL_HEADER void DoArchive (Archive & ar);
 
-    void SetIndex (int si) { h->index = si; }
-    int GetIndex () const { return h->index; }
+    void SetIndex (VolumeRegionIndex si) { h->index = si; }
+    void SetIndex (int si) { h->index = si > 0 ? VolumeRegionIndex::FromNr1(si) : VolumeRegionIndex::INVALID; }
+    VolumeRegionIndex GetIndex () const { return h->index; }
 
     int GetOrder () const { return h->orderx; }
     void SetOrder (const int aorder) { h->orderx = h->ordery = h->orderz = aorder; }
@@ -1525,8 +1524,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   PointIndex pnums[3];
   EdgePointGeomInfo epgeominfo[2]; // combines PointGeomInfo + dist
   int hp_elnr;
-  /// 1-based edge descriptor index into mesh.edgedecoding (INVALID = 0)
-  EdgeDescriptorIndex index = EdgeDescriptorIndex::INVALID;
+  /// 1-based edge descriptor index into mesh.Regions<1>() (INVALID = 0)
+  EdgeRegionIndex index = EdgeRegionIndex::INVALID;
 
   public:
     ///
@@ -1552,9 +1551,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int GetHpElnr () const { return hp_elnr; }
     void SetHpElnr (int nr) { hp_elnr = nr; }
 
-    EdgeDescriptorIndex GetIndex() const { return index; }
-    void SetIndex (EdgeDescriptorIndex i) { index = i; }
-    void SetIndex (int i) { index = i > 0 ? EdgeDescriptorIndex::FromNr1(i) : EdgeDescriptorIndex::INVALID; }
+    EdgeRegionIndex GetIndex() const { return index; }
+    void SetIndex (EdgeRegionIndex i) { index = i; }
+    void SetIndex (int i) { index = i > 0 ? EdgeRegionIndex::FromNr1(i) : EdgeRegionIndex::INVALID; }
 
     void DoArchive (Archive & ar);
 #ifdef PARALLEL
@@ -1573,10 +1572,16 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   public:
     PointIndex pnum;
     string name;
-    int index;
+    VertexRegionIndex index = VertexRegionIndex::INVALID;
     Element0d () = default;
-    Element0d (PointIndex _pnum, int _index)
+    Element0d (PointIndex _pnum, VertexRegionIndex _index)
       : pnum(_pnum), index(_index) { ; }
+    Element0d (PointIndex _pnum, int _index)
+      : pnum(_pnum) { SetIndex(_index); }
+
+    VertexRegionIndex GetIndex () const { return index; }
+    void SetIndex (VertexRegionIndex i) { index = i; }
+    void SetIndex (int i) { index = i > 0 ? VertexRegionIndex::FromNr1(i) : VertexRegionIndex::INVALID; }
 
 #ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType();
@@ -1587,11 +1592,46 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
   ostream & operator<<(ostream  & s, const Element0d & el);
 
-  // class Surface;  
-  // class FaceDescriptor;
+  /// common part of the regions of all dimensions
+  class RegionBase
+  {
+    optional<string> name;   // nullopt: not set, reported as "default"
+  public:
+    DLL_HEADER static const string default_name;
+
+    const string & GetName () const { return name ? *name : default_name; }
+    bool HasName () const { return name.has_value(); }
+    void SetName (optional<string> aname) { name = std::move(aname); }
+    void ResetName () { name = nullopt; }
+    const optional<string> & OptName () const { return name; }
+  };
+
+  /**
+     Geometric entity of dimension D the mesh elements of dimension D belong to:
+     Region<3> volume (material), Region<2> face, Region<1> edge, Region<0> vertex.
+     Indexed by RegionIndex<D>.
+  */
+  template <int D> class Region;
+
+  template <>
+  class Region<3> : public RegionBase
+  {
+  public:
+    Region () = default;
+    explicit Region (optional<string> aname) { SetName(std::move(aname)); }
+  };
+
+  template <>
+  class Region<0> : public RegionBase
+  {
+  public:
+    Region () = default;
+    explicit Region (optional<string> aname) { SetName(std::move(aname)); }
+  };
 
   ///
-  class FaceDescriptor
+  template <>
+  class Region<2> : public RegionBase
   {
     /// which surface, 0 if not available
     int surfnr;
@@ -1609,10 +1649,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// surface colour (Default: R=0.0 ; G=1.0 ; B=0.0)
     Vec<4> surfcolour;
     
-    ///
-    // static string default_bcname;
-    // string * bcname = &default_bcname;
-    string bcname = "default";
     /// root of linked list 
     SurfaceElementIndex firstelement;
   
@@ -1620,10 +1656,10 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     double domout_singular;
 
   public:
-    DLL_HEADER FaceDescriptor();
-    DLL_HEADER FaceDescriptor(int surfnri, int domini, int domouti, int tlosurfi);
-    DLL_HEADER FaceDescriptor(const FaceDescriptor& other);
-    DLL_HEADER ~FaceDescriptor()  { ; }
+    DLL_HEADER Region();
+    DLL_HEADER Region(int surfnri, int domini, int domouti, int tlosurfi);
+    DLL_HEADER Region(const Region& other);
+    Region & operator= (const Region & other) = default;
 
     int SurfNr () const { return surfnr; }
     int DomainIn () const { return domin; }
@@ -1638,14 +1674,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     // Philippose - 06/07/2009
     // Get Surface colour
     Vec<4> SurfColour () const { return surfcolour; }
-    /* DLL_HEADER */ const string & GetBCName () const { return bcname; }
-    // string * BCNamePtr () { return bcname; }
-    // const string * BCNamePtr () const  { return bcname; }
+    const string & GetBCName () const { return GetName(); }
     void SetSurfNr (int sn) { surfnr = sn; }
     void SetDomainIn (int di) { domin = di; }
     void SetDomainOut (int dom) { domout = dom; }
     void SetBCProperty (int bc) { bcprop = bc; }
-    void SetBCName (const string & bcn) { bcname = bcn; }
+    void SetBCName (const string & bcn) { SetName(bcn); }
     // Philippose - 06/07/2009
     // Set the surface colour
     void SetSurfColour (Vec<4> colour) { surfcolour = colour; }
@@ -1654,21 +1688,22 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetDomainOutSingular (double v) { domout_singular = v; }
 
     SurfaceElementIndex FirstElement() { return firstelement; }
-    // friend ostream & operator<<(ostream  & s, const FaceDescriptor & fd);
     friend class Mesh;
 
     void DoArchive (Archive & ar);
   };
 
-  ostream & operator<< (ostream  & s, const FaceDescriptor & fd);
+  using FaceRegion = Region<2>;
+
+  ostream & operator<< (ostream  & s, const FaceRegion & fd);
 
   
  
-  class EdgeDescriptor
+  template <>
+  class Region<1> : public RegionBase
   {
     int edgenr = -1;
     int surfnr[2] = {-1, -1};
-    string name = "default";
     double singedge_left = 0;
     double singedge_right = 0;
 
@@ -1677,11 +1712,11 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int domin = -1, domout = -1;
 
     /// transient index: face descriptor index (1-based) in 3D, not serialized - recomputed by RebuildFDIndices()
-    FaceDescriptorIndex index_ = FaceDescriptorIndex::INVALID;
+    FaceRegionIndex index_ = FaceRegionIndex::INVALID;
 
   public:
-    EdgeDescriptor () = default;
-    EdgeDescriptor (int edgenri, int surfnr1 = -1, int surfnr2 = -1,
+    Region () = default;
+    Region (int edgenri, int surfnr1 = -1, int surfnr2 = -1,
                     int domini = -1, int domouti = -1, int tlosurfi = -1)
       : edgenr(edgenri), surfnr{surfnr1, surfnr2}, tlosurf(tlosurfi), domin(domini), domout(domouti)
     { ; }
@@ -1691,9 +1726,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     int SurfNr (int i) const { return surfnr[i]; }
     void SetSurfNr (int i, int nr) { surfnr[i] = nr; }
-
-    const string & GetName () const { return name; }
-    void SetName (const string & aname) { name = aname; }
 
     double SingEdgeLeft () const { return singedge_left; }
     void SetSingEdgeLeft (double s) { singedge_left = s; }
@@ -1712,9 +1744,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetDomainOut (int nr) { domout = nr; }
 
     /// face descriptor index (1-based), INVALID if not yet set. Transient, recomputed by RebuildFDIndices().
-    FaceDescriptorIndex GetIndex () const { return index_; }
-    void SetIndex (FaceDescriptorIndex i) { index_ = i; }
-    void SetIndex (int i) { index_ = i > 0 ? FaceDescriptorIndex::FromNr1(i) : FaceDescriptorIndex::INVALID; }
+    FaceRegionIndex GetIndex () const { return index_; }
+    void SetIndex (FaceRegionIndex i) { index_ = i; }
+    void SetIndex (int i) { index_ = i > 0 ? FaceRegionIndex::FromNr1(i) : FaceRegionIndex::INVALID; }
 
     // deprecated aliases
     [[deprecated("use GetIndex()")]] int FDIndex () const { return index_.Nr1(); }
@@ -1722,17 +1754,30 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     void DoArchive (Archive & ar)
     {
-      ar & edgenr & surfnr[0] & surfnr[1] & name
+      string aname = GetName();
+      ar & edgenr & surfnr[0] & surfnr[1] & aname
         & singedge_left & singedge_right & tlosurf
         & domin & domout;
+      if (ar.Input()) SetName(aname);
     }
 
-    friend inline ostream & operator<< (ostream & ost, const EdgeDescriptor & ed)
+    friend inline ostream & operator<< (ostream & ost, const Region & ed)
     {
-      ost << "EdgeDescriptor(edgenr=" << ed.edgenr << ", surfnr=(" << ed.surfnr[0] << "," << ed.surfnr[1] << "), domin=" << ed.domin << ", domout=" << ed.domout << ", name=" << ed.name << ")";
+      ost << "EdgeDescriptor(edgenr=" << ed.edgenr << ", surfnr=(" << ed.surfnr[0] << "," << ed.surfnr[1] << "), domin=" << ed.domin << ", domout=" << ed.domout << ", name=" << ed.GetName() << ")";
       return ost;
     }
   };
+
+  using EdgeRegion = Region<1>;
+  using VolumeRegion = Region<3>;
+  using VertexRegion = Region<0>;
+
+  // old names
+  using FaceDescriptor = FaceRegion;
+  using EdgeDescriptor = EdgeRegion;
+
+  template <int D>
+  using RegionArray = Array<Region<D>, RegionIndex<D>>;
 
   struct BoundaryLayerParameters
   {
@@ -2162,10 +2207,7 @@ namespace ngcore
   template <> struct MPI_typetrait<netgen::PointIndex> {
     static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
   };
-  template <> struct MPI_typetrait<netgen::FaceDescriptorIndex> {
-    static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
-  };
-  template <> struct MPI_typetrait<netgen::EdgeDescriptorIndex> {
+  template <int D> struct MPI_typetrait<netgen::RegionIndex<D>> {
     static NG_MPI_Datatype MPIType ()  { return NG_MPI_INT; }
   };
 

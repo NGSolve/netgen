@@ -342,7 +342,7 @@ void BoundaryLayerTool ::CreateNewFaceDescriptors ()
               if (!insert_only_volume_elements)
                 {
                   // -1 surf nr is so that curving does not do anything
-                  FaceDescriptor new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(), isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
+                  FaceRegion new_fd(-1, isIn ? new_mat_nrs[i] : fd.DomainIn(), isIn ? fd.DomainOut() : new_mat_nrs[i], -1);
                   new_fd.SetBCProperty(new_si);
                   new_fd.SetSurfColour(fd.SurfColour());
                   mesh.AddFaceDescriptor(new_fd);
@@ -394,7 +394,7 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
           // auto isOut = domains.Test(fd.DomainOut());
           int si = params.sides_keep_surfaceindex ? int(facei) : -1;
           // domin and domout can only be set later
-          FaceDescriptor new_fd(si, -1, -1, si);
+          FaceRegion new_fd(si, -1, -1, si);
           new_fd.SetBCProperty(new_si);
           mesh.AddFaceDescriptor(new_fd);
           si_map[facei] = new_si;
@@ -702,7 +702,7 @@ void BoundaryLayerTool ::InsertNewElements (
   auto getIndex = [&] (int ei) {
     if (edge_map.count(ei) == 0)
       {
-        EdgeDescriptor new_ed;
+        EdgeRegion new_ed;
         if (ei >= 1 && ei <= mesh.GetNED())
           {
             new_ed = mesh.GetEdgeDescriptor(ei);
@@ -1123,9 +1123,9 @@ void BoundaryLayerTool ::SetDomInOutSides ()
       int dom[2] = {-1, -1};
 
       if (e1.IsValid())
-        dom[0] = mesh[e1].GetIndex();
+        dom[0] = mesh[e1].GetIndex().Nr1();
       if (e2.IsValid())
-        dom[1] = mesh[e2].GetIndex();
+        dom[1] = mesh[e2].GetIndex().Nr1();
 
       const auto& fd_old = mesh.GetFaceDescriptor(inv_si_map[index]);
       int dom_old[2] = {fd_old.DomainIn(), fd_old.DomainOut()};

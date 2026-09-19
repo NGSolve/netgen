@@ -91,8 +91,8 @@ namespace netgen
         int maxbc(-1),mindomain(-1);
         
         for (ElementIndex i : mesh.VolumeElements().Range())
-          if(i.Nr0()==0 || mesh[i].GetIndex() < mindomain)
-            mindomain = mesh[i].GetIndex();
+          if(i.Nr0()==0 || mesh[i].GetIndex().Nr1() < mindomain)
+            mindomain = mesh[i].GetIndex().Nr1();
         for(int i=1; i<=mesh.GetNFD(); i++)
           if(i==1 || mesh.GetFaceDescriptor(i).BCProperty() > maxbc)
             maxbc = mesh.GetFaceDescriptor(i).BCProperty();
@@ -220,7 +220,7 @@ namespace netgen
         
         for(int j=0; j<4; j++)
           if(point_ids[el[j]] == -1)
-            point_ids[el[j]] = (version >= 2) ? el.GetIndex() : 0;
+            point_ids[el[j]] = (version >= 2) ? el.GetIndex().Nr1() : 0;
 
         IVec<4> e_to_f;
 
@@ -256,7 +256,7 @@ namespace netgen
                 facenumbers.Set(i3a,numfaces);
                 e_to_f[i] = numfaces;
                 if(version >= 2)
-                  face_ids.Append(el.GetIndex());
+                  face_ids.Append(el.GetIndex().Nr1());
                 else
                   face_ids.Append(0);
 
@@ -277,7 +277,7 @@ namespace netgen
                         edge2node.Append(i2a);
                         f_to_n[j] = numedges;
                         if(version >= 2)
-                          edge_ids.Append(el.GetIndex());
+                          edge_ids.Append(el.GetIndex().Nr1());
                         else
                           edge_ids.Append(0);
                       }
@@ -1020,8 +1020,8 @@ namespace netgen
 
     if (uid_to_group_3D.Size())          // loop-invariant guard, hoisted
       for(ElementIndex i : mesh.VolumeElements().Range())
-        if(uid_to_group_3D[mesh[i].GetIndex()] >= 0)
-          groups[uid_to_group_3D[mesh[i].GetIndex()]]->Append(i.Nr1());
+        if(uid_to_group_3D[mesh[i].GetIndex().Nr1()] >= 0)
+          groups[uid_to_group_3D[mesh[i].GetIndex().Nr1()]]->Append(i.Nr1());
       
     
 

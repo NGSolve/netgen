@@ -85,7 +85,7 @@ namespace netgen
    }
 
 
-  static void SetEdgeDomains (EdgeDescriptor & ed, int dom0, int dom1)
+  static void SetEdgeDomains (EdgeRegion & ed, int dom0, int dom1)
   {
      ed.SetSurfNr(0, dom0);
      ed.SetSurfNr(1, dom1);
@@ -204,7 +204,7 @@ namespace netgen
     {
         while(mesh.GetNFD() < new_domain)
         {
-           FaceDescriptor fd(0, 0, 0, -1);
+           FaceRegion fd(0, 0, 0, -1);
            fd.SetBCProperty(mesh.GetNFD()+1);
            mesh.AddFaceDescriptor(fd);
         }
@@ -612,7 +612,7 @@ namespace netgen
         if(ed_to_bl_ed.find(old_ed_idx) == ed_to_bl_ed.end())
         {
            const auto & ed = mesh.GetEdgeDescriptor(old_ed_idx);
-           EdgeDescriptor new_ed;
+           EdgeRegion new_ed;
            new_ed.SetEdgeNr(ed.EdgeNr());
            SetEdgeDomains(new_ed,
                           ed.SurfNr(0) == domain ? new_domain : ed.SurfNr(0),
@@ -773,7 +773,7 @@ namespace netgen
 
         if(edge_to_new_edge.find(seg.GetIndex().Nr1()) == edge_to_new_edge.end())
         {
-          EdgeDescriptor ed;
+          EdgeRegion ed;
           ed.SetEdgeNr(next_edge_nr++);
           auto & orig_ed = mesh.GetEdgeDescriptor(seg.GetIndex());
           // the moved segment separates the layer from the rest of the domain
@@ -954,7 +954,7 @@ namespace netgen
         n_edge_descriptors = min2(n_edge_descriptors, info.n_edge_descriptors);
 
         for(auto & sel : mesh.SurfaceElements())
-           if(sel.GetIndex() == FaceDescriptorIndex::FromNr1(info.new_domain))   // 2D: descriptor k <-> domain k
+           if(sel.GetIndex() == FaceRegionIndex::FromNr1(info.new_domain))   // 2D: descriptor k <-> domain k
               sel.SetIndex(info.domain);
 
         // the segments in front of the layer are interior now

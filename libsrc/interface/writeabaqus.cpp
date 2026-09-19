@@ -93,7 +93,7 @@ static void WriteElements ( ostream & out, const Mesh & mesh, int dim, const Ele
       else if constexpr(std::is_same_v<ElIndex,SurfaceElementIndex>)
         index = el.GetIndex().Nr1();
         else
-        index = el.GetIndex();
+        index = el.GetIndex().Nr1();
       elset_map[{index, el.GetNP()}].Append(ei);
     }
 

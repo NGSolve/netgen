@@ -66,15 +66,15 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
       STLLine* line = meshlines[i-1];
       (*testout) << "store line " << i << endl;
 
-      // Create EdgeDescriptor for this edge
-      EdgeDescriptorIndex edsi_left, edsi_right = EdgeDescriptorIndex::INVALID;
+      // Create EdgeRegion for this edge
+      EdgeRegionIndex edsi_left, edsi_right = EdgeRegionIndex::INVALID;
       {
         int lt = line->GetLeftTrig(1);
         int rt = line->GetRightTrig(1);
         int left_face = geom.GetTriangle(lt).GetFaceNum();
         int right_face = (rt != 0) ? geom.GetTriangle(rt).GetFaceNum() : -1;
 
-        EdgeDescriptor ed_left;
+        EdgeRegion ed_left;
         ed_left.SetEdgeNr(i);
         ed_left.SetSurfNr(0, left_face);
         if (rt != 0) ed_left.SetSurfNr(1, right_face);
@@ -82,7 +82,7 @@ static void STLFindEdges (STLGeometry & geom, Mesh & mesh,
         mesh.GetEdgeDescriptor(edsi_left).SetIndex(left_face);
 
         if (rt != 0) {
-          EdgeDescriptor ed_right;
+          EdgeRegion ed_right;
           ed_right.SetEdgeNr(i);
           ed_right.SetSurfNr(0, right_face);
           ed_right.SetSurfNr(1, left_face);

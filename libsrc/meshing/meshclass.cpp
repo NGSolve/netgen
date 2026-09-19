@@ -42,7 +42,7 @@ namespace netgen
 
         if(indices && indices->Size() > 0)
           {
-            bool contained = indices->Contains(mesh[ei].GetIndex());
+            bool contained = indices->Contains(mesh[ei].GetIndex().Nr1());
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
 
@@ -62,7 +62,7 @@ namespace netgen
 
         if(indices && indices->Size() > 0)
           {
-            bool contained = indices->Contains(mesh[ei].GetIndex());
+            bool contained = indices->Contains(mesh[ei].GetIndex().Nr1());
             if((allowindex && !contained) || (!allowindex && contained)) continue;
           }
 
@@ -289,16 +289,12 @@ namespace netgen
     surfelements = mesh2.surfelements;
     volelements = mesh2.volelements;
     lockedpoints = mesh2.lockedpoints;
-    facedecoding = mesh2.facedecoding;
-    edgedecoding = mesh2.edgedecoding;
+    regions = mesh2.regions;
     dimension = mesh2.dimension;
     hglob = mesh2.hglob;
     hmin = mesh2.hmin;
     maxhdomain = mesh2.maxhdomain;
     pointelements = mesh2.pointelements;
-
-    materials = mesh2.materials;
-    vertexnames = mesh2.vertexnames;
 
     numvertices = mesh2.numvertices;
 
@@ -322,15 +318,15 @@ namespace netgen
     surfelementht = nullptr;
 
     openelements.SetSize(0);
-    facedecoding.SetSize(0);
-    edgedecoding = Array<EdgeDescriptor, EdgeDescriptorIndex>();
+    Regions<2>().SetSize(0);
+    Regions<1>() = RegionArray<1>();
 
     ident = make_unique<Identifications> (*this);
     topology = MeshTopology (*this);
     curvedelems = make_unique<CurvedElements> (*this);
     clusters = make_unique<AnisotropicClusters> (*this);
 
-    edgedecoding.SetSize(0);
+    Regions<1>().SetSize(0);
 
 #ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
@@ -344,10 +340,10 @@ namespace netgen
   { 
     surfelements.SetSize(0);
     /*
-    for (int i = 0; i < facedecoding.Size(); i++)
-      facedecoding[i].firstelement = SurfaceElementIndex::INVALID;
+    for (int i = 0; i < Regions<2>().Size(); i++)
+      Regions<2>()[i].firstelement = SurfaceElementIndex::INVALID;
     */
-    for (auto & fd : facedecoding)
+    for (auto & fd : Regions<2>())
       fd.firstelement = SurfaceElementIndex::INVALID;
     
     timestamp = NextTimeStamp();
@@ -459,10 +455,10 @@ namespace netgen
       }
 
     if (!HasFaceDescriptor(el))
-      cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
+      cerr << "has no face descriptor: fd.size = " << Regions<2>().Size() << ", ind = " << el.index << endl;
 
-    surfelements.Last().next = facedecoding[el.index].firstelement;
-    facedecoding[el.index].firstelement = si;
+    surfelements.Last().next = Regions<2>()[el.index].firstelement;
+    Regions<2>()[el.index].firstelement = si;
 
     if (SurfaceArea().Valid())
       SurfaceArea().Add (el);
@@ -494,12 +490,12 @@ namespace netgen
 
     surfelements[sei] = el;
     if (!HasFaceDescriptor(el))
-      cerr << "has no facedecoding: fd.size = " << facedecoding.Size() << ", ind = " << el.index << endl;
+      cerr << "has no face descriptor: fd.size = " << Regions<2>().Size() << ", ind = " << el.index << endl;
 
     // add lock-free to list ... slow, call RebuildSurfaceElementLists later
     /*
-    surfelements[sei].next = facedecoding[el.index].firstelement;
-    auto & head = reinterpret_cast<atomic<SurfaceElementIndex>&> (facedecoding[el.index].firstelement);
+    surfelements[sei].next = Regions<2>()[el.index].firstelement;
+    auto & head = reinterpret_cast<atomic<SurfaceElementIndex>&> (Regions<2>()[el.index].firstelement);
     while (!head.compare_exchange_weak (surfelements[sei].next, sei))
       ;
     */
@@ -615,7 +611,7 @@ namespace netgen
     /*
     auto seg_fdi = [this](const Segment& s) -> int {
       if (HasEdgeDescriptor(s))
-        { auto fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
+        { auto fdi = Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     */
@@ -873,12 +869,12 @@ namespace netgen
         outfile << endl << endl;
       }
 
-    if (edgedecoding.Size())
+    if (Regions<1>().Size())
       {
-        outfile << "\n\nedgedescriptors" << endl << edgedecoding.Size() << endl;
-        for (int ii = 0; ii < edgedecoding.Size(); ii++)
+        outfile << "\n\nedgedescriptors" << endl << Regions<1>().Size() << endl;
+        for (int ii = 0; ii < Regions<1>().Size(); ii++)
           {
-            const EdgeDescriptor & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(ii)];
+            const EdgeRegion & ed = Regions<1>()[EdgeRegionIndex::FromNr0(ii)];
             outfile << ed.EdgeNr() << " "
                     << ed.SurfNr(0) << " " << ed.SurfNr(1) << " "
                     << ed.SingEdgeLeft() << " " << ed.SingEdgeRight() << " "
@@ -892,7 +888,7 @@ namespace netgen
     int ncd3 = GetNCD3Names();
     int cntcd3names = 0;
     for (int ii = 0; ii < ncd3; ii++)
-      if (vertexnames[ii]) cntcd3names++;
+      if (Regions<0>()[VertexRegionIndex::FromNr0(ii)].HasName()) cntcd3names++;
 
     if(cntcd3names)
       {
@@ -1177,7 +1173,7 @@ namespace netgen
     int invertsurf = 0;  // globflags.GetDefineFlag ("invertsurfacemesh");
 
 
-    facedecoding.SetSize(0);
+    Regions<2>().SetSize(0);
 
     bool endmesh = false;
 
@@ -1214,7 +1210,7 @@ namespace netgen
             {
                 int surfnr, domin, domout, tlosurf, bcprop;
                 infile >> surfnr >> domin >> domout >> tlosurf >> bcprop;
-                auto faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, tlosurf));
+                auto faceind = AddFaceDescriptor (FaceRegion(surfnr, domin, domout, tlosurf));
                 GetFaceDescriptor(faceind).SetBCProperty(bcprop);
             }
           }
@@ -1246,18 +1242,18 @@ namespace netgen
                   }
                 */
                 
-                for (int j = 1; j <= facedecoding.Size(); j++)
+                for (int j = 1; j <= Regions<2>().Size(); j++)
                   if (GetFaceDescriptor(j).SurfNr() == surfnr &&
                       GetFaceDescriptor(j).BCProperty() == bcp &&
                       GetFaceDescriptor(j).DomainIn() == domin &&
                       GetFaceDescriptor(j).DomainOut() == domout)
                     faceind = j;
 
-                // if (facedecoding.Size()) faceind = 1;   // for timing 
+                // if (Regions<2>().Size()) faceind = 1;   // for timing 
 
                 if (!faceind)
                   {
-                    faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0)).Nr1();
+                    faceind = AddFaceDescriptor (FaceRegion(surfnr, domin, domout, 0)).Nr1();
                     GetFaceDescriptor(faceind).SetBCProperty (bcp);
                   }
 
@@ -1434,7 +1430,9 @@ namespace netgen
             for (int i = 0; i < n; i++)
               {
                 Element0d el;
-                infile >> el.pnum >> el.index;
+                int index;
+                infile >> el.pnum >> index;
+                el.SetIndex(index);
                 pointelements.Append (el);
               }
             PrintMessage (3, n, " pointelements done");
@@ -1537,10 +1535,10 @@ namespace netgen
         if ( strcmp (str, "edgedescriptors" ) == 0)
           {
             infile >> n;
-            edgedecoding.SetSize(n);
+            Regions<1>().SetSize(n);
             for (int ii = 0; ii < n; ii++)
               {
-                EdgeDescriptor & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(ii)];
+                EdgeRegion & ed = Regions<1>()[EdgeRegionIndex::FromNr0(ii)];
                 int ednr, s0, s1, tlo;
                 double sl, sr;
                 infile >> ednr >> s0 >> s1 >> sl >> sr >> tlo;
@@ -1584,7 +1582,7 @@ namespace netgen
               {
                 string nextcd3name;
                 ReadNumberAndName( infile, cd3nrs[i], nextcd3name );
-                vertexnames[cd3nrs[i]-1] = nextcd3name;
+                Regions<0>()[VertexRegionIndex::FromNr1(cd3nrs[i])].SetName(nextcd3name);
               }
             if (GetDimension() < 3)
               {
@@ -1773,7 +1771,7 @@ namespace netgen
       }
 
     // reconstruct edge descriptors from segment data if not loaded from file
-    if (edgedecoding.Size() == 0)
+    if (Regions<1>().Size() == 0)
       ReconstructEdgeDescriptors(&seg_surfnrs, &seg_edgenrs);
     else if (seg_edgenrs.Size() > 0)
       {
@@ -1794,9 +1792,9 @@ namespace netgen
             // Find matching ED: prefer exact (edgenr, surfnr1, surfnr2, fdindex) match
             int best = -1;
             int best_no_fdi = -1;
-            for (int j = 0; j < edgedecoding.Size(); j++)
+            for (int j = 0; j < Regions<1>().Size(); j++)
               {
-                const auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(j)];
+                const auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(j)];
                 if (ed.EdgeNr() == seg_edgenr)
                   {
                     if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
@@ -2004,9 +2002,10 @@ namespace netgen
         
         if (comm.Rank() == 0)
           {
-            archive & facedecoding;
+            archive & Regions<2>();
             archive.NeedsVersion("netgen", names_in_descriptors_version);
-            archive & materials & vertexnames;
+            ArchiveRegionNames<3>(archive);
+            ArchiveRegionNames<0>(archive);
             auto mynv = numglob;
             archive & mynv;   // numvertices;
             archive & *ident;
@@ -2023,7 +2022,7 @@ namespace netgen
             if(archive.GetVersion("netgen") >= "v6.2.2603-26")
               {
                 archive.NeedsVersion("netgen", "v6.2.2603-26");
-                archive & edgedecoding;
+                archive & Regions<1>();
               }
           }
         
@@ -2039,12 +2038,13 @@ namespace netgen
     archive & volelements;
     archive & segments;
     archive & pointelements;
-    archive & facedecoding;
+    archive & Regions<2>();
     Array<optional<string>> bcnames2d_compat;
     if (archive.GetVersion("netgen") >= names_in_descriptors_version)
       {
         archive.NeedsVersion("netgen", names_in_descriptors_version);
-        archive & materials & vertexnames;
+        ArchiveRegionNames<3>(archive);
+        ArchiveRegionNames<0>(archive);
       }
     else
       {
@@ -2054,11 +2054,11 @@ namespace netgen
         auto [mats, bcnames, cd2names, cd3names] = ReadRegionNamesCompat(archive);
         SetDomainNames(std::move(mats));
         if (dimension == 1)
-          vertexnames = std::move(bcnames);   // bc names of 1D meshes are the vertex names
+          SetRegionNames<0>(bcnames);   // bc names of 1D meshes are the vertex names
         if (dimension == 2)
           bcnames2d_compat = std::move(bcnames);
         if (dimension == 3)
-          vertexnames = std::move(cd3names);
+          SetRegionNames<0>(cd3names);
         for (int i = 0; i < cd2names.Size(); i++)
           if (cd2names[i])
             SetCD2NameCompat(i+1, *cd2names[i]);
@@ -2083,7 +2083,7 @@ namespace netgen
     if(archive.GetVersion("netgen") >= "v6.2.2603-26")
       {
         archive.NeedsVersion("netgen", "v6.2.2603-26");
-        archive & edgedecoding;
+        archive & Regions<1>();
       }
 
     if (archive.Input())
@@ -2092,7 +2092,7 @@ namespace netgen
         int ntasks = GetCommunicator().Size();
         
         RebuildSurfaceElementLists();
-        if (edgedecoding.Size() == 0)
+        if (Regions<1>().Size() == 0)
           ReconstructEdgeDescriptors(nullptr, nullptr);
         for (int i = 0; i < bcnames2d_compat.Size(); i++)
           if (bcnames2d_compat[i])
@@ -2141,7 +2141,7 @@ namespace netgen
     int oldnp = GetNP();
     int oldne = GetNSeg();
     int oldnd = GetNDomains();
-    int oldned = edgedecoding.Size();
+    int oldned = Regions<1>().Size();
     bool merge_has_gi2 = false;
 
     for (auto & el : SurfaceElements())
@@ -2177,7 +2177,7 @@ namespace netgen
                 surfnr += max_surfnr;
 
 
-                for (int j = 1; j <= facedecoding.Size(); j++)
+                for (int j = 1; j <= Regions<2>().Size(); j++)
                   if (GetFaceDescriptor(j).SurfNr() == surfnr &&
                       GetFaceDescriptor(j).BCProperty() == bcp &&
                       GetFaceDescriptor(j).DomainIn() == domin &&
@@ -2186,7 +2186,7 @@ namespace netgen
 
                 if (!faceind)
                   {
-                    faceind = AddFaceDescriptor (FaceDescriptor(surfnr, domin, domout, 0)).Nr1();
+                    faceind = AddFaceDescriptor (FaceRegion(surfnr, domin, domout, 0)).Nr1();
                     if(GetDimension() == 2) bcp++;
                     GetFaceDescriptor(faceind).SetBCProperty (bcp);
                   }
@@ -2320,7 +2320,7 @@ namespace netgen
             infile >> n;
             for (int ii = 0; ii < n; ii++)
               {
-                EdgeDescriptor ed;
+                EdgeRegion ed;
                 int ednr, s0, s1, tlo;
                 double sl, sr;
                 infile >> ednr >> s0 >> s1 >> sl >> sr >> tlo;
@@ -2351,7 +2351,7 @@ namespace netgen
                     infile >> nm;
                     ed.SetName(nm);
                   }
-                edgedecoding.Append(ed);
+                Regions<1>().Append(ed);
               }
           }
 
@@ -2423,7 +2423,7 @@ namespace netgen
     topology.Update();
     clusters -> Update();
 
-    if (edgedecoding.Size() == 0)
+    if (Regions<1>().Size() == 0)
       ReconstructEdgeDescriptors(&merge_seg_surfnrs, &merge_seg_edgenrs);
     else if (merge_has_gi2)
       {
@@ -2442,9 +2442,9 @@ namespace netgen
               }
             int best = -1;
             int best_no_fdi = -1;
-            for (int j = 0; j < edgedecoding.Size(); j++)
+            for (int j = 0; j < Regions<1>().Size(); j++)
               {
-                const auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(j)];
+                const auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(j)];
                 if (ed.EdgeNr() == seg_edgenr)
                   {
                     if (ed.SurfNr(0) == snr1 && ed.SurfNr(1) == snr2)
@@ -2584,8 +2584,8 @@ namespace netgen
                                            const Array<int, SegmentIndex> * seg_edgenrs)
   {
     Array<string> oldnames;   // names set before the reconstruction (readers name first)
-    for (const auto & ed : edgedecoding) oldnames.Append(ed.GetName());
-    edgedecoding.SetSize(0);
+    for (const auto & ed : Regions<1>()) oldnames.Append(ed.GetName());
+    Regions<1>().SetSize(0);
 
     // find the max index value across all segments
     int maxindex = 0;
@@ -2596,7 +2596,7 @@ namespace netgen
     if (maxindex < 1) return;
 
     // create edge descriptors indexed by seg.GetIndex() (1-based)
-    edgedecoding.SetSize(maxindex);
+    Regions<1>().SetSize(maxindex);
 
     // mark which indices are used
     Array<bool> used(maxindex);
@@ -2619,7 +2619,7 @@ namespace netgen
             snr1 = (*seg_surfnrs)[segi].first;
             snr2 = (*seg_surfnrs)[segi].second;
           }
-        auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr1(idx)];
+        auto & ed = Regions<1>()[EdgeRegionIndex::FromNr1(idx)];
         int ednr = -1;
         if (seg_edgenrs && seg_edgenrs->Range().Contains(segi))
           ednr = (*seg_edgenrs)[segi];
@@ -2634,20 +2634,20 @@ namespace netgen
       }
     }
 
-    for (int i = 0; i < min(oldnames.Size(), edgedecoding.Size()); i++)
+    for (int i = 0; i < min(oldnames.Size(), Regions<1>().Size()); i++)
       if (oldnames[i] != "default")
-        edgedecoding[EdgeDescriptorIndex::FromNr0(i)].SetName(oldnames[i]);
+        Regions<1>()[EdgeRegionIndex::FromNr0(i)].SetName(oldnames[i]);
 
     RebuildFDIndices();
   }
 
   void Mesh :: RebuildFDIndices ()
   {
-    // Recompute EdgeDescriptor::index_ from surfnr + domin/domout vs face descriptors.
-    for (int edi = 0; edi < edgedecoding.Size(); edi++)
+    // Recompute EdgeRegion::index_ from surfnr + domin/domout vs face descriptors.
+    for (int edi = 0; edi < Regions<1>().Size(); edi++)
       {
-        auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(edi)];
-        ed.SetIndex(FaceDescriptorIndex::INVALID);
+        auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(edi)];
+        ed.SetIndex(FaceRegionIndex::INVALID);
         for (int k = 1; k <= GetNFD(); k++)
           {
             const auto & fd = GetFaceDescriptor(k);
@@ -2900,7 +2900,7 @@ namespace netgen
            {
              auto el = (*this)[ei];
              if(el.IsDeleted()) return;
-             if (dom == 0 || dom == el.GetIndex())
+             if (dom == 0 || dom == el.GetIndex().Nr1())
                {
                  if (el.GetNP() == 4)
                    {
@@ -3226,7 +3226,7 @@ namespace netgen
                   auto el = VolumeElement(ei);
                   if(el.IsDeleted()) continue;
                   
-                  if (dom == 0 || el.GetIndex() == dom)
+                  if (dom == 0 || el.GetIndex().Nr1() == dom)
                     {
                       for (int j = 1; j <= el.GetNFaces(); j++)
                         {
@@ -3242,7 +3242,7 @@ namespace netgen
                               if (faceht.Used (i3))
                                 {
                                   tval i2 = faceht.Get(i3);
-                                  if (i2.index == el.GetIndex())
+                                  if (i2.index == el.GetIndex().Nr1())
                                     {
                                       i2.index = long(PointIndex::BASE)-1;
                                       faceht.Set (i3, i2);
@@ -3269,7 +3269,7 @@ namespace netgen
                                   PointIndices<3> i3(hel[0], hel[1], hel[2]);
                                   
                                   tval i2;
-                                  i2.index = el.GetIndex();
+                                  i2.index = el.GetIndex().Nr1();
                                   i2.p4 = (hel.GetNP() == 3)
                                     ? PointIndex (PointIndex::INVALID)
                                     : hel[3];
@@ -3375,8 +3375,9 @@ namespace netgen
   void Mesh :: FindOpenSegments (int surfnr)
   {
     auto seg_fdi = [this](const Segment& s) -> int {
-      if (HasEdgeDescriptor(s))
-        { auto fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
+      const Mesh & self = *this;
+      if (self.HasEdgeDescriptor(s))
+        { auto fdi = self.Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     // int i, j, k;
@@ -3657,13 +3658,13 @@ namespace netgen
 
     RebuildSurfaceElementLists ();
     /*
-    for (int i = 0; i < facedecoding.Size(); i++)
-      facedecoding[i].firstelement = SurfaceElementIndex::INVALID;
+    for (int i = 0; i < Regions<2>().Size(); i++)
+      Regions<2>()[i].firstelement = SurfaceElementIndex::INVALID;
     for (int i = surfelements.Size()-1; i >= 0; i--)
       {
         int ind = surfelements[i].GetIndex();
-        surfelements[i].next = facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement;
-        facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement = i;
+        surfelements[i].next = Regions<2>()[FaceRegionIndex::FromNr1(ind)].firstelement;
+        Regions<2>()[FaceRegionIndex::FromNr1(ind)].firstelement = i;
       }
     */
 
@@ -4593,13 +4594,13 @@ namespace netgen
 
     GetIdentifications().MapPoints(op2np);
     /*
-    for (int i = 0; i < facedecoding.Size(); i++)
-      facedecoding[i].firstelement = SurfaceElementIndex::INVALID;
+    for (int i = 0; i < Regions<2>().Size(); i++)
+      Regions<2>()[i].firstelement = SurfaceElementIndex::INVALID;
     for (int i = surfelements.Size()-1; i >= 0; i--)
       {
         int ind = surfelements[i].GetIndex();
-        surfelements[i].next = facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement;
-        facedecoding[FaceDescriptorIndex::FromNr1(ind)].firstelement = i;
+        surfelements[i].next = Regions<2>()[FaceRegionIndex::FromNr1(ind)].firstelement;
+        Regions<2>()[FaceRegionIndex::FromNr1(ind)].firstelement = i;
       }
     */
     RebuildSurfaceElementLists ();
@@ -5127,12 +5128,12 @@ namespace netgen
   {
     int ndom = 0;
 
-    for (int k = 0; k < facedecoding.Size(); k++)
+    for (int k = 0; k < Regions<2>().Size(); k++)
       {
-        if (facedecoding[FaceDescriptorIndex::FromNr0(k)].DomainIn() > ndom)
-          ndom = facedecoding[FaceDescriptorIndex::FromNr0(k)].DomainIn();
-        if (facedecoding[FaceDescriptorIndex::FromNr0(k)].DomainOut() > ndom)
-          ndom = facedecoding[FaceDescriptorIndex::FromNr0(k)].DomainOut();
+        if (Regions<2>()[FaceRegionIndex::FromNr0(k)].DomainIn() > ndom)
+          ndom = Regions<2>()[FaceRegionIndex::FromNr0(k)].DomainIn();
+        if (Regions<2>()[FaceRegionIndex::FromNr0(k)].DomainOut() > ndom)
+          ndom = Regions<2>()[FaceRegionIndex::FromNr0(k)].DomainOut();
       }
 
     return ndom;
@@ -5142,7 +5143,7 @@ namespace netgen
   {
     // domain names of 2D/1D meshes live in the face/edge descriptors, vertex names stay
     if (dim != 3)
-      materials.SetSize(0);
+      Regions<3>().SetSize(0);
     dimension = dim;
   }
 
@@ -6506,17 +6507,17 @@ namespace netgen
       }
 
     /*
-      facedecoding.SetSize (dom);
+      Regions<2>().SetSize (dom);
       for (i = 1; i <= dom; i++)
       {
-      facedecoding.Elem(i).surfnr = 0;
-      facedecoding.Elem(i).domin = i;
-      facedecoding.Elem(i).domout = 0;
+      Regions<2>().Elem(i).surfnr = 0;
+      Regions<2>().Elem(i).domin = i;
+      Regions<2>().Elem(i).domout = 0;
       }
     */
     ClearFaceDescriptors();
     for (int i = 1; i <= dom; i++)
-      AddFaceDescriptor (FaceDescriptor (0, i, 0, 0));
+      AddFaceDescriptor (FaceRegion (0, i, 0, 0));
     CalcSurfacesOfNode();
     timestamp = NextTimeStamp();
   }
@@ -6524,8 +6525,9 @@ namespace netgen
   void Mesh :: SplitSeparatedFaces ()
   {
     auto seg_fdi = [this](const Segment& s) -> int {
-      if (HasEdgeDescriptor(s))
-        { auto fdi = edgedecoding[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
+      const Mesh & self = *this;
+      if (self.HasEdgeDescriptor(s))
+        { auto fdi = self.Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     PrintMessage (3, "SplitSeparateFaces");
@@ -6595,7 +6597,7 @@ namespace netgen
               {
                 if (!nface)
                   {
-                    FaceDescriptor nfd = GetFaceDescriptor(fdi);
+                    FaceRegion nfd = GetFaceDescriptor(fdi);
                     nface = AddFaceDescriptor (nfd).Nr1();
                   }
 
@@ -6606,14 +6608,14 @@ namespace netgen
         // reconnect list
         if (nface)
           {
-            facedecoding[FaceDescriptorIndex::FromNr1(nface)].firstelement = SurfaceElementIndex::INVALID;
-            facedecoding[FaceDescriptorIndex::FromNr1(fdi)].firstelement = SurfaceElementIndex::INVALID;
+            Regions<2>()[FaceRegionIndex::FromNr1(nface)].firstelement = SurfaceElementIndex::INVALID;
+            Regions<2>()[FaceRegionIndex::FromNr1(fdi)].firstelement = SurfaceElementIndex::INVALID;
 
             for (int i = 0; i < els_of_face.Size(); i++)
               {
                 auto ind = SurfaceElement(els_of_face[i]).GetIndex();
-                SurfaceElement(els_of_face[i]).next = facedecoding[ind].firstelement;
-                facedecoding[ind].firstelement = els_of_face[i];
+                SurfaceElement(els_of_face[i]).next = Regions<2>()[ind].firstelement;
+                Regions<2>()[ind].firstelement = els_of_face[i];
               }
 
             // map the segments - also create per-face EDs so edsi stays in sync
@@ -6633,7 +6635,7 @@ namespace netgen
                             }
                           else
                             {
-                              EdgeDescriptor new_ed = edgedecoding[seg.GetIndex()];
+                              EdgeRegion new_ed = Regions<1>()[seg.GetIndex()];
                               new_ed.SetIndex(nface);
                               auto new_edsi = AddEdgeDescriptor(new_ed);
                               split_ed_cache[key] = new_edsi.Nr1();
@@ -6712,7 +6714,7 @@ namespace netgen
       {
       if (!nface)
       {
-      FaceDescriptor nfd = GetFaceDescriptor(fdi);
+      FaceRegion nfd = GetFaceDescriptor(fdi);
       nface = AddFaceDescriptor (nfd).Nr1();
       }
 
@@ -6912,14 +6914,14 @@ namespace netgen
   {
     static Timer t("Mesh::LinkSurfaceElements"); RegionTimer reg (t);    
     
-    for (int i = 0; i < facedecoding.Size(); i++)
-      facedecoding[FaceDescriptorIndex::FromNr0(i)].firstelement = SurfaceElementIndex::INVALID;
+    for (int i = 0; i < Regions<2>().Size(); i++)
+      Regions<2>()[FaceRegionIndex::FromNr0(i)].firstelement = SurfaceElementIndex::INVALID;
     for (int i = surfelements.Size()-1; i >= 0; i--)
       {
         SurfaceElementIndex sei = SurfaceElementIndex::FromNr0(i);
         auto ind = surfelements[sei].GetIndex();
-        surfelements[sei].next = facedecoding[ind].firstelement;
-        facedecoding[ind].firstelement = sei;
+        surfelements[sei].next = Regions<2>()[ind].firstelement;
+        Regions<2>()[ind].firstelement = sei;
       }
   }
 
@@ -6941,7 +6943,7 @@ namespace netgen
 
      sei.SetSize(0);
 
-     SurfaceElementIndex si = facedecoding[FaceDescriptorIndex::FromNr1(facenr)].firstelement;
+     SurfaceElementIndex si = Regions<2>()[FaceRegionIndex::FromNr1(facenr)].firstelement;
      while (si.IsValid())
      {
        if ( (*this)[si].GetIndex().Nr1() == facenr && (*this)[si][0].IsValid() &&
@@ -7095,7 +7097,7 @@ namespace netgen
     {
       int cnt_local = 0;
       for (auto el : volelements.Range(myrange))
-        if ((domain==0 || el.GetIndex() == domain) && !LegalTet (el))
+        if ((domain==0 || el.GetIndex().Nr1() == domain) && !LegalTet (el))
           cnt_local++;
       cnt += cnt_local;
     });
@@ -7353,7 +7355,7 @@ namespace netgen
                  if(el.IsDeleted())
                      return;
 
-                 if(domain && el.GetIndex() != domain)
+                 if(domain && el.GetIndex().Nr1() != domain)
                      return;
 
                  for (PointIndex pi : el.PNums())
@@ -7369,7 +7371,7 @@ namespace netgen
                  if(el.IsDeleted())
                      return;
 
-                 if(domain && el.GetIndex() != domain)
+                 if(domain && el.GetIndex().Nr1() != domain)
                      return;
 
                  for (PointIndex pi : el.PNums())
@@ -7529,8 +7531,8 @@ namespace netgen
           continue;
         auto & sel = (*this)[sei];
         int face = sel.GetIndex().Nr1();
-        int domin = (*this)[eli0].GetIndex();
-        int domout = eli1.IsValid() ? (*this)[eli1].GetIndex() : 0;
+        int domin = (*this)[eli0].GetIndex().Nr1();
+        int domout = eli1.IsValid() ? (*this)[eli1].GetIndex().Nr1() : 0;
         if(domin < domout)
           swap(domin, domout);
 
@@ -7538,13 +7540,13 @@ namespace netgen
         if(face_doms_2_new_face.find(key) == face_doms_2_new_face.end())
           {
             {
-              auto & fd = FaceDescriptors()[FaceDescriptorIndex::FromNr1(face)];
+              auto & fd = FaceDescriptors()[FaceRegionIndex::FromNr1(face)];
               if(domout == 0 && min(fd.DomainIn(), fd.DomainOut()) > 0)
                 continue;
             }
             if(!first_visit[face-1]) {
               nfaces++;
-              FaceDescriptor new_fd = FaceDescriptors()[FaceDescriptorIndex::FromNr1(face)];
+              FaceRegion new_fd = FaceDescriptors()[FaceRegionIndex::FromNr1(face)];
               new_fd.bcprop = nfaces;
               new_fd.domin = domin;
               new_fd.domout = domout;
@@ -7554,7 +7556,7 @@ namespace netgen
             }
             else {
               face_doms_2_new_face[key] = face;
-              auto & fd = FaceDescriptors()[FaceDescriptorIndex::FromNr1(face)];
+              auto & fd = FaceDescriptors()[FaceRegionIndex::FromNr1(face)];
               fd.domin = domin;
               fd.domout = domout;
             }
@@ -7596,7 +7598,7 @@ namespace netgen
 
       for(auto fi : Range(nfaces))
       {
-        auto & fd = mesh.FaceDescriptors()[FaceDescriptorIndex::FromNr0(fi)];
+        auto & fd = mesh.FaceDescriptors()[FaceRegionIndex::FromNr0(fi)];
         if (regex_match(fd.GetBCName(), regex_faces) 
           || keep_domain[fd.DomainIn()] || keep_domain[fd.DomainOut()])
             keep_face.SetBit(fd.BCProperty());
@@ -7605,7 +7607,7 @@ namespace netgen
     else {
       for(auto fi : Range(nfaces))
       {
-        auto & fd = mesh.FaceDescriptors()[FaceDescriptorIndex::FromNr0(fi)];
+        auto & fd = mesh.FaceDescriptors()[FaceRegionIndex::FromNr0(fi)];
         auto mat = GetMaterial(fd.BCProperty());
         if (regex_match(mat, regex_faces))
             keep_face.SetBit(fd.BCProperty());
@@ -7624,7 +7626,7 @@ namespace netgen
       }
     };
 
-    filter_elements(mesh.VolumeElements(), keep_domain, [](const ElementRef & el) { return el.GetIndex(); });
+    filter_elements(mesh.VolumeElements(), keep_domain, [](const ElementRef & el) { return el.GetIndex().Nr1(); });
     // keep_face is filled by BCProperty, tested here by descriptor number (they coincide for generated meshes)
     filter_elements(mesh.SurfaceElements(), keep_face, [](const Element2d & el) { return el.GetIndex().Nr1(); });
 
@@ -7661,30 +7663,26 @@ namespace netgen
     if (domnr < 1) throw RangeException("Illegal domain number ", domnr, 1, domnr);
     if (dimension == 2)
       {
-        while (facedecoding.Size() < domnr)
+        while (Regions<2>().Size() < domnr)
           {
-            FaceDescriptor fd(0, 0, 0, 0);
-            fd.SetBCProperty(facedecoding.Size()+1);
-            facedecoding.Append(fd);
+            FaceRegion fd(0, 0, 0, 0);
+            fd.SetBCProperty(Regions<2>().Size()+1);
+            Regions<2>().Append(fd);
           }
-        facedecoding[FaceDescriptorIndex::FromNr1(domnr)].SetBCName(mat);
+        Regions<2>()[FaceRegionIndex::FromNr1(domnr)].SetBCName(mat);
       }
     else if (dimension == 1)
       {
-        while (edgedecoding.Size() < domnr)
-          edgedecoding.Append(EdgeDescriptor());
-        edgedecoding[EdgeDescriptorIndex::FromNr1(domnr)].SetName(mat);
+        while (Regions<1>().Size() < domnr)
+          Regions<1>().Append(EdgeRegion());
+        Regions<1>()[EdgeRegionIndex::FromNr1(domnr)].SetName(mat);
       }
     else
       {
-        if (domnr > materials.Size())
-          {
-            int olds = materials.Size();
-            materials.SetSize (domnr);
-            for (int i = olds; i < domnr-1; i++)
-              materials[i] = "default";   // set, like the old code
-          }
-        materials[domnr-1] = mat;
+        auto & vols = Regions<3>();
+        while (vols.Size() < domnr)
+          vols.Append(VolumeRegion(defaultmat));   // set, like the old code
+        vols[VolumeRegionIndex::FromNr1(domnr)].SetName(mat);
       }
   }
 
@@ -7693,26 +7691,26 @@ namespace netgen
   const string & Mesh :: GetMaterial (int domnr) const
   {
     if (dimension == 2)
-      return (domnr >= 1 && domnr <= facedecoding.Size()) ? facedecoding[FaceDescriptorIndex::FromNr1(domnr)].GetBCName() : defaultmat;
+      return (domnr >= 1 && domnr <= Regions<2>().Size()) ? Regions<2>()[FaceRegionIndex::FromNr1(domnr)].GetBCName() : defaultmat;
     if (dimension == 1)
-      return (domnr >= 1 && domnr <= edgedecoding.Size()) ? edgedecoding[EdgeDescriptorIndex::FromNr1(domnr)].GetName() : defaultmat;
+      return (domnr >= 1 && domnr <= Regions<1>().Size()) ? Regions<1>()[EdgeRegionIndex::FromNr1(domnr)].GetName() : defaultmat;
     return *GetMaterialPtr(domnr);
   }
 
   Array<optional<string>> Mesh :: DomainNames () const
   {
     Array<optional<string>> names;
-    if (dimension == 3) { names = materials; return names; }
+    if (dimension == 3) return RegionNames<3>();
     if (dimension == 2)
-      for (const auto & fd : facedecoding) names.Append(fd.GetBCName());
+      for (const auto & fd : Regions<2>()) names.Append(fd.GetBCName());
     else
-      for (const auto & ed : edgedecoding) names.Append(ed.GetName());
+      for (const auto & ed : Regions<1>()) names.Append(ed.GetName());
     return names;
   }
 
   void Mesh :: SetDomainNames (Array<optional<string>> names)
   {
-    if (dimension == 3) { materials = std::move(names); return; }
+    if (dimension == 3) { SetRegionNames<3>(names); return; }
     for (int i = 0; i < names.Size(); i++)
       if (names[i]) SetMaterial(i+1, *names[i]);
   }
@@ -7720,8 +7718,7 @@ namespace netgen
   void Mesh ::SetNBCNames ( int nbcn )
   {
     if (dimension >= 2) return;   // boundary names live on the descriptors
-    vertexnames.SetSize(nbcn);
-    vertexnames = nullopt;
+    Regions<0>() = RegionArray<0>(nbcn);
   }
 
   void Mesh ::SetBCName ( int bcnr, const string & abcname )
@@ -7729,30 +7726,26 @@ namespace netgen
     if (bcnr < 0) throw RangeException("Illegal bc number ", bcnr, 0, bcnr);
     if (dimension == 3)
       {
-        while (facedecoding.Size() <= bcnr)
+        while (Regions<2>().Size() <= bcnr)
           {
-            FaceDescriptor fd(0, 0, 0, 0);
-            fd.SetBCProperty(facedecoding.Size()+1);
-            facedecoding.Append(fd);
+            FaceRegion fd(0, 0, 0, 0);
+            fd.SetBCProperty(Regions<2>().Size()+1);
+            Regions<2>().Append(fd);
           }
-        facedecoding[FaceDescriptorIndex::FromNr0(bcnr)].SetBCName(abcname);
+        Regions<2>()[FaceRegionIndex::FromNr0(bcnr)].SetBCName(abcname);
       }
     else if (dimension == 2)
       {
-        while (edgedecoding.Size() <= bcnr)
-          edgedecoding.Append(EdgeDescriptor());
-        edgedecoding[EdgeDescriptorIndex::FromNr0(bcnr)].SetName(abcname);
+        while (Regions<1>().Size() <= bcnr)
+          Regions<1>().Append(EdgeRegion());
+        Regions<1>()[EdgeRegionIndex::FromNr0(bcnr)].SetName(abcname);
       }
     else
       {
-        if (bcnr >= vertexnames.Size())
-          {
-            int oldsize = vertexnames.Size();
-            vertexnames.SetSize (bcnr+1);
-            for (int i = oldsize; i <= bcnr; i++)
-              vertexnames[i] = "default";
-          }
-        vertexnames[bcnr] = abcname;
+        auto & verts = Regions<0>();
+        while (verts.Size() <= bcnr)
+          verts.Append(VertexRegion(default_bc));
+        verts[VertexRegionIndex::FromNr0(bcnr)].SetName(abcname);
       }
   }
 
@@ -7770,7 +7763,7 @@ namespace netgen
       {
         int nbc = 0;
         bool named = false;
-        for (const auto & fd : facedecoding)
+        for (const auto & fd : Regions<2>())
           {
             nbc = max(nbc, fd.BCProperty());
             if (fd.GetBCName() != "default") named = true;
@@ -7779,26 +7772,26 @@ namespace netgen
         names.SetSize(nbc);
         names = "default";
         Array<bool> done(nbc); done = false;
-        for (const auto & fd : facedecoding)
+        for (const auto & fd : Regions<2>())
           if (fd.BCProperty() >= 1 && !done[fd.BCProperty()-1])
             { names[fd.BCProperty()-1] = fd.GetBCName(); done[fd.BCProperty()-1] = true; }
       }
     else if (dimension == 2)
       {
-        for (const auto & ed : edgedecoding)
+        for (const auto & ed : Regions<1>())
           names.Append(ed.GetName());
       }
     else
-      for (auto & n : vertexnames)
-        names.Append(n ? *n : "default");
+      for (auto & vd : Regions<0>())
+        names.Append(vd.GetName());
     return names;
   }
 
-  EdgeDescriptor & Mesh :: EnsureEdgeDescriptor (int nr)
+  EdgeRegion & Mesh :: EnsureEdgeDescriptor (int nr)
   {
-    while (edgedecoding.Size() < nr)
-      edgedecoding.Append(EdgeDescriptor());
-    return edgedecoding[EdgeDescriptorIndex::FromNr1(nr)];
+    while (Regions<1>().Size() < nr)
+      Regions<1>().Append(EdgeRegion());
+    return Regions<1>()[EdgeRegionIndex::FromNr1(nr)];
   }
 
   // cd2names of files and archives: edge names in 3D, vertex names in 2D
@@ -7813,68 +7806,57 @@ namespace netgen
   void Mesh :: SetCD2Name ( int cd2nr, const string & abcname )
   {
     if (dimension != 2) throw Exception("SetCD2Name names vertices of 2D meshes only");
-    cd2nr--;
-    if (cd2nr >= vertexnames.Size())
-      {
-        int oldsize = vertexnames.Size();
-        vertexnames.SetSize(cd2nr+1);
-        for (int i = oldsize; i <= cd2nr; i++)
-          vertexnames[i] = "default";
-      }
-    vertexnames[cd2nr] = abcname.empty() ? string("default") : abcname;
+    auto & verts = Regions<0>();
+    while (verts.Size() < cd2nr)
+      verts.Append(VertexRegion(cd2_default_name));
+    verts[VertexRegionIndex::FromNr1(cd2nr)].SetName(abcname.empty() ? cd2_default_name : abcname);
   }
 
   string Mesh :: cd2_default_name = "default";
   string Mesh :: default_bc = "default";
   const string & Mesh :: GetCD2Name (int cd2nr) const
   {
-    if (dimension == 2 && cd2nr >= 0 && cd2nr < vertexnames.Size() && vertexnames[cd2nr])
-      return *vertexnames[cd2nr];
+    if (dimension == 2 && cd2nr >= 0 && cd2nr < Regions<0>().Size())
+      return Regions<0>()[VertexRegionIndex::FromNr0(cd2nr)].GetName();
     return cd2_default_name;
   }
 
   void Mesh :: SetNCD3Names( int ncd3n )
   {
-    vertexnames.SetSize(ncd3n);
-    vertexnames = nullopt;
+    Regions<0>() = RegionArray<0>(ncd3n);
   }
 
   void Mesh :: SetCD3Name ( int cd3nr, const string & abcname )
   {
-    cd3nr--;
-    (*testout) << "setCD3Name on vertex " << cd3nr << " to " << abcname << endl;
-    if (cd3nr >= vertexnames.Size())
-      {
-        int oldsize = vertexnames.Size();
-        vertexnames.SetSize(cd3nr+1);
-        for(int i= oldsize; i<= cd3nr; i++)
-          vertexnames[i] = nullopt;
-      }
-    if (abcname != "default") vertexnames[cd3nr] = abcname; else vertexnames[cd3nr] = nullopt;
+    (*testout) << "setCD3Name on vertex " << cd3nr-1 << " to " << abcname << endl;
+    auto & verts = Regions<0>();
+    while (verts.Size() < cd3nr)
+      verts.Append(VertexRegion());
+    auto & vd = verts[VertexRegionIndex::FromNr1(cd3nr)];
+    if (abcname != "default") vd.SetName(abcname); else vd.ResetName();
   }
   
   int Mesh :: AddCD3Name (const string & aname)
   {
-    for (int i = 0; i < vertexnames.Size(); i++)
-      if (vertexnames[i] && *vertexnames[i] == aname)
-        return i;
-    vertexnames.Append (aname);
-    return vertexnames.Size()-1;
+    for (auto i : Regions<0>().Range())
+      if (Regions<0>()[i].HasName() && Regions<0>()[i].GetName() == aname)
+        return i.Nr0();
+    return AddRegion(VertexRegion(aname)).Nr0();
   }
   
   string Mesh :: cd3_default_name = "default";
   static string defaultstring  = "default";
   const string & Mesh :: GetCD3Name (int cd3nr) const
   {
-    if (cd3nr < 0 || cd3nr >= vertexnames.Size())
+    if (cd3nr < 0 || cd3nr >= Regions<0>().Size())
       return defaultstring;
-    return vertexnames[cd3nr] ? *vertexnames[cd3nr] : defaultstring;
+    return Regions<0>()[VertexRegionIndex::FromNr0(cd3nr)].GetName();
   }
 
   std::string_view Mesh :: GetRegionName (const Segment & el) const
   {
     if (HasEdgeDescriptor(el))
-      return edgedecoding[el.GetIndex()].GetName();
+      return Regions<1>()[el.GetIndex()].GetName();
     return defaultmat_sv;
   }
 
@@ -7887,7 +7869,7 @@ namespace netgen
 
   std::string_view Mesh :: GetRegionName (const ElementRef & el) const
   {
-    return GetRegionName(3, el.GetIndex());
+    return GetRegionName(3, el.GetIndex().Nr1());
   }
   
 
@@ -8119,7 +8101,7 @@ namespace netgen
     els_per_domain = 0;
 
     for(const auto & el : mesh.VolumeElements())
-      els_per_domain[el.GetIndex()]++;
+      els_per_domain[el.GetIndex().Nr1()]++;
 
     std::map<tuple<int,int>, int> doms_2_new_face;
 
@@ -8165,8 +8147,8 @@ namespace netgen
 
         if(els.Size() == 2 && mesh[els[0]].GetIndex() != mesh[els[1]].GetIndex())
         {
-          auto dom0 = mesh[els[0]].GetIndex();
-          auto dom1 = mesh[els[1]].GetIndex();
+          int dom0 = mesh[els[0]].GetIndex().Nr1();
+          int dom1 = mesh[els[1]].GetIndex().Nr1();
           ElementIndex ei0 = els[0];
           if(dom0 > dom1)
           {
@@ -8179,7 +8161,7 @@ namespace netgen
 
           if(doms_2_new_face.count({dom0, dom1}) == 0)
           {
-            auto fd = FaceDescriptor(-1, dom0, dom1, -1);
+            auto fd = FaceRegion(-1, dom0, dom1, -1);
             auto new_si = mesh.GetNFD()+1;
             fd.SetBCProperty(new_si);
             auto new_face = mesh.AddFaceDescriptor(fd);

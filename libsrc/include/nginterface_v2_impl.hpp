@@ -7,7 +7,7 @@ NGX_INLINE DLL_HEADER Ng_Point Ngx_Mesh :: GetPoint (int nr) const
 template <>
 NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<0> (size_t nr) const
 {
-  return (*mesh).pointelements[nr].index;
+  return (*mesh).pointelements[nr].index.Nr1();
 }
 
 template <>
@@ -40,7 +40,7 @@ NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<2> (size_t nr) const
 template <>
 NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<3> (size_t nr) const
 {
-  return (*mesh)[ElementIndex::FromNr0(nr)].GetIndex();
+  return (*mesh)[ElementIndex::FromNr0(nr)].GetIndex().Nr1();
 }
 
 
@@ -51,7 +51,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   
   Ng_Element ret;
   ret.type = NG_PNT;
-  ret.index = el.index;
+  ret.index = el.index.Nr1();
   ret.mat = el.name;
   
   ret.points.num = 1;
@@ -75,8 +75,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
   ret.facets.base = POINTINDEX_BASE;
   ret.facets.ptr = (int*)&el.pnum;
 
-  auto & vnames = mesh->VertexNames();
-  ret.mat = (el.index >= 1 && el.index <= vnames.Size() && vnames[el.index-1]) ? string_view(*vnames[el.index-1]) : Mesh::defaultmat_sv;
+  ret.mat = mesh->GetRegionName<0>(el.index.Nr1());
     
   ret.is_curved = false;
   return ret;
@@ -186,7 +185,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<3> (size_t nr) const
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
-  ret.index = el.GetIndex();
+  ret.index = el.GetIndex().Nr1();
   ret.mat = *(mesh -> GetMaterialPtr(ret.index));
   ret.points.num = el.GetNP();
   ret.points.ptr = (int*)&el[0];

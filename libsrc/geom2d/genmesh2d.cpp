@@ -116,7 +116,7 @@ namespace netgen
     double edgelength, edgelengthold;
 
     // create edge descriptor for this spline edge
-    EdgeDescriptor ed;
+    EdgeRegion ed;
     ed.SetEdgeNr(segnr);
     ed.SetSurfNr(0, spline.leftdom);
     ed.SetSurfNr(1, spline.rightdom);
@@ -396,7 +396,7 @@ namespace netgen
       mesh.GetIdentifications().SetType(to,Identifications::PERIODIC);
 
     // create edge descriptor for the copied edge
-    EdgeDescriptor ed;
+    EdgeRegion ed;
     ed.SetEdgeNr(to);
     ed.SetSurfNr(0, GetSpline(to-1).leftdom);
     ed.SetSurfNr(1, GetSpline(to-1).rightdom);
@@ -520,7 +520,7 @@ namespace netgen
     
     mesh->ClearFaceDescriptors();
     for (int i = 1; i <= maxdomnr; i++)
-      mesh->AddFaceDescriptor (FaceDescriptor (i, 0, 0, i));
+      mesh->AddFaceDescriptor (FaceRegion (i, 0, 0, i));
 
     for (int edi = 1; edi <= mesh->GetNED(); edi++)
       {

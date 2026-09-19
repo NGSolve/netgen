@@ -326,7 +326,7 @@ namespace netgen
   {
       auto mesh = make_unique<Mesh>();
       Mesh & m = *mesh;
-      m.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
+      m.AddFaceDescriptor (FaceRegion (1, 1, 0, 0));
       for(auto pi : points.Range())
           m.AddPoint(P3(points[pi]));
 
@@ -624,9 +624,9 @@ namespace netgen
 
     t3.Start();
     Mesh tempmesh;
-    tempmesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
-    tempmesh.AddFaceDescriptor (FaceDescriptor (2, 1, 0, 0));
-    tempmesh.AddFaceDescriptor (FaceDescriptor (3, 1, 0, 0));
+    tempmesh.AddFaceDescriptor (FaceRegion (1, 1, 0, 0));
+    tempmesh.AddFaceDescriptor (FaceRegion (2, 1, 0, 0));
+    tempmesh.AddFaceDescriptor (FaceRegion (3, 1, 0, 0));
 
     Array<PointIndex, PointIndex> compress;
     Array<PointIndex, PointIndex> icompress(mesh.Points().Size());

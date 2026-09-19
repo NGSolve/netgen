@@ -355,7 +355,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<ElementRef>(m, "Element3DRef", "handle to a volume element stored in a mesh")
     .def("__repr__", [] (const ElementRef & self) { return ToString(self); })
-    .def_property("index", &ElementRef::GetIndex, &ElementRef::SetIndex)
+    .def_property("index", [](const ElementRef & self) { return self.GetIndex().Nr1(); }, [](ElementRef & self, int i) { self.SetIndex(i); })
     .def_property("curved", &ElementRef::IsCurved, &ElementRef::SetCurved)
     .def_property("refine", [] (const ElementRef & self) { return bool(self.TestRefinementFlag()); },
                   [] (ElementRef & self, bool refine) { self.SetRefinementFlag(refine); })
@@ -600,7 +600,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                       newel->GeomInfo(i).trignum = py::cast<int>(trignums[i]);
                     if (len(surfaces))
                       {
-                        // surfnr1/surfnr2 removed from Segment - surfaces are on EdgeDescriptor
+                        // surfnr1/surfnr2 removed from Segment - surfaces are on EdgeRegion
                       }
                     return newel;
                   }),
@@ -655,7 +655,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   })
     .def_property("singular",
                   [](const Segment & seg) -> double {
-                    // singedge_left/right now live on the EdgeDescriptor; access via mesh.GetEdgeDescriptor(seg.edsi)
+                    // singedge_left/right now live on the EdgeRegion; access via mesh.GetEdgeDescriptor(seg.edsi)
                     throw py::attribute_error("singular is now on EdgeDescriptor, use mesh.GetEdgeDescriptor(seg.edsi).SingEdgeLeft()");
                     return 0;
                   },
@@ -686,7 +686,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   {
                     Element0d * instance = new Element0d;
                     instance->pnum = vertex;
-                    instance->index = index;
+                    instance->SetIndex(index);
                     return instance;
                   }),
          py::arg("vertex"),
@@ -707,11 +707,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   
 
 
-  py::class_<FaceDescriptor>(m, "FaceDescriptor")
-    .def(py::init<const FaceDescriptor&>())
+  py::class_<FaceRegion>(m, "FaceDescriptor")
+    .def(py::init<const FaceRegion&>())
     .def(py::init([](int surfnr, int domin, int domout, int bc)
                   {
-                    FaceDescriptor * instance = new FaceDescriptor();
+                    FaceRegion * instance = new FaceRegion();
                     instance->SetSurfNr(surfnr);
                     instance->SetDomainIn(domin);
                     instance->SetDomainOut(domout);
@@ -723,26 +723,26 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::arg("domout")=py::int_(0),
          py::arg("bc")=py::int_(0),
          "create facedescriptor")
-    .def("__str__", &ToString<FaceDescriptor>)
-    .def("__repr__", &ToString<FaceDescriptor>)
-    .def_property("surfnr", &FaceDescriptor::SurfNr, &FaceDescriptor::SetSurfNr)
-    .def_property("domin", &FaceDescriptor::DomainIn, &FaceDescriptor::SetDomainIn)
-    .def_property("domout", &FaceDescriptor::DomainOut, &FaceDescriptor::SetDomainOut)
-    .def_property("domin_singular", &FaceDescriptor::DomainInSingular, &FaceDescriptor::SetDomainInSingular)
-    .def_property("domout_singular", &FaceDescriptor::DomainOutSingular, &FaceDescriptor::SetDomainOutSingular)
+    .def("__str__", &ToString<FaceRegion>)
+    .def("__repr__", &ToString<FaceRegion>)
+    .def_property("surfnr", &FaceRegion::SurfNr, &FaceRegion::SetSurfNr)
+    .def_property("domin", &FaceRegion::DomainIn, &FaceRegion::SetDomainIn)
+    .def_property("domout", &FaceRegion::DomainOut, &FaceRegion::SetDomainOut)
+    .def_property("domin_singular", &FaceRegion::DomainInSingular, &FaceRegion::SetDomainInSingular)
+    .def_property("domout_singular", &FaceRegion::DomainOutSingular, &FaceRegion::SetDomainOutSingular)
 
-    .def_property("bc", &FaceDescriptor::BCProperty, &FaceDescriptor::SetBCProperty)
+    .def_property("bc", &FaceRegion::BCProperty, &FaceRegion::SetBCProperty)
     .def_property("bcname",
-                  [](FaceDescriptor & self) -> string { return self.GetBCName(); },
-                  [](FaceDescriptor & self, string name) { self.SetBCName(name); }
+                  [](FaceRegion & self) -> string { return self.GetBCName(); },
+                  [](FaceRegion & self, string name) { self.SetBCName(name); }
                   )
     .def_property("color",
-                  [](const FaceDescriptor& self)
+                  [](const FaceRegion& self)
                   {
                     auto sc = self.SurfColour();
                     return py::make_tuple(sc[0], sc[1], sc[2], sc[3]);
                   },
-                  [](FaceDescriptor& self, py::tuple col)
+                  [](FaceRegion& self, py::tuple col)
                   {
                     Vec<4> sc = 1;
                     sc[0] = py::cast<double>(col[0]);
@@ -754,11 +754,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   }
                   )
     .def_property("transparency",
-                  [](const FaceDescriptor& self)
+                  [](const FaceRegion& self)
                   {
                     return self.SurfColour()[3];
                   },
-                  [](FaceDescriptor& self, double val)
+                  [](FaceRegion& self, double val)
                   {
                     auto sc = self.SurfColour();
                     sc[3] = val;
@@ -766,32 +766,32 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
                   })
     ;
 
-  py::class_<EdgeDescriptor>(m, "EdgeDescriptor")
+  py::class_<EdgeRegion>(m, "EdgeDescriptor")
     .def(py::init<>())
-    .def("__repr__", [](const EdgeDescriptor & self) {
+    .def("__repr__", [](const EdgeRegion & self) {
       return string("EdgeDescriptor(edgenr=") + to_string(self.EdgeNr()) +
              ", surfnr=(" + to_string(self.SurfNr(0)) + "," + to_string(self.SurfNr(1)) +
              "), domin=" + to_string(self.DomainIn()) +
              ", domout=" + to_string(self.DomainOut()) +
              ", name=" + self.GetName() + ")";
     })
-    .def_property("edgenr", &EdgeDescriptor::EdgeNr, &EdgeDescriptor::SetEdgeNr)
+    .def_property("edgenr", &EdgeRegion::EdgeNr, &EdgeRegion::SetEdgeNr)
     .def_property("surfnr",
-                  [](const EdgeDescriptor & self) {
+                  [](const EdgeRegion & self) {
                     return py::make_tuple(self.SurfNr(0), self.SurfNr(1));
                   },
-                  [](EdgeDescriptor & self, py::tuple s) {
+                  [](EdgeRegion & self, py::tuple s) {
                     self.SetSurfNr(0, py::cast<int>(s[0]));
                     self.SetSurfNr(1, py::cast<int>(s[1]));
                   })
-    .def_property("name", &EdgeDescriptor::GetName, &EdgeDescriptor::SetName)
-    .def_property("singedge_left", &EdgeDescriptor::SingEdgeLeft, &EdgeDescriptor::SetSingEdgeLeft)
-    .def_property("singedge_right", &EdgeDescriptor::SingEdgeRight, &EdgeDescriptor::SetSingEdgeRight)
-    .def_property("tlosurf", &EdgeDescriptor::TLOSurface, &EdgeDescriptor::SetTLOSurface)
-    .def_property("domin", &EdgeDescriptor::DomainIn, &EdgeDescriptor::SetDomainIn)
-    .def_property("domout", &EdgeDescriptor::DomainOut, &EdgeDescriptor::SetDomainOut)
-    .def_property("index", [](const EdgeDescriptor & self) { return self.GetIndex().Nr1(); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
-    .def_property("fdindex", [](const EdgeDescriptor & self) { return self.GetIndex().Nr1(); }, [](EdgeDescriptor & self, int i) { self.SetIndex(i); })
+    .def_property("name", &EdgeRegion::GetName, &EdgeRegion::SetName)
+    .def_property("singedge_left", &EdgeRegion::SingEdgeLeft, &EdgeRegion::SetSingEdgeLeft)
+    .def_property("singedge_right", &EdgeRegion::SingEdgeRight, &EdgeRegion::SetSingEdgeRight)
+    .def_property("tlosurf", &EdgeRegion::TLOSurface, &EdgeRegion::SetTLOSurface)
+    .def_property("domin", &EdgeRegion::DomainIn, &EdgeRegion::SetDomainIn)
+    .def_property("domout", &EdgeRegion::DomainOut, &EdgeRegion::SetDomainOut)
+    .def_property("index", [](const EdgeRegion & self) { return self.GetIndex().Nr1(); }, [](EdgeRegion & self, int i) { self.SetIndex(i); })
+    .def_property("fdindex", [](const EdgeRegion & self) { return self.GetIndex().Nr1(); }, [](EdgeRegion & self, int i) { self.SetIndex(i); })
 
     ;
 
@@ -807,22 +807,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<Segment,SegmentIndex>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex>(m);
-  py::class_<FaceDescriptorIndex>(m, "FaceDescriptorIndex")
-    .def(py::init([](int nr0) { return FaceDescriptorIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
-    .def("__repr__", &ToString<FaceDescriptorIndex>)
-    .def("__int__", [](FaceDescriptorIndex i) { return i.Nr1(); })
-    .def_property_readonly("nr0", [](FaceDescriptorIndex i) { return i.Nr0(); })
-    .def_property_readonly("nr1", [](FaceDescriptorIndex i) { return i.Nr1(); });
-  py::implicitly_convertible<int, FaceDescriptorIndex>();
-  py::class_<EdgeDescriptorIndex>(m, "EdgeDescriptorIndex")
-    .def(py::init([](int nr0) { return EdgeDescriptorIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
-    .def("__repr__", &ToString<EdgeDescriptorIndex>)
-    .def("__int__", [](EdgeDescriptorIndex i) { return i.Nr1(); })
-    .def_property_readonly("nr0", [](EdgeDescriptorIndex i) { return i.Nr0(); })
-    .def_property_readonly("nr1", [](EdgeDescriptorIndex i) { return i.Nr1(); });
-  py::implicitly_convertible<int, EdgeDescriptorIndex>();
-  ExportArray<FaceDescriptor, FaceDescriptorIndex>(m);
-  ExportArray<EdgeDescriptor, EdgeDescriptorIndex>(m);
+  py::class_<FaceRegionIndex>(m, "FaceDescriptorIndex")
+    .def(py::init([](int nr0) { return FaceRegionIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
+    .def("__repr__", &ToString<FaceRegionIndex>)
+    .def("__int__", [](FaceRegionIndex i) { return i.Nr1(); })
+    .def_property_readonly("nr0", [](FaceRegionIndex i) { return i.Nr0(); })
+    .def_property_readonly("nr1", [](FaceRegionIndex i) { return i.Nr1(); });
+  py::implicitly_convertible<int, FaceRegionIndex>();
+  py::class_<EdgeRegionIndex>(m, "EdgeDescriptorIndex")
+    .def(py::init([](int nr0) { return EdgeRegionIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
+    .def("__repr__", &ToString<EdgeRegionIndex>)
+    .def("__int__", [](EdgeRegionIndex i) { return i.Nr1(); })
+    .def_property_readonly("nr0", [](EdgeRegionIndex i) { return i.Nr0(); })
+    .def_property_readonly("nr1", [](EdgeRegionIndex i) { return i.Nr1(); });
+  py::implicitly_convertible<int, EdgeRegionIndex>();
+  ExportArray<FaceRegion, FaceRegionIndex>(m);
+  ExportArray<EdgeRegion, EdgeRegionIndex>(m);
 
 
 
@@ -1231,7 +1231,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
         }
       throw Exception ("MacroElementNr not implemented for dim");
     }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")
-    .def("FaceDescriptor", static_cast<FaceDescriptor&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
+    .def("FaceDescriptor", static_cast<FaceRegion&(Mesh::*)(int)> (&Mesh::GetFaceDescriptor),
          py::return_value_policy::reference)
     .def("GetNFaceDescriptors", &Mesh::GetNFD)
 
@@ -1244,11 +1244,11 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          // static_cast<Array<Element>&(Mesh::*)()> (&Mesh::FaceDescriptors),
          &Mesh::FaceDescriptors,         
          py::return_value_policy::reference)
-    .def("EdgeDescriptor", [](Mesh & self, int i) -> EdgeDescriptor& {
+    .def("EdgeDescriptor", [](Mesh & self, int i) -> EdgeRegion& {
            return self.GetEdgeDescriptor(i);
          }, py::arg("i"), py::return_value_policy::reference)
     .def("EdgeDescriptors",
-         static_cast<Array<EdgeDescriptor, EdgeDescriptorIndex>&(Mesh::*)()>(&Mesh::EdgeDescriptors),
+         static_cast<Array<EdgeRegion, EdgeRegionIndex>&(Mesh::*)()>(&Mesh::EdgeDescriptors),
          py::return_value_policy::reference)
     
     
@@ -1309,12 +1309,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.pointelements.Append (el);
           })
 
-    .def ("Add", [](Mesh & self, const FaceDescriptor & fd)
+    .def ("Add", [](Mesh & self, const FaceRegion & fd)
           {
             return self.AddFaceDescriptor (fd).Nr1();
           })
 
-    .def ("Add", [](Mesh & self, const EdgeDescriptor & ed)
+    .def ("Add", [](Mesh & self, const EdgeRegion & ed)
           {
             return self.AddEdgeDescriptor (ed).Nr1();
           })
@@ -1489,24 +1489,22 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
            switch (dim)
              {
              case 3:
-               self.Materials().Append(name);
-               return self.Materials().Size();
+               return self.AddRegion(VolumeRegion(name)).Nr1();
              case 2:
                {
-                 FaceDescriptor fd;
+                 FaceRegion fd;
                  fd.SetBCName(name);
                  fd.SetBCProperty(self.GetNFD()+1);
                  return self.AddFaceDescriptor(fd).Nr1();
                }
              case 1:
                {
-                 EdgeDescriptor ed;
+                 EdgeRegion ed;
                  ed.SetName(name);
                  return self.AddEdgeDescriptor(ed).Nr1();
                }
              default:
-               self.VertexNames().Append(name);
-               return self.VertexNames().Size();
+               return self.AddRegion(VertexRegion(name)).Nr1();
              }
          }, py::arg("name"), py::arg("dim"))
 
@@ -1525,7 +1523,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             if (dim == 3 || dim == 0)
               {
                 // arrays: unset entries are reported as ""
-                for (const auto & name : (dim == 0 ? self.VertexNames() : self.Materials()))
+                for (const auto & name : (dim == 0 ? self.RegionNames<0>() : self.RegionNames<3>()))
                   names.push_back(name ? *name : "");
               }
             else

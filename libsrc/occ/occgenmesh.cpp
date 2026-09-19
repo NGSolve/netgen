@@ -248,7 +248,7 @@ namespace netgen
     multithread.percent = 100 * k / (mesh.GetNFD() + VSMALL);
     geom.facemeshstatus[k-1] = -1;
 
-    // FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+    // FaceRegion & fd = mesh.GetFaceDescriptor(k);
     auto face = TopoDS::Face(geom.fmap(k));
     const auto& occface = dynamic_cast<const OCCFace&>(geom.GetFace(k-1));
 

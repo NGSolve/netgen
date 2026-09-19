@@ -32,7 +32,7 @@ namespace netgen
   }
 
   HPRefElement :: HPRefElement(const ElementRef & el) :
-    type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
+    type(HP_NONE), index(el.GetIndex().Nr1()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
     for (int i=0; i<np ; i++) 
@@ -1736,7 +1736,7 @@ namespace netgen
         facepoint = 0;
         for (const Element2d & el : mesh.SurfaceElements())
           {
-            const FaceDescriptor & fd = mesh.GetFaceDescriptor (el.GetIndex());
+            const FaceRegion & fd = mesh.GetFaceDescriptor (el.GetIndex());
           
             int domnr = 0;
             if (fd.DomainInSingular() * levels < act_ref && fd.DomainOutSingular() * levels < act_ref) 
@@ -1796,7 +1796,7 @@ namespace netgen
         
         for (auto & seg : mesh.LineSegments())
           {
-            const EdgeDescriptor & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
+            const EdgeRegion & ed = mesh.GetEdgeDescriptor(seg.GetIndex());
             int ind = ed.EdgeNr();
             
             if (ed.SingEdgeLeft() * levels >= act_ref)
@@ -1976,7 +1976,7 @@ namespace netgen
           case HP_TRIG: 
             {
               int dim = mesh.GetDimension(); 
-              const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
+              const FaceRegion & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
 
               if (split == SPLIT_HP)
                 hpel.type = ClassifyTrig(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
@@ -1992,7 +1992,7 @@ namespace netgen
           case HP_QUAD: 
             { 
               int dim = mesh.GetDimension(); 
-              const FaceDescriptor & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
+              const FaceRegion & fd = mesh.GetFaceDescriptor (hpel.GetIndex());
               hpel.type = ClassifyQuad(hpel, edges, edgepoint_dom, cornerpoint, edgepoint, 
                                   faces, face_edges, surf_edges, facepoint, dim, fd);    
               dd = 2; 

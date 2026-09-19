@@ -28,7 +28,7 @@ TEST_CASE("ElementRef")
   ElementRef v = els[ei];
   CHECK (v.GetNP() == 4);
   CHECK (v.GetType() == TET);
-  CHECK (v.GetIndex() == 3);
+  CHECK (v.GetIndex().Nr1() == 3);
   CHECK (v[2] == PointIndex::FromNr0(12));
   CHECK (v.PNum(1) == PointIndex::FromNr0(10));
   CHECK (v.PNums().Size() == 4);
@@ -42,12 +42,12 @@ TEST_CASE("ElementRef")
   v.SetOrder(2,3,4);
   Element back (els[ei]);
   CHECK (back[0] == PointIndex::FromNr0(99));
-  CHECK (back.GetIndex() == 7);
+  CHECK (back.GetIndex().Nr1() == 7);
   CHECK (!back.TestRefinementFlag());
   int ox, oy, oz;
   back.GetOrder(ox, oy, oz);
   CHECK (ox == 2); CHECK (oy == 3); CHECK (oz == 4);
-  CHECK (Copy(els[ei]).GetIndex() == 7);
+  CHECK (Copy(els[ei]).GetIndex().Nr1() == 7);
 
   const T_VOLELEMENTS & cels = els;
   const ElementRef cv = cels[ei];
@@ -68,7 +68,7 @@ TEST_CASE("ElementRef")
   CHECK (v2.GetNFaces() == 5);
   ElementRef v1 = els[ei];
   CHECK (v1[0] == PointIndex::FromNr0(99));
-  CHECK (v1.GetIndex() == 7);
+  CHECK (v1.GetIndex().Nr1() == 7);
   CHECK (v1.GetNP() == 4);
 
   // handle assignment copies contents

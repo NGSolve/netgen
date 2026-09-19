@@ -167,7 +167,7 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
     for (ElementIndex ei : myrange)
     {
       auto el = mesh[ei];
-      if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) continue;
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex().Nr1()) continue;
       if(!el.BadnessValid())
         el.SetBadness(CalcBad(mesh.Points(), el, 0));
       double bad = el.GetBadness();
@@ -451,7 +451,7 @@ void MeshOptimize3d :: CombineImprove ()
       int cntill = 0;
       // for (ElementIndex ei = 0; ei < ne; ei++)
       for (ElementIndex ei : ngcore::T_Range<ElementIndex>(ne))
-        if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex()))
+        if(!(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex().Nr1()))
           if (!mesh.LegalTet (mesh[ei]))
             cntill++;
 
@@ -493,7 +493,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
 
   if(mp.only3D_domain_nr)
       for(auto ei : hasbothpoints)
-          if(mp.only3D_domain_nr != mesh[ei].GetIndex())
+          if(mp.only3D_domain_nr != mesh[ei].GetIndex().Nr1())
               return 0.0;
 
   if (!NeedsOptimization(hasbothpoints))
@@ -777,7 +777,7 @@ double MeshOptimize3d :: SwapImproveEdge (
       if (mesh[ei].GetType () != TET)
           return 0.0;
 
-      if (mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex())
+      if (mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(ei).GetIndex().Nr1())
           return 0.0;
 
 
@@ -800,7 +800,7 @@ double MeshOptimize3d :: SwapImproveEdge (
     return 0.0;
 
   int nsuround = hasbothpoints.Size();
-  int mattyp = mesh[hasbothpoints[0]].GetIndex();
+  int mattyp = mesh[hasbothpoints[0]].GetIndex().Nr1();
 
   /*
     // unused ? 
@@ -1229,7 +1229,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
             if(el.Flags().fixed || el.GetType() != TET)
               continue;
 
-            if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex())
+            if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex().Nr1())
               continue;
 
             for (auto pi : el.PNums())
@@ -1445,7 +1445,7 @@ void MeshOptimize3d :: SwapImproveSurface (
       if (elemi.IsDeleted()) continue;
 
 
-      mattype = elemi.GetIndex();
+      mattype = elemi.GetIndex().Nr1();
 
       bool swapped = false;
 
@@ -1521,10 +1521,10 @@ void MeshOptimize3d :: SwapImproveSurface (
 
               if (has1 && has2) 
                 { 
-                  if(othermattype == -1 && elem.GetIndex() != mattype)
-                    othermattype = elem.GetIndex();
+                  if(othermattype == -1 && elem.GetIndex().Nr1() != mattype)
+                    othermattype = elem.GetIndex().Nr1();
 
-                  if(elem.GetIndex() == mattype)
+                  if(elem.GetIndex().Nr1() == mattype)
                     {
                       // only once
                       for (int l = 0; l < hasbothpoints.Size(); l++)
@@ -1534,7 +1534,7 @@ void MeshOptimize3d :: SwapImproveSurface (
                       if (has1)
                         hasbothpoints.Append (elnr);
                     }
-                  else if(elem.GetIndex() == othermattype)
+                  else if(elem.GetIndex().Nr1() == othermattype)
                     {
                       // only once
                       for (int l = 0; l < hasbothpointsother.Size(); l++)
@@ -1582,7 +1582,7 @@ void MeshOptimize3d :: SwapImproveSurface (
                   if (has1 && has2) 
                     { 
                       if(othermattype == -1)
-                        othermattype = elem.GetIndex();
+                        othermattype = elem.GetIndex().Nr1();
 
                       // only once
                       for (int l = 0; l < hasbothpointsother.Size(); l++)
@@ -2214,7 +2214,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
   auto elem = mesh[eli1];
   if (elem.IsDeleted()) return 0.0;
 
-  int mattyp = elem.GetIndex();
+  int mattyp = elem.GetIndex().Nr1();
 
   switch (j)
   {
@@ -2440,7 +2440,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
             if (goal == OPT_LEGAL && mesh.LegalTet (mesh[eli1]))
               continue;
 
-            if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex())
+            if(mesh.GetDimension()==3 && mp.only3D_domain_nr && mp.only3D_domain_nr != mesh.VolumeElement(eli1).GetIndex().Nr1())
               continue;
 
             for (int j = 0; j < 4; j++)
@@ -2631,7 +2631,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   {
     for(ElementIndex ei : myrange)
     {
-      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex())
+      if(mp.only3D_domain_nr && mp.only3D_domain_nr != mesh[ei].GetIndex().Nr1())
         continue;
       double d_badness = SplitImprove2Element(ei, elements_of_point, true);
       if(d_badness<0.0)

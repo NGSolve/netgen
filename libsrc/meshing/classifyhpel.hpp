@@ -835,7 +835,7 @@ HPREF_ELEMENT_TYPE ClassifyPrism(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOI
 
 HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
-                                HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
+                                HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceRegion & fd)
 
 {
   HPREF_ELEMENT_TYPE type = HP_NONE;
@@ -1050,7 +1050,7 @@ HPREF_ELEMENT_TYPE ClassifyTrig(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOIN
 }
 HPREF_ELEMENT_TYPE ClassifyQuad(HPRefElement & el, HT_EDGES & edges, HT_EDGEPOINT_DOM & edgepoint_dom, 
                                 TBitArray<PointIndex> & cornerpoint, TBitArray<PointIndex> & edgepoint, HT_FACES & faces, HT_FACE_EDGES & face_edges, 
-                                HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceDescriptor & fd)
+                                HT_FACE_EDGES & surf_edges, Array<int, PointIndex> & facepoint, int dim, const FaceRegion & fd)
 {
   HPREF_ELEMENT_TYPE type = HP_NONE; 
   

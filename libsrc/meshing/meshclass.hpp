@@ -119,24 +119,11 @@ namespace netgen
     Array<double> maxhdomain;
   
     /**
-       the face-index of the surface element maps into
-       this table.
+       regions of dimension 0..3 (vertices, edges, faces, volumes).
+       The index of an element of dimension D maps into std::get<D>(regions).
     */
-    Array<FaceDescriptor, FaceDescriptorIndex> facedecoding;
+    std::tuple<RegionArray<0>, RegionArray<1>, RegionArray<2>, RegionArray<3>> regions;
 
-  
-    /**
-       the edge-index of the line element maps into
-       this table.
-    */
-    Array<EdgeDescriptor, EdgeDescriptorIndex> edgedecoding;
-
-    /// names of 3D domains; nullopt = not set (reported as "default").
-    /// Faces and edges carry their names in their descriptors.
-    Array<optional<string>> materials;
-    /// names of 0D regions (vertices)
-    Array<optional<string>> vertexnames;
-    
     /// Periodic surface, close surface, etc. identifications
     unique_ptr<Identifications> ident;
 
@@ -647,12 +634,21 @@ namespace netgen
     void GetIntersectingVolEls(const netgen::Point<3>& p1, const netgen::Point<3>& p2, 
                                Array<ElementIndex> & locels) const;
 
-    ///
-    FaceDescriptorIndex AddFaceDescriptor(const FaceDescriptor& fd)
-    { return facedecoding.Append(fd); }
+    /// regions of entity dimension D, indexed by RegionIndex<D>
+    template <int D> RegionArray<D> & Regions () { return std::get<D>(regions); }
+    template <int D> const RegionArray<D> & Regions () const { return std::get<D>(regions); }
 
-    EdgeDescriptorIndex AddEdgeDescriptor(const EdgeDescriptor & fd)
-    { return edgedecoding.Append(fd); }
+    template <int D> Region<D> & GetRegion (RegionIndex<D> i) { return Regions<D>()[i]; }
+    template <int D> const Region<D> & GetRegion (RegionIndex<D> i) const { return Regions<D>()[i]; }
+
+    template <int D> RegionIndex<D> AddRegion (const Region<D> & reg) { return Regions<D>().Append(reg); }
+
+    ///
+    FaceRegionIndex AddFaceDescriptor(const FaceRegion& fd)
+    { return Regions<2>().Append(fd); }
+
+    EdgeRegionIndex AddEdgeDescriptor(const EdgeRegion & fd)
+    { return Regions<1>().Append(fd); }
 
     auto & GetCommunicator() const { return this->comm; }
     void SetCommunicator(NgMPI_Comm acomm);
@@ -667,7 +663,7 @@ namespace netgen
     /// 3D domain name
     const string * GetMaterialPtr (int domnr) const // 1-based
     {
-      return (domnr >= 1 && domnr <= materials.Size() && materials[domnr-1]) ? &*materials[domnr-1] : &defaultmat;
+      return (domnr >= 1 && domnr <= Regions<3>().Size()) ? &Regions<3>()[VolumeRegionIndex::FromNr1(domnr)].GetName() : &defaultmat;
     }
     
     /// 1D meshes only (vertex names); a no-op otherwise
@@ -680,18 +676,25 @@ namespace netgen
     /// boundary names keyed by bc number, the layout of files and archives (empty if nothing is named)
     DLL_HEADER Array<string> BCNamesByNumber () const;
     /// name of the boundary described by face descriptor fdi
-    const string & GetBCName (FaceDescriptorIndex fdi) const { return facedecoding[fdi].GetBCName(); }
+    const string & GetBCName (FaceRegionIndex fdi) const { return Regions<2>()[fdi].GetBCName(); }
 
     /// vertex names of 2D meshes (cd2nr 1-based); edge names of 3D meshes live in the edge descriptors
     DLL_HEADER void SetCD2Name (int cd2nr, const string & abcname);
     DLL_HEADER const string & GetCD2Name (int cd2nr ) const;
     DLL_HEADER static string cd2_default_name;
-    size_t GetNCD2Names() const { return dimension == 2 ? vertexnames.Size() : 0; }
+    size_t GetNCD2Names() const { return dimension == 2 ? Regions<0>().Size() : 0; }
 
     /// edge descriptor nr (1-based); missing descriptors up to nr are created
-    DLL_HEADER EdgeDescriptor & EnsureEdgeDescriptor (int nr);
+    DLL_HEADER EdgeRegion & EnsureEdgeDescriptor (int nr);
   private:
     void SetCD2NameCompat (int cd2nr, const string & name);
+    /// names of dimension D in the archive layout Array<optional<string>>
+    template <int D> void ArchiveRegionNames (Archive & ar)
+    {
+      auto names = RegionNames<D>();
+      ar & names;
+      if (ar.Input()) SetRegionNames<D>(names);
+    }
   public:
 
     DLL_HEADER void SetNCD3Names (int ncd3n);
@@ -701,19 +704,19 @@ namespace netgen
     DLL_HEADER static string cd3_default_name;
     const string * GetCD3NamePtr (int cd3nr ) const
     {
-      if (cd3nr >= 0 && cd3nr < vertexnames.Size() && vertexnames[cd3nr]) return &*vertexnames[cd3nr];
+      if (cd3nr >= 0 && cd3nr < Regions<0>().Size()) return &Regions<0>()[VertexRegionIndex::FromNr0(cd3nr)].GetName();
       return &cd3_default_name;
     }
-    size_t GetNCD3Names() const { return dimension == 3 ? vertexnames.Size() : 0; }
+    size_t GetNCD3Names() const { return dimension == 3 ? Regions<0>().Size() : 0; }
 
     DLL_HEADER static string default_bc;
     const string * GetBCNamePtr (int bcnr) const
     {
       if (dimension == 3)
-        return (bcnr >= 0 && bcnr < facedecoding.Size()) ? &facedecoding[FaceDescriptorIndex::FromNr0(bcnr)].GetBCName() : &default_bc;
+        return (bcnr >= 0 && bcnr < Regions<2>().Size()) ? &Regions<2>()[FaceRegionIndex::FromNr0(bcnr)].GetBCName() : &default_bc;
       if (dimension == 2)
-        return (bcnr >= 0 && bcnr < edgedecoding.Size()) ? &edgedecoding[EdgeDescriptorIndex::FromNr0(bcnr)].GetName() : &default_bc;
-      return (bcnr >= 0 && bcnr < vertexnames.Size() && vertexnames[bcnr]) ? &*vertexnames[bcnr] : &default_bc;
+        return (bcnr >= 0 && bcnr < Regions<1>().Size()) ? &Regions<1>()[EdgeRegionIndex::FromNr0(bcnr)].GetName() : &default_bc;
+      return (bcnr >= 0 && bcnr < Regions<0>().Size()) ? &Regions<0>()[VertexRegionIndex::FromNr0(bcnr)].GetName() : &default_bc;
     }
 
     DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
@@ -730,10 +733,10 @@ namespace netgen
     {
       switch (dim)
         {
-        case 3: return materials.Size();
-        case 2: return facedecoding.Size();
-        case 1: return edgedecoding.Size();
-        default: return vertexnames.Size();
+        case 3: return Regions<3>().Size();
+        case 2: return Regions<2>().Size();
+        case 1: return Regions<1>().Size();
+        default: return Regions<0>().Size();
         }
     }
     /// name of region nr (1-based) of entity dimension dim
@@ -741,90 +744,108 @@ namespace netgen
     {
       switch (dim)
         {
-        case 3: return (nr >= 1 && nr <= materials.Size() && materials[nr-1]) ? string_view(*materials[nr-1]) : defaultmat_sv;
-        case 2: return (nr >= 1 && nr <= facedecoding.Size()) ? string_view(facedecoding[FaceDescriptorIndex::FromNr1(nr)].GetBCName()) : defaultmat_sv;
-        case 1: return (nr >= 1 && nr <= edgedecoding.Size()) ? string_view(edgedecoding[EdgeDescriptorIndex::FromNr1(nr)].GetName()) : defaultmat_sv;
-        default: return (nr >= 1 && nr <= vertexnames.Size() && vertexnames[nr-1]) ? string_view(*vertexnames[nr-1]) : defaultmat_sv;
+        case 3: return GetRegionName<3>(nr);
+        case 2: return GetRegionName<2>(nr);
+        case 1: return GetRegionName<1>(nr);
+        default: return GetRegionName<0>(nr);
         }
     }
-    const Array<optional<string>> & Materials () const { return materials; }
-    Array<optional<string>> & Materials () { return materials; }
-    const Array<optional<string>> & VertexNames () const { return vertexnames; }
-    Array<optional<string>> & VertexNames () { return vertexnames; }
+    template <int D>
+    std::string_view GetRegionName (int nr) const  // 1-based
+    {
+      auto & regs = Regions<D>();
+      return (nr >= 1 && nr <= regs.Size()) ? string_view(regs[RegionIndex<D>::FromNr1(nr)].GetName()) : defaultmat_sv;
+    }
+    /// region names of dimension D, nullopt where not set
+    template <int D>
+    Array<optional<string>> RegionNames () const
+    {
+      Array<optional<string>> names(Regions<D>().Size());
+      for (auto i : Regions<D>().Range())
+        names[i.Nr0()] = Regions<D>()[i].OptName();
+      return names;
+    }
+    template <int D>
+    void SetRegionNames (FlatArray<optional<string>> names)
+    {
+      Regions<D>().SetSize(names.Size());
+      for (auto i : Regions<D>().Range())
+        Regions<D>()[i].SetName(names[i.Nr0()]);
+    }
     /// domain names (dimension of the mesh) as array, the layout of files, archives and MPI messages
     DLL_HEADER Array<optional<string>> DomainNames () const;
     DLL_HEADER void SetDomainNames (Array<optional<string>> names);
     
     ///
     void ClearFaceDescriptors()
-    { facedecoding.SetSize(0); }
+    { Regions<2>().SetSize(0); }
 
     void FreeFaceDescriptors()
-    { facedecoding = Array<FaceDescriptor, FaceDescriptorIndex>(); }
+    { Regions<2>() = RegionArray<2>(); }
 
     ///
     int GetNFD () const
-    { return facedecoding.Size(); }
+    { return Regions<2>().Size(); }
 
-    const FaceDescriptor & GetFaceDescriptor (const Element2d & el) const
-    { return facedecoding[el.GetIndex()]; }
-    FaceDescriptor & GetFaceDescriptor (const Element2d & el)
-    { return facedecoding[el.GetIndex()]; }
+    const FaceRegion & GetFaceDescriptor (const Element2d & el) const
+    { return Regions<2>()[el.GetIndex()]; }
+    FaceRegion & GetFaceDescriptor (const Element2d & el)
+    { return Regions<2>()[el.GetIndex()]; }
 
     /// surface element refers to an existing face descriptor
     bool HasFaceDescriptor (const Element2d & el) const
-    { return facedecoding.Range().Contains(el.GetIndex()); }
+    { return Regions<2>().Range().Contains(el.GetIndex()); }
     
-    const FaceDescriptor & GetFaceDescriptor (FaceDescriptorIndex i) const
-    { return facedecoding[i]; }
+    const FaceRegion & GetFaceDescriptor (FaceRegionIndex i) const
+    { return Regions<2>()[i]; }
     /// 1-based
-    const FaceDescriptor & GetFaceDescriptor (int i) const
-    { return facedecoding[FaceDescriptorIndex::FromNr1(i)]; }
+    const FaceRegion & GetFaceDescriptor (int i) const
+    { return Regions<2>()[FaceRegionIndex::FromNr1(i)]; }
 
-    auto & FaceDescriptors () const { return facedecoding; }
+    auto & FaceDescriptors () const { return Regions<2>(); }
 
-    const EdgeDescriptor & GetEdgeDescriptor (EdgeDescriptorIndex i) const
-    { return edgedecoding[i]; }
-    EdgeDescriptor & GetEdgeDescriptor (EdgeDescriptorIndex i)
-    { return edgedecoding[i]; }
+    const EdgeRegion & GetEdgeDescriptor (EdgeRegionIndex i) const
+    { return Regions<1>()[i]; }
+    EdgeRegion & GetEdgeDescriptor (EdgeRegionIndex i)
+    { return Regions<1>()[i]; }
     /// 1-based
-    const EdgeDescriptor & GetEdgeDescriptor (int i) const
-    { return edgedecoding[EdgeDescriptorIndex::FromNr1(i)]; }
-    EdgeDescriptor & GetEdgeDescriptor (int i)
-    { return edgedecoding[EdgeDescriptorIndex::FromNr1(i)]; }
+    const EdgeRegion & GetEdgeDescriptor (int i) const
+    { return Regions<1>()[EdgeRegionIndex::FromNr1(i)]; }
+    EdgeRegion & GetEdgeDescriptor (int i)
+    { return Regions<1>()[EdgeRegionIndex::FromNr1(i)]; }
 
-    const EdgeDescriptor & GetEdgeDescriptor (const Segment & seg) const
-    { return edgedecoding[seg.GetIndex()]; }
-    EdgeDescriptor & GetEdgeDescriptor (const Segment & seg)
-    { return edgedecoding[seg.GetIndex()]; }
+    const EdgeRegion & GetEdgeDescriptor (const Segment & seg) const
+    { return Regions<1>()[seg.GetIndex()]; }
+    EdgeRegion & GetEdgeDescriptor (const Segment & seg)
+    { return Regions<1>()[seg.GetIndex()]; }
 
     /// segment refers to an existing edge descriptor
     bool HasEdgeDescriptor (const Segment & seg) const
-    { return edgedecoding.Range().Contains(seg.GetIndex()); }
+    { return Regions<1>().Range().Contains(seg.GetIndex()); }
 
     int GetNED () const
-    { return edgedecoding.Size(); }
+    { return Regions<1>().Size(); }
 
-    auto & EdgeDescriptors () const { return edgedecoding; }
-    auto & EdgeDescriptors () { return edgedecoding; }
+    auto & EdgeDescriptors () const { return Regions<1>(); }
+    auto & EdgeDescriptors () { return Regions<1>(); }
 
     void ClearEdgeDescriptors()
-    { edgedecoding.SetSize(0); }
+    { Regions<1>().SetSize(0); }
 
     void ReconstructEdgeDescriptors(const Array<std::pair<int,int>, SegmentIndex> * seg_surfnrs = nullptr,
                                     const Array<int, SegmentIndex> * seg_edgenrs = nullptr);
 
-    /// Recompute EdgeDescriptor::fdindex from segment si values or FD lookup
+    /// Recompute EdgeRegion::fdindex from segment si values or FD lookup
     void RebuildFDIndices();
 
 
 
     ///
-    FaceDescriptor & GetFaceDescriptor (FaceDescriptorIndex i)
-    { return facedecoding[i]; }
+    FaceRegion & GetFaceDescriptor (FaceRegionIndex i)
+    { return Regions<2>()[i]; }
     /// 1-based
-    FaceDescriptor & GetFaceDescriptor (int i)
-    { return facedecoding[FaceDescriptorIndex::FromNr1(i)]; }
+    FaceRegion & GetFaceDescriptor (int i)
+    { return Regions<2>()[FaceRegionIndex::FromNr1(i)]; }
 
     int IdentifyPeriodicBoundaries(const string& id_name,
                                    const string& s1,

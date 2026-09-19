@@ -141,7 +141,7 @@ namespace ngcore
     int index;
     PointElPackage () { pnum = netgen::PointIndex::INVALID; index = -1; }
     PointElPackage (const netgen::Element0d & el)
-    { pnum = el.pnum; index = el.index; }
+    { pnum = el.pnum; index = el.index.Nr1(); }
   }; // class PointElPackage
 
   template<> struct MPI_typetrait<PointElPackage> {
@@ -603,7 +603,7 @@ namespace netgen
         int dest = vol_partition[ei];
         
         elementarrays.Add (dest, ei.Nr1());
-        elementarrays.Add (dest, el.GetIndex());
+        elementarrays.Add (dest, el.GetIndex().Nr1());
         elementarrays.Add (dest, el.GetNP());
         for (PointIndex pi : el.PNums())
           elementarrays.Add (dest, pi.Nr0());
@@ -636,7 +636,7 @@ namespace netgen
     Array<double> eddata (8 * ned);
     for (int edi = 0; edi < ned; edi++)
       {
-        auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(edi)];
+        auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(edi)];
         eddata[8*edi+0] = ed.EdgeNr();
         eddata[8*edi+1] = ed.SurfNr(0);
         eddata[8*edi+2] = ed.SurfNr(1);
@@ -914,17 +914,17 @@ namespace netgen
     paralleltop -> EnumeratePointsGlobally();
     PrintMessage ( 3, "Sending names");
 
-    std::array<int,4> nnames{ int(materials.Size()), int(GetNFD()), int(GetNED()), int(vertexnames.Size()) };
+    std::array<int,4> nnames{ int(Regions<3>().Size()), int(Regions<2>().Size()), int(Regions<1>().Size()), int(Regions<0>().Size()) };
     int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
 
     NgMPI_Requests requ;
     requ += comm.IBcast (nnames);
     
     auto iterate_names = [&](auto func) {
-      for (auto & n : materials) func(n ? &*n : nullptr);
-      for (auto & fd : facedecoding) func(&fd.GetBCName());
-      for (auto & ed : edgedecoding) func(&ed.GetName());
-      for (auto & n : vertexnames) func(n ? &*n : nullptr);
+      auto names_of = [&](auto & regs) {
+        for (auto & reg : regs) func(reg.HasName() ? &reg.GetName() : nullptr);
+      };
+      names_of(Regions<3>()); names_of(Regions<2>()); names_of(Regions<1>()); names_of(Regions<0>());
     };
     // sizes of names
     Array<int> name_sizes(tot_nn);
@@ -1112,7 +1112,7 @@ namespace netgen
       for (int i = 0; i < fddata.Size(); i += 6)
         {
           auto faceind = AddFaceDescriptor 
-            (FaceDescriptor(int(fddata[i]), int(fddata[i+1]), int(fddata[i+2]), 0));
+            (FaceRegion(int(fddata[i]), int(fddata[i+1]), int(fddata[i+2]), 0));
           GetFaceDescriptor(faceind).SetBCProperty (int(fddata[i+3]));
           GetFaceDescriptor(faceind).domin_singular = fddata[i+4];
         GetFaceDescriptor(faceind).domout_singular = fddata[i+5];
@@ -1123,10 +1123,10 @@ namespace netgen
       Array<double> eddata;
       comm.Recv (eddata, 0, NG_MPI_TAG_MESH+7);
       int ned = eddata.Size() / 8;
-      edgedecoding.SetSize(ned);
+      Regions<1>().SetSize(ned);
       for (int edi = 0; edi < ned; edi++)
         {
-          auto & ed = edgedecoding[EdgeDescriptorIndex::FromNr0(edi)];
+          auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(edi)];
           ed.SetEdgeNr(int(eddata[8*edi+0]));
           ed.SetSurfNr(0, int(eddata[8*edi+1]));
           ed.SetSurfNr(1, int(eddata[8*edi+2]));
@@ -1179,22 +1179,22 @@ namespace netgen
       while ( ii < segmbuf.Size() )
         {
           globsegi = int (segmbuf[ii++]);
-          ii++; // fdi (now on EdgeDescriptor)
+          ii++; // fdi (now on EdgeRegion)
           
           seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
           seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
           seg.GeomInfo(0).trignum = int( segmbuf[ii++] );
           seg.GeomInfo(1).trignum = int ( segmbuf[ii++]);
-          ii++; // surfnr1 (on EdgeDescriptor)
-          ii++; // surfnr2 (on EdgeDescriptor)
-          ii++; // edgenr (on EdgeDescriptor)
+          ii++; // surfnr1 (on EdgeRegion)
+          ii++; // surfnr2 (on EdgeRegion)
+          ii++; // edgenr (on EdgeRegion)
           seg.SetIndex(int ( segmbuf[ii++]));
           seg.EPGeomInfo(0).dist = segmbuf[ii++];
-          ii++; // edgenr (now on EdgeDescriptor)
+          ii++; // edgenr (now on EdgeRegion)
           seg.EPGeomInfo(1).dist = segmbuf[ii++];
           
-          ii++; // singedge_right (on EdgeDescriptor)
-          ii++; // singedge_left (on EdgeDescriptor)
+          ii++; // singedge_right (on EdgeRegion)
+          ii++; // singedge_left (on EdgeRegion)
           
           if ( seg[0].IsValid() && seg[1].IsValid() )
             {
@@ -1213,7 +1213,7 @@ namespace netgen
       for (auto k : Range(pointelements)) {
         auto & el = pointelements[k];
         el.pnum = glob2loc_vert_ht.Get(zdes[k].pnum.Nr0());
-        el.index = zdes[k].index;
+        el.SetIndex(zdes[k].index);
       }
     }
 
@@ -1261,24 +1261,21 @@ namespace netgen
       tot_size += s;
       return name;
     };
-    materials.SetSize(nnames[0]);
-    for (auto & n : materials)
-      n = next_name();
-    for (int k = 0; k < nnames[1]; k++)
-      {
-        auto n = next_name();
-        if (k < facedecoding.Size())
-          facedecoding[FaceDescriptorIndex::FromNr0(k)].SetBCName(n ? *n : "default");
-      }
-    for (int k = 0; k < nnames[2]; k++)
-      {
-        auto n = next_name();
-        if (k < edgedecoding.Size())
-          edgedecoding[EdgeDescriptorIndex::FromNr0(k)].SetName(n ? *n : "default");
-      }
-    vertexnames.SetSize(nnames[3]);
-    for (auto & n : vertexnames)
-      n = next_name();
+    // faces and edges exist already, volume and vertex regions carry only names
+    Regions<3>().SetSize(nnames[0]);
+    Regions<0>().SetSize(nnames[3]);
+    auto set_names = [&](auto & regs, int n) {
+      for (int k = 0; k < n; k++)
+        {
+          auto name = next_name();
+          if (k < regs.Size())
+            regs[regs.Range()[k]].SetName(std::move(name));
+        }
+    };
+    set_names(Regions<3>(), nnames[0]);
+    set_names(Regions<2>(), nnames[1]);
+    set_names(Regions<1>(), nnames[2]);
+    set_names(Regions<0>(), nnames[3]);
     
     comm.Barrier();
 
@@ -1657,7 +1654,7 @@ namespace netgen
         
         auto el = (*this)[ElementIndex::FromNr1(i+1)];
         
-        int ind = el.GetIndex();        
+        int ind = el.GetIndex().Nr1();        
         if (volume_weights.Size()<ind)
             nwgt.Append(0);
         else

@@ -137,7 +137,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
     pmat[pi] = mesh.AddPoint (othermesh[pi]);
 
   int fnum = 
-    mesh.AddFaceDescriptor (FaceDescriptor(0,0,1,0)).Nr1();
+    mesh.AddFaceDescriptor (FaceRegion(0,0,1,0)).Nr1();
 
   for (auto & sel : othermesh.SurfaceElements())
     {

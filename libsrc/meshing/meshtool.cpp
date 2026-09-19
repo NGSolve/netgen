@@ -945,7 +945,7 @@ namespace netgen
 
         for (auto el : mesh.VolumeElements())
           {
-            if (el.GetIndex() == k)
+            if (el.GetIndex().Nr1() == k)
               {
                 int todel = 0;
                 for (int j = 0; j < el.GetNP(); j++)

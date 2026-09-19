@@ -49,7 +49,7 @@ namespace netgen
           }
 
         mesh.ClearFaceDescriptors();
-        mesh.AddFaceDescriptor (FaceDescriptor(1,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(1,1,0,0));
       
         in >> nbe;
         //      int invert = globflags.GetDefineFlag ("invertsurfacemesh");
@@ -95,7 +95,7 @@ namespace netgen
         ifstream in(filename);
 
         mesh.ClearFaceDescriptors();
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
         mesh.GetFaceDescriptor(1).SetBCProperty (1);
         // map from unv element nr to our element number + an index if it is vol (0), bnd(1), ...
         std::map<size_t, std::tuple<size_t, int>> element_map;
@@ -321,7 +321,7 @@ namespace netgen
                           if(dim == 3)
                           {
                             int bcpr = mesh.GetNFD();
-                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(bcpr, 0,0,0)).Nr1();
+                            fdnr = mesh.AddFaceDescriptor(FaceRegion(bcpr, 0,0,0)).Nr1();
                             mesh.GetFaceDescriptor(fdnr).SetBCProperty(bcpr+1);
                             mesh.SetBCName(bcpr, name);
                             mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(fdnr);
@@ -329,7 +329,7 @@ namespace netgen
                           }
                           else if(dim == 2)
                           {
-                            fdnr = mesh.AddFaceDescriptor(FaceDescriptor(matnr, 0,0,0)).Nr1();
+                            fdnr = mesh.AddFaceDescriptor(FaceRegion(matnr, 0,0,0)).Nr1();
                             mesh.SetMaterial(matnr, name);
                             mesh[SurfaceElementIndex::FromNr1(get<0>(element_map[index]))].SetIndex(matnr);
                             mesh.GetFaceDescriptor(fdnr).SetBCProperty(matnr);
@@ -343,7 +343,7 @@ namespace netgen
                          if(dim == 3)
                           {
                             int bcpr = mesh.GetNED()+1;
-                            auto ed = EdgeDescriptor();
+                            auto ed = EdgeRegion();
                             ed.SetSurfNr(0,bcpr);//?
                             ed.SetName(name);
                             mesh.AddEdgeDescriptor(ed);
@@ -525,7 +525,7 @@ namespace netgen
                 mesh.AddVolumeElement (el);
               }
 
-            mesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
+            mesh.AddFaceDescriptor (FaceRegion (1, 1, 0, 0));
             int nfd = 1;
 
             in >> nse;
@@ -538,7 +538,7 @@ namespace netgen
                 while(nfd<mat)
                   {
                     ++nfd;
-                    mesh.AddFaceDescriptor(FaceDescriptor(nfd,nfd,0,0));
+                    mesh.AddFaceDescriptor(FaceRegion(nfd,nfd,0,0));
                   }
                 for (j = 1; j <= 3; j++)
                   in >> el.PNum(j);
@@ -586,15 +586,15 @@ namespace netgen
           }      
 
         mesh.ClearFaceDescriptors();
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
         mesh.GetFaceDescriptor(1).SetBCProperty (1);
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
         mesh.GetFaceDescriptor(2).SetBCProperty (2);
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
         mesh.GetFaceDescriptor(3).SetBCProperty (3);
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
         mesh.GetFaceDescriptor(4).SetBCProperty (4);
-        mesh.AddFaceDescriptor (FaceDescriptor(0,1,0,0));
+        mesh.AddFaceDescriptor (FaceRegion(0,1,0,0));
         mesh.GetFaceDescriptor(5).SetBCProperty (5);
 
         int p1, p2, p3;
@@ -692,7 +692,7 @@ namespace netgen
         for (auto & p : points)
           mesh.AddPoint(MeshPoint(p));
 
-        mesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 1));
+        mesh.AddFaceDescriptor (FaceRegion (1, 1, 0, 1));
 
         for (auto ti : IntRange(geom->GetNT()))
         {
