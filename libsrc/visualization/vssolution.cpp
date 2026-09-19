@@ -4004,8 +4004,8 @@ namespace netgen
         int first_point_of_element = pts.Size();
 
         locgrid.SetSize(n3);
-        if(vispar.clipdomain > 0 && vispar.clipdomain != (*mesh)[ei].GetIndex()) continue;
-        if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex()) continue;
+        if(vispar.clipdomain > 0 && vispar.clipdomain != (*mesh)[ei].GetIndex().Nr1()) continue;
+        if(vispar.donotclipdomain > 0 && vispar.donotclipdomain == (*mesh)[ei].GetIndex().Nr1()) continue;
 
         ELEMENT_TYPE type = (*mesh)[ei].GetType();
         if (type == HEX || type == PRISM || type == TET || type == TET10 || type == PYRAMID || type == PYRAMID13 || type == PRISM15 || type == HEX20 || type == HEX7)
@@ -4749,7 +4749,7 @@ namespace netgen
   {
     bool is_active = true;
     if(data->draw_volumes)
-      is_active = is_active && (*data->draw_volumes)[el.GetIndex()-1];
+      is_active = is_active && (*data->draw_volumes)[el.GetIndex().Nr0()];
     return is_active;
   }
 

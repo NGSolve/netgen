@@ -21,11 +21,11 @@ void ReadMeditFormat (Mesh & mesh, const filesystem::path & filename, map<tuple<
       auto n = ++index_cnt[eldim];
       index_map[{eldim, index}] = n;
       if(eldim==1) {
-        auto ed = EdgeDescriptor{};
+        auto ed = EdgeRegion{};
         mesh.AddEdgeDescriptor(ed);
       }
       if(eldim==2) {
-        auto fd = FaceDescriptor(n-1,1,0,0);
+        auto fd = FaceRegion(n-1,1,0,0);
         fd.SetBCProperty(n);
         mesh.AddFaceDescriptor (fd);
       }
@@ -220,7 +220,7 @@ void WriteMeditFormat (const Mesh & mesh, const filesystem::path & filename, map
   base_index = max_index;
   fout << "Tetrahedra\n" << mesh.GetNE() << endl;
   for(const auto & el : mesh.VolumeElements())
-    fout << el[0] << ' ' << el[1] << ' ' << el[2] << ' ' << el[3] << '\t' << getIndex(el.GetIndex(), 3) << endl;
+    fout << el[0] << ' ' << el[1] << ' ' << el[2] << ' ' << el[3] << '\t' << getIndex(el.GetIndex().Nr1(), 3) << endl;
 
   fout << "End" << endl;
 }

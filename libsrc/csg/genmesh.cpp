@@ -115,7 +115,7 @@ namespace netgen
 
         if (!ok)
           {
-            ok = mesh.AddFaceDescriptor (FaceDescriptor (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1)).Nr1();
+            ok = mesh.AddFaceDescriptor (FaceRegion (surf_rep, ed.DomainIn()+1, ed.DomainOut()+1, ed.TLOSurface()+1)).Nr1();
           }
 
         ed.SetIndex(ok);
@@ -303,7 +303,7 @@ namespace netgen
       {
         bool increased = false;
 
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        FaceRegion & fd = mesh.GetFaceDescriptor(k);
         const Surface * surf = geom.GetSurface(fd.SurfNr());
 
         if (fd.TLOSurface() && 
@@ -345,7 +345,7 @@ namespace netgen
     names = "default";
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        FaceRegion & fd = mesh.GetFaceDescriptor(k);
         const Surface * surf = geom.GetSurface(fd.SurfNr());
         string nextbcname = fd.TLOSurface() ? geom.GetTopLevelObject(fd.TLOSurface()-1) -> GetBCName() : surf->GetBCName();
         int bcp = fd.BCProperty();
@@ -354,7 +354,7 @@ namespace netgen
       }
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        FaceRegion & fd = mesh.GetFaceDescriptor(k);
         int bcp = fd.BCProperty();
         fd.SetBCName ((bcp >= 1 && bcp <= bccnt) ? names[bcp-1] : "default");
       }
@@ -363,7 +363,7 @@ namespace netgen
     
     for (int k = 1; k <= mesh.GetNFD(); k++)
       {
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        FaceRegion & fd = mesh.GetFaceDescriptor(k);
         //const Surface * surf = geom.GetSurface(fd.SurfNr());
 
         for (int l = 0; l < geom.bcmodifications.Size(); l++)
@@ -396,7 +396,7 @@ namespace netgen
                                            geom.BoundingBox(), surfs);
         for (int k = 1; k <= mesh.GetNFD(); k++)
           {
-            FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+            FaceRegion & fd = mesh.GetFaceDescriptor(k);
             for (int l = 0; l < surfs.Size(); l++)
               if (surfs[l] == fd.SurfNr())
                 {
@@ -419,7 +419,7 @@ namespace netgen
         if (masterface[k-1] != k)
           continue;
 
-        FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+        FaceRegion & fd = mesh.GetFaceDescriptor(k);
 
         (*testout) << "Surface " << k << endl;
         (*testout) << "Face Descriptor: " << fd << endl;
@@ -602,7 +602,7 @@ namespace netgen
             if (masterface[k-1] == k)
               continue;
 
-            FaceDescriptor & fd = mesh.GetFaceDescriptor(k);
+            FaceRegion & fd = mesh.GetFaceDescriptor(k);
 
             (*testout) << "Surface " << k << endl;
             (*testout) << "Face Descriptor: " << fd << endl;

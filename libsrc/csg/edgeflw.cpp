@@ -429,7 +429,7 @@ namespace netgen
         // create one edge descriptor per refedge
         for (int i = 0; i < refedges.Size(); i++)
         {
-          EdgeDescriptor ed;
+          EdgeRegion ed;
           ed.SetEdgeNr(cntedge);
           ed.SetSurfNr(0, refedges[i].surfnr1);
           ed.SetSurfNr(1, refedges[i].surfnr2);
@@ -561,7 +561,7 @@ namespace netgen
           int ednr = refedges[0].edgenr;
           if (ednr > 0 && ednr <= mesh.GetNED())
             {
-              const string & name = mesh.GetEdgeDescriptor(EdgeDescriptorIndex::FromNr1(ednr)).GetName();
+              const string & name = mesh.GetEdgeDescriptor(EdgeRegionIndex::FromNr1(ednr)).GetName();
               if (name != "default")
                 ed.SetName(name);
             }
@@ -1903,7 +1903,7 @@ namespace netgen
                 seg1.GeomInfo(1).trignum = 1;
                 seg2.GeomInfo(0).trignum = 1;
                 seg2.GeomInfo(1).trignum = 1;
-                EdgeDescriptor ed;
+                EdgeRegion ed;
                 ed.SetEdgeNr(-1);
                 ed.SetSurfNr(0, i);
                 ed.SetSurfNr(1, i);

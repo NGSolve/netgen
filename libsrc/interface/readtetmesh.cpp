@@ -443,9 +443,9 @@ namespace netgen
                   //                    else
                   //                      {
                   //                        if(neg[j])
-                  //                          faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf[j]].GetIndex(),0,domain,0));
+                  //                          faceind = mesh.AddFaceDescriptor(FaceRegion(mesh[surf[j]].GetIndex(),0,domain,0));
                   //                        else
-                  //                          faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf[j]].GetIndex(),domain,0,0));
+                  //                          faceind = mesh.AddFaceDescriptor(FaceRegion(mesh[surf[j]].GetIndex(),domain,0,0));
                   //                        mesh.GetFaceDescriptor(faceind).SetBCProperty(mesh[surf[j]].GetIndex());
                   //                      }
                   //                  }
@@ -689,10 +689,10 @@ namespace netgen
     mesh.ClearFaceDescriptors();
     if(atof(version.c_str()) <= 1.999999)
       for(int i = 1; i <= maxId2D; i++)
-        mesh.AddFaceDescriptor(FaceDescriptor(i,0,0,0));
+        mesh.AddFaceDescriptor(FaceRegion(i,0,0,0));
     else
       for(int i=minId2D; i<minId3D; i++)
-        mesh.AddFaceDescriptor(FaceDescriptor(i,0,0,0));
+        mesh.AddFaceDescriptor(FaceRegion(i,0,0,0));
         
 
     for(int i=0; i<tetfacedata.Size(); i+=9)
@@ -728,9 +728,9 @@ namespace netgen
               else
               {
               if(tetfacedata[i+4+j] == 1)
-              faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf].GetIndex(),0,tetfacedata[i+8],0));
+              faceind = mesh.AddFaceDescriptor(FaceRegion(mesh[surf].GetIndex(),0,tetfacedata[i+8],0));
               else
-              faceind = mesh.AddFaceDescriptor(FaceDescriptor(mesh[surf].GetIndex(),tetfacedata[i+8],0,0));
+              faceind = mesh.AddFaceDescriptor(FaceRegion(mesh[surf].GetIndex(),tetfacedata[i+8],0,0));
               mesh.GetFaceDescriptor(faceind).SetBCProperty(mesh[surf].GetIndex());
               }
             */

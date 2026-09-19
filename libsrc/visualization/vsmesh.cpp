@@ -1855,7 +1855,7 @@ namespace netgen
             int tetid = vispar.drawmetispartition ? 
               (*mesh)[ei].GetPartition() : (*mesh)[ei].GetIndex();
             */
-            int tetid =  (*mesh)[ei].GetIndex();
+            int tetid =  (*mesh)[ei].GetIndex().Nr1();
             if (vispar.drawtetsdomain != tetid) continue;
           }
 
@@ -1869,7 +1869,7 @@ namespace netgen
                 visible = false;
             if(!visible) continue;
 
-            int ind = el.GetIndex() % 4;
+            int ind = el.GetIndex().Nr1() % 4;
 
             // if (vispar.drawmetispartition && el.GetPartition()!=-1)
             // ind = el.GetPartition() % 4;

@@ -1592,8 +1592,8 @@ namespace netgen
 
       MeshQuality3d (tempmesh);
 
-      tempmesh.AddFaceDescriptor (FaceDescriptor (1, 1, 0, 0));
-      tempmesh.AddFaceDescriptor (FaceDescriptor (2, 1, 0, 0));
+      tempmesh.AddFaceDescriptor (FaceRegion (1, 1, 0, 0));
+      tempmesh.AddFaceDescriptor (FaceRegion (2, 1, 0, 0));
 
 
     

@@ -393,7 +393,7 @@ namespace netgen
         return 0.0;
 
     double loch = 0.5*(mesh.GetH(pi1) + mesh.GetH(pi2));
-    FaceDescriptorIndex faceindex = FaceDescriptorIndex::INVALID;
+    FaceRegionIndex faceindex = FaceRegionIndex::INVALID;
 
     for (SurfaceElementIndex sei2 : elementsonnode[pi1])
       {

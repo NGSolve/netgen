@@ -28,7 +28,7 @@ void STLMeshing (STLGeometry & geom,
 
   mesh.ClearFaceDescriptors();
   for (int i = 1; i <= geom.GetNOFaces(); i++)
-    mesh.AddFaceDescriptor (FaceDescriptor (i, 1, 0, 0));
+    mesh.AddFaceDescriptor (FaceRegion (i, 1, 0, 0));
 }
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

@@ -67,7 +67,7 @@ void WriteTochnogFormat (const Mesh & mesh,
         {
           auto el = mesh[i];
               
-          if (el.GetIndex() == indcnt)
+          if (el.GetIndex().Nr1() == indcnt)
             {
               actcnt++;
               if (el.GetNP() != non) 

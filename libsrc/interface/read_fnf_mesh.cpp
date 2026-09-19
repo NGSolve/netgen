@@ -339,7 +339,7 @@ namespace netgen
                                 fnums.Append (fn);
                               }                            
 
-                            FaceDescriptor fd(-1, -1, -1, -1);
+                            FaceRegion fd(-1, -1, -1, -1);
                             fd.SetBCProperty (nr);
                             *testout << "add fd " << mesh.GetNFD() << ", nr = " << nr << endl;
                             mesh.AddFaceDescriptor (fd);
@@ -351,7 +351,7 @@ namespace netgen
                                 
                                 auto el = mesh[ElementIndex::FromNr1(elnr)];
                                 if(j == 0)
-                                  mesh.GetFaceDescriptor(nr).SetDomainIn(el.GetIndex());
+                                  mesh.GetFaceDescriptor(nr).SetDomainIn(el.GetIndex().Nr1());
                                 Element2d el2d;
                                 el.GetFace (fnr, el2d);
                                 el2d.SetIndex (nr);

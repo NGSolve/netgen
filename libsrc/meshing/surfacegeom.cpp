@@ -342,7 +342,7 @@ namespace netgen
       if (!f)
         throw Exception("In SurfaceGeometry :: GenerateMesh: bbbpts not resolved in mesh.");
 
-    FaceDescriptor fd;
+    FaceRegion fd;
     fd.SetSurfNr(1);
     fd.SetDomainIn(1);
     fd.SetDomainOut(0);
@@ -424,7 +424,7 @@ namespace netgen
       }
     // needed for codim2 in 3d
     {
-      EdgeDescriptor ed;
+      EdgeRegion ed;
       ed.SetEdgeNr(1);
       ed.SetSurfNr(0, -1);
       ed.SetSurfNr(1, -1);
@@ -460,7 +460,7 @@ namespace netgen
       }
 
     {
-      EdgeDescriptor ed;
+      EdgeRegion ed;
       ed.SetEdgeNr(2);
       ed.SetSurfNr(0, -1);
       ed.SetSurfNr(1, -1);
@@ -496,7 +496,7 @@ namespace netgen
       }
 
     {
-      EdgeDescriptor ed;
+      EdgeRegion ed;
       ed.SetEdgeNr(3);
       ed.SetSurfNr(0, -1);
       ed.SetSurfNr(1, -1);
@@ -532,7 +532,7 @@ namespace netgen
 
 
     {
-      EdgeDescriptor ed;
+      EdgeRegion ed;
       ed.SetEdgeNr(4);
       ed.SetSurfNr(0, -1);
       ed.SetSurfNr(1, -1);
@@ -564,7 +564,7 @@ namespace netgen
       {
         Element0d el;
         el.pnum = indbbbpts[i];
-        el.index = i+1;
+        el.SetIndex(i+1);
         mesh->pointelements.Append(el);
         mesh->SetCD3Name(i+1, bbbnames[i]);
       }

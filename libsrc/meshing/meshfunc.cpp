@@ -116,7 +116,7 @@ namespace netgen
       // mark used points for already existing volume elements, add them (with wrong point numbers) to domain mesh
       for(const auto & el : mesh.VolumeElements())
       {
-        auto dom = el.GetIndex();
+        int dom = el.GetIndex().Nr1();
         
         auto & els = ret[dom-1].mesh->VolumeElements();
         for(auto pi : el.PNums())

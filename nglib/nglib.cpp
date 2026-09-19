@@ -86,7 +86,7 @@ namespace nglib
    NGLIB_API Ng_Mesh * Ng_NewMesh ()
    {
       Mesh * mesh = new Mesh;  
-      mesh->AddFaceDescriptor (FaceDescriptor (1, 1, 0, 1));
+      mesh->AddFaceDescriptor (FaceRegion (1, 1, 0, 1));
       return (Ng_Mesh*)(void*)mesh;
    }
 

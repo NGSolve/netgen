@@ -423,7 +423,7 @@ NG_ELEMENT_TYPE Ng_GetElementType (int ei)
 int Ng_GetElementIndex (int ei)
 {
   if (mesh->GetDimension() == 3)
-    return (*mesh)[ElementIndex::FromNr1(ei)].GetIndex();
+    return (*mesh)[ElementIndex::FromNr1(ei)].GetIndex().Nr1();
   else
     {
       int ind = mesh->GetFaceDescriptor((*mesh)[SurfaceElementIndex::FromNr1(ei)]).BCProperty();
@@ -441,7 +441,7 @@ const char * Ng_GetElementMaterial (int ei)
   static char empty[] = "";
   if (mesh->GetDimension() == 3)
     {
-      int ind = (*mesh)[ElementIndex::FromNr1(ei)].GetIndex();
+      int ind = (*mesh)[ElementIndex::FromNr1(ei)].GetIndex().Nr1();
       // cout << "ind = " << ind << endl;
       const string * mat = mesh->GetMaterialPtr (ind);
       if (mat)

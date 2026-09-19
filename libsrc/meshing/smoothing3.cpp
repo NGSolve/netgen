@@ -353,7 +353,7 @@ namespace netgen
                {
                  const auto & el = elements[ei];
 
-                 if(el.NP()!=4 || (mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex()) )
+                 if(el.NP()!=4 || (mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex().Nr1()) )
                    return;
 
                  for (PointIndex pi : el.PNums())
