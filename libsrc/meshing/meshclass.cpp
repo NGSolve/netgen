@@ -3375,8 +3375,9 @@ namespace netgen
   void Mesh :: FindOpenSegments (int surfnr)
   {
     auto seg_fdi = [this](const Segment& s) -> int {
-      if (HasEdgeDescriptor(s))
-        { auto fdi = Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
+      const Mesh & self = *this;
+      if (self.HasEdgeDescriptor(s))
+        { auto fdi = self.Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     // int i, j, k;
@@ -6524,8 +6525,9 @@ namespace netgen
   void Mesh :: SplitSeparatedFaces ()
   {
     auto seg_fdi = [this](const Segment& s) -> int {
-      if (HasEdgeDescriptor(s))
-        { auto fdi = Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
+      const Mesh & self = *this;
+      if (self.HasEdgeDescriptor(s))
+        { auto fdi = self.Regions<1>()[s.GetIndex()].GetIndex(); if (fdi.IsValid()) return fdi.Nr1(); }
       return -1;
     };
     PrintMessage (3, "SplitSeparateFaces");
