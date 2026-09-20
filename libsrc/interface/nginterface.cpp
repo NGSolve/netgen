@@ -1672,39 +1672,39 @@ void Ng_GetVertexElements (int vnr, int * els)
 int Ng_GetElementOrder (int enr)
 {
   if (mesh->GetDimension() == 3)
-    return (*mesh)[ElementIndex::FromNr1(enr)].GetOrder();
+    return mesh->GetOrder(ElementIndex::FromNr1(enr));
   else
-    return (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder();
+    return mesh->GetOrder(SurfaceElementIndex::FromNr1(enr));
 }
 
 void Ng_GetElementOrders (int enr, int * ox, int * oy, int * oz)
 {
   if (mesh->GetDimension() == 3)
-    (*mesh)[ElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, *oz);
+    mesh->GetOrder(ElementIndex::FromNr1(enr), *ox, *oy, *oz);
   else
-    (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, *oz);
+    mesh->GetOrder(SurfaceElementIndex::FromNr1(enr), *ox, *oy, *oz);
 }
 
 void Ng_SetElementOrder (int enr, int order)
 {
   if (mesh->GetDimension() == 3)
-    return (*mesh)[ElementIndex::FromNr1(enr)].SetOrder(order);
+    return mesh->SetOrder(ElementIndex::FromNr1(enr), order);
   else
-    return (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(order);
+    return mesh->SetOrder(SurfaceElementIndex::FromNr1(enr), order);
 }
 
 void Ng_SetElementOrders (int enr, int ox, int oy, int oz)
 {
   if (mesh->GetDimension() == 3)
-    (*mesh)[ElementIndex::FromNr1(enr)].SetOrder(ox, oy, oz);
+    mesh->SetOrder(ElementIndex::FromNr1(enr), ox, oy, oz);
   else
-    (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(ox, oy);
+    mesh->SetOrder(SurfaceElementIndex::FromNr1(enr), ox, oy);
 }
 
 
 int Ng_GetSurfaceElementOrder (int enr)
 {
-  return (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder();
+  return mesh->GetOrder(SurfaceElementIndex::FromNr1(enr));
 }
 
 //HERBERT: falsche Anzahl von Argumenten
@@ -1712,17 +1712,17 @@ int Ng_GetSurfaceElementOrder (int enr)
 void Ng_GetSurfaceElementOrders (int enr, int * ox, int * oy)
 {
   int d; 
-  (*mesh)[SurfaceElementIndex::FromNr1(enr)].GetOrder(*ox, *oy, d);
+  mesh->GetOrder(SurfaceElementIndex::FromNr1(enr), *ox, *oy, d);
 }
 
 void Ng_SetSurfaceElementOrder (int enr, int order)
 {
-  return (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(order);
+  return mesh->SetOrder(SurfaceElementIndex::FromNr1(enr), order);
 }
 
 void Ng_SetSurfaceElementOrders (int enr, int ox, int oy)
 {
-  (*mesh)[SurfaceElementIndex::FromNr1(enr)].SetOrder(ox, oy);
+  mesh->SetOrder(SurfaceElementIndex::FromNr1(enr), ox, oy);
 }
 
 

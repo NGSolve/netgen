@@ -1714,7 +1714,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         return mesh.coarsemesh->GetCurvedElements().IsCurved (SegmentIndex(hpref_el.coarse_elnr));
       }
@@ -1744,7 +1744,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         // xi umrechnen
         T lami[2] = { xi, 1-xi };
@@ -1965,7 +1965,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         return mesh.coarsemesh->GetCurvedElements().IsCurved (SurfaceElementIndex(hpref_el.coarse_elnr));
       }
@@ -2021,7 +2021,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         // xi umrechnen
         double lami[4];
@@ -2842,7 +2842,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         return mesh.coarsemesh->GetCurvedElements().IsCurved (ElementIndex(hpref_el.coarse_elnr));
       }
@@ -2894,7 +2894,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         return mesh.coarsemesh->GetCurvedElements().IsElementHighOrder (ElementIndex(hpref_el.coarse_elnr));
       }
@@ -2933,7 +2933,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
           
         // xi umrechnen
         double lami[8];
@@ -4715,7 +4715,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         // xi umrechnen
         T lami[4];
@@ -5023,7 +5023,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         // xi umrechnen
         double lami[8];
@@ -5182,7 +5182,7 @@ namespace netgen
     if (mesh.coarsemesh)
       {
         const HPRefElement & hpref_el =
-          (*mesh.hpelements) [mesh[elnr].GetHpElnr()];
+          (*mesh.hpelements) [mesh.GetHpElnr(elnr)];
         
         // xi umrechnen
         T lami[8];

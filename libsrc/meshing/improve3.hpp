@@ -13,6 +13,15 @@ class MeshOptimize3d
   OPTIMIZEGOAL goal = OPT_QUALITY;
   double min_badness = 0;
 
+  /// element badness, valid only during an optimization pass; NaN = not computed
+  Array<float, ElementIndex> badness;
+  void EnsureBadnessSize ();
+  float GetBadness (ElementIndex ei);
+  void SetBadness (ElementIndex ei, float bad) { EnsureBadnessSize(); badness[ei] = bad; }
+  void InvalidateBadness (ElementIndex ei) { if (badness.Range().Contains(ei)) badness[ei] = NAN; }
+  /// mesh.Compress(), keeping the badness array aligned with the elements
+  void CompressMesh ();
+
   bool HasBadElement(FlatArray<ElementIndex> els);
   bool HasIllegalElement(FlatArray<ElementIndex> els);
   bool NeedsOptimization(FlatArray<ElementIndex> els);

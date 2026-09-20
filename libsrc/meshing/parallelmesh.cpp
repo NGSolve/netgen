@@ -959,6 +959,9 @@ namespace netgen
     self.surfelements = Array<Element2d>(0);
     self.volelements = T_VOLELEMENTS();
     self.segments = Array<Segment>(0);
+    self.hp_surfinfo.SetSize(0);
+    self.hp_volinfo.SetSize(0);
+    self.hp_seginfo.SetSize(0);
     self.pointelements = Array<Element0d>(0);
     self.lockedpoints = Array<PointIndex>(0);
     /*

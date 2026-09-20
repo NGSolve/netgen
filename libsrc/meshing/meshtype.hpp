@@ -863,14 +863,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     bool visible:1;  // element visible
     bool is_curved;   // element is (high order) curved
     int8_t newest_vertex = -1; // from refinement via bisection
-    /// order for hp-FEM
-    unsigned int orderx:6;
-    unsigned int ordery:6;
 
     /// a linked list for all elements in the same face
     SurfaceElementIndex next;
-    ///
-    int hp_elnr;
 
   public:
     static auto GetDataLayout()
@@ -1004,17 +999,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     ///
     FaceRegionIndex GetIndex () const { return index; }
 
-    int GetOrder () const { return orderx; }
-    void SetOrder (int aorder) { orderx = ordery = aorder; }
 
 
-    void GetOrder (int & ox, int & oy) const { ox = orderx, oy =ordery;};
-    void GetOrder (int & ox, int & oy, int & oz) const { ox = orderx; oy = ordery; oz=0; }
-    void SetOrder (int ox, int oy, int  /* oz */) { orderx = ox; ordery = oy;}
-    void SetOrder (int ox, int oy) { orderx = ox; ordery = oy;}
 
-    int GetHpElnr() const { return hp_elnr; }
-    void SetHpElnr(int _hp_elnr) { hp_elnr = _hp_elnr; }
 
     ///
     void GetBox (const T_POINTS & points, Box3d & box) const;
@@ -1135,30 +1122,22 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     int8_t newest_vertex = -1; // from refinement via bisection
     /// sub-domain index
     VolumeRegionIndex index;
-    /// order for hp-FEM
-    unsigned int orderx:6;
-    unsigned int ordery:6;
-    unsigned int orderz:6;
-    /// stored shape-badness of element
-    float badness;
     bool is_curved;   // element is (high order) curved
+    bool refflag;     // mark element for refinement
 
     class flagstruct {
     public:
-      bool refflag;     // mark element for refinement
       bool marked:1;  // marked for refinement
       bool badel:1;   // angles worse then limit
       bool reverse:1; // for refinement a la Bey
       bool illegal:1; // illegal, will be split or swapped
       bool illegal_valid:1; // is illegal-flag valid ?
-      bool badness_valid:1; // is badness valid ?
       bool strongrefflag:1;
       bool deleted:1;   // element is deleted, will be removed from array
       bool fixed:1;     // don't change element in optimization
     };
 
     flagstruct flags;
-    int hp_elnr;
   };
 
   class Element;
@@ -1230,10 +1209,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetIndex (VolumeRegionIndex si) { h->index = si; }
     VolumeRegionIndex GetIndex () const { return h->index; }
 
-    int GetOrder () const { return h->orderx; }
-    void SetOrder (const int aorder) { h->orderx = h->ordery = h->orderz = aorder; }
-    void GetOrder (int & ox, int & oy, int & oz) const { ox = h->orderx; oy = h->ordery; oz = h->orderz; }
-    void SetOrder (const int ox, const int oy, const int oz) { h->orderx = ox; h->ordery = oy; h->orderz = oz; }
 
     DLL_HEADER void GetBox (const T_POINTS & points, Box3d & box) const;
     /// Calculates Volume of element
@@ -1244,8 +1219,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void GetFace2 (int i, Element2d & face) const;
     DLL_HEADER void Invert ();
 
-    int GetHpElnr() const { return h->hp_elnr; }
-    void SetHpElnr(int _hp_elnr) { h->hp_elnr = _hp_elnr; }
 
     /// split into 4 node tets
     DLL_HEADER void GetTets (Array<Element> & locels) const;
@@ -1284,8 +1257,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER double CalcJacobianBadnessGradient (const T_POINTS & points,
                                                    int pi, Vec<3> & grad) const;
 
-    void SetRefinementFlag (bool rflag = 1) { h->flags.refflag = rflag; }
-    int TestRefinementFlag () const { return h->flags.refflag; }
+    void SetRefinementFlag (bool rflag = 1) { h->refflag = rflag; }
+    int TestRefinementFlag () const { return h->refflag; }
 
     void SetStrongRefinementFlag (bool rflag = 1) { h->flags.strongrefflag = rflag; }
     int TestStrongRefinementFlag () const { return h->flags.strongrefflag; }
@@ -1307,22 +1280,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       h->flags.illegal_valid = 1;
     }
 
-    bool BadnessValid() const { return h->flags.badness_valid; }
-    float GetBadness() const
-    {
-      NETGEN_CHECK_SAME(h->flags.badness_valid, true);
-      return h->badness;
-    }
-    void SetBadness(float value)
-    {
-      h->badness = value;
-      h->flags.badness_valid = 1;
-    }
-
-    void Touch() {
-      h->flags.illegal_valid = 0;
-      h->flags.badness_valid = 0;
-    }
+    void Touch() { h->flags.illegal_valid = 0; }
 
     void Delete () { h->flags.deleted = 1; }
     bool IsDeleted () const
@@ -1366,7 +1324,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
           { "pnum", off(&hel.pnstore[0]) },
           { "index", off(&hel.hstore.index) },
           { "type", off(&hel.hstore.typ) },
-          { "refine", off(&hel.hstore.flags.refflag) },
+          { "refine", off(&hel.hstore.refflag) },
           { "curved", off(&hel.hstore.is_curved) }
         });
     }
@@ -1518,7 +1476,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   {
   PointIndex pnums[3];
   EdgePointGeomInfo epgeominfo[2]; // combines PointGeomInfo + dist
-  int hp_elnr;
   /// 1-based edge descriptor index into mesh.Regions<1>() (INVALID = 0)
   EdgeRegionIndex index = EdgeRegionIndex::INVALID;
 
@@ -1543,8 +1500,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     EdgePointGeomInfo & EPGeomInfo (int i) { return epgeominfo[i]; }
     const EdgePointGeomInfo & EPGeomInfo (int i) const { return epgeominfo[i]; }
 
-    int GetHpElnr () const { return hp_elnr; }
-    void SetHpElnr (int nr) { hp_elnr = nr; }
 
     EdgeRegionIndex GetIndex() const { return index; }
     void SetIndex (EdgeRegionIndex i) { index = i; }

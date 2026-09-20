@@ -450,7 +450,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             add ("nodes", py::dtype ("(" + ToString(els.Width()) + ",)i4"), els.GetLayout().offset[0]);
             add ("index", py::dtype ("i4"), offsetof(ElementHeader, index));
             add ("type", py::dtype ("u1"), offsetof(ElementHeader, typ));
-            add ("refine", py::dtype ("?"), offsetof(ElementHeader, flags));
+            add ("refine", py::dtype ("?"), offsetof(ElementHeader, refflag));
             add ("curved", py::dtype ("?"), offsetof(ElementHeader, is_curved));
             py::dtype dt (names, formats, offsets, els.Stride());
             return py::module::import("numpy").attr("frombuffer")(self, dt);
@@ -1220,14 +1220,14 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     }, "mesh before hp-refinement")
     .def("MacroElementNr", [](Mesh & self, int elnr, optional<int> dim) {
       // cout << "hpels = " << self.hpelements->Size() << endl;
-      // return self[ElementIndex(elnr)].GetHpElnr();
+      // return self.GetHpElnr(ElementIndex(elnr));
       if (!dim) dim = self.GetDimension();
       switch (*dim)
         {
         case 2:
-          return (*self.hpelements)[self[SurfaceElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
+          return (*self.hpelements)[self.GetHpElnr(SurfaceElementIndex::FromNr0(elnr))].coarse_elnr.Nr0();
         case 3:
-          return (*self.hpelements)[self[ElementIndex::FromNr0(elnr)].GetHpElnr()].coarse_elnr.Nr0();
+          return (*self.hpelements)[self.GetHpElnr(ElementIndex::FromNr0(elnr))].coarse_elnr.Nr0();
         }
       throw Exception ("MacroElementNr not implemented for dim");
     }, py::arg("elnr"), py::arg("dim")=nullopt, "number of macro element of element number elnr")

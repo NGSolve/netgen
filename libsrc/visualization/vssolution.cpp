@@ -2947,7 +2947,7 @@ namespace netgen
       
       case SOL_ELEMENT_ORDER:
         {
-          val = (*mesh)[elnr].GetOrder();
+          val = mesh->GetOrder(elnr);
           return 1;
         }
 
@@ -3115,7 +3115,7 @@ namespace netgen
       
       case SOL_ELEMENT_ORDER:
         {
-          val = (*mesh)[elnr].GetOrder();
+          val = mesh->GetOrder(elnr);
           return 1;
         }
       default:
@@ -3591,7 +3591,7 @@ namespace netgen
       case SOL_ELEMENT_ORDER:
         {
           shared_ptr<Mesh> mesh = GetMesh();          
-          val = (*mesh)[selnr].GetOrder();
+          val = mesh->GetOrder(selnr);
           return 1;
         }
 
@@ -3828,7 +3828,7 @@ namespace netgen
       
       case SOL_ELEMENT_ORDER:
         {       
-          val = (*mesh)[selnr].GetOrder();
+          val = mesh->GetOrder(selnr);
           return 1;
         }
 

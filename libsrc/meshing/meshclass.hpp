@@ -203,6 +203,54 @@ namespace netgen
     // store coarse mesh before hp-refinement
     unique_ptr<Array<HPRefElement>> hpelements;
     unique_ptr<Mesh> coarsemesh;
+
+    /// per-element data of hp- and p-refinement; the arrays stay empty until something is set
+    struct HPElementInfo
+    {
+      int hp_elnr = -1;
+      uint8_t orderx = 1, ordery = 1, orderz = 1;
+    };
+  private:
+    Array<HPElementInfo, ElementIndex> hp_volinfo;
+    Array<HPElementInfo, SurfaceElementIndex> hp_surfinfo;
+    Array<HPElementInfo, SegmentIndex> hp_seginfo;
+
+    template <typename TIndex>
+    const Array<HPElementInfo,TIndex> & HPInfo () const;
+    template <typename TIndex>
+    Array<HPElementInfo,TIndex> & HPInfo ();
+    template <typename TIndex>
+    HPElementInfo GetHPInfo (TIndex i) const
+    {
+      auto & info = HPInfo<TIndex>();
+      return info.Range().Contains(i) ? info[i] : HPElementInfo();
+    }
+    template <typename TIndex>
+    void SetHPInfo (TIndex i, HPElementInfo val);
+  public:
+    template <typename TIndex>
+    int GetOrder (TIndex i) const { return GetHPInfo(i).orderx; }
+    void GetOrder (ElementIndex i, int & ox, int & oy, int & oz) const
+    { auto h = GetHPInfo(i); ox = h.orderx; oy = h.ordery; oz = h.orderz; }
+    void GetOrder (SurfaceElementIndex i, int & ox, int & oy, int & oz) const
+    { auto h = GetHPInfo(i); ox = h.orderx; oy = h.ordery; oz = 0; }
+    void GetOrder (SurfaceElementIndex i, int & ox, int & oy) const
+    { auto h = GetHPInfo(i); ox = h.orderx; oy = h.ordery; }
+    template <typename TIndex>
+    void SetOrder (TIndex i, int order) { SetOrder (i, order, order, order); }
+    void SetOrder (ElementIndex i, int ox, int oy, int oz)
+    { auto h = GetHPInfo(i); h.orderx = ox; h.ordery = oy; h.orderz = oz; SetHPInfo (i, h); }
+    void SetOrder (SurfaceElementIndex i, int ox, int oy, int /* oz */ = 0)
+    { auto h = GetHPInfo(i); h.orderx = ox; h.ordery = oy; h.orderz = 1; SetHPInfo (i, h); }
+    /// number of the HPRefElement an element was made from (-1 if none)
+    template <typename TIndex>
+    int GetHpElnr (TIndex i) const { return GetHPInfo(i).hp_elnr; }
+    template <typename TIndex>
+    void SetHpElnr (TIndex i, int nr) { auto h = GetHPInfo(i); h.hp_elnr = nr; SetHPInfo (i, h); }
+    template <typename TIndex>
+    void AllocateHPInfo ();
+    template <typename TIndex>
+    bool HasHPInfo () const { return HPInfo<TIndex>().Size() > 0; }
   
   
     /// number of refinement levels
@@ -235,6 +283,7 @@ namespace netgen
     DLL_HEADER void ClearVolumeElements()
     {
       volelements.SetSize(0); 
+      hp_volinfo.SetSize(0);
       timestamp = NextTimeStamp();
     }
 
@@ -242,6 +291,7 @@ namespace netgen
     DLL_HEADER void ClearSegments()
     { 
       segments.SetSize(0); 
+      hp_seginfo.SetSize(0);
       timestamp = NextTimeStamp();
     }
     
