@@ -48,7 +48,7 @@ namespace netgen
       for (PointIndex pi : mesh.Points().Range())
         mapto[pi] = bndnodes.Test(pi) ? mesh.AddPoint (mesh[pi]) : PointIndex(PointIndex::INVALID);
 
-      for (auto & el : mesh.SurfaceElements())
+      for (auto el : mesh.SurfaceElements())
       {
          for (int j = 0; j < el.GetNP(); j++)
             if (mapto[el[j]].IsValid())
@@ -953,7 +953,7 @@ namespace netgen
         any = true;
         n_edge_descriptors = min2(n_edge_descriptors, info.n_edge_descriptors);
 
-        for(auto & sel : mesh.SurfaceElements())
+        for(auto sel : mesh.SurfaceElements())
            if(sel.GetIndex() == FaceRegionIndex::FromNr1(info.new_domain))   // 2D: descriptor k <-> domain k
               sel.SetIndex(FaceRegionIndex::FromNr1(info.domain));
 

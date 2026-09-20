@@ -6,7 +6,7 @@
 namespace netgen
 {
 
-inline void AppendEdges( const Element2d & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
+inline void AppendEdges( const Element2dRef & elem, PointIndex pi, Array<std::tuple<PointIndex,PointIndex>> & edges )
 {
   for (int j = 0; j < 3; j++)
   {

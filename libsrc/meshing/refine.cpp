@@ -55,7 +55,7 @@ namespace netgen
             parents.Append(i2);
           }
       }
-    for (const Element2d & el : mesh.SurfaceElements())
+    for (const Element2dRef & el : mesh.SurfaceElements())
       {
         switch (el.GetType())
           {
@@ -215,7 +215,7 @@ namespace netgen
 
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
       {
-        const Element2d & el = mesh[sei];
+        const Element2dRef & el = mesh[sei];
 
         switch (el.GetType())
           {
@@ -791,7 +791,7 @@ namespace netgen
 
         TBitArray<PointIndex> boundp(np);
         boundp.Clear();
-        for (auto & sel : mesh.SurfaceElements())
+        for (auto sel : mesh.SurfaceElements())
           for (auto pi : sel.PNums())
             boundp.SetBit(pi);
 
@@ -854,7 +854,7 @@ namespace netgen
                     (*testout) << "p " << pi << endl;
 
                 (*testout) << "surf points: " << endl;
-                for (auto & sel : mesh.SurfaceElements())
+                for (auto sel : mesh.SurfaceElements())
                   for (auto pi : sel.PNums())
                     (*testout) << pi << endl;
 

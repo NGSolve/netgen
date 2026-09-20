@@ -116,7 +116,7 @@ namespace netgen
     for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(n))
       {
         SURFELEMENT sel;
-        const Element2d & el = mesh[i];
+        const Element2dRef & el = mesh[i];
         sel.snr = el.GetIndex().Nr1();
         sel.p1 = el[0];
         sel.p2 = el[1];

@@ -124,7 +124,7 @@ namespace netgen::cg
       verts.Append(el[1].Nr1());
     }
 
-  void WriteCGNSElement( const Element2d & el, Array<cgsize_t> & verts )
+  void WriteCGNSElement( const Element2dRef & el, Array<cgsize_t> & verts )
     {
       static constexpr int map_tri6[]  = {0,2,1,3,5,4}; // untested
       static constexpr int map_quad8[] = {0,3,2,1,4,7,6,5}; // untested

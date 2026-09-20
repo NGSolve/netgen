@@ -77,7 +77,7 @@ void WriteGmshFormat (const Mesh & mesh,
 
      for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
          {
-         Element2d el = mesh[i];
+         Element2d el (mesh[i]);
          if (invertsurf) el.Invert();
          outfile << i.Nr1();
          outfile << " ";
@@ -160,7 +160,7 @@ void WriteGmshFormat (const Mesh & mesh,
 
               for (SurfaceElementIndex k : T_Range<SurfaceElementIndex>(nse))
               {
-              const Element2d & el = mesh[k];
+              const Element2dRef & el = mesh[k];
 
 
               outfile << k.Nr1();

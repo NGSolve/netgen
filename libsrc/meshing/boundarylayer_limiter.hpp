@@ -62,7 +62,7 @@ struct GrowthVectorLimiter
     out_mesh.Save(name);
   }
 
-  const auto& Get (SurfaceElementIndex sei)
+  const Element2dRef Get (SurfaceElementIndex sei)
   {
     if (sei.Nr0() < tool.nse)
       return mesh[sei];
@@ -515,7 +515,7 @@ struct GrowthVectorLimiter
             special_points.insert(group.new_points.Last());
         }
 
-    auto skip_trig = [&] (const Element2d& tri) {
+    auto skip_trig = [&] (const Element2dRef & tri) {
       if (!tool.insert_only_volume_elements)
         return false;
       for (auto pi : tri.PNums())
@@ -533,7 +533,7 @@ struct GrowthVectorLimiter
 
         for (auto sei : SurfaceElementsRange())
           {
-            const Element2d& tri = Get(sei);
+            const Element2dRef & tri = Get(sei);
 
             if (skip_trig(tri))
               continue;
@@ -548,7 +548,7 @@ struct GrowthVectorLimiter
 
         for (auto sei : SurfaceElementsRange())
           {
-            const Element2d& tri = Get(sei);
+            const Element2dRef & tri = Get(sei);
 
             if (skip_trig(tri))
               continue;
@@ -558,7 +558,7 @@ struct GrowthVectorLimiter
               box.Add(GetPoint(pi, 1.0, true));
 
             setree.GetFirstIntersecting(box.PMin(), box.PMax(), [&] (SurfaceElementIndex sej) {
-              const Element2d& tri2 = Get(sej);
+              const Element2dRef & tri2 = Get(sej);
 
               if (mesh[tri[0]].GetLayer() != mesh[tri2[0]].GetLayer())
                 return false;

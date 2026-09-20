@@ -1293,7 +1293,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
     {
       for (int i = 1; i <= mesh.GetNOpenElements(); i++)
         {
-          const Element2d & hel = mesh.OpenElement(i);
+          const Element2dRef & hel = mesh.OpenElement(i);
           PointIndices<3> face(hel[0], hel[1], hel[2]);
           face.Sort();
           faces.Set (face, i);
@@ -1646,7 +1646,7 @@ void MeshOptimize3d :: SwapImproveSurface (
             {
               bool has1 = false, has2 = false;
               SurfaceElementIndex elnr = surfaceelementsonnode[pi1][k];
-              const Element2d & elem = mesh[elnr];
+              const Element2dRef & elem = mesh[elnr];
 
               if (elem.IsDeleted()) continue;
 
@@ -1669,7 +1669,7 @@ void MeshOptimize3d :: SwapImproveSurface (
                 {
                   bool has1 = false, has2 = false;
                   SurfaceElementIndex elnr = surfaceelementsonnode[pi1other][k];
-                  const Element2d & elem = mesh[elnr];
+                  const Element2dRef & elem = mesh[elnr];
 
                   if (elem.IsDeleted()) continue;
 
@@ -2282,7 +2282,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
       bool bface = 0;
       for (int k = 0; k < belementsonnode[pi1].Size(); k++)
       {
-          const Element2d & bel =
+          const Element2dRef & bel =
             mesh[belementsonnode[pi1][k]];
 
           bool bface1 = 1;
@@ -2779,7 +2779,7 @@ void MeshOptimize3d :: SplitImprove2 ()
 
   for (i = 1; i <= GetNSE(); i++)
   {
-  const Element2d & sface = SurfaceElement(i);
+  const Element2dRef & sface = SurfaceElement(i);
   IVec<3> i3 (sface[0], sface[1], sface[2]);
   i3.Sort();
   IVec<2> i2(0,0);

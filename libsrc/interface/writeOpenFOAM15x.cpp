@@ -234,7 +234,7 @@ namespace netgen
             // into the various surface elements lists
             else
             {
-               Element2d sel = mesh[SurfaceElementIndex::FromNr1(surfelem)];
+               Element2d sel (mesh[SurfaceElementIndex::FromNr1(surfelem)]);
                surfelem_bclist[bc_ind-1] = mesh.GetFaceDescriptor(sel.GetIndex()).BCProperty();
                surfelem_lists[bc_ind-1] = IVec<2>(locfaces[i],elind);
 

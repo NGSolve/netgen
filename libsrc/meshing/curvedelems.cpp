@@ -859,7 +859,7 @@ namespace netgen
             {
               // top.GetEdges (i, edgenrs);
               auto edgenrs = top.GetEdges(i);
-              const Element2d & el = mesh[i];
+              const Element2dRef & el = mesh[i];
               const ELEMENT_EDGE * edges = MeshTopology::GetEdges0 (el.GetType());
 
               for (int i2 = 0; i2 < edgenrs.Size(); i2++)
@@ -1970,7 +1970,7 @@ namespace netgen
         return mesh.coarsemesh->GetCurvedElements().IsCurved (SurfaceElementIndex(hpref_el.coarse_elnr));
       }
 
-    const Element2d & el = mesh[elnr];
+    const Element2dRef & el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
     
     SurfaceElementInfo info;
@@ -2060,7 +2060,7 @@ namespace netgen
 
 
 
-    const Element2d & el = mesh[elnr];
+    const Element2dRef & el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     SurfaceElementInfo info;
@@ -2167,7 +2167,7 @@ namespace netgen
   void CurvedElements :: 
   CalcElementShapes (SurfaceElementInfo & info, const Point<2,T> xi, TFlatVector<T> shapes) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     // shapes.SetSize(info.ndof);
     
     if (rational && info.order >= 2)
@@ -2323,7 +2323,7 @@ namespace netgen
   void CurvedElements :: 
   CalcElementDShapes (SurfaceElementInfo & info, const Point<2,T> xi, MatrixFixWidth<2,T> & dshapes) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     ELEMENT_TYPE type = el.GetType();
 
     T lami[4];
@@ -2599,7 +2599,7 @@ namespace netgen
   bool CurvedElements ::
   EvaluateMapping (SurfaceElementInfo & info, const Point<2,T> xi, Point<DIM_SPACE,T> & mx, Mat<DIM_SPACE,2,T> & jac) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     if (rational && info.order >= 2) return false; // not supported     
 
     AutoDiff<2,T> x(xi(0), 0);
@@ -2791,7 +2791,7 @@ namespace netgen
   void CurvedElements :: 
   GetCoefficients (SurfaceElementInfo & info, Array<Vec<DIM_SPACE> > & coefs) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     coefs.SetSize (info.ndof);
     
     for (int i = 0; i < info.nv; i++)
@@ -4779,7 +4779,7 @@ namespace netgen
       }
 
 
-    const Element2d & el = mesh[elnr];
+    const Element2dRef & el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     SurfaceElementInfo info;

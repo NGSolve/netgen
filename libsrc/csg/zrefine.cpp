@@ -75,9 +75,9 @@ namespace netgen
       }
 
     // surface elements
-    for (auto & sel : mesh.SurfaceElements())
+    for (auto sel : mesh.SurfaceElements())
       {
-        Element2d & el = sel;
+        Element2dRef el = sel;
         if (el.GetType() != TRIG) continue;
 
         for (int j = 1; j <= 3; j++)
@@ -168,9 +168,9 @@ namespace netgen
           }
       }
   
-    for (auto & sel : mesh.SurfaceElements())
+    for (auto sel : mesh.SurfaceElements())
       {
-        Element2d & el = sel;
+        Element2dRef el = sel;
         if (el.GetType() != TRIG) continue;
 
         for (int j = 1; j <= 3; j++)
@@ -589,7 +589,7 @@ namespace netgen
         //      cout << "oldnse = " << oldnse << endl;
         for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(oldnse))
           {
-            Element2d & el = mesh.SurfaceElement (sei);
+            Element2dRef el = mesh.SurfaceElement (sei);
             if (el.GetType() != QUAD)
               continue;
 

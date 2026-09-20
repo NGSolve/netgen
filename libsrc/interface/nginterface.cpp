@@ -384,7 +384,7 @@ NG_ELEMENT_TYPE Ng_GetElement (int ei, int * epi, int * np)
     }
   else
     {
-      const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
+      const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
         epi[i] = PointNr(el[i]);      
 
@@ -405,7 +405,7 @@ NG_ELEMENT_TYPE Ng_GetElementType (int ei)
     }
   else
     {
-      const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
+      const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       switch (el.GetNP())
         {
         case 3: return NG_TRIG; 
@@ -491,7 +491,7 @@ NG_ELEMENT_TYPE Ng_GetSurfaceElement (int ei, int * epi, int * np)
 {
   if (mesh->GetDimension() == 3)
     {
-      const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
+      const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(ei)];
       for (int i = 0; i < el.GetNP(); i++)
         epi[i] = PointNr(el[i]);
       
@@ -2320,7 +2320,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
         int cnt = 0;
         if (nodeset & 1)  // Vertices
           {
-            const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr0(elementnr)];
+            const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr0(elementnr)];
             for (int i = 0; i < el.GetNP(); i++)
               { 
                 nodes[cnt++] = 0;

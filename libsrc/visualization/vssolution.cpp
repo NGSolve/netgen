@@ -240,22 +240,22 @@ namespace netgen
           }
 
         int cntverts = 0;
-        for (auto & el : mesh->SurfaceElements())
+        for (auto el : mesh->SurfaceElements())
           cntverts += 1 + el.GetNP();
 
         surf_ost << "\nCELLS " << mesh->GetNSE() << " " << cntverts << "\n";
-        for (auto & sel : mesh->SurfaceElements())
+        for (auto sel : mesh->SurfaceElements())
           {
-            const Element2d & el = sel;
+            const Element2dRef & el = sel;
             surf_ost << el.GetNP();
             for (int j = 0; j < el.GetNP(); j++)
               surf_ost << " " << el[j] - IndexBASE<PointIndex>();
             surf_ost << "\n";
           }
         surf_ost << "\nCELL_TYPES " << mesh->GetNSE() << "\n";
-        for (auto & sel : mesh->SurfaceElements())
+        for (auto sel : mesh->SurfaceElements())
           {
-            const Element2d & el = sel;
+            const Element2dRef & el = sel;
             switch (el.GetType())
               {
               case QUAD: surf_ost << 9; break;
@@ -970,7 +970,7 @@ namespace netgen
           
             for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
               {
-                const Element2d & el = (*mesh)[sei];
+                const Element2dRef & el = (*mesh)[sei];
 
                 if(!SurfaceElementActive(sol_active, *mesh, el))
                   continue;
@@ -1338,7 +1338,7 @@ namespace netgen
     
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
-        const Element2d & el = (*mesh)[sei];
+        const Element2dRef & el = (*mesh)[sei];
 
         if(!SurfaceElementActive(sol_active, *mesh, el))
           continue;
@@ -1508,7 +1508,7 @@ namespace netgen
     
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
-        const Element2d & el = (*mesh)[sei];
+        const Element2dRef & el = (*mesh)[sei];
         // if (el.GetIndex() <= 1) continue;
 
         if(!SurfaceElementActive(sol_active, *mesh, el))
@@ -1819,7 +1819,7 @@ namespace netgen
 
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
       {
-        Element2d & el = (*mesh)[sei];
+        Element2dRef el = (*mesh)[sei];
 
         if(!SurfaceElementActive(sol_active, *mesh, el))
             continue;
@@ -2303,7 +2303,7 @@ namespace netgen
         int nse = mesh->GetNSE();
         for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
           {
-            const Element2d & el = (*mesh)[sei];
+            const Element2dRef & el = (*mesh)[sei];
             if(!SurfaceElementActive(vsol, *mesh, el))
               continue;
           
@@ -3426,7 +3426,7 @@ namespace netgen
       case SOL_NODAL:
         {
           shared_ptr<Mesh> mesh = GetMesh();
-          const Element2d & el = (*mesh)[selnr];
+          const Element2dRef & el = (*mesh)[selnr];
 
           double lami[8];
           int np;
@@ -3509,7 +3509,7 @@ namespace netgen
       case SOL_SURFACE_NONCONTINUOUS:
         {
           shared_ptr<Mesh> mesh = GetMesh();          
-          const Element2d & el = (*mesh)[selnr];
+          const Element2dRef & el = (*mesh)[selnr];
 
           double lami[8];
           int np = 0;
@@ -3667,7 +3667,7 @@ namespace netgen
 
       case SOL_NODAL:
         {
-          const Element2d & el = (*mesh)[selnr];
+          const Element2dRef & el = (*mesh)[selnr];
 
           double lami[8];
           int np;
@@ -3748,7 +3748,7 @@ namespace netgen
 
       case SOL_SURFACE_NONCONTINUOUS:
         {
-          const Element2d & el = (*mesh)[selnr];
+          const Element2dRef & el = (*mesh)[selnr];
 
           double lami[8] = { 0.0 };
           int np = 0;
@@ -3908,7 +3908,7 @@ namespace netgen
           }
         else if (vsol->soltype == SOL_SURFACE_NONCONTINUOUS)
           {
-            const Element2d & el = (*mesh)[elnr];
+            const Element2dRef & el = (*mesh)[elnr];
             for (int j = 0; j < el.GetNP(); j++)
               if (el[j] == pnum)
                 {
@@ -4718,7 +4718,7 @@ namespace netgen
 
 
   bool VisualSceneSolution ::
-  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2d & el) const
+  SurfaceElementActive(const SolData *data, const Mesh & mesh, const Element2dRef & el) const
   {
     if(data == nullptr) return true;
     bool is_active = true;

@@ -81,7 +81,7 @@ namespace netgen
 
     for (i = 0; i < seia.Size(); i++)
       {
-        const Element2d & el = mesh[seia[i]];
+        const Element2dRef & el = mesh[seia[i]];
         for (j = 0; j < el.GetNP(); j++)
           nelementsonpoint[el[j]]++;
       }
@@ -90,7 +90,7 @@ namespace netgen
     DynamicTable<SurfaceElementIndex, PointIndex> elementsonpoint(mesh.GetNP());
     for (i = 0; i < seia.Size(); i++)
       {
-        const Element2d & el = mesh[seia[i]];
+        const Element2dRef & el = mesh[seia[i]];
         for (j = 0; j < el.GetNP(); j++)
           elementsonpoint.Add (el[j], seia[i]);
       }
@@ -155,7 +155,7 @@ namespace netgen
         if(elementsonpoint[pi].Size() == 0)
           continue;
 
-        Element2d & hel = mesh[elementsonpoint[pi][0]];
+        Element2dRef hel = mesh[elementsonpoint[pi][0]];
 
         if(hel.GetIndex() != faceindex)
           continue;
@@ -183,7 +183,7 @@ namespace netgen
         for (j = 0; j < elementsonpoint[pi].Size(); j++)
           {
             sei = elementsonpoint[pi][j];
-            const Element2d & bel = mesh[sei];
+            const Element2dRef & bel = mesh[sei];
             surfi = mesh.GetFaceDescriptor(bel.GetIndex()).SurfNr();
             
             locelements.Append (sei);

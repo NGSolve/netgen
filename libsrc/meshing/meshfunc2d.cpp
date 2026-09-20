@@ -16,7 +16,7 @@ namespace netgen
 
     if (secondorder)
       {
-      for (auto & el : mesh.SurfaceElements())
+      for (auto el : mesh.SurfaceElements())
         el.SetType(TRIG);
       }
     mesh.Compress();

@@ -49,7 +49,7 @@ namespace netgen
                 pnums[deltetfaces[i][2]] };
     }
 
-    void GetFace (int i, Element2d & face) const
+    void GetFace (int i, Element2dRef face) const
     {
       // face.SetType(TRIG);
       face[0] = pnums[deltetfaces[i][0]];
@@ -817,7 +817,7 @@ namespace netgen
 
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
-        const Element2d & tri = mesh.OpenElement(i);
+        const Element2dRef & tri = mesh.OpenElement(i);
         bnd_points.SetBit(tri[0]);
         bnd_points.SetBit(tri[1]);
         bnd_points.SetBit(tri[2]);
@@ -874,7 +874,7 @@ namespace netgen
     openels.SetSize(0);
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
-        const Element2d & tri = mesh.OpenElement(i);
+        const Element2dRef & tri = mesh.OpenElement(i);
         // ngcore::IVec<3,PointIndex> i3(tri[0], tri[1], tri[2]);
         PointIndices<3> i3(tri[0], tri[1], tri[2]);
         i3.Sort();
@@ -888,7 +888,7 @@ namespace netgen
            [&](auto & table, int i)
            {
              auto openel_i = openels[i];
-             const Element2d & tri = mesh.OpenElement(openel_i);
+             const Element2dRef & tri = mesh.OpenElement(openel_i);
              table.Add(tri[0], openel_i);
              table.Add(tri[1], openel_i);
              table.Add(tri[2], openel_i);
@@ -901,7 +901,7 @@ namespace netgen
         for (auto i_ : myrange)
           {
             auto i = openels[i_];
-            const Element2d & tri = mesh.OpenElement(i);
+            const Element2dRef & tri = mesh.OpenElement(i);
 
             for( auto edge : Range(3) )
             {
@@ -995,7 +995,7 @@ namespace netgen
             fnr = openels[i];
             if (fnr)
               {
-                const Element2d & tri = mesh.OpenElement(fnr);
+                const Element2dRef & tri = mesh.OpenElement(fnr);
               
                 Point<3> ltpmin (mesh.Point(tri[0]));
                 Point<3> ltpmax (ltpmin);
@@ -1043,7 +1043,7 @@ namespace netgen
               {
                 int j = neartrias[jj];
               
-                const Element2d & tri = mesh.OpenElement(j);
+                const Element2dRef & tri = mesh.OpenElement(j);
                 const Point<3> *tripp[3];
                 int tripi[3];
               
@@ -1109,7 +1109,7 @@ namespace netgen
     /*
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
-        const Element2d & tri = mesh.OpenElement(i);
+        const Element2dRef & tri = mesh.OpenElement(i);
         IVec<3> i3 (tri[0], tri[1], tri[2]);
         i3.Sort();
         boundaryfaces.PrepareSet (i3);
@@ -1117,7 +1117,7 @@ namespace netgen
     */
     for (int i = 1; i <= mesh.GetNOpenElements(); i++)
       {
-        const Element2d & tri = mesh.OpenElement(i);
+        const Element2dRef & tri = mesh.OpenElement(i);
         PointIndices<3> i3 (tri[0], tri[1], tri[2]);
         i3.Sort();
         boundaryfaces.Set (i3, 1);
@@ -1473,7 +1473,7 @@ namespace netgen
     if (tempmesh.SurfaceElement(j).GetIndex()==2)
     {
     const Element & el = tempmesh.VolumeElement(i);
-    const Element2d & sel = tempmesh.SurfaceElement(j);
+    const Element2dRef & sel = tempmesh.SurfaceElement(j);
 
     const Point<3> *tripp[3];
     const Point<3> *pp[4];
@@ -1599,7 +1599,7 @@ namespace netgen
     
       for (int i = 1; i <= mesh.GetNOpenElements(); i++)
         {
-          Element2d sel = mesh.OpenElement(i);
+          Element2d sel (mesh.OpenElement(i));
           sel.SetIndex(FaceRegionIndex::FromNr1(1));
           tempmesh.AddSurfaceElement (sel);
           swap (sel[1], sel[2]);

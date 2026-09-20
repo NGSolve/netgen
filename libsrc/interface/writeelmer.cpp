@@ -86,7 +86,7 @@ void WriteElmerFormat (const Mesh &mesh,
       }
   }
 
-  auto get3FacePoints = [](const Element2d & el)
+  auto get3FacePoints = [](const Element2dRef & el)
   {
       PointIndices<3> i3;
       PointIndices<4> i4;
@@ -167,7 +167,7 @@ void WriteElmerFormat (const Mesh &mesh,
 
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
     {
-      Element2d el = mesh[i];
+      Element2d el (mesh[i]);
       if (invertsurf) el.Invert();
       auto eltype = el.GetType();
       elcount[eltype]++;

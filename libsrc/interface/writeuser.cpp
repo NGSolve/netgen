@@ -141,7 +141,7 @@ void WriteNeutralFormat (const Mesh & mesh,
     {
       Element2d el = mesh.SurfaceElement(i);
   */
-  for (Element2d el : mesh.SurfaceElements())
+  for (auto el : mesh.SurfaceElements())
     {
       if (invertsurf)
         el.Invert();
@@ -221,7 +221,7 @@ void WriteSurfaceFormat (const Mesh & mesh,
       outfile << endl;
     }
   outfile << mesh.GetNSE() << endl;
-  for (auto & sel : mesh.SurfaceElements())
+  for (auto sel : mesh.SurfaceElements())
     {
       for (j = 1; j <= 3; j++)
         {
@@ -258,7 +258,7 @@ void WriteSTLFormat (const Mesh & mesh,
 
   *outfile << "solid" << endl;
 
-  for (auto & sel : mesh.SurfaceElements())
+  for (auto sel : mesh.SurfaceElements())
     {
       *outfile << "facet normal ";
       const Point<3>& p1 = mesh.Point(sel[0]);
@@ -436,7 +436,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
 
           for (j = 1; j <= 3; j++)
             {
@@ -512,7 +512,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
 
           for (j = 1; j <= 3; j++)
             {
@@ -590,7 +590,7 @@ void WriteFEPPFormat (const Mesh & mesh,
       outfile << nse << endl;
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
 
           //      int facenr = mesh.facedecoding.Get(el.GetIndex()).surfnr;
           outfile.width(4);
@@ -790,7 +790,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nsurfelem))
     {
       SurfaceElementIndex sei = i;
-      Element2d el = mesh[sei];
+      Element2d el (mesh[sei]);
       if (invertsurf)
         el.Invert();
       outfile.width(4);

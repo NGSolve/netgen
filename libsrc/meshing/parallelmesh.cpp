@@ -79,7 +79,7 @@ namespace ngcore
     SelPackage () { ; }
     SelPackage (const netgen::Mesh & mesh, netgen::SurfaceElementIndex _sei)
     {
-      const netgen::Element2d & el = mesh[_sei];
+      const netgen::Element2dRef el = mesh[_sei];
       sei = _sei.Nr0();
       index = el.GetIndex().Nr1();
       np = el.GetNP();
@@ -98,7 +98,7 @@ namespace ngcore
         points[k].v = -1;
       }
     }
-    void Unpack (netgen::Element2d & el) const {
+    void Unpack (netgen::Element2dRef el) const {
         el.SetIndex(netgen::FaceRegionIndex::FromNr1(index));
         for (int k : Range(1, np + 1)) {
           auto & pnt = points[k-1];
@@ -664,7 +664,7 @@ namespace netgen
         for (SurfaceElementIndex sei : SurfaceElements().Range())
           {
             if(ided_sel[sei].IsValid()) continue;
-            const Element2d & sel = (*this)[sei];
+            const Element2dRef & sel = (*this)[sei];
             auto points = sel.PNums();
             auto ided1 = per_verts[points[0]];
             os1.SetSize(0);
@@ -688,7 +688,7 @@ namespace netgen
             if(os1.Size()>1) {
               throw NgException("SurfaceElement identified with more than one other??");
             }
-            // const Element2d & sel2 = (*this)[sei];
+            // const Element2dRef & sel2 = (*this)[sei];
             // auto points2 = sel2.PNums();
             has_ided_sels = true;
             ided_sel[sei] = os1[0];
@@ -699,7 +699,7 @@ namespace netgen
     auto iterate_sels = [&](auto f) {
       for (SurfaceElementIndex sei : SurfaceElements().Range())
         {
-          const Element2d & sel = (*this)[sei];
+          const Element2dRef & sel = (*this)[sei];
           // int dest = (*this)[sei].GetPartition();
           int dest = surf_partition[sei];
           f(sei, sel, dest);
@@ -714,7 +714,7 @@ namespace netgen
     Array <int> nlocsel(ntasks), bufsize(ntasks);
     nlocsel = 0;
     bufsize = 0;
-    iterate_sels([&](SurfaceElementIndex sei, const Element2d & sel, int dest){
+    iterate_sels([&](SurfaceElementIndex sei, const Element2dRef & sel, int dest){
         nlocsel[dest]++;
         bufsize[dest]++;
       });
@@ -956,7 +956,7 @@ namespace netgen
 
     auto & self = const_cast<Mesh&>(*this);
     self.points = T_POINTS(0);
-    self.surfelements = Array<Element2d>(0);
+    self.surfelements = T_SURFELEMENTS();
     self.volelements = T_VOLELEMENTS();
     self.segments = Array<Segment>(0);
     self.hp_surfinfo.SetSize(0);
@@ -1366,7 +1366,7 @@ namespace netgen
     for (int i = 0; i < GetNSE(); i++)
       {
         eptr.Append (eind.Size());
-        const Element2d & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
+        const Element2dRef & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
         for (int j = 0; j < el.GetNP(); j++)
           eind.Append (el[j].Nr0());
       }
@@ -1427,9 +1427,9 @@ namespace netgen
     boundarypoints = false;
 
     if(GetDimension() == 3)
-      for (auto & sel : SurfaceElements())
+      for (auto sel : SurfaceElements())
         {
-          const Element2d & el = sel;
+          const Element2dRef & el = sel;
           for (int j = 0; j < el.GetNP(); j++)
             boundarypoints[el[j]] = true;
         }
@@ -1448,7 +1448,7 @@ namespace netgen
     auto loop_els_2d = [&](auto f) {
       for (SurfaceElementIndex sei : SurfaceElements().Range())
         {
-          const Element2d & el = (*this)[sei];
+          const Element2dRef & el = (*this)[sei];
           for (int j = 0; j < el.GetNP(); j++) {
             f(el[j], sei);
           }
@@ -1488,7 +1488,7 @@ namespace netgen
       {
         for (SurfaceElementIndex sei : SurfaceElements().Range())
           {
-            Element2d & sel = (*this)[sei];
+            Element2dRef sel = (*this)[sei];
             PointIndex pi1 = sel[0];
             // FlatArray<ElementIndex> els = pnt2el[pi1];
             FlatArray<int> els = pnt2el[pi1];
@@ -1574,7 +1574,7 @@ namespace netgen
             for (int j = 0; j < sels.Size(); j++)
               {
                 SurfaceElementIndex sei = SurfaceElementIndex::FromNr0(sels[j]);
-                Element2d & se = (*this)[sei];
+                Element2dRef se = (*this)[sei];
                 bool found = false;
                 for (int l = 0; l < se.GetNP(); l++ && !found)
                   found |= (se[l]==seg[1]);
@@ -1670,7 +1670,7 @@ namespace netgen
     for (int i = 0; i < GetNSE(); i++)
       {
         eptr.Append (eind.Size());
-        const Element2d & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
+        const Element2dRef & el = (*this)[SurfaceElementIndex::FromNr1(i+1)];
         
         
         int ind = GetFaceDescriptor(el).BCProperty();
@@ -1890,7 +1890,7 @@ namespace netgen
       {
         ElementIndex ei1, ei2;
         GetTopology().GetSurface2VolumeElement (sei, ei1, ei2);
-        Element2d & sel = (*this)[sei];
+        Element2dRef sel = (*this)[sei];
 
         for (int j = 0; j < 2; j++)
           {
@@ -2142,7 +2142,7 @@ namespace netgen
     // first, build the vertex 2 element table:
     Array<int, PointIndex> cnt(nv);
     cnt = 0;
-    for (auto & el : SurfaceElements())
+    for (auto el : SurfaceElements())
       for (int j = 0; j < el.GetNP(); j++)
         cnt[ el[j] ] ++;
     

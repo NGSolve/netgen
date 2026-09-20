@@ -123,7 +123,7 @@ namespace netgen
     /*
     for (int i = 1; i <= nse; i++)
       {
-        const Element2d & el = mesh.SurfaceElement(i);
+        const Element2dRef & el = mesh.SurfaceElement(i);
         ELEMENT_TYPE typ = el.GetType();
       
         top.GetSurfaceElementEdges (i, ednums);
@@ -153,7 +153,7 @@ namespace netgen
          for (SurfaceElementIndex i_ : myrange)
            {
              // int i = i_+1;
-             const Element2d & el = mesh[i_]; // .SurfaceElement(i);
+             const Element2dRef & el = mesh[i_]; // .SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
              // top.GetSurfaceElementEdges (i, ednums);

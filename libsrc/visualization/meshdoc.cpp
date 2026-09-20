@@ -162,7 +162,7 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
 
       // copy to be thread-safe
       // Element2d el = mesh->SurfaceElement (i);
-      Element2d el = (*mesh)[i];
+      Element2d el ((*mesh)[i]);
 
       int drawel = 1;
       for (int j = 0; j < el.GetNP(); j++)
@@ -273,9 +273,9 @@ void VisualSceneMeshDoctor :: BuildScene (int zoomall)
   glColor3f (0.0f, 0.0f, 0.0f);
   glEnable (GL_COLOR_MATERIAL);
   
-  for (auto & sel : mesh->SurfaceElements())
+  for (auto sel : mesh->SurfaceElements())
     {
-      Element2d el = sel;
+      Element2d el (sel);
 
       int drawel = 1;
       for (int j = 0; j < el.GetNP(); j++)

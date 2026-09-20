@@ -225,7 +225,7 @@ namespace netgen
 
   template <> DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (int nr) const
   {
-    const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
+    const Element2dRef & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
   
     Ng_Element ret;
     ret.type = NG_ELEMENT_TYPE(el.GetType());
@@ -392,7 +392,7 @@ namespace netgen
 
   template <> DLL_HEADER Ng_Element Ng_GetElement<2> (int nr)
   {
-    const Element2d & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
+    const Element2dRef & el = mesh->SurfaceElement (SurfaceElementIndex (nr));
   
     Ng_Element ret;
     ret.type = NG_ELEMENT_TYPE(el.GetType());

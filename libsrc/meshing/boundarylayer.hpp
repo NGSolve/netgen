@@ -117,7 +117,7 @@ public:
   void AddSegments ();
   void AddSurfaceElements ();
 
-  Vec<3> getNormal (const Element2d& el)
+  Vec<3> getNormal (const Element2dRef & el)
   {
     auto v0 = mesh[el[0]];
     return Cross(mesh[el[1]] - v0, mesh[el[2]] - v0).Normalize();

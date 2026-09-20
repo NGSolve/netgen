@@ -105,7 +105,7 @@ namespace netgen
          {
             int elType = 0;
 
-            Element2d el = mesh[sei]; // .SurfaceElement(i);
+            Element2d el (mesh[sei]); // .SurfaceElement(i);
             if(invertsurf) el.Invert();
             
             if(el.GetNP() == 3) elType = GMSH_TRIG;     //// GMSH Type for a 3 node triangle
@@ -211,7 +211,7 @@ namespace netgen
          {
             int elType = 0;
 
-            const Element2d & el = mesh[k];
+            const Element2dRef & el = mesh[k];
 
             if(el.GetNP() == 3) elType = GMSH_TRIG;   //// GMSH Type for a 3 node triangle
             if(el.GetNP() == 6) elType = GMSH_TRIG6;  //// GMSH Type for a 6 node triangle

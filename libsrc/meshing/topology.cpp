@@ -114,7 +114,7 @@ namespace netgen
     
     for (SurfaceElementIndex elnr : top.GetVertexSurfaceElements(v))
       {
-        const Element2d & el = mesh[elnr];
+        const Element2dRef & el = mesh[elnr];
 
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
@@ -253,7 +253,7 @@ namespace netgen
     
     for (SurfaceElementIndex elnr : top.GetVertexSurfaceElements(v))          
       {
-        const Element2d & el = mesh[elnr];
+        const Element2dRef & el = mesh[elnr];
         
         const ELEMENT_FACE * elfaces = MeshTopology::GetFaces1 (el.GetType());
         
@@ -984,7 +984,7 @@ namespace netgen
 
             for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
               {
-                const Element2d & sel = (*mesh)[sei];
+                const Element2dRef & sel = (*mesh)[sei];
                 IVec<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
                 for (int j = 0; j < 3; j++)
                   {
@@ -2130,7 +2130,7 @@ namespace netgen
   
   int MeshTopology :: GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const
   {
-    const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
+    const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
     const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
 
     int k = locedgenr;
@@ -2141,7 +2141,7 @@ namespace netgen
   
   int MeshTopology :: GetSurfaceElementFaceOrientation2 (int elnr) const
   {
-    const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
+    const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
     
     const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
 

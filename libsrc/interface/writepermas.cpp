@@ -72,7 +72,7 @@ namespace netgen
                 
                 for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
                 {
-                    const Element2d & el = mesh[i];
+                    const Element2dRef & el = mesh[i];
                     if (el.GetNP() != nelp)
                         continue;
                     
@@ -130,7 +130,7 @@ namespace netgen
             outfile << "$SURFACE GEO  SURFID = 1  SFSET = ALLSUR" << endl;
             for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
             {
-                const Element2d & el = mesh[i];
+                const Element2dRef & el = mesh[i];
                 if (el.GetNP() == 3)
                     outfile << "STRIA3"
                             << " " << el[0] 
@@ -140,7 +140,7 @@ namespace netgen
             
             for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
             {
-                const Element2d & el = mesh[i];
+                const Element2dRef & el = mesh[i];
                 if (el.GetNP() == 4)
                     outfile << "SQUAD4"
                             << " " << el[0] 
@@ -151,7 +151,7 @@ namespace netgen
             
             for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
             {
-                const Element2d & el = mesh[i];
+                const Element2dRef & el = mesh[i];
                 if (el.GetNP() == 6)
                     outfile << "STRIA6"
                             << " " << el[0] 

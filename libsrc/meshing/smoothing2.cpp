@@ -423,7 +423,7 @@ namespace netgen
 
         /*
         int roti = ld.locrots[j];
-        const Element2d & bel = mesh[ld.locelements[j]];
+        const Element2dRef & bel = mesh[ld.locelements[j]];
         Vec<3> e1 = mesh[bel.PNumMod(roti + 1)] - pp1;
         Vec<3> e2 = mesh[bel.PNumMod(roti + 2)] - pp1;
         */
@@ -506,7 +506,7 @@ namespace netgen
     for (j = 0; j < ld.locelements.Size(); j++)
       {
         rot = ld.locrots[j];
-        const Element2d & bel = mesh[ld.locelements[j]];
+        const Element2dRef & bel = mesh[ld.locelements[j]];
 
         v1 = mesh[bel.PNumMod(rot + 1)] - pp1;
         v2 = mesh[bel.PNumMod(rot + 2)] - pp1;
@@ -593,7 +593,7 @@ namespace netgen
     for (int j = 0; j < ld.locelements.Size(); j++)
       {
         lpi = ld.locrots[j];
-        const Element2d & bel = 
+        const Element2dRef & bel = 
           mesh[ld.locelements[j]];
       
         gpi = bel.PNum(lpi);
@@ -663,7 +663,7 @@ namespace netgen
     for (j = 1; j <= ld.locelements.Size(); j++)
       {
         lpi = ld.locrots[j-1];
-        const Element2d & bel = 
+        const Element2dRef & bel = 
           mesh[ld.locelements[j-1]];
       
         gpi = bel.PNum(lpi);
@@ -721,13 +721,13 @@ namespace netgen
         Array<PointIndex> icompress;
         for (int i = 0; i < seia.Size(); i++)
           {
-            const Element2d & el = mesh[seia[i]];
+            const Element2dRef & el = mesh[seia[i]];
             for (int j = 0; j < el.GetNP(); j++)
               compress[el[j]] = -1;
           }
         for (int i = 0; i < seia.Size(); i++)
           {
-            const Element2d & el = mesh[seia[i]];
+            const Element2dRef & el = mesh[seia[i]];
             for (int j = 0; j < el.GetNP(); j++)
               if (compress[el[j]] == -1)
                 {
@@ -757,7 +757,7 @@ namespace netgen
       }
     else
       {
-        for (auto & se : mesh.SurfaceElements())
+        for (auto se : mesh.SurfaceElements())
           if (se.GetNP() != 3)
           {
               for(auto pi : se.PNums())
@@ -899,7 +899,7 @@ namespace netgen
             
             ld.sp1 = mesh[pi];
             
-            Element2d & hel = mesh[elementsonpoint[pi][0]];
+            Element2dRef hel = mesh[elementsonpoint[pi][0]];
             
             int hpi = 0;
             for (int j = 1; j <= hel.GetNP(); j++)
@@ -921,7 +921,7 @@ namespace netgen
             for (int j = 0; j < elementsonpoint[pi].Size(); j++)
               {
                 SurfaceElementIndex sei = elementsonpoint[pi][j];
-                const Element2d & bel = mesh[sei];
+                const Element2dRef & bel = mesh[sei];
                 ld.surfi = mesh.GetFaceDescriptor(bel.GetIndex()).SurfNr();
                 
                 ld.locelements.Append (sei);
@@ -952,14 +952,14 @@ namespace netgen
               // save points, and project to tangential plane (only for optimization with Opti2SurfaceMinFunctionJacobian in mixed element meshes)
               for (int j = 0; j < ld.locelements.Size(); j++)
                 {
-                  const Element2d & el = mesh[ld.locelements[j]];
+                  const Element2dRef & el = mesh[ld.locelements[j]];
                   for (int k = 0; k < el.GetNP(); k++)
                     savepoints[el[k]] = mesh[el[k]];
                 }
 
               for (int j = 0; j < ld.locelements.Size(); j++)
                 {
-                  const Element2d & el = mesh[ld.locelements[j]];
+                  const Element2dRef & el = mesh[ld.locelements[j]];
                   for (int k = 0; k < el.GetNP(); k++)
                     {
                       PointIndex hhpi = el[k];
@@ -989,7 +989,7 @@ namespace netgen
               // restore other points
               for (int j = 0; j < ld.locelements.Size(); j++)
                 {
-                  const Element2d & el = mesh[ld.locelements[j]];
+                  const Element2dRef & el = mesh[ld.locelements[j]];
                   for (int k = 0; k < el.GetNP(); k++)
                     {
                       PointIndex hhpi = el[k];

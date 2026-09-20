@@ -118,12 +118,12 @@ namespace netgen
         Element2d hel;
         int blocklen[] = { ELEMENT2D_MAXPOINTS, 1, 1 };
         NG_MPI_Aint displ[] =
-          { (char*)&hel.pnum[0] - (char*)&hel,
-            (char*)&hel.index - (char*)&hel,
-            (char*)&hel.typ - (char*)&hel
+          { (char*)&hel[0] - (char*)&hel,
+            (char*)&hel.Header().index - (char*)&hel,
+            (char*)&hel.Header().typ - (char*)&hel
           };
-        NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.index),
-                                 GetMPIType(hel.typ) };
+        NG_MPI_Datatype types[] = { GetMPIType<PointIndex>(), GetMPIType(hel.Header().index),
+                                 GetMPIType(hel.Header().typ) };
         NG_MPI_Type_create_struct (3, blocklen, displ, types, &htype);
         NG_MPI_Type_commit ( &htype );
         NG_MPI_Aint lb, ext;
@@ -271,114 +271,117 @@ namespace netgen
     return s;
   }
 
-  // needed, e.g. for MPI communication
   Element2d :: Element2d ()
+    : Element2dRef(&hstore, pnstore, gistore, ELEMENT2D_MAXPOINTS)
   {
     for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
       {
-        pnum[i].Invalidate();
-        geominfo[i].trignum = 0;
+        pnstore[i].Invalidate();
+        gistore[i].trignum = 0;
       }
-    index = FaceRegionIndex::INVALID;
-    badel = 0;
-    deleted = 0;
-    visible = 1;
-    typ = TRIG;
-    refflag = 1;
-    strongrefflag = false;
-    is_curved = 0;
-  } 
+    hstore.typ = TRIG;
+    hstore.index = FaceRegionIndex::INVALID;
+    hstore.refflag = 1;
+    hstore.is_curved = 0;
+    hstore.flags.badel = 0;
+    hstore.flags.deleted = 0;
+    hstore.flags.visible = 1;
+    hstore.flags.strongrefflag = false;
+  }
 
   Element2d :: Element2d (int anp)
-  { 
-    for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
-      {
-        pnum[i].Invalidate();
-        geominfo[i].trignum = 0;
-      }
-    typ = Element2dTypeFromNP (anp);
-    index = FaceRegionIndex::INVALID;
-    badel = 0;
-    deleted = 0;
-    visible = 1;
-    refflag = 1;
-    strongrefflag = false;
-    is_curved = (GetNP() >= 4); // false;
-  } 
+    : Element2d()
+  {
+    hstore.typ = Element2dTypeFromNP (anp);
+    hstore.is_curved = (GetNP() >= 4);
+  }
 
   Element2d :: Element2d (ELEMENT_TYPE atyp)
-  { 
-    for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
-      {
-        pnum[i].Invalidate();
-        geominfo[i].trignum = 0;
-      }
-
+    : Element2d()
+  {
     SetType (atyp);
-
-    index = FaceRegionIndex::INVALID;
-    badel = 0;
-    deleted = 0;
-    visible = 1;
-    refflag = 1;
-    strongrefflag = false;
-    is_curved = (GetNP() >= 4); // false;
-  } 
-
-
+  }
 
   Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3)
+    : Element2d()
   {
-    pnum[0] = pi1;
-    pnum[1] = pi2;
-    pnum[2] = pi3;
-    typ = TRIG;
-    
-    for (int i = 3; i < ELEMENT2D_MAXPOINTS; i++)
-      pnum[i].Invalidate();
-  
-    for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
-      geominfo[i].trignum = 0;
-    index = FaceRegionIndex::INVALID;
-    badel = 0;
-    refflag = 1;
-    strongrefflag = false;
-    deleted = 0;
-    visible = 1;
-    is_curved = false;
+    pnstore[0] = pi1;
+    pnstore[1] = pi2;
+    pnstore[2] = pi3;
+    hstore.typ = TRIG;
   }
 
   Element2d :: Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4)
+    : Element2d()
   {
-    pnum[0] = pi1;
-    pnum[1] = pi2;
-    pnum[2] = pi3;
-    pnum[3] = pi4;
-    typ = QUAD;
-
-    pnum[4].Invalidate();
-    pnum[5].Invalidate();
-  
-    for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
-      geominfo[i].trignum = 0;
-    index = FaceRegionIndex::INVALID;
-    badel = 0;
-    refflag = 1;
-    strongrefflag = false;
-    deleted = 0;
-    visible = 1;
-    is_curved = true;
+    pnstore[0] = pi1;
+    pnstore[1] = pi2;
+    pnstore[2] = pi3;
+    pnstore[3] = pi4;
+    hstore.typ = QUAD;
+    hstore.is_curved = true;
   }
 
-
-  void Element2d :: GetBox (const T_POINTS & points, Box3d & box) const
+  void Element2dRef :: SetType (ELEMENT_TYPE atyp)
   {
-    box.SetPoint (points[pnum[0]]);
+    if (element2d_info::np[atyp] == 0)
+      PrintSysError ("Element2d::SetType, illegal type ", int(atyp));
+    if (element2d_info::np[atyp] > maxnp)
+      throw Exception ("Element2dRef::SetType: element with " + ToString(int(element2d_info::np[atyp])) +
+                       " points does not fit into " + ToString(maxnp) + " slots, use Mesh::SetSurfaceElement");
+    h->typ = atyp;
+    h->is_curved = (GetNP() >= 4);
+  }
+
+  Element2dRef & Element2dRef :: operator= (const Element2dRef & el2)
+  {
+    if (el2.GetNP() > maxnp)
+      throw Exception ("Element2dRef: element with " + ToString(el2.GetNP()) + " points does not fit into " +
+                       ToString(maxnp) + " slots, use Mesh::SetSurfaceElement");
+    *h = *el2.h;
+    for (int i = 0; i < el2.GetNP(); i++)
+      {
+        pn[i] = el2.pn[i];
+        gi[i] = el2.gi[i];
+      }
+    return *this;
+  }
+
+  void Element2dRef :: DoArchive (Archive & ar)
+  {
+    short _np, _typ;
+    bool _curved, _vis, _deleted;
+    if (ar.Output())
+      { _np = GetNP(); _typ = h->typ; _curved = h->is_curved;
+        _vis = h->flags.visible; _deleted = h->flags.deleted; }
+    ar.DoPacked (_np, _typ, h->index, _curved, _vis, _deleted);
+    if (ar.Input())
+      {
+        h->typ = ELEMENT_TYPE(_typ); h->is_curved = _curved;
+        h->flags.visible = _vis; h->flags.deleted = _deleted;
+        h->flags.badel = 0; h->flags.strongrefflag = 0;
+        h->refflag = 1;
+        h->newest_vertex = -1;
+        h->next.Invalidate();
+      }
+
+    // archive stores 1-based point numbers, independent of BASE
+    int nr1[ELEMENT2D_MAXPOINTS];
+    if (ar.Output())
+      for (int k = 0; k < GetNP(); k++) nr1[k] = pn[k].Nr1();
+    ar.Do (nr1, GetNP());
+    if (ar.Input())
+      for (int k = 0; k < GetNP(); k++) pn[k] = PointIndex::FromNr1(nr1[k]);
+  }
+
+  void Element2dRef :: GetBox (const T_POINTS & points, Box3d & box) const
+  {
+    box.SetPoint (points[pn[0]]);
     for (int i = 1; i < GetNP(); i++)
-      box.AddPoint (points[pnum[i]]);
+      box.AddPoint (points[pn[i]]);
   }
 
-  bool Element2d :: operator==(const Element2d & el2) const
+  bool Element2dRef :: operator==(const Element2dRef & el2) const
   {
     bool retval = (el2.GetNP() == GetNP());
     for(int i= 0; retval && i<GetNP(); i++)
@@ -388,35 +391,35 @@ namespace netgen
   }
 
 
-  void Element2d :: Invert2()
+  void Element2dRef :: Invert2()
   {
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG:
         {
-          Swap (pnum[1], pnum[2]);
+          Swap (pn[1], pn[2]);
           break;
         }
       case TRIG6:
         {
-          Swap (pnum[1], pnum[2]);
-          Swap (pnum[4], pnum[5]);
+          Swap (pn[1], pn[2]);
+          Swap (pn[4], pn[5]);
           break;
         }
       case QUAD:
         {
-          Swap (pnum[0], pnum[3]);
-          Swap (pnum[1], pnum[2]);
+          Swap (pn[0], pn[3]);
+          Swap (pn[1], pn[2]);
           break;
         }
       default:
         {
-          cerr << "Element2d::Invert2, illegal element type " << int(typ) << endl;
+          cerr << "Element2d::Invert2, illegal element type " << int(h->typ) << endl;
         }
       }
   }
 
-  int Element2d::HasFace(const Element2d & el) const
+  int Element2dRef::HasFace(const Element2dRef & el) const
   {
     //nur für tets!!! hannes
     for (int i = 1; i <= 3; i++)
@@ -431,7 +434,7 @@ namespace netgen
     return 0;
   }
 
-  void Element2d :: NormalizeNumbering2 ()
+  void Element2dRef :: NormalizeNumbering2 ()
   {
     if (GetNP() == 3)
       {
@@ -461,7 +464,7 @@ namespace netgen
         for (int i = 2; i <= GetNP(); i++)
           if (PNum(i) < PNum(mini)) mini = i;
       
-        Element2d hel = (*this);
+        Element2d hel ((*this));
         for (int i = 1; i <= GetNP(); i++)
           PNum(i) = hel.PNumMod (i+mini-1);
       }
@@ -474,7 +477,7 @@ namespace netgen
   Array<IntegrationPointData*> ipdquad;
 
 
-  int Element2d :: GetNIP () const
+  int Element2dRef :: GetNIP () const
   {
     int nip;
     switch (GetNP())
@@ -486,7 +489,7 @@ namespace netgen
     return nip;
   }
 
-  void Element2d :: 
+  void Element2dRef :: 
   GetIntegrationPoint (int ip, Point<2> & p, double & weight) const
   {
     static double eltriqp[1][3] =
@@ -503,12 +506,12 @@ namespace netgen
       };
   
     double * pp = 0;
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG: pp = &eltriqp[0][0]; break;
       case QUAD: pp = &elquadqp[ip-1][0]; break;
       default:
-        PrintSysError ("Element2d::GetIntegrationPoint, illegal type ", int(typ));
+        PrintSysError ("Element2d::GetIntegrationPoint, illegal type ", int(h->typ));
       }
 
     p[0] = pp[0];
@@ -516,7 +519,7 @@ namespace netgen
     weight = pp[2];
   }
 
-  void Element2d :: 
+  void Element2dRef :: 
   GetTransformation (int ip, FlatArray<Point<2>, PointIndex> points,
                      DenseMatrix & trans) const
   {
@@ -542,7 +545,7 @@ namespace netgen
     */
   }
 
-  void Element2d :: 
+  void Element2dRef :: 
   GetTransformation (int ip, class DenseMatrix & pmat,
                      class DenseMatrix & trans) const
   {
@@ -558,19 +561,19 @@ namespace netgen
 
     ComputeIntegrationPointData ();
     DenseMatrix * dshapep = NULL;
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG: dshapep = &ipdtrig[ip-1]->dshape; break;
       case QUAD: dshapep = &ipdquad[ip-1]->dshape; break;
       default:
-        PrintSysError ("Element2d::GetTransformation, illegal type ", int(typ));
+        PrintSysError ("Element2d::GetTransformation, illegal type ", int(h->typ));
       }
   
     CalcABt (pmat, *dshapep, trans);
   }
 
 
-  void Element2d :: GetShape (const Point<2> & p, Vector & shape) const
+  void Element2dRef :: GetShape (const Point<2> & p, Vector & shape) const
   {
     if (shape.Size() != GetNP())
       {
@@ -578,7 +581,7 @@ namespace netgen
         return;
       }
 
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG:
         shape(0) = 1 - p[0] - p[1];
@@ -592,15 +595,15 @@ namespace netgen
         shape(3) = (1-p[0]) * p[1];
         break;
       default:
-        PrintSysError ("Element2d::GetShape, illegal type ", int(typ));
+        PrintSysError ("Element2d::GetShape, illegal type ", int(h->typ));
       }
   }
 
 
 
-  void Element2d :: GetShapeNew (const Point<2> & p, FlatVector & shape) const
+  void Element2dRef :: GetShapeNew (const Point<2> & p, FlatVector & shape) const
   {
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG:
         {
@@ -625,9 +628,9 @@ namespace netgen
   }
 
   template <typename T>
-  void Element2d :: GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const
+  void Element2dRef :: GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const
   {
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG:
         {
@@ -658,7 +661,7 @@ namespace netgen
 
 
 
-  void Element2d :: 
+  void Element2dRef :: 
   GetDShape (const Point<2> & p, DenseMatrix & dshape) const
   {
 #ifdef DEBUG
@@ -669,7 +672,7 @@ namespace netgen
       }
 #endif
 
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG:
         dshape.Elem(1, 1) = -1;
@@ -691,16 +694,16 @@ namespace netgen
         break;
 
       default:
-        PrintSysError ("Element2d::GetDShape, illegal type ", int(typ));
+        PrintSysError ("Element2d::GetDShape, illegal type ", int(h->typ));
       }
   }
 
 
   template <typename T>
-  void Element2d :: 
+  void Element2dRef :: 
   GetDShapeNew (const Point<2,T> & p, MatrixFixWidth<2,T> & dshape) const
   {
-    switch (typ)
+    switch (h->typ)
       {
       case TRIG:
         {
@@ -735,7 +738,7 @@ namespace netgen
 
 
 
-  void Element2d ::
+  void Element2dRef ::
   GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
                   DenseMatrix & pmat) const
   {
@@ -751,7 +754,7 @@ namespace netgen
 
 
 
-  double Element2d :: CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const
+  double Element2dRef :: CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const
   {
     int i, j;
     int nip = GetNIP();
@@ -794,11 +797,11 @@ namespace netgen
       { 3, 2, 1, 2 }
     };
 
-  double Element2d :: 
+  double Element2dRef :: 
   CalcJacobianBadnessDirDeriv (FlatArray<Point<2>, PointIndex> points,
                                int pi, Vec<2> & dir, double & dd) const
   {
-    if (typ == QUAD)
+    if (h->typ == QUAD)
       {
         Mat<2,2> trans, dtrans;
         Mat<2,4> vmat, pmat;
@@ -931,7 +934,7 @@ namespace netgen
 
 
 
-  double Element2d :: 
+  double Element2dRef :: 
   CalcJacobianBadness (const T_POINTS & points, const Vec<3> & n) const
   {
     int i, j;
@@ -978,7 +981,7 @@ namespace netgen
 
 
 
-  void Element2d :: ComputeIntegrationPointData () const
+  void Element2dRef :: ComputeIntegrationPointData () const
   {
     switch (GetNP())
       {
@@ -1022,7 +1025,7 @@ namespace netgen
   }
 
 
-  ostream & operator<<(ostream  & s, const Element2d & el)
+  ostream & operator<<(ostream  & s, const Element2dRef & el)
   {
     s << "np = " << el.GetNP();
     for (int j = 0; j < el.GetNP(); j++)
@@ -1172,9 +1175,12 @@ namespace netgen
 
   void ElementRef :: SetType (ELEMENT_TYPE atyp)
   {
-    h->typ = atyp;
     if (element3d_info::np[atyp] == 0)
       cerr << "Element::SetType unknown type  " << int(atyp) << endl;
+    if (element3d_info::np[atyp] > maxnp)
+      throw Exception ("ElementRef::SetType: element with " + ToString(int(element3d_info::np[atyp])) +
+                       " points does not fit into " + ToString(maxnp) + " slots, use Mesh::SetVolumeElement");
+    h->typ = atyp;
     h->is_curved = (GetNP() > 4); 
   }
 
@@ -1231,7 +1237,7 @@ namespace netgen
   }  
 
 
-  void ElementRef :: GetFace2 (int i, Element2d & face) const
+  void ElementRef :: GetFace2 (int i, Element2dRef face) const
   {
     static const int tetfaces[][5] = 
       { { 3, 2, 3, 4, 0 },
@@ -2270,11 +2276,11 @@ namespace netgen
       }
   }
 
-  template void Element2d :: GetShapeNew (const Point<2,double> & p, TFlatVector<double> shape) const;
-  template void Element2d :: GetShapeNew (const Point<2,SIMD<double>> & p, TFlatVector<SIMD<double>> shape) const;
+  template void Element2dRef :: GetShapeNew (const Point<2,double> & p, TFlatVector<double> shape) const;
+  template void Element2dRef :: GetShapeNew (const Point<2,SIMD<double>> & p, TFlatVector<SIMD<double>> shape) const;
 
-  template void Element2d::GetDShapeNew<double> (const Point<2> &, MatrixFixWidth<2> &) const;
-  template void Element2d::GetDShapeNew<SIMD<double>> (const Point<2,SIMD<double>> &, MatrixFixWidth<2,SIMD<double>> &) const;
+  template void Element2dRef::GetDShapeNew<double> (const Point<2> &, MatrixFixWidth<2> &) const;
+  template void Element2dRef::GetDShapeNew<SIMD<double>> (const Point<2,SIMD<double>> &, MatrixFixWidth<2,SIMD<double>> &) const;
 
 
   template DLL_HEADER void ElementRef :: GetShapeNew (const Point<3,double> & p, TFlatVector<double> shape) const;

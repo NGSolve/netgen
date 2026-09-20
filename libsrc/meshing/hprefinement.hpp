@@ -292,7 +292,7 @@ private:
 public:
   HPRefElement (); 
   HPRefElement(const ElementRef & el);
-  HPRefElement(Element2d & el);
+  HPRefElement(Element2dRef el);
   HPRefElement(Segment & el, const Mesh & mesh);        
   HPRefElement(HPRefElement & el);
 

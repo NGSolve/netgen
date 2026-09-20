@@ -169,7 +169,7 @@ namespace netgen
         for (auto el : mesh.VolumeElements())
           for (PointIndex & pi : el.PNums())
             pi = inv_index[pi];
-        for (auto & el : mesh.SurfaceElements())
+        for (auto el : mesh.SurfaceElements())
           for (PointIndex & pi : el.PNums())
             pi = inv_index[pi];
         for (auto & el : mesh.LineSegments())
@@ -330,7 +330,7 @@ namespace netgen
         for (int el = 1; el <= mesh.GetNSE(); el++)
           {
             topology.GetSurfaceElementEdges (el, edges);
-            // const Element2d & surfel = mesh.SurfaceElement (el);
+            // const Element2dRef & surfel = mesh.SurfaceElement (el);
             // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
             Array<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
