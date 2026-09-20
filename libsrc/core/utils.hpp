@@ -130,7 +130,7 @@ namespace ngcore
   }
 
   template <class T>
-  NETGEN_INLINE void Swap (T & a, T & b)
+  NETGEN_INLINE constexpr void Swap (T & a, T & b)
   {
       T temp = std::move(a);
       a = std::move(b);
