@@ -112,7 +112,7 @@ void WriteJCMFormat (const Mesh & mesh,
   // number of boundary triangles and boundary quadrilaterals
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
   {
-    Element2d el = mesh[i];
+    Element2d el (mesh[i]);
     if (el.GetNP() == 3 &&
         ( mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0  ||
           mesh.GetFaceDescriptor (el.GetIndex()).DomainOut()==0 ) )
@@ -294,7 +294,7 @@ void WriteJCMFormat (const Mesh & mesh,
   outfile << "# Number of identified points in 3-direction: " << npid3 << "\n";
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
   {
-    Element2d el = mesh[i];
+    Element2d el (mesh[i]);
     if (el.GetNP() == 3
         && (mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0
             || mesh.GetFaceDescriptor (el.GetIndex()).DomainOut()==0))
@@ -345,7 +345,7 @@ void WriteJCMFormat (const Mesh & mesh,
   outfile << "# Boundary quadrilaterals\n";
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
   {
-    Element2d el = mesh[i];
+    Element2d el (mesh[i]);
 
     if (el.GetNP() == 4
         && (mesh.GetFaceDescriptor (el.GetIndex()).DomainIn()==0

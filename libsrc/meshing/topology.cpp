@@ -114,7 +114,7 @@ namespace netgen
     
     for (SurfaceElementIndex elnr : top.GetVertexSurfaceElements(v))
       {
-        const Element2d & el = mesh[elnr];
+        const Element2dRef & el = mesh[elnr];
 
         auto eledges = MeshTopology::GetEdges (el.GetType());
         for (int k = 0; k < eledges.Size(); k++)
@@ -253,7 +253,7 @@ namespace netgen
     
     for (SurfaceElementIndex elnr : top.GetVertexSurfaceElements(v))          
       {
-        const Element2d & el = mesh[elnr];
+        const Element2dRef & el = mesh[elnr];
         
         const ELEMENT_FACE * elfaces = MeshTopology::GetFaces1 (el.GetType());
         
@@ -457,22 +457,22 @@ namespace netgen
         ParallelFor (ne, [this](auto i)
                      {
                        for (auto & e : edges[ElementIndex::FromNr0(i)])
-                         e = -1;
+                         e.Invalidate();
                      });
         ParallelFor (nse, [this](auto i)
                      {
                        for (auto & e : surfedges[SurfaceElementIndex::FromNr0(i)])
-                         e = -1;
+                         e.Invalidate();
                      });
 
 
         
         // keep existing edges
         cnt = 0;
-        for (int i = 0; i < edge2vert.Size(); i++)
+        for (auto i : edge2vert.Range())
           cnt[edge2vert[i][0]]++;
-        DynamicTable<int, PointIndex> vert2edge (nv);
-        for (int i = 0; i < edge2vert.Size(); i++)
+        DynamicTable<EdgeIndex, PointIndex> vert2edge (nv);
+        for (auto i : edge2vert.Range())
           vert2edge.Add (edge2vert[i][0], i);
 
         // ensure all coarse grid and intermediate level edges
@@ -520,7 +520,7 @@ namespace netgen
                  for (EdgeIndex ednr : vert2edge[v])
                    {
                      PointIndex v2 = edge2vert[ednr][1];
-                     v2eht.Set (v2, ednr);
+                     v2eht.Set (v2, ednr.Nr0());
                    }
 
                  size_t usedold = v2eht.UsedElements();
@@ -575,7 +575,7 @@ namespace netgen
                  for (EdgeIndex ednr : vert2edge[v])
                    {
                      PointIndex v2 = edge2vert[ednr][1];
-                     v2eht.Set (v2, ednr);
+                     v2eht.Set (v2, ednr.Nr0());
                    }
                  
                  for (PointIndex v2 : vert2vertcoarse[v])
@@ -616,14 +616,14 @@ namespace netgen
                  for (auto v2 : vertex2)
                    {
                      v2eht.Set (v2, ned);
-                     edge2vert[ned] = { v, v2 };
+                     edge2vert[EdgeIndex::FromNr0(ned)] = { v, v2 };
                      ned++;
                    }
                  
                  LoopOverEdges (*mesh, *this, v,
                                 [&](PointIndices<2> edge, AnyElementIndex elnr, int loc_edge, int element_dim)
                                 {
-                                  int edgenum = v2eht.Get(edge[1]);
+                                  EdgeIndex edgenum = EdgeIndex::FromNr0 (v2eht.Get(edge[1]));
                                   switch (element_dim)
                                     {
                                     case 3:
@@ -915,7 +915,7 @@ namespace netgen
         {
           auto edge = edge2vert[i];
           SortedPointIndices<2> e2(edge[0], edge[1]);
-          v2e[e2] = i;
+          v2e[e2] = i.Nr0();
         }
 
     
@@ -939,10 +939,10 @@ namespace netgen
   
 
         cnt = 0;
-        for (int i = 0; i < face2vert.Size(); i++)
+        for (auto i : face2vert.Range())
           cnt[face2vert[i][0]]++;
-        DynamicTable<int, PointIndex> vert2oldface(nv);
-        for (int i = 0; i < face2vert.Size(); i++)
+        DynamicTable<FaceIndex, PointIndex> vert2oldface(nv);
+        for (auto i : face2vert.Range())
           vert2oldface.Add (face2vert[i][0], i);
 
         // find all potential intermediate faces
@@ -984,7 +984,7 @@ namespace netgen
 
             for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
               {
-                const Element2d & sel = (*mesh)[sei];
+                const Element2dRef & sel = (*mesh)[sei];
                 IVec<3,PointIndex> f3 = { sel[0], sel[1], sel[2] };
                 for (int j = 0; j < 3; j++)
                   {
@@ -1023,7 +1023,7 @@ namespace netgen
         
         for (ElementIndex elnr : T_Range<ElementIndex>(ne))
           for (int j = 0; j < 6; j++)
-            faces[elnr][j] = -1;
+            faces[elnr][j].Invalidate();
         
 
         int max_face_on_vertex = 0;
@@ -1063,7 +1063,7 @@ namespace netgen
                   
                   for (int j = 0; j < vert2oldface[v].Size(); j++)
                     {
-                      int fnr = vert2oldface[v][j];
+                      FaceIndex fnr = vert2oldface[v][j];
                       PointIndices<3> face (face2vert[fnr][0],
                                     face2vert[fnr][1],
                                     face2vert[fnr][2]);
@@ -1132,11 +1132,11 @@ namespace netgen
                   
                   for (int j = 0; j < vert2oldface[v].Size(); j++)
                     {
-                      int fnr = vert2oldface[v][j];
+                      FaceIndex fnr = vert2oldface[v][j];
                       PointIndices<3> face (face2vert[fnr][0], 
                                     face2vert[fnr][1],
                                     face2vert[fnr][2]);
-                      vert2face.Set (face, fnr);
+                      vert2face.Set (face, fnr.Nr0());
                     }
                   
                   for (int j = 0; j < vert2intermediate[v].Size(); j++)
@@ -1157,7 +1157,7 @@ namespace netgen
                       size_t pos;
                       if (vert2face.PositionCreate(face, pos))
                         {
-                          face2vert[nfa] = { face[0], face[1], face[2], PointIndex::INVALID }; // i4;
+                          face2vert[FaceIndex::FromNr0(nfa)] = { face[0], face[1], face[2], PointIndex::INVALID };
                           vert2face.SetData (pos, face, nfa);
                           nfa++;
                         }
@@ -1179,7 +1179,7 @@ namespace netgen
                                    size_t pos;
                                    if (vert2face.PositionCreate(face, pos))
                                      {
-                                       face2vert[nfa] = { i4[0], i4[1], i4[2], i4[3] }; // i4;
+                                       face2vert[FaceIndex::FromNr0(nfa)] = { i4[0], i4[1], i4[2], i4[3] };
                                        vert2face.SetData (pos, face, nfa);
                                        nfa++;
                                      }
@@ -1190,11 +1190,12 @@ namespace netgen
                   
                   for (int j = first_fa; j < nfa; j++)
                     {
-                      if (face2vert[j][0] == v)
+                      FaceIndex fj = FaceIndex::FromNr0(j);
+                      if (face2vert[fj][0] == v)
                         {
-                          PointIndices<3> face (face2vert[j][0], 
-                                        face2vert[j][1], 
-                                        face2vert[j][2]);
+                          PointIndices<3> face (face2vert[fj][0], 
+                                        face2vert[fj][1], 
+                                        face2vert[fj][2]);
                           vert2face.Set (face, j);
                         }
                       else
@@ -1206,7 +1207,7 @@ namespace netgen
                                  [&] (PointIndices<4> i4, AnyElementIndex elnr, int j, bool volume)
                                  {
                                    PointIndices<3> face(i4[0], i4[1], i4[2]);
-                                   int facenum = vert2face.Get(face);
+                                   FaceIndex facenum = FaceIndex::FromNr0 (vert2face.Get(face));
                                    if (volume)
                                      faces[ElementIndex(elnr)][j] = facenum;
                                    else
@@ -1249,8 +1250,8 @@ namespace netgen
                        for (int j = 0; j < 6; j++)
                          {
                            // int fnum = (faces.Get(i)[j]+7) / 8;
-                           int fnum = faces[ElementIndex::FromNr0(i)][j];
-                           if (fnum >= 0 && face2surfel[fnum].IsValid())
+                           FaceIndex fnum = faces[ElementIndex::FromNr0(i)][j];
+                           if (fnum.IsValid() && face2surfel[fnum].IsValid())
                              {
                                SurfaceElementIndex sel = face2surfel[fnum];
                                surf2volelement[sel][1] = surf2volelement[sel][0];
@@ -1270,7 +1271,7 @@ namespace netgen
 #endif
 
         static Timer t_topology_update_count_face_els("Topology::Update count face_els"); t_topology_update_count_face_els.Start();
-        Array<short int> face_els(nfa), face_surfels(nfa);
+        Array<short int, FaceIndex> face_els(nfa), face_surfels(nfa);
         face_els = 0;
         face_surfels = 0;
 
@@ -1304,7 +1305,7 @@ namespace netgen
         if (ne)
           {
             int cnt_err = 0;
-            for (int i = 0; i < nfa; i++)
+            for (auto i : face_els.Range())
               {
                 /*
                   (*testout) << "face " << i << " has " << int(face_els[i]) << " els, " 
@@ -1323,7 +1324,7 @@ namespace netgen
                     else
 #endif
                       {
-                        (*testout) << "illegal face : " << i << ", cnt = " << face_els[i]+face_surfels[i] << endl;
+                        (*testout) << "illegal face : " << i.Nr0() << ", cnt = " << face_els[i]+face_surfels[i] << endl;
                         (*testout) << "points = "
                                    << face2vert[i][0] << ","
                                    << face2vert[i][1] << ","
@@ -1342,7 +1343,7 @@ namespace netgen
                             int elfaces[10], orient[10];
                             int nf = GetElementFaces (vertels[k].Nr1(), elfaces, orient);
                             for (int l = 0; l < nf; l++)
-                              if (elfaces[l] == i)
+                              if (elfaces[l] == i.Nr0())
                                 {
                                   (*testout) << "is face of element " << vertels[k] << endl;
                             
@@ -1808,13 +1809,13 @@ namespace netgen
 
     for (auto i : Range(nfa))
       // elfaces[i] = faces.Get(elnr)[i]+1;
-      elfaces[i] = faces[ei][i]+1;
+      elfaces[i] = faces[ei][i].Nr1();
     
     if(withorientation)
     {
         for(auto & face : elfaces)
         {
-            auto v = face2vert[face-1];
+            auto v = face2vert[FaceIndex::FromNr1(face)];
             if(v[3].IsValid())
                 cerr << "GetElementFaces with orientation currently not supported for quads" << endl;
 
@@ -1871,8 +1872,8 @@ namespace netgen
                 
                 // if (edges.Get(elnr)[i] == -1) return i;
                 // eledges[i] = edges[ei].Get(elnr)[i]+1;
-                if (edges[ei][i] == -1) return i;
-                eledges[i] = edges[ei][i]+1;
+                if (!edges[ei][i].IsValid()) return i;
+                eledges[i] = edges[ei][i].Nr1();
                 
                 // orient[i] = edges.Get(elnr)[i].orient ? -1 : 1;
                 orient[i] = GetElementEdgeOrientation(elnr, i) ? -1 : 1;
@@ -1887,8 +1888,8 @@ namespace netgen
                 
                 // if (edges.Get(elnr)[i] == -1) return i;
                 //eledges[i] = edges.Get(elnr)[i]+1;
-                if (edges[ei][i] == -1) return i;
-                eledges[i] = edges[ei][i]+1;
+                if (!edges[ei][i].IsValid()) return i;
+                eledges[i] = edges[ei][i].Nr1();
 
               }
           }
@@ -1935,8 +1936,8 @@ namespace netgen
             */
             // if (faces.Get(elnr)[i] == -1) return i;
             // elfaces[i] = faces.Get(elnr)[i]+1;
-            if (faces[ei][i] == -1) return i;
-            elfaces[i] = faces[ei][i]+1;
+            if (!faces[ei][i].IsValid()) return i;
+            elfaces[i] = faces[ei][i].Nr1();
             // orient[i] = faces.Get(elnr)[i].forient;
             orient[i] = GetElementFaceOrientation (elnr, i);
           }
@@ -1950,8 +1951,8 @@ namespace netgen
 
             // if (faces.Get(elnr)[i] == -1) return i;
             // elfaces[i] = faces.Get(elnr)[i]+1;
-            if (faces[ei][i] == -1) return i;
-            elfaces[i] = faces[ei][i]+1;
+            if (!faces[ei][i].IsValid()) return i;
+            elfaces[i] = faces[ei][i].Nr1();
           }
       }
     return 6;
@@ -1961,19 +1962,19 @@ namespace netgen
 
 
   /*
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
   {
-    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
+    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
   }
 
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (ElementIndex elnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (ElementIndex elnr) const
   {
-    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
+    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
   }
 
-  FlatArray<T_FACE> MeshTopology :: GetFaces (ElementIndex elnr) const
+  FlatArray<FaceIndex> MeshTopology :: GetFaces (ElementIndex elnr) const
   {
-    return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+    return FlatArray<FaceIndex>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
   }
   */
   
@@ -2016,8 +2017,8 @@ namespace netgen
                 */
                 // if (surfedges.Get(elnr)[i] == -1) return i;
                 // eledges[i] = surfedges.Get(elnr)[i]+1;
-                if (surfedges[sei][i] == -1) return i;
-                eledges[i] = surfedges[sei][i]+1;
+                if (!surfedges[sei][i].IsValid()) return i;
+                eledges[i] = surfedges[sei][i].Nr1();
                 // orient[i] = (surfedges.Get(elnr)[i].orient) ? -1 : 1;
                 // orient[i] = GetSurfaceElementEdgeOrientation(elnr, i) ? -1 : 1;
                 orient[i] = 1;
@@ -2034,8 +2035,8 @@ namespace netgen
                 */
                 // if (surfedges.Get(elnr)[i] == -1) return i;
                 // eledges[i] = surfedges.Get(elnr)[i]+1;
-                if (surfedges[sei][i] == -1) return i;
-                eledges[i] = surfedges[sei][i]+1;
+                if (!surfedges[sei][i].IsValid()) return i;
+                eledges[i] = surfedges[sei][i].Nr1();
               }
           }
         return 4;
@@ -2047,7 +2048,7 @@ namespace netgen
         if (orient)
           orient[0] = segedges.Get(elnr) > 0 ? 1 : -1;
         */
-        eledges[0] = segedges[SegmentIndex::FromNr1(elnr)]+1;
+        eledges[0] = segedges[SegmentIndex::FromNr1(elnr)].Nr1();
         if (orient)
           // orient[0] = segedges.Get(elnr).orient ? -1 : 1;
           // orient[0] = GetSegmentEdgeOrientation(elnr) ? -1 : 1;
@@ -2130,7 +2131,7 @@ namespace netgen
   
   int MeshTopology :: GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const
   {
-    const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
+    const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
     const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
 
     int k = locedgenr;
@@ -2141,7 +2142,7 @@ namespace netgen
   
   int MeshTopology :: GetSurfaceElementFaceOrientation2 (int elnr) const
   {
-    const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
+    const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
     
     const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
 
@@ -2195,7 +2196,7 @@ namespace netgen
 
   void MeshTopology :: GetSegmentEdge (int segnr, int & enr, int & orient) const
   {
-    enr = segedges[SegmentIndex::FromNr1(segnr)]+1;
+    enr = segedges[SegmentIndex::FromNr1(segnr)].Nr1();
     orient = GetSegmentEdgeOrientation(segnr);
   }
 
@@ -2217,7 +2218,7 @@ namespace netgen
   {
     vertices.SetSize(4);
     for (int i = 0; i < 4; i++)
-      vertices[i] = face2vert[fnr-1][i].Nr1();
+      vertices[i] = face2vert[FaceIndex::FromNr1(fnr)][i].Nr1();
     if (vertices[3] == 0)
       vertices.SetSize(3);
   }
@@ -2225,7 +2226,7 @@ namespace netgen
   void MeshTopology :: GetFaceVertices (int fnr, int * vertices) const
   {
     for (int i = 0; i <= 3; i++)
-      vertices[i] = face2vert[fnr-1][i].Nr1();
+      vertices[i] = face2vert[FaceIndex::FromNr1(fnr)][i].Nr1();
   }
 
 
@@ -2239,7 +2240,7 @@ namespace netgen
   
     fedges.SetSize (0);
     // GetFaceVertices(fnr, pi);
-    auto pi = GetFaceVertices(fnr-1);
+    auto pi = GetFaceVertices(FaceIndex::FromNr1(fnr));
     
     // Sort Edges according to global vertex numbers 
     // e1 = fmax, f2 
@@ -2264,7 +2265,7 @@ namespace netgen
         auto el = (*mesh)[els[i]];
         int nref_faces = GetNFaces (el.GetType());
         const ELEMENT_FACE * ref_faces = GetFaces1 (el.GetType());
-        int nfa_ref_edges = GetNEdges (GetFaceType0(fnr-1));
+        int nfa_ref_edges = GetNEdges (GetFaceType0(FaceIndex::FromNr1(fnr)));
       
         int cntv = 0,fa=-1; 
         for(int m=0;m<nref_faces;m++)
@@ -2285,7 +2286,7 @@ namespace netgen
      
         if(fa>=0)
           {
-            const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType0(fnr-1)); 
+            const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType0(FaceIndex::FromNr1(fnr))); 
             fedges.SetSize(nfa_ref_edges);
             // GetElementEdges (els[i]+1, eledges);
             auto eledges = GetEdges (els[i]);
@@ -2316,13 +2317,13 @@ namespace netgen
                         if(withorientation)
                           {
                             if(w1==vi1 && w2==vi2)
-                              fedges[k] = eledges[j]+1;
+                              fedges[k] = eledges[j].Nr1();
                             if(w1==vi2 && w2==vi1)
-                              fedges[k] = -eledges[j]+1;
+                              fedges[k] = -eledges[j].Nr0()+1;
                           }
                         else
                           if((w1==vi1 && w2==vi2) || (w1==vi2 && w2==vi1))
-                            fedges[k] = eledges[j]+1;
+                            fedges[k] = eledges[j].Nr1();
                       }
                   }
               }
@@ -2333,7 +2334,7 @@ namespace netgen
             return;
           }
       }   
-    SurfaceElementIndex surfel = GetFace2SurfaceElement(fnr-1);
+    SurfaceElementIndex surfel = GetFace2SurfaceElement(FaceIndex::FromNr1(fnr));
     
     if (surfel.IsValid())
       {
@@ -2341,7 +2342,7 @@ namespace netgen
         auto hedges = GetEdges (surfel);
         fedges.SetSize(hedges.Size());
         for (int i : Range(hedges))
-          fedges[i]=hedges[i]+1;
+          fedges[i]=hedges[i].Nr1();
         return;
       }
   }
@@ -2350,7 +2351,7 @@ namespace netgen
 
 
 
-  int MeshTopology :: GetVerticesEdge ( PointIndex v1, PointIndex v2 ) const
+  EdgeIndex MeshTopology :: GetVerticesEdge ( PointIndex v1, PointIndex v2 ) const
   {
     /*
     if (vert2element.Size() > 0)
@@ -2392,7 +2393,7 @@ namespace netgen
               return ed;
           }
 
-    return -1;
+    return EdgeIndex::INVALID;
   }
 
 

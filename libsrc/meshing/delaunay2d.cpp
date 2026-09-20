@@ -744,7 +744,7 @@ namespace netgen
         ArrayMem<SurfaceElementIndex, 2> cutting_trigs;
         for(auto sei : point_to_trigs[pi0])
         {
-          auto & el = tempmesh[sei];
+          auto el = tempmesh[sei];
           pi2 = el[0] == pi0 ? el[1] : el[0];
           pi3 = el[2] == pi0 ? el[1] : el[2];
           double alpha, beta;
@@ -773,8 +773,8 @@ namespace netgen
           if(marked_points.Test(pi2)) continue;
           if(marked_points.Test(pi3)) continue;
 
-          auto & el0 = tempmesh[cutting_trigs[0]];
-          auto & el1 = tempmesh[cutting_trigs[1]];
+          auto el0 = tempmesh[cutting_trigs[0]];
+          auto el1 = tempmesh[cutting_trigs[1]];
 
           pi1 = el1[0]-pi2+el1[1]-pi3+el1[2];
 
@@ -818,7 +818,7 @@ namespace netgen
 
       for(auto sei : els)
       {
-        auto & el = tempmesh[sei];
+        auto el = tempmesh[sei];
         PointIndex pi2 = el[0]-seg[0]+el[1]-seg[1]+el[2];
         bool is_left = ::netgen::Area(P2(tempmesh[seg[0]]), P2(tempmesh[seg[1]]), P2(tempmesh[pi2]))>0.0;
         POSITION pos;
@@ -848,7 +848,7 @@ namespace netgen
 
       for (auto sei : Range(tempmesh.SurfaceElements()))
       {
-        auto & el = tempmesh[sei];
+        auto el = tempmesh[sei];
 
         if(trig_pos[sei] == UNKNOWN)
         {
@@ -884,7 +884,7 @@ namespace netgen
     {
       if(trig_pos[sei] == INSIDE)
       {
-        auto el = tempmesh[sei];
+        Element2d el (tempmesh[sei]);
 
         Vec<3> n = Cross (tempmesh[el[1]]-tempmesh[el[0]],
             tempmesh[el[2]]-tempmesh[el[0]]);

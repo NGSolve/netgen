@@ -457,7 +457,59 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           })
     ;
 
-  py::class_<Element2d>(m, "Element2D")
+  py::class_<Element2dRef>(m, "Element2DRef", "handle to a surface element stored in a mesh")
+    .def("__repr__", [] (const Element2dRef & self) { return ToString(self); })
+    .def_property("index", [](const Element2dRef & self) { return self.GetIndex().Nr1(); }, [](Element2dRef self, int i) { self.SetIndex(FaceRegionIndex::FromNr1(i)); })
+    .def_property("curved", &Element2dRef::IsCurved, &Element2dRef::SetCurved)
+    .def_property("refine", &Element2dRef::TestRefinementFlag, &Element2dRef::SetRefinementFlag)
+    .def_property("uv",
+                  [](const Element2dRef & self) {
+                    std::vector<std::array<double,2>> uv(self.GetNP());
+                    for (int i = 0; i < uv.size(); i++)
+                      {
+                        double u = self.GeomInfo()[i].u;
+                        double v = self.GeomInfo()[i].v;
+                        uv[i] = std::array<double,2>{u,v};
+                      }
+                    return uv;
+                  },
+                  [](Element2dRef self, const std::vector<std::array<double,2>> & uv) {
+                    if (uv.size() != self.GetNP())
+                      throw NgException("wrong number of uv-parameters");
+                    for (int i = 0; i < uv.size(); i++)
+                      {
+                        PointGeomInfo gi;
+                        gi.u = uv[i][0];
+                        gi.v = uv[i][1];
+                        self.GeomInfo()[i] = gi;
+                      }
+                  })
+    .def_property_readonly("geominfo", [](const Element2dRef & self) -> py::list
+    {
+      py::list li;
+      for (const auto &pgi : self.GeomInfo())
+        li.append(py::make_tuple(pgi.trignum, pgi.u, pgi.v));
+      return li;
+    })
+    .def_property_readonly("vertices",
+                  FunctionPointer([](const Element2dRef & self) -> py::list
+                                  {
+                                    py::list li;
+                                    for (int i = 0; i < self.GetNV(); i++)
+                                      li.append(py::cast(self[i]));
+                                    return li;
+                                  }))
+    .def_property_readonly("points", 
+                  FunctionPointer ([](const Element2dRef & self) -> py::list
+                                   {
+                                     py::list li;
+                                     for (int i = 0; i < self.GetNP(); i++)
+                                       li.append (py::cast(self[i]));
+                                     return li;
+                                   }))
+    ;
+
+  py::class_<Element2d, Element2dRef>(m, "Element2D")
     .def(py::init ([](int index, std::vector<PointIndex> vertices,
                       std::optional<std::vector<std::array<double,2>>> uv)
                    {
@@ -510,83 +562,58 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          py::arg("index")=1,py::arg("vertices"), py::arg("uv")=std::nullopt,
          "create surface element"
          )
-    .def_property("index", [](const Element2d & self) { return self.GetIndex().Nr1(); }, [](Element2d & self, int i) { self.SetIndex(FaceRegionIndex::FromNr1(i)); })
-    .def_property("curved", &Element2d::IsCurved, &Element2d::SetCurved)
-    .def_property("refine", &Element2d::TestRefinementFlag, &Element2d::SetRefinementFlag)
-    .def_property("uv",
-                  [](const Element2d & self) {
-                    std::vector<std::array<double,2>> uv(self.GetNP());
-                    for (int i = 0; i < uv.size(); i++)
-                      {
-                        double u = self.GeomInfo()[i].u;
-                        double v = self.GeomInfo()[i].v;
-                        uv[i] = std::array<double,2>{u,v};
-                      }
-                    return uv;
-                  },
-                  [](Element2d & self, const std::vector<std::array<double,2>> & uv) {
-                    if (uv.size() != self.GetNP())
-                      throw NgException("wrong number of uv-parameters");
-                    for (int i = 0; i < uv.size(); i++)
-                      {
-                        PointGeomInfo gi;
-                        gi.u = uv[i][0];
-                        gi.v = uv[i][1];
-                        self.GeomInfo()[i] = gi;
-                      }
-                  })
-    .def_property_readonly("geominfo", [](const Element2d& self) -> py::list
-    {
-      py::list li;
-      for (const auto &pgi : self.GeomInfo())
-        li.append(py::make_tuple(pgi.trignum, pgi.u, pgi.v));
-      return li;
-    })
-    .def_property_readonly("vertices",
-                  FunctionPointer([](const Element2d & self) -> py::list
-                                  {
-                                    py::list li;
-                                    for (int i = 0; i < self.GetNV(); i++)
-                                      li.append(py::cast(self[i]));
-                                    return li;
-                                  }))
-    .def_property_readonly("points", 
-                  FunctionPointer ([](const Element2d & self) -> py::list
-                                   {
-                                     py::list li;
-                                     for (int i = 0; i < self.GetNP(); i++)
-                                       li.append (py::cast(self[i]));
-                                     return li;
-                                   }))    
+    .def(py::init([] (const Element2dRef & el) { return new Element2d(el); }), "copy of a stored element")
     ;
+  py::implicitly_convertible<Element2dRef, Element2d>();
 
-  if(ngcore_have_numpy)
-  {
-    auto data_layout = Element2d::GetDataLayout();
-    py::detail::npy_format_descriptor<Element2d>::register_dtype({
-        py::detail::field_descriptor {
-          "nodes", data_layout["pnum"],
-          ELEMENT2D_MAXPOINTS * sizeof(PointIndex),
-          py::format_descriptor<int[ELEMENT2D_MAXPOINTS]>::format(),
-          py::detail::npy_format_descriptor<int[ELEMENT2D_MAXPOINTS]>::dtype() },
-        py::detail::field_descriptor {
-          "index", data_layout["index"], sizeof(int),
-          py::format_descriptor<int>::format(),
-          py::detail::npy_format_descriptor<int>::dtype() },
-        py::detail::field_descriptor {
-          "type", data_layout["type"], sizeof(uint8_t),
-          py::format_descriptor<unsigned char>::format(),
-        pybind11::dtype("uint8") },
-        py::detail::field_descriptor {
-          "refine", data_layout["refine"], sizeof(bool),
-          py::format_descriptor<bool>::format(),
-          py::detail::npy_format_descriptor<bool>::dtype() },
-        py::detail::field_descriptor {
-          "curved", data_layout["curved"], sizeof(bool),
-          py::format_descriptor<bool>::format(),
-          py::detail::npy_format_descriptor<bool>::dtype() }
-      });
-  }
+  py::class_<T_SURFELEMENTS> (m, "SurfaceElementArray", py::buffer_protocol())
+    .def ("__len__", [] (T_SURFELEMENTS & self) { return self.Size(); })
+    .def ("__getitem__",
+          [] (T_SURFELEMENTS & self, SurfaceElementIndex i) -> Element2dRef
+          {
+            auto reli = i - IndexBASE<SurfaceElementIndex>();
+            if (reli < 0 || reli >= self.Size())
+              throw py::index_error();
+            return self[i];
+          }, py::keep_alive<0,1>())
+    .def ("__setitem__",
+          [] (T_SURFELEMENTS & self, SurfaceElementIndex i, const Element2dRef & el)
+          {
+            auto reli = i - IndexBASE<SurfaceElementIndex>();
+            if (reli < 0 || reli >= self.Size())
+              throw py::index_error();
+            if (size_t(el.GetNP()) > self.Width())
+              self.SetWidth (el.GetNP());
+            self[i] = el;
+          })
+    .def ("__iter__", [] (T_SURFELEMENTS & self)
+          { return py::make_iterator (self.begin(), self.end()); }, py::keep_alive<0,1>())
+    .def ("__str__", [] (T_SURFELEMENTS & self)
+          {
+            std::stringstream str;
+            for (auto el : self) str << el << endl;
+            return str.str();
+          })
+    .def_buffer ([] (T_SURFELEMENTS & self)
+                 {
+                   return py::buffer_info (self.Data(), 1, "B", 1,
+                                           { std::ptrdiff_t(self.Size()*self.Stride()) }, { std::ptrdiff_t(1) });
+                 })
+    .def ("NumPy", [] (py::object self)
+          {
+            auto & els = self.cast<T_SURFELEMENTS&>();
+            py::list names, formats, offsets;
+            auto add = [&] (const char * name, py::dtype format, std::ptrdiff_t offset)
+            { names.append (name); formats.append (format); offsets.append (offset); };
+            add ("nodes", py::dtype ("(" + ToString(els.Width()) + ",)i4"), els.GetLayout().offset[0]);
+            add ("index", py::dtype ("i4"), offsetof(Element2dHeader, index));
+            add ("type", py::dtype ("u1"), offsetof(Element2dHeader, typ));
+            add ("refine", py::dtype ("?"), offsetof(Element2dHeader, refflag));
+            add ("curved", py::dtype ("?"), offsetof(Element2dHeader, is_curved));
+            py::dtype dt (names, formats, offsets, els.Stride());
+            return py::module::import("numpy").attr("frombuffer")(self, dt);
+          })
+    ;
 
   py::class_<Segment>(m, "Element1D")
     .def(py::init([](py::list vertices, py::list surfaces, int index, int edgenr,
@@ -803,7 +830,6 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   PYBIND11_NUMPY_DTYPE(ElementIndex, i);
   ExportArray<ElementIndex, ElementIndex>(m);
   
-  ExportArray<Element2d,SurfaceElementIndex>(m);
   ExportArray<Segment,SegmentIndex>(m);
   ExportArray<Element0d>(m);
   ExportArray<MeshPoint,PointIndex>(m);
@@ -1179,9 +1205,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          [] (Mesh & self) -> T_VOLELEMENTS & { return self.VolumeElements(); },
          py::return_value_policy::reference_internal)
 
-    .def("Elements2D", 
-         static_cast<Array<Element2d,SurfaceElementIndex>&(Mesh::*)()> (&Mesh::SurfaceElements),
-         py::return_value_policy::reference)
+    .def("Elements2D",
+         [] (Mesh & self) -> T_SURFELEMENTS & { return self.SurfaceElements(); },
+         py::return_value_policy::reference_internal)
 
     .def("Elements1D", 
          static_cast<Array<Segment, SegmentIndex>&(Mesh::*)()> (&Mesh::LineSegments),
@@ -1282,7 +1308,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.AddVolumeElement (el);
           })
           
-    .def ("Add", [](Mesh & self, const Element2d & el)
+    .def ("Add", [](Mesh & self, const Element2dRef & el)
           {
             return self.AddSurfaceElement (el);
           })
@@ -1891,7 +1917,7 @@ py::arg("point_tolerance") = -1.)
                 {
                   // PointIndex p0,p1;
                   // topo.GetEdgeVertices(i+1, p0, p1);
-                  auto [p0,p1] = topo.GetEdgeVertices(i);
+                  auto [p0,p1] = topo.GetEdgeVertices(EdgeIndex::FromNr0(i));
                     output[2*i] = p0.Nr0();
                     output[2*i+1] = p1.Nr0();
                 } });

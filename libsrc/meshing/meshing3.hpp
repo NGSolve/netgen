@@ -60,7 +60,7 @@ public:
   ///
   Front3PointIndex AddPoint (const Point<3> & p, PointIndex globind);
   /// elem is given in mesh point numbers
-  void AddBoundaryElement (const Element2d & elem);
+  void AddBoundaryElement (const Element2dRef & elem);
   ///
   int AddConnectedPair (PointIndices<2> pair);
   

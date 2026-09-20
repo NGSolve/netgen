@@ -46,7 +46,7 @@ namespace netgen
   }
 
   
-  HPRefElement :: HPRefElement(Element2d & el) :
+  HPRefElement :: HPRefElement(Element2dRef el) :
     type(HP_NONE), index(el.GetIndex()), levelx(0), levely(0), levelz(0), np(el.GetNV()), domin(-1), domout(-1) //domin,out for segments
   { 
     //Reset();
@@ -1589,7 +1589,7 @@ namespace netgen
           }
         for (auto sei : mesh.SurfaceElements().Range()) 
           { 
-            auto & sel = mesh[sei];
+            auto sel = mesh[sei];
             HPRefElement & hpel = hpelements[mesh.GetHpElnr(sei)];
             const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (sel.GetType());
             double dist[3] = {0,0,0}; 
@@ -1649,7 +1649,7 @@ namespace netgen
         Array<IVec<3>, PointIndex> surfonpoint(mesh.GetNP());
         surfonpoint = IVec<3>(0,0,0);
 
-        for (const Element2d & el : mesh.SurfaceElements())
+        for (const Element2dRef & el : mesh.SurfaceElements())
           {
             int ind = el.GetIndex();
             for (int j = 0; j < el.GetNP(); j++)
@@ -1734,7 +1734,7 @@ namespace netgen
         (*testout) << "edgepoint = " << endl << edgepoint << endl;
 
         facepoint = 0;
-        for (const Element2d & el : mesh.SurfaceElements())
+        for (const Element2dRef & el : mesh.SurfaceElements())
           {
             const FaceRegion & fd = mesh.GetFaceDescriptor (el.GetIndex());
           

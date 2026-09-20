@@ -141,8 +141,9 @@ void WriteNeutralFormat (const Mesh & mesh,
     {
       Element2d el = mesh.SurfaceElement(i);
   */
-  for (Element2d el : mesh.SurfaceElements())
+  for (auto elref : mesh.SurfaceElements())
     {
+      Element2d el (elref);
       if (invertsurf)
         el.Invert();
       outfile.width(4);
@@ -221,7 +222,7 @@ void WriteSurfaceFormat (const Mesh & mesh,
       outfile << endl;
     }
   outfile << mesh.GetNSE() << endl;
-  for (auto & sel : mesh.SurfaceElements())
+  for (auto sel : mesh.SurfaceElements())
     {
       for (j = 1; j <= 3; j++)
         {
@@ -258,7 +259,7 @@ void WriteSTLFormat (const Mesh & mesh,
 
   *outfile << "solid" << endl;
 
-  for (auto & sel : mesh.SurfaceElements())
+  for (auto sel : mesh.SurfaceElements())
     {
       *outfile << "facet normal ";
       const Point<3>& p1 = mesh.Point(sel[0]);
@@ -436,7 +437,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
 
           for (j = 1; j <= 3; j++)
             {
@@ -512,7 +513,7 @@ void WriteVRMLFormat (const Mesh & mesh,
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
 
           for (j = 1; j <= 3; j++)
             {
@@ -590,7 +591,7 @@ void WriteFEPPFormat (const Mesh & mesh,
       outfile << nse << endl;
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
 
           //      int facenr = mesh.facedecoding.Get(el.GetIndex()).surfnr;
           outfile.width(4);
@@ -769,7 +770,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
         {
           outfile << " ";
           outfile.width(8);
-          outfile << eledges[j]+1;
+          outfile << eledges[j].Nr1();
         }
       outfile << "\n";
 
@@ -790,7 +791,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nsurfelem))
     {
       SurfaceElementIndex sei = i;
-      Element2d el = mesh[sei];
+      Element2d el (mesh[sei]);
       if (invertsurf)
         el.Invert();
       outfile.width(4);
@@ -813,7 +814,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
         {
           outfile << " ";
           outfile.width(8);
-          outfile << edges[j]+1;
+          outfile << edges[j].Nr1();
         }
       outfile << "\n";
     }
@@ -825,7 +826,7 @@ void WriteEdgeElementFormat (const Mesh & mesh,
   for (int i=1; i <= nedges; i++)
     {
       // top->GetEdgeVertices(i,v1,v2);
-      auto [v1,v2] = top->GetEdgeVertices(i-1);
+      auto [v1,v2] = top->GetEdgeVertices(EdgeIndex::FromNr1(i));
       outfile.width(4);
       outfile << v1;
       outfile << " ";

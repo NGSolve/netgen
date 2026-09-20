@@ -823,7 +823,7 @@ namespace netgen
           mesh->SurfaceElement(i).Visible(1);
         }
        */
-       for (auto & el : mesh->SurfaceElements())
+       for (auto el : mesh->SurfaceElements())
          el.Visible(1);
        
        mesh->SetNextTimeStamp();
@@ -837,7 +837,7 @@ namespace netgen
           mesh->SurfaceElement(i).Visible(0);
         }
        */
-       for (auto & el : mesh->SurfaceElements())
+       for (auto el : mesh->SurfaceElements())
          el.Visible(0);
        
         mesh->SetNextTimeStamp();

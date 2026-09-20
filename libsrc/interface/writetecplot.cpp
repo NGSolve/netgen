@@ -66,7 +66,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
        
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
           if (j ==  mesh.GetFaceDescriptor (el.GetIndex ()).SurfNr())
             {
               for (k = 1; k <= 3; k++)
@@ -100,7 +100,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
           if (j ==  mesh.GetFaceDescriptor(el.GetIndex ()).SurfNr())
             /* FlaechenKnoten (3) */
             outfile << sn[el[0]] << " " 
@@ -112,7 +112,7 @@ void WriteTecPlotFormat (const Mesh & mesh,
 
               for (SurfaceElementIndex k : T_Range<SurfaceElementIndex>(nse))
                 {
-                  const Element2d & sel = mesh[k];
+                  const Element2dRef & sel = mesh[k];
                   PointIndices<3> i3;
                   for (j = 1; j <= 3; j++)
                     i3[j-1] = sel.PNum(j);

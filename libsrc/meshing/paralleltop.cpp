@@ -169,7 +169,7 @@ namespace netgen
         for (auto el : mesh.VolumeElements())
           for (PointIndex & pi : el.PNums())
             pi = inv_index[pi];
-        for (auto & el : mesh.SurfaceElements())
+        for (auto el : mesh.SurfaceElements())
           for (PointIndex & pi : el.PNums())
             pi = inv_index[pi];
         for (auto & el : mesh.LineSegments())
@@ -330,7 +330,7 @@ namespace netgen
         for (int el = 1; el <= mesh.GetNSE(); el++)
           {
             topology.GetSurfaceElementEdges (el, edges);
-            // const Element2d & surfel = mesh.SurfaceElement (el);
+            // const Element2dRef & surfel = mesh.SurfaceElement (el);
             // Array<int> & sendarray = *sendarrays[surfel.GetPartition()];
             Array<int> & sendarray = *sendarrays[mesh.surf_partition[el-1]];
 
@@ -640,7 +640,7 @@ namespace netgen
     for (int edge = 1; edge <= ned; edge++)
       {
         // topology.GetEdgeVertices (edge, v1, v2);
-        auto [v1,v2] = topology.GetEdgeVertices(edge-1);
+        auto [v1,v2] = topology.GetEdgeVertices(EdgeIndex::FromNr1(edge));
         /*
         for (int dest = 1; dest < ntasks; dest++)
           // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
@@ -661,7 +661,7 @@ namespace netgen
     for (int edge = 1; edge <= ned; edge++)
       {
         // topology.GetEdgeVertices (edge, v1, v2);
-        auto [v1,v2] = topology.GetEdgeVertices(edge-1);        
+        auto [v1,v2] = topology.GetEdgeVertices(EdgeIndex::FromNr1(edge));        
         for (int dest = 0; dest < ntasks; dest++)
           // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
           if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
@@ -680,7 +680,7 @@ namespace netgen
         for (int edge : dest2edge[dest])
           {
             // topology.GetEdgeVertices (edge, v1, v2);
-            auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
+            auto [v1,v2] = topology.GetEdgeVertices(EdgeIndex::FromNr1(edge));            
             // if (IsExchangeVert (dest, v1) && IsExchangeVert (dest, v2))
             if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))            
               {
@@ -702,7 +702,7 @@ namespace netgen
         for (int edge : dest2edge[dest])
           {
             // topology.GetEdgeVertices (edge, v1, v2);
-            auto [v1,v2] = topology.GetEdgeVertices(edge-1);            
+            auto [v1,v2] = topology.GetEdgeVertices(EdgeIndex::FromNr1(edge));            
             vert2edge.Set(PointIndices<2>(v1,v2), edge);
           }
 
@@ -730,7 +730,7 @@ namespace netgen
         cnt_send = 0;
         for (int face = 0; face < nfa; face++)
           {
-            auto verts = topology.GetFaceVertices (face);
+            auto verts = topology.GetFaceVertices (FaceIndex::FromNr0(face));
             for (int dest = 0; dest < ntasks; dest++)
               if (dest != id)
                 /*
@@ -748,7 +748,7 @@ namespace netgen
         DynamicTable<int> dest2face(cnt_send);
         for (int face = 1; face <= nfa; face++)
           {
-            auto verts = topology.GetFaceVertices (face-1);
+            auto verts = topology.GetFaceVertices (FaceIndex::FromNr1(face));
             for (int dest = 0; dest < ntasks; dest++)
               if (dest != id)
                 /*
@@ -778,7 +778,7 @@ namespace netgen
               
               for (int face : dest2face[dest])
                 {
-                  auto verts = topology.GetFaceVertices (face-1);
+                  auto verts = topology.GetFaceVertices (FaceIndex::FromNr1(face));
                   /*
                   if (IsExchangeVert (dest, verts[0]) && 
                       IsExchangeVert (dest, verts[1]) &&
@@ -806,7 +806,7 @@ namespace netgen
             ClosedHashTable<PointIndices<3>, int> vert2face(4*dest2face[dest].Size()+16);
             for (int face : dest2face[dest])
               {
-                auto verts = topology.GetFaceVertices (face-1);
+                auto verts = topology.GetFaceVertices (FaceIndex::FromNr1(face));
                 vert2face.Set(PointIndices<3>(verts[0], verts[1], verts[2]), face);
               }
             

@@ -108,9 +108,9 @@ namespace netgen
              for (int j = 0; j < elnv; j++)
                nnums[j] = el[j]+1-PI0;
              for (int j = 0; j < elned; j++)
-               nnums[elnv+j] = nv+ednums[j]+1;
+               nnums[elnv+j] = nv+ednums[j].Nr1();
              for (int j = 0; j < elnfa; j++)
-               nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+               nnums[elnv+elned+j] = nv+ned+fanums[j].Nr1();
              nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
 
              for (int j = 0; j < nnums.Size(); j++)
@@ -123,7 +123,7 @@ namespace netgen
     /*
     for (int i = 1; i <= nse; i++)
       {
-        const Element2d & el = mesh.SurfaceElement(i);
+        const Element2dRef & el = mesh.SurfaceElement(i);
         ELEMENT_TYPE typ = el.GetType();
       
         top.GetSurfaceElementEdges (i, ednums);
@@ -153,14 +153,14 @@ namespace netgen
          for (SurfaceElementIndex i_ : myrange)
            {
              // int i = i_+1;
-             const Element2d & el = mesh[i_]; // .SurfaceElement(i);
+             const Element2dRef & el = mesh[i_]; // .SurfaceElement(i);
              ELEMENT_TYPE typ = el.GetType();
              
              // top.GetSurfaceElementEdges (i, ednums);
              auto ednums = top.GetEdges (i_);
              // cout << "ednums = " << ednums << endl;
              
-             int fanum = top.GetFace(i_)+1;
+             int fanum = top.GetFace(i_).Nr1();
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
@@ -169,7 +169,7 @@ namespace netgen
              for (int j = 0; j < elnv; j++)
                nnums[j] = el[j]+1-PI0;
              for (int j = 0; j < elned; j++)
-               nnums[elnv+j] = nv+ednums[j]+1;
+               nnums[elnv+j] = nv+ednums[j].Nr1();
              nnums[elnv+elned] = fanum;             
              
              for (int j = 0; j < nnums.Size(); j++)
@@ -294,9 +294,9 @@ namespace netgen
                 for (int j = 0; j < elnv; j++)
                   nnums[j] = el[j]+1-IndexBASE<PointIndex>();
                 for (int j = 0; j < elned; j++)
-                  nnums[elnv+j] = nv+ednums[j]+1;
+                  nnums[elnv+j] = nv+ednums[j].Nr1();
                 for (int j = 0; j < elnfa; j++)
-                  nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+                  nnums[elnv+elned+j] = nv+ned+fanums[j].Nr1();
                 nnums[elnv+elned+elnfa] = nv+ned+nfa+ei.Nr1();
                 
                 

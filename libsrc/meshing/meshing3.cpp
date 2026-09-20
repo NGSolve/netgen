@@ -141,7 +141,7 @@ Front3PointIndex Meshing3 :: AddPoint (const Point<3> & p, PointIndex globind)
   return fpi;
 }  
 
-void Meshing3 :: AddBoundaryElement (const Element2d & elem)
+void Meshing3 :: AddBoundaryElement (const Element2dRef & elem)
 {
   FrontElement2d mini(elem.GetNP());
   for (int j = 0; j < elem.GetNP(); j++)

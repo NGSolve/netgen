@@ -191,9 +191,9 @@ namespace netgen
     /*
     for (int i = 1; i <= mesh.GetNSE(); i++)
       {
-        const Element2d & sel = mesh.SurfaceElement(i);
+        const Element2dRef & sel = mesh.SurfaceElement(i);
     */
-    for (auto & sel : mesh.SurfaceElements())
+    for (auto sel : mesh.SurfaceElements())
       for (int j = 1; j <= sel.GetNP(); j++)
         if(!isedgepoint.Test(sel.PNum(j)))
           {
@@ -301,9 +301,9 @@ namespace netgen
             /*
             for (int i = 1; i <= mesh.GetNSE(); i++)
               {
-                const Element2d & sel = mesh.SurfaceElement(i);
+                const Element2dRef & sel = mesh.SurfaceElement(i);
             */
-            for (auto & sel : mesh.SurfaceElements())
+            for (auto sel : mesh.SurfaceElements())
               {
                 Vec<3> auxvec = Cross(mesh.Point(sel[1])-mesh.Point(sel[0]),
                                       mesh.Point(sel[2])-mesh.Point(sel[0]));
@@ -528,7 +528,7 @@ namespace netgen
         nv = Vec<3>(0,0,0);
         for (int i = 1; i <= mesh.GetNSE(); i++)
           {
-            const Element2d & sel = mesh.SurfaceElement(i);
+            const Element2dRef & sel = mesh.SurfaceElement(i);
             Vec<3> auxvec = Cross(mesh.Point(sel[1])-mesh.Point(sel[0]),
                                  mesh.Point(sel[2])-mesh.Point(sel[0]));
             auxvec.Normalize();

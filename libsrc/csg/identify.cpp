@@ -479,7 +479,7 @@ BuildSurfaceElements (Array<Segment> & segs,
     {
       Array<PointIndex> copy_points;
 
-      for (const Element2d & sel : mesh.SurfaceElements())
+      for (const Element2dRef & sel : mesh.SurfaceElements())
         {
           IVec<2> fpair = IVec<2>(facei, sel.GetIndex().Nr1()).Sort();
           if (identfaces.Used (fpair))
@@ -495,7 +495,7 @@ BuildSurfaceElements (Array<Segment> & segs,
 
 
 
-      for (const Element2d & sel : mesh.SurfaceElements())
+      for (const Element2dRef & sel : mesh.SurfaceElements())
         {
           IVec<2> fpair = IVec<2>(facei, sel.GetIndex().Nr1()).Sort();
           if (identfaces.Used (fpair))
@@ -1393,7 +1393,7 @@ BuildSurfaceElements2 (Array<Segment> & segs,
     {
       //          (*testout) << "surfaces found" << endl;
       // copy surface
-      for (const Element2d & sel : mesh.SurfaceElements())
+      for (const Element2dRef & sel : mesh.SurfaceElements())
         {
           IVec<2> fpair = IVec<2>(facei, sel.GetIndex().Nr1()).Sort();
           if (identfaces.Used (fpair))

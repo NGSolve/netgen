@@ -120,7 +120,7 @@ inline int FindInnerPoint (POINTArray & points,
   double hmax = 0;
   for (int i = 0; i < nf; i++)
     {
-      // const Element2d & el = faces[i];
+      // const Element2dRef & el = faces[i];
       // (*testout) << "el[" << i << "] = " << el << endl;
       for (int j : Range(3))
         {

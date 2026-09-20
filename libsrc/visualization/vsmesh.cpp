@@ -429,7 +429,7 @@ namespace netgen
               {
                 // int v1, v2;
                 // top.GetEdgeVertices (i, v1, v2);
-                auto [v1,v2] = top.GetEdgeVertices(i-1);
+                auto [v1,v2] = top.GetEdgeVertices(EdgeIndex::FromNr1(i));
                 const Point<3> & p1 = mesh->Point(v1);
                 const Point<3> & p2 = mesh->Point(v2);
                 const Point<3> p = Center (p1, p2);
@@ -685,9 +685,9 @@ namespace netgen
               }
           }
 
-        for (auto & sel : mesh->SurfaceElements())
+        for (auto sel : mesh->SurfaceElements())
           {
-            Element2d el = sel; // copy to be thread-safe
+            Element2d el (sel); // copy to be thread-safe
             if (!el.BadElement())
               continue;
 
@@ -896,7 +896,7 @@ namespace netgen
         for (int hi = 0; hi < seia.Size(); hi++)
           {
             SurfaceElementIndex sei = seia[hi];
-            const Element2d & el = (*mesh)[sei];
+            const Element2dRef & el = (*mesh)[sei];
 
             bool drawel = (!el.IsDeleted() && el.IsVisible());
 
@@ -1279,7 +1279,7 @@ namespace netgen
             
         if (vispar.colormeshsize)
         {
-          auto & el = (*mesh)[sei];
+          auto el = (*mesh)[sei];
           if(el.GetType() == TRIG && !curv.IsHighOrder()) {
             if (vispar.colormeshsize)
               SetOpenGlColor  (locms[el[0]], minh, maxh, 0);
@@ -1374,7 +1374,7 @@ namespace netgen
     // PrintMessage (3, "nse = ", mesh->GetNSE());
     for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
       {
-        const Element2d & el = (*mesh)[sei];
+        const Element2dRef & el = (*mesh)[sei];
 
         bool drawel = (!el.IsDeleted() && el.IsVisible());
 
@@ -3135,9 +3135,9 @@ namespace netgen
 
     glDisable (GL_COLOR_MATERIAL);
 
-    for (auto & sel : mesh->SurfaceElements())
+    for (auto sel : mesh->SurfaceElements())
       {
-        Element2d el = sel;
+        Element2d el (sel);
 
         int drawel = 1;
         for (j = 1; j <= el.GetNP(); j++)
@@ -3369,7 +3369,7 @@ namespace netgen
 
     if(selelement>0)
       {
-        const Element2d & sel = (*GetMesh())[SurfaceElementIndex::FromNr1(selelement)];
+        const Element2dRef & sel = (*GetMesh())[SurfaceElementIndex::FromNr1(selelement)];
         SetSelectedFace(sel.GetIndex().Nr1());
 
         auto pi_nearest = sel[0];

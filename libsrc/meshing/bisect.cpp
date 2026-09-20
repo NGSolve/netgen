@@ -414,7 +414,7 @@ namespace netgen
       
         // additional surface edges:
 
-        for (const Element2d & el : mesh.SurfaceElements())
+        for (const Element2dRef & el : mesh.SurfaceElements())
           {
             static int trigedges[3][2] =
               { { 1, 2 },
@@ -543,7 +543,7 @@ namespace netgen
                   }
               }
 
-            for (const Element2d & el2d : mesh.SurfaceElements())
+            for (const Element2dRef & el2d : mesh.SurfaceElements())
               {
                 for(int i = 0; i < el2d.GetNP(); i++)
                   {
@@ -985,7 +985,7 @@ namespace netgen
 
 
   template <typename T_EDGENUMBER>
-  bool BTDefineMarkedId(const Element2d & el, 
+  bool BTDefineMarkedId(const Element2dRef & el, 
                         T_EDGENUMBER & edgenumber, 
                         const idmap_type & idmap,
                         MarkedIdentification & mi)
@@ -1036,7 +1036,7 @@ namespace netgen
 
   
   template <typename T_EDGENUMBER>
-  void BTDefineMarkedTri (const Element2d & el,
+  void BTDefineMarkedTri (const Element2dRef & el,
                           T_EDGENUMBER & edgenumber,
                           MarkedTri & mt)
   {
@@ -1096,7 +1096,7 @@ namespace netgen
 
 
   template <typename T_EDGENUMBER>
-  void BTDefineMarkedQuad (const Element2d & el,
+  void BTDefineMarkedQuad (const Element2dRef & el,
                            T_EDGENUMBER & edgenumber,
                            MarkedQuad & mq)
   {
@@ -1661,7 +1661,7 @@ namespace netgen
 
 
     
-    for (const Element2d & el2d : mesh.SurfaceElements())
+    for (const Element2dRef & el2d : mesh.SurfaceElements())
       {
         
         for(i = 0; i < el2d.GetNP(); i++)
@@ -2162,9 +2162,9 @@ namespace netgen
         /*
         for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
           {
-            const Element2d & el = mesh[sei];
+            const Element2dRef & el = mesh[sei];
         */
-        for (const Element2d & el  : mesh.SurfaceElements())
+        for (const Element2dRef & el  : mesh.SurfaceElements())
           {
             if (el.GetType() == TRIG ||
                 el.GetType() == TRIG6)
@@ -2444,7 +2444,7 @@ namespace netgen
 
     for (i = 1; i <= nse; i++)
       {
-        const Element2d & el = mesh.SurfaceElement(i);
+        const Element2dRef & el = mesh.SurfaceElement(i);
         if (el.GetType() == TRIG ||
             el.GetType() == TRIG6)
           {
@@ -2645,11 +2645,11 @@ namespace netgen
       }
     
     /*
-    for (const Element2d & el : mesh.SurfaceElements())
+    for (const Element2dRef & el : mesh.SurfaceElements())
        {
     */
 
-    for (const Element2d & el : mesh.SurfaceElements())
+    for (const Element2dRef & el : mesh.SurfaceElements())
       {
          /*
          for(int k=0; k<3; k++)
@@ -3154,7 +3154,7 @@ namespace netgen
             int cnttrig = 0;
             int cntquad = 0;
             // for (int i = 1; i <= mesh.GetNSE(); i++)
-            for (auto & el : mesh.SurfaceElements())
+            for (auto el : mesh.SurfaceElements())
               {
                 if (el.GetType() == TRIG ||
                     el.GetType() == TRIG6)
@@ -3271,7 +3271,7 @@ namespace netgen
                 /*
                   for ( i=1; i<= mesh.GetNSE(); i++)
                   {
-                  const Element2d & sel = mesh.SurfaceElement(i);
+                  const Element2dRef & sel = mesh.SurfaceElement(i);
                   for(int j=1; j<=sel.GetNP(); j++)
                   singv.Set(sel.PNum(j));
                   }

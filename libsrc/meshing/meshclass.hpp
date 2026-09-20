@@ -79,7 +79,7 @@ namespace netgen
     /// line-segments at edges
     Array<Segment, SegmentIndex> segments;
     /// surface elements, 2d-inner elements
-    Array<Element2d, SurfaceElementIndex> surfelements;
+    T_SURFELEMENTS surfelements;
     /// volume elements
     T_VOLELEMENTS volelements;
     /// points will be fixed forever
@@ -340,9 +340,9 @@ namespace netgen
     
     Array<Element0d> pointelements;  // only via python interface
 
-    DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2d & el);
+    DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2dRef & el);
     // write to pre-allocated container, thread-safe
-    DLL_HEADER void SetSurfaceElement (SurfaceElementIndex sei, const Element2d & el);
+    DLL_HEADER void SetSurfaceElement (SurfaceElementIndex sei, const Element2dRef & el);
     
     void Delete (SurfaceElementIndex eli)
     {
@@ -354,14 +354,12 @@ namespace netgen
     auto GetNSE () const { return surfelements.Size(); }
 
     // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
-    Element2d & SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
+    Element2dRef SurfaceElement(SurfaceElementIndex i) { return surfelements[i]; }
     // [[deprecated("Use mesh[](SurfaceElementIndex) instead !")]]
-    const Element2d & SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
+    const Element2dRef SurfaceElement(SurfaceElementIndex i) const { return surfelements[i]; }
 
-    const Element2d & operator[] (SurfaceElementIndex ei) const
-    { return surfelements[ei]; }
-    Element2d & operator[] (SurfaceElementIndex ei)
-    { return surfelements[ei]; }
+    const Element2dRef operator[] (SurfaceElementIndex ei) const { return surfelements[ei]; }
+    Element2dRef operator[] (SurfaceElementIndex ei) { return surfelements[ei]; }
 
     const auto & SurfaceElements() const { return surfelements; }
     auto & SurfaceElements() { return surfelements; }
@@ -477,7 +475,7 @@ namespace netgen
     DLL_HEADER void CalcLocalHFromPointDistances(double grading, int layer=1);
     ///
     DLL_HEADER void RestrictLocalH (resthtype rht, int nr, double loch);
-    DLL_HEADER void RestrictLocalH (const Element2d & sel, double loch);
+    DLL_HEADER void RestrictLocalH (const Element2dRef & sel, double loch);
     DLL_HEADER void RestrictLocalH (const Segment & seg, double loch);
     ///
     DLL_HEADER void LoadLocalMeshSize (const filesystem::path & meshsizefilename);
@@ -520,7 +518,7 @@ namespace netgen
     int GetNOpenElements() const
     { return openelements.Size(); }
     ///
-    const Element2d & OpenElement(int i) const
+    const Element2dRef & OpenElement(int i) const
     { return openelements[i-1]; }
 
     auto & OpenElements() const { return openelements; }
@@ -626,7 +624,7 @@ namespace netgen
     // return: number of illegal trigs
     int FindIllegalTrigs ();
 
-    bool LegalTrig (const Element2d & el) const;
+    bool LegalTrig (const Element2dRef & el) const;
     /**
        if values non-null, return values in 4-double array:
        triangle angles min/max, tetangles min/max
@@ -779,7 +777,7 @@ namespace netgen
     }
 
     DLL_HEADER std::string_view GetRegionName(const Segment & el) const;
-    DLL_HEADER std::string_view GetRegionName(const Element2d & el) const;
+    DLL_HEADER std::string_view GetRegionName(const Element2dRef & el) const;
     DLL_HEADER std::string_view GetRegionName(const ElementRef & el) const;
 
     std::string_view GetRegionName(SegmentIndex ei) const { return GetRegionName((*this)[ei]); }
@@ -846,13 +844,13 @@ namespace netgen
     int GetNFD () const
     { return Regions<2>().Size(); }
 
-    const FaceRegion & GetFaceDescriptor (const Element2d & el) const
+    const FaceRegion & GetFaceDescriptor (const Element2dRef & el) const
     { return Regions<2>()[el.GetIndex()]; }
-    FaceRegion & GetFaceDescriptor (const Element2d & el)
+    FaceRegion & GetFaceDescriptor (const Element2dRef & el)
     { return Regions<2>()[el.GetIndex()]; }
 
     /// surface element refers to an existing face descriptor
-    bool HasFaceDescriptor (const Element2d & el) const
+    bool HasFaceDescriptor (const Element2dRef & el) const
     { return Regions<2>().Range().Contains(el.GetIndex()); }
     
     const FaceRegion & GetFaceDescriptor (FaceRegionIndex i) const
@@ -992,7 +990,7 @@ namespace netgen
       CSurfaceArea (const Mesh & amesh) 
         : mesh(amesh), valid(false), area(0.) { ; }
 
-      void Add (const Element2d & sel)
+      void Add (const Element2dRef & sel)
       {
         if (sel.GetNP() == 3)
           area += Cross ( mesh[sel[1]]-mesh[sel[0]],
@@ -1008,7 +1006,7 @@ namespace netgen
         for (auto & el : mesh.SurfaceElements())
           Add (el);
         */
-        for (const Element2d & el : mesh.SurfaceElements())
+        for (auto el : mesh.SurfaceElements())
           Add (el);
         valid = true;
       }
@@ -1123,30 +1121,30 @@ namespace netgen
 
 
 
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
   {
-    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
+    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
   }
 
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (ElementIndex elnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (ElementIndex elnr) const
   {
-    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
+    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
   }
   
-  FlatArray<T_FACE> MeshTopology :: GetFaces (ElementIndex elnr) const
+  FlatArray<FaceIndex> MeshTopology :: GetFaces (ElementIndex elnr) const
   {
-    return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+    return FlatArray<FaceIndex>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
   }
 
   /// a surface element has one face, a segment one edge
-  FlatArray<T_FACE> MeshTopology :: GetFaces (SurfaceElementIndex elnr) const
+  FlatArray<FaceIndex> MeshTopology :: GetFaces (SurfaceElementIndex elnr) const
   {
-    return FlatArray<T_FACE>(1, &surffaces[elnr]);
+    return FlatArray<FaceIndex>(1, &surffaces[elnr]);
   }
 
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (SegmentIndex segnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (SegmentIndex segnr) const
   {
-    return FlatArray<T_EDGE>(1, &segedges[segnr]);
+    return FlatArray<EdgeIndex>(1, &segedges[segnr]);
   }
 
   DLL_HEADER void AddFacesBetweenDomains(Mesh & mesh);

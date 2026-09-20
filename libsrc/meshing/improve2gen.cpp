@@ -45,7 +45,7 @@ namespace netgen
     
 //     for (SurfaceElementIndex sei = 0; sei < ne; sei++)
 //       {
-//      const Element2d & el = mesh[sei];
+//      const Element2dRef & el = mesh[sei];
 //      (*testout) << "element " << sei << ": " <<flush;
 //      for(int j=0; j<el.GetNP(); j++)
 //        (*testout) << el[j] << " " << flush;
@@ -234,18 +234,18 @@ namespace netgen
         /*
         for (int j = 1; j <= rule.oldels.Size(); j++)
           {
-            const Element2d & el = rule.oldels.Elem(j);
+            const Element2dRef & el = rule.oldels.Elem(j);
             for (int k = 1; k <= el.GetNP(); k++)
               rule.incelsonnode.Elem(el.PNum(k))--;
           }
         */
-        for (const Element2d & el : rule.oldels)
+        for (const Element2dRef & el : rule.oldels)
           for (PointIndex pi : el.PNums())
             rule.incelsonnode[pi]--;
 
         for (int j = 0; j < rule.newels.Size(); j++)
           {
-            const Element2d & el = rule.newels[j];
+            const Element2dRef & el = rule.newels[j];
             for (int k = 1; k <= el.GetNP(); k++)
               {
                 rule.incelsonnode[el.PNum(k)]++;
@@ -265,7 +265,7 @@ namespace netgen
 
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
-        const Element2d & el = mesh[sei];
+        const Element2dRef & el = mesh[sei];
 
         if (el.GetIndex() == faceindex && !el.IsDeleted())
           {
@@ -281,7 +281,7 @@ namespace netgen
 
     for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
       {
-        const Element2d & el = mesh[sei];
+        const Element2dRef & el = mesh[sei];
         if (el.GetIndex() == faceindex && !el.IsDeleted())
           {
             for (int j = 0; j < el.GetNP(); j++)
@@ -322,8 +322,8 @@ namespace netgen
             
             for (elrot[0] = 0; elrot[0] < mesh[sei].GetNP(); elrot[0]++)
               {
-                const Element2d & el0 = mesh[sei];
-                const Element2d & rel0 = rule.oldels[0];
+                const Element2dRef & el0 = mesh[sei];
+                const Element2dRef & rel0 = rule.oldels[0];
 
                 if (el0.GetIndex() != faceindex) continue;
                 if (el0.IsDeleted()) continue;
@@ -343,13 +343,13 @@ namespace netgen
                   {
                     // try to find a mapping for reference-element i
 
-                    const Element2d & rel = rule.oldels[i];
+                    const Element2dRef & rel = rule.oldels[i];
                     bool possible = 0;
 
                     int nbi;   // position in neighbours while searching
                     for (nbi = 0; nbi < neighbours.Size(); nbi++)
                       {
-                        const Element2d & el = mesh[neighbours[nbi]];
+                        const Element2dRef & el = mesh[neighbours[nbi]];
                         if (el.IsDeleted()) continue;
                         if (el.GetNP() != rel.GetNP()) continue;
 
@@ -423,7 +423,7 @@ namespace netgen
                 // check new element:
                 for (int j = 0; j < rule.newels.Size(); j++)
                   {
-                    const Element2d & rnel = rule.newels[j];
+                    const Element2dRef & rnel = rule.newels[j];
                     Element2d nel(rnel.GetNP());
                     for (int k = 1; k <= rnel.GetNP(); k++)
                       nel.PNum(k) = pmap[rnel.PNum(k)];
@@ -439,7 +439,7 @@ namespace netgen
                 // generate new element:
                 for (int j = 0; j < rule.newels.Size(); j++)
                   {
-                    const Element2d & rnel = rule.newels[j];
+                    const Element2dRef & rnel = rule.newels[j];
                     Element2d nel(rnel.GetNP());
                     nel.SetIndex (faceindex);
                     for (int k = 1; k <= rnel.GetNP(); k++)

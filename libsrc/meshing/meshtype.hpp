@@ -39,43 +39,42 @@ namespace netgen
   using ELEMENT_EDGE = std::array<int,2>;
   using ELEMENT_FACE = std::array<int,4>;
 
-  /// number of points / vertices / edges / faces of a 3D element type, 0 for other types
-  namespace element3d_info
+  /// number of points / vertices / edges / faces and the dimension of an element type
+  namespace element_info
   {
     constexpr size_t SIZE = 32;   // > max ELEMENT_TYPE value
     constexpr std::array<int8_t,SIZE> np = [] {
       std::array<int8_t,SIZE> t{};
+      t[SEGMENT] = 2;  t[SEGMENT3] = 3;
+      t[TRIG] = 3;  t[QUAD] = 4;  t[TRIG6] = 6;  t[QUAD6] = 6;  t[QUAD8] = 8;
       t[TET] = 4;  t[PYRAMID] = 5;  t[PRISM] = 6;  t[HEX7] = 7;  t[HEX] = 8;
       t[TET10] = 10;  t[PRISM12] = 12;  t[PYRAMID13] = 13;  t[PRISM15] = 15;  t[HEX20] = 20;
       return t; } ();
     constexpr std::array<int8_t,SIZE> nv = [] {
       std::array<int8_t,SIZE> t{};
+      t[SEGMENT] = t[SEGMENT3] = 2;
+      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
       t[TET] = t[TET10] = 4;  t[PYRAMID] = t[PYRAMID13] = 5;  t[PRISM] = t[PRISM12] = t[PRISM15] = 6;
       t[HEX7] = 7;  t[HEX] = t[HEX20] = 8;
       return t; } ();
     constexpr std::array<int8_t,SIZE> nedges = [] {
       std::array<int8_t,SIZE> t{};
+      t[SEGMENT] = t[SEGMENT3] = 1;
+      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
       t[TET] = t[TET10] = 6;  t[PYRAMID] = t[PYRAMID13] = 8;  t[PRISM] = t[PRISM12] = t[PRISM15] = 9;
       t[HEX7] = 11;  t[HEX] = t[HEX20] = 12;
       return t; } ();
     constexpr std::array<int8_t,SIZE> nfaces = [] {
       std::array<int8_t,SIZE> t{};
+      t[TRIG] = t[TRIG6] = 1;  t[QUAD] = t[QUAD6] = t[QUAD8] = 1;
       t[TET] = t[TET10] = 4;  t[PYRAMID] = t[PYRAMID13] = 5;  t[PRISM] = t[PRISM12] = t[PRISM15] = 5;
       t[HEX7] = 6;  t[HEX] = t[HEX20] = 6;
       return t; } ();
-  }
-
-  /// number of points / vertices of a 2D element type, 0 for other types
-  namespace element2d_info
-  {
-    constexpr size_t SIZE = 32;
-    constexpr std::array<int8_t,SIZE> np = [] {
+    constexpr std::array<int8_t,SIZE> dim = [] {
       std::array<int8_t,SIZE> t{};
-      t[TRIG] = 3;  t[QUAD] = 4;  t[TRIG6] = 6;  t[QUAD6] = 6;  t[QUAD8] = 8;
-      return t; } ();
-    constexpr std::array<int8_t,SIZE> nv = [] {
-      std::array<int8_t,SIZE> t{};
-      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
+      t[SEGMENT] = t[SEGMENT3] = 1;
+      t[TRIG] = t[TRIG6] = t[QUAD] = t[QUAD6] = t[QUAD8] = 2;
+      t[TET] = t[TET10] = t[PYRAMID] = t[PYRAMID13] = t[PRISM] = t[PRISM12] = t[PRISM15] = t[HEX7] = t[HEX] = t[HEX20] = 3;
       return t; } ();
   }
 
@@ -125,8 +124,8 @@ namespace netgen
   class PointGeomInfo
   {
   public:
-    int trignum;   // for STL Meshing
-    double u, v;   // for OCC Meshing
+    int trignum = 0;        // for STL Meshing
+    double u = 0, v = 0;    // for OCC Meshing
 
     PointGeomInfo () = default;
     PointGeomInfo (const PointGeomInfo&) = default;
@@ -841,195 +840,133 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   /**
      Triangle element for surface mesh generation.
   */
-  class Element2d
-  { 
-    /// point numbers
-    PointIndex pnum[ELEMENT2D_MAXPOINTS];
-    /// geom info of points
-    PointGeomInfo geominfo[ELEMENT2D_MAXPOINTS];
-
+  struct Element2dHeader
+  {
+    ELEMENT_TYPE typ;   // number of points and vertices follow from the type: element_info
+    int8_t newest_vertex = -1; // from refinement via bisection
+    bool refflag;     // marked for refinement
+    bool is_curved;   // element is (high order) curved
     /// face descriptor index (1-based)
     FaceRegionIndex index = FaceRegionIndex::INVALID;
-    ///
-    ELEMENT_TYPE typ;   // number of points and vertices follow from the type: element2d_info
-    bool refflag;  // marked for refinement
-    bool badel:1;
-    bool strongrefflag:1;
-    bool deleted:1;  // element is deleted
-
-    // Philippose - 08 August 2010
-    // Set a new property for each element, to 
-    // control whether it is visible or not
-    bool visible:1;  // element visible
-    bool is_curved;   // element is (high order) curved
-    int8_t newest_vertex = -1; // from refinement via bisection
-
     /// a linked list for all elements in the same face
     SurfaceElementIndex next;
 
-  public:
-    static auto GetDataLayout()
-    {
-      return std::map<string, int>({
-          { "pnum", offsetof(Element2d, pnum)},
-          { "index", offsetof(Element2d, index) },
-          { "type", offsetof(Element2d, typ) },
-          { "refine", offsetof(Element2d, refflag) },
-          { "curved", offsetof(Element2d, is_curved)}
-        });
-    }
+    class flagstruct {
+    public:
+      bool badel:1;
+      bool strongrefflag:1;
+      bool deleted:1;  // element is deleted
+      bool visible:1;  // element visible
+    };
+    flagstruct flags;
+  };
 
-    ///
-    DLL_HEADER Element2d ();
-    Element2d (const Element2d &) = default;
-    Element2d (Element2d &&) = default;
-    Element2d & operator= (const Element2d &) = default;
-    Element2d & operator= (Element2d &&) = default;
-    Element2d & operator= (initializer_list<PointIndex> list)
+  /*
+    Handle to a surface element: header, point numbers, geom info and the number of point slots.
+    Refers to a slot of the mesh's surface element array or to the storage of an Element2d value.
+    Copying the handle rebinds it, assigning through it copies the element contents.
+  */
+  class Element2dRef
+  {
+  protected:
+    Element2dHeader * h;
+    PointIndex * pn;
+    PointGeomInfo * gi;
+    int maxnp;
+
+  public:
+    typedef Element2dHeader::flagstruct flagstruct;
+
+    Element2dRef (Element2dHeader * ah, PointIndex * apn, PointGeomInfo * agi, int amaxnp)
+      : h(ah), pn(apn), gi(agi), maxnp(amaxnp) { }
+    Element2dRef (DynStrideView<Element2dHeader, false, PointIndex, PointGeomInfo> v)
+      : h(&v.Head()), pn(v.TailPtr<0>()), gi(v.TailPtr<1>()), maxnp(int(v.Width())) { }
+    Element2dRef (DynStrideView<Element2dHeader, true, PointIndex, PointGeomInfo> v)
+      : h(const_cast<Element2dHeader*>(&v.Head())), pn(const_cast<PointIndex*>(v.TailPtr<0>())),
+        gi(const_cast<PointGeomInfo*>(v.TailPtr<1>())), maxnp(int(v.Width())) { }
+    Element2dRef (const Element2dRef &) = default;
+
+    /// copies header, point numbers and geom info, throws if the element does not fit
+    DLL_HEADER Element2dRef & operator= (const Element2dRef & el2);
+
+    Element2dRef & operator= (initializer_list<PointIndex> list)
     {
       size_t cnt = 0;
       for (auto val : list)
-        pnum[cnt++] = val;
+        pn[cnt++] = val;
       return *this;
     }
-    Element2d & operator= (initializer_list<std::tuple<PointIndex,PointGeomInfo>> list)
+    Element2dRef & operator= (initializer_list<std::tuple<PointIndex,PointGeomInfo>> list)
     {
       size_t cnt = 0;
       for (auto val : list)
         {
-          pnum[cnt] = get<0>(val);
-          geominfo[cnt++] = get<1>(val);
+          pn[cnt] = get<0>(val);
+          gi[cnt++] = get<1>(val);
         }
       return *this;
     }
-    ///
-    DLL_HEADER Element2d (int anp);
-    ///
-    DLL_HEADER Element2d (ELEMENT_TYPE type);
-    ///
-    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3);
-    ///
-    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4);
-    ///
-    ELEMENT_TYPE GetType () const { return typ; }
-    /// 
-    void SetType (ELEMENT_TYPE atyp)
-    {
-      typ = atyp;
-      if (element2d_info::np[atyp] == 0)
-        PrintSysError ("Element2d::SetType, illegal type ", int(atyp));
-      is_curved = (GetNP() >= 4); 
-    }
-    ///
-    int GetNP() const { return element2d_info::np[typ]; }
-    ///
-    int GetNV() const { return element2d_info::nv[typ]; }
 
-    ///
-    PointIndex & operator[] (int i) { return pnum[i]; }
-    ///
-    const PointIndex & operator[] (int i) const { return pnum[i]; }
+    Element2dHeader & Header () const { return *h; }
+    int MaxNP () const { return maxnp; }
 
-    auto PNums () const { return FlatArray<const PointIndex> (GetNP(), &pnum[0]); }
-    auto PNums ()  { return FlatArray<PointIndex> (GetNP(), &pnum[0]); }
+    ELEMENT_TYPE GetType () const { return h->typ; }
+    DLL_HEADER void SetType (ELEMENT_TYPE atyp);
+    int GetNP() const { return element_info::np[h->typ]; }
+    int GetNV() const { return element_info::nv[h->typ]; }
+
+    PointIndex & operator[] (int i) { NETGEN_CHECK_RANGE(i, 0, maxnp); return pn[i]; }
+    const PointIndex & operator[] (int i) const { NETGEN_CHECK_RANGE(i, 0, maxnp); return pn[i]; }
+
+    auto PNums () const { return FlatArray<const PointIndex> (GetNP(), pn); }
+    auto PNums ()  { return FlatArray<PointIndex> (GetNP(), pn); }
     template <int NP>
-    auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
-    auto Vertices() const { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
+    auto PNums() const { return FlatArray<const PointIndex> (NP, pn); }
+    auto Vertices() const { return FlatArray<const PointIndex> (GetNV(), pn); }
+    auto GeomInfo() const { return FlatArray<const PointGeomInfo> (GetNP(), gi); }
+    auto GeomInfo() { return FlatArray<PointGeomInfo> (GetNP(), gi); }
 
-    auto GeomInfo() const { return FlatArray<const PointGeomInfo> (GetNP(), &geominfo[0]); }
-    auto GeomInfo() { return FlatArray<PointGeomInfo> (GetNP(), &geominfo[0]); }
-    
-    ///
-    PointIndex & PNum (int i) { return pnum[i-1]; }
+    PointIndex & PNum (int i) { NETGEN_CHECK_RANGE(i, 1, maxnp+1); return pn[i-1]; }
     /// vertex i of this element
-    PointIndex & PNum (ElementVertexIndex i) { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
-    ///
-    const PointIndex & PNum (int i) const { return pnum[i-1]; }
-    const PointIndex & PNum (ElementVertexIndex i) const { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
-    ///
-    PointIndex & PNumMod (int i) { return pnum[(i-1) % GetNP()]; }
-    ///
-    const PointIndex & PNumMod (int i) const { return pnum[(i-1) % GetNP()]; }
-    ///
+    PointIndex & PNum (ElementVertexIndex i) { return pn[i-IndexBASE<ElementVertexIndex>()]; }
+    const PointIndex & PNum (int i) const { NETGEN_CHECK_RANGE(i, 1, maxnp+1); return pn[i-1]; }
+    const PointIndex & PNum (ElementVertexIndex i) const { return pn[i-IndexBASE<ElementVertexIndex>()]; }
+    PointIndex & PNumMod (int i) { return pn[(i-1) % GetNP()]; }
+    const PointIndex & PNumMod (int i) const { return pn[(i-1) % GetNP()]; }
 
-    ///
-    PointGeomInfo & GeomInfoPi (int i) { return geominfo[i-1]; }
-    ///
-    const PointGeomInfo & GeomInfoPi (int i) const { return geominfo[i-1]; }
-    ///
-    PointGeomInfo & GeomInfoPiMod (int i) { return geominfo[(i-1) % GetNP()]; }
-    ///
-    const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % GetNP()]; }
+    PointGeomInfo & GeomInfoPi (int i) { NETGEN_CHECK_RANGE(i, 1, maxnp+1); return gi[i-1]; }
+    const PointGeomInfo & GeomInfoPi (int i) const { NETGEN_CHECK_RANGE(i, 1, maxnp+1); return gi[i-1]; }
+    PointGeomInfo & GeomInfoPiMod (int i) { return gi[(i-1) % GetNP()]; }
+    const PointGeomInfo & GeomInfoPiMod (int i) const { return gi[(i-1) % GetNP()]; }
 
-    auto & NewestVertex() { return newest_vertex; }
-    auto NewestVertex() const { return newest_vertex; }
+    auto & NewestVertex() { return h->newest_vertex; }
+    auto NewestVertex() const { return h->newest_vertex; }
 
-    void DoArchive (Archive & ar)
-    {
-      short _np, _typ;
-      bool _curved, _vis, _deleted;
-      if (ar.Output())
-        { _np = GetNP(); _typ = typ; _curved = is_curved;
-          _vis = visible; _deleted = deleted; }
-      // ar & _np & _typ & index & _curved & _vis & _deleted;
-      ar.DoPacked (_np, _typ, index, _curved, _vis, _deleted);
-      // ar & next; don't need 
-      if (ar.Input())
-        { typ = ELEMENT_TYPE(_typ); is_curved = _curved;
-          visible = _vis; deleted = _deleted; }
-      /*
-      for (size_t i = 0; i < GetNP(); i++)
-        ar & pnum[i];
-      */
-      // archive stores 1-based point numbers, independent of BASE
-      int nr1[ELEMENT2D_MAXPOINTS];
-      if (ar.Output())
-        for (int k = 0; k < GetNP(); k++) nr1[k] = pnum[k].Nr1();
-      ar.Do (nr1, GetNP());
-      if (ar.Input())
-        for (int k = 0; k < GetNP(); k++) pnum[k] = PointIndex::FromNr1(nr1[k]);
-    }
+    DLL_HEADER void DoArchive (Archive & ar);
 
-#ifdef PARALLEL
-    static NG_MPI_Datatype MyGetMPIType();
-#endif
-    
+    void SetIndex (FaceRegionIndex si) { h->index = si; }
+    FaceRegionIndex GetIndex () const { return h->index; }
 
-    void SetIndex (FaceRegionIndex si) { index = si; }
-    ///
-    FaceRegionIndex GetIndex () const { return index; }
-
-
-
-
-
-    ///
-    void GetBox (const T_POINTS & points, Box3d & box) const;
+    DLL_HEADER void GetBox (const T_POINTS & points, Box3d & box) const;
     /// invert orientation
     inline void Invert ();
-    ///
     DLL_HEADER void Invert2 ();
     /// first point number is smallest
     inline void NormalizeNumbering ();
-    ///
-    void NormalizeNumbering2 ();
+    DLL_HEADER void NormalizeNumbering2 ();
 
-    bool BadElement() const { return badel; }
-
-    // friend ostream & operator<<(ostream  & s, const Element2d & el);
-    friend class Mesh;
-
+    bool BadElement() const { return h->flags.badel; }
 
     /// get number of 'integration points'
-    int GetNIP () const;
-    void GetIntegrationPoint (int ip, Point<2> & p, double & weight) const;
+    DLL_HEADER int GetNIP () const;
+    DLL_HEADER void GetIntegrationPoint (int ip, Point<2> & p, double & weight) const;
 
-    void GetTransformation (int ip, FlatArray<Point<2>, PointIndex> points,
-                            class DenseMatrix & trans) const;
-    void GetTransformation (int ip, class DenseMatrix & pmat,
-                            class DenseMatrix & trans) const;
+    DLL_HEADER void GetTransformation (int ip, FlatArray<Point<2>, PointIndex> points,
+                                       class DenseMatrix & trans) const;
+    DLL_HEADER void GetTransformation (int ip, class DenseMatrix & pmat,
+                                       class DenseMatrix & trans) const;
 
-    void GetShape (const Point<2> & p, class Vector & shape) const;
+    DLL_HEADER void GetShape (const Point<2> & p, class Vector & shape) const;
     DLL_HEADER void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
     template <typename T>
     DLL_HEADER void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;
@@ -1037,66 +974,97 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
     template <typename T>
     DLL_HEADER void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
-    
     /// matrix 2 * GetNP()
-    void GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
-                         class DenseMatrix & pmat) const;
+    DLL_HEADER void GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
+                                    class DenseMatrix & pmat) const;
 
-    void ComputeIntegrationPointData () const;
-  
+    DLL_HEADER void ComputeIntegrationPointData () const;
 
-    double CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const;
-    double CalcJacobianBadness (const T_POINTS & points, 
-                                const Vec<3> & n) const;
-    double CalcJacobianBadnessDirDeriv (FlatArray<Point<2>, PointIndex> points,
-                                        int pi, Vec<2> & dir, double & dd) const;
+    DLL_HEADER double CalcJacobianBadness (FlatArray<Point<2>, PointIndex> points) const;
+    DLL_HEADER double CalcJacobianBadness (const T_POINTS & points,
+                                           const Vec<3> & n) const;
+    DLL_HEADER double CalcJacobianBadnessDirDeriv (FlatArray<Point<2>, PointIndex> points,
+                                                   int pi, Vec<2> & dir, double & dd) const;
 
-
-    
-    void Delete ()
-    {
-      deleted = true;
-      // for (PointIndex & p : pnum) p.Invalidate(); 
-    }
-    
-    bool IsDeleted () const 
+    void Delete () { h->flags.deleted = true; }
+    bool IsDeleted () const
     {
 #ifdef DEBUG
-      if ((pnum[0]-IndexBASE<PointIndex>() < 0) && !deleted)
+      if ((pn[0]-IndexBASE<PointIndex>() < 0) && !h->flags.deleted)
         cerr << "Surfelement has illegal pnum, but not marked as deleted" << endl;
-#endif    
-      return deleted; 
+#endif
+      return h->flags.deleted;
     }
 
-    // Philippose - 08 August 2010
-    // Access functions for the new property: visible
-    void Visible(bool vis = true) 
-    { visible = vis; }
-    bool IsVisible () const 
-    { return visible; }
-   
-    void SetRefinementFlag (bool rflag = true) 
-    { refflag = rflag; }
-    bool TestRefinementFlag () const
-    { return refflag; }
+    void Visible (bool vis = true) { h->flags.visible = vis; }
+    bool IsVisible () const { return h->flags.visible; }
 
-    void SetStrongRefinementFlag (bool rflag = true) 
-    { strongrefflag = rflag; }
-    bool TestStrongRefinementFlag () const
-    { return strongrefflag; }
+    void SetRefinementFlag (bool rflag = true) { h->refflag = rflag; }
+    bool TestRefinementFlag () const { return h->refflag; }
 
+    void SetStrongRefinementFlag (bool rflag = true) { h->flags.strongrefflag = rflag; }
+    bool TestStrongRefinementFlag () const { return h->flags.strongrefflag; }
 
-    bool IsCurved () const { return is_curved; }
-    void SetCurved (bool acurved) { is_curved = acurved; }
-  
-    SurfaceElementIndex NextElement() { return next; }
+    bool IsCurved () const { return h->is_curved; }
+    void SetCurved (bool acurved) { h->is_curved = acurved; }
 
-    bool operator==(const Element2d & el2) const;
+    SurfaceElementIndex NextElement() const { return h->next; }
 
-    int HasFace(const Element2d& el) const;
+    DLL_HEADER bool operator== (const Element2dRef & el2) const;
+    DLL_HEADER int HasFace (const Element2dRef & el) const;
   };
 
-  DLL_HEADER ostream & operator<<(ostream  & s, const Element2d & el);
+  /// surface element value type: own storage for ELEMENT2D_MAXPOINTS points, handled through Element2dRef
+  class Element2d : public Element2dRef
+  {
+    Element2dHeader hstore;
+    PointIndex pnstore[ELEMENT2D_MAXPOINTS];
+    PointGeomInfo gistore[ELEMENT2D_MAXPOINTS];
+  public:
+    static constexpr const char * archive_width_version = "v6.2.2607-149";
+    static constexpr size_t archive_max_width = ELEMENT2D_MAXPOINTS;
+    DLL_HEADER Element2d ();
+    DLL_HEADER Element2d (int anp);
+    DLL_HEADER Element2d (ELEMENT_TYPE type);
+    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3);
+    DLL_HEADER Element2d (PointIndex pi1, PointIndex pi2, PointIndex pi3, PointIndex pi4);
+    /// copy of a stored element; explicit, a handle is what you usually want
+    explicit Element2d (const Element2dRef & el) : Element2d() { Element2dRef::operator= (el); }
+    Element2d (const Element2d & e2) : Element2dRef(&hstore, pnstore, gistore, ELEMENT2D_MAXPOINTS), hstore(e2.hstore)
+    {
+      for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
+        { pnstore[i] = e2.pnstore[i]; gistore[i] = e2.gistore[i]; }
+    }
+    Element2d & operator= (const Element2d & e2)
+    {
+      hstore = e2.hstore;
+      for (int i = 0; i < ELEMENT2D_MAXPOINTS; i++)
+        { pnstore[i] = e2.pnstore[i]; gistore[i] = e2.gistore[i]; }
+      return *this;
+    }
+    Element2d & operator= (const Element2dRef & el) { Element2dRef::operator= (el); return *this; }
+    Element2d & operator= (initializer_list<PointIndex> list) { Element2dRef::operator= (list); return *this; }
+    Element2d & operator= (initializer_list<std::tuple<PointIndex,PointGeomInfo>> list) { Element2dRef::operator= (list); return *this; }
+
+    static auto GetDataLayout()
+    {
+      Element2d hel;
+      auto off = [&hel] (const void * p) { return int((const char*)p - (const char*)&hel); };
+      return std::map<string, int>({
+          { "pnum", off(&hel.pnstore[0]) },
+          { "index", off(&hel.hstore.index) },
+          { "type", off(&hel.hstore.typ) },
+          { "refine", off(&hel.hstore.refflag) },
+          { "curved", off(&hel.hstore.is_curved) }
+        });
+    }
+
+#ifdef PARALLEL
+    static NG_MPI_Datatype MyGetMPIType();
+#endif
+  };
+
+  DLL_HEADER ostream & operator<<(ostream  & s, const Element2dRef & el);
   class IntegrationPointData
   {
   public:
@@ -1118,7 +1086,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   */
   struct ElementHeader
   {
-    ELEMENT_TYPE typ;   // number of points, vertices, ... follow from the type: element3d_info
+    ELEMENT_TYPE typ;   // number of points, vertices, ... follow from the type: element_info
     int8_t newest_vertex = -1; // from refinement via bisection
     /// sub-domain index
     VolumeRegionIndex index;
@@ -1176,11 +1144,11 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     DLL_HEADER void SetNP (int anp);
     DLL_HEADER void SetType (ELEMENT_TYPE atyp);
-    int GetNP () const { return element3d_info::np[h->typ]; }
+    int GetNP () const { return element_info::np[h->typ]; }
     // old style:
-    int NP () const { return element3d_info::np[h->typ]; }
+    int NP () const { return element_info::np[h->typ]; }
 
-    uint8_t GetNV() const { return element3d_info::nv[h->typ]; }
+    uint8_t GetNV() const { return element_info::nv[h->typ]; }
 
     ELEMENT_TYPE GetType () const { return h->typ; }
 
@@ -1214,9 +1182,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// Calculates Volume of element
     DLL_HEADER double Volume (const T_POINTS & points) const;
     DLL_HEADER void Print (ostream & ost) const;
-    int GetNFaces () const { return element3d_info::nfaces[h->typ]; }
-    inline void GetFace (int i, Element2d & face) const;
-    DLL_HEADER void GetFace2 (int i, Element2d & face) const;
+    int GetNFaces () const { return element_info::nfaces[h->typ]; }
+    inline void GetFace (int i, Element2dRef face) const;
+    DLL_HEADER void GetFace2 (int i, Element2dRef face) const;
     DLL_HEADER void Invert ();
 
 
@@ -1305,6 +1273,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     ElementHeader hstore;
     PointIndex pnstore[ELEMENT_MAXPOINTS];
   public:
+    static constexpr const char * archive_width_version = "v6.2.2607-128";
+    static constexpr size_t archive_max_width = ELEMENT_MAXPOINTS;
     DLL_HEADER Element ();
     DLL_HEADER Element (int anp);
     DLL_HEADER Element (ELEMENT_TYPE type);
@@ -1337,21 +1307,21 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   /// array of volume elements with run-time number of point slots
   typedef DynStrideArray<ElementHeader, TailList<PointIndex>, ElementIndex> T_VOLELEMENTS_BASE;
 
-  /// adds ElementRef access and iteration to a (flat or owning) strided element array
+  /// adds TREF handle access and iteration to a (flat or owning) strided element array
   // the template parameter must not be called BASE: the strided array has a static member of that name
-  template <class TBASE>
+  template <class TBASE, class TREF>
   class ElementRefArray : public TBASE
   {
   public:
     using TBASE::TBASE;
     ElementRefArray (const TBASE & b) : TBASE(b) { }
 
-    ElementRef operator[] (typename TBASE::index_type i) { return ElementRef (TBASE::operator[] (i)); }
-    const ElementRef operator[] (typename TBASE::index_type i) const { return ElementRef (TBASE::operator[] (i)); }
-    ElementRef First () { return ElementRef (TBASE::First()); }
-    const ElementRef First () const { return ElementRef (TBASE::First()); }
-    ElementRef Last () { return ElementRef (TBASE::Last()); }
-    const ElementRef Last () const { return ElementRef (TBASE::Last()); }
+    TREF operator[] (typename TBASE::index_type i) { return TREF (TBASE::operator[] (i)); }
+    const TREF operator[] (typename TBASE::index_type i) const { return TREF (TBASE::operator[] (i)); }
+    TREF First () { return TREF (TBASE::First()); }
+    const TREF First () const { return TREF (TBASE::First()); }
+    TREF Last () { return TREF (TBASE::Last()); }
+    const TREF Last () const { return TREF (TBASE::Last()); }
 
     template <class IT>
     class Iterator
@@ -1360,7 +1330,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     public:
       Iterator (IT ait) : it(ait) { }
       Iterator & operator++ () { ++it; return *this; }
-      ElementRef operator* () const { return ElementRef (*it); }
+      TREF operator* () const { return TREF (*it); }
       bool operator!= (const Iterator & it2) const { return it != it2.it; }
       bool operator== (const Iterator & it2) const { return it == it2.it; }
     };
@@ -1372,22 +1342,31 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     auto Range () const { return TBASE::Range(); }
     template <typename... ARGS>
     auto Range (ARGS... args) const
-    { return ElementRefArray<FlatDynStrideArray<ElementHeader, TailList<PointIndex>, size_t>> (TBASE::Range (args...)); }
+    {
+      auto r = TBASE::Range (args...);
+      return ElementRefArray<decltype(r), TREF> (r);
+    }
   };
 
-  class VolumeElementArray : public ElementRefArray<T_VOLELEMENTS_BASE>
+  /// owning strided element array: Append grows the width to the element's number of points if needed
+  template <class TBASE, class TREF, class TVAL>
+  class StridedElementArray : public ElementRefArray<TBASE, TREF>
   {
-    typedef ElementRefArray<T_VOLELEMENTS_BASE> TBASE;
+    typedef ElementRefArray<TBASE, TREF> TREFARRAY;
   public:
-    using TBASE::TBASE;
-    using TBASE::Append;
+    typedef typename TBASE::index_type index_type;
+    using TREFARRAY::TREFARRAY;
+    using TREFARRAY::Append;
+    using TREFARRAY::Size;
+    using TREFARRAY::Width;
+    using TREFARRAY::SetWidth;
+    using TREFARRAY::SetSize;
 
-    // grows the width to the element's number of points if needed
-    ElementIndex Append (const ElementRef & el)
+    index_type Append (const TREF & el)
     {
       if (size_t(el.GetNP()) > Width()) SetWidth (el.GetNP());
-      ElementIndex ei = T_VOLELEMENTS_BASE::Append();
-      ElementRef v = (*this)[ei];
+      index_type ei = TBASE::Append();
+      TREF v = (*this)[ei];
       v = el;
       for (int k = el.GetNP(); k < int(Width()); k++) v[k].Invalidate();
       return ei;
@@ -1395,7 +1374,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     void DoArchive (Archive & ar)
     {
-      constexpr const char * width_version = "v6.2.2607-105";
+      constexpr const char * width_version = TVAL::archive_width_version;
       if (ar.Input() && ar.GetVersion("netgen") < width_version)
         {
           size_t s;
@@ -1403,7 +1382,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
           SetSize (0);
           for (size_t i = 0; i < s; i++)
             {
-              Element el;
+              TVAL el;
               el.DoArchive (ar);
               Append (el);
             }
@@ -1412,11 +1391,25 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       ar.NeedsVersion ("netgen", width_version);
       size_t s = Size(), w = Width();
       ar & s & w;
-      if (ar.Input()) { SetWidth (w); SetSize (s); }
+      if (ar.Input())
+        {
+          if (w > TVAL::archive_max_width)
+            throw Exception("element array: archive of netgen " + ar.GetVersion("netgen").to_string() +
+                            " does not have the element width, but is not recognized as the old format"
+                            " (width_version " + width_version + " too low?)");
+          SetWidth (w); SetSize (s);
+        }
       for (auto el : *this) el.DoArchive (ar);
     }
   };
+
+  typedef StridedElementArray<T_VOLELEMENTS_BASE, ElementRef, Element> VolumeElementArray;
   typedef VolumeElementArray T_VOLELEMENTS;
+
+  /// array of surface elements with run-time number of point slots
+  typedef DynStrideArray<Element2dHeader, TailList<PointIndex, PointGeomInfo>, SurfaceElementIndex> T_SURFELEMENTS_BASE;
+  typedef StridedElementArray<T_SURFELEMENTS_BASE, Element2dRef, Element2d> SurfaceElementArray;
+  typedef SurfaceElementArray T_SURFELEMENTS;
 
   /// explicit value copy of a stored element (auto x = mesh[i] yields a handle)
   inline Element Copy (const ElementRef & el) { return Element(el); }
@@ -1945,9 +1938,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
 
 
-  inline void Element2d :: Invert()
+  inline void Element2dRef :: Invert()
   {
-    if (typ == TRIG)
+    if (h->typ == TRIG)
       Swap (PNum(2), PNum(3));
     else
       Invert2();
@@ -1956,7 +1949,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
 
 
-  inline void Element2d :: NormalizeNumbering ()
+  inline void Element2dRef :: NormalizeNumbering ()
   {
     if (GetNP() == 3)
       {
@@ -1992,7 +1985,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       { 0, 1, 3 },
       { 1, 0, 2 } };
 
-  inline void ElementRef :: GetFace (int i, Element2d & face) const
+  inline void ElementRef :: GetFace (int i, Element2dRef face) const
   {
     if (h->typ == TET)
       {

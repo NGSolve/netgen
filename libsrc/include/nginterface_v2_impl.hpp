@@ -33,7 +33,7 @@ NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<2> (size_t nr) const
 {
   // int ind = (*mesh)[SurfaceElementIndex(nr)].GetIndex(); 
   // return mesh->GetFaceDescriptor(ind).BCProperty();
-  const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr0(nr)];
+  const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr0(nr)];
   return mesh->GetFaceDescriptor(el).BCProperty();
 }
 
@@ -137,7 +137,7 @@ NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<1> (size_t nr) const
 template <> 
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<2> (size_t nr) const
 {
-  const Element2d & el = (*mesh)[SurfaceElementIndex::FromNr0(nr)];
+  const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr0(nr)];
   
   Ng_Element ret;
   ret.type = NG_ELEMENT_TYPE(el.GetType());
@@ -307,16 +307,16 @@ template <> NGX_INLINE DLL_HEADER const Ng_Node<0> Ngx_Mesh :: GetNode<0> (int v
 template <> NGX_INLINE DLL_HEADER const Ng_Node<1> Ngx_Mesh :: GetNode<1> (int nr) const
 {
   Ng_Node<1> node;
-  node.vertices.ptr = (const int*)mesh->GetTopology().GetEdgeVerticesPtr(nr);
+  node.vertices.ptr = (const int*)mesh->GetTopology().GetEdgeVerticesPtr(EdgeIndex::FromNr0(nr));
   return node;
 }
 
 template <> NGX_INLINE DLL_HEADER const Ng_Node<2> Ngx_Mesh :: GetNode<2> (int nr) const
 {
   Ng_Node<2> node;
-  node.vertices.ptr = (const int*)mesh->GetTopology().GetFaceVerticesPtr(nr);
+  node.vertices.ptr = (const int*)mesh->GetTopology().GetFaceVerticesPtr(FaceIndex::FromNr0(nr));
   node.vertices.nv = (node.vertices.ptr[3]+1 == PointIndex::BASE) ? 3 : 4;
-  node.surface_el = mesh->GetTopology().GetFace2SurfaceElement (nr).Nr0();
+  node.surface_el = mesh->GetTopology().GetFace2SurfaceElement (FaceIndex::FromNr0(nr)).Nr0();
   return node;
 }
 

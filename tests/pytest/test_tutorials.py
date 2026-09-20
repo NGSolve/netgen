@@ -52,7 +52,7 @@ def getData(mesh, mp, vol_filename):
     out = {}
     out['hash'] = saveNormalizedMesh(mesh, vol_filename)
     out['hash_el1d'] = hashArray(elementArray(mesh.Elements1D()))
-    out['hash_el2d'] = hashArray(elementArray(mesh.Elements2D()))
+    out['hash_el2d'] = hashArray(elementArray(mesh.Elements2D(), 8))
     out['hash_el3d'] = hashArray(elementArray(mesh.Elements3D(), 20))
     out['hash_points'] = hashArray(np.array(mesh.Coordinates(), dtype=np.float64))
     out['ne1d'] = len(mesh.Elements1D())

@@ -749,13 +749,13 @@ namespace netgen
         auto bl_valid = [&](PointIndex pi) -> bool {
           return pi < offset_map.Range().Next() && offset_map[pi].IsValid();
         };
-        for (int e = 0; e < nedges; e++)
+        for (auto e : T_Range<EdgeIndex>(nedges))
           {
             auto [p1, p2] = top.GetEdgeVertices(e);
             if (bl_valid(p1) || bl_valid(p2))
               edgeorder[e] = max(edgeorder[e], aorder);
           }
-        for (int f = 0; f < nfaces; f++)
+        for (auto f : T_Range<FaceIndex>(nfaces))
           {
             auto verts = top.GetFaceVertices(f);
             bool any_bl = false;
@@ -779,10 +779,10 @@ namespace netgen
 
     if (ntasks > 1 && working)
       {
-        for (int e = 0; e < edgeorder.Size(); e++)
+        for (auto e : edgeorder.Range())
           for (int proc : partop.GetDistantEdgeProcs(e))
             send_orders.Add (proc, edgeorder[e]);              
-        for (int f = 0; f < faceorder.Size(); f++)
+        for (auto f : faceorder.Range())
           for (int proc : partop.GetDistantFaceProcs(f))
             send_orders.Add (proc, faceorder[f]);                          
       }
@@ -795,10 +795,10 @@ namespace netgen
       {
         Array<int> cnt(ntasks);
         cnt = 0;
-        for (int e = 0; e < edgeorder.Size(); e++)
+        for (auto e : edgeorder.Range())
           for (auto proc : partop.GetDistantEdgeProcs(e))
             edgeorder[e] = max(edgeorder[e], recv_orders[proc][cnt[proc]++]);              
-        for (int f = 0; f < faceorder.Size(); f++)
+        for (auto f : faceorder.Range())
           for (auto proc : partop.GetDistantFaceProcs(f))
             faceorder[f] = max(faceorder[f], recv_orders[proc][cnt[proc]++]);              
       }
@@ -807,12 +807,12 @@ namespace netgen
 
     edgecoeffsindex.SetSize (nedges+1);
     int nd = 0;
-    for (int i = 0; i < nedges; i++)
+    for (auto i : T_Range<EdgeIndex>(nedges))
       {
         edgecoeffsindex[i] = nd;
         nd += max (0, edgeorder[i]-1);
       }
-    edgecoeffsindex[nedges] = nd;
+    edgecoeffsindex[EdgeIndex::FromNr0(nedges)] = nd;
 
     edgecoeffs.SetSize (nd);
     edgecoeffs = Vec<3> (0,0,0);
@@ -820,7 +820,7 @@ namespace netgen
 
     facecoeffsindex.SetSize (nfaces+1);
     nd = 0;
-    for (int i = 0; i < nfaces; i++)
+    for (auto i : T_Range<FaceIndex>(nfaces))
       {
         facecoeffsindex[i] = nd;
         if (top.GetFaceType0(i) == TRIG)
@@ -828,7 +828,7 @@ namespace netgen
         else
           nd += max2 (0, sqr(faceorder[i]-1));
       }
-    facecoeffsindex[nfaces] = nd;
+    facecoeffsindex[FaceIndex::FromNr0(nfaces)] = nd;
 
     facecoeffs.SetSize (nd);
     facecoeffs = Vec<3> (0,0,0);
@@ -849,9 +849,9 @@ namespace netgen
     if (mesh.GetDimension() == 3 || rational)
       {
         static Timer tce("curve edges"); RegionTimer reg(tce);
-        Array<int> surfnr(nedges);
-        Array<PointGeomInfo> gi0(nedges);
-        Array<PointGeomInfo> gi1(nedges);
+        Array<int, EdgeIndex> surfnr(nedges);
+        Array<PointGeomInfo, EdgeIndex> gi0(nedges);
+        Array<PointGeomInfo, EdgeIndex> gi1(nedges);
         surfnr = -1;
 
         if (working)
@@ -859,7 +859,7 @@ namespace netgen
             {
               // top.GetEdges (i, edgenrs);
               auto edgenrs = top.GetEdges(i);
-              const Element2d & el = mesh[i];
+              const Element2dRef & el = mesh[i];
               const ELEMENT_EDGE * edges = MeshTopology::GetEdges0 (el.GetType());
 
               for (int i2 = 0; i2 < edgenrs.Size(); i2++)
@@ -888,7 +888,7 @@ namespace netgen
             DynamicTable<double> senddata(ntasks), recvdata(ntasks);
             
             if (working)
-              for (int e = 0; e < nedges; e++)
+              for (auto e : T_Range<EdgeIndex>(nedges))
                 for (int proc : partop.GetDistantEdgeProcs(e))
                   {
                     senddata.Add (proc, surfnr[e]);
@@ -909,7 +909,7 @@ namespace netgen
             Array<int> cnt(ntasks);
             cnt = 0;
             if (working)
-              for (int e = 0; e < nedges; e++)
+              for (auto e : T_Range<EdgeIndex>(nedges))
                 for (int proc : partop.GetDistantEdgeProcs(e))
                   {
                     int surfnr1 = recvdata[proc][cnt[proc]++];
@@ -929,10 +929,10 @@ namespace netgen
 
 
         if (working)
-          for (int e = 0; e < surfnr.Size(); e++)
+          for (auto e : surfnr.Range())
             {
               if (surfnr[e] == -1) continue;
-              SetThreadPercent(double(e)/surfnr.Size()*100.);
+              SetThreadPercent(double(e.Nr0())/surfnr.Size()*100.);
 
               // PointIndex pi1, pi2;
               // top.GetEdgeVertices (e+1, pi1, pi2);
@@ -1058,13 +1058,13 @@ namespace netgen
       }
 
 
-    Array<int> use_edge(nedges);
-    Array<int> edge_surfnr1(nedges);
-    Array<int> edge_surfnr2(nedges);
-    Array<int> swap_edge(nedges);
-    Array<EdgePointGeomInfo> edge_gi0(nedges);
-    Array<EdgePointGeomInfo> edge_gi1(nedges);
-    Array<int> edge_geoedgenr(nedges);
+    Array<int, EdgeIndex> use_edge(nedges);
+    Array<int, EdgeIndex> edge_surfnr1(nedges);
+    Array<int, EdgeIndex> edge_surfnr2(nedges);
+    Array<int, EdgeIndex> swap_edge(nedges);
+    Array<EdgePointGeomInfo, EdgeIndex> edge_gi0(nedges);
+    Array<EdgePointGeomInfo, EdgeIndex> edge_gi1(nedges);
+    Array<int, EdgeIndex> edge_geoedgenr(nedges);
     use_edge = 0;
     edge_geoedgenr = -1;
 
@@ -1072,7 +1072,7 @@ namespace netgen
       for (SegmentIndex i : mesh.LineSegments().Range())
         {
           const Segment & seg = mesh[i];
-          int edgenr = top.GetEdge (i);
+          EdgeIndex edgenr = top.GetEdge (i);
           use_edge[edgenr] = 1;
           edge_surfnr1[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(0);
           edge_surfnr2[edgenr] = mesh.GetEdgeDescriptor(seg.GetIndex()).SurfNr(1);
@@ -1090,7 +1090,7 @@ namespace netgen
         DynamicTable<double> senddata(ntasks), recvdata(ntasks);
         
         if (working)
-          for (int e = 0; e < nedges; e++)
+          for (auto e : T_Range<EdgeIndex>(nedges))
             for (int proc : partop.GetDistantEdgeProcs(e))
               {
                 senddata.Add (proc, use_edge[e]);
@@ -1115,7 +1115,7 @@ namespace netgen
         Array<int> cnt(ntasks);
         cnt = 0;
         if (working)
-          for (int e = 0; e < edge_surfnr1.Size(); e++)
+          for (auto e : edge_surfnr1.Range())
             for (int proc : partop.GetDistantEdgeProcs(e))
               {
                 int get_edge = int(recvdata[proc][cnt[proc]++]);
@@ -1138,12 +1138,12 @@ namespace netgen
 #endif    
 
     if (working)
-      for (int edgenr = 0; edgenr < use_edge.Size(); edgenr++)
+      for (auto edgenr : use_edge.Range())
         {
-          int segnr = edgenr;
+          EdgeIndex segnr = edgenr;
           if (!use_edge[edgenr]) continue;
 
-          SetThreadPercent(double(edgenr)/edge_surfnr1.Size()*100.);
+          SetThreadPercent(double(edgenr.Nr0())/edge_surfnr1.Size()*100.);
 
           //  PointIndex pi1, pi2;
           // top.GetEdgeVertices (edgenr+1, pi1, pi2);
@@ -1275,7 +1275,7 @@ namespace netgen
     
     PrintMessage (3, "Curving faces");
 
-    Array<int> surfnr(nfaces);
+    Array<int, FaceIndex> surfnr(nfaces);
     surfnr = -1;
 
     if (working)
@@ -1289,7 +1289,7 @@ namespace netgen
 
     if (ntasks > 1 && working)
       {
-        for (int f = 0; f < nfaces; f++)
+        for (auto f : T_Range<FaceIndex>(nfaces))
           for (int proc : partop.GetDistantFaceProcs(f))
             send_surfnr.Add (proc, surfnr[f]);              
       }
@@ -1302,7 +1302,7 @@ namespace netgen
       {
         Array<int> cnt(ntasks);
         cnt = 0;
-        for (int f = 0; f < nfaces; f++)
+        for (auto f : T_Range<FaceIndex>(nfaces))
           for (int proc : partop.GetDistantFaceProcs(f))
             surfnr[f] = max(surfnr[f], recv_surfnr[proc][cnt[proc]++]);              
       }
@@ -1311,9 +1311,9 @@ namespace netgen
     if (mesh.GetDimension() == 3 && working)
       {
         static Timer tcf("curve faces"); RegionTimer reg(tcf);
-        for (int f = 0; f < nfaces; f++)
+        for (auto f : T_Range<FaceIndex>(nfaces))
           {
-            int facenr = f;
+            FaceIndex facenr = f;
             if (surfnr[f] == -1) continue;
 
             auto face_type = top.GetFaceType0(facenr);
@@ -1368,9 +1368,10 @@ namespace netgen
                 // CalcMultiPointSurfaceTransformation (&xia, i, &xa, NULL);
 
 
-                Array<int> edgenrs;
-                top.GetFaceEdges (facenr+1, edgenrs);
-                for (int k = 0; k < edgenrs.Size(); k++) edgenrs[k]--;
+                Array<int> edgenrs1;
+                top.GetFaceEdges (facenr.Nr1(), edgenrs1);
+                Array<EdgeIndex> edgenrs(edgenrs1.Size());
+                for (int k = 0; k < edgenrs.Size(); k++) edgenrs[k] = EdgeIndex::FromNr1(edgenrs1[k]);
                 
                 for (int jj = 0; jj < np; jj++)
                   {
@@ -1551,7 +1552,7 @@ namespace netgen
         };
 
           PrintMessage (3, "Prolonging curvature to offset-point edges");
-          for (int e = 0; e < nedges; e++)
+          for (auto e : T_Range<EdgeIndex>(nedges))
             {
               auto [p1, p2] = top.GetEdgeVertices(e);
               if (!bl_valid(p1) || !bl_valid(p2)) continue;
@@ -1560,8 +1561,8 @@ namespace netgen
               PointIndex base_p2 = offset_map[p2];
               if (base_p1 == p1 && base_p2 == p2) continue;
 
-              int base_edge = top.GetVerticesEdge(base_p1, base_p2);
-              if (base_edge < 0) continue;
+              EdgeIndex base_edge = top.GetVerticesEdge(base_p1, base_p2);
+              if (!base_edge.IsValid()) continue;
 
               int ndof = edgecoeffsindex[e+1] - edgecoeffsindex[e];
               int base_ndof = edgecoeffsindex[base_edge+1] - edgecoeffsindex[base_edge];
@@ -1580,7 +1581,7 @@ namespace netgen
             }
 
           PrintMessage (3, "Prolonging curvature to offset-point faces");
-          for (int f = 0; f < nfaces; f++)
+          for (auto f : T_Range<FaceIndex>(nfaces))
             {
               auto verts = top.GetFaceVertices(f);
               bool all_bl = true;
@@ -1598,7 +1599,7 @@ namespace netgen
                 }
               if (!is_offset) continue;
 
-              int base_face = -1;
+              FaceIndex base_face = FaceIndex::INVALID;
               for (auto sei : top.GetVertexSurfaceElements(base_verts[0]))
                 {
                   auto bfverts = top.GetFaceVertices(top.GetFace(sei));
@@ -1613,7 +1614,7 @@ namespace netgen
                     }
                   if (match) { base_face = top.GetFace(sei); break; }
                 }
-              if (base_face < 0) continue;
+              if (!base_face.IsValid()) continue;
 
               int ndof = facecoeffsindex[f+1] - facecoeffsindex[f];
               int base_ndof = facecoeffsindex[base_face+1] - facecoeffsindex[base_face];
@@ -1643,7 +1644,7 @@ namespace netgen
 
     // compress edge and face tables
     int newbase = 0;
-    for (int i = 0; i < edgeorder.Size(); i++)
+    for (auto i : edgeorder.Range())
       {
         bool curved = 0;
         int oldbase = edgecoeffsindex[i];
@@ -1666,7 +1667,7 @@ namespace netgen
 
 
     newbase = 0;
-    for (int i = 0; i < faceorder.Size(); i++)
+    for (auto i : faceorder.Range())
       {
         bool curved = 0;
         int oldbase = facecoeffsindex[i];
@@ -1970,7 +1971,7 @@ namespace netgen
         return mesh.coarsemesh->GetCurvedElements().IsCurved (SurfaceElementIndex(hpref_el.coarse_elnr));
       }
 
-    const Element2d & el = mesh[elnr];
+    const Element2dRef & el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
     
     SurfaceElementInfo info;
@@ -2060,7 +2061,7 @@ namespace netgen
 
 
 
-    const Element2d & el = mesh[elnr];
+    const Element2dRef & el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     SurfaceElementInfo info;
@@ -2100,12 +2101,12 @@ namespace netgen
 
             for (int i = 0; !problem && i < info.edgenrs.Size(); i++)
               {
-                if(info.edgenrs[i]+1 >= edgecoeffsindex.Size())
+                if(info.edgenrs[i].Nr0()+1 >= edgecoeffsindex.Size())
                   problem = true;
                 else
                   info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
               }
-            if(info.facenr+1 >= facecoeffsindex.Size())
+            if(info.facenr.Nr0()+1 >= facecoeffsindex.Size())
               problem = true;
             else
               info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
@@ -2167,7 +2168,7 @@ namespace netgen
   void CurvedElements :: 
   CalcElementShapes (SurfaceElementInfo & info, const Point<2,T> xi, TFlatVector<T> shapes) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     // shapes.SetSize(info.ndof);
     
     if (rational && info.order >= 2)
@@ -2323,7 +2324,7 @@ namespace netgen
   void CurvedElements :: 
   CalcElementDShapes (SurfaceElementInfo & info, const Point<2,T> xi, MatrixFixWidth<2,T> & dshapes) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     ELEMENT_TYPE type = el.GetType();
 
     T lami[4];
@@ -2599,7 +2600,7 @@ namespace netgen
   bool CurvedElements ::
   EvaluateMapping (SurfaceElementInfo & info, const Point<2,T> xi, Point<DIM_SPACE,T> & mx, Mat<DIM_SPACE,2,T> & jac) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     if (rational && info.order >= 2) return false; // not supported     
 
     AutoDiff<2,T> x(xi(0), 0);
@@ -2791,7 +2792,7 @@ namespace netgen
   void CurvedElements :: 
   GetCoefficients (SurfaceElementInfo & info, Array<Vec<DIM_SPACE> > & coefs) const
   {
-    const Element2d & el = mesh[info.elnr];
+    const Element2dRef & el = mesh[info.elnr];
     coefs.SetSize (info.ndof);
     
     for (int i = 0; i < info.nv; i++)
@@ -4779,7 +4780,7 @@ namespace netgen
       }
 
 
-    const Element2d & el = mesh[elnr];
+    const Element2dRef & el = mesh[elnr];
     ELEMENT_TYPE type = el.GetType();
 
     SurfaceElementInfo info;
@@ -4834,12 +4835,12 @@ namespace netgen
 
             for (int i = 0; !problem && i < info.edgenrs.Size(); i++)
               {
-                if(info.edgenrs[i]+1 >= edgecoeffsindex.Size())
+                if(info.edgenrs[i].Nr0()+1 >= edgecoeffsindex.Size())
                   problem = true;
                 else
                   info.ndof += edgecoeffsindex[info.edgenrs[i]+1] - edgecoeffsindex[info.edgenrs[i]];
               }
-            if(info.facenr+1 >= facecoeffsindex.Size())
+            if(info.facenr.Nr0()+1 >= facecoeffsindex.Size())
               problem = true;
             else
               info.ndof += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];

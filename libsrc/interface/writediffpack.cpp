@@ -86,7 +86,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
       DynamicTable<SurfaceElementIndex, PointIndex> point2sel(np);
       for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[sei];
+          const Element2dRef & el = mesh[sei];
           for (int j = 0; j < el.GetNP(); j++)
             point2sel.Add (el[j], sei);
         }
@@ -211,7 +211,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
       outfile.precision(6);
       outfile.setf (ios::fixed, ios::floatfield);
       outfile.setf (ios::showpoint);
-      const Element2d & eldummy = mesh[SurfaceElementIndex::FromNr1((int)1)];
+      const Element2dRef & eldummy = mesh[SurfaceElementIndex::FromNr1((int)1)];
       outfile << "\n\n"
         "Finite element mesh (GridFE):\n\n"
         "  Number of space dim. =  2\n"
@@ -296,7 +296,7 @@ void WriteDiffPackFormat (const Mesh & mesh,
 
       for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
         {
-          const Element2d & el = mesh[i];
+          const Element2dRef & el = mesh[i];
           outfile.width(12);
           if(eldummy.GetNP()==3)
             outfile << i.Nr1() << "  ElmT3n2D ";

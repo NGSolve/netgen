@@ -128,7 +128,7 @@ namespace netgen
 
     incl = 0;
 
-    for (auto & el : mesh.SurfaceElements())
+    for (auto el : mesh.SurfaceElements())
       {
         double qual = TriangleQualityInst (mesh[el[0]],
                                            mesh[el[1]],
@@ -664,7 +664,7 @@ namespace netgen
   
 
     outfile << mesh.GetNSE() << endl;
-    for (auto & el : mesh.SurfaceElements())
+    for (auto el : mesh.SurfaceElements())
       {
 
         if (mesh.GetFaceDescriptor(el.GetIndex()).DomainOut() == 0)
@@ -740,7 +740,7 @@ namespace netgen
     outfile << "volumemesh" << endl;
 
     outfile << mesh.GetNSE() << endl;
-    for (auto & sel : mesh.SurfaceElements())
+    for (auto sel : mesh.SurfaceElements())
       {
         if (sel.GetIndex().IsValid())
           outfile << mesh.GetFaceDescriptor(sel.GetIndex ()).SurfNr()
@@ -798,7 +798,7 @@ namespace netgen
     ClosedHashTable<SortedPointIndices<3>, int> faceused(mesh.GetNE()/3);
     int ok = 1;
 
-    for (auto & el : mesh.SurfaceElements())
+    for (auto el : mesh.SurfaceElements())
       {
       
         if (mesh.GetFaceDescriptor(el.GetIndex()).DomainIn() == 0 ||
@@ -830,7 +830,7 @@ namespace netgen
 
     for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
       {
-        const Element2d & el = mesh[i];
+        const Element2dRef & el = mesh[i];
 
         SortedPointIndices<3> i3(el[0], el[1], el[2]);
         int nel = faceused.Used(i3) ? faceused.Get(i3) : 0;
@@ -894,7 +894,7 @@ namespace netgen
         (*testout) << "surfelements: " << endl;
         for (SurfaceElementIndex i : mesh.SurfaceElements().Range())
           {
-            const Element2d & el = mesh[i];
+            const Element2dRef & el = mesh[i];
             (*testout) << setw(5) << i.Nr1() << ":" 
                        << setw(6) << el.GetIndex() 
                        << setw(6) << el[0] 
@@ -935,7 +935,7 @@ namespace netgen
       
         for (int i = 1; i <= mesh.GetNOpenElements(); i++)
           {
-            const Element2d & sel = mesh.OpenElement(i);
+            const Element2dRef & sel = mesh.OpenElement(i);
             if (sel.GetIndex().Nr1() == k)
               {
                 for (int j = 0; j < sel.GetNP(); j++)

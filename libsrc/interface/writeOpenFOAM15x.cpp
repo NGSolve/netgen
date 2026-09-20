@@ -216,7 +216,7 @@ namespace netgen
             // if not, add the current volume element and the corresponding face into 
             // the owner list
             // int surfelem = meshtopo.GetFace2SurfaceElement1(absfacenr);
-            int surfelem = meshtopo.GetFace2SurfaceElement(absfacenr-1).Nr1();
+            int surfelem = meshtopo.GetFace2SurfaceElement(FaceIndex::FromNr1(absfacenr)).Nr1();
             if(!surfelem)
             {
                // If it is a new face which has not been listed before, 
@@ -234,7 +234,7 @@ namespace netgen
             // into the various surface elements lists
             else
             {
-               Element2d sel = mesh[SurfaceElementIndex::FromNr1(surfelem)];
+               Element2d sel (mesh[SurfaceElementIndex::FromNr1(surfelem)]);
                surfelem_bclist[bc_ind-1] = mesh.GetFaceDescriptor(sel.GetIndex()).BCProperty();
                surfelem_lists[bc_ind-1] = IVec<2>(locfaces[i],elind);
 

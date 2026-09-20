@@ -354,7 +354,7 @@ void netrule :: LoadRule (istream & ist)
                   ist >> elements.Last()[3];
                   ist >> ch;    // ','
                   
-                  // const Element2d & el = elements.Last();
+                  // const Element2dRef & el = elements.Last();
                   /*
                   orientations.Append (IVec<3,RulePointIndex>(el[0], el[1], el[2]));
                   orientations.Append (IVec<3,RulePointIndex>(el[1], el[2], el[3]));

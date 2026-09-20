@@ -25,7 +25,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   double maxh = 0;
   for (SurfaceElementIndex i : T_Range<SurfaceElementIndex>(nse))
     {
-      const Element2d & sel = othermesh[i];
+      const Element2dRef & sel = othermesh[i];
       sel.GetBox(othermesh.Points(), otherbounds[i.Nr1()-1]);
 
       double loch = othermesh.GetH (othermesh.Point (sel[0]));
@@ -63,7 +63,7 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 
   TBitArray<PointIndex> connected(mesh.GetNP());
   connected.Clear();
-  for (auto & el : mesh.SurfaceElements())
+  for (auto el : mesh.SurfaceElements())
     {
       for (j = 1; j <= 3; j++)
         connected.SetBit(el.PNum(j));
@@ -139,9 +139,9 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
   int fnum = 
     mesh.AddFaceDescriptor (FaceRegion(0,0,1,0)).Nr1();
 
-  for (auto & sel : othermesh.SurfaceElements())
+  for (auto sel : othermesh.SurfaceElements())
     {
-      Element2d tri = sel;
+      Element2d tri (sel);
       for (j = 1; j <= 3; j++)
         tri.PNum(j) = pmat[tri.PNum(j)];
       tri.SetIndex(FaceRegionIndex::FromNr1(fnum));

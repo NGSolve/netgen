@@ -178,7 +178,7 @@ namespace netgen
           auto nmax = identifications.GetMaxNr ();
           auto & m_ident = m.GetIdentifications();
 
-          for (auto & sel : m.SurfaceElements())
+          for (auto sel : m.SurfaceElements())
             for(auto & pi : sel.PNums())
               pi = imap[pi];
 
@@ -360,7 +360,7 @@ namespace netgen
            
            for (int i = 1; i <= mesh.GetNOpenElements(); i++)
              {
-               Element2d hel = mesh.OpenElement(i);
+               Element2d hel (mesh.OpenElement(i));
                meshing.AddBoundaryElement (hel);
              }
            
@@ -427,7 +427,7 @@ namespace netgen
 
     Box<3> domain_bbox( Box<3>::EMPTY_BOX ); 
    
-    for (auto & sel : mesh.SurfaceElements())
+    for (auto sel : mesh.SurfaceElements())
      {
        if (sel.IsDeleted() ) continue;
 

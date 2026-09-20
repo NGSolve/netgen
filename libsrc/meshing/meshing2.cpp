@@ -348,7 +348,7 @@ namespace netgen
     /*
     for (sei = 0; sei < mesh.GetNSE(); sei++)
       {
-        const Element2d & sel = mesh[sei];
+        const Element2dRef & sel = mesh[sei];
 
         if (sel.IsDeleted()) continue;
 
@@ -366,7 +366,7 @@ namespace netgen
     mesh.GetSurfaceElementsOfFace (facenr, seia);
     for (int i = 0; i < seia.Size(); i++)
       {
-        const Element2d & sel = mesh[seia[i]];
+        const Element2dRef & sel = mesh[seia[i]];
 
         if (sel.IsDeleted()) continue;
 
@@ -383,7 +383,7 @@ namespace netgen
     if (totalarea > 0 || maxarea > 0)
       meshedarea = mesh.SurfaceArea();
       /*
-      for (const Element2d & sel : mesh.SurfaceElements())
+      for (const Element2dRef & sel : mesh.SurfaceElements())
         {
           if (sel.IsDeleted()) continue;
         
@@ -1181,10 +1181,10 @@ namespace netgen
                 for (int jj = 0; jj < intersecttrias.Size(); jj++)
                   {
                     // int j = intersecttrias.Get(jj);
-                    // const Element2d & el = mesh.SurfaceElement(j);
+                    // const Element2dRef & el = mesh.SurfaceElement(j);
 
                     SurfaceElementIndex j = intersecttrias[jj];
-                    const Element2d & el = mesh[j];
+                    const Element2dRef & el = mesh[j];
 
                     int ntrig = (el.GetNP() == 3) ? 1 : 2;
 

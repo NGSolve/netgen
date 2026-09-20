@@ -40,7 +40,7 @@ inline int FindInnerPoint2 (POINTArray & points,
   double hmax = 0;
   for (int i = 0; i < nf; i++)
     {
-      const Element2d & el = faces[i];
+      const Element2dRef & el = faces[i];
       for (int j = 1; j <= 3; j++)
         {
           double hi = Dist (points.Get(el.PNumMod(j)),

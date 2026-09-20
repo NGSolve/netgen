@@ -232,7 +232,7 @@ namespace netgen
       {
         ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
             {
-              const Element2d & sel = mesh[seia[i]];
+              const Element2dRef & sel = mesh[seia[i]];
               for (int j = 0; j < 3; j++)
                   pangle[sel[j]] = 0.0;
             });
@@ -240,7 +240,7 @@ namespace netgen
 
     ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
         {
-          const Element2d & sel = mesh[seia[i]];
+          const Element2dRef & sel = mesh[seia[i]];
           for (int j = 0; j < 3; j++)
             {
               POINTTYPE typ = mesh[sel[j]].Type();
@@ -255,7 +255,7 @@ namespace netgen
 
     ParallelFor( Range(seia), [&] (auto i) NETGEN_LAMBDA_INLINE
         {
-          const Element2d & sel = mesh[seia[i]];
+          const Element2dRef & sel = mesh[seia[i]];
           for (int j = 0; j < 3; j++)
             {
               PointIndex pi = sel[j];
@@ -397,7 +397,7 @@ namespace netgen
 
     for (SurfaceElementIndex sei2 : elementsonnode[pi1])
       {
-        const Element2d & el2 = mesh[sei2];
+        const Element2dRef & el2 = mesh[sei2];
 
         if (el2.IsDeleted()) continue;
 
@@ -417,7 +417,7 @@ namespace netgen
 
     for (SurfaceElementIndex sei2 :  elementsonnode[pi2])
       {
-        const Element2d & el2 = mesh[sei2];
+        const Element2dRef & el2 = mesh[sei2];
         if (el2.IsDeleted()) continue;
         if (!el2.PNums<3>().Contains (pi1))
             hasonepi.Append (sei2);
@@ -428,14 +428,15 @@ namespace netgen
     /*
        for (SurfaceElementIndex sei : hasonepi)
        {
-       const Element2d & el = mesh[sei];
+       const Element2dRef & el = mesh[sei];
        bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
        nv, -1, loch);
        illegal1 += 1-mesh.LegalTrig(el);
        }
        */
-    for (const Element2d & el : mesh.SurfaceElements()[hasonepi])
+    for (auto sei : hasonepi)
       {
+        auto el = mesh[sei];
         bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
                 nv, metricweight, loch);
         illegal1 += 1-mesh.LegalTrig(el);
@@ -443,7 +444,7 @@ namespace netgen
 
     for (int k = 0; k < hasbothpi.Size(); k++)
       {
-        const Element2d & el = mesh[hasbothpi[k]];
+        const Element2dRef & el = mesh[hasbothpi[k]];
         bad1 += CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
                 nv, metricweight, loch);
         illegal1 += 1-mesh.LegalTrig(el);
@@ -452,7 +453,7 @@ namespace netgen
     double bad2 = 0;
     for (int k = 0; k < hasonepi.Size(); k++)
       {
-        Element2d el = mesh[hasonepi[k]];
+        Element2d el (mesh[hasonepi[k]]);
         for (auto i : Range(3))
             if(el[i]==pi2)
                 el[i] = pi1;
@@ -532,7 +533,7 @@ namespace netgen
         */
         for (auto sei : hasbothpi)
           {
-            const Element2d & el1p = mesh[sei];
+            const Element2dRef & el1p = mesh[sei];
             if (el1p.IsDeleted()) continue;
             if(el1p.GetIndex() != faceindex) continue;
 
@@ -547,7 +548,7 @@ namespace netgen
         // for (int k = 0; k < elementsonnode[pi2].Size(); k++)
         for (SurfaceElementIndex sei2 : elementsonnode[pi2])
           {
-            Element2d & el = mesh[sei2];
+            Element2dRef el = mesh[sei2];
             if (el.IsDeleted()) continue;
             if (el.PNums().Contains(pi1)) continue;
 
@@ -626,7 +627,7 @@ namespace netgen
         {
             if (elementsonnode[pi].Size())
               {
-                Element2d & hel = mesh[elementsonnode[pi][0]];
+                Element2dRef hel = mesh[elementsonnode[pi][0]];
                 for (int k = 0; k < 3; k++)
                   if (hel[k] == pi)
                     {
@@ -705,7 +706,7 @@ namespace netgen
     // build els_on_edge table
     for (SurfaceElementIndex sei : elements)
       {
-        const Element2d & sel = mesh[sei];
+        const Element2dRef & sel = mesh[sei];
 
         for (int j = 0; j < 3; j++)
           {
@@ -732,7 +733,7 @@ namespace netgen
     // split edges of illegal trigs
     for (SurfaceElementIndex sei : elements)
       {
-        Element2d & sel = mesh[sei];
+        Element2dRef sel = mesh[sei];
 
         if (sel.IsDeleted()) continue;
 
@@ -770,7 +771,7 @@ namespace netgen
         auto els = els_on_edge.Get(edge);
         SurfaceElementIndex other_i = get<0>(els);
         if(other_i==sei) other_i = get<1>(els);
-        auto & other = mesh[other_i];
+        auto other = mesh[other_i];
 
         // find opposite point of neighbor element
         for (int j = 0; j < 3; j++)
@@ -836,7 +837,7 @@ namespace netgen
 
     for (i = 1; i <= ne; i++)
     {
-    const Element2d & el = mesh.SurfaceElement(i);
+    const Element2dRef & el = mesh.SurfaceElement(i);
     surfnr = mesh.GetFaceDescriptor (el.GetIndex()).SurfNr();
     Vec<3> n = Cross (mesh.Point (el[0]) - mesh.Point (el[1]),
     mesh.Point (el[0]) - mesh.Point (el[2]));

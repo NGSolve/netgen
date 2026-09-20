@@ -30,7 +30,7 @@ namespace netgen
       }
     
     
-    for (const Element2d & el : mesh.SurfaceElements())
+    for (const Element2dRef & el : mesh.SurfaceElements())
       {
 
         static int betw_trig[3][3] =
@@ -108,9 +108,9 @@ namespace netgen
       }
 
     // refine surface elements
-    for (auto & sel : mesh.SurfaceElements())
+    for (auto sei : mesh.SurfaceElements().Range())
       {
-        const Element2d & el = sel;
+        const Element2dRef & el = mesh[sei];
 
         int onp = 0;
       
@@ -204,7 +204,7 @@ namespace netgen
               }
           }
       
-        sel = newel;
+        mesh.SetSurfaceElement (sei, newel);
       }
 
  
@@ -502,9 +502,9 @@ namespace netgen
         /*
         for (int i = 1; i <= mesh.GetNSE(); i++)
           {
-            const Element2d & sel = mesh.SurfaceElement(i);
+            const Element2dRef & sel = mesh.SurfaceElement(i);
         */
-        for (auto & sel : mesh.SurfaceElements())
+        for (auto sel : mesh.SurfaceElements())
           for (int j = 0; j < sel.GetNP(); j++)
             boundp.SetBit(sel[j]);
         // }

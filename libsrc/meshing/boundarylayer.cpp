@@ -389,16 +389,14 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
       if (point_moved && !moved_surfaces.Test(facei))
         {
           int new_si = mesh.GetNFD() + 1;
-          const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei));
-          // auto isIn = domains.Test(fd.DomainIn());
-          // auto isOut = domains.Test(fd.DomainOut());
+          string fd_name = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei)).GetBCName();
           int si = params.sides_keep_surfaceindex ? int(facei) : -1;
           // domin and domout can only be set later
           FaceRegion new_fd(si, -1, -1, si);
           new_fd.SetBCProperty(new_si);
           mesh.AddFaceDescriptor(new_fd);
           si_map[facei] = new_si;
-          mesh.SetBCName(new_si - 1, fd.GetBCName());
+          mesh.SetBCName(new_si - 1, fd_name);
           face_done.SetBit(facei);
         }
     }
@@ -934,7 +932,7 @@ void BoundaryLayerTool ::InsertNewElements (
                       }
                 }
             }
-          Element2d newel = sel;
+          Element2d newel (sel);
           for (auto i : Range(np))
             newel[i] = newPoint(points[i], -1, groups[i]);
           if (surfacefacs[iface] > 0)
@@ -944,7 +942,7 @@ void BoundaryLayerTool ::InsertNewElements (
         }
       if (is_boundary_moved.Test(iface))
         {
-          auto& sel = mesh[si];
+          auto sel = mesh[si];
           for (auto& p : sel.PNums())
             if (hasMoved(p))
               p = newPoint(p);
@@ -1016,7 +1014,7 @@ void BoundaryLayerTool ::InsertNewElements (
                 {
                   if (mesh[sei].GetIndex().Nr1() == mapped_fi && mesh[sei].PNums().Contains(new_special_pi0))
                     {
-                      auto sel = mesh[sei];
+                      Element2d sel (mesh[sei]);
                       sel.Invert();
                       for (auto& pi : sel.PNums())
                         if (pi != pi_common && pi != new_special_pi0)
@@ -1105,7 +1103,7 @@ void BoundaryLayerTool ::SetDomInOutSides ()
 
   for (auto sei : Range(mesh.SurfaceElements()))
     {
-      auto& sel = mesh[sei];
+      auto sel = mesh[sei];
       auto index = sel.GetIndex().Nr1();
       if (done.Test(index))
         continue;
