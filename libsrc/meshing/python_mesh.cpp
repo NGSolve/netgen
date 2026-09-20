@@ -449,7 +449,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             { names.append (name); formats.append (format); offsets.append (offset); };
             add ("nodes", py::dtype ("(" + ToString(els.Width()) + ",)i4"), els.GetLayout().offset[0]);
             add ("index", py::dtype ("i4"), offsetof(ElementHeader, index));
-            add ("np", py::dtype ("i1"), offsetof(ElementHeader, np));
+            add ("type", py::dtype ("u1"), offsetof(ElementHeader, typ));
             add ("refine", py::dtype ("?"), offsetof(ElementHeader, flags));
             add ("curved", py::dtype ("?"), offsetof(ElementHeader, is_curved));
             py::dtype dt (names, formats, offsets, els.Stride());
@@ -574,9 +574,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           py::format_descriptor<int>::format(),
           py::detail::npy_format_descriptor<int>::dtype() },
         py::detail::field_descriptor {
-          "np", data_layout["np"], sizeof(int8_t),
-          py::format_descriptor<signed char>::format(),
-        pybind11::dtype("int8") },
+          "type", data_layout["type"], sizeof(uint8_t),
+          py::format_descriptor<unsigned char>::format(),
+        pybind11::dtype("uint8") },
         py::detail::field_descriptor {
           "refine", data_layout["refine"], sizeof(bool),
           py::format_descriptor<bool>::format(),

@@ -39,6 +39,67 @@ namespace netgen
   using ELEMENT_EDGE = std::array<int,2>;
   using ELEMENT_FACE = std::array<int,4>;
 
+  /// number of points / vertices / edges / faces of a 3D element type, 0 for other types
+  namespace element3d_info
+  {
+    constexpr size_t SIZE = 32;   // > max ELEMENT_TYPE value
+    constexpr std::array<int8_t,SIZE> np = [] {
+      std::array<int8_t,SIZE> t{};
+      t[TET] = 4;  t[PYRAMID] = 5;  t[PRISM] = 6;  t[HEX7] = 7;  t[HEX] = 8;
+      t[TET10] = 10;  t[PRISM12] = 12;  t[PYRAMID13] = 13;  t[PRISM15] = 15;  t[HEX20] = 20;
+      return t; } ();
+    constexpr std::array<int8_t,SIZE> nv = [] {
+      std::array<int8_t,SIZE> t{};
+      t[TET] = t[TET10] = 4;  t[PYRAMID] = t[PYRAMID13] = 5;  t[PRISM] = t[PRISM12] = t[PRISM15] = 6;
+      t[HEX7] = 7;  t[HEX] = t[HEX20] = 8;
+      return t; } ();
+    constexpr std::array<int8_t,SIZE> nedges = [] {
+      std::array<int8_t,SIZE> t{};
+      t[TET] = t[TET10] = 6;  t[PYRAMID] = t[PYRAMID13] = 8;  t[PRISM] = t[PRISM12] = t[PRISM15] = 9;
+      t[HEX7] = 11;  t[HEX] = t[HEX20] = 12;
+      return t; } ();
+    constexpr std::array<int8_t,SIZE> nfaces = [] {
+      std::array<int8_t,SIZE> t{};
+      t[TET] = t[TET10] = 4;  t[PYRAMID] = t[PYRAMID13] = 5;  t[PRISM] = t[PRISM12] = t[PRISM15] = 5;
+      t[HEX7] = 6;  t[HEX] = t[HEX20] = 6;
+      return t; } ();
+  }
+
+  /// number of points / vertices of a 2D element type, 0 for other types
+  namespace element2d_info
+  {
+    constexpr size_t SIZE = 32;
+    constexpr std::array<int8_t,SIZE> np = [] {
+      std::array<int8_t,SIZE> t{};
+      t[TRIG] = 3;  t[QUAD] = 4;  t[TRIG6] = 6;  t[QUAD6] = 6;  t[QUAD8] = 8;
+      return t; } ();
+    constexpr std::array<int8_t,SIZE> nv = [] {
+      std::array<int8_t,SIZE> t{};
+      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
+      return t; } ();
+  }
+
+  /// the 2D element type with np points; 6 points give a TRIG6 (a QUAD6 is only made by type)
+  constexpr ELEMENT_TYPE Element2dTypeFromNP (int np)
+  {
+    switch (np)
+      {
+      case 3: return TRIG;  case 4: return QUAD;  case 6: return TRIG6;  case 8: return QUAD8;
+      }
+    return ELEMENT_TYPE(0);
+  }
+
+  /// the 3D element type with np points (the mapping is one-to-one)
+  constexpr ELEMENT_TYPE Element3dTypeFromNP (int np)
+  {
+    switch (np)
+      {
+      case 4: return TET;  case 5: return PYRAMID;  case 6: return PRISM;  case 7: return HEX7;  case 8: return HEX;
+      case 10: return TET10;  case 12: return PRISM12;  case 13: return PYRAMID13;  case 15: return PRISM15;  case 20: return HEX20;
+      }
+    return ELEMENT_TYPE(0);
+  }
+
 
 #define ELEMENT_MAXPOINTS 20
 #define ELEMENT2D_MAXPOINTS 8
@@ -790,9 +851,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// face descriptor index (1-based)
     FaceRegionIndex index = FaceRegionIndex::INVALID;
     ///
-    ELEMENT_TYPE typ;
-    /// number of points
-    int8_t np;
+    ELEMENT_TYPE typ;   // number of points and vertices follow from the type: element2d_info
     bool refflag;  // marked for refinement
     bool badel:1;
     bool strongrefflag:1;
@@ -819,7 +878,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       return std::map<string, int>({
           { "pnum", offsetof(Element2d, pnum)},
           { "index", offsetof(Element2d, index) },
-          { "np", offsetof(Element2d, np) },
+          { "type", offsetof(Element2d, typ) },
           { "refine", offsetof(Element2d, refflag) },
           { "curved", offsetof(Element2d, is_curved)}
         });
@@ -862,65 +921,28 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetType (ELEMENT_TYPE atyp)
     {
       typ = atyp;
-      switch (typ)
-        {
-        case TRIG: np = 3; break;
-        case QUAD: np = 4; break;
-        case TRIG6: np = 6; break;
-        case QUAD6: np = 6; break;
-        case QUAD8: np = 8; break;
-        default:
-          PrintSysError ("Element2d::SetType, illegal type ", int(typ));
-        }
-      is_curved = (np >= 4); 
+      if (element2d_info::np[atyp] == 0)
+        PrintSysError ("Element2d::SetType, illegal type ", int(atyp));
+      is_curved = (GetNP() >= 4); 
     }
     ///
-    int GetNP() const { return np; }
+    int GetNP() const { return element2d_info::np[typ]; }
     ///
-    int GetNV() const
-    {
-      if (typ == TRIG || typ == TRIG6)
-        return 3;
-      else
-        {
-#ifdef DEBUG
-          if (typ != QUAD && typ != QUAD6 && typ != QUAD8)
-            PrintSysError ("element2d::GetNV not implemented for typ", int(typ));
-#endif
-          return 4;
-        }
-      /*
-      switch (typ)
-        {
-        case TRIG:
-        case TRIG6: return 3;
-          
-        case QUAD:
-        case QUAD8:
-        case QUAD6: return 4;
-        default:
-#ifdef DEBUG
-          PrintSysError ("element2d::GetNV not implemented for typ", typ)
-#endif
-            ;
-        }
-      return np;
-      */
-    }
+    int GetNV() const { return element2d_info::nv[typ]; }
 
     ///
     PointIndex & operator[] (int i) { return pnum[i]; }
     ///
     const PointIndex & operator[] (int i) const { return pnum[i]; }
 
-    auto PNums () const { return FlatArray<const PointIndex> (np, &pnum[0]); }
-    auto PNums ()  { return FlatArray<PointIndex> (np, &pnum[0]); }
+    auto PNums () const { return FlatArray<const PointIndex> (GetNP(), &pnum[0]); }
+    auto PNums ()  { return FlatArray<PointIndex> (GetNP(), &pnum[0]); }
     template <int NP>
     auto PNums() const { return FlatArray<const PointIndex> (NP, &pnum[0]); }
     auto Vertices() const { return FlatArray<const PointIndex> (GetNV(), &pnum[0]); }
 
-    auto GeomInfo() const { return FlatArray<const PointGeomInfo> (np, &geominfo[0]); }
-    auto GeomInfo() { return FlatArray<PointGeomInfo> (np, &geominfo[0]); }
+    auto GeomInfo() const { return FlatArray<const PointGeomInfo> (GetNP(), &geominfo[0]); }
+    auto GeomInfo() { return FlatArray<PointGeomInfo> (GetNP(), &geominfo[0]); }
     
     ///
     PointIndex & PNum (int i) { return pnum[i-1]; }
@@ -930,9 +952,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     const PointIndex & PNum (int i) const { return pnum[i-1]; }
     const PointIndex & PNum (ElementVertexIndex i) const { return pnum[i-IndexBASE<ElementVertexIndex>()]; }
     ///
-    PointIndex & PNumMod (int i) { return pnum[(i-1) % np]; }
+    PointIndex & PNumMod (int i) { return pnum[(i-1) % GetNP()]; }
     ///
-    const PointIndex & PNumMod (int i) const { return pnum[(i-1) % np]; }
+    const PointIndex & PNumMod (int i) const { return pnum[(i-1) % GetNP()]; }
     ///
 
     ///
@@ -940,9 +962,9 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     ///
     const PointGeomInfo & GeomInfoPi (int i) const { return geominfo[i-1]; }
     ///
-    PointGeomInfo & GeomInfoPiMod (int i) { return geominfo[(i-1) % np]; }
+    PointGeomInfo & GeomInfoPiMod (int i) { return geominfo[(i-1) % GetNP()]; }
     ///
-    const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % np]; }
+    const PointGeomInfo & GeomInfoPiMod (int i) const { return geominfo[(i-1) % GetNP()]; }
 
     auto & NewestVertex() { return newest_vertex; }
     auto NewestVertex() const { return newest_vertex; }
@@ -952,25 +974,25 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       short _np, _typ;
       bool _curved, _vis, _deleted;
       if (ar.Output())
-        { _np = np; _typ = typ; _curved = is_curved;
+        { _np = GetNP(); _typ = typ; _curved = is_curved;
           _vis = visible; _deleted = deleted; }
       // ar & _np & _typ & index & _curved & _vis & _deleted;
       ar.DoPacked (_np, _typ, index, _curved, _vis, _deleted);
       // ar & next; don't need 
       if (ar.Input())
-        { np = _np; typ = ELEMENT_TYPE(_typ); is_curved = _curved;
+        { typ = ELEMENT_TYPE(_typ); is_curved = _curved;
           visible = _vis; deleted = _deleted; }
       /*
-      for (size_t i = 0; i < np; i++)
+      for (size_t i = 0; i < GetNP(); i++)
         ar & pnum[i];
       */
       // archive stores 1-based point numbers, independent of BASE
       int nr1[ELEMENT2D_MAXPOINTS];
       if (ar.Output())
-        for (int k = 0; k < np; k++) nr1[k] = pnum[k].Nr1();
-      ar.Do (nr1, np);
+        for (int k = 0; k < GetNP(); k++) nr1[k] = pnum[k].Nr1();
+      ar.Do (nr1, GetNP());
       if (ar.Input())
-        for (int k = 0; k < np; k++) pnum[k] = PointIndex::FromNr1(nr1[k]);
+        for (int k = 0; k < GetNP(); k++) pnum[k] = PointIndex::FromNr1(nr1[k]);
     }
 
 #ifdef PARALLEL
@@ -1024,12 +1046,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
     template <typename T>
     DLL_HEADER void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;
-    /// matrix 2 * np
+    /// matrix 2 * GetNP()
     DLL_HEADER void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
     template <typename T>
     DLL_HEADER void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     
-    /// matrix 2 * np
+    /// matrix 2 * GetNP()
     void GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
                          class DenseMatrix & pmat) const;
 
@@ -1088,11 +1110,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   };
 
   DLL_HEADER ostream & operator<<(ostream  & s, const Element2d & el);
-
-
-
-
-
   class IntegrationPointData
   {
   public:
@@ -1114,9 +1131,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   */
   struct ElementHeader
   {
-    ELEMENT_TYPE typ;
-    /// number of points (4..tet, 5..pyramid, 6..prism, 8..hex, 10..quad tet, 12..quad prism)
-    int8_t np;
+    ELEMENT_TYPE typ;   // number of points, vertices, ... follow from the type: element3d_info
     int8_t newest_vertex = -1; // from refinement via bisection
     /// sub-domain index
     VolumeRegionIndex index;
@@ -1182,45 +1197,19 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     DLL_HEADER void SetNP (int anp);
     DLL_HEADER void SetType (ELEMENT_TYPE atyp);
-    int GetNP () const { return h->np; }
+    int GetNP () const { return element3d_info::np[h->typ]; }
     // old style:
-    int NP () const { return h->np; }
+    int NP () const { return element3d_info::np[h->typ]; }
 
-    uint8_t GetNV() const
-    {
-      switch (h->typ)
-        {
-        case TET:
-        case TET10:
-          return 4;
-        case PRISM12:
-        case PRISM15:
-        case PRISM:
-          return 6;
-        case PYRAMID:
-        case PYRAMID13:
-          return 5;
-        case HEX7:
-          return 7;
-        case HEX:
-        case HEX20:
-          return 8;
-        default: // not a 3D element
-#ifdef DEBUG
-          PrintSysError ("Element3d::GetNV not implemented for typ ", int(h->typ));
-#endif
-          __assume(false);
-          return -1;
-        }
-    }
+    uint8_t GetNV() const { return element3d_info::nv[h->typ]; }
 
     ELEMENT_TYPE GetType () const { return h->typ; }
 
     PointIndex & operator[] (int i) { NETGEN_CHECK_RANGE(i, 0, maxnp); return pn[i]; }
     const PointIndex & operator[] (int i) const { NETGEN_CHECK_RANGE(i, 0, maxnp); return pn[i]; }
 
-    auto PNums () const { return FlatArray<const PointIndex> (h->np, pn); }
-    auto PNums () { return FlatArray<PointIndex> (h->np, pn); }
+    auto PNums () const { return FlatArray<const PointIndex> (GetNP(), pn); }
+    auto PNums () { return FlatArray<PointIndex> (GetNP(), pn); }
     template <int NP>
     auto PNums() const { return FlatArray<const PointIndex> (NP, pn); }
     FlatArray<const PointIndex> Vertices() const { return { GetNV(), pn }; }
@@ -1230,8 +1219,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     PointIndex & PNum (ElementVertexIndex i) { return pn[i-IndexBASE<ElementVertexIndex>()]; }
     const PointIndex & PNum (int i) const { NETGEN_CHECK_RANGE(i, 1, maxnp+1); return pn[i-1]; }
     const PointIndex & PNum (ElementVertexIndex i) const { return pn[i-IndexBASE<ElementVertexIndex>()]; }
-    PointIndex & PNumMod (int i) { return pn[(i-1) % h->np]; }
-    const PointIndex & PNumMod (int i) const { return pn[(i-1) % h->np]; }
+    PointIndex & PNumMod (int i) { return pn[(i-1) % GetNP()]; }
+    const PointIndex & PNumMod (int i) const { return pn[(i-1) % GetNP()]; }
 
     auto & NewestVertex() { return h->newest_vertex; }
     auto NewestVertex() const { return h->newest_vertex; }
@@ -1250,27 +1239,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// Calculates Volume of element
     DLL_HEADER double Volume (const T_POINTS & points) const;
     DLL_HEADER void Print (ostream & ost) const;
-    int GetNFaces () const
-    {
-      switch (h->typ)
-        {
-        case TET:
-        case TET10: return 4;
-        case PYRAMID: case PYRAMID13: return 5;
-        case PRISM:
-        case PRISM15:
-        case PRISM12: return 5;
-        case HEX7: return 6;
-        case HEX: case HEX20:
-          return 6;
-        default:
-#ifdef DEBUG
-          PrintSysError ("element3d::GetNFaces not implemented for typ", int(h->typ))
-#endif
-            ;
-        }
-      return 0;
-    }
+    int GetNFaces () const { return element3d_info::nfaces[h->typ]; }
     inline void GetFace (int i, Element2d & face) const;
     DLL_HEADER void GetFace2 (int i, Element2d & face) const;
     DLL_HEADER void Invert ();
@@ -1396,7 +1365,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       return std::map<string, int>({
           { "pnum", off(&hel.pnstore[0]) },
           { "index", off(&hel.hstore.index) },
-          { "np", off(&hel.hstore.np) },
+          { "type", off(&hel.hstore.typ) },
           { "refine", off(&hel.hstore.flags.refflag) },
           { "curved", off(&hel.hstore.is_curved) }
         });
