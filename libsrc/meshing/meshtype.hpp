@@ -1021,8 +1021,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     PointIndex pnstore[ELEMENT2D_MAXPOINTS];
     PointGeomInfo gistore[ELEMENT2D_MAXPOINTS];
   public:
-    /// first netgen version storing the surface element array with its width
-    static constexpr const char * archive_width_version = "v6.2.2607-147";
+    static constexpr const char * archive_width_version = "v6.2.2607-149";
+    static constexpr size_t archive_max_width = ELEMENT2D_MAXPOINTS;
     DLL_HEADER Element2d ();
     DLL_HEADER Element2d (int anp);
     DLL_HEADER Element2d (ELEMENT_TYPE type);
@@ -1273,8 +1273,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     ElementHeader hstore;
     PointIndex pnstore[ELEMENT_MAXPOINTS];
   public:
-    /// first netgen version storing the element array with its width
-    static constexpr const char * archive_width_version = "v6.2.2607-105";
+    static constexpr const char * archive_width_version = "v6.2.2607-128";
+    static constexpr size_t archive_max_width = ELEMENT_MAXPOINTS;
     DLL_HEADER Element ();
     DLL_HEADER Element (int anp);
     DLL_HEADER Element (ELEMENT_TYPE type);
@@ -1391,7 +1391,14 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       ar.NeedsVersion ("netgen", width_version);
       size_t s = Size(), w = Width();
       ar & s & w;
-      if (ar.Input()) { SetWidth (w); SetSize (s); }
+      if (ar.Input())
+        {
+          if (w > TVAL::archive_max_width)
+            throw Exception("element array: archive of netgen " + ar.GetVersion("netgen").to_string() +
+                            " does not have the element width, but is not recognized as the old format"
+                            " (width_version " + width_version + " too low?)");
+          SetWidth (w); SetSize (s);
+        }
       for (auto el : *this) el.DoArchive (ar);
     }
   };
