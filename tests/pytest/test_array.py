@@ -21,14 +21,15 @@ def test_mesh_elements_numpy_array_access():
     np_els = mesh.Elements3D().NumPy()
     vol_nodes = np_els["nodes"]
     indices = np_els["index"]
-    nps = np_els["np"]
-    for nodes, el, index, np in zip(vol_nodes, mesh.Elements3D(), indices, nps):
+    types = np_els["type"]
+    for nodes, el, index, typ in zip(vol_nodes, mesh.Elements3D(), indices, types):
         for n1, n2 in zip(nodes, el.vertices):
             assert n1 == n2
         for n in nodes[len(el.vertices):]:
             assert n == PointId.base - 1  # unused slot holds PointIndex::INVALID
         assert el.index == index
-        assert len(el.vertices) == np
+        assert typ == 20  # TET
+        assert len(el.vertices) == 4
 
 if __name__ == "__main__":
     test_array_numpy()
