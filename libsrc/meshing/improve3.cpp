@@ -151,6 +151,44 @@ static double SplitElementBadness (const Mesh::T_POINTS & points, const MeshingP
 }
 
 
+void MeshOptimize3d :: EnsureBadnessSize ()
+{
+  size_t oldsize = badness.Size();
+  if (oldsize >= mesh.GetNE()) return;
+  badness.SetSize (mesh.GetNE());
+  badness.Range(oldsize, badness.Size()) = NAN;
+}
+
+float MeshOptimize3d :: GetBadness (ElementIndex ei)
+{
+  EnsureBadnessSize();
+  if (std::isnan (badness[ei]))
+    badness[ei] = CalcBad (mesh.Points(), mesh[ei], 0);
+  return badness[ei];
+}
+
+void MeshOptimize3d :: CompressMesh ()
+{
+  // Mesh::Compress deletes by moving the last element into the hole; apply the same permutation
+  EnsureBadnessSize();
+  Array<size_t> old_of_new (badness.Size());
+  for (size_t i = 0; i < old_of_new.Size(); i++) old_of_new[i] = i;
+  size_t n = old_of_new.Size();
+  for (size_t i = 0; i < n; )
+    {
+      auto el = mesh[ElementIndex::FromNr0(old_of_new[i])];
+      if (!el[0].IsValid() || el.IsDeleted())
+        old_of_new[i] = old_of_new[--n];
+      else
+        i++;
+    }
+  Array<float, ElementIndex> nbadness (n);
+  for (size_t i = 0; i < n; i++)
+    nbadness[ElementIndex::FromNr0(i)] = badness[ElementIndex::FromNr0(old_of_new[i])];
+  badness = std::move (nbadness);
+  mesh.Compress();
+}
+
 tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
 {
   static Timer tbad("UpdateBadness");
@@ -160,6 +198,7 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
   double maxbad = 0.0;
   atomic<int> bad_elements = 0;
 
+  EnsureBadnessSize();
   ParallelForRange(Range(mesh.VolumeElements()), [&] (auto myrange) {
     double totalbad_local = 0.0;
     double maxbad_local = 0.0;
@@ -168,9 +207,9 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
     {
       auto el = mesh[ei];
       if(mp.only3D_domain_nr && mp.only3D_domain_nr != el.GetIndex().Nr1()) continue;
-      if(!el.BadnessValid())
-        el.SetBadness(CalcBad(mesh.Points(), el, 0));
-      double bad = el.GetBadness();
+      if (std::isnan (badness[ei]))
+        badness[ei] = CalcBad(mesh.Points(), el, 0);
+      double bad = badness[ei];
       totalbad_local += bad;
       maxbad_local = max(maxbad_local, bad);
       if(bad > min_badness)
@@ -186,7 +225,7 @@ tuple<double, double, int> MeshOptimize3d :: UpdateBadness()
 bool MeshOptimize3d :: HasBadElement(FlatArray<ElementIndex> els)
 {
   for(auto ei : els)
-    if(mesh[ei].GetBadness()>min_badness)
+    if(GetBadness(ei)>min_badness)
       return true;
   return false;
 }
@@ -269,9 +308,9 @@ double MeshOptimize3d :: CombineImproveEdge (
 
   double badness_old = 0.0;
   for (auto ei : has_one_point)
-      badness_old += mesh[ei].GetBadness();
+      badness_old += GetBadness(ei);
   for (auto ei : has_both_points)
-      badness_old += mesh[ei].GetBadness();
+      badness_old += GetBadness(ei);
 
   if (goal == OPT_CONFORM && p0.Type() <= EDGEPOINT) {
     // check if the optimization improves conformity with free segments
@@ -346,12 +385,13 @@ double MeshOptimize3d :: CombineImproveEdge (
                   elem[l] = pi0;
 
           elem.Touch();
+          InvalidateBadness (ei);
           if (!mesh.LegalTet (elem))
               (*testout) << "illegal tet " << ei << endl;
       }
 
       for (auto i : Range(has_one_point))
-          mesh[has_one_point[i]].SetBadness(one_point_badness[i]);
+          SetBadness (has_one_point[i], one_point_badness[i]);
 
       for (auto ei : has_both_points)
       {
@@ -437,7 +477,7 @@ void MeshOptimize3d :: CombineImprove ()
   }
   topt.Stop();
 
-  mesh.Compress();
+  CompressMesh();
   mesh.MarkIllegalElements();
 
   PrintMessage (5, cnt, " elements combined");
@@ -503,7 +543,7 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
   double bad1_max = 0.0;
   for (ElementIndex ei : hasbothpoints)
     {
-      double bad = mesh[ei].GetBadness();
+      double bad = GetBadness(ei);
       bad1 += bad;
       bad1_max = max(bad1_max, bad);
     }
@@ -708,7 +748,7 @@ void MeshOptimize3d :: SplitImprove ()
         cnt++;
   }
   topt.Stop();
-  mesh.Compress();
+  CompressMesh();
   PrintMessage (5, cnt, " splits performed");
   (*testout) << "Splitt - Improve done" << "\n";
 
@@ -1335,7 +1375,7 @@ void MeshOptimize3d :: SwapImprove (const TBitArray<ElementIndex> * working_elem
 
       mesh.DeleteBoundaryEdges();
   }
-  mesh.Compress ();
+  CompressMesh();
 
   multithread.task = savetask;
 }
@@ -2185,7 +2225,7 @@ void MeshOptimize3d :: SwapImproveSurface (
     delete locidmaps[i];
 
 
-  mesh.Compress ();
+  CompressMesh();
 
   multithread.task = savetask;
 }
@@ -2305,7 +2345,7 @@ double MeshOptimize3d :: SwapImprove2 ( ElementIndex eli1, int face,
 
           if (comnodes == 3)
           {
-              bad1 = elem.GetBadness() + elem2.GetBadness();
+              bad1 = GetBadness(eli1) + GetBadness(eli2);
 
               if (!mesh.LegalTet(elem) ||
                   !mesh.LegalTet(elem2))
@@ -2467,7 +2507,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
 
   PrintMessage (5, cnt, " swaps performed");
 
-  mesh.Compress();
+  CompressMesh();
   if(testout->good())
   {
     double bad1 = mesh.CalcTotalBad (mp);
@@ -2486,7 +2526,7 @@ double MeshOptimize3d :: SplitImprove2Element (
     return false;
 
   // Optimize only bad elements
-  if(el.GetBadness() < 100)
+  if(GetBadness(ei) < 100)
     return false;
 
   // search for very flat tets, with two disjoint edges nearly crossing, like a rectangle with diagonals
@@ -2560,21 +2600,21 @@ double MeshOptimize3d :: SplitImprove2Element (
         has_both_points1.Append (ei1);
   }
 
-  double badness_before = mesh[ei].GetBadness();
+  double badness_before = GetBadness(ei);
   double badness_after = 0.0;
 
   for (auto ei0 : has_both_points0)
   {
     if(mesh[ei0].GetType()!=TET)
       return false;
-    badness_before += mesh[ei0].GetBadness();
+    badness_before += GetBadness(ei0);
     badness_after += SplitElementBadness (mesh.Points(), mp, Copy(mesh[ei0]), pi0, pi1, pnew);
   }
   for (auto ei1 : has_both_points1)
   {
     if(mesh[ei1].GetType()!=TET)
       return false;
-    badness_before += mesh[ei1].GetBadness();
+    badness_before += GetBadness(ei1);
     badness_after += SplitElementBadness (mesh.Points(), mp, Copy(mesh[ei1]), pi2, pi3, pnew);
   }
 
@@ -2659,7 +2699,7 @@ void MeshOptimize3d :: SplitImprove2 ()
   (*testout) << "SplitImprove2 done" << "\n";
 
   if(cnt>0)
-    mesh.Compress();
+    CompressMesh();
   multithread.task = savetask;
 }
 

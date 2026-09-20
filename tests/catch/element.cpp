@@ -39,14 +39,10 @@ TEST_CASE("ElementRef")
   v[0] = PointIndex::FromNr0(99);
   v.SetIndex(VolumeRegionIndex::FromNr1(7));
   v.SetRefinementFlag(false);
-  v.SetOrder(2,3,4);
   Element back (els[ei]);
   CHECK (back[0] == PointIndex::FromNr0(99));
   CHECK (back.GetIndex().Nr1() == 7);
   CHECK (!back.TestRefinementFlag());
-  int ox, oy, oz;
-  back.GetOrder(ox, oy, oz);
-  CHECK (ox == 2); CHECK (oy == 3); CHECK (oz == 4);
   CHECK (Copy(els[ei]).GetIndex().Nr1() == 7);
 
   const T_VOLELEMENTS & cels = els;

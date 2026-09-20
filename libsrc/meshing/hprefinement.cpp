@@ -1453,8 +1453,8 @@ namespace netgen
                     seg.EPGeomInfo(0).dist = d1 + hpel.param[0][0] * (d2-d1);
                     seg.EPGeomInfo(1).dist = d1 + hpel.param[1][0] * (d2-d1);
 
-                    seg.SetHpElnr(i);
-                    mesh.AddSegment (seg); 
+                    auto si = mesh.AddSegment (seg); 
+                    mesh.SetHpElnr (si, i);
                     break;
                   }
                   
@@ -1464,13 +1464,13 @@ namespace netgen
                     Element2d el(hpel.np); 
                     for(int j=0;j<hpel.np;j++) 
                       el[j] = hpel.pnums[j]; 
-                    el.SetHpElnr(i);
                     el.SetIndex(hpel.index);
-                    if(setorders)
-                      el.SetOrder(act_ref+1,act_ref+1,0); 
                     if((*mesh.coarsemesh)[SurfaceElementIndex(hpel.coarse_elnr)].IsCurved())
                         el.SetCurved(true);
-                    mesh.AddSurfaceElement(el);
+                    auto sei = mesh.AddSurfaceElement(el);
+                    mesh.SetHpElnr (sei, i);
+                    if(setorders)
+                      mesh.SetOrder (sei, act_ref+1, act_ref+1, 0); 
                     break; 
                   } 
                 case HP_HEX:
@@ -1483,12 +1483,12 @@ namespace netgen
                     for(int j=0;j<hpel.np;j++) 
                       el[j] = hpel.pnums[j]; 
                     el.SetIndex(hpel.index);
-                    el.SetHpElnr(i);
-                    if(setorders)
-                      el.SetOrder(act_ref+1,act_ref+1,act_ref+1);
                     if((*mesh.coarsemesh)[ElementIndex(hpel.coarse_elnr)].IsCurved())
                         el.SetCurved(true);
-                    mesh.AddVolumeElement(el); 
+                    auto ei = mesh.AddVolumeElement(el); 
+                    mesh.SetHpElnr (ei, i);
+                    if(setorders)
+                      mesh.SetOrder (ei, act_ref+1, act_ref+1, act_ref+1);
                     break;
                   } 
                       
@@ -1512,10 +1512,10 @@ namespace netgen
     if(act_ref>=1)
       { 
         // for(ElementIndex i=0;i<mesh.GetNE(); i++)
-        for (auto el : mesh.VolumeElements())
+        for (auto ei : mesh.VolumeElements().Range())
           { 
-            // Element el = el ;
-            HPRefElement & hpel = hpelements[el.GetHpElnr()];
+            auto el = mesh[ei];
+            HPRefElement & hpel = hpelements[mesh.GetHpElnr(ei)];
             const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (el.GetType());
             double dist[3] = {0,0,0}; 
             int ord_dir[3] = {0,0,0}; 
@@ -1585,12 +1585,12 @@ namespace netgen
             // cout << " order " << act_ref +1 - refi[0] << "\t" << act_ref +1 - refi[1] << "\t" << act_ref +1 - refi[2] << endl; 
                       
             if(setorders)
-              el.SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
+              mesh.SetOrder (ei, act_ref+1-refi[0], act_ref+1-refi[1], act_ref+1-refi[2]); 
           }
-        for (auto & sel : mesh.SurfaceElements()) 
+        for (auto sei : mesh.SurfaceElements().Range()) 
           { 
-            // Element2d el = sel ;
-            HPRefElement & hpel = hpelements[sel.GetHpElnr()];
+            auto & sel = mesh[sei];
+            HPRefElement & hpel = hpelements[mesh.GetHpElnr(sei)];
             const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (sel.GetType());
             double dist[3] = {0,0,0}; 
             int ord_dir[3] = {0,0,0}; 
@@ -1627,7 +1627,7 @@ namespace netgen
               refi[j] = RefinementLevels(dist[ord_dir[j]]/sqrt(2.), fac1);
             
             if(setorders)
-              sel.SetOrder(act_ref+1-refi[0],act_ref+1-refi[1],act_ref+1-refi[2]); 
+              mesh.SetOrder (sei, act_ref+1-refi[0], act_ref+1-refi[1], act_ref+1-refi[2]); 
 
               // cout << " ref " << refi[0] << "\t" << refi[1] << endl; 
               // cout << " order " << act_ref +1 - refi[0] << "\t" << act_ref +1 - refi[1] << endl; 

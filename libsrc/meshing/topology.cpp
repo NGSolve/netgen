@@ -1349,7 +1349,7 @@ namespace netgen
                                   if (mesh->coarsemesh && mesh->hpelements->Size() == mesh->GetNE() )
                                     {
                                       const HPRefElement & hpref_el =
-                                        (*mesh->hpelements) [ (*mesh)[vertels[k]].GetHpElnr()];
+                                        (*mesh->hpelements) [ mesh->GetHpElnr(vertels[k])];
                                       (*testout) << "coarse eleme = " << hpref_el.coarse_elnr << endl;
                                     }
 

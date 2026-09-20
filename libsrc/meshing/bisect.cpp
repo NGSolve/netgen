@@ -2874,18 +2874,18 @@ namespace netgen
         for (auto ei : mesh.VolumeElements().Range())
           if (mesh[ei].TestRefinementFlag())
             {
-              mesh[ei].GetOrder(ox,oy,oz);
-              mesh[ei].SetOrder (ox+1,oy+1,oz+1);
+              mesh.GetOrder(ei, ox,oy,oz);
+              mesh.SetOrder(ei, ox+1,oy+1,oz+1);
               if (mesh[ei].TestStrongRefinementFlag())
-                mesh[ei].SetOrder (ox+2,oy+2,oz+2);
+                mesh.SetOrder(ei, ox+2,oy+2,oz+2);
             }
         for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
           if (mesh[sei].TestRefinementFlag())
             {
-              mesh[sei].GetOrder(ox,oy);
-              mesh[sei].SetOrder(ox+1,oy+1);
+              mesh.GetOrder(sei, ox,oy);
+              mesh.SetOrder(sei, ox+1,oy+1);
               if (mesh[sei].TestStrongRefinementFlag())
-                mesh[sei].SetOrder(ox+2,oy+2);
+                mesh.SetOrder(sei, ox+2,oy+2);
             }
 
 #ifndef SABINE //Nachbarelemente mit ordx,ordy,ordz 
@@ -2897,24 +2897,24 @@ namespace netgen
           // for (ElementIndex ei = 0; ei < ne; ei++)
           for (auto ei : mesh.VolumeElements().Range())
             for (int j = 0; j < mesh[ei].GetNP(); j++)
-              if (mesh[ei].GetOrder() > v_order[mesh[ei][j]])
-                v_order[mesh[ei][j]] = mesh[ei].GetOrder();
+              if (mesh.GetOrder(ei) > v_order[mesh[ei][j]])
+                v_order[mesh[ei][j]] = mesh.GetOrder(ei);
 
           for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
             for (int j = 0; j < mesh[sei].GetNP(); j++)
-              if (mesh[sei].GetOrder() > v_order[mesh[sei][j]])
-                v_order[mesh[sei][j]] = mesh[sei].GetOrder();
+              if (mesh.GetOrder(sei) > v_order[mesh[sei][j]])
+                v_order[mesh[sei][j]] = mesh.GetOrder(sei);
 
           // for (ElementIndex ei = 0; ei < ne; ei++)
           for (auto ei : mesh.VolumeElements().Range())          
             for (int j = 0; j < mesh[ei].GetNP(); j++)
-              if (mesh[ei].GetOrder() < v_order[mesh[ei][j]]-1)
-                mesh[ei].SetOrder(v_order[mesh[ei][j]]-1);
+              if (mesh.GetOrder(ei) < v_order[mesh[ei][j]]-1)
+                mesh.SetOrder(ei, v_order[mesh[ei][j]]-1);
 
           for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(nse))
             for (int j = 0; j < mesh[sei].GetNP(); j++)
-              if (mesh[sei].GetOrder() < v_order[mesh[sei][j]]-1)
-                mesh[sei].SetOrder(v_order[mesh[sei][j]]-1);
+              if (mesh.GetOrder(sei) < v_order[mesh[sei][j]]-1)
+                mesh.SetOrder(sei, v_order[mesh[sei][j]]-1);
           
 #endif
           
@@ -3756,6 +3756,9 @@ namespace netgen
     mesh.ClearVolumeElements();
     mesh.VolumeElements().SetAllocSize (mtets.Size()+mprisms.Size());
     mesh.VolumeElements().SetSize(mtets.Size());
+    bool have_orders = false;
+    for (auto & tet : mtets) if (tet.order != 1) { have_orders = true; break; }
+    if (have_orders) mesh.AllocateHPInfo<ElementIndex>();
     /*
     for (int i = 1; i <= mtets.Size(); i++)
       {
@@ -3764,7 +3767,8 @@ namespace netgen
         for (int j = 1; j <= 4; j++)
           el.PNum(j) = mtets.Get(i).pnums[j-1];
         el.SetOrder (mtets.Get(i).order);
-        mesh.AddVolumeElement (el);
+        auto ei = mesh.AddVolumeElement (el);
+        mesh.SetOrder (ei, mprisms[i].order);
       }
     */
     ngcore::ParallelForRange
@@ -3775,11 +3779,11 @@ namespace netgen
             Element el(TET);
             auto & tet = mtets[ei];
             el.SetIndex (tet.matindex);
-            el.SetOrder (tet.order);
             for (int j = 0; j < 4; j++)
               el[j] = tet.pnums[j];
             el.NewestVertex() = tet.newest_vertex;
             mesh.SetVolumeElement (ei, el);
+            if (have_orders) mesh.SetOrder (ei, tet.order);
           }
        });
 
@@ -3791,7 +3795,6 @@ namespace netgen
         el.SetIndex (mprisms[i].matindex);
         for (int j = 1; j <= 6; j++)
           el.PNum(j) = mprisms[i].pnums[j-1];
-        el.SetOrder (mprisms[i].order);
 
         // degenerated prism ?
         static const int map1[] = { 3, 2, 5, 6, 1 };
@@ -3860,6 +3863,9 @@ namespace netgen
     */
 
     mesh.SurfaceElements().SetSize(mtris.Size());
+    bool have_surf_orders = false;
+    for (auto & trig : mtris) if (trig.order != 1) { have_surf_orders = true; break; }
+    if (have_surf_orders) mesh.AllocateHPInfo<SurfaceElementIndex>();
     // for (size_t i = 0; i < mtris.Size(); i++)
     ParallelForRange
       (mtris.Range(), [&] (auto myrange)
@@ -3869,7 +3875,6 @@ namespace netgen
             Element2d el(TRIG);
             auto & trig = mtris[i];
             el.SetIndex (trig.surfid);
-            el.SetOrder (trig.order);
             for (int j = 0; j < 3; j++)
               {
                 el[j] = trig.pnums[j];
@@ -3877,6 +3882,7 @@ namespace netgen
               }
             el.NewestVertex() = trig.newest_vertex;
             mesh.SetSurfaceElement (SurfaceElementIndex::FromNr0(i), el);
+            if (have_surf_orders) mesh.SetOrder (SurfaceElementIndex::FromNr0(i), trig.order);
           }
        });
     mesh.RebuildSurfaceElementLists();

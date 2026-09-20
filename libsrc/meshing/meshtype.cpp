@@ -232,7 +232,6 @@ namespace netgen
  }
 
   Segment :: Segment() 
-    : hp_elnr(0)
   {
     pnums[0] = PointIndex::INVALID;
     pnums[1] = PointIndex::INVALID;
@@ -285,7 +284,6 @@ namespace netgen
     deleted = 0;
     visible = 1;
     typ = TRIG;
-    orderx = ordery = 1;
     refflag = 1;
     strongrefflag = false;
     is_curved = 0;
@@ -303,7 +301,6 @@ namespace netgen
     badel = 0;
     deleted = 0;
     visible = 1;
-    orderx = ordery = 1;
     refflag = 1;
     strongrefflag = false;
     is_curved = (GetNP() >= 4); // false;
@@ -323,7 +320,6 @@ namespace netgen
     badel = 0;
     deleted = 0;
     visible = 1;
-    orderx = ordery = 1;
     refflag = 1;
     strongrefflag = false;
     is_curved = (GetNP() >= 4); // false;
@@ -349,7 +345,6 @@ namespace netgen
     strongrefflag = false;
     deleted = 0;
     visible = 1;
-    orderx = ordery = 1;
     is_curved = false;
   }
 
@@ -372,7 +367,6 @@ namespace netgen
     strongrefflag = false;
     deleted = 0;
     visible = 1;
-    orderx = ordery = 1;
     is_curved = true;
   }
 
@@ -1058,12 +1052,10 @@ namespace netgen
     flags.reverse = 0;
     flags.illegal = 0;
     flags.illegal_valid = 0;
-    flags.badness_valid = 0;
-    flags.refflag = 1;
+    refflag = 1;
     flags.strongrefflag = false;
     flags.deleted = 0;
     flags.fixed = 0;
-    orderx = ordery = orderz = 1;
     is_curved = false;
 #ifdef PARALLEL
     partitionNumber = -1;
@@ -1087,15 +1079,13 @@ namespace netgen
     h->flags.reverse = 0;
     h->flags.illegal = 0;
     h->flags.illegal_valid = 0;
-    h->flags.badness_valid = 0;
-    h->flags.refflag = 1;
+    h->refflag = 1;
     h->flags.strongrefflag = false;
     h->flags.deleted = 0;
     h->flags.fixed = 0;
 
     if (h->typ == ELEMENT_TYPE(0))
       cerr << "Element::Element: unknown element with " << anp << " points" << endl;
-    h->orderx = h->ordery = h->orderz = 1;
     h->is_curved = h->typ != TET; // false;
   }
 
@@ -1116,12 +1106,10 @@ namespace netgen
     h->flags.reverse = 0;
     h->flags.illegal = 0;
     h->flags.illegal_valid = 0;
-    h->flags.badness_valid = 0;
-    h->flags.refflag = 1;
+    h->refflag = 1;
     h->flags.strongrefflag = false;
     h->flags.deleted = 0;
     h->flags.fixed = 0;
-    h->orderx = h->ordery = h->orderz = 1;
     h->is_curved =  h->typ != TET; // false;
     // #ifdef PARALLEL
     // partitionNumber = -1;
@@ -1129,26 +1117,6 @@ namespace netgen
   }
 
 
-
-
-  /*
-  Element & ElementRef :: operator= (const Element & el2)
-  {
-    h->typ = el2.typ;
-    GetNP() = el2.np;
-    for (int i = 0; i < ELEMENT_MAXPOINTS; i++)
-      pn[i] = el2.pnum[i];
-    h->index = el2.index;
-    flags = el2.flags;
-    h->orderx = el2.orderx;
-    h->ordery = el2.ordery;
-    h->orderz = el2.orderz;
-    h->hp_elnr = el2.hp_elnr;
-    flags = el2.flags;
-    h->is_curved = el2.is_curved;
-    return *this;
-  }
-  */
 
 
   ElementRef & ElementRef :: operator= (const ElementRef & el2)
@@ -1178,8 +1146,7 @@ namespace netgen
         h->flags.reverse = 0;
         h->flags.illegal = 0;
         h->flags.illegal_valid = 0;
-        h->flags.badness_valid = 0;
-        h->flags.refflag = 1;
+        h->refflag = 1;
         h->flags.strongrefflag = false;
         h->flags.deleted = 0;
         h->flags.fixed = 0;

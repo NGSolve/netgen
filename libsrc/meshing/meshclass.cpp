@@ -280,6 +280,67 @@ namespace netgen
     this->comm = acomm;
   }
 
+  template <typename TIndex> static size_t NumElements (const Mesh & mesh);
+  template <> size_t NumElements<ElementIndex> (const Mesh & mesh) { return mesh.GetNE(); }
+  template <> size_t NumElements<SurfaceElementIndex> (const Mesh & mesh) { return mesh.GetNSE(); }
+  template <> size_t NumElements<SegmentIndex> (const Mesh & mesh) { return mesh.GetNSeg(); }
+
+  template <typename TIndex>
+  void Mesh :: AllocateHPInfo ()
+  {
+    auto & info = HPInfo<TIndex>();
+    size_t n = NumElements<TIndex>(*this);
+    if (info.Size() >= n) return;
+    size_t oldsize = info.Size();
+    info.SetSize (n);
+    for (size_t i = oldsize; i < n; i++)
+      info[TIndex::FromNr0(i)] = HPElementInfo();
+  }
+  template void Mesh :: AllocateHPInfo<ElementIndex> ();
+  template void Mesh :: AllocateHPInfo<SurfaceElementIndex> ();
+  template void Mesh :: AllocateHPInfo<SegmentIndex> ();
+
+  template <typename TIndex>
+  void Mesh :: SetHPInfo (TIndex i, HPElementInfo val)
+  {
+    auto & info = HPInfo<TIndex>();
+    if (!info.Range().Contains(i))
+      {
+        if (val.hp_elnr == -1 && val.orderx == 1 && val.ordery == 1 && val.orderz == 1) return;
+        AllocateHPInfo<TIndex>();
+      }
+    info[i] = val;
+  }
+  template void Mesh :: SetHPInfo<ElementIndex> (ElementIndex, HPElementInfo);
+  template void Mesh :: SetHPInfo<SurfaceElementIndex> (SurfaceElementIndex, HPElementInfo);
+  template void Mesh :: SetHPInfo<SegmentIndex> (SegmentIndex, HPElementInfo);
+
+  // apply the deletion order of Mesh::Compress (the last element moves into the hole) to a side array
+  template <typename TIndex, typename T, typename TELS, typename DELETED>
+  static void CompressSideArray (Array<T,TIndex> & data, const TELS & els, DELETED deleted)
+  {
+    if (data.Size() == 0) return;
+    size_t n = els.Size();
+    if (data.Size() < n)
+      {
+        size_t oldsize = data.Size();
+        data.SetSize (n);
+        for (size_t i = oldsize; i < n; i++) data[TIndex::FromNr0(i)] = T();
+      }
+    Array<size_t> old_of_new (n);
+    for (size_t i = 0; i < n; i++) old_of_new[i] = i;
+    for (size_t i = 0; i < n; )
+      if (deleted (els[TIndex::FromNr0(old_of_new[i])]))
+        old_of_new[i] = old_of_new[--n];
+      else
+        i++;
+    Array<T,TIndex> ndata (n);
+    for (size_t i = 0; i < n; i++)
+      ndata[TIndex::FromNr0(i)] = data[TIndex::FromNr0(old_of_new[i])];
+    data = std::move (ndata);
+  }
+
+
   Mesh & Mesh :: operator= (const Mesh & mesh2)
   {
     geometry = mesh2.geometry;
@@ -288,6 +349,9 @@ namespace netgen
     segments = mesh2.segments;
     surfelements = mesh2.surfelements;
     volelements = mesh2.volelements;
+    hp_seginfo = mesh2.hp_seginfo;
+    hp_surfinfo = mesh2.hp_surfinfo;
+    hp_volinfo = mesh2.hp_volinfo;
     lockedpoints = mesh2.lockedpoints;
     regions = mesh2.regions;
     dimension = mesh2.dimension;
@@ -309,6 +373,9 @@ namespace netgen
     segments.SetSize(0);
     surfelements.SetSize(0);
     volelements.SetSize(0);
+    hp_seginfo.SetSize(0);
+    hp_surfinfo.SetSize(0);
+    hp_volinfo.SetSize(0);
     lockedpoints.SetSize(0);
     // surfacesonnode.SetSize(0);
 
@@ -339,6 +406,7 @@ namespace netgen
   void Mesh :: ClearSurfaceElements()
   { 
     surfelements.SetSize(0);
+    hp_surfinfo.SetSize(0);
     /*
     for (int i = 0; i < Regions<2>().Size(); i++)
       Regions<2>()[i].firstelement = SurfaceElementIndex::INVALID;
@@ -4426,6 +4494,10 @@ namespace netgen
       (*testout) << "np: " << GetNP() << endl;
     */
 
+    CompressSideArray (hp_volinfo, volelements, [] (const auto & el) { return !el[0].IsValid() || el.IsDeleted(); });
+    CompressSideArray (hp_surfinfo, surfelements, [] (const auto & el) { return el.IsDeleted(); });
+    CompressSideArray (hp_seginfo, segments, [] (const auto & seg) { return !seg[0].IsValid() || !seg.GetIndex().IsValid(); });
+
     // DeleteElement moves the last element into the hole, so re-check the slot
     for (auto ei = volelements.Range().First(); ei < volelements.Range().Next(); )
       if (!volelements[ei][0].IsValid() || volelements[ei].IsDeleted())
@@ -5720,7 +5792,7 @@ namespace netgen
         const auto & p3 = Point(el[2]);
         const auto & p4 = Point(el[3]);
 
-        if (el.GetOrder() > 1 || el.GetHpElnr() != -1) {
+        if (GetOrder(ei) > 1 || GetHpElnr(ei) != -1) {
           netgen::Point<2> lam(0.5,0.5);
           Vec<3> rhs;
           Vec<2> deltalam;
