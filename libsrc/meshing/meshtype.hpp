@@ -39,43 +39,42 @@ namespace netgen
   using ELEMENT_EDGE = std::array<int,2>;
   using ELEMENT_FACE = std::array<int,4>;
 
-  /// number of points / vertices / edges / faces of a 3D element type, 0 for other types
-  namespace element3d_info
+  /// number of points / vertices / edges / faces and the dimension of an element type
+  namespace element_info
   {
     constexpr size_t SIZE = 32;   // > max ELEMENT_TYPE value
     constexpr std::array<int8_t,SIZE> np = [] {
       std::array<int8_t,SIZE> t{};
+      t[SEGMENT] = 2;  t[SEGMENT3] = 3;
+      t[TRIG] = 3;  t[QUAD] = 4;  t[TRIG6] = 6;  t[QUAD6] = 6;  t[QUAD8] = 8;
       t[TET] = 4;  t[PYRAMID] = 5;  t[PRISM] = 6;  t[HEX7] = 7;  t[HEX] = 8;
       t[TET10] = 10;  t[PRISM12] = 12;  t[PYRAMID13] = 13;  t[PRISM15] = 15;  t[HEX20] = 20;
       return t; } ();
     constexpr std::array<int8_t,SIZE> nv = [] {
       std::array<int8_t,SIZE> t{};
+      t[SEGMENT] = t[SEGMENT3] = 2;
+      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
       t[TET] = t[TET10] = 4;  t[PYRAMID] = t[PYRAMID13] = 5;  t[PRISM] = t[PRISM12] = t[PRISM15] = 6;
       t[HEX7] = 7;  t[HEX] = t[HEX20] = 8;
       return t; } ();
     constexpr std::array<int8_t,SIZE> nedges = [] {
       std::array<int8_t,SIZE> t{};
+      t[SEGMENT] = t[SEGMENT3] = 1;
+      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
       t[TET] = t[TET10] = 6;  t[PYRAMID] = t[PYRAMID13] = 8;  t[PRISM] = t[PRISM12] = t[PRISM15] = 9;
       t[HEX7] = 11;  t[HEX] = t[HEX20] = 12;
       return t; } ();
     constexpr std::array<int8_t,SIZE> nfaces = [] {
       std::array<int8_t,SIZE> t{};
+      t[TRIG] = t[TRIG6] = 1;  t[QUAD] = t[QUAD6] = t[QUAD8] = 1;
       t[TET] = t[TET10] = 4;  t[PYRAMID] = t[PYRAMID13] = 5;  t[PRISM] = t[PRISM12] = t[PRISM15] = 5;
       t[HEX7] = 6;  t[HEX] = t[HEX20] = 6;
       return t; } ();
-  }
-
-  /// number of points / vertices of a 2D element type, 0 for other types
-  namespace element2d_info
-  {
-    constexpr size_t SIZE = 32;
-    constexpr std::array<int8_t,SIZE> np = [] {
+    constexpr std::array<int8_t,SIZE> dim = [] {
       std::array<int8_t,SIZE> t{};
-      t[TRIG] = 3;  t[QUAD] = 4;  t[TRIG6] = 6;  t[QUAD6] = 6;  t[QUAD8] = 8;
-      return t; } ();
-    constexpr std::array<int8_t,SIZE> nv = [] {
-      std::array<int8_t,SIZE> t{};
-      t[TRIG] = t[TRIG6] = 3;  t[QUAD] = t[QUAD6] = t[QUAD8] = 4;
+      t[SEGMENT] = t[SEGMENT3] = 1;
+      t[TRIG] = t[TRIG6] = t[QUAD] = t[QUAD6] = t[QUAD8] = 2;
+      t[TET] = t[TET10] = t[PYRAMID] = t[PYRAMID13] = t[PRISM] = t[PRISM12] = t[PRISM15] = t[HEX7] = t[HEX] = t[HEX20] = 3;
       return t; } ();
   }
 
@@ -843,7 +842,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   */
   struct Element2dHeader
   {
-    ELEMENT_TYPE typ;   // number of points and vertices follow from the type: element2d_info
+    ELEMENT_TYPE typ;   // number of points and vertices follow from the type: element_info
     int8_t newest_vertex = -1; // from refinement via bisection
     bool refflag;     // marked for refinement
     bool is_curved;   // element is (high order) curved
@@ -913,8 +912,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     ELEMENT_TYPE GetType () const { return h->typ; }
     DLL_HEADER void SetType (ELEMENT_TYPE atyp);
-    int GetNP() const { return element2d_info::np[h->typ]; }
-    int GetNV() const { return element2d_info::nv[h->typ]; }
+    int GetNP() const { return element_info::np[h->typ]; }
+    int GetNV() const { return element_info::nv[h->typ]; }
 
     PointIndex & operator[] (int i) { NETGEN_CHECK_RANGE(i, 0, maxnp); return pn[i]; }
     const PointIndex & operator[] (int i) const { NETGEN_CHECK_RANGE(i, 0, maxnp); return pn[i]; }
@@ -1087,7 +1086,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
   */
   struct ElementHeader
   {
-    ELEMENT_TYPE typ;   // number of points, vertices, ... follow from the type: element3d_info
+    ELEMENT_TYPE typ;   // number of points, vertices, ... follow from the type: element_info
     int8_t newest_vertex = -1; // from refinement via bisection
     /// sub-domain index
     VolumeRegionIndex index;
@@ -1145,11 +1144,11 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 
     DLL_HEADER void SetNP (int anp);
     DLL_HEADER void SetType (ELEMENT_TYPE atyp);
-    int GetNP () const { return element3d_info::np[h->typ]; }
+    int GetNP () const { return element_info::np[h->typ]; }
     // old style:
-    int NP () const { return element3d_info::np[h->typ]; }
+    int NP () const { return element_info::np[h->typ]; }
 
-    uint8_t GetNV() const { return element3d_info::nv[h->typ]; }
+    uint8_t GetNV() const { return element_info::nv[h->typ]; }
 
     ELEMENT_TYPE GetType () const { return h->typ; }
 
@@ -1183,7 +1182,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     /// Calculates Volume of element
     DLL_HEADER double Volume (const T_POINTS & points) const;
     DLL_HEADER void Print (ostream & ost) const;
-    int GetNFaces () const { return element3d_info::nfaces[h->typ]; }
+    int GetNFaces () const { return element_info::nfaces[h->typ]; }
     inline void GetFace (int i, Element2dRef face) const;
     DLL_HEADER void GetFace2 (int i, Element2dRef face) const;
     DLL_HEADER void Invert ();

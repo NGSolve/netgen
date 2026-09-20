@@ -324,10 +324,10 @@ namespace netgen
 
   void Element2dRef :: SetType (ELEMENT_TYPE atyp)
   {
-    if (element2d_info::np[atyp] == 0)
+    if (element_info::np[atyp] == 0)
       PrintSysError ("Element2d::SetType, illegal type ", int(atyp));
-    if (element2d_info::np[atyp] > maxnp)
-      throw Exception ("Element2dRef::SetType: element with " + ToString(int(element2d_info::np[atyp])) +
+    if (element_info::np[atyp] > maxnp)
+      throw Exception ("Element2dRef::SetType: element with " + ToString(int(element_info::np[atyp])) +
                        " points does not fit into " + ToString(maxnp) + " slots, use Mesh::SetSurfaceElement");
     h->typ = atyp;
     h->is_curved = (GetNP() >= 4);
@@ -1175,10 +1175,10 @@ namespace netgen
 
   void ElementRef :: SetType (ELEMENT_TYPE atyp)
   {
-    if (element3d_info::np[atyp] == 0)
+    if (element_info::np[atyp] == 0)
       cerr << "Element::SetType unknown type  " << int(atyp) << endl;
-    if (element3d_info::np[atyp] > maxnp)
-      throw Exception ("ElementRef::SetType: element with " + ToString(int(element3d_info::np[atyp])) +
+    if (element_info::np[atyp] > maxnp)
+      throw Exception ("ElementRef::SetType: element with " + ToString(int(element_info::np[atyp])) +
                        " points does not fit into " + ToString(maxnp) + " slots, use Mesh::SetVolumeElement");
     h->typ = atyp;
     h->is_curved = (GetNP() > 4); 
