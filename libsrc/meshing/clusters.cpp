@@ -108,9 +108,9 @@ namespace netgen
              for (int j = 0; j < elnv; j++)
                nnums[j] = el[j]+1-PI0;
              for (int j = 0; j < elned; j++)
-               nnums[elnv+j] = nv+ednums[j]+1;
+               nnums[elnv+j] = nv+ednums[j].Nr1();
              for (int j = 0; j < elnfa; j++)
-               nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+               nnums[elnv+elned+j] = nv+ned+fanums[j].Nr1();
              nnums[elnv+elned+elnfa] = nv+ned+nfa+i;
 
              for (int j = 0; j < nnums.Size(); j++)
@@ -160,7 +160,7 @@ namespace netgen
              auto ednums = top.GetEdges (i_);
              // cout << "ednums = " << ednums << endl;
              
-             int fanum = top.GetFace(i_)+1;
+             int fanum = top.GetFace(i_).Nr1();
              
              int elnv = top.GetNVertices (typ);
              int elned = ednums.Size();
@@ -169,7 +169,7 @@ namespace netgen
              for (int j = 0; j < elnv; j++)
                nnums[j] = el[j]+1-PI0;
              for (int j = 0; j < elned; j++)
-               nnums[elnv+j] = nv+ednums[j]+1;
+               nnums[elnv+j] = nv+ednums[j].Nr1();
              nnums[elnv+elned] = fanum;             
              
              for (int j = 0; j < nnums.Size(); j++)
@@ -294,9 +294,9 @@ namespace netgen
                 for (int j = 0; j < elnv; j++)
                   nnums[j] = el[j]+1-IndexBASE<PointIndex>();
                 for (int j = 0; j < elned; j++)
-                  nnums[elnv+j] = nv+ednums[j]+1;
+                  nnums[elnv+j] = nv+ednums[j].Nr1();
                 for (int j = 0; j < elnfa; j++)
-                  nnums[elnv+elned+j] = nv+ned+fanums[j]+1;
+                  nnums[elnv+elned+j] = nv+ned+fanums[j].Nr1();
                 nnums[elnv+elned+elnfa] = nv+ned+nfa+ei.Nr1();
                 
                 

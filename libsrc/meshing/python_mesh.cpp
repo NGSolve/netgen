@@ -1917,7 +1917,7 @@ py::arg("point_tolerance") = -1.)
                 {
                   // PointIndex p0,p1;
                   // topo.GetEdgeVertices(i+1, p0, p1);
-                  auto [p0,p1] = topo.GetEdgeVertices(i);
+                  auto [p0,p1] = topo.GetEdgeVertices(EdgeIndex::FromNr0(i));
                     output[2*i] = p0.Nr0();
                     output[2*i+1] = p1.Nr0();
                 } });

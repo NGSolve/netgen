@@ -46,8 +46,8 @@ namespace netgen
     void AddDistantEdgeProc (int face, int proc) { loc2distedge.AddUnique (face, proc); }
     
     FlatArray<int> GetDistantProcs (PointIndex pi) const { return loc2distvert[pi-IndexBASE<PointIndex>()]; }
-    FlatArray<int> GetDistantFaceProcs (int locnum) const { return loc2distface[locnum]; }
-    FlatArray<int> GetDistantEdgeProcs (int locnum) const { return loc2distedge[locnum]; }
+    FlatArray<int> GetDistantFaceProcs (FaceIndex locnum) const { return loc2distface[locnum.Nr0()]; }
+    FlatArray<int> GetDistantEdgeProcs (EdgeIndex locnum) const { return loc2distedge[locnum.Nr0()]; }
 
 
     

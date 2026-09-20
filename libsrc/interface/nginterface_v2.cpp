@@ -1271,7 +1271,7 @@ int Ngx_Mesh::GetSurfaceElement_Face (int selnr, int * orient) const
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
         *orient = topology.GetSurfaceElementFaceOrientation (selnr+1);
-      return topology.GetFace (SurfaceElementIndex::FromNr0(selnr));
+      return topology.GetFace (SurfaceElementIndex::FromNr0(selnr)).Nr0();
     }
   return -1;
 }
@@ -1321,10 +1321,10 @@ FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
         return mesh->GetParallelTopology().GetDistantProcs(PointIndex::FromNr0(locnum));
       case 1:
         // return mesh->GetParallelTopology().GetDistantEdgeNums(locnum);
-        return mesh->GetParallelTopology().GetDistantEdgeProcs(locnum);
+        return mesh->GetParallelTopology().GetDistantEdgeProcs(EdgeIndex::FromNr0(locnum));
       case 2:
         // return mesh->GetParallelTopology().GetDistantFaceNums(locnum);
-        return mesh->GetParallelTopology().GetDistantFaceProcs(locnum);
+        return mesh->GetParallelTopology().GetDistantFaceProcs(FaceIndex::FromNr0(locnum));
       default:
         return FlatArray<int>(0, nullptr);
       }

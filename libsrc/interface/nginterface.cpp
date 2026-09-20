@@ -1573,7 +1573,7 @@ int Ng_GetSurfaceElement_Face (int selnr, int * orient)
       const MeshTopology & topology = mesh->GetTopology();
       if (orient)
         *orient = topology.GetSurfaceElementFaceOrientation (selnr);
-      return topology.GetFace(sei);
+      return topology.GetFace(sei).Nr0();
     }
   return -1;
 }
@@ -1605,7 +1605,7 @@ void Ng_GetEdge_Vertices (int ednr, int * vert)
   const MeshTopology & topology = mesh->GetTopology();
   // topology.GetEdgeVertices (ednr, vert[0], vert[1]);
   // tie(vert[0], vert[1]) = topology.GetEdgeVertices(ednr-1);
-  auto [v1,v2] = topology.GetEdgeVertices(ednr-1);
+  auto [v1,v2] = topology.GetEdgeVertices(EdgeIndex::FromNr1(ednr));
   vert[0] = v1.Nr1();
   vert[1] = v2.Nr1();
 }
@@ -1876,8 +1876,8 @@ void Ng_GetPeriodicEdges (int idnr, int * pairs)
             SegmentIndex otherseg = mesh->SegmentNr (other1, other2);
             // pairs[cnt++] = top.GetSegmentEdge (si+1);
             // pairs[cnt++] = top.GetSegmentEdge (otherseg+1);
-            pairs[cnt++] = top.GetEdge (si)+1;
-            pairs[cnt++] = top.GetEdge (otherseg)+1;
+            pairs[cnt++] = top.GetEdge (si).Nr1();
+            pairs[cnt++] = top.GetEdge (otherseg).Nr1();
           }
       }
   }
@@ -2252,7 +2252,7 @@ int Ng_GetClosureNodes (int nt, int nodenr, int nodeset, int * nodes)
             for (int i = 0; i < edges.Size(); i++)
               {
                 nodes[cnt++] = 1;
-                nodes[cnt++] = edges[i]-1;
+                nodes[cnt++] = edges[i].Nr0();
               }
           }
 
@@ -2342,7 +2342,7 @@ int Ng_GetElementClosureNodes (int dim, int elementnr, int nodeset, int * nodes)
 
         if (nodeset & 4)  // Faces
           {
-            int face = mesh->GetTopology().GetFace (SurfaceElementIndex::FromNr0(elementnr))+1;
+            int face = mesh->GetTopology().GetFace (SurfaceElementIndex::FromNr0(elementnr)).Nr1();
             nodes[cnt++] = 2;
             nodes[cnt++] = face-1;
           }

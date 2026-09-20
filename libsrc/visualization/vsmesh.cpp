@@ -429,7 +429,7 @@ namespace netgen
               {
                 // int v1, v2;
                 // top.GetEdgeVertices (i, v1, v2);
-                auto [v1,v2] = top.GetEdgeVertices(i-1);
+                auto [v1,v2] = top.GetEdgeVertices(EdgeIndex::FromNr1(i));
                 const Point<3> & p1 = mesh->Point(v1);
                 const Point<3> & p2 = mesh->Point(v2);
                 const Point<3> p = Center (p1, p2);

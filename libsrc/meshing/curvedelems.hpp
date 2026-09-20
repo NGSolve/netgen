@@ -23,16 +23,16 @@ class CurvedElements
 {
   const Mesh & mesh;
 
-  Array<int> edgeorder;
-  Array<int> faceorder;
+  Array<int, EdgeIndex> edgeorder;
+  Array<int, FaceIndex> faceorder;
 
-  Array<int> edgecoeffsindex;
-  Array<int> facecoeffsindex;
+  Array<int, EdgeIndex> edgecoeffsindex;
+  Array<int, FaceIndex> facecoeffsindex;
 
   Array< Vec<3> > edgecoeffs;
   Array< Vec<3> > facecoeffs;
 
-  Array< double > edgeweight;  // for rational 2nd order splines
+  Array<double, EdgeIndex> edgeweight;  // for rational 2nd order splines
 
   int order;
   bool rational;
@@ -184,7 +184,7 @@ private:
     int order;
     int nv;
     int ndof;
-    int edgenr;
+    EdgeIndex edgenr;
   };
 
   template <typename T>
@@ -203,8 +203,8 @@ private:
     int ndof;
     int nedges;
     int nfaces;
-    int edgenrs[12];
-    int facenrs[6];
+    EdgeIndex edgenrs[12];
+    FaceIndex facenrs[6];
     Mat<3> hdxdxi;
     Vec<3> hcoefs[10]; // enough for second order tets
 
@@ -245,8 +245,8 @@ private:
     int order;
     int nv;
     int ndof;
-    ArrayMem<int,4> edgenrs;
-    int facenr;
+    ArrayMem<EdgeIndex,4> edgenrs;
+    FaceIndex facenr;
 
     void SetEdges (FlatArray<EdgeIndex> edges)
     {
