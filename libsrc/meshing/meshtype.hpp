@@ -124,8 +124,8 @@ namespace netgen
   class PointGeomInfo
   {
   public:
-    int trignum;   // for STL Meshing
-    double u, v;   // for OCC Meshing
+    int trignum = 0;        // for STL Meshing
+    double u = 0, v = 0;    // for OCC Meshing
 
     PointGeomInfo () = default;
     PointGeomInfo (const PointGeomInfo&) = default;
