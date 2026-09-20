@@ -87,6 +87,15 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::implicitly_convertible<int, Identifications::ID_TYPE>();
 
+  py::enum_<ELEMENT_TYPE>(m, "ElementType", "element type, its value is the 'type' column of Elements*D().NumPy()")
+    .value("SEGMENT", SEGMENT).value("SEGMENT3", SEGMENT3)
+    .value("TRIG", TRIG).value("QUAD", QUAD).value("TRIG6", TRIG6).value("QUAD6", QUAD6).value("QUAD8", QUAD8)
+    .value("TET", TET).value("TET10", TET10)
+    .value("PYRAMID", PYRAMID).value("PYRAMID13", PYRAMID13)
+    .value("PRISM", PRISM).value("PRISM12", PRISM12).value("PRISM15", PRISM15)
+    .value("HEX", HEX).value("HEX20", HEX20).value("HEX7", HEX7)
+    ;
+
   
   py::class_<NGDummyArgument>(m, "NGDummyArgument")
     .def("__bool__", []( NGDummyArgument &self ) { return false; } )
@@ -355,6 +364,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<ElementRef>(m, "Element3DRef", "handle to a volume element stored in a mesh")
     .def("__repr__", [] (const ElementRef & self) { return ToString(self); })
+    .def_property_readonly("type", &ElementRef::GetType)
     .def_property("index", [](const ElementRef & self) { return self.GetIndex().Nr1(); }, [](ElementRef & self, int i) { self.SetIndex(VolumeRegionIndex::FromNr1(i)); })
     .def_property("curved", &ElementRef::IsCurved, &ElementRef::SetCurved)
     .def_property("refine", [] (const ElementRef & self) { return bool(self.TestRefinementFlag()); },
@@ -459,6 +469,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   py::class_<Element2dRef>(m, "Element2DRef", "handle to a surface element stored in a mesh")
     .def("__repr__", [] (const Element2dRef & self) { return ToString(self); })
+    .def_property_readonly("type", &Element2dRef::GetType)
     .def_property("index", [](const Element2dRef & self) { return self.GetIndex().Nr1(); }, [](Element2dRef self, int i) { self.SetIndex(FaceRegionIndex::FromNr1(i)); })
     .def_property("curved", &Element2dRef::IsCurved, &Element2dRef::SetCurved)
     .def_property("refine", &Element2dRef::TestRefinementFlag, &Element2dRef::SetRefinementFlag)
@@ -639,6 +650,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          "create segment element"
          )
     .def("__repr__", &ToString<Segment>)
+    .def_property_readonly("type", &Segment::GetType)
     .def_property_readonly("vertices", 
                   FunctionPointer ([](const Segment & self) -> py::list
                                    {
@@ -693,6 +705,18 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
 
   if(ngcore_have_numpy)
   {
+    // element_info tables indexed by element type, e.g. ElementNP[els.NumPy()["type"]]
+    auto export_table = [&] (const char * name, const auto & table)
+    {
+      py::array_t<int8_t> arr (table.size(), table.data());   // copies the constexpr table
+      arr.attr("setflags")(py::arg("write")=false);
+      m.attr(name) = arr;
+    };
+    export_table ("ElementNP", element_info::np);           // number of points
+    export_table ("ElementNV", element_info::nv);           // number of vertices
+    export_table ("ElementNEdges", element_info::nedges);
+    export_table ("ElementNFaces", element_info::nfaces);
+
     py::detail::npy_format_descriptor<Segment>::register_dtype({
         py::detail::field_descriptor {
           "nodes", (pybind11::ssize_t)Segment::OffsetPnums(),
