@@ -389,16 +389,14 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
       if (point_moved && !moved_surfaces.Test(facei))
         {
           int new_si = mesh.GetNFD() + 1;
-          const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei));
-          // auto isIn = domains.Test(fd.DomainIn());
-          // auto isOut = domains.Test(fd.DomainOut());
+          string fd_name = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei)).GetBCName();
           int si = params.sides_keep_surfaceindex ? int(facei) : -1;
           // domin and domout can only be set later
           FaceRegion new_fd(si, -1, -1, si);
           new_fd.SetBCProperty(new_si);
           mesh.AddFaceDescriptor(new_fd);
           si_map[facei] = new_si;
-          mesh.SetBCName(new_si - 1, fd.GetBCName());
+          mesh.SetBCName(new_si - 1, fd_name);
           face_done.SetBit(facei);
         }
     }
