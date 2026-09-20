@@ -95,10 +95,10 @@ namespace ngcore
   public:
     constexpr BaseArrayObject() = default;
 
-    NETGEN_INLINE const T & Spec() const { return static_cast<const T&> (*this); }
-    NETGEN_INLINE size_t Size() const { return Spec().Size(); }
+    NETGEN_INLINE constexpr const T & Spec() const { return static_cast<const T&> (*this); }
+    NETGEN_INLINE constexpr size_t Size() const { return Spec().Size(); }
     template <typename T2>
-    NETGEN_INLINE bool Contains(const T2 & el) const
+    NETGEN_INLINE constexpr bool Contains(const T2 & el) const
     {
       for (size_t i = 0; i < Size(); i++)
         if (Spec()[i] == el)
@@ -237,10 +237,10 @@ namespace ngcore
     ptrdiff_t i;
   public:
     constexpr IndexFromEnd (ptrdiff_t ai) : i(ai) { }
-    IndexFromEnd operator+ (ptrdiff_t inc) const { return i+inc; }
-    IndexFromEnd operator- (ptrdiff_t dec) const { return i-dec; }
+    constexpr IndexFromEnd operator+ (ptrdiff_t inc) const { return i+inc; }
+    constexpr IndexFromEnd operator- (ptrdiff_t dec) const { return i-dec; }
     // operator ptrdiff_t () const { return i; }
-    ptrdiff_t Value() const { return i; }
+    constexpr ptrdiff_t Value() const { return i; }
   };
 
   constexpr IndexFromEnd END(0);
@@ -250,8 +250,8 @@ namespace ngcore
     ptrdiff_t i;
   public:
     constexpr IndexFromBegin (ptrdiff_t ai) : i(ai) { }
-    IndexFromBegin operator+ (ptrdiff_t inc) const { return i+inc; }
-    ptrdiff_t Value() const { return i; }
+    constexpr IndexFromBegin operator+ (ptrdiff_t inc) const { return i+inc; }
+    constexpr ptrdiff_t Value() const { return i; }
   };
 
   constexpr IndexFromBegin BEGIN(0);
@@ -287,14 +287,14 @@ namespace ngcore
   {
     TSIZE ind;
   public:
-    NETGEN_INLINE ArrayRangeIterator (TSIZE ai) : ind(ai) { ; }
-    NETGEN_INLINE ArrayRangeIterator operator++ (int) { return ind++; }
-    NETGEN_INLINE ArrayRangeIterator operator++ () { return ++ind; }
-    NETGEN_INLINE TSIZE operator*() const { return ind; }
-    NETGEN_INLINE TSIZE Index() { return ind; }
-    NETGEN_INLINE operator TSIZE () const { return ind; }
-    NETGEN_INLINE bool operator != (ArrayRangeIterator d2) { return ind != d2.ind; }
-    NETGEN_INLINE bool operator == (ArrayRangeIterator d2) { return ind == d2.ind; }
+    NETGEN_INLINE constexpr ArrayRangeIterator (TSIZE ai) : ind(ai) { ; }
+    NETGEN_INLINE constexpr ArrayRangeIterator operator++ (int) { return ind++; }
+    NETGEN_INLINE constexpr ArrayRangeIterator operator++ () { return ++ind; }
+    NETGEN_INLINE constexpr TSIZE operator*() const { return ind; }
+    NETGEN_INLINE constexpr TSIZE Index() { return ind; }
+    NETGEN_INLINE constexpr operator TSIZE () const { return ind; }
+    NETGEN_INLINE constexpr bool operator != (ArrayRangeIterator d2) { return ind != d2.ind; }
+    NETGEN_INLINE constexpr bool operator == (ArrayRangeIterator d2) { return ind == d2.ind; }
   };
 
   /// a range of integers
@@ -305,23 +305,23 @@ namespace ngcore
   public: 
     NETGEN_INLINE T_Range () { ; }
     // NETGEN_INLINE T_Range (T n) : first(0), next(n) {;}
-    NETGEN_INLINE explicit T_Range (size_t n) : first(IndexBASE<T>()), next(IndexBASE<T>()+n) {;}    
-    NETGEN_INLINE T_Range (T f, T n) : first(f), next(n) {;}
+    NETGEN_INLINE constexpr explicit T_Range (size_t n) : first(IndexBASE<T>()), next(IndexBASE<T>()+n) {;}    
+    NETGEN_INLINE constexpr T_Range (T f, T n) : first(f), next(n) {;}
     template <typename T2>
-      NETGEN_INLINE T_Range(T_Range<T2> r2) : first(r2.First()), next(r2.Next()) { ; }
-    NETGEN_INLINE T First() const { return first; }
-    NETGEN_INLINE T Next() const { return next; }
-    NETGEN_INLINE T & First() { return first; }
-    NETGEN_INLINE T & Next() { return next; }
-    NETGEN_INLINE auto Size() const { return next-first; }
-    NETGEN_INLINE T operator[] (size_t i) const { return first+i; }
-    NETGEN_INLINE bool Contains (T i) const { return ((i >= first) && (i < next)); }
-    NETGEN_INLINE T_Range Modify(int inc_beg, int inc_end) const
+      NETGEN_INLINE constexpr T_Range(T_Range<T2> r2) : first(r2.First()), next(r2.Next()) { ; }
+    NETGEN_INLINE constexpr T First() const { return first; }
+    NETGEN_INLINE constexpr T Next() const { return next; }
+    NETGEN_INLINE constexpr T & First() { return first; }
+    NETGEN_INLINE constexpr T & Next() { return next; }
+    NETGEN_INLINE constexpr auto Size() const { return next-first; }
+    NETGEN_INLINE constexpr T operator[] (size_t i) const { return first+i; }
+    NETGEN_INLINE constexpr bool Contains (T i) const { return ((i >= first) && (i < next)); }
+    NETGEN_INLINE constexpr T_Range Modify(int inc_beg, int inc_end) const
     { return T_Range(first+inc_beg, next+inc_end); }
-    NETGEN_INLINE ArrayRangeIterator<T> begin() const { return first; }
-    NETGEN_INLINE ArrayRangeIterator<T> end() const { return next; }
+    NETGEN_INLINE constexpr ArrayRangeIterator<T> begin() const { return first; }
+    NETGEN_INLINE constexpr ArrayRangeIterator<T> end() const { return next; }
 
-    NETGEN_INLINE T_Range Split (size_t nr, int tot) const
+    NETGEN_INLINE constexpr T_Range Split (size_t nr, int tot) const
     {
       auto diff = next-first;
       return T_Range (first + nr * diff / tot,
@@ -333,37 +333,37 @@ namespace ngcore
   using IntRange = T_Range<size_t>;
 
   template <typename T>
-  NETGEN_INLINE T_Range<T> Range (T a, T b)
+  NETGEN_INLINE constexpr T_Range<T> Range (T a, T b)
   {
     return T_Range<T>(a,b);
   }
 
   /// range from the first index of type T (plus offset) to next
   template <typename T>
-  NETGEN_INLINE T_Range<T> Range (IndexFromBegin b, T next)
+  NETGEN_INLINE constexpr T_Range<T> Range (IndexFromBegin b, T next)
   {
     return T_Range<T>(T(IndexBASE<T>()+int(b.Value())), next);
   }
 
   template<typename T>
-  NETGEN_INLINE auto Range (const T& ao)
+  NETGEN_INLINE constexpr auto Range (const T& ao)
     -> typename std::enable_if<has_range<T>, decltype(std::declval<T>().Range())>::type
   { return ao.Range(); }
 
   template <typename T>
-  NETGEN_INLINE auto Range (FlatArray<T> fa)
+  NETGEN_INLINE constexpr auto Range (FlatArray<T> fa)
   {
     return fa.Range();
   }
   
   template <typename T>
-  NETGEN_INLINE T_Range<T> Range_impl (T n, std::true_type)
+  NETGEN_INLINE constexpr T_Range<T> Range_impl (T n, std::true_type)
   {
     return T_Range<T> (0, n);
   }
 
   template <typename TA>
-  NETGEN_INLINE auto Range_impl (const TA & ao, std::false_type)
+  NETGEN_INLINE constexpr auto Range_impl (const TA & ao, std::false_type)
     -> T_Range<index_type<TA>>
   {
     return T_Range<index_type<TA>> (IndexBASE<index_type<TA>>(),
@@ -510,14 +510,14 @@ namespace ngcore
     { ; }
 
     template <size_t N>
-    NETGEN_INLINE FlatArray(std::array<T,N> & a)
+    NETGEN_INLINE constexpr FlatArray(std::array<T,N> & a)
       : size(N), data(&a[0]) { }
     
     /// the size
     NETGEN_INLINE constexpr size_t Size() const { return size; }
 
     /// the data
-    NETGEN_INLINE T* Data() const { return data; }
+    NETGEN_INLINE constexpr T* Data() const { return data; }
 
     /// Fill array with value val
     NETGEN_INLINE const FlatArray & operator= (const T & val) const
@@ -584,25 +584,25 @@ namespace ngcore
       return data[i-BASE]; 
     }
   
-    NETGEN_INLINE T_Range<index_type> Range () const
+    NETGEN_INLINE constexpr T_Range<index_type> Range () const
     {
       return T_Range<index_type> (BASE, size+BASE);
     }
     
-    NETGEN_INLINE const CArray<T> Addr (size_t pos) const
+    NETGEN_INLINE constexpr const CArray<T> Addr (size_t pos) const
     {
       return CArray<T> (data+pos-detail::GetRawInteger(BASE));
     }
 
     /// 0-based position of an index
-    NETGEN_INLINE static size_t Ind0 (IndexType i)
+    NETGEN_INLINE constexpr static size_t Ind0 (IndexType i)
     {
       return detail::GetRawInteger(i) - detail::GetRawInteger(BASE);
     }
 
     // const CArray<T> operator+ (int pos)
     // { return CArray<T> (data+pos); }
-    NETGEN_INLINE T * operator+ (size_t pos) const { return data+pos; }
+    NETGEN_INLINE constexpr T * operator+ (size_t pos) const { return data+pos; }
 
     /// access first element. check by macro NETGEN_CHECK_RANGE
     T & First () const
@@ -619,31 +619,31 @@ namespace ngcore
     }
 
     /// takes sub-array starting from position pos
-    NETGEN_INLINE const FlatArray<T> Part (size_t pos)
+    NETGEN_INLINE constexpr const FlatArray<T> Part (size_t pos)
     {
       return FlatArray<T> (size-pos, data+pos);
     }
 
     /// takes subsize elements starting from position pos
-    NETGEN_INLINE const FlatArray<T> Part (size_t pos, size_t subsize)
+    NETGEN_INLINE constexpr const FlatArray<T> Part (size_t pos, size_t subsize)
     {
       return FlatArray<T> (subsize, data+pos);
     }
 
     /// takes range starting from position start of end-start elements
-    NETGEN_INLINE FlatArray<T> Range (size_t start, size_t end) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (size_t start, size_t end) const
     {
       return FlatArray<T> (end-start, data+start);
     }
 
     /// takes range starting from position start of end-start elements
-    NETGEN_INLINE FlatArray<T> Range (size_t start, IndexFromEnd indend) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (size_t start, IndexFromEnd indend) const
     {
       return this->Range(start, size_t(Size()+indend.Value()));
     }
     
     /// takes range starting from position start of end-start elements
-    NETGEN_INLINE FlatArray<T> Range (T_Range<size_t> range) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (T_Range<size_t> range) const
     {
       return FlatArray<T> (range.Size(), data+range.First());
     }
@@ -651,7 +651,7 @@ namespace ngcore
     /// a range of own index type gives a 0-based sub-array
     template <typename TI = IndexType,
               typename = std::enable_if_t<!std::is_same_v<TI,size_t>>>
-    NETGEN_INLINE FlatArray<T> Range (T_Range<IndexType> range) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (T_Range<IndexType> range) const
     {
       return FlatArray<T> (range.Size(), data+Ind0(range.First()));
     }
@@ -659,7 +659,7 @@ namespace ngcore
     /// indices [from,next) of own index type give a 0-based sub-array
     template <typename TI = IndexType,
               typename = std::enable_if_t<!std::is_same_v<TI,size_t>>>
-    NETGEN_INLINE FlatArray<T> Range (IndexType from, IndexType next) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (IndexType from, IndexType next) const
     {
       return Range(T_Range<IndexType>(from, next));
     }
@@ -667,25 +667,25 @@ namespace ngcore
     /// indices [from, end+indend) of own index type give a 0-based sub-array
     template <typename TI = IndexType,
               typename = std::enable_if_t<!std::is_same_v<TI,size_t>>>
-    NETGEN_INLINE FlatArray<T> Range (IndexType from, IndexFromEnd indend) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (IndexType from, IndexFromEnd indend) const
     {
       return Range(from, Range().Next()+int(indend.Value()));
     }
 
     /// from the first index (plus offset) to next
-    NETGEN_INLINE FlatArray<T> Range (IndexFromBegin b, IndexType next) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (IndexFromBegin b, IndexType next) const
     {
       return Range(T_Range<IndexType>(IndexType(BASE+int(b.Value())), next));
     }
 
     /// from the first index (plus offset) to the end (plus offset)
-    NETGEN_INLINE FlatArray<T> Range (IndexFromBegin b, IndexFromEnd indend) const
+    NETGEN_INLINE constexpr FlatArray<T> Range (IndexFromBegin b, IndexFromEnd indend) const
     {
       return Range(IndexType(BASE+int(b.Value())), indend);
     }
 
     /// takes range starting from position start of end-start elements
-    NETGEN_INLINE const FlatArray<T> operator[] (T_Range<IndexType> range) const
+    NETGEN_INLINE constexpr const FlatArray<T> operator[] (T_Range<IndexType> range) const
     {
       return FlatArray<T> (range.Size(), data+Ind0(range.First()));
     }
@@ -697,7 +697,7 @@ namespace ngcore
     }
 
     /// first position of element elem, returns -1 if element not contained in array 
-    NETGEN_INLINE size_t Pos(const T & el) const
+    NETGEN_INLINE constexpr size_t Pos(const T & el) const
     {
       for (size_t i = 0; i < Size(); i++)
         if (data[i] == el)
@@ -706,15 +706,15 @@ namespace ngcore
     }
 
     /// does the array contain element elem ?
-    NETGEN_INLINE bool Contains(const T & elem) const
+    NETGEN_INLINE constexpr bool Contains(const T & elem) const
     {
       return Pos(elem) != ILLEGAL_POSITION;
     }
     
     //auto begin() const { return ArrayIterator<T,IndexType> (*this, BASE); }
     // auto end() const { return ArrayIterator<T,IndexType> (*this, size+BASE); }
-    NETGEN_INLINE auto begin() const { return data; }
-    NETGEN_INLINE auto end() const { return data+Size(); }
+    NETGEN_INLINE constexpr auto begin() const { return data; }
+    NETGEN_INLINE constexpr auto end() const { return data+Size(); }
   };
 
   template <typename T>
