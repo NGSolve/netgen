@@ -280,13 +280,6 @@ namespace netgen
     this->comm = acomm;
   }
 
-  template <> const Array<Mesh::HPElementInfo,ElementIndex> & Mesh :: HPInfo<ElementIndex> () const { return hp_volinfo; }
-  template <> const Array<Mesh::HPElementInfo,SurfaceElementIndex> & Mesh :: HPInfo<SurfaceElementIndex> () const { return hp_surfinfo; }
-  template <> const Array<Mesh::HPElementInfo,SegmentIndex> & Mesh :: HPInfo<SegmentIndex> () const { return hp_seginfo; }
-  template <> Array<Mesh::HPElementInfo,ElementIndex> & Mesh :: HPInfo<ElementIndex> () { return hp_volinfo; }
-  template <> Array<Mesh::HPElementInfo,SurfaceElementIndex> & Mesh :: HPInfo<SurfaceElementIndex> () { return hp_surfinfo; }
-  template <> Array<Mesh::HPElementInfo,SegmentIndex> & Mesh :: HPInfo<SegmentIndex> () { return hp_seginfo; }
-
   template <typename TIndex> static size_t NumElements (const Mesh & mesh);
   template <> size_t NumElements<ElementIndex> (const Mesh & mesh) { return mesh.GetNE(); }
   template <> size_t NumElements<SurfaceElementIndex> (const Mesh & mesh) { return mesh.GetNSE(); }

@@ -216,9 +216,15 @@ namespace netgen
     Array<HPElementInfo, SegmentIndex> hp_seginfo;
 
     template <typename TIndex>
-    const Array<HPElementInfo,TIndex> & HPInfo () const;
+    const Array<HPElementInfo,TIndex> & HPInfo () const
+    {
+      if constexpr (std::is_same_v<TIndex, ElementIndex>) return hp_volinfo;
+      else if constexpr (std::is_same_v<TIndex, SurfaceElementIndex>) return hp_surfinfo;
+      else return hp_seginfo;
+    }
     template <typename TIndex>
-    Array<HPElementInfo,TIndex> & HPInfo ();
+    Array<HPElementInfo,TIndex> & HPInfo ()
+    { return const_cast<Array<HPElementInfo,TIndex>&> (std::as_const(*this).HPInfo<TIndex>()); }
     template <typename TIndex>
     HPElementInfo GetHPInfo (TIndex i) const
     {
