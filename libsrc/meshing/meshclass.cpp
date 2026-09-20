@@ -5691,7 +5691,7 @@ namespace netgen
                   auto eltype = el.GetType();
                   const auto verts = topology.GetVertices(eltype);
 
-                  const auto edges = FlatArray<const ELEMENT_EDGE>(topology.GetNEdges(eltype), topology.GetEdges0(eltype));
+                  const auto edges = topology.GetEdges(eltype);
                   for (const auto & edge: edges) {
                     netgen::Point<3> lam = netgen::Point<3>(0.5* (Vec<3>(verts[edge[0]]) + Vec<3>(verts[edge[1]])));
                     auto p = netgen::Point<3>(0.0);
@@ -5699,7 +5699,7 @@ namespace netgen
                     box.Add(p);
                   }
 
-                  const auto faces = FlatArray<const ELEMENT_FACE>(topology.GetNFaces(eltype), topology.GetFaces0(eltype));
+                  const auto faces = topology.GetFaces(eltype);
                   for (const auto & face: faces) {
                     netgen::Vec<3> lam = Vec<3>(verts[face[0]]) + Vec<3>(verts[face[1]]) + Vec<3>(verts[face[2]]);
                     if(face[3] != -1) {

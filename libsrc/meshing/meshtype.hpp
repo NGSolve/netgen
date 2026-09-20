@@ -76,6 +76,56 @@ namespace netgen
       t[TRIG] = t[TRIG6] = t[QUAD] = t[QUAD6] = t[QUAD8] = 2;
       t[TET] = t[TET10] = t[PYRAMID] = t[PYRAMID13] = t[PRISM] = t[PRISM12] = t[PRISM15] = t[HEX7] = t[HEX] = t[HEX20] = 3;
       return t; } ();
+
+    /// edges of the reference elements, 0-based local vertex numbers
+    constexpr std::array<ELEMENT_EDGE,1> segm_edges = { ELEMENT_EDGE{ 0, 1 } };
+    constexpr std::array<ELEMENT_EDGE,3> trig_edges = { ELEMENT_EDGE{ 2, 0 }, { 1, 2 }, { 0, 1 } };
+    constexpr std::array<ELEMENT_EDGE,4> quad_edges = { ELEMENT_EDGE{ 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 } };
+    constexpr std::array<ELEMENT_EDGE,6> tet_edges = { ELEMENT_EDGE{ 3, 0 }, { 3, 1 }, { 3, 2 }, { 0, 1 }, { 0, 2 }, { 1, 2 } };
+    constexpr std::array<ELEMENT_EDGE,9> prism_edges = { ELEMENT_EDGE{ 2, 0 }, { 0, 1 }, { 2, 1 }, { 5, 3 }, { 3, 4 }, { 5, 4 }, { 2, 5 }, { 0, 3 }, { 1, 4 } };
+    constexpr std::array<ELEMENT_EDGE,8> pyramid_edges = { ELEMENT_EDGE{ 0, 1 }, { 1, 2 }, { 0, 3 }, { 3, 2 }, { 0, 4 }, { 1, 4 }, { 2, 4 }, { 3, 4 } };
+    constexpr std::array<ELEMENT_EDGE,11> hex7_edges = { ELEMENT_EDGE{ 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 }, { 4, 5 }, { 6, 4 }, { 5, 6 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 6 } };
+    constexpr std::array<ELEMENT_EDGE,12> hex_edges = { ELEMENT_EDGE{ 0, 1 }, { 2, 3 }, { 3, 0 }, { 1, 2 }, { 4, 5 }, { 6, 7 }, { 7, 4 }, { 5, 6 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
+
+    constexpr FlatArray<const ELEMENT_EDGE> Edges (ELEMENT_TYPE et)
+    {
+      switch (et)
+        {
+        case SEGMENT: case SEGMENT3: return { segm_edges.size(), segm_edges.data() };
+        case TRIG: case TRIG6: return { trig_edges.size(), trig_edges.data() };
+        case QUAD: case QUAD6: case QUAD8: return { quad_edges.size(), quad_edges.data() };
+        case TET: case TET10: return { tet_edges.size(), tet_edges.data() };
+        case PYRAMID: case PYRAMID13: return { pyramid_edges.size(), pyramid_edges.data() };
+        case PRISM: case PRISM12: case PRISM15: return { prism_edges.size(), prism_edges.data() };
+        case HEX7: return { hex7_edges.size(), hex7_edges.data() };
+        case HEX: case HEX20: return { hex_edges.size(), hex_edges.data() };
+        default: return { 0, nullptr };
+        }
+    }
+
+    /// faces of the reference elements, 0-based local vertex numbers, -1 in the 4th slot of a triangle
+    constexpr std::array<ELEMENT_FACE,1> trig_faces = { ELEMENT_FACE{ 0, 1, 2, -1 } };
+    constexpr std::array<ELEMENT_FACE,1> quad_faces = { ELEMENT_FACE{ 0, 1, 2, 3 } };
+    constexpr std::array<ELEMENT_FACE,4> tet_faces = { ELEMENT_FACE{ 3, 1, 2, -1 }, { 3, 2, 0, -1 }, { 3, 0, 1, -1 }, { 0, 2, 1, -1 } };
+    constexpr std::array<ELEMENT_FACE,5> prism_faces = { ELEMENT_FACE{ 0, 2, 1, -1 }, { 3, 4, 5, -1 }, { 2, 0, 3, 5 }, { 0, 1, 4, 3 }, { 1, 2, 5, 4 } };
+    constexpr std::array<ELEMENT_FACE,5> pyramid_faces = { ELEMENT_FACE{ 0, 1, 4, -1 }, { 1, 2, 4, -1 }, { 2, 3, 4, -1 }, { 3, 0, 4, -1 }, { 0, 3, 2, 1 } };
+    constexpr std::array<ELEMENT_FACE,6> hex7_faces = { ELEMENT_FACE{ 0, 3, 2, 1 }, { 4, 5, 6, -1 }, { 0, 1, 5, 4 }, { 1, 2, 6, 5 }, { 2, 3, 6, -1 }, { 3, 0, 4, 6 } };
+    constexpr std::array<ELEMENT_FACE,6> hex_faces = { ELEMENT_FACE{ 0, 3, 2, 1 }, { 4, 5, 6, 7 }, { 0, 1, 5, 4 }, { 1, 2, 6, 5 }, { 2, 3, 7, 6 }, { 3, 0, 4, 7 } };
+
+    constexpr FlatArray<const ELEMENT_FACE> Faces (ELEMENT_TYPE et)
+    {
+      switch (et)
+        {
+        case TRIG: case TRIG6: return { trig_faces.size(), trig_faces.data() };
+        case QUAD: case QUAD6: case QUAD8: return { quad_faces.size(), quad_faces.data() };
+        case TET: case TET10: return { tet_faces.size(), tet_faces.data() };
+        case PRISM: case PRISM12: case PRISM15: return { prism_faces.size(), prism_faces.data() };
+        case PYRAMID: case PYRAMID13: return { pyramid_faces.size(), pyramid_faces.data() };
+        case HEX7: return { hex7_faces.size(), hex7_faces.data() };
+        case HEX: case HEX20: return { hex_faces.size(), hex_faces.data() };
+        default: return { 0, nullptr };
+        }
+    }
   }
 
   /// the 2D element type with np points; 6 points give a TRIG6 (a QUAD6 is only made by type)

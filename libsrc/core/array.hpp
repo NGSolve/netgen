@@ -93,7 +93,7 @@ namespace ngcore
   class BaseArrayObject
   {
   public:
-    NETGEN_INLINE BaseArrayObject() { ; }
+    constexpr BaseArrayObject() = default;
 
     NETGEN_INLINE const T & Spec() const { return static_cast<const T&> (*this); }
     NETGEN_INLINE size_t Size() const { return Spec().Size(); }
@@ -497,7 +497,7 @@ namespace ngcore
     // : size(a2.Size()), data(a2.data) { ; } 
 
     /// provide size and memory
-    NETGEN_INLINE FlatArray (size_t asize, T * adata) 
+    NETGEN_INLINE constexpr FlatArray (size_t asize, T * adata) 
       : size(asize), data(adata) { ; }
     
     /// memory from local heap
@@ -514,7 +514,7 @@ namespace ngcore
       : size(N), data(&a[0]) { }
     
     /// the size
-    NETGEN_INLINE size_t Size() const { return size; }
+    NETGEN_INLINE constexpr size_t Size() const { return size; }
 
     /// the data
     NETGEN_INLINE T* Data() const { return data; }
@@ -578,7 +578,7 @@ namespace ngcore
     }
 
     /// Access array. range check by macro NETGEN_CHECK_RANGE
-    NETGEN_INLINE T & operator[] (IndexType i) const
+    NETGEN_INLINE constexpr T & operator[] (IndexType i) const
     {
       NETGEN_CHECK_RANGE(i,BASE,size+BASE);
       return data[i-BASE]; 

@@ -860,7 +860,7 @@ namespace netgen
               // top.GetEdges (i, edgenrs);
               auto edgenrs = top.GetEdges(i);
               const Element2dRef & el = mesh[i];
-              const ELEMENT_EDGE * edges = MeshTopology::GetEdges0 (el.GetType());
+              auto edges = MeshTopology::GetEdges (el.GetType());
 
               for (int i2 = 0; i2 < edgenrs.Size(); i2++)
                 {
@@ -2179,12 +2179,12 @@ namespace netgen
         for (int j = 0; j < 3; j++)
           shapes(j) = lami[j] * lami[j];
 
-        const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TRIG);
+        auto edges = MeshTopology::GetEdges (TRIG);
         for (int j = 0; j < 3; j++)
           {
             T wi = edgeweight[info.edgenrs[j]];
-            shapes(j+3) = 2 * wi * lami[edges[j][0]-1] * lami[edges[j][1]-1];
-            w += (wi-1) * 2 * lami[edges[j][0]-1] * lami[edges[j][1]-1];
+            shapes(j+3) = 2 * wi * lami[edges[j][0]] * lami[edges[j][1]];
+            w += (wi-1) * 2 * lami[edges[j][0]] * lami[edges[j][1]];
           }
 
         shapes *= 1.0 / w;
@@ -2202,7 +2202,7 @@ namespace netgen
           if (info.order == 1) return;
 
           int ii = 3;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges0 (TRIG);
+          auto edges = MeshTopology::GetEdges (TRIG);
           
           for (int i = 0; i < 3; i++)
             {
@@ -2273,14 +2273,14 @@ namespace netgen
           };
             
           int ii = 4;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (QUAD);
+          auto edges = MeshTopology::GetEdges (QUAD);
           
           for (int i = 0; i < 4; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcEdgeShape (eorder, mu[vi1]-mu[vi2], &shapes(ii));
@@ -2351,20 +2351,20 @@ namespace netgen
             dshapes(j,1) = 2 * lami[j] * dlami[j][1];
           }
 
-        const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TRIG);
+        auto edges = MeshTopology::GetEdges (TRIG);
         for (int j = 0; j < 3; j++)
           {
             T wi = edgeweight[info.edgenrs[j]];
 
-            shapes[j+3] = 2 * wi * lami[edges[j][0]-1] * lami[edges[j][1]-1];
+            shapes[j+3] = 2 * wi * lami[edges[j][0]] * lami[edges[j][1]];
             for (int k = 0; k < 2; k++)
-              dshapes(j+3,k) = 2*wi* (lami[edges[j][0]-1] * dlami[edges[j][1]-1][k] +
-                                      lami[edges[j][1]-1] * dlami[edges[j][0]-1][k]);
+              dshapes(j+3,k) = 2*wi* (lami[edges[j][0]] * dlami[edges[j][1]][k] +
+                                      lami[edges[j][1]] * dlami[edges[j][0]][k]);
 
-            w += (wi-1) * 2 * lami[edges[j][0]-1] * lami[edges[j][1]-1];
+            w += (wi-1) * 2 * lami[edges[j][0]] * lami[edges[j][1]];
             for (int k = 0; k < 2; k++)
-              dw[k] += 2*(wi-1) * (lami[edges[j][0]-1] * dlami[edges[j][1]-1][k] +
-                                   lami[edges[j][1]-1] * dlami[edges[j][0]-1][k]);
+              dw[k] += 2*(wi-1) * (lami[edges[j][0]] * dlami[edges[j][1]][k] +
+                                   lami[edges[j][1]] * dlami[edges[j][0]][k]);
           }
         // shapes *= 1.0 / w;
         dshapes *= 1.0 / w;
@@ -2399,14 +2399,14 @@ namespace netgen
           lami[2] = 1-xi(0)-xi(1);
 
           int ii = 3;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TRIG);
+          auto edges = MeshTopology::GetEdges (TRIG);
           
           for (int i = 0; i < 3; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShapeDxDt<2> (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &dshapes(ii,0));
@@ -2533,13 +2533,13 @@ namespace netgen
           ArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
 
           int ii = 4;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (QUAD);
+          auto edges = MeshTopology::GetEdges (QUAD);
           for (int i = 0; i < 4; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcEdgeShapeDx (eorder, mu[vi1]-mu[vi2], &hshapes[0], &hdshapes[0]);
@@ -2638,7 +2638,7 @@ namespace netgen
             }
           if (info.order == 1) break;
           
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TRIG);
+          auto edges = MeshTopology::GetEdges (TRIG);
           for (int i = 0; i < 3; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
@@ -2646,7 +2646,7 @@ namespace netgen
                 {
                   int first = edgecoeffsindex[info.edgenrs[i]];
                   
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShapeLambda (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2],
@@ -2690,7 +2690,7 @@ namespace netgen
             }
           if (info.order == 1) break;
 
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (QUAD);
+          auto edges = MeshTopology::GetEdges (QUAD);
           for (int i = 0; i < 4; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
@@ -2698,7 +2698,7 @@ namespace netgen
                 {
                   int first = edgecoeffsindex[info.edgenrs[i]];
                   
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   auto lame = lami[vi1]+lami[vi2];
@@ -2854,7 +2854,7 @@ namespace netgen
     int nfaces = MeshTopology::GetNFaces (type);
     if (nfaces > 4)
       { // not a tet
-        const ELEMENT_FACE * faces = MeshTopology::GetFaces0 (type);
+        auto faces = MeshTopology::GetFaces (type);
         for (int j = 0; j < nfaces; j++)
           {
             if (faces[j][3] != -1)
@@ -3076,12 +3076,12 @@ namespace netgen
         for (int j = 0; j < 4; j++)
           shapes(j) = lami[j] * lami[j];
 
-        const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TET);
+        auto edges = MeshTopology::GetEdges (TET);
         for (int j = 0; j < 6; j++)
           {
             double wi = edgeweight[info.edgenrs[j]];
-            shapes(j+4) = 2 * wi * lami[edges[j][0]-1] * lami[edges[j][1]-1];
-            w += (wi-1) * 2 * lami[edges[j][0]-1] * lami[edges[j][1]-1];
+            shapes(j+4) = 2 * wi * lami[edges[j][0]] * lami[edges[j][1]];
+            w += (wi-1) * 2 * lami[edges[j][0]] * lami[edges[j][1]];
           }
 
         shapes *= 1.0 / w;
@@ -3102,26 +3102,26 @@ namespace netgen
           if (info.order == 1) return;
 
           int ii = 4;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TET);
+          auto edges = MeshTopology::GetEdges (TET);
           for (int i = 0; i < 6; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShape (eorder, shapes(vi1)-shapes(vi2), shapes(vi1)+shapes(vi2), &shapes(ii));
                   ii += eorder-1;
                 }
             }
-          const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (TET);
+          auto faces = MeshTopology::GetFaces (TET);
           for (int i = 0; i < 4; i++)
             {
               int forder = faceorder[info.facenrs[i]];
               if (forder >= 3)
                 {
-                  int fnums[] = { faces[i][0]-1, faces[i][1]-1, faces[i][2]-1 }; 
+                  int fnums[] = { faces[i][0], faces[i][1], faces[i][2] }; 
                   if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
                   if (el[fnums[1]] > el[fnums[2]]) swap (fnums[1], fnums[2]);
                   if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
@@ -3177,13 +3177,13 @@ namespace netgen
 
 
           int ii = 6;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (PRISM);
+          auto edges = MeshTopology::GetEdges (PRISM);
           for (int i = 0; i < 6; i++)    // horizontal edges
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShape (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &shapes(ii));
@@ -3200,7 +3200,7 @@ namespace netgen
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   T bubxy = lami[vi1];
@@ -3222,12 +3222,12 @@ namespace netgen
             }
 
           // FACE SHAPES
-          const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (PRISM);
+          auto faces = MeshTopology::GetFaces (PRISM);
           for (int i = 0; i < 2; i++)
             {
               int forder = faceorder[info.facenrs[i]];
               if ( forder < 3 ) continue;
-              int fav[3] = { faces[i][0]-1, faces[i][1]-1, faces[i][2]-1 };
+              int fav[3] = { faces[i][0], faces[i][1], faces[i][2] };
               if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 
               if(el[fav[1]] > el[fav[2]]) swap(fav[1],fav[2]);
               if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]);  
@@ -3296,13 +3296,13 @@ namespace netgen
             };
 
           int ii = 5;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (PYRAMID);
+          auto edges = MeshTopology::GetEdges (PYRAMID);
           for (int i = 0; i < 4; i++)    // horizontal edges
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = (edges[i][0]-1), vi2 = (edges[i][1]-1);
+                  int vi1 = (edges[i][0]), vi2 = (edges[i][1]);
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShape (eorder, sigma[vi1]-sigma[vi2], 1-z, &shapes(ii));
@@ -3372,14 +3372,14 @@ namespace netgen
           };
             
           int ii = 8;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
+          auto edges = MeshTopology::GetEdges (HEX);
           
           for (int i = 0; i < 12; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcEdgeShape (eorder, mu[vi1]-mu[vi2], &shapes(ii));
@@ -3471,20 +3471,20 @@ namespace netgen
             dshapes(j,2) = 2 * lami[j] * dlami[j][2];
           }
 
-        const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TET);
+        auto edges = MeshTopology::GetEdges (TET);
         for (int j = 0; j < 6; j++)
           {
             T wi = edgeweight[info.edgenrs[j]];
 
-            shapes[j+4] = 2 * wi * lami[edges[j][0]-1] * lami[edges[j][1]-1];
+            shapes[j+4] = 2 * wi * lami[edges[j][0]] * lami[edges[j][1]];
             for (int k = 0; k < 3; k++)
-              dshapes(j+4,k) = 2*wi* (lami[edges[j][0]-1] * dlami[edges[j][1]-1][k] +
-                                      lami[edges[j][1]-1] * dlami[edges[j][0]-1][k]);
+              dshapes(j+4,k) = 2*wi* (lami[edges[j][0]] * dlami[edges[j][1]][k] +
+                                      lami[edges[j][1]] * dlami[edges[j][0]][k]);
 
-            w += (wi-1) * 2 * lami[edges[j][0]-1] * lami[edges[j][1]-1];
+            w += (wi-1) * 2 * lami[edges[j][0]] * lami[edges[j][1]];
             for (int k = 0; k < 3; k++)
-              dw[k] += 2*(wi-1) * (lami[edges[j][0]-1] * dlami[edges[j][1]-1][k] +
-                                   lami[edges[j][1]-1] * dlami[edges[j][0]-1][k]);
+              dw[k] += 2*(wi-1) * (lami[edges[j][0]] * dlami[edges[j][1]][k] +
+                                   lami[edges[j][1]] * dlami[edges[j][0]][k]);
           }
         // shapes *= 1.0 / w;
         dshapes *= 1.0 / w;
@@ -3521,13 +3521,13 @@ namespace netgen
 
           T lami[] = { xi(0), xi(1), xi(2), 1-xi(0)-xi(1)-xi(2) };
           int ii = 4;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TET);
+          auto edges = MeshTopology::GetEdges (TET);
           for (int i = 0; i < 6; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShapeDxDt<3> (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &dshapes(ii,0));
@@ -3552,13 +3552,13 @@ namespace netgen
                 }
             }
 
-          const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (TET);
+          auto faces = MeshTopology::GetFaces (TET);
           for (int i = 0; i < 4; i++)
             {
               int forder = faceorder[info.facenrs[i]];
               if (forder >= 3)
                 {
-                  int fnums[] = { faces[i][0]-1, faces[i][1]-1, faces[i][2]-1 }; 
+                  int fnums[] = { faces[i][0], faces[i][1], faces[i][2] }; 
                   if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
                   if (el[fnums[1]] > el[fnums[2]]) swap (fnums[1], fnums[2]);
                   if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
@@ -3669,13 +3669,13 @@ namespace netgen
           
           ArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
           
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (PRISM);
+          auto edges = MeshTopology::GetEdges (PRISM);
           for (int i = 0; i < 6; i++)    // horizontal edges
             {
               int order = edgeorder[info.edgenrs[i]];
               if (order >= 2)
                 {
-                  int vi1 = (edges[i][0]-1), vi2 = (edges[i][1]-1);
+                  int vi1 = (edges[i][0]), vi2 = (edges[i][1]);
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
                   vi1 = vi1 % 3;
                   vi2 = vi2 % 3;
@@ -3723,7 +3723,7 @@ namespace netgen
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = (edges[i][0]-1), vi2 = (edges[i][1]-1);
+                  int vi1 = (edges[i][0]), vi2 = (edges[i][1]);
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   // T bubz = lamiz[vi1] * lamiz[vi2];
@@ -3762,7 +3762,7 @@ namespace netgen
 
           if (info.order == 2) return;
           // FACE SHAPES
-          const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (PRISM);
+          auto faces = MeshTopology::GetFaces (PRISM);
           for (int i = 0; i < 2; i++)
             {
               int forder = faceorder[info.facenrs[i]];
@@ -3770,7 +3770,7 @@ namespace netgen
               if ( forder < 3 ) continue;
               int ndf = (forder+1)*(forder+2)/2 - 3 - 3*(forder-1);
 
-              int fav[3] = { faces[i][0]-1, faces[i][1]-1, faces[i][2]-1 };
+              int fav[3] = { faces[i][0], faces[i][1], faces[i][2] };
               if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]); 
               if(el[fav[1]] > el[fav[2]]) swap(fav[1],fav[2]);
               if(el[fav[0]] > el[fav[1]]) swap(fav[0],fav[1]);  
@@ -3883,7 +3883,7 @@ namespace netgen
           if (info.order == 1) return;
 
           int ii = 5;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (PYRAMID);
+          auto edges = MeshTopology::GetEdges (PYRAMID);
           // if (z == 1.) z = 1-1e-10;
           z *= 1-1e-12;
           T shapes[5];
@@ -3913,7 +3913,7 @@ namespace netgen
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = (edges[i][0]-1), vi2 = (edges[i][1]-1);
+                  int vi1 = (edges[i][0]), vi2 = (edges[i][1]);
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   ArrayMem<T,20> shapei_mem(eorder+1);
@@ -4080,13 +4080,13 @@ namespace netgen
           ArrayMem<T, 20> hshapes(order+1), hdshapes(order+1);
 
           int ii = 8;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
+          auto edges = MeshTopology::GetEdges (HEX);
           for (int i = 0; i < 12; i++) 
             {
               int eorder = edgeorder[info.edgenrs[i]];
               if (eorder >= 2)
                 {
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcEdgeShapeDx (eorder, mu[vi1]-mu[vi2], &hshapes[0], &hdshapes[0]);
@@ -4227,7 +4227,7 @@ namespace netgen
             }
           if (info.order == 1) break;
 
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (TET);
+          auto edges = MeshTopology::GetEdges (TET);
           for (int i = 0; i < 6; i++)
             {
               int eorder = edgeorder[info.edgenrs[i]];
@@ -4235,7 +4235,7 @@ namespace netgen
                 {
                   int first = edgecoeffsindex[info.edgenrs[i]];
                   
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   CalcScaledEdgeShapeLambda (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2],
@@ -4248,7 +4248,7 @@ namespace netgen
                 }              
             }
           
-          const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (TET);
+          auto faces = MeshTopology::GetFaces (TET);
           for (int i = 0; i < 4; i++)
             {
               int forder = faceorder[info.facenrs[i]];
@@ -4256,7 +4256,7 @@ namespace netgen
                 {
                   int first = facecoeffsindex[info.facenrs[i]];
                   
-                  int fnums[] = { faces[i][0]-1, faces[i][1]-1, faces[i][2]-1 }; 
+                  int fnums[] = { faces[i][0], faces[i][1], faces[i][2] }; 
                   if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
                   if (el[fnums[1]] > el[fnums[2]]) swap (fnums[1], fnums[2]);
                   if (el[fnums[0]] > el[fnums[1]]) swap (fnums[0], fnums[1]);
@@ -4308,8 +4308,8 @@ namespace netgen
             (1-x)+   y +(z),
           };
           // int ii = 8;
-          const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (HEX);
-          const ELEMENT_FACE * faces = MeshTopology::GetFaces0 (HEX);
+          auto edges = MeshTopology::GetEdges (HEX);
+          auto faces = MeshTopology::GetFaces (HEX);
           
           for (int i = 0; i < 12; i++)
             {
@@ -4317,7 +4317,7 @@ namespace netgen
               if (eorder >= 2)
                 {
                   int first = edgecoeffsindex[info.edgenrs[i]];                  
-                  int vi1 = edges[i][0]-1, vi2 = edges[i][1]-1;
+                  int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
 
                   AutoDiff<3,T> lame = lami[vi1]+lami[vi2];
@@ -4419,7 +4419,7 @@ namespace netgen
             }
 
           // FACE SHAPES
-          auto faces = MeshTopology::GetFaces0 (PRISM);
+          auto faces = MeshTopology::GetFaces (PRISM);
           for (int i = 0; i < 2; i++)   // triangular faces
             {
               int forder = faceorder[info.facenrs[i]];

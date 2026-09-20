@@ -1879,7 +1879,7 @@ namespace netgen
 
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
               {
-                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (TET);
+                auto faces = MeshTopology :: GetFaces (TET);
                 const Point<3> * vertices = MeshTopology :: GetVertices (TET);
 
                 /*
@@ -1890,7 +1890,7 @@ namespace netgen
                   for (int trig = 0; trig < 4; trig++)
                   {
                   for (int j = 0; j < 3; j++)
-                  fpts[j] = vertices[faces[trig][j]-1];
+                  fpts[j] = vertices[faces[trig][j]];
 
                   static Point<3> c(0.25, 0.25, 0.25);
                   if (vispar.shrink < 1)
@@ -1944,7 +1944,7 @@ namespace netgen
                 for (int trig = 0; trig < 4; trig++)
                   {
                     for (int j = 0; j < 3; j++)
-                      fpts[j] = vertices[faces[trig][j]-1];
+                      fpts[j] = vertices[faces[trig][j]];
 
                     static Point<3> c(0.25, 0.25, 0.25);
                     if (vispar.shrink < 1)
@@ -2144,7 +2144,7 @@ namespace netgen
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
               {
-                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PRISM);
+                auto faces = MeshTopology :: GetFaces (PRISM);
                 const Point<3> * vertices = MeshTopology :: GetVertices (PRISM);
 
                 Point<3> grid[11][11];
@@ -2154,7 +2154,7 @@ namespace netgen
                 for (int trig = 0; trig < 2; trig++)
                   {
                     for (int j = 0; j < 3; j++)
-                      fpts[j] = vertices[faces[trig][j]-1];
+                      fpts[j] = vertices[faces[trig][j]];
 
                     static Point<3> c(1.0/3.0, 1.0/3.0, 0.5);
                     if (vispar.shrink < 1)
@@ -2199,7 +2199,7 @@ namespace netgen
                 for (int quad = 2; quad < 5; quad++)
                   {
                     for (int j = 0; j < 4; j++)
-                      fpts[j] = vertices[faces[quad][j]-1];
+                      fpts[j] = vertices[faces[quad][j]];
 
                     static Point<3> c(1.0/3.0, 1.0/3.0, 0.5);
                     if (vispar.shrink < 1)
@@ -2536,7 +2536,7 @@ namespace netgen
                    glEnd ();
                 */
 
-                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
+                auto faces = MeshTopology :: GetFaces (HEX);
                 const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
                 Point<3> grid[11][11];
@@ -2546,7 +2546,7 @@ namespace netgen
                 for (int quad = 0; quad<6; quad++)
                   {
                     for (int j = 0; j < 4; j++)
-                      fpts[j] = vertices[faces[quad][j]-1];
+                      fpts[j] = vertices[faces[quad][j]];
 
                     static Point<3> c(0.5, 0.5, 0.5);
                     if (vispar.shrink < 1)
@@ -2647,7 +2647,7 @@ namespace netgen
             CurvedElements & curv = mesh->GetCurvedElements();
             if (curv.IsHighOrder()) 
               {
-                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (HEX);
+                auto faces = MeshTopology :: GetFaces (HEX);
                 const Point<3> * vertices = MeshTopology :: GetVertices (HEX);
 
                 Point<3> grid[11][11];
@@ -2657,7 +2657,7 @@ namespace netgen
                 for (int quad = 0; quad<6; quad++)
                   {
                     for (int j = 0; j < 4; j++)
-                      fpts[j] = vertices[faces[quad][j]-1];
+                      fpts[j] = vertices[faces[quad][j]];
 
                     static Point<3> c(0.5, 0.5, 0.5);
                     if (vispar.shrink < 1)
@@ -2805,7 +2805,7 @@ namespace netgen
             if (curv.IsHighOrder()) //  && curv.IsCurved(ei))
               {
 
-                const ELEMENT_FACE * faces = MeshTopology :: GetFaces1 (PYRAMID);
+                auto faces = MeshTopology :: GetFaces (PYRAMID);
                 const Point<3> * vertices = MeshTopology :: GetVertices (PYRAMID);
 
                 Point<3> grid[11][11];
@@ -2815,7 +2815,7 @@ namespace netgen
                 for (int trig = 0; trig < 4; trig++)
                   {
                     for (int j = 0; j < 3; j++)
-                      fpts[j] = vertices[faces[trig][j]-1];
+                      fpts[j] = vertices[faces[trig][j]];
 
                     static Point<3> c(0.375, 0.375, 0.25);
                     if (vispar.shrink < 1)
@@ -2860,7 +2860,7 @@ namespace netgen
                 for (int quad = 4; quad < 5; quad++)
                   {
                     for (int j = 0; j < 4; j++)
-                      fpts[j] = vertices[faces[quad][j]-1];
+                      fpts[j] = vertices[faces[quad][j]];
 
                     static Point<3> c(0.375, 0.375, 0.25);
                     if (vispar.shrink < 1)
