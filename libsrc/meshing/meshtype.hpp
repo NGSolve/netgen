@@ -1044,7 +1044,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
       return *this;
     }
     Element2d & operator= (const Element2dRef & el) { Element2dRef::operator= (el); return *this; }
-    using Element2dRef::operator=;
+    Element2d & operator= (initializer_list<PointIndex> list) { Element2dRef::operator= (list); return *this; }
+    Element2d & operator= (initializer_list<std::tuple<PointIndex,PointGeomInfo>> list) { Element2dRef::operator= (list); return *this; }
 
     static auto GetDataLayout()
     {
