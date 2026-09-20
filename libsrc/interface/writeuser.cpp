@@ -141,8 +141,9 @@ void WriteNeutralFormat (const Mesh & mesh,
     {
       Element2d el = mesh.SurfaceElement(i);
   */
-  for (auto el : mesh.SurfaceElements())
+  for (auto elref : mesh.SurfaceElements())
     {
+      Element2d el (elref);
       if (invertsurf)
         el.Invert();
       outfile.width(4);
