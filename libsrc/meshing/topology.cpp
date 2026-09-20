@@ -153,7 +153,7 @@ namespace netgen
         auto el = mesh[elnr];
         
         int nelfaces = MeshTopology::GetNFaces (el.GetType());
-        const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
+        auto elfaces = MeshTopology::GetFaces (el.GetType());
         
         for (int j = 0; j < nelfaces; j++)
           if (elfaces[j][3] < 0)
@@ -255,18 +255,18 @@ namespace netgen
       {
         const Element2dRef & el = mesh[elnr];
         
-        const ELEMENT_FACE * elfaces = MeshTopology::GetFaces1 (el.GetType());
+        auto elfaces = MeshTopology::GetFaces (el.GetType());
         
-        if (elfaces[0][3] == 0)
+        if (elfaces[0][3] < 0)
           
           { // triangle
             
             // int facenum;
             // int facedir;
             
-            PointIndices<4> face(el.PNum(elfaces[0][0]),
-                                 el.PNum(elfaces[0][1]),
-                                 el.PNum(elfaces[0][2]), PointIndex(PointIndex::INVALID));
+            PointIndices<4> face(el.PNum(elfaces[0][0]+1),
+                                 el.PNum(elfaces[0][1]+1),
+                                 el.PNum(elfaces[0][2]+1), PointIndex(PointIndex::INVALID));
             
             // facedir = 0;
             if (face[0] > face[1])
@@ -313,10 +313,10 @@ namespace netgen
             // int facenum;
             // int facedir;
             
-            PointIndices<4> face4(el.PNum(elfaces[0][0]),
-                                  el.PNum(elfaces[0][1]),
-                                  el.PNum(elfaces[0][2]),
-                                  el.PNum(elfaces[0][3]));
+            PointIndices<4> face4(el.PNum(elfaces[0][0]+1),
+                                  el.PNum(elfaces[0][1]+1),
+                                  el.PNum(elfaces[0][2]+1),
+                                  el.PNum(elfaces[0][3]+1));
             
             // facedir = 0;
             if (min2 (face4[0], face4[1]) > 
@@ -2063,7 +2063,7 @@ namespace netgen
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
     
     auto el = mesh->VolumeElement (ei);
-    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
+    auto eledges = MeshTopology::GetEdges (el.GetType());    
 
     int k = locedgenr;
     PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
@@ -2077,7 +2077,7 @@ namespace netgen
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);        
     auto el = mesh->VolumeElement (ei);
     
-    const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
+    auto elfaces = MeshTopology::GetFaces (el.GetType());
 
     int j = locfacenr;
     if (elfaces[j][3] < 0)
@@ -2132,7 +2132,7 @@ namespace netgen
   int MeshTopology :: GetSurfaceElementEdgeOrientation (int elnr, int locedgenr) const
   {
     const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
-    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
+    auto eledges = MeshTopology::GetEdges (el.GetType());    
 
     int k = locedgenr;
     PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
@@ -2144,7 +2144,7 @@ namespace netgen
   {
     const Element2dRef & el = (*mesh)[SurfaceElementIndex::FromNr1(elnr)];
     
-    const ELEMENT_FACE * elfaces = MeshTopology::GetFaces0 (el.GetType());
+    auto elfaces = MeshTopology::GetFaces (el.GetType());
 
     int j = 0;
     if (elfaces[j][3] < 0)
@@ -2204,7 +2204,7 @@ namespace netgen
   int MeshTopology :: GetSegmentEdgeOrientation (int elnr) const
   {
     const Segment & el = (*mesh)[SegmentIndex::FromNr1(elnr)];
-    const ELEMENT_EDGE * eledges = MeshTopology::GetEdges0 (el.GetType());    
+    auto eledges = MeshTopology::GetEdges (el.GetType());    
 
     int k = 0;
     PointIndices<2> edge(el[eledges[k][0]], el[eledges[k][1]]);
@@ -2264,17 +2264,17 @@ namespace netgen
       {
         auto el = (*mesh)[els[i]];
         int nref_faces = GetNFaces (el.GetType());
-        const ELEMENT_FACE * ref_faces = GetFaces1 (el.GetType());
+        auto ref_faces = GetFaces (el.GetType());
         int nfa_ref_edges = GetNEdges (GetFaceType0(FaceIndex::FromNr1(fnr)));
       
         int cntv = 0,fa=-1; 
         for(int m=0;m<nref_faces;m++)
           { 
             cntv=0;
-            for(int j=0;j<nfa_ref_edges && ref_faces[m][j]>0;j++)
+            for(int j=0;j<nfa_ref_edges && ref_faces[m][j] >= 0;j++)
               for(int k=0;k<pi.Size();k++)
                 {
-                  if(el[ref_faces[m][j]-1] == pi[k])
+                  if(el[ref_faces[m][j]] == pi[k])
                     cntv++;
                 }
             if (cntv == pi.Size())
@@ -2286,7 +2286,7 @@ namespace netgen
      
         if(fa>=0)
           {
-            const ELEMENT_EDGE * fa_ref_edges = GetEdges1 (GetFaceType0(FaceIndex::FromNr1(fnr))); 
+            auto fa_ref_edges = GetEdges (GetFaceType0(FaceIndex::FromNr1(fnr))); 
             fedges.SetSize(nfa_ref_edges);
             // GetElementEdges (els[i]+1, eledges);
             auto eledges = GetEdges (els[i]);
@@ -2311,8 +2311,8 @@ namespace netgen
                     // fedges.Append (eledges[j]);
                     for(int k=0;k<nfa_ref_edges;k++)
                       {
-                        PointIndex w1 = el[ref_faces[fa][fa_ref_edges[k][0]-1]-1]; 
-                        PointIndex w2 = el[ref_faces[fa][fa_ref_edges[k][1]-1]-1]; 
+                        PointIndex w1 = el[ref_faces[fa][fa_ref_edges[k][0]]]; 
+                        PointIndex w2 = el[ref_faces[fa][fa_ref_edges[k][1]]]; 
 
                         if(withorientation)
                           {

@@ -1058,7 +1058,7 @@ namespace netgen
 
               PointIndex npi = mesh.AddPoint (center);
 
-              const ELEMENT_FACE * faces = MeshTopology::GetFaces1 (HEX);
+              auto faces = MeshTopology::GetFaces (HEX);
 
               for (int j = 0; j < 6; j++)  
                 {
@@ -1067,10 +1067,10 @@ namespace netgen
                     {
                       bool same = 0;
                       for (int l = 0; l < pts.Size(); l++)
-                        if (el.pnums[pts[l]] == el.pnums[faces[j][k]-1])
+                        if (el.pnums[pts[l]] == el.pnums[faces[j][k]])
                           same = 1;
                       if (!same)
-                        pts.Append (faces[j][k]-1);
+                        pts.Append (faces[j][k]);
 
                     }
                   
@@ -1516,7 +1516,7 @@ namespace netgen
           { 
             auto el = mesh[ei];
             HPRefElement & hpel = hpelements[mesh.GetHpElnr(ei)];
-            const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (el.GetType());
+            auto edges = MeshTopology::GetEdges (el.GetType());
             double dist[3] = {0,0,0}; 
             int ord_dir[3] = {0,0,0}; 
             int edge_dir[12] = {0,0,0,0,0,0,0,0,0,0,0,0}; 
@@ -1571,9 +1571,9 @@ namespace netgen
             for (int j=0;j<ned;j++) 
               { 
                         
-                Vec<3> v(hpel.param[edges[j][0]-1][0]-hpel.param[edges[j][1]-1][0],
-                            hpel.param[edges[j][0]-1][1]-hpel.param[edges[j][1]-1][1],
-                            hpel.param[edges[j][0]-1][2]-hpel.param[edges[j][1]-1][2]);
+                Vec<3> v(hpel.param[edges[j][0]][0]-hpel.param[edges[j][1]][0],
+                            hpel.param[edges[j][0]][1]-hpel.param[edges[j][1]][1],
+                            hpel.param[edges[j][0]][2]-hpel.param[edges[j][1]][2]);
                 dist[edge_dir[j]] = max(v.Length(),dist[edge_dir[j]]);
               }
             
@@ -1591,7 +1591,7 @@ namespace netgen
           { 
             auto sel = mesh[sei];
             HPRefElement & hpel = hpelements[mesh.GetHpElnr(sei)];
-            const ELEMENT_EDGE * edges = MeshTopology::GetEdges1 (sel.GetType());
+            auto edges = MeshTopology::GetEdges (sel.GetType());
             double dist[3] = {0,0,0}; 
             int ord_dir[3] = {0,0,0}; 
             int  edge_dir[4] = {0,0,0,0} ; 
@@ -1616,9 +1616,9 @@ namespace netgen
             
             for (int j=0;j<ned;j++) 
               { 
-                Vec<3> v(hpel.param[edges[j][0]-1][0]-hpel.param[edges[j][1]-1][0],
-                            hpel.param[edges[j][0]-1][1]-hpel.param[edges[j][1]-1][1],
-                            hpel.param[edges[j][0]-1][2]-hpel.param[edges[j][1]-1][2]);
+                Vec<3> v(hpel.param[edges[j][0]][0]-hpel.param[edges[j][1]][0],
+                            hpel.param[edges[j][0]][1]-hpel.param[edges[j][1]][1],
+                            hpel.param[edges[j][0]][2]-hpel.param[edges[j][1]][2]);
                 dist[edge_dir[j]] = max(v.Length(),dist[edge_dir[j]]);
               }
             
@@ -1709,15 +1709,15 @@ namespace netgen
         for (auto ei : mesh.VolumeElements().Range())
           {
             auto el = mesh[ei]; 
-            const ELEMENT_EDGE * eledges = MeshTopology::GetEdges1 (el.GetType());
+            auto eledges = MeshTopology::GetEdges (el.GetType());
             int nedges = MeshTopology::GetNEdges (el.GetType());
             for (int j = 0; j < nedges; j++)
               for (int k = 0; k < nedges; k++)
                 if (j != k)
                   {
-                    PointIndices<2> ej(el.PNum(eledges[j][0]), el.PNum(eledges[j][1]));
+                    PointIndices<2> ej(el.PNum(eledges[j][0]+1), el.PNum(eledges[j][1]+1));
                     ej.Sort();
-                    PointIndices<2> ek(el.PNum(eledges[k][0]), el.PNum(eledges[k][1]));
+                    PointIndices<2> ek(el.PNum(eledges[k][0]+1), el.PNum(eledges[k][1]+1));
                     ek.Sort();
                     if (edges.Used(ej) && edges.Used(ek))
                       {
