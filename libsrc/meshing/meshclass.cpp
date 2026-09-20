@@ -8129,7 +8129,7 @@ namespace netgen
     
     for (auto el : VolumeElements())
       {
-        auto nel = el;
+        Element nel (el);
         for(auto i : Range(el.GetNP()))
           nel[i] = point_map[el[i]];
         nm.AddVolumeElement(nel);
@@ -8138,7 +8138,7 @@ namespace netgen
     for (auto ei : Range(SurfaceElements()))
     {
       auto el = m[ei];
-      auto nel = el;
+      Element2d nel (el);
       for(auto i : Range(el.GetNP()))
         nel[i] = point_map[el[i]];
 

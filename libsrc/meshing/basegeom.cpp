@@ -1233,7 +1233,7 @@ namespace netgen
         if(mesh.GetFaceDescriptor(sel).SurfNr() != src.nr+1)
           continue;
 
-        auto sel_new = sel;
+        Element2d sel_new (sel);
         sel_new.SetIndex(FaceRegionIndex::FromNr0(dst.nr));
         for(auto i : Range(sel.PNums()))
           {
