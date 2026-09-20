@@ -16,9 +16,6 @@
 
 namespace netgen
 {
-  // typedef int T_EDGE;
-  // typedef int T_FACE;
-
   class EdgeIndex : public Index<int,EdgeIndex,0>
   {
   public:
@@ -31,9 +28,6 @@ namespace netgen
     using Index::Index;
   };
 
-  typedef EdgeIndex T_EDGE;  
-  typedef FaceIndex T_FACE;  
-  
 class MeshTopology
 {
   const Mesh * mesh;

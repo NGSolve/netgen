@@ -1961,19 +1961,19 @@ namespace netgen
 
 
   /*
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
   {
-    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
+    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
   }
 
-  FlatArray<T_EDGE> MeshTopology :: GetEdges (ElementIndex elnr) const
+  FlatArray<EdgeIndex> MeshTopology :: GetEdges (ElementIndex elnr) const
   {
-    return FlatArray<T_EDGE>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
+    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
   }
 
-  FlatArray<T_FACE> MeshTopology :: GetFaces (ElementIndex elnr) const
+  FlatArray<FaceIndex> MeshTopology :: GetFaces (ElementIndex elnr) const
   {
-    return FlatArray<T_FACE>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+    return FlatArray<FaceIndex>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
   }
   */
   
