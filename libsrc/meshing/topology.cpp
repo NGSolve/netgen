@@ -442,18 +442,17 @@ namespace netgen
         if (id == 0)
           PrintMessage (5, "Update edges ");
       
-        edges.SetSize(ne);
-        surfedges.SetSize(nse); 
+        {
+          size_t maxedges = 0, maxsurfedges = 0;
+          for (const auto & el : mesh->VolumeElements())
+            maxedges = max (maxedges, size_t(GetNEdges (el.GetType())));
+          for (const auto & el : mesh->SurfaceElements())
+            maxsurfedges = max (maxsurfedges, size_t(GetNEdges (el.GetType())));
+          edges.SetSize0();  edges.SetWidth (maxedges);  edges.SetSize (ne);
+          surfedges.SetSize0();  surfedges.SetWidth (maxsurfedges);  surfedges.SetSize (nse);
+        }
         segedges.SetSize(nseg);
 
-        /*
-        for (int i = 0; i < ne; i++)
-          for (int j = 0; j < 12; j++)
-            edges[i][j].nr = -1;
-        for (int i = 0; i < nse; i++)
-          for (int j = 0; j < 4; j++)
-            surfedges[i][j].nr = -1;
-        */
         ParallelFor (ne, [this](auto i)
                      {
                        for (auto & e : edges[ElementIndex::FromNr0(i)])
@@ -934,7 +933,12 @@ namespace netgen
 
         // NgProfiler::StartTimer (timer2a);
 
-        faces.SetSize(ne);
+        {
+          size_t maxfaces = 0;
+          for (const auto & el : mesh->VolumeElements())
+            maxfaces = max (maxfaces, size_t(GetNFaces (el.GetType())));
+          faces.SetSize0();  faces.SetWidth (maxfaces);  faces.SetSize (ne);
+        }
         surffaces.SetSize(nse);
   
 
@@ -1022,8 +1026,8 @@ namespace netgen
 
         
         for (ElementIndex elnr : T_Range<ElementIndex>(ne))
-          for (int j = 0; j < 6; j++)
-            faces[elnr][j].Invalidate();
+          for (auto & f : faces[elnr])
+            f.Invalidate();
         
 
         int max_face_on_vertex = 0;
@@ -1247,10 +1251,8 @@ namespace netgen
         // for (int i = 0; i < ne; i++)
         ParallelFor (ne, [this](auto i)
                      {
-                       for (int j = 0; j < 6; j++)
+                       for (FaceIndex fnum : faces[ElementIndex::FromNr0(i)])
                          {
-                           // int fnum = (faces.Get(i)[j]+7) / 8;
-                           FaceIndex fnum = faces[ElementIndex::FromNr0(i)][j];
                            if (fnum.IsValid() && face2surfel[fnum].IsValid())
                              {
                                SurfaceElementIndex sel = face2surfel[fnum];
@@ -1860,9 +1862,10 @@ namespace netgen
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     if (mesh->GetDimension()==3 || 1)
       {
+        auto eledges_ei = edges[ei];
         if (orient)
           {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < int(eledges_ei.Size()); i++)
               {
                 /*
                 if (!edges.Get(elnr)[i]) return i;
@@ -1881,19 +1884,13 @@ namespace netgen
           }
         else
           {
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < int(eledges_ei.Size()); i++)
               {
-                // if (!edges.Get(elnr)[i]) return i;
-                // eledges[i] = abs (edges.Get(elnr)[i]);
-                
-                // if (edges.Get(elnr)[i] == -1) return i;
-                //eledges[i] = edges.Get(elnr)[i]+1;
                 if (!edges[ei][i].IsValid()) return i;
                 eledges[i] = edges[ei][i].Nr1();
-
               }
           }
-        return 12;
+        return int(eledges_ei.Size());
       }
     else
       {
@@ -1925,9 +1922,10 @@ namespace netgen
     ElementIndex ei = IndexBASE<ElementIndex>() +(elnr-1);
     
     //  int nfa = GetNFaces (mesh.VolumeElement(elnr).GetType());
+    auto elfaces_ei = faces[ei];
     if (orient)
       {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < int(elfaces_ei.Size()); i++)
           {
             /*
             if (!faces.Get(elnr)[i]) return i;
@@ -1944,18 +1942,13 @@ namespace netgen
       }
     else
       {
-        for (int i = 0; i < 6; i++)
+        for (int i = 0; i < int(elfaces_ei.Size()); i++)
           {
-            // if (!faces.Get(elnr)[i]) return i;
-            // elfaces[i] = (faces.Get(elnr)[i]-1) / 8 + 1;
-
-            // if (faces.Get(elnr)[i] == -1) return i;
-            // elfaces[i] = faces.Get(elnr)[i]+1;
             if (!faces[ei][i].IsValid()) return i;
             elfaces[i] = faces[ei][i].Nr1();
           }
       }
-    return 6;
+    return int(elfaces_ei.Size());
   }
 
   
@@ -2004,11 +1997,12 @@ namespace netgen
   {
     SurfaceElementIndex sei = IndexBASE<SurfaceElementIndex>() +(elnr-1);        
     int i;
+    auto eledges_sei = surfedges[sei];
     if (mesh->GetDimension() == 3 || 1)
       {
         if (orient)
           {
-            for (i = 0; i < 4; i++)
+            for (i = 0; i < int(eledges_sei.Size()); i++)
               {
                 /*
                 if (!surfedges.Get(elnr)[i]) return i;
@@ -2027,19 +2021,13 @@ namespace netgen
           }
         else
           {
-            for (i = 0; i < 4; i++)
+            for (i = 0; i < int(eledges_sei.Size()); i++)
               {
-                /*
-                if (!surfedges.Get(elnr)[i]) return i;
-                eledges[i] = abs (surfedges.Get(elnr)[i]);
-                */
-                // if (surfedges.Get(elnr)[i] == -1) return i;
-                // eledges[i] = surfedges.Get(elnr)[i]+1;
                 if (!surfedges[sei][i].IsValid()) return i;
                 eledges[i] = surfedges[sei][i].Nr1();
               }
           }
-        return 4;
+        return int(eledges_sei.Size());
       }
     else
       {
