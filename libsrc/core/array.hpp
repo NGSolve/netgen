@@ -496,6 +496,11 @@ namespace ngcore
     FlatArray (const FlatArray & a2) = default;
     // : size(a2.Size()), data(a2.data) { ; } 
 
+    /// a non-const view converts to a const view (never the reverse)
+    template <typename T2, typename = std::enable_if_t<std::is_same_v<T, const T2>>>
+    NETGEN_INLINE constexpr FlatArray (FlatArray<T2,IndexType> a2)
+      : size(a2.Size()), data(a2.Data()) { }
+
     /// provide size and memory
     NETGEN_INLINE constexpr FlatArray (size_t asize, T * adata) 
       : size(asize), data(adata) { ; }

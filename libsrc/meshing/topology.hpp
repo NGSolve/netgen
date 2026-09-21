@@ -51,9 +51,11 @@ class MeshTopology
   Array<std::array<PointIndex,2>, EdgeIndex> edge2vert;
   Array<std::array<PointIndex,4>, FaceIndex> face2vert;
 
-  Array<std::array<EdgeIndex,12>, ElementIndex> edges;
-  Array<std::array<FaceIndex,6>, ElementIndex> faces;
-  Array<std::array<EdgeIndex,4>, SurfaceElementIndex> surfedges;
+  // per-element edge/face numbers, width = max nedges/nfaces over the element types in the mesh
+  // (6/4 for a tet mesh instead of the hex maximum 12/6); unused slots are INVALID
+  DynStrideArray<void, TailList<EdgeIndex>, ElementIndex> edges;
+  DynStrideArray<void, TailList<FaceIndex>, ElementIndex> faces;
+  DynStrideArray<void, TailList<EdgeIndex>, SurfaceElementIndex> surfedges;
   
   Array<EdgeIndex,SegmentIndex> segedges;
   Array<FaceIndex,SurfaceElementIndex> surffaces;
@@ -117,8 +119,8 @@ public:
   void GetElementFaces (int elnr, Array<int> & faces, bool withorientation) const;  
 
   // definition in meshclass.hpp 
-  inline FlatArray<EdgeIndex> GetEdges (ElementIndex elnr) const;
-  inline FlatArray<FaceIndex> GetFaces (ElementIndex elnr) const;    
+  inline FlatArray<const EdgeIndex> GetEdges (ElementIndex elnr) const;
+  inline FlatArray<const FaceIndex> GetFaces (ElementIndex elnr) const;    
 
   
   // [[deprecated("use GetElementEdge instead")]]                        
@@ -163,7 +165,7 @@ public:
   int GetSurfaceElementFaceOrientation (int elnr) const;
 
 
-  inline FlatArray<EdgeIndex> GetEdges (SurfaceElementIndex elnr) const;
+  inline FlatArray<const EdgeIndex> GetEdges (SurfaceElementIndex elnr) const;
   inline FlatArray<FaceIndex> GetFaces (SurfaceElementIndex elnr) const;
   // { return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]); }
   

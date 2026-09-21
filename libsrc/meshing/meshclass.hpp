@@ -1121,19 +1121,21 @@ namespace netgen
 
 
 
-  FlatArray<EdgeIndex> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
+  // the topology tables are DynStrideArrays with a run-time width >= the element's nedges/nfaces,
+  // the first GetNEdges/GetNFaces entries belong to the element
+  FlatArray<const EdgeIndex> MeshTopology :: GetEdges (SurfaceElementIndex elnr) const
   {
-    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &surfedges[elnr][0]);
+    return FlatArray<const EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), surfedges[elnr].TailPtr());
   }
 
-  FlatArray<EdgeIndex> MeshTopology :: GetEdges (ElementIndex elnr) const
+  FlatArray<const EdgeIndex> MeshTopology :: GetEdges (ElementIndex elnr) const
   {
-    return FlatArray<EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), &edges[elnr][0]);
+    return FlatArray<const EdgeIndex>(GetNEdges ( (*mesh)[elnr].GetType()), edges[elnr].TailPtr());
   }
   
-  FlatArray<FaceIndex> MeshTopology :: GetFaces (ElementIndex elnr) const
+  FlatArray<const FaceIndex> MeshTopology :: GetFaces (ElementIndex elnr) const
   {
-    return FlatArray<FaceIndex>(GetNFaces ( (*mesh)[elnr].GetType()), &faces[elnr][0]);
+    return FlatArray<const FaceIndex>(GetNFaces ( (*mesh)[elnr].GetType()), faces[elnr].TailPtr());
   }
 
   /// a surface element has one face, a segment one edge
