@@ -194,7 +194,7 @@ public:
   SegmentIndex GetSegmentOfEdge (EdgeIndex edgenr) const { return edge2segment[edgenr]; }
 
   
-  FlatArray<ElementIndex> GetVertexElements (PointIndex vnr) const
+  FlatArray<const ElementIndex> GetVertexElements (PointIndex vnr) const
   { return vert2element[vnr]; }
 
   const auto & GetVertexSurfaceElements( ) const { return vert2surfelement; }

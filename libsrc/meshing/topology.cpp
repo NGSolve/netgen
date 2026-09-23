@@ -1339,7 +1339,7 @@ namespace netgen
                             (*testout) << (*mesh)[(PointIndex)face2vert[i][j]] << " ";
                         (*testout) << endl;
 
-                        FlatArray<ElementIndex> vertels = GetVertexElements (face2vert[i][0]);
+                        FlatArray<const ElementIndex> vertels = GetVertexElements (face2vert[i][0]);
                         for (int k = 0; k < vertels.Size(); k++)
                           {
                             int elfaces[10], orient[10];
@@ -2245,7 +2245,7 @@ namespace netgen
   
 
     //  GetVertexElements (pi[0], els);
-    FlatArray<ElementIndex> els = GetVertexElements (pi[0]);
+    FlatArray<const ElementIndex> els = GetVertexElements (pi[0]);
 
     // find one element having all vertices of the face
     for (int i = 0; i < els.Size(); i++)
