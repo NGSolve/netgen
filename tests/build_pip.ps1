@@ -26,11 +26,11 @@ $env:NETGEN_CCACHE = "1"
 $env:NETGEN_ARCH = "avx2"
 
 $pythons = @(
+    "C:\Python315",
     "C:\Python314",
     "C:\Python313",
     "C:\Python312",
-    "C:\Python311",
-    "C:\Python310"
+    "C:\Python311"
 )
 
 foreach ($pydir in $pythons) {

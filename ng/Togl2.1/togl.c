@@ -28,6 +28,9 @@
 #define USE_TOGL_STUB_PROCS
 #include "togl.h"
 #include <tkInt.h>   // don't need it on osx ???
+#if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7
+#  define Tk_MakeWindow(tkwin, parent) TkpMakeWindow((TkWindow *) (tkwin), parent)
+#endif
 #include <limits.h>
 
 #ifndef TOGL_USE_FONTS
@@ -297,9 +300,9 @@ static  LRESULT(CALLBACK *tkWinChildProc) (HWND hwnd, UINT message,
  */
 static int SetStereo(ClientData clientData, Tcl_Interp *interp,
         Tk_Window tkwin, Tcl_Obj **value, char *recordPtr,
-        int internalOffset, char *oldInternalPtr, int flags);
+        Tcl_Size internalOffset, char *oldInternalPtr, int flags);
 static Tcl_Obj *GetStereo(ClientData clientData, Tk_Window tkwin,
-        char *recordPtr, int internalOffset);
+        char *recordPtr, Tcl_Size internalOffset);
 static void RestoreStereo(ClientData clientData, Tk_Window tkwin,
         char *internalPtr, char *oldInternalPtr);
 
@@ -318,9 +321,9 @@ static Tk_ObjCustomOption stereoOption = {
  */
 static int SetWideInt(ClientData clientData, Tcl_Interp *interp,
         Tk_Window tkwin, Tcl_Obj **value, char *recordPtr,
-        int internalOffset, char *oldInternalPtr, int flags);
+        Tcl_Size internalOffset, char *oldInternalPtr, int flags);
 static Tcl_Obj *GetWideInt(ClientData clientData, Tk_Window tkwin,
-        char *recordPtr, int internalOffset);
+        char *recordPtr, Tcl_Size internalOffset);
 static void RestoreWideInt(ClientData clientData, Tk_Window tkwin,
         char *internalPtr, char *oldInternalPtr);
 
@@ -1190,12 +1193,12 @@ Togl_Init(Tcl_Interp *interp)
     int     major, minor, patchLevel, releaseType;
 
 #ifdef USE_TCL_STUBS
-    if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
+    if (Tcl_InitStubs(interp, TCL_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }
 #endif
 #ifdef USE_TK_STUBS
-    if (Tk_InitStubs(interp, TCL_STUPID "8.1", 0) == NULL) {
+    if (Tk_InitStubs(interp, TCL_STUPID TK_VERSION, 0) == NULL) {
         return TCL_ERROR;
     }
 #endif
@@ -2117,7 +2120,7 @@ Togl_ObjWidget(ClientData clientData, Tcl_Interp *interp, int objc,
           if (objc == 2) {
               const char *extensions;
               Tcl_Obj *objPtr;
-              int     length = -1;
+              Tcl_Size length = -1;
 
               extensions = (const char *) glGetString(GL_EXTENSIONS);
               objPtr = Tcl_NewStringObj(extensions, -1);
@@ -2552,7 +2555,7 @@ Togl_ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,
     Togl_PackageGlobals *tpg;
     Togl   *togl;
     Tk_Window tkwin;
-    Tcl_SavedResult saveError;
+    Tcl_InterpState saveError;
 
     if (objc <= 1) {
         Tcl_WrongNumArgs(interp, 1, objv, "pathName ?options?");
@@ -2801,10 +2804,10 @@ Togl_ObjCmd(ClientData clientData, Tcl_Interp *interp, int objc,
     return TCL_OK;
 
   error:
-    Tcl_SaveResult(interp, &saveError);
+    saveError = Tcl_SaveInterpState(interp, TCL_OK);
     togl->badWindow = True;
     (void) Tcl_DeleteCommandFromToken(interp, togl->widgetCmd);
-    Tcl_RestoreResult(interp, &saveError);
+    (void) Tcl_RestoreInterpState(interp, saveError);
     Tcl_AppendResult(interp, "\nCouldn't configure togl widget", NULL);
     return TCL_ERROR;
 }
@@ -3003,7 +3006,7 @@ Togl_MakeWindow(Tk_Window tkwin, Window parent, ClientData instanceData)
     if (togl->badWindow) {
         TkWindow *winPtr = (TkWindow *) tkwin;
 
-        return TkpMakeWindow(winPtr, parent);
+        return Tk_MakeWindow((Tk_Window) winPtr, parent);
     }
 
     /* for color index mode photos */
@@ -3027,7 +3030,7 @@ Togl_MakeWindow(Tk_Window tkwin, Window parent, ClientData instanceData)
     {
         TkWindow *winPtr = (TkWindow *) tkwin;
 
-        window = TkpMakeWindow(winPtr, parent);
+        window = Tk_MakeWindow((Tk_Window) winPtr, parent);
         if (!togl->PbufferFlag)
             (void) XMapWindow(dpy, window);
     }
@@ -3408,7 +3411,7 @@ Togl_MakeWindow(Tk_Window tkwin, Window parent, ClientData instanceData)
             goto error;
         }
 #  ifdef TOGL_X11
-        window = TkpMakeWindow((TkWindow *) tkwin, parent);
+        window = Tk_MakeWindow(tkwin, parent);
 #  endif
 #endif
         return window;
@@ -3614,7 +3617,7 @@ Togl_MakeWindow(Tk_Window tkwin, Window parent, ClientData instanceData)
     if (window == None) {
         TkWindow *winPtr = (TkWindow *) tkwin;
 
-        window = TkpMakeWindow(winPtr, parent);
+        window = Tk_MakeWindow((Tk_Window) winPtr, parent);
     }
 #elif defined(TOGL_WGL)
     if (togl->tglGLHdc) {
@@ -3707,7 +3710,7 @@ ToglCmdDeletedProc(ClientData clientData)
     }
 
     Tk_Preserve((ClientData) togl);
-    Tcl_EventuallyFree((ClientData) togl, ToglFree);
+    Tcl_EventuallyFree((ClientData) togl, (Tcl_FreeProc *) ToglFree);
 
     Togl_LeaveStereo(togl, togl->Stereo);
 
@@ -4280,14 +4283,14 @@ Win32FreeColor(const Togl *togl, unsigned long index)
     Tcl_HashEntry *entryPtr;
 
     if (index >= cmap->size) {
-        panic("Tried to free a color that isn't allocated.");
+        Tcl_Panic("Tried to free a color that isn't allocated.");
     }
     GetPaletteEntries(cmap->palette, index, 1, &entry);
 
     cref = PALETTERGB(entry.peRed, entry.peGreen, entry.peBlue);
     entryPtr = Tcl_FindHashEntry(&cmap->refCounts, (CONST char *) cref);
     if (!entryPtr) {
-        panic("Tried to free a color that isn't allocated.");
+        Tcl_Panic("Tried to free a color that isn't allocated.");
     }
     refCount = (int) Tcl_GetHashValue(entryPtr) - 1;
     if (refCount == 0) {
@@ -5127,7 +5130,7 @@ static int ObjectIsEmpty(Tcl_Obj *objPtr);
 
 static Tcl_Obj *
 GetStereo(ClientData clientData, Tk_Window tkwin, char *recordPtr,
-        int internalOffset)
+        Tcl_Size internalOffset)
     /* recordPtr is a pointer to widget record. */
     /* internalOffset is the offset within *recordPtr containing the stereo
      * value. */
@@ -5191,7 +5194,7 @@ GetStereo(ClientData clientData, Tk_Window tkwin, char *recordPtr,
 
 static int
 SetStereo(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-        Tcl_Obj **value, char *recordPtr, int internalOffset,
+        Tcl_Obj **value, char *recordPtr, Tcl_Size internalOffset,
         char *oldInternalPtr, int flags)
     /* interp is the current interp; may be used for errors. */
     /* tkwin is the Window for which option is being set. */
@@ -5297,7 +5300,7 @@ RestoreStereo(ClientData clientData, Tk_Window tkwin, char *internalPtr,
 
 static Tcl_Obj *
 GetWideInt(ClientData clientData, Tk_Window tkwin, char *recordPtr,
-        int internalOffset)
+        Tcl_Size internalOffset)
     /* recordPtr is a pointer to widget record. */
     /* internalOffset is the offset within *recordPtr containing the wide int
      * value. */
@@ -5327,7 +5330,7 @@ GetWideInt(ClientData clientData, Tk_Window tkwin, char *recordPtr,
 
 static int
 SetWideInt(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-        Tcl_Obj **value, char *recordPtr, int internalOffset,
+        Tcl_Obj **value, char *recordPtr, Tcl_Size internalOffset,
         char *oldInternalPtr, int flags)
     /* interp is the current interp; may be used for errors. */
     /* tkwin is the Window for which option is being set. */
@@ -5404,7 +5407,7 @@ static int
 ObjectIsEmpty(Tcl_Obj *objPtr)
 /* objPtr = Object to test.  May be NULL. */
 {
-    int     length;
+    Tcl_Size length;
 
     if (objPtr == NULL) {
         return 1;

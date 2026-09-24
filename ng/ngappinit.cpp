@@ -60,6 +60,8 @@ bool shellmode = false;
  *
  */
 
+int Ng_AppInit(Tcl_Interp * interp);
+
 int main(int argc, char ** argv)
 {
   netgen::netgen_executable_started = true;
@@ -149,7 +151,7 @@ int main(int argc, char ** argv)
 
       // initialize application
       Tcl_Interp * myinterp = Tcl_CreateInterp ();
-      if (Tcl_AppInit (myinterp) == TCL_ERROR)
+      if (Ng_AppInit (myinterp) == TCL_ERROR)
         {
           cerr << "Exit Netgen due to initialization problem" << endl;
           exit (1);
@@ -286,7 +288,7 @@ extern "C" int Ng_Vis_Init (Tcl_Interp * interp);
 // extern "C" int NGSolve_Init (Tcl_Interp * interp);
 
 
-int Tcl_AppInit(Tcl_Interp * interp)
+int Ng_AppInit(Tcl_Interp * interp)
 {
 
   if (Tcl_Init(interp) == TCL_ERROR) { 

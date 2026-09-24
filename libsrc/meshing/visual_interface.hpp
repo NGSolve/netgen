@@ -18,7 +18,7 @@ DLL_HEADER extern void (*Ptr_Ng_Redraw) (bool blocking);
 struct Tcl_Interp;
 typedef int (Tcl_CmdProc) (void * clientData, Tcl_Interp *interp,
         int argc, const char *argv[]);
-typedef void (Tcl_FreeProc) (char *blockPtr);
+typedef void (Ng_Tcl_FreeProc) (char *blockPtr);
 
 namespace netgen {
   /*
@@ -27,16 +27,16 @@ namespace netgen {
   inline constexpr int NG_TCL_DYNAMIC  = 3;
   */
 
-#define NG_TCL_VOLATILE         ((Tcl_FreeProc *) 1)
-#define NG_TCL_STATIC           ((Tcl_FreeProc *) 0)
-#define NG_TCL_DYNAMIC          ((Tcl_FreeProc *) 3)
+#define NG_TCL_VOLATILE         ((Ng_Tcl_FreeProc *) 1)
+#define NG_TCL_STATIC           ((Ng_Tcl_FreeProc *) 0)
+#define NG_TCL_DYNAMIC          ((Ng_Tcl_FreeProc *) 3)
 
     inline constexpr int NG_TCL_OK       = 0;
     inline constexpr int NG_TCL_ERROR    = 1;
     inline constexpr int NG_TCL_RETURN   = 2;
     inline constexpr int NG_TCL_BREAK    = 3;
     inline constexpr int NG_TCL_CONTINUE = 4;
-    DLL_HEADER extern void (*Ptr_Ng_Tcl_SetResult)(Tcl_Interp *interp, char *result, Tcl_FreeProc *freeProc);
+    DLL_HEADER extern void (*Ptr_Ng_Tcl_SetResult)(Tcl_Interp *interp, char *result, Ng_Tcl_FreeProc *freeProc);
     DLL_HEADER extern void (*Ptr_Ng_Tcl_CreateCommand)(Tcl_Interp *interp,
                                     const char *cmdName, Tcl_CmdProc *proc);
 
@@ -56,7 +56,7 @@ namespace netgen {
         if(Ptr_UpdateVisSurfaceMeshData) Ptr_UpdateVisSurfaceMeshData(oldnl, locpointsptr, loclinesptr, plainpointsptr);
     }
 
-    inline void Ng_Tcl_SetResult(Tcl_Interp *interp, char *result, Tcl_FreeProc *freeProc)
+    inline void Ng_Tcl_SetResult(Tcl_Interp *interp, char *result, Ng_Tcl_FreeProc *freeProc)
     {
         if(Ptr_Ng_Tcl_SetResult)
             Ptr_Ng_Tcl_SetResult(interp, result, freeProc);

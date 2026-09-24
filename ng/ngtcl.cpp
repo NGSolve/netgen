@@ -3,9 +3,9 @@
 #include "../libsrc/meshing/visual_interface.hpp"
 
 
-static void Impl_Ng_Tcl_SetResult(Tcl_Interp *interp, char *result, Tcl_FreeProc *freeProc)
+static void Impl_Ng_Tcl_SetResult(Tcl_Interp *interp, char *result, Ng_Tcl_FreeProc *freeProc)
 {
-    Tcl_SetResult(interp, result, freeProc);
+    Tcl_SetResult(interp, result, (Tcl_FreeProc *)freeProc);
 }
 
 static void Impl_Ng_Tcl_CreateCommand(Tcl_Interp *interp, const char *cmdName, Tcl_CmdProc *proc)

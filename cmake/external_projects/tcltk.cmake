@@ -69,10 +69,11 @@ if(APPLE OR WIN32)
         ${PYTHON_BASE_PREFIX}/Frameworks/Tcl.framework
         ${PYTHON_BASE_PREFIX}/Frameworks/Tk.framework
         )
-    find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 ${tcl_find_args})
-    find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 ${tcl_find_args})
-    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t Tcl ${tcl_find_args})
-    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t Tk ${tcl_find_args})
+    # Tcl/Tk 9 (Python >= 3.15 on Windows): tclstub, tkstub, tcl90, tcl9tk90
+    find_library(TCL_STUB_LIBRARY NAMES tclstub85 tclstub8.5 tclstub86 tclstub8.6 tclstub ${tcl_find_args})
+    find_library(TK_STUB_LIBRARY NAMES tkstub85 tkstub8.5 tkstub86 tkstub8.6 tkstub ${tcl_find_args})
+    find_library(TCL_LIBRARY NAMES tcl85 tcl8.5 tcl86 tcl8.6 tcl86t tcl90 tcl9.0 Tcl ${tcl_find_args})
+    find_library(TK_LIBRARY NAMES tk85 tk8.5 tk86 tk8.6 tk86t tcl9tk90 tcl9tk9.0 Tk ${tcl_find_args})
 else()
     # use system tcl/tk on linux
     find_package(TclStub REQUIRED)

@@ -45,6 +45,24 @@
 
 #  include <tcl.h>
 #  include <tk.h>
+
+/* Tcl/Tk 9 removed these compatibility macros */
+#  if TCL_MAJOR_VERSION >= 9
+#    include <stddef.h>
+#    ifndef _ANSI_ARGS_
+#      define _ANSI_ARGS_(x) x
+#    endif
+#    ifndef Tk_Offset
+#      define Tk_Offset(type, field) ((int) offsetof(type, field))
+#    endif
+#    define Tk_Preserve Tcl_Preserve
+#    define Tk_Release Tcl_Release
+#    define Tk_EventuallyFree Tcl_EventuallyFree
+#    define Tk_DoWhenIdle Tcl_DoWhenIdle
+#    define Tk_CancelIdleCall Tcl_CancelIdleCall
+#  elif !defined(TCL_SIZE_MAX)
+typedef int Tcl_Size;
+#  endif
 #  if defined(TOGL_AGL)
 #    include <OpenGL/gl.h>
 #  elif defined(TOGL_NSOPENGL)

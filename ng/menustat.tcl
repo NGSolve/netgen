@@ -432,7 +432,7 @@ set videoactive 0
     -command { 
         puts "Thank you for using $progname"; 
 
-        if { [catch { unload libngsolve[info sharedlibextension] ngsolve } result ] } {
+        if { [catch { unload libngsolve[info sharedlibextension] Ngsolve } result ] } {
             # puts "cannot unload ngsolve" 
             # puts "error: $result"
         } 

@@ -14,7 +14,7 @@ export NETGEN_CCACHE=1
 export NETGEN_ARCH=avx2
 export NETGEN_MPI=ON
 
-for pyversion in 314 313 312 311 310
+for pyversion in 315 314 313 312 311
 do
     export PYDIR="/opt/python/cp${pyversion}-cp${pyversion}/bin"
     echo $PYDIR

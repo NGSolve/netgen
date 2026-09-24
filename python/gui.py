@@ -21,7 +21,7 @@ def StartGUI():
     win.tk.eval('lappend ::auto_path ' + netgen._netgen_lib_dir)
     win.tk.eval('lappend ::auto_path ' + netgen._netgen_bin_dir)
     # load with absolute path to avoid issues on MacOS
-    win.tk.eval('load "'+netgen._netgen_lib_dir.replace('\\','/')+'/libnggui[info sharedlibextension]" gui')
+    win.tk.eval('load "'+netgen._netgen_lib_dir.replace('\\','/')+'/libnggui[info sharedlibextension]" Gui')
 
     if config.is_python_package and 'darwin' in sys.platform:
         # libngsolve and other libraries are installed into netgen python dir to keep relative installation paths, but tcl won't find them there automatically
