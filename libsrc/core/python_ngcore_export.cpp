@@ -345,7 +345,7 @@ threads : int
   py::class_<PajeTrace>(m, "PajeTrace")
     .def(py::init( [] (string filename, size_t size_mb, bool threads, bool thread_counter, bool memory)
           {
-              PajeTrace::SetMaxTracefileSize(size_mb*1014*1024);
+              PajeTrace::SetMaxTracefileSize(size_mb*1024*1024);
               PajeTrace::SetTraceThreads(threads);
               PajeTrace::SetTraceMemory(memory);
               PajeTrace::SetTraceThreadCounter(thread_counter);
