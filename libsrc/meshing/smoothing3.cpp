@@ -421,29 +421,8 @@ namespace netgen
   double PointFunction :: PointFunctionValueDeriv (const Point<3> & pp, const Vec<3> & dir,
                                                    double & deriv) const
   {
-    Vec<3> vgradi, vgrad(0,0,0);
-
-    Point<3> hp = points[actpind];
-    points[actpind] = pp;
-    double f = 0;
-
-    for (auto ei : elementsonpoint[actpind])
-      {
-        auto el = elements[ei];
-
-        for (int k = 1; k <= 4; k++)
-          if (el.PNum(k) == actpind)
-            {
-              f += CalcTetBadnessGrad (points[el[0]], 
-                                       points[el[1]], 
-                                       points[el[2]], 
-                                       points[el[3]], -1, k, vgradi, mp);
-
-              vgrad += vgradi;
-            }
-      }
-
-    points[actpind] = Point<3> (hp); 
+    Vec<3> vgrad;
+    double f = PointFunctionValueGrad (pp, vgrad);
     deriv = dir * vgrad;
     return f;
   }
