@@ -153,7 +153,7 @@ namespace netgen
     inv(1,1) =  idet * m(0,0);
   }
 
-  void CalcInverse (const Mat<3,3> & m, Mat<3,3> & inv);
+  DLL_HEADER void CalcInverse (const Mat<3,3> & m, Mat<3,3> & inv);
 
   inline void CalcInverse (const Mat<2,3> & m, Mat<3,2> & inv)
   {

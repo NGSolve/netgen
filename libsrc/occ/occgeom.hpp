@@ -52,7 +52,7 @@ namespace netgen
 #define OCCGEOMETRYVISUALIZATIONFULLCHANGE 1  // Compute transformation matrices and redraw
 #define OCCGEOMETRYVISUALIZATIONHALFCHANGE 2  // Redraw
 
-  bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you);
+  DLL_HEADER bool IsMappedShape(const Transformation<3> & trafo, const TopoDS_Shape & me, const TopoDS_Shape & you);
 
   class EntityVisualizationCode
   {
