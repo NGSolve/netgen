@@ -57,6 +57,7 @@
 #include <XCAFDoc_ColorTool.hxx>
 #include <XCAFDoc_DocumentTool.hxx>
 #include <XCAFDoc_ShapeTool.hxx>
+#include <TDataStd_Name.hxx>
 #include <XCAFPrs.hxx>
 #include <XCAFPrs_IndexedDataMapOfShapeStyle.hxx>
 #include <XCAFPrs_Style.hxx>
@@ -1441,6 +1442,88 @@ namespace netgen
 //    }
 
 
+  namespace {
+
+    string XCAFLabelName(const TDF_Label & l)
+    {
+      Handle(TDataStd_Name) na;
+      if(!l.IsNull() && l.FindAttribute(TDataStd_Name::GetID(), na))
+        {
+          TCollection_AsciiString a(na->Get());
+          return string(a.ToCString());
+        }
+      return "";
+    }
+
+    shared_ptr<OCCAssemblyNode> BuildAssemblyNode(
+        const Handle(XCAFDoc_ShapeTool) & st, const TDF_Label & label,
+        const TopLoc_Location & loc, const string & name)
+    {
+      auto node = make_shared<OCCAssemblyNode>();
+      node->name = name;
+      if(st->IsAssembly(label))
+        {
+          node->is_assembly = true;
+          TDF_LabelSequence comps;
+          XCAFDoc_ShapeTool::GetComponents(label, comps, Standard_False); // immediate only
+          for(Standard_Integer ci = 1; ci <= comps.Length(); ci++)
+            {
+              TDF_Label comp = comps.Value(ci);
+              TopLoc_Location childLoc = loc * XCAFDoc_ShapeTool::GetLocation(comp);
+              string nm = XCAFLabelName(comp);
+              TDF_Label ref;
+              if(XCAFDoc_ShapeTool::GetReferredShape(comp, ref))
+                {
+                  string rn = XCAFLabelName(ref);
+                  if(nm.empty()) nm = rn;       // prefer the component name, fall back to the part's
+                  node->children.push_back(BuildAssemblyNode(st, ref, childLoc, nm));
+                }
+              else
+                {
+                  auto leaf = make_shared<OCCAssemblyNode>();
+                  leaf->name = nm;
+                  leaf->shape = st->GetShape(comp).Moved(loc);
+                  node->children.push_back(leaf);
+                }
+            }
+        }
+      else
+        {
+          node->shape = st->GetShape(label).Moved(loc);
+        }
+      return node;
+    }
+
+    shared_ptr<OCCAssemblyNode> BuildAssemblyTree(const Handle(XCAFDoc_ShapeTool) & st)
+    {
+      if(st.IsNull())
+        return nullptr;
+      TDF_LabelSequence roots;
+      st->GetFreeShapes(roots);
+      if(roots.Length() == 0)
+        return nullptr;
+      auto root = make_shared<OCCAssemblyNode>();
+      root->is_assembly = true;
+      for(Standard_Integer ri = 1; ri <= roots.Length(); ri++)
+        {
+          TDF_Label r = roots.Value(ri);
+          string nm = XCAFLabelName(r);
+          TDF_Label ref;
+          if(XCAFDoc_ShapeTool::GetReferredShape(r, ref))
+            {
+              string rn = XCAFLabelName(ref);
+              if(nm.empty()) nm = rn;
+              root->children.push_back(
+                  BuildAssemblyNode(st, ref, XCAFDoc_ShapeTool::GetLocation(r), nm));
+            }
+          else
+            root->children.push_back(BuildAssemblyNode(st, r, TopLoc_Location(), nm));
+        }
+      return root;
+    }
+
+  }
+
   void LoadOCCInto(OCCGeometry* occgeo, const filesystem::path & filename)
   {
       static Timer timer_all("LoadOCC"); RegionTimer rtall(timer_all);
@@ -1494,6 +1577,7 @@ namespace netgen
       step_utils::LoadProperties(main_shape, reader, step_doc);
 
       occgeo->shape = main_shape;
+      occgeo->assembly_tree = BuildAssemblyTree(step_shape_contents);
       occgeo->changed = 1;
       occgeo->BuildFMap();
       occgeo->CalcBoundingBox();
@@ -1607,6 +1691,7 @@ namespace netgen
         }
 
       occgeo->shape = shape;
+      occgeo->assembly_tree = BuildAssemblyTree(iges_shape_contents);
       occgeo->changed = 1;
       occgeo->BuildFMap();
 
@@ -1708,9 +1793,56 @@ namespace netgen
     ost << ss->str();
   }
 
+  static void ArchiveAssemblyNode(Archive& ar, shared_ptr<OCCAssemblyNode>& node,
+                                  const TopTools_IndexedMapOfShape& shape_map,
+                                  const Array<TopoDS_Shape>& shape_list)
+  {
+    ar & node->name & node->is_assembly;
+
+    std::vector<int> solid_idx;
+    if(ar.Output())
+      for(TopExp_Explorer e(node->shape, TopAbs_SOLID); e.More(); e.Next())
+        {
+          int idx = shape_map.FindIndex(e.Current()) - 1;
+          if(idx >= 0)
+            solid_idx.push_back(idx);
+        }
+    int nsolid = solid_idx.size();
+    ar & nsolid;
+    solid_idx.resize(nsolid);
+    for(auto & si : solid_idx)
+      ar & si;
+
+    if(ar.Input())
+      {
+        if(nsolid == 1)
+          node->shape = shape_list[solid_idx[0]];
+        else if(nsolid > 1)
+          {
+            BRep_Builder builder;
+            TopoDS_Compound comp;
+            builder.MakeCompound(comp);
+            for(int si : solid_idx)
+              builder.Add(comp, shape_list[si]);
+            node->shape = comp;
+          }
+        // nsolid == 0 -> internal node / shapeless leaf, shape stays null
+      }
+
+    int nchild = ar.Output() ? int(node->children.size()) : 0;
+    ar & nchild;
+    node->children.resize(nchild);
+    for(auto & child : node->children)
+      {
+        if(ar.Input())
+          child = make_shared<OCCAssemblyNode>();
+        ArchiveAssemblyNode(ar, child, shape_map, shape_list);
+      }
+  }
+
   void OCCGeometry :: DoArchive(Archive& ar)
   {
-    constexpr int current_format_version = 0;
+    constexpr int current_format_version = 1;
 
     int format_version = current_format_version;
     auto netgen_version = GetLibraryVersion("netgen");
@@ -1812,6 +1944,22 @@ namespace netgen
                 }
               }
           }
+      }
+
+    // format_version >= 1: the product-structure assembly tree. Older archives
+    // don't have it -> assembly_tree simply stays null (as before).
+    if(format_version >= 1)
+      {
+        bool have_tree = (assembly_tree != nullptr);
+        ar & have_tree;
+        if(have_tree)
+          {
+            if(ar.Input())
+              assembly_tree = make_shared<OCCAssemblyNode>();
+            ArchiveAssemblyNode(ar, assembly_tree, shape_map, shape_list);
+          }
+        else if(ar.Input())
+          assembly_tree = nullptr;
       }
 
     if(ar.Input())
