@@ -32,6 +32,7 @@ namespace ngcore
 
       bool tracing_enabled;
       TTimePoint start_time;
+      TTimePoint end_time = 0;
       int nthreads;
 
     public:
@@ -172,14 +173,14 @@ namespace ngcore
       {
           if(!tracing_enabled) return;
           if(unlikely(user_events.size() == max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return; }
           user_events.push_back(ue);
       }
       void StartGPU(int timer_id = 0, int user_value = -1)
         {
           if(!tracing_enabled) return;
           if(unlikely(gpu_events.size() == max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return; }
           gpu_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, user_value, true});
         }
 
@@ -187,7 +188,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return;
           if(unlikely(gpu_events.size() == max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return; }
           gpu_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
         }
 
@@ -196,7 +197,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return;
           if(unlikely(gpu_events.size()+2 >= max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return; }
           gpu_events.push_back(TimerEvent{t_start, timer_id, 0, -1, true});
           gpu_events.push_back(TimerEvent{t_stop, timer_id, 0, -1, false});
         }
@@ -205,7 +206,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return;
           if(unlikely(timer_events.size() == max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return; }
           timer_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, user_value, true});
         }
 
@@ -213,7 +214,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return;
           if(unlikely(timer_events.size() == max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return; }
           timer_events.push_back(TimerEvent{GetTimeCounter(), timer_id, 0, -1, false});
         }
 
@@ -226,7 +227,7 @@ namespace ngcore
           if(!tracing_enabled) return -1;
           if(!trace_threads && !trace_thread_counter) return -1;
           if(unlikely(tasks[thread_id].size() == max_num_events_per_thread))
-            StopTracing();
+            { StopTracing(); return -1; }
           int task_num = tasks[thread_id].size();
           tasks[thread_id].push_back( Task{thread_id, id, id_type, additional_value, GetTimeCounter(), true} );
           return task_num;
@@ -234,6 +235,7 @@ namespace ngcore
 
       void StopTask(int thread_id, int id, int id_type = Task::ID_NONE)
         {
+          if(!tracing_enabled) return;
           if(!trace_threads && !trace_thread_counter) return;
           tasks[thread_id].push_back( Task{thread_id, id, id_type, 0, GetTimeCounter(), false} );
         }
@@ -242,14 +244,14 @@ namespace ngcore
         {
           if(!tracing_enabled) return -1;
           if(jobs.size() == max_num_events_per_thread)
-            StopTracing();
+            { StopTracing(); return -1; }
           jobs.push_back( Job{job_id, &type, GetTimeCounter()} );
           return jobs.size()-1;
         }
 
       void StopJob(int index)
         {
-          if(tracing_enabled && index >= 0)
+          if(index >= 0)
             jobs[index].stop_time = GetTimeCounter();
         }
 
@@ -257,7 +259,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return;
           if(links[thread_id].size() == max_num_events_per_thread)
-            StopTracing();
+            { StopTracing(); return; }
           links[thread_id].push_back( ThreadLink{thread_id, key, GetTimeCounter(), true} );
         }
 
@@ -265,7 +267,7 @@ namespace ngcore
         {
           if(!tracing_enabled) return;
           if(links[thread_id].size() == max_num_events_per_thread)
-            StopTracing();
+            { StopTracing(); return; }
           links[thread_id].push_back( ThreadLink{thread_id, key, GetTimeCounter(), false} );
         }
 

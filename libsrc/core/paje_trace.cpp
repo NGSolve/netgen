@@ -96,6 +96,8 @@ namespace ngcore
   {
     if(memtrace == this)
       memtrace = nullptr;
+    if(tracing_enabled)
+      end_time = GetTimeCounter();
 
     // timer events on thread 0 are moved to the timer_events array for a tree-like view of hierachical timers at the bottom
     std::vector<Task> new_tasks0;
@@ -115,6 +117,8 @@ namespace ngcore
           }
     for(auto & job : jobs)
       {
+        if(job.stop_time < job.start_time)
+          job.stop_time = end_time;
         job.start_time -= start_time;
         job.stop_time -= start_time;
       }
@@ -137,6 +141,8 @@ namespace ngcore
     for(auto & levents : memory_events)
         for(auto & event : levents)
             event.time -= start_time;
+
+    end_time -= start_time;
 
     NgMPI_Comm comm;
   #ifdef PARALLEL
@@ -169,6 +175,7 @@ namespace ngcore
       if(tracing_enabled && max_num_events_per_thread>0)
         {
           logger->warn("Maximum number of traces reached, tracing is stopped now.");
+          end_time = GetTimeCounter();
         }
       tracing_enabled = false;
       if(memtrace == this)
@@ -183,7 +190,14 @@ namespace ngcore
       if(tid < 0 || tid >= nthreads) tid = 0;
       auto & events = memory_events[tid];
       if(unlikely(events.size() == max_num_events_per_thread))
-        StopTracing();
+        {
+          if(memtrace == this)
+            {
+              memtrace = nullptr;
+              logger->warn("Maximum number of memory events reached, memory tracing is stopped now.");
+            }
+          return;
+        }
       events.push_back(MemoryEvent{GetTimeCounter(), bytes, reinterpret_cast<uintptr_t>(p), kind});
     }
 
@@ -698,17 +712,28 @@ namespace ngcore
           else if(timerdepth > 0)
             paje.PopState( event.time, state_type_timer, timer_container_aliases[--timerdepth] );
         }
+      while(timerdepth > 0)
+        paje.PopState( end_time, state_type_timer, timer_container_aliases[--timerdepth] );
 
       if(gpu_events.size())
       {
         auto gpu_container =  paje.CreateContainer( container_type_timer, container_task_manager, "GPU" );
+        int gpudepth = 0;
         for(auto & event : gpu_events)
         {
           if(event.is_start)
-            paje.PushState( event.time, state_type_timer, gpu_container, timer_aliases[event.timer_id] );
-          else
-            paje.PopState( event.time, state_type_timer, gpu_container);
+            {
+              paje.PushState( event.time, state_type_timer, gpu_container, timer_aliases[event.timer_id] );
+              gpudepth++;
+            }
+          else if(gpudepth > 0)
+            {
+              paje.PopState( event.time, state_type_timer, gpu_container);
+              gpudepth--;
+            }
         }
+        for( ; gpudepth > 0; gpudepth--)
+          paje.PopState( end_time, state_type_timer, gpu_container);
       }
 
       if(user_events.size())
@@ -731,45 +756,65 @@ namespace ngcore
           }
         }
 
-      for(auto & vtasks : tasks)
-        {
-          for (Task & t : vtasks) {
-              int value_id = t.id;
+      auto write_task = [&] (const Task & t) {
+          int value_id = t.id;
 
-              switch(t.id_type)
+          switch(t.id_type)
+            {
+            case Task::ID_JOB:
+              value_id = job_task_map[jobs[t.id-1].type];
+              if(trace_thread_counter)
                 {
-                case Task::ID_JOB:
-                  value_id = job_task_map[jobs[t.id-1].type];
-                  if(trace_thread_counter)
-                    {
-                      if(t.is_start)
-                        paje.AddVariable( t.time, variable_type_active_threads, container_jobs, 1.0 );
-                      else
-                        paje.SubVariable( t.time, variable_type_active_threads, container_jobs, 1.0 );
-                    }
-                  if(trace_threads)
-                    {
-                      if(t.is_start)
-                        paje.PushState( t.time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, true );
-                      else
-                        paje.PopState( t.time, state_type_task, thread_aliases[t.thread_id] );
-                    }
-                  break;
-                case Task::ID_TIMER:
-                  value_id = timer_aliases[t.id];
                   if(t.is_start)
-                    paje.PushState( t.time, state_type_timer, thread_aliases[t.thread_id], value_id, t.additional_value, true );
+                    paje.AddVariable( t.time, variable_type_active_threads, container_jobs, 1.0 );
                   else
-                    paje.PopState( t.time, state_type_timer, thread_aliases[t.thread_id] );
-                  break;
-                default:
+                    paje.SubVariable( t.time, variable_type_active_threads, container_jobs, 1.0 );
+                }
+              if(trace_threads)
+                {
                   if(t.is_start)
-                    paje.PushState( t.time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, false );
+                    paje.PushState( t.time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, true );
                   else
                     paje.PopState( t.time, state_type_task, thread_aliases[t.thread_id] );
-                  break;
                 }
-          }
+              break;
+            case Task::ID_TIMER:
+              value_id = timer_aliases[t.id];
+              if(t.is_start)
+                paje.PushState( t.time, state_type_timer, thread_aliases[t.thread_id], value_id, t.additional_value, true );
+              else
+                paje.PopState( t.time, state_type_timer, thread_aliases[t.thread_id] );
+              break;
+            default:
+              if(t.is_start)
+                paje.PushState( t.time, state_type_task, thread_aliases[t.thread_id], value_id, t.additional_value, false );
+              else
+                paje.PopState( t.time, state_type_task, thread_aliases[t.thread_id] );
+              break;
+            }
+      };
+
+      for(auto & vtasks : tasks)
+        {
+          std::vector<const Task*> open;
+          for (const Task & t : vtasks)
+            {
+              if(t.is_start)
+                open.push_back(&t);
+              else if(open.empty())
+                continue;
+              else
+                open.pop_back();
+              write_task(t);
+            }
+          while(open.size())
+            {
+              Task t = *open.back();
+              open.pop_back();
+              t.time = end_time;
+              t.is_start = false;
+              write_task(t);
+            }
         }
 
 #ifdef PARALLEL
