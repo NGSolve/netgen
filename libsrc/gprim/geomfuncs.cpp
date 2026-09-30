@@ -28,7 +28,7 @@ inline void CalcInverse (const Mat<2,2> & m, Mat<2,2> & inv)
 
 
   // template <>
-void CalcInverse (const Mat<3,3> & m, Mat<3,3> & inv)
+DLL_HEADER void CalcInverse (const Mat<3,3> & m, Mat<3,3> & inv)
 {
   double det = Det (m);
   if (det == 0) 
