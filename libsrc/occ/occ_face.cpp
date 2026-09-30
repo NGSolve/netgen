@@ -5,6 +5,7 @@
 #include <BRep_Tool.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <BRepLProp_SLProps.hxx>
+#include <ShapeAnalysis.hxx>
 
 #pragma clang diagnostic pop
 
@@ -97,6 +98,10 @@ namespace netgen
 
         auto n_faces = static_cast<int>(geom.GetNFaces());
 
+        double umin, umax, vmin, vmax;
+        ShapeAnalysis::GetFaceUVBounds (face, umin, umax, vmin, vmax);
+        double du = 0.01*(umax-umin), dv = 0.01*(vmax-vmin);
+
         Array<Segment> boundary;
         for (auto seg : mesh.LineSegments())
         {
@@ -145,6 +150,12 @@ namespace netgen
                     gi.v = uv.Y();
                     Point<3> pproject = mesh[seg[i]];
                     ProjectPointGI(pproject, gi);
+                    // points off the surface (large vertex tolerance) may project outside the face
+                    if(gi.u < umin-du || gi.u > umax+du || gi.v < vmin-dv || gi.v > vmax+dv)
+                      {
+                        gi.u = uv.X();
+                        gi.v = uv.Y();
+                      }
                     seg.GeomInfo(i).u = gi.u;
                     seg.GeomInfo(i).v = gi.v;
                 }
