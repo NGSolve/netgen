@@ -59,16 +59,16 @@ namespace netgen
         return {occ2ng(bb.CornerMin()), occ2ng(bb.CornerMax())};
     }
 
-    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape )
+    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape,
+                                         double deflection, double angle )
     {
        BRepTools::Clean (shape);
-       // double deflection = 0.01;
 
        // https://dev.opencascade.org/doc/overview/html/occt_user_guides__mesh.html
        // from Standard_Boolean meshing_imeshtools_parameters()
        IMeshTools_Parameters aMeshParams;
-       aMeshParams.Deflection               = 0.01;
-       aMeshParams.Angle                    = 0.5;
+       aMeshParams.Deflection               = deflection;
+       aMeshParams.Angle                    = angle;
        aMeshParams.Relative                 = Standard_True;
        aMeshParams.InParallel               = Standard_True;
        aMeshParams.MinSize                  = Precision::Confusion();

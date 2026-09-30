@@ -1411,11 +1411,9 @@ namespace netgen
   }
 
 
-   void OCCGeometry :: BuildVisualizationMesh (double deflection)
+   void OCCGeometry :: BuildVisualizationMesh (double deflection, double angle)
    {
-      // cout << IM(5) << "Preparing visualization (deflection = " << deflection << ") ... " << flush;
-      BuildTriangulation(shape);
-      // cout << IM(5) << "done" << endl;
+      BuildTriangulation(shape, deflection, angle);
    }
 
 

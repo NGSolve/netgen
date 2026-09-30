@@ -229,7 +229,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
              vertices.push_back(geo->vmap(i));
            return vertices;
          }, "Get vertices in order that they will be in the mesh")
-    .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo)
+    .def("_visualizationData", [] (shared_ptr<OCCGeometry> occ_geo,
+                                   double deflection, double angle)
          {
            std::vector<float> vertices;
            std::vector<uint32_t> indices;
@@ -250,7 +251,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                min[i] = box.PMin()[i];
                max[i] = box.PMax()[i];
              }
-           occ_geo->BuildVisualizationMesh(0.01);
+           occ_geo->BuildVisualizationMesh(deflection, angle);
            gp_Pnt2d uv;
            gp_Pnt pnt;
            gp_Vec n;
@@ -391,7 +392,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
             res["min"] = MoveToNumpy(min);
             res["max"] = MoveToNumpy(max);
             return res;
-         }, py::call_guard<py::gil_scoped_release>())
+         }, py::arg("deflection")=0.01, py::arg("angle")=0.5,
+            py::call_guard<py::gil_scoped_release>())
     .def("GenerateMesh", [](shared_ptr<OCCGeometry> geo,
                             MeshingParameters* pars, NgMPI_Comm comm,
                             shared_ptr<Mesh> mesh, py::kwargs kwargs)

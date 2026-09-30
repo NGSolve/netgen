@@ -97,7 +97,8 @@ namespace netgen
       bool opposite_direction = false;
     };
 
-    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape );
+    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape,
+                                         double deflection = 0.01, double angle = 0.5 );
 
 
     class MyExplorer
