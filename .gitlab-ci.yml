@@ -271,6 +271,7 @@ mac:
 pip_linux:
   image: cerbsim/manylinux_2_28_x86_64_cuda_12.9
   stage: pip
+  needs: []
   tags:
     - pip
     - linux
@@ -280,6 +281,7 @@ pip_linux:
 
 pip_windows:
   stage: pip
+  needs: []
   tags:
     - pip
     - windows
@@ -290,6 +292,7 @@ pip_windows:
 
 pip_macos:
   stage: pip
+  needs: []
   tags:
     - pip
     - macosx
