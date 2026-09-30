@@ -1487,6 +1487,7 @@ void GenerateBoundaryLayer (Mesh& mesh, const BoundaryLayerParameters& blp)
 
   BoundaryLayerTool tool(mesh, blp);
   tool.Perform();
+  mesh.PreviewResync();
 }
 
 } // namespace netgen

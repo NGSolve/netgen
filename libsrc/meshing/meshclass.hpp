@@ -61,6 +61,16 @@ namespace netgen
     BisectionInfo();
     ~BisectionInfo();
   };
+
+  struct PreviewBuffer
+  {
+    std::atomic<bool> enabled{false};
+    std::mutex mutex;
+    std::vector<float> coords;  // 9 per triangle
+    std::vector<int> faces;     // 0-based face index per triangle
+    std::vector<uint8_t> edges; // bit k: triangle edge (vk,vk+1) is an element edge
+    std::vector<int> reset;     // faces to drop before applying coords, -1 = all
+  };
   
   /// 2d/3d mesh
   class Mesh
@@ -157,6 +167,9 @@ namespace netgen
     std::mutex mutex;
     /// mesh access semaphores.
     std::mutex majormutex;
+
+    PreviewBuffer preview;
+    DLL_HEADER void PreviewAppend (const Element2dRef & el);
 
     SymbolTable< Array<int>* > userdata_int;
     SymbolTable< Array<double>* > userdata_double;
@@ -1033,6 +1046,14 @@ namespace netgen
     /// return mutex
     std::mutex & Mutex ()   { return mutex; }
     std::mutex & MajorMutex ()   { return majormutex; }
+
+    DLL_HEADER void EnablePreviewBuffer (bool enable);
+    bool PreviewEnabled () const { return preview.enabled.load(std::memory_order_relaxed); }
+    DLL_HEADER void TakePreview (std::vector<float> & coords, std::vector<int> & faces,
+                                 std::vector<int> & reset);
+    DLL_HEADER void TakePreview (std::vector<float> & coords, std::vector<int> & faces,
+                                 std::vector<int> & reset, std::vector<uint8_t> & edges);
+    DLL_HEADER void PreviewResync (FaceRegionIndex fi = FaceRegionIndex::INVALID);
 
 
     DLL_HEADER shared_ptr<NetgenGeometry> GetGeometry() const;

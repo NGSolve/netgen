@@ -210,6 +210,7 @@ namespace netgen
         timerstart.Stop();
         return GenericImprove();
     }
+    PreviewResyncGuard preview_guard{mesh, faceindex};
 
     Array<Neighbour, SurfaceElementIndex> neighbors(mesh.GetNSE());
     auto elements_on_node = mesh.CreateCompressedPoint2SurfaceElementTable(faceindex);
@@ -599,6 +600,7 @@ namespace netgen
         timerstart.Stop();
         return;
     }
+    PreviewResyncGuard preview_guard{mesh, faceindex};
 
     int np = mesh.GetNP();
 
@@ -691,6 +693,7 @@ namespace netgen
         mesh.Compress(); // TODO: needed?
         return;
       }
+    PreviewResyncGuard preview_guard{mesh, faceindex};
 
     Array<SurfaceElementIndex> elements;
     mesh.GetSurfaceElementsOfFace (faceindex, elements);

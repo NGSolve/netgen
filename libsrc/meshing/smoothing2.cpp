@@ -693,6 +693,7 @@ namespace netgen
   void MeshOptimize2d :: ImproveMesh (const MeshingParameters & mp)
   {
     static Timer timer("MeshSmoothing 2D"); RegionTimer reg (timer);
+    PreviewResyncGuard preview_guard{mesh, faceindex};
 
     PrintMessage (3, "Smoothing");
 

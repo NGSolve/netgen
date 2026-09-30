@@ -98,6 +98,18 @@ public:
 };
 
 ///
+struct PreviewResyncGuard
+{
+  Mesh & mesh;
+  FaceRegionIndex fi;
+  int nexcept = std::uncaught_exceptions();
+  ~PreviewResyncGuard()
+  {
+    if (std::uncaught_exceptions() == nexcept)
+      mesh.PreviewResync(fi);
+  }
+};
+
 class MeshOptimize2d
 {
   FaceRegionIndex faceindex = FaceRegionIndex::INVALID;   // INVALID: all faces
