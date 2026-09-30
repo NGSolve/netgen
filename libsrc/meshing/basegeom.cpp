@@ -1436,7 +1436,10 @@ namespace netgen
           bl_infos = InsertBoundaryLayers2d(*mesh, mparam);
         MeshSurface(*mesh, mparam);
         if(dimension == 2)
-          FinalizeBoundaryLayers2d(*mesh, bl_infos);
+          {
+            FinalizeBoundaryLayers2d(*mesh, bl_infos);
+            mesh->PreviewResync();
+          }
       }
 
     if (multithread.terminate || mparam.perfstepsend <= MESHCONST_OPTSURFACE)

@@ -399,6 +399,7 @@ namespace netgen
     paralleltop = make_unique<ParallelMeshTopology> (*this);
 #endif
 
+    PreviewResync();
     timestamp = NextTimeStamp();
   }
 
@@ -407,6 +408,7 @@ namespace netgen
   { 
     surfelements.SetSize(0);
     hp_surfinfo.SetSize(0);
+    PreviewResync();
     /*
     for (int i = 0; i < Regions<2>().Size(); i++)
       Regions<2>()[i].firstelement = SurfaceElementIndex::INVALID;
@@ -531,7 +533,124 @@ namespace netgen
     if (SurfaceArea().Valid())
       SurfaceArea().Add (el);
 
+    if (PreviewEnabled())
+      PreviewAppend (el);
+
     return si;
+  }
+
+  void Mesh :: EnablePreviewBuffer (bool enable)
+  {
+    {
+      std::lock_guard<std::mutex> lock(preview.mutex);
+      preview.coords.clear();
+      preview.faces.clear();
+      preview.edges.clear();
+      preview.reset.clear();
+      preview.enabled = enable;
+    }
+    if (enable)
+      PreviewResync();
+  }
+
+  void Mesh :: TakePreview (std::vector<float> & coords, std::vector<int> & faces,
+                            std::vector<int> & reset)
+  {
+    std::vector<uint8_t> edges;
+    TakePreview (coords, faces, reset, edges);
+  }
+
+  void Mesh :: TakePreview (std::vector<float> & coords, std::vector<int> & faces,
+                            std::vector<int> & reset, std::vector<uint8_t> & edges)
+  {
+    coords.clear();
+    faces.clear();
+    reset.clear();
+    edges.clear();
+    std::lock_guard<std::mutex> lock(preview.mutex);
+    swap(coords, preview.coords);
+    swap(faces, preview.faces);
+    swap(reset, preview.reset);
+    swap(edges, preview.edges);
+  }
+
+  static void PreviewAddTrigs (const Mesh & mesh, const Element2dRef & el,
+                               std::vector<float> & coords, std::vector<int> & faces,
+                               std::vector<uint8_t> & edges)
+  {
+    int nv = el.GetNV();
+    int fi = el.GetIndex().Nr0();
+    for (int i = 1; i+1 < nv; i++)
+      {
+        for (int j : { 0, i, i+1 })
+          {
+            const auto & p = mesh[el[j]];
+            for (int k = 0; k < 3; k++)
+              coords.push_back (p(k));
+          }
+        faces.push_back (fi);
+        edges.push_back (uint8_t((i == 1 ? 1 : 0) | 2 | (i+2 == nv ? 4 : 0)));
+      }
+  }
+
+  void Mesh :: PreviewAppend (const Element2dRef & el)
+  {
+    std::lock_guard<std::mutex> lock(preview.mutex);
+    PreviewAddTrigs (*this, el, preview.coords, preview.faces, preview.edges);
+  }
+
+  void Mesh :: PreviewResync (FaceRegionIndex fi)
+  {
+    if (!PreviewEnabled()) return;
+    std::vector<float> coords;
+    std::vector<int> faces;
+    std::vector<uint8_t> edges;
+    auto add = [&] (const Element2dRef & el)
+    {
+      if (!el.IsDeleted() && el[0].IsValid())
+        PreviewAddTrigs (*this, el, coords, faces, edges);
+    };
+    if (fi.IsValid())
+      {
+        Array<SurfaceElementIndex> seia;
+        GetSurfaceElementsOfFace (fi, seia);
+        for (auto sei : seia)
+          add ((*this)[sei]);
+      }
+    else
+      for (const auto & el : surfelements)
+        add (el);
+
+    std::lock_guard<std::mutex> lock(preview.mutex);
+    if (fi.IsValid())
+      {
+        int f = fi.Nr0();
+        size_t n = 0;
+        for (size_t i = 0; i < preview.faces.size(); i++)
+          if (preview.faces[i] != f)
+            {
+              preview.faces[n] = preview.faces[i];
+              preview.edges[n] = preview.edges[i];
+              for (int k = 0; k < 9; k++)
+                preview.coords[9*n+k] = preview.coords[9*i+k];
+              n++;
+            }
+        preview.faces.resize(n);
+        preview.edges.resize(n);
+        preview.coords.resize(9*n);
+        preview.reset.push_back (f);
+      }
+    else
+      {
+        preview.coords.clear();
+        preview.faces.clear();
+        preview.edges.clear();
+        preview.reset.clear();
+        preview.reset.push_back (-1);
+      }
+    preview.coords.insert (preview.coords.end(), coords.begin(), coords.end());
+    preview.faces.insert (preview.faces.end(), faces.begin(), faces.end());
+    preview.edges.insert (preview.edges.end(), edges.begin(), edges.end());
   }
 
   void Mesh :: SetSurfaceElement (SurfaceElementIndex sei, const Element2dRef & el)

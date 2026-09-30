@@ -1225,6 +1225,36 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     .def_property("dim", &Mesh::GetDimension, &Mesh::SetDimension)
 
+    .def("EnablePreviewBuffer", &Mesh::EnablePreviewBuffer, py::arg("enable")=true,
+         py::call_guard<py::gil_scoped_release>(),
+         "Collect surface triangles during meshing for a live preview, see TakePreviewTriangles")
+    .def("TakePreviewTriangles", [] (Mesh & self, bool with_edges) -> py::tuple
+         {
+           std::vector<float> coords;
+           std::vector<int> faces, reset;
+           std::vector<uint8_t> edges;
+           {
+             py::gil_scoped_release release;
+             self.TakePreview (coords, faces, reset, edges);
+           }
+           py::ssize_t n = faces.size();
+           py::array_t<float> np_coords({ n, py::ssize_t(3), py::ssize_t(3) });
+           py::array_t<int32_t> np_faces(n);
+           py::array_t<int32_t> np_reset(py::ssize_t(reset.size()));
+           std::copy (coords.begin(), coords.end(), np_coords.mutable_data());
+           std::copy (faces.begin(), faces.end(), np_faces.mutable_data());
+           std::copy (reset.begin(), reset.end(), np_reset.mutable_data());
+           if (!with_edges)
+             return py::make_tuple (np_coords, np_faces, np_reset);
+           py::array_t<uint8_t> np_edges(n);
+           std::copy (edges.begin(), edges.end(), np_edges.mutable_data());
+           return py::make_tuple (np_coords, np_faces, np_reset, np_edges);
+         }, py::arg("edges")=false,
+         "Returns (coords (n,3,3) float32, faces (n,) int32, reset (k,) int32) collected since the last call.\n"
+         "Triangles of faces listed in reset (-1: all) delivered earlier must be dropped before appending coords.\n"
+         "With edges=True additionally returns edge_mask (n,) uint8: bit k set if triangle edge (vk,v(k+1)%3)\n"
+         "is an element edge, unset for diagonals of split quads/polygons.")
+
     .def("Elements3D",
          [] (Mesh & self) -> T_VOLELEMENTS & { return self.VolumeElements(); },
          py::return_value_policy::reference_internal)

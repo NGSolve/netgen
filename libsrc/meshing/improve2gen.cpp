@@ -36,6 +36,7 @@ namespace netgen
         faceindex = FaceRegionIndex::INVALID;
         return;
       }
+    PreviewResyncGuard preview_guard{mesh, faceindex};
 
     // int j, k, l, ri;
     int np = mesh.GetNP();
