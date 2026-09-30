@@ -90,7 +90,7 @@ if(BUILD_OCC)
 
   ExternalProject_Add(project_occ
     URL https://github.com/Open-Cascade-SAS/OCCT/archive/refs/tags/V8_0_1.zip
-    URL_MD5 26b0630938d18dacf55b4bd9708cc405
+    URL_MD5 5b0b171d7028cf73bd9369997091347a
     DOWNLOAD_DIR ${CMAKE_CURRENT_SOURCE_DIR}/external_dependencies
     ${SUBPROJECT_ARGS}
     CMAKE_ARGS
