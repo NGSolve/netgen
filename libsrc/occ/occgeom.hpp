@@ -321,7 +321,7 @@ namespace netgen
     }
 
     void CalcBoundingBox ();
-    void BuildVisualizationMesh (double deflection);
+    void BuildVisualizationMesh (double deflection = 0.01, double angle = 0.5);
     
     void RecursiveTopologyTree (const TopoDS_Shape & sh,
                                 stringstream & str,
