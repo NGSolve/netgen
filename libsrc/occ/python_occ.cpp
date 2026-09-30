@@ -111,6 +111,25 @@ DLL_HEADER void ExportNgOCC(py::module &m)
     }
   });
   
+  py::class_<OCCAssemblyNode, shared_ptr<OCCAssemblyNode>>
+    (m, "OCCAssemblyNode",
+     "A node of the STEP/IGES product structure: a named sub-assembly (with "
+     "children) or a leaf part (with a `shape` placed in global coordinates).")
+    .def_readonly("name", &OCCAssemblyNode::name)
+    .def_readonly("is_assembly", &OCCAssemblyNode::is_assembly)
+    .def_property_readonly("shape", [](shared_ptr<OCCAssemblyNode> n) -> py::object
+                           {
+                             if(n->shape.IsNull()) return py::none();
+                             return py::cast(n->shape);
+                           })
+    .def_property_readonly("children", [](shared_ptr<OCCAssemblyNode> n)
+                           {
+                             py::list out;
+                             for(auto & c : n->children) out.append(c);
+                             return out;
+                           })
+    ;
+
   py::class_<OCCGeometry, shared_ptr<OCCGeometry>, NetgenGeometry> (m, "OCCGeometry", R"raw_string(Use LoadOCCGeometry to load the geometry from a *.step file.)raw_string")
     /*
     .def(py::init<const TopoDS_Shape&>(), py::arg("shape"),
@@ -416,6 +435,11 @@ DLL_HEADER void ExportNgOCC(py::module &m)
          py::arg("mesh")=nullptr,
          (meshingparameter_description + occparameter_description).c_str())
     .def_property_readonly("shape", [](const OCCGeometry & self) { return self.GetShape(); })
+    .def("GetAssemblyTree", [](shared_ptr<OCCGeometry> geo) -> py::object
+         {
+           if(!geo->assembly_tree) return py::none();
+           return py::cast(geo->assembly_tree);
+         }, "Product/assembly structure read from the file (STEP/IGES), or None.")
     ;
 
   
