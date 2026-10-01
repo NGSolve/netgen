@@ -29,7 +29,8 @@ do
 
     # Point CMake at the Python prefix for Tcl/Tk discovery (as the old setup.py did)
     PYPREFIX=$($PYDIR/python3 -c 'import sys; print(sys.prefix)')
-    export CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${PYPREFIX} -DPython3_ROOT_DIR=${PYPREFIX}"
+    # Link legacy libGL.so.1 (manylinux whitelisted), vendored glvnd libs clash with the system ones
+    export CMAKE_ARGS="-DCMAKE_PREFIX_PATH=${PYPREFIX} -DPython3_ROOT_DIR=${PYPREFIX} -DOpenGL_GL_PREFERENCE=LEGACY"
 
     rm -rf dist
     $PYDIR/python3 -m build --wheel --no-isolation --outdir dist .
