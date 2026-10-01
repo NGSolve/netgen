@@ -9,7 +9,9 @@
 
 #ifdef OCCGEOMETRY
 
+#include <mutex>
 #include <set>
+#include <unordered_map>
 
 #include <meshing.hpp>
 #include "occ_utils.hpp"
@@ -149,10 +151,9 @@ namespace netgen
     Point<3> center;
     OCCParameters occparam;
   public:
-    static TopTools_IndexedMapOfShape global_shape_property_indices;
-    static std::vector<ShapeProperties> global_shape_properties;
-    static TopTools_IndexedMapOfShape global_identification_indices;
-    static std::vector<std::vector<OCCIdentification>> global_identifications;
+    static std::unordered_map<TopoDS_Shape, ShapeProperties, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> global_shape_properties;
+    static std::unordered_map<TopoDS_Shape, std::vector<OCCIdentification>, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> global_identifications;
+    static std::mutex global_shape_mutex;
 
     static ShapeProperties& GetProperties(const TopoDS_Shape& shape)
     {
@@ -164,31 +165,36 @@ namespace netgen
         {
           cerr << "WARNING: " << e.what() << endl;
         }
-      auto index = OCCGeometry::global_shape_property_indices.FindIndex(shape);
-      if(index > 0)
-        return OCCGeometry::global_shape_properties
-          [index-1];
-      OCCGeometry::global_shape_property_indices.Add(shape);
-      OCCGeometry::global_shape_properties.push_back({});
-      return OCCGeometry::global_shape_properties.back();
+      std::lock_guard<std::mutex> guard(global_shape_mutex);
+      return global_shape_properties[shape];
+    }
+    // does not create an entry, nullptr if shape has no properties
+    static const ShapeProperties* FindProperties(const TopoDS_Shape& shape)
+    {
+      std::lock_guard<std::mutex> guard(global_shape_mutex);
+      auto it = global_shape_properties.find(shape);
+      return it == global_shape_properties.end() ? nullptr : &it->second;
     }
     static bool HaveProperties(const TopoDS_Shape& shape)
     {
-      return OCCGeometry::global_shape_property_indices.FindIndex(shape) > 0;
+      std::lock_guard<std::mutex> guard(global_shape_mutex);
+      return global_shape_properties.count(shape) > 0;
     }
     static std::vector<OCCIdentification>& GetIdentifications(const TopoDS_Shape& shape)
     {
-      auto index = OCCGeometry::global_identification_indices.FindIndex(shape);
-      if(index > 0)
-        return OCCGeometry::global_identifications[index-1];
-      OCCGeometry::global_identification_indices.Add(shape);
-      OCCGeometry::global_identifications.push_back({});
-      return OCCGeometry::global_identifications.back();
+      std::lock_guard<std::mutex> guard(global_shape_mutex);
+      return global_identifications[shape];
     }
     static bool HaveIdentifications(const TopoDS_Shape& shape)
     {
-      return OCCGeometry::global_identification_indices.FindIndex(shape) > 0;
+      std::lock_guard<std::mutex> guard(global_shape_mutex);
+      return global_identifications.count(shape) > 0;
     }
+    // removes entries of shapes that are only referenced by the global maps,
+    // returns the number of removed entries
+    static size_t CleanupGlobalShapeData();
+    // cleanup only if the maps have doubled since the last cleanup
+    static void CleanupGlobalShapeDataIfGrown();
 
     TopoDS_Shape shape;
     std::shared_ptr<OCCAssemblyNode> assembly_tree;
