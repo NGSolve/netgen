@@ -1996,7 +1996,7 @@ namespace netgen
                 
                 for (int i = 0; i < cnt_valid; i++)
                   {
-                    el.GetShapeNew<double> (locgrid[i], shape);
+                    el.GetShape<double> (locgrid[i], shape);
                     Point<3> pglob;
                     for (int j = 0; j < 3; j++)
                       {
@@ -4132,7 +4132,7 @@ namespace netgen
                 
                 for (int i = 0; i < cnt_valid; i++)
                   {
-                    el.GetShapeNew<double> (locgrid[i], shape);
+                    el.GetShape<double> (locgrid[i], shape);
                     Point<3> pglob;
                     for (int j = 0; j < 3; j++)
                       {
