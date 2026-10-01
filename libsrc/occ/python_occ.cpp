@@ -178,7 +178,8 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                     ng_geometry = geo;
                     return geo;
                   }), py::arg("filename"), py::arg("dim")=3,
-        "Load OCC geometry from step, brep or iges file")
+        "Load OCC geometry from step, brep or iges file",
+        py::call_guard<py::gil_scoped_release>())
     .def(NGSPickle<OCCGeometry>())
     .def("Glue", &OCCGeometry::GlueGeometry)
     .def("Heal",[](OCCGeometry & self, double tolerance, bool fixsmalledges, bool fixspotstripfaces, bool sewfaces, bool makesolids, bool splitpartitions)
