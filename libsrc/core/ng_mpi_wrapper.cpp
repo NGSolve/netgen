@@ -3,6 +3,7 @@
 #include <stdexcept>
 
 #include "ng_mpi.hpp"
+#include "array.hpp"
 #include "ngstream.hpp"
 #ifdef NG_PYTHON
 #include "python_ngcore.hpp"
@@ -52,12 +53,12 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
       int flag = 0;
       mpi_initialized(&flag);
       if (!flag) {
-        typedef const char *pchar;
         int argc = 1;
-        pchar args[] = {"netgen", nullptr};
-        pchar *argv = &args[0];
+        char name[] = "netgen";
+        char *args[] = {name, nullptr};
+        char **argv = args;
         cout << IM(5) << "Calling MPI_Init" << endl;
-        mpi_init(&argc, (char ***)argv);
+        mpi_init(&argc, &argv);   // was passing argv instead of &argv
         need_mpi_finalize = true;
       }
 
@@ -68,19 +69,7 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
       auto get_version =
           mpi_lib->GetSymbol<get_version_handle>("MPI_Get_library_version");
       get_version(c_version_string, &result_len);
-      std::string version = c_version_string;
-
-      if (version.substr(0, 8) == "Open MPI")
-        vendor = "Open MPI";
-      else if (version.substr(0, 5) == "MPICH")
-        vendor = "MPICH";
-      else if (version.substr(0, 13) == "Microsoft MPI")
-        vendor = "Microsoft MPI";
-      else if (version.substr(0, 12) == "Intel(R) MPI")
-        vendor = "Intel MPI";
-      else
-        throw std::runtime_error(
-            std::string("Unknown MPI version: " + version));
+      vendor = c_version_string;   // library version string, searched for vendor names below
     } catch (std::runtime_error &e) {
       cerr << "Could not load MPI: " << e.what() << endl;
       throw e;
@@ -98,34 +87,63 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
     mpi4py_lib_file = mpi4py.attr("__file__").cast<std::string>();
     mpi_lib =
         std::make_unique<SharedLibrary>(mpi4py_lib_file, std::nullopt, true);
+    try {
+      char c_version_string[65536];
+      c_version_string[0] = '\0';
+      int result_len = 0;
+      typedef void (*get_version_handle)(char *, int *);
+      mpi_lib->GetSymbol<get_version_handle>("MPI_Get_library_version")(c_version_string, &result_len);
+      vendor += std::string(" / ") + c_version_string;
+    } catch (std::runtime_error &) {
+    }
 #endif  // WIN32
 #endif // NG_PYTHON
   }
 
-  std::string ng_lib_name = "";
-  if (vendor == "Open MPI")
-    ng_lib_name = "ng_openmpi";
-  else if (vendor == "MPICH")
-    ng_lib_name = "ng_mpich";
-  else if (vendor == "Microsoft MPI")
-    ng_lib_name = "ng_microsoft_mpi";
-  else if (vendor == "Intel MPI")
-    ng_lib_name = "ng_intel_mpi";
-  else
-    throw std::runtime_error("Unknown MPI vendor: " + vendor);
-
-  ng_lib_name += NETGEN_SHARED_LIBRARY_SUFFIX;
+  // The wrapper variant is chosen by ABI, not by vendor name: every MPI library
+  // is either Open MPI-ABI (predefined handles are exported symbols) or
+  // MPICH-ABI (predefined handles are integer constants: MPICH, Cray MPICH,
+  // MVAPICH, Intel MPI, ...). Vendor names only select the dedicated variants.
+  auto mentions = [&](const char *name) {
+    return vendor.find(name) != std::string::npos;
+  };
+  Array<std::string> candidates;
+  if (mentions("Microsoft MPI"))
+    candidates.Append("ng_microsoft_mpi");
+  else if (mentions("Intel(R) MPI") || mentions("Intel MPI"))
+    candidates = {"ng_intel_mpi", "ng_mpich"};
+  else if (mentions("Open MPI") || mentions("Spectrum MPI"))
+    candidates.Append("ng_openmpi");
+  else if (mentions("MPICH") || mentions("MVAPICH"))
+    candidates.Append("ng_mpich");
+  else {
+    bool openmpi_abi = false;
+    if (mpi_lib)
+      try {
+        mpi_lib->GetSymbol<void *>("ompi_mpi_comm_world");
+        openmpi_abi = true;
+      } catch (std::runtime_error &) {
+      }
+    candidates.Append(openmpi_abi ? "ng_openmpi" : "ng_mpich");
+  }
 
   // Load the ng_mpi wrapper and call ng_init_mpi to set all function pointers
   typedef void (*ng_init_handle)();
-  try {
-    ng_mpi_lib = std::make_unique<SharedLibrary>(ng_lib_name);
-  } catch (std::runtime_error &e) {
-    throw std::runtime_error("Could not load MPI wrapper library " + ng_lib_name +
-                             " (is Netgen built with USE_MPI=ON?): " + e.what());
+  std::string errors;
+  for (auto name : candidates) {
+    std::string ng_lib_name = name + NETGEN_SHARED_LIBRARY_SUFFIX;
+    try {
+      ng_mpi_lib = std::make_unique<SharedLibrary>(ng_lib_name);
+      break;
+    } catch (std::runtime_error &e) {
+      errors += std::string("\n  ") + ng_lib_name + ": " + e.what();
+    }
   }
+  if (!ng_mpi_lib)
+    throw std::runtime_error("Could not load the MPI wrapper library for \"" + vendor +
+                             "\" (is Netgen built with USE_MPI=ON?):" + errors);
   ng_mpi_lib->GetSymbol<ng_init_handle>("ng_init_mpi")();
-  std::cout << IM(3) << "MPI wrapper loaded, vendor: " << vendor << endl;
+  std::cout << IM(3) << "MPI wrapper loaded: " << candidates[0] << " for " << vendor << endl;
 }
 
 static std::runtime_error no_mpi() {

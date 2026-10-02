@@ -1,5 +1,6 @@
 NGCORE_API extern double (*NG_MPI_Wtime)();
 NGCORE_API extern int (*NG_MPI_Allgather)(void*, int, NG_MPI_Datatype, void*, int, NG_MPI_Datatype, NG_MPI_Comm);
+NGCORE_API extern int (*NG_MPI_Allgatherv)(void*, int, NG_MPI_Datatype, void*, int*, int*, NG_MPI_Datatype, NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Allreduce)(void*, void*, int, NG_MPI_Datatype, NG_MPI_Op, NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Alltoall)(void*, int, NG_MPI_Datatype, void*, int, NG_MPI_Datatype, NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Barrier)(NG_MPI_Comm);
@@ -17,6 +18,7 @@ NGCORE_API extern int (*NG_MPI_Gather)(void*, int, NG_MPI_Datatype, void*, int, 
 NGCORE_API extern int (*NG_MPI_Gatherv)(void*, int, NG_MPI_Datatype, void*, int*, int*, NG_MPI_Datatype, int, NG_MPI_Comm);
 NGCORE_API extern int (*NG_MPI_Get_count)(NG_MPI_Status*, NG_MPI_Datatype, int*);
 NGCORE_API extern int (*NG_MPI_Get_processor_name)(char*, int*);
+NGCORE_API extern int (*NG_MPI_Group_free)(NG_MPI_Group*);
 NGCORE_API extern int (*NG_MPI_Group_incl)(NG_MPI_Group, int, int*, NG_MPI_Group*);
 NGCORE_API extern int (*NG_MPI_Init)(int*, char***);
 NGCORE_API extern int (*NG_MPI_Init_thread)(int*, char***, int, int*);
@@ -56,6 +58,9 @@ NGCORE_API extern NG_MPI_Datatype NG_MPI_DATATYPE_NULL;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_DOUBLE;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_FLOAT;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_INT;
+NGCORE_API extern NG_MPI_Datatype NG_MPI_LONG;
+NGCORE_API extern NG_MPI_Datatype NG_MPI_LONG_LONG;
+NGCORE_API extern NG_MPI_Datatype NG_MPI_UNSIGNED;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_SHORT;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_UINT64_T;
 NGCORE_API extern NG_MPI_Op NG_MPI_LOR;

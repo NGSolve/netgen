@@ -122,6 +122,11 @@ function (build_mpi_variant)
   install(TARGETS ${target} RUNTIME DESTINATION ${NG_INSTALL_DIR_BIN} LIBRARY DESTINATION ${NG_INSTALL_DIR_LIB} COMPONENT netgen)
 endfunction()
 
+if(ENABLE_UNIT_TESTS AND Python3_EXECUTABLE)
+  add_test(NAME ng_mpi_generated_sources
+           COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_mpi_sources.py --check)
+endif()
+
 if(USE_MPI)
   # PARALLEL and NG_MPI_WRAPPER are no longer used inside Netgen; they are
   # still exported for downstream projects (NGSolve) that select their MPI

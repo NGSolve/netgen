@@ -1,6 +1,7 @@
 functions = [
         ("double", "MPI_Wtime"),
         ("int", "MPI_Allgather", "void*", "int", "MPI_Datatype", "void*", "int", "MPI_Datatype", "MPI_Comm"),
+        ("int", "MPI_Allgatherv", "void*", "int", "MPI_Datatype", "void*", "int*", "int*", "MPI_Datatype", "MPI_Comm"),
         ("int", "MPI_Allreduce", "void*", "void*", "int", "MPI_Datatype", "MPI_Op", "MPI_Comm"),
         ("int", "MPI_Alltoall", "void*", "int", "MPI_Datatype", "void*", "int", "MPI_Datatype", "MPI_Comm"),
         ("int", "MPI_Barrier", "MPI_Comm"),
@@ -18,6 +19,7 @@ functions = [
         ("int", "MPI_Gatherv", "void*", "int", "MPI_Datatype", "void*", "int*", "int*", "MPI_Datatype", "int", "MPI_Comm"),
         ("int", "MPI_Get_count", "MPI_Status*", "MPI_Datatype", "int*"),
         ("int", "MPI_Get_processor_name", "char*", "int*"),
+        ("int", "MPI_Group_free", "MPI_Group*"),
         ("int", "MPI_Group_incl", "MPI_Group", "int", "int*", "MPI_Group*"),
         ("int", "MPI_Init", "int*", "char***"),
         ("int", "MPI_Init_thread", "int*", "char***", "int", "int*"),
@@ -60,6 +62,9 @@ constants = [
         ("MPI_Datatype", "MPI_DOUBLE"),
         ("MPI_Datatype", "MPI_FLOAT"),
         ("MPI_Datatype", "MPI_INT"),
+        ("MPI_Datatype", "MPI_LONG"),
+        ("MPI_Datatype", "MPI_LONG_LONG"),
+        ("MPI_Datatype", "MPI_UNSIGNED"),
         ("MPI_Datatype", "MPI_SHORT"),
         ("MPI_Datatype", "MPI_UINT64_T"),
         ("MPI_Op", "MPI_LOR"),
@@ -99,6 +104,20 @@ def get_args(f, counts=False):
             args.append(s)
     return args
 
+import os, sys
+
+def write_or_check(filename, content):
+    """--check: compare with the file on disk instead of writing it"""
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(here, filename)
+    if "--check" in sys.argv:
+        if open(path).read() != content:
+            print(f"{filename} is out of date, run generate_mpi_sources.py", file=sys.stderr)
+            sys.exit(1)
+    else:
+        with open(path, "w") as f:
+            f.write(content)
+
 def generate_declarations():
     code = ""
     for f in functions:
@@ -112,8 +131,7 @@ def generate_declarations():
             typ = "NG_" + typ
         code += f"NGCORE_API extern {typ} NG_{name};\n"
 
-    with open("ng_mpi_generated_declarations.hpp", "w") as f:
-        f.write(code)
+    write_or_check("ng_mpi_generated_declarations.hpp", code)
 
 def generate_dummy_init():
     code = ""
@@ -128,8 +146,7 @@ def generate_dummy_init():
             typ = "NG_" + typ
         code += f"{typ} NG_{name} = 0;\n"
 
-    with open("ng_mpi_generated_dummy_init.hpp", "w") as f:
-        f.write(code)
+    write_or_check("ng_mpi_generated_dummy_init.hpp", code)
 
 def generate_init():
     code = ""
@@ -159,8 +176,7 @@ def generate_init():
     for _, name in constants:
         code += f"NG_{name} = mpi2ng({name});\n"
 
-    with open("ng_mpi_generated_init.hpp", "w") as f:
-        f.write(code)
+    write_or_check("ng_mpi_generated_init.hpp", code)
 
 if __name__ == "__main__":
     generate_declarations()
