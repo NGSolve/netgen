@@ -1408,11 +1408,11 @@ namespace netgen
 #endif
 
 #ifndef METIS5
-  void Mesh :: ParallelMetis (int /* nproc */)
+  void Mesh :: ParallelMetis (int /* nproc */, bool /* root_participates */)
   {
     throw NgException("Mesh::ParallelMetis: Netgen was built without METIS");
   }
-  void Mesh :: ParallelMetis (Array<int> &, Array<int> &, Array<int> &)
+  void Mesh :: ParallelMetis (Array<int> &, Array<int> &, Array<int> &, bool /* root_participates */)
   {
     throw NgException("Mesh::ParallelMetis: Netgen was built without METIS");
   }
