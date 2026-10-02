@@ -2,7 +2,7 @@ import pytest
 import netgen.meshing
 
 mpi4py = pytest.importorskip("mpi4py")
-_ = pytest.importorskip("pytest_mpi")
+pytestmark = pytest.mark.skipif(mpi4py.MPI.COMM_WORLD.size == 1, reason="needs more than one MPI rank")
 
 try:
     from netgen.occ import Box, Pnt, OCCGeometry
@@ -11,7 +11,6 @@ except ImportError:
     has_occ = False
 
 
-@pytest.mark.mpi
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
 def test_mpi_segments_have_valid_ed_after_load():
     """Check that every local segment has a valid edge descriptor index (>= 0) after MPI distribution."""
@@ -32,7 +31,6 @@ def test_mpi_segments_have_valid_ed_after_load():
         assert seg.index >= 0, f"segment has index={seg.index}"
 
 
-@pytest.mark.mpi
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
 def test_mpi_edge_descriptors_distributed():
     """Check that non-root ranks have edge descriptors with valid edgenr after MPI distribution."""
@@ -56,7 +54,6 @@ def test_mpi_edge_descriptors_distributed():
             assert ed.edgenr > 0, f"ED[{i}] edgenr={ed.edgenr} should be > 0"
 
 
-@pytest.mark.mpi
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
 def test_mpi_cd2names_survive_distribution():
     """Check that named edges (CD2 names) survive MPI distribution."""

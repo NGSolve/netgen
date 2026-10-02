@@ -2,9 +2,8 @@ import pytest
 import netgen.meshing
 
 mpi4py = pytest.importorskip("mpi4py")
-_ = pytest.importorskip("pytest_mpi")
+pytestmark = pytest.mark.skipif(mpi4py.MPI.COMM_WORLD.size == 1, reason="needs more than one MPI rank")
 
-@pytest.mark.mpi
 def test_mpi4py():
     comm = mpi4py.MPI.COMM_WORLD
 
