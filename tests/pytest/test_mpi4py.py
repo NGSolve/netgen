@@ -1,11 +1,11 @@
 import pytest
 import netgen.meshing
 
-mpi4py = pytest.importorskip("mpi4py")
-pytestmark = pytest.mark.skipif(mpi4py.MPI.COMM_WORLD.size == 1, reason="needs more than one MPI rank")
+MPI = pytest.importorskip("mpi4py.MPI")
+pytestmark = pytest.mark.skipif(MPI.COMM_WORLD.size == 1, reason="needs more than one MPI rank")
 
 def test_mpi4py():
-    comm = mpi4py.MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD
 
     if comm.rank==0:
         from netgen.csg import unit_cube
