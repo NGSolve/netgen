@@ -2837,12 +2837,7 @@ namespace netgen
     mesh.SetNP(np);
 
 
-    if (mesh.GetCommunicator().Size() > 1)
-      {
-        mesh.GetParallelTopology().IdentifyVerticesAfterRefinement();
-        mesh.GetCommunicator().Barrier();
-        mesh.GetParallelTopology().EnumeratePointsGlobally();
-      }
+    mesh.UpdateParallelTopology();
 
 
 

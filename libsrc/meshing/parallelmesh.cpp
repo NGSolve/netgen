@@ -39,22 +39,18 @@ namespace netgen
     if (id == 0)
       PrintMessage (1, "Send/Receive mesh");
 
-    // Why is this here??
-    if (id == 0)
-      {
-        paralleltop -> SetNV (GetNV());
-        paralleltop -> SetNV_Loc2Glob (GetNV());
-        paralleltop -> SetNE (GetNE());
-        paralleltop -> SetNSegm (GetNSeg());
-        paralleltop -> SetNSE (GetNSE());
-      }
-
     if (id == 0)
       SendMesh ();
     else
       ReceiveParallelMesh();
+  }
 
-    paralleltop -> UpdateCoarseGrid();
+
+  void Mesh :: UpdateParallelTopology ()
+  {
+    if (GetCommunicator().Size() == 1) return;
+    paralleltop->IdentifyNewVertices();
+    paralleltop->EnumeratePointsGlobally();
   }
 
 
@@ -67,10 +63,10 @@ namespace netgen
       points                               -> Array<MeshPoint>
       identifications                      -> int table, local vertex numbers
       distant procs of vertices            -> pairs (local vertex, proc)
-      global volume element numbers, volume elements   (StridedElementArray::DoArchiveCurrent)
+      volume elements                      (StridedElementArray::DoArchiveCurrent)
       regions of dimension 2, 1, 3, 0      -> descriptors including names
-      global surface element numbers, surface elements, their geometry info
-      global segment numbers, segments, their geometry info
+      surface elements, their geometry info
+      segments, their geometry info
       point elements
 
     Element point numbers are mapped to the destination's local numbers before
@@ -620,9 +616,6 @@ namespace netgen
         // volume elements
         {
           auto els = els_of_proc[dest];
-          Array<int> glob(els.Size());
-          for (auto k : Range(els)) glob[k] = els[k].Nr1();
-          ar & glob;
           size_t n = els.Size(), w = volelements.Width();   // as StridedElementArray::DoArchiveCurrent
           ar & n & w;
           for (auto ei : els)
@@ -638,9 +631,6 @@ namespace netgen
         // surface elements
         {
           auto sels = sels_to_send[dest];
-          Array<int> glob(sels.Size());
-          for (auto k : Range(sels)) glob[k] = sels[k].Nr1();
-          ar & glob;
           size_t n = sels.Size(), w = surfelements.Width();
           ar & n & w;
           for (auto sei : sels)
@@ -656,9 +646,6 @@ namespace netgen
         // segments
         {
           auto segs = segs_to_send[dest];
-          Array<int> glob(segs.Size());
-          for (auto k : Range(segs)) glob[k] = segs[k].Nr1();
-          ar & glob;
           size_t n = segs.Size();
           ar & n;
           for (auto segi : segs)
@@ -806,41 +793,17 @@ namespace netgen
       paralleltop -> AddDistantProc (PointIndex::FromNr0(dist_pnums[hi]), dist_pnums[hi+1]);
     *testout << "got " << numvert << " vertices" << endl;
 
-    // volume elements
-    {
-      Array<int> glob;
-      ar & glob;
-      volelements.DoArchiveCurrent (ar);
-      paralleltop -> SetNE (GetNE());
-      for (auto k : Range(glob))
-        paralleltop->SetLoc2Glob_VolEl (k+1, glob[k]);
-    }
+    volelements.DoArchiveCurrent (ar);
 
     ar & Regions<2>() & Regions<1>() & Regions<3>() & Regions<0>();
 
-    // surface elements
-    {
-      Array<int> glob;
-      ar & glob;
-      surfelements.DoArchiveCurrent (ar);
-      for (auto el : surfelements)
-        el.DoArchiveGeomInfo (ar);
-      paralleltop -> SetNSE (GetNSE());
-      for (auto k : Range(glob))
-        paralleltop->SetLoc2Glob_SurfEl (k+1, glob[k]);
-    }
+    surfelements.DoArchiveCurrent (ar);
+    for (auto el : surfelements)
+      el.DoArchiveGeomInfo (ar);
 
-    // segments
-    {
-      Array<int> glob;
-      ar & glob;
-      ar & segments;
-      for (auto & seg : segments)
-        seg.DoArchiveGeomInfo (ar);
-      paralleltop -> SetNSegm (GetNSeg());
-      for (auto k : Range(glob))
-        paralleltop->SetLoc2Glob_Segm (k+1, glob[k]);
-    }
+    ar & segments;
+    for (auto & seg : segments)
+      seg.DoArchiveGeomInfo (ar);
 
     ar & pointelements;
     timer_unpack.Stop();
@@ -848,9 +811,7 @@ namespace netgen
     RebuildSurfaceElementLists();
     RebuildFDIndices();
 
-    paralleltop -> EnumeratePointsGlobally();
-
-    comm.Barrier();
+    UpdateParallelTopology();
 
     static Timer timerloc("Update local mesh");
     static Timer timerloc2("CalcSurfacesOfNode");
@@ -870,11 +831,7 @@ namespace netgen
 
     timerloc2.Stop();
 
-    topology.Update();
-    clusters -> Update();
-
-    // paralleltop -> UpdateCoarseGrid();
-    // paralleltop->EnumeratePointsGlobally();
+    UpdateTopology();   // includes the shared edges and faces
     SetNextMajorTimeStamp();
   }
 

@@ -274,14 +274,6 @@ extern "C" {
                                         double * p3d, double * jacobian);
 
 
-  // the following functions are 0-base  !!
-
-  // number on distant processor 
-  // returns pairs  (dist_proc, num_on_dist_proc)
-  int NgPar_GetDistantNodeNums ( int nodetype, int locnum, int * pnums );
-  int NgPar_GetNDistantNodeNums ( int nodetype, int locnum );
-  
-  DLL_HEADER int NgPar_GetGlobalNodeNum (int nodetype, int locnum);
 
   
   namespace netgen {

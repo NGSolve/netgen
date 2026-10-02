@@ -1088,6 +1088,10 @@ namespace netgen
     /// collective: the whole mesh, in global point numbering, on rank root; nullptr on the other ranks
     DLL_HEADER shared_ptr<Mesh> GatherToRoot (int root = 0) const;
 
+    /// collective: shared vertices (new ones after refinement) and global vertex numbers;
+    /// shared edges and faces are updated by UpdateTopology
+    DLL_HEADER void UpdateParallelTopology ();
+
     /// distributes the mesh of rank 0 over the communicator; root_participates=false leaves rank 0 empty (legacy master layout)
     DLL_HEADER void Distribute (bool root_participates = true);
     DLL_HEADER void Distribute (Array<int> & volume_weights, Array<int> & surface_weights,

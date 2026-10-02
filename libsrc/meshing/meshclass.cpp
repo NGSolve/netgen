@@ -7504,10 +7504,7 @@ namespace netgen
     clusters->Update();
     t_call_update_clusters.Stop();
     if (paralleltop)
-      {
-        paralleltop->Reset();
-        paralleltop->UpdateCoarseGrid();
-      }
+      paralleltop->UpdateEdgesAndFaces();
     updateSignal.Emit();
   }
 

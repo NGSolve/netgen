@@ -747,12 +747,7 @@ namespace netgen
 
     mesh.level_nv.Append (mesh.GetNV());
 
-    if (mesh.GetCommunicator().Size() > 1)
-      {
-        mesh.GetParallelTopology().IdentifyVerticesAfterRefinement();
-        mesh.GetCommunicator().Barrier();
-        mesh.GetParallelTopology().EnumeratePointsGlobally();
-      }
+    mesh.UpdateParallelTopology();
       
     PrintMessage (5, "mesh updates complete");
     return;
