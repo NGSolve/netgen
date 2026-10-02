@@ -18,5 +18,4 @@ def test_mpi4py():
     mesh = netgen.meshing.Mesh(3, comm)
     mesh.Load("mpimesh.vol.gz")
 
-    if comm.rank==0:
-        assert mesh.ne==0
+    assert mesh.ne > 0   # every rank, including 0, holds a part

@@ -62,9 +62,6 @@ namespace netgen
     *testout << "enumerate globally, loc2distvert.size = " << loc2distvert.Size()
              << ", glob_vert.size = " << glob_vert.Size() << endl;
 
-    
-    if (rank == 0)
-      nv = 0;
 
     // IntRange newvr(oldnv, nv); // new vertex range
     auto new_pir = Range(PointIndex::FromNr0(oldnv), PointIndex::FromNr0(nv));
@@ -160,8 +157,7 @@ namespace netgen
       index0[pi] = pi;
     QuickSortI (glob_vert, index0);
 
-    if (rank != 0)
-      {
+    {
         Array<PointIndex, PointIndex> inv_index(index0.Size());
         for (int i = 0; i < index0.Size(); i++)
           inv_index[PointIndex::FromNr0(index0[i])] = PointIndex::FromNr0(i);
@@ -203,10 +199,7 @@ namespace netgen
         for (int i = 0; i < index0.Size(); i++)
           glob_vert[i] = hglob_vert[index0[i]];
 
-        // *testout << "loc2distvertnew = " << endl;
-        // for (auto i : Range(index0))
-        // *testout << "l " << i << " globi "<< glob_vert[i]  << " dist = " << loc2distvert[i] << endl;
-      }
+    }
 
     /*
     for (size_t i = 0; i+1 < glob_vert.Size(); i++)

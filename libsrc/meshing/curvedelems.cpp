@@ -658,7 +658,8 @@ namespace netgen
     enum { NG_MPI_TAG_CURVE = NG_MPI_TAG_MESH+20 };
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
     int ntasks = comm.Size();
-    bool working = (ntasks == 1) || (comm.Rank() > 0);
+    // ranks without elements (rank 0 in the master layout) only take part in the exchanges
+    bool working = (ntasks == 1) || (mesh.GetNE() + mesh.GetNSE() + mesh.GetNSeg() > 0);
 
     if (working)
       order = aorder;

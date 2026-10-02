@@ -1049,28 +1049,38 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
           m.GetBox(pmin, pmax);
           return py::make_tuple( Point<3>(pmin),Point<3>(pmax));
     })
-    .def("Partition", [](shared_ptr<Mesh> self, int numproc) {
-        self->ParallelMetis(numproc);
-      }, py::arg("numproc"))
+    .def("Partition", [](shared_ptr<Mesh> self, int numproc, bool root_participates) {
+        self->ParallelMetis(numproc, root_participates);
+      }, py::arg("numproc"), py::arg("root_participates")=true)
     .def("OrderElements", [](shared_ptr<Mesh> self) {
         self->OrderElements();
       })
     
-    .def("Distribute", [](shared_ptr<Mesh> self, NgMPI_Comm comm) {
+    .def("Distribute", [](shared_ptr<Mesh> self, NgMPI_Comm comm, bool root_participates) {
         self->SetCommunicator(comm);
         if(comm.Size()==1) return self;
-        // if(MyMPI_GetNTasks(comm)==2) throw NgException("Sorry, cannot handle communicators with NP=2!");
-        // cout << " rank " << MyMPI_GetId(comm) << " of " << MyMPI_GetNTasks(comm) << " called Distribute " << endl;
-        if(comm.Rank()==0) self->Distribute();
+        if(comm.Rank()==0) self->Distribute(root_participates);
         else self->SendRecvMesh();
         return self;
-      }, py::arg("comm"))
+      }, py::arg("comm"), py::arg("root_participates")=true,
+      "Collective: partition the mesh of rank 0 and distribute it over the communicator.\n"
+      "Every rank gets a part; root_participates=False leaves rank 0 empty (legacy master layout).")
     .def_static("Receive", [](NgMPI_Comm comm) -> shared_ptr<Mesh> {
         auto mesh = make_shared<Mesh>();
         mesh->SetCommunicator(comm);
         mesh->SendRecvMesh();
         return mesh;
       }, py::arg("comm"))
+    .def("Gather", [](const Mesh & self, int root) -> py::object {
+        shared_ptr<Mesh> gathered;
+        {
+          py::gil_scoped_release release;
+          gathered = self.GatherToRoot(root);
+        }
+        if (gathered) return py::cast(gathered);
+        return py::none();
+      }, py::arg("root")=0,
+      "Collective over the mesh communicator: returns the whole mesh on rank root, None on the other ranks")
     .def("Load",  FunctionPointer 
          ([](shared_ptr<Mesh> self, const string & filename)
           {
@@ -2322,7 +2332,12 @@ project_boundaries : Optional[str] = None
     py::class_<ClearSolutionClass> (m, "ClearSolutionClass")
       .def(py::init<>())
       ;
-    m.def("SetParallelPickling", [](bool par) { parallel_pickling = par; });
+    m.def("SetParallelPickling", [](bool par) {
+        if (par)
+          PyErr_WarnEx(PyExc_DeprecationWarning,
+                       "collective parallel pickling is deprecated: pickling will become local, use Mesh.Gather() for the whole mesh", 1);
+        parallel_pickling = par;
+      }, py::arg("par"), "par=False: every rank pickles its local mesh; True (deprecated default): collective, rank 0 pickles the whole mesh");
     m.def ("_Redraw",
         ([](bool blocking, double fr)
           {

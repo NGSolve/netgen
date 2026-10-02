@@ -2033,212 +2033,28 @@ namespace netgen
     return names;
   }
 
-  // archive an object into a byte buffer and send it / receive and unarchive it
-  template <typename T>
-  static void SendArchived (const NgMPI_Comm & comm, T & obj, int dest, int tag)
-  {
-    MemoryOutArchive ar;
-    ar & obj;
-    auto & data = ar.Data();
-    comm.Send (FlatArray<std::byte>(data.size(), data.data()), dest, tag);
-  }
-  template <typename T>
-  static void RecvArchived (const NgMPI_Comm & comm, T & obj, int src, int tag)
-  {
-    Array<std::byte> buffer;
-    comm.Recv (buffer, src, tag);
-    MemoryInArchive ar(buffer.Data(), buffer.Size());
-    ar & obj;
-  }
-
   void Mesh :: DoArchive (Archive & archive)
   {
     static Timer t("Mesh::Archive"); RegionTimer r(t);
 
     auto comm = GetCommunicator();
     if (archive.IsParallel() && comm.Size() > 1)
-      { // parallel pickling supported only for output archives
-        if (comm.Rank() == 0)
-          archive & dimension;
-
-        // auto rank = comm.Rank();
-        
-        auto & partop = GetParallelTopology();
-        
-        // global enumration of points:
-        // not used now, but will be needed for refined meshes
-        // GridFunciton pickling is not compatible, now
-        // should go to paralleltopology
-        
-        
-        
-        // merge points
-        Array<PointIndex, PointIndex> globnum(points.Size());
-        PointIndex maxglob = PointIndex::INVALID;
-        for (auto pi : Range(points))
+      {
+        // deprecated collective pickling: rank 0 archives the gathered mesh, the others their local part
+        static bool warned = false;
+        if (!warned && comm.Rank() == 0)
           {
-            globnum[pi] = PointIndex::FromNr1(partop.GetGlobalPNum(pi));
-            // globnum[pi] = global_pnums[pi];
-            maxglob = max(globnum[pi], maxglob);
+            PrintWarning("Collective parallel pickling is deprecated, use Mesh.Gather() and pickle the result");
+            warned = true;
           }
-        
-        maxglob = comm.AllReduce (maxglob, NG_MPI_MAX);
-        int numglob = maxglob+1-IndexBASE<PointIndex>();
-        if (comm.Rank() > 0)
-          {
-            comm.Send (globnum, 0, 200);
-            SendArchived (comm, points, 0, 200);
-          }
-        else
-          {
-            Array<PointIndex, PointIndex> globnumi;
-            Array<MeshPoint, PointIndex> pointsi;
-            Array<MeshPoint, PointIndex> globpoints(numglob);
-            for (int j = 1; j < comm.Size(); j++)
-              {
-                comm.Recv (globnumi, j, 200);
-                RecvArchived (comm, pointsi, j, 200);
-                for (auto i : Range(globnumi))
-                  globpoints[globnumi[i]] = pointsi[i];
-              }
-            archive & globpoints;
-          }
-
-        
-        // sending surface elements
-        auto copy_el2d  (surfelements);
-        for (auto el : copy_el2d)
-          for (auto & pi : el.PNums())
-            pi = globnum[pi];
-
-        if (comm.Rank() > 0)
-          {
-            Array<size_t> shape { copy_el2d.Width(), copy_el2d.Size() };
-            comm.Send(FlatArray<size_t>(shape), 0, 200);
-            comm.Send(FlatArray<char>(copy_el2d.Size()*copy_el2d.Stride(), copy_el2d.Data()), 0, 200);
-          }
-        else
-          {
-            for (int j = 1; j < comm.Size(); j++)
-              {
-                Array<size_t> shape(2);
-                comm.Recv(FlatArray<size_t>(shape), j, 200);
-                T_SURFELEMENTS el2di(shape[1], shape[0]);
-                comm.Recv(FlatArray<char>(el2di.Size()*el2di.Stride(), el2di.Data()), j, 200);
-                for (auto el : el2di)
-                  copy_el2d.Append (el);
-              }
-            archive & copy_el2d;
-          }
-
-
-        // sending volume elements
-        auto copy_el3d  (volelements);
-        for (auto el : copy_el3d)
-          for (auto & pi : el.PNums())
-            pi = globnum[pi];
-
-        // strided slots are trivially copyable: send width, size and raw bytes
-        if (comm.Rank() > 0)
-          {
-            Array<size_t> shape { copy_el3d.Width(), copy_el3d.Size() };
-            comm.Send(FlatArray<size_t>(shape), 0, 200);
-            comm.Send(FlatArray<char>(copy_el3d.Size()*copy_el3d.Stride(), copy_el3d.Data()), 0, 200);
-          }
-        else
-          {
-            for (int j = 1; j < comm.Size(); j++)
-              {
-                Array<size_t> shape(2);
-                comm.Recv(FlatArray<size_t>(shape), j, 200);
-                T_VOLELEMENTS el3di(shape[1], shape[0]);
-                comm.Recv(FlatArray<char>(el3di.Size()*el3di.Stride(), el3di.Data()), j, 200);
-                for (auto el : el3di)
-                  copy_el3d.Append (el);
-              }
-            archive & copy_el3d;
-          }
-
-
-        // sending 1D elements
-        auto copy_el1d  (segments);
-        for (auto & el : copy_el1d)
-          for (auto & pi : el.PNums())
-            if (pi != PointIndex(PointIndex::INVALID))
-              pi = globnum[pi];
-
-        if (comm.Rank() > 0)
-          SendArchived (comm, copy_el1d, 0, 200);
-        else
-          {
-            Array<Segment, SegmentIndex> el1di;
-            for (int j = 1; j < comm.Size(); j++)
-              {
-                RecvArchived (comm, el1di, j, 200);
-                for (auto & el : el1di)
-                  copy_el1d += el;
-              }
-            archive & copy_el1d;
-          }
-
-
-        // sending 0D elements
-        auto copy_el0d  (pointelements);
-        for (auto & el : copy_el0d)
-          {
-            auto & pi = el.pnum;
-            if (pi != PointIndex(PointIndex::INVALID))
-              pi = globnum[pi];
-          }
-        
-        if (comm.Rank() > 0)
-          SendArchived (comm, copy_el0d, 0, 200);
-        else
-          {
-            Array<Element0d> el0di;
-            for (int j = 1; j < comm.Size(); j++)
-              {
-                RecvArchived (comm, el0di, j, 200);
-                for (auto & el : el0di)
-                  copy_el0d += el;
-              }
-            archive & copy_el0d;
-          }
-
-
-
-        
+        auto gathered = GatherToRoot();
         if (comm.Rank() == 0)
           {
-            archive & Regions<2>();
-            archive.NeedsVersion("netgen", names_in_descriptors_version);
-            ArchiveRegionNames<3>(archive);
-            ArchiveRegionNames<0>(archive);
-            auto mynv = numglob;
-            archive & mynv;   // numvertices;
-            archive & *ident;
-
-            if(archive.GetVersion("netgen") >= "v6.2.2103-1")
-              {
-                archive.NeedsVersion("netgen", "v6.2.2103-1");
-                archive & vol_partition & surf_partition & seg_partition;
-              }
-            
-            archive.Shallow(geometry);
-            archive & *curvedelems;
-
-            if(archive.GetVersion("netgen") >= "v6.2.2603-26")
-              {
-                archive.NeedsVersion("netgen", "v6.2.2603-26");
-                archive & Regions<1>();
-              }
+            gathered->DoArchive (archive);
+            return;
           }
-        
-        if (comm.Rank() == 0)
-          return;
       }
-    
-    
+
     archive & dimension;
     archive & points;
     archive & surfelements;

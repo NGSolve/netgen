@@ -27,11 +27,9 @@ def test_mpi_segments_have_valid_ed_after_load():
     mesh = netgen.meshing.Mesh(3, comm)
     mesh.Load("test_ed_segments.vol.gz")
 
-    if comm.rank == 0:
-        assert mesh.ne == 0
-    else:
-        for seg in mesh.Elements1D():
-            assert seg.index >= 0, f"segment has index={seg.index}"
+    assert mesh.ne > 0   # every rank, including 0, holds a part
+    for seg in mesh.Elements1D():
+        assert seg.index >= 0, f"segment has index={seg.index}"
 
 
 @pytest.mark.mpi
