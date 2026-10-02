@@ -1432,7 +1432,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                BuildTriangulation(shape);
                triangulation = BRep_Tool::Triangulation (face, loc);               
              }
-           // throw Exception("Don't have a triangulation, call 'MakeTriangulation' first");
+           if (triangulation.IsNull())
+             throw NgException("Triangulation: could not triangulate face");
 
            int ntriangles = triangulation -> NbTriangles();
            Array< std::array<Point<3>,3> > triangles;

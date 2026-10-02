@@ -349,7 +349,10 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                BRepLProp_SLProps prop(sf, 1, 1e-5);
                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
                if (triangulation.IsNull())
-                 cout << "cannot visualize face " << i << endl;
+                 {
+                   cout << "cannot visualize face " << i << endl;
+                   continue;
+                 }
                indices.reserve(indices.size() + triangulation->NbTriangles());
                vertices.reserve(vertices.size() + triangulation->NbTriangles()*3*3);
                normals.reserve(normals.size() + triangulation->NbTriangles()*3*3);
