@@ -1214,33 +1214,6 @@ namespace netgen
     RegionTimer reg (timer);
   
     
-#ifdef PARALLELGL
-
-    if (id == 0 && ntasks > 1)
-      {
-        InitParallelGL();
-
-        par_surfellists.SetSize (ntasks);
-
-        MyMPI_SendCmd ("redraw");
-        MyMPI_SendCmd ("solsurfellist");
-
-        for ( int dest = 1; dest < ntasks; dest++ )
-          MyMPI_Recv (par_surfellists[dest], dest, NG_MPI_TAG_VIS);
-
-        if (surfellist)
-          glDeleteLists (surfellist, 1);
-
-        surfellist = glGenLists (1);
-        glNewList (surfellist, GL_COMPILE);
-        
-        for ( int dest = 1; dest < ntasks; dest++ )
-          glCallList (par_surfellists[dest]);
-        
-        glEndList();
-        return;
-      }
-#endif
 
     // NgProfiler::StartTimer(timerstart);
 
@@ -1755,11 +1728,6 @@ namespace netgen
     glEndList ();
     // NgProfiler::StopTimer(timerlist);
     
-#ifdef PARALLELGL
-    glFinish();
-    if (id > 0)
-      MyMPI_Send (surfellist, 0, NG_MPI_TAG_VIS);
-#endif
   }
 
 
@@ -1767,32 +1735,6 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-#ifdef PARALLELGL
-    if (id == 0 && ntasks > 1)
-      {
-        InitParallelGL();
-
-        par_surfellists.SetSize (ntasks);
-
-        MyMPI_SendCmd ("redraw");
-        MyMPI_SendCmd ("solsurfellinelist");
-
-        for ( int dest = 1; dest < ntasks; dest++ )
-          MyMPI_Recv (par_surfellists[dest], dest, NG_MPI_TAG_VIS);
-
-        if (linelist)
-          glDeleteLists (linelist, 1);
-
-        linelist = glGenLists (1);
-        glNewList (linelist, GL_COMPILE);
-        
-        for ( int dest = 1; dest < ntasks; dest++ )
-          glCallList (par_surfellists[dest]);
-        
-        glEndList();
-        return;
-      }
-#endif
 
     if (linelist)
       glDeleteLists (linelist, 1);
@@ -1860,11 +1802,6 @@ namespace netgen
     glEndList ();
 
 
-#ifdef PARALLELGL
-    glFinish();
-    if (id > 0)
-      MyMPI_Send (linelist, 0, NG_MPI_TAG_VIS);
-#endif
   }
 
 
@@ -2618,19 +2555,6 @@ namespace netgen
     // static int timer1 = NgProfiler::CreateTimer ("getminmax, vol");
     // static int timer2 = NgProfiler::CreateTimer ("getminmax, surf");
 
-#ifdef PARALLELGL
-    auto comm = mesh->GetCommunicator();
-    if (comm.Size() > 1)
-      {
-        if (id == 0)
-          {
-            MyMPI_SendCmd ("redraw");
-            MyMPI_SendCmd ("getminmax");
-          }
-        MyMPI_Bcast (funcnr, mesh->GetCommunicator());
-        MyMPI_Bcast (comp, mesh->GetCommunicator());
-      }
-#endif
 
     // double val;
     // bool considerElem;
@@ -2642,8 +2566,7 @@ namespace netgen
     minv = numeric_limits<double>::max();
     maxv = -numeric_limits<double>::max();
 
-    if ((ntasks == 1) || (id > 0))
-      if (funcnr != -1)
+    if (funcnr != -1)
         {
           const SolData * sol = soldata[funcnr];
 
@@ -4349,33 +4272,6 @@ namespace netgen
   {
     shared_ptr<Mesh> mesh = GetMesh();
 
-#ifdef PARALLELGL
-
-    if (id == 0 && ntasks > 1)
-      {
-        InitParallelGL();
-
-        Array<int> parlists (ntasks);
-
-        MyMPI_SendCmd ("redraw");
-        MyMPI_SendCmd ("clipplanetrigs");
-
-        for ( int dest = 1; dest < ntasks; dest++ )
-          MyMPI_Recv (parlists[dest], dest, NG_MPI_TAG_VIS);
-
-        if (clipplanelist_scal)
-          glDeleteLists (clipplanelist_scal, 1);
-
-        clipplanelist_scal = glGenLists (1);
-        glNewList (clipplanelist_scal, GL_COMPILE);
-        
-        for ( int dest = 1; dest < ntasks; dest++ )
-          glCallList (parlists[dest]);
-        
-        glEndList();
-        return;
-      }
-#endif
 
 
 
@@ -4503,11 +4399,6 @@ namespace netgen
     glEndList ();
 
 
-#ifdef PARALLELGLGL
-    glFinish();
-    if (id > 0)
-      MyMPI_Send (clipplanelist_scal, 0, NG_MPI_TAG_VIS);
-#endif
   }
 
 
@@ -4960,59 +4851,6 @@ namespace netgen
 
 
 
-#ifdef PARALLELGL
-
-  void VisualSceneSolution :: Broadcast ()
-  {
-    NG_MPI_Datatype type;
-    int blocklen[] = 
-      { 
-        1, 1, 1, 1,
-        1, 1, 1, 1, 
-        1, 1, 1, 1, 
-        1, 4, 1, 1, 
-        1
-      };
-    NG_MPI_Aint displ[] = { (char*)&usetexture - (char*)this,
-                         (char*)&clipsolution - (char*)this,
-                         (char*)&scalfunction - (char*)this,
-                         (char*)&scalcomp - (char*)this,
-
-                         (char*)&vecfunction - (char*)this,
-                         (char*)&gridsize - (char*)this,
-                         (char*)&autoscale - (char*)this,
-                         (char*)&logscale - (char*)this,
-
-                         (char*)&minval - (char*)this,
-                         (char*)&maxval - (char*)this,
-                         (char*)&numisolines - (char*)this,
-                         (char*)&subdivisions - (char*)this,
-
-                         (char*)&evalfunc - (char*)this,
-                         (char*)&clipplane[0] - (char*)this,
-                         (char*)&multidimcomponent - (char*)this, 
-                         (char*)&deform - (char*)this,
-
-                         (char*)&scaledeform - (char*)this 
-    };
-
-
-    NG_MPI_Datatype types[] = { 
-      NG_MPI_INT, NG_MPI_INT, NG_MPI_INT, NG_MPI_INT,
-      NG_MPI_INT, NG_MPI_INT, NG_MPI_INT, NG_MPI_INT,
-      NG_MPI_DOUBLE, NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_INT,
-      NG_MPI_INT, NG_MPI_DOUBLE, NG_MPI_INT, NG_MPI_INT,
-      NG_MPI_DOUBLE
-    };
-
-    NG_MPI_Type_create_struct (17, blocklen, displ, types, &type);
-    NG_MPI_Type_commit ( &type );
-
-    NG_MPI_Bcast (this, 1, type, 0, NG_MPI_COMM_WORLD);
-    NG_MPI_Type_free (&type);
-  }
-  
-#endif
 
 }
 

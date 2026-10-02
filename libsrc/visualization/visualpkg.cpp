@@ -291,9 +291,6 @@ namespace netgen
     vssolution.SetClippingPlane ();  // for computing parameters
     glDisable(GL_CLIP_PLANE0);
 
-#ifdef PARALLELGL
-    vsmesh.Broadcast ();
-#endif    
 
 
     return TCL_OK;

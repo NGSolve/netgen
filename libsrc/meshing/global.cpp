@@ -70,8 +70,7 @@ namespace netgen
 
   void Ng_PrintDest(const char * s)
   {
-    if (id == 0)
-      cout << s << flush;
+    cout << s << flush;
   }
 
 

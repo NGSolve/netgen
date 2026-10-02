@@ -34,9 +34,10 @@ namespace ngcore
     if (getenv ("NGPROFILE"))
       {
        std::string filename = "netgen.prof";
-       if (NgMPI_Comm comm(NG_MPI_COMM_WORLD); comm.Size() > 1)
+       NgMPI_Comm comm(NG_MPI_COMM_WORLD);
+       if (comm.Size() > 1)
          filename += "."+ToString(comm.Rank());
-       if (id == 0) logger->info( "write profile to file {}", filename );
+       if (comm.Rank() == 0) logger->info( "write profile to file {}", filename );
        FILE *prof = fopen(filename.c_str(),"w"); // NOLINT
        Print (prof);
        fclose(prof); // NOLINT

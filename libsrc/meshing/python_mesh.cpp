@@ -1202,18 +1202,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
               mesh->SendRecvMesh();
             }
 
-            if(ntasks>1) {
-              // #ifdef PARALLEL
-              /** Scatter the geometry-string (no dummy-implementation in mpi_interface) **/
-              /*
-              int strs = buf.Size();
-              MyMPI_Bcast(strs, comm);
-              if(strs>0)
-                MyMPI_Bcast(buf, comm);
-              */
-              comm.Bcast(buf);
-              // #endif
-            }
+            comm.Bcast(buf);   // geometry string, no-op on one rank
 
             shared_ptr<NetgenGeometry> geo;
             if(buf.Size()) { // if we had geom-info in the file, take it

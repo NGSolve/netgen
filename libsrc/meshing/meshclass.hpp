@@ -1109,10 +1109,6 @@ namespace netgen
     DLL_HEADER void ParallelMetis (Array<int> & volume_weights, Array<int> & surface_weights,
                                    Array<int> & segment_weights, bool root_participates = true);
 
-    void PartHybridMesh (); 
-    void PartDualHybridMesh (); 
-    void PartDualHybridMesh2D ();
-
     /// send mesh from master to local procs
     void SendRecvMesh ();
 

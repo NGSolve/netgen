@@ -90,7 +90,7 @@ void Ng_LoadGeometry (const char * filename)
 
 
   // if (id == 0)
-  cerr << "cannot load geometry '" << filename << "'" << ", id = " << id << endl;
+  cerr << "cannot load geometry '" << filename << "'" << endl;
 }                          
 
 
@@ -239,17 +239,6 @@ void Ng_LoadMesh (const char * filename, ngcore::NgMPI_Comm comm)
     mesh->SendRecvMesh();
   }
 
-    /*
-  if(ntasks>1) {
-#ifdef PARALLEL
-    // Scatter the geometry-string (no dummy-implementation in mpi_interface) 
-    int strs = buf.Size();
-    MyMPI_Bcast(strs, comm);
-    if(strs>0)
-      MyMPI_Bcast(buf, comm);
- #endif
- }
-  */
   comm.Bcast(buf);
 
   shared_ptr<NetgenGeometry> geo;

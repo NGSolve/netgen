@@ -129,24 +129,6 @@ namespace ngcore
     }
   };
   
-  [[deprecated("use requests.WaitAll instread")]]
-  inline void MyMPI_WaitAll (FlatArray<NG_MPI_Request> requests)
-  {
-    static Timer t("MPI - WaitAll"); RegionTimer reg(t);    
-    if (!requests.Size()) return;
-    NG_MPI_Waitall (requests.Size(), requests.Data(), NG_MPI_STATUSES_IGNORE);
-  }
-
-  [[deprecated("use requests.WaitAny instread")]]  
-  inline int MyMPI_WaitAny (FlatArray<NG_MPI_Request> requests)
-  {
-    int nr;
-    NG_MPI_Waitany (requests.Size(), requests.Data(), &nr, NG_MPI_STATUS_IGNORE);
-    return nr;
-  }
-
-  
-
   class NgMPI_Comm
   {
   protected:

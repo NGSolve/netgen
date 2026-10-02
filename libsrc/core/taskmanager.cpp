@@ -142,7 +142,6 @@ namespace ngcore
     {
       taskqueue_ptr = new TQueue;
       num_threads = anthreads;
-      // if (MyMPI_GetNTasks() > 1) num_threads = 1;
 
 #ifdef USE_NUMA
       numa_available();

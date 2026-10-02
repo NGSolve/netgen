@@ -104,10 +104,6 @@ class NGGUI_API VisualSceneSolution : public VisualScene
   string title = "";
 
   VisualSelect select;
-#ifdef PARALLELGL
-  Array<int> par_linelists;
-  Array<int> par_surfellists;
-#endif
 
   Array<UserVisualizationObject*> user_vis;
 
@@ -375,9 +371,6 @@ public:
   SolData* GetVecFunction() const { return vecfunction == -1 ? nullptr : soldata[vecfunction]; }
   SolData* GetScalOrVecFunction() const { auto sol = GetScalFunction(); return sol ? sol : GetVecFunction(); }
 
-#ifdef PARALLELGL
-  void Broadcast ();
-#endif
 
 
 };

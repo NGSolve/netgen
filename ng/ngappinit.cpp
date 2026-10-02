@@ -64,7 +64,6 @@ int main(int argc, char ** argv)
 {
   netgen::netgen_executable_started = true;
 
-  if ( netgen::id == 0 )
     {
       cout << "NETGEN-" << netgen::netgen_version << endl;
       
@@ -122,7 +121,6 @@ int main(int argc, char ** argv)
     cout << "NETGENDIR = " << ngdir << endl;
   
 
-  if ( netgen::id == 0 )
     {
       if (parameters.StringFlagDefined ("testout"))
         {

@@ -786,7 +786,6 @@ namespace netgen
       }
 
     if (ntasks > 1)
-      //  MyMPI_ExchangeTable (send_orders, recv_orders, NG_MPI_TAG_CURVE, comm);
       comm.ExchangeTable (send_orders, recv_orders, NG_MPI_TAG_CURVE);
 
     if (ntasks > 1 && working)
@@ -899,7 +898,6 @@ namespace netgen
                       }
                   }
             
-            // MyMPI_ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE, comm);
             comm.ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE);
 
             Array<int> cnt(ntasks);
@@ -1103,7 +1101,6 @@ namespace netgen
                   }
               }
 
-        // MyMPI_ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE, comm);
         comm.ExchangeTable (senddata, recvdata, NG_MPI_TAG_CURVE);
         
         Array<int> cnt(ntasks);
@@ -1287,7 +1284,6 @@ namespace netgen
       }
 
     if (ntasks > 1)
-      // MyMPI_ExchangeTable (send_surfnr, recv_surfnr, NG_MPI_TAG_CURVE, comm);
       comm.ExchangeTable (send_surfnr, recv_surfnr, NG_MPI_TAG_CURVE);
 
     if (ntasks > 1 && working)
