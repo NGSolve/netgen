@@ -5039,7 +5039,7 @@ namespace netgen
           {
             el.GetTransformation (j, Points(), dtrans);
             double det = dtrans.Det();
-            if (det > 0)
+            if (det < 0)
               {
                 PrintError ("Element ", i.Nr1() , " has wrong orientation");
                 el.Flags().badel = 1;
