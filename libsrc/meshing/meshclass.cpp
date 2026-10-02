@@ -2033,6 +2033,24 @@ namespace netgen
     return names;
   }
 
+  // archive an object into a byte buffer and send it / receive and unarchive it
+  template <typename T>
+  static void SendArchived (const NgMPI_Comm & comm, T & obj, int dest, int tag)
+  {
+    MemoryOutArchive ar;
+    ar & obj;
+    auto & data = ar.Data();
+    comm.Send (FlatArray<std::byte>(data.size(), data.data()), dest, tag);
+  }
+  template <typename T>
+  static void RecvArchived (const NgMPI_Comm & comm, T & obj, int src, int tag)
+  {
+    Array<std::byte> buffer;
+    comm.Recv (buffer, src, tag);
+    MemoryInArchive ar(buffer.Data(), buffer.Size());
+    ar & obj;
+  }
+
   void Mesh :: DoArchive (Archive & archive)
   {
     static Timer t("Mesh::Archive"); RegionTimer r(t);
@@ -2069,7 +2087,7 @@ namespace netgen
         if (comm.Rank() > 0)
           {
             comm.Send (globnum, 0, 200);
-            comm.Send (points, 0, 200);
+            SendArchived (comm, points, 0, 200);
           }
         else
           {
@@ -2079,7 +2097,7 @@ namespace netgen
             for (int j = 1; j < comm.Size(); j++)
               {
                 comm.Recv (globnumi, j, 200);
-                comm.Recv (pointsi, j, 200);
+                RecvArchived (comm, pointsi, j, 200);
                 for (auto i : Range(globnumi))
                   globpoints[globnumi[i]] = pointsi[i];
               }
@@ -2150,13 +2168,13 @@ namespace netgen
               pi = globnum[pi];
 
         if (comm.Rank() > 0)
-          comm.Send(copy_el1d, 0, 200);
+          SendArchived (comm, copy_el1d, 0, 200);
         else
           {
             Array<Segment, SegmentIndex> el1di;
             for (int j = 1; j < comm.Size(); j++)
               {
-                comm.Recv(el1di, j, 200);
+                RecvArchived (comm, el1di, j, 200);
                 for (auto & el : el1di)
                   copy_el1d += el;
               }
@@ -2174,13 +2192,13 @@ namespace netgen
           }
         
         if (comm.Rank() > 0)
-          comm.Send(copy_el0d, 0, 200);
+          SendArchived (comm, copy_el0d, 0, 200);
         else
           {
             Array<Element0d> el0di;
             for (int j = 1; j < comm.Size(); j++)
               {
-                comm.Recv(el0di, j, 200);
+                RecvArchived (comm, el0di, j, 200);
                 for (auto & el : el0di)
                   copy_el0d += el;
               }

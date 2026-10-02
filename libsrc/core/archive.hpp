@@ -1070,6 +1070,77 @@ namespace ngcore
     { stream->read(reinterpret_cast<char*>(&val), sizeof(T)); } // NOLINT
   };
 
+  // MemoryOutArchive / MemoryInArchive =====================================================
+  // binary archives on a byte buffer, e.g. for sending archived objects via MPI
+  namespace detail
+  {
+    class ByteVectorOStream : public std::ostream
+    {
+      class Buf : public std::streambuf
+      {
+        std::vector<std::byte> & data;
+      public:
+        Buf (std::vector<std::byte> & adata) : data(adata) { }
+        std::streamsize xsputn (const char * s, std::streamsize n) override
+        {
+          size_t old = data.size();
+          data.resize (old + n);
+          memcpy (data.data() + old, s, n);
+          return n;
+        }
+        int_type overflow (int_type c) override
+        {
+          if (c != traits_type::eof()) data.push_back (std::byte(c));
+          return c;
+        }
+      };
+      std::vector<std::byte> data;
+      Buf buf;
+    public:
+      ByteVectorOStream () : std::ostream(&buf), buf(data) { }
+      std::vector<std::byte> & Data () { return data; }
+    };
+
+    class ByteSpanIStream : public std::istream
+    {
+      class Buf : public std::streambuf
+      {
+      public:
+        Buf (const std::byte * data, size_t n)
+        {
+          char * p = const_cast<char*> (reinterpret_cast<const char*> (data));
+          setg (p, p, p + n);
+        }
+      };
+      Buf buf;
+    public:
+      ByteSpanIStream (const std::byte * data, size_t n) : std::istream(&buf), buf(data, n) { }
+    };
+  }
+
+  class MemoryOutArchive : public BinaryOutArchive
+  {
+    detail::ByteVectorOStream * bytes;  // owned by BinaryOutArchive::stream
+  public:
+    MemoryOutArchive ()
+      : BinaryOutArchive(std::make_shared<detail::ByteVectorOStream>()),
+        bytes(static_cast<detail::ByteVectorOStream*>(stream.get())) { }
+    /// the archived bytes, valid as long as the archive lives
+    std::vector<std::byte> & Data ()
+    {
+      FlushBuffer();
+      return bytes->Data();
+    }
+  };
+
+  class MemoryInArchive : public BinaryInArchive
+  {
+  public:
+    /// data must outlive the archive
+    MemoryInArchive (const std::byte * data, size_t n)
+      : BinaryInArchive(std::make_shared<detail::ByteSpanIStream>(data, n)) { }
+  };
+
   // TextOutArchive ======================================================================
   class NGCORE_API TextOutArchive : public Archive
   {

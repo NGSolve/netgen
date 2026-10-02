@@ -48,6 +48,7 @@ NG_MPI_Waitall = [](int arg0, NG_MPI_Request* arg1, NG_MPI_Status* arg2)->int { 
 NG_MPI_Waitany = [](int arg0, NG_MPI_Request* arg1, int* arg2, NG_MPI_Status* arg3)->int { return MPI_Waitany( arg0,  ng2mpi(arg1, arg0),  arg2,  ng2mpi(arg3)); };
 NG_MPI_COMM_NULL = mpi2ng(MPI_COMM_NULL);
 NG_MPI_COMM_WORLD = mpi2ng(MPI_COMM_WORLD);
+NG_MPI_BYTE = mpi2ng(MPI_BYTE);
 NG_MPI_CHAR = mpi2ng(MPI_CHAR);
 NG_MPI_CXX_DOUBLE_COMPLEX = mpi2ng(MPI_CXX_DOUBLE_COMPLEX);
 NG_MPI_C_BOOL = mpi2ng(MPI_C_BOOL);

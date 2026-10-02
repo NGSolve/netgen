@@ -48,6 +48,7 @@ NGCORE_API extern int (*NG_MPI_Waitall)(int, NG_MPI_Request*, NG_MPI_Status*);
 NGCORE_API extern int (*NG_MPI_Waitany)(int, NG_MPI_Request*, int*, NG_MPI_Status*);
 NGCORE_API extern NG_MPI_Comm NG_MPI_COMM_NULL;
 NGCORE_API extern NG_MPI_Comm NG_MPI_COMM_WORLD;
+NGCORE_API extern NG_MPI_Datatype NG_MPI_BYTE;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_CHAR;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_CXX_DOUBLE_COMPLEX;
 NGCORE_API extern NG_MPI_Datatype NG_MPI_C_BOOL;

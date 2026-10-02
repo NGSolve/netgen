@@ -52,6 +52,7 @@ functions = [
 constants = [
         ("MPI_Comm", "MPI_COMM_NULL"),
         ("MPI_Comm", "MPI_COMM_WORLD"),
+        ("MPI_Datatype", "MPI_BYTE"),
         ("MPI_Datatype", "MPI_CHAR"),
         ("MPI_Datatype", "MPI_CXX_DOUBLE_COMPLEX"),
         ("MPI_Datatype", "MPI_C_BOOL"),

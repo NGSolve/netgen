@@ -867,7 +867,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void Singularity(double s) { singular = s; }
     bool IsSingular() const { return (singular != 0.0); }
 
-    static NG_MPI_Datatype MyGetMPIType ( );
 
     void DoArchive (Archive & ar)
     {
@@ -991,6 +990,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     auto NewestVertex() const { return h->newest_vertex; }
 
     DLL_HEADER void DoArchive (Archive & ar);
+    /// geometry info of the points, not part of DoArchive
+    void DoArchiveGeomInfo (Archive & ar)
+    {
+      for (int k = 0; k < GetNP(); k++)
+        ar & gi[k].trignum & gi[k].u & gi[k].v;
+    }
 
     void SetIndex (FaceRegionIndex si) { h->index = si; }
     FaceRegionIndex GetIndex () const { return h->index; }
@@ -1107,7 +1112,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
         });
     }
 
-    static NG_MPI_Datatype MyGetMPIType();
   };
 
   DLL_HEADER ostream & operator<<(ostream  & s, const Element2dRef & el);
@@ -1345,7 +1349,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
         });
     }
 
-    static NG_MPI_Datatype MyGetMPIType();
   };
 
   /// array of volume elements with run-time number of point slots
@@ -1433,6 +1436,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
           return;
         }
       ar.NeedsVersion ("netgen", width_version);
+      DoArchiveCurrent (ar);
+    }
+
+    /// current format without version handling: size, width, elements
+    void DoArchiveCurrent (Archive & ar)
+    {
       size_t s = Size(), w = Width();
       ar & s & w;
       if (ar.Input())
@@ -1440,7 +1449,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
           if (w > TVAL::archive_max_width)
             throw Exception("element array: archive of netgen " + ar.GetVersion("netgen").to_string() +
                             " does not have the element width, but is not recognized as the old format"
-                            " (width_version " + width_version + " too low?)");
+                            " (width_version " + TVAL::archive_width_version + " too low?)");
           SetWidth (w); SetSize (s);
         }
       for (auto el : *this) el.DoArchive (ar);
@@ -1542,7 +1551,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetIndex (EdgeRegionIndex i) { index = i; }
 
     void DoArchive (Archive & ar);
-    static NG_MPI_Datatype MyGetMPIType();
+    /// geometry info of the end points, not part of DoArchive
+    void DoArchiveGeomInfo (Archive & ar)
+    {
+      for (auto & epgi : epgeominfo)
+        ar & epgi.gi.trignum & epgi.gi.u & epgi.gi.v & epgi.dist;
+    }
 
     static size_t OffsetPnums() { return offsetof(Segment, pnums); }
     static size_t OffsetIndex() { return offsetof(Segment, index); }
@@ -1564,7 +1578,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     VertexRegionIndex GetIndex () const { return index; }
     void SetIndex (VertexRegionIndex i) { index = i; }
 
-    static NG_MPI_Datatype MyGetMPIType();
     
     void DoArchive (Archive & ar);
   };
@@ -1583,6 +1596,8 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetName (optional<string> aname) { name = std::move(aname); }
     void ResetName () { name = nullopt; }
     const optional<string> & OptName () const { return name; }
+    /// regions with more data (Region<2>, Region<1>) archive the name themselves
+    void DoArchive (Archive & ar) { ar & name; }
   };
 
   /**
@@ -2191,22 +2206,6 @@ namespace ngcore
     static NG_MPI_Datatype MPIType ()  { return NG_MPI_CHAR; }
   };
 
-  template <> struct MPI_typetrait<netgen::MeshPoint> {
-    static NG_MPI_Datatype MPIType ()  { return netgen::MeshPoint::MyGetMPIType(); }
-  };
-
-  template <> struct MPI_typetrait<netgen::Element> {
-    static NG_MPI_Datatype MPIType ()  { return netgen::Element::MyGetMPIType(); }
-  };
-  template <> struct MPI_typetrait<netgen::Element2d> {
-    static NG_MPI_Datatype MPIType ()  { return netgen::Element2d::MyGetMPIType(); }
-  };
-  template <> struct MPI_typetrait<netgen::Segment> {
-    static NG_MPI_Datatype MPIType ()  { return netgen::Segment::MyGetMPIType(); }
-  };
-  template <> struct MPI_typetrait<netgen::Element0d> {
-    static NG_MPI_Datatype MPIType ()  { return netgen::Element0d::MyGetMPIType(); }
-  };
 
 }
 

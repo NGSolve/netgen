@@ -32,6 +32,9 @@ namespace ngcore
   template <> struct MPI_typetrait<unsigned char> {
     static NG_MPI_Datatype MPIType () { return NG_MPI_CHAR; } };
 
+  template <> struct MPI_typetrait<std::byte> {
+    static NG_MPI_Datatype MPIType () { return NG_MPI_BYTE; } };
+
   template <> struct MPI_typetrait<size_t> {
     static NG_MPI_Datatype MPIType () { return NG_MPI_UINT64_T; } };
 
