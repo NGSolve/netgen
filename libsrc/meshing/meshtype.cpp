@@ -17,7 +17,6 @@ namespace netgen
   
 
 
-#ifdef PARALLEL
 
   /*
     working locally, but not too much at once ...
@@ -193,10 +192,8 @@ namespace netgen
     return type;
   }
 
-#endif
 
 
-#ifdef PARALLEL
   NG_MPI_Datatype Element0d :: MyGetMPIType()
   {
     static NG_MPI_Datatype type = NG_MPI_DATATYPE_NULL;
@@ -224,7 +221,6 @@ namespace netgen
       }
     return type;
   }
-#endif
 
  void Element0d :: DoArchive (Archive & ar)
  {
@@ -1060,9 +1056,7 @@ namespace netgen
     flags.deleted = 0;
     flags.fixed = 0;
     is_curved = false;
-#ifdef PARALLEL
     partitionNumber = -1;
-#endif
   }
   */
 

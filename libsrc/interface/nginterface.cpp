@@ -897,8 +897,6 @@ void Ng_GetSurfaceElementNeighbouringDomains(const int selnr, int & in, int & ou
 }
 
 
-#ifdef PARALLEL
-
 // gibt anzahl an distant pnums zurueck
 // * pnums entspricht ARRAY<int[2] >
 [[deprecated("Use GetDistantNodeNums(locnum) -> FlatArray instead!")]]                    
@@ -955,9 +953,6 @@ int NgPar_GetGlobalNodeNum (int nodetype, int locnum)
     }
   return -1;
 }
-
-
-#endif
 
 void Ng_SetRefinementFlag (int ei, int flag)
 {

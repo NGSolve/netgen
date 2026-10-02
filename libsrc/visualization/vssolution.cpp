@@ -2717,21 +2717,16 @@ namespace netgen
     if (minv == maxv) maxv = minv+1e-6;
     if (!hasit) { minv = 0; maxv = 1; }
     
-#ifdef PARALLEL
-    if ((ntasks > 1) && (id == 0))
+    if (auto comm = mesh->GetCommunicator(); comm.Size() > 1)
       {
-        minv = 1e99;
-        maxv = -1e99;
+        if (comm.Rank() == 0)
+          {
+            minv = 1e99;
+            maxv = -1e99;
+          }
+        minv = comm.Reduce (minv, NG_MPI_MIN);
+        maxv = comm.Reduce (maxv, NG_MPI_MAX);
       }
-    if (ntasks > 1)
-      {
-        double hmin, hmax;
-        NG_MPI_Reduce (&minv, &hmin, 1, NG_MPI_DOUBLE, NG_MPI_MIN, 0, NG_MPI_COMM_WORLD);
-        NG_MPI_Reduce (&maxv, &hmax, 1, NG_MPI_DOUBLE, NG_MPI_MAX, 0, NG_MPI_COMM_WORLD);
-        minv = hmin;
-        maxv = hmax;
-      }
-#endif
   }
 
 

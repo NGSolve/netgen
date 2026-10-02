@@ -1,4 +1,3 @@
-#ifdef PARALLEL
 
 #include <meshing.hpp>
 #include "paralleltop.hpp"
@@ -1323,14 +1322,9 @@ namespace netgen
 
     if (id != 0 || ntasks == 1 ) return;
 
-#ifdef METIS
     if (vol_partition.Size() < GetNE() || surf_partition.Size() < GetNSE() ||
         seg_partition.Size() < GetNSeg())
       ParallelMetis (comm.Size());
-#else
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      (*this)[ei].SetPartition(ntasks * ei/GetNE() + 1);
-#endif
 
     /*
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
@@ -1617,12 +1611,7 @@ namespace netgen
 
     if (id != 0 || ntasks == 1 ) return;
 
-#ifdef METIS
     ParallelMetis (volume_weights, surface_weights, segment_weights);
-#else
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      (*this)[ei].SetPartition(ntasks * ei/GetNE() + 1);
-#endif
 
     /*
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
@@ -1747,7 +1736,19 @@ namespace netgen
       // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
       seg_partition[SegmentIndex::FromNr0(i)] = epart[i+GetNE()+GetNSE()] + 1;
   }
-#endif 
+#endif
+
+#ifndef METIS5
+  void Mesh :: ParallelMetis (int /* nproc */)
+  {
+    throw NgException("Mesh::ParallelMetis: Netgen was built without METIS");
+  }
+  void Mesh :: ParallelMetis (Array<int> &, Array<int> &, Array<int> &)
+  {
+    throw NgException("Mesh::ParallelMetis: Netgen was built without METIS");
+  }
+#endif
+ 
 
 
 
@@ -2227,7 +2228,3 @@ namespace netgen
 
 
 }
-
-
-
-#endif

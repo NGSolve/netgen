@@ -975,11 +975,7 @@ namespace netgen
    //Destination for messages, errors, ...
    NGLIB_API void Ng_PrintDest2(const char * s)
    {
-#ifdef PARALLEL
-     int id = 0;
-     NG_MPI_Comm_rank(NG_MPI_COMM_WORLD, &id);
-     if (id != 0) return;
-#endif
+     if (NgMPI_Comm comm(NG_MPI_COMM_WORLD); comm.Rank() != 0) return;
      cout << s << flush;
    }
 

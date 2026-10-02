@@ -867,9 +867,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void Singularity(double s) { singular = s; }
     bool IsSingular() const { return (singular != 0.0); }
 
-#ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType ( );
-#endif
 
     void DoArchive (Archive & ar)
     {
@@ -1109,9 +1107,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
         });
     }
 
-#ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType();
-#endif
   };
 
   DLL_HEADER ostream & operator<<(ostream  & s, const Element2dRef & el);
@@ -1349,9 +1345,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
         });
     }
 
-#ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType();
-#endif
   };
 
   /// array of volume elements with run-time number of point slots
@@ -1548,9 +1542,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     void SetIndex (EdgeRegionIndex i) { index = i; }
 
     void DoArchive (Archive & ar);
-#ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType();
-#endif
 
     static size_t OffsetPnums() { return offsetof(Segment, pnums); }
     static size_t OffsetIndex() { return offsetof(Segment, index); }
@@ -1572,9 +1564,7 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     VertexRegionIndex GetIndex () const { return index; }
     void SetIndex (VertexRegionIndex i) { index = i; }
 
-#ifdef PARALLEL
     static NG_MPI_Datatype MyGetMPIType();
-#endif
     
     void DoArchive (Archive & ar);
   };
@@ -2188,7 +2178,6 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
 }
 
 
-#ifdef PARALLEL
 namespace ngcore
 {
   template <> struct MPI_typetrait<netgen::PointIndex> {
@@ -2220,7 +2209,6 @@ namespace ngcore
   };
 
 }
-#endif
 
 
 #endif

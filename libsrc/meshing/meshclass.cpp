@@ -251,9 +251,7 @@ namespace netgen
 
     geomtype = NO_GEOM;
 
-#ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
-#endif
   }
 
 
@@ -395,9 +393,7 @@ namespace netgen
 
     Regions<1>().SetSize(0);
 
-#ifdef PARALLEL
     paralleltop = make_unique<ParallelMeshTopology> (*this);
-#endif
 
     PreviewResync();
     timestamp = NextTimeStamp();
@@ -2041,7 +2037,6 @@ namespace netgen
   {
     static Timer t("Mesh::Archive"); RegionTimer r(t);
 
-#ifdef PARALLEL
     auto comm = GetCommunicator();
     if (archive.IsParallel() && comm.Size() > 1)
       { // parallel pickling supported only for output archives
@@ -2224,7 +2219,6 @@ namespace netgen
         if (comm.Rank() == 0)
           return;
       }
-#endif
     
     
     archive & dimension;
@@ -7675,13 +7669,11 @@ namespace netgen
     static Timer t_call_update_clusters("call update clusters"); t_call_update_clusters.Start();
     clusters->Update();
     t_call_update_clusters.Stop();
-#ifdef PARALLEL
     if (paralleltop)
       {
         paralleltop->Reset();
         paralleltop->UpdateCoarseGrid();
       }
-#endif
     updateSignal.Emit();
   }
 

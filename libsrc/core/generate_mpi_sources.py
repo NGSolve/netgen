@@ -100,26 +100,19 @@ def get_args(f, counts=False):
 
 def generate_declarations():
     code = ""
-    nowrapper_code = ""
     for f in functions:
         ret = f[0]
         name = f[1]
         args = ", ".join(get_args(f))
         code += f"NGCORE_API extern {ret} (*NG_{name})({args});\n"
-        nowrapper_code += f"#define NG_{name} {name}\n"
 
     for typ, name in constants:
         if typ.startswith("MPI_"):
             typ = "NG_" + typ
         code += f"NGCORE_API extern {typ} NG_{name};\n"
-        nowrapper_code += f"#define NG_{name} {name}\n"
 
     with open("ng_mpi_generated_declarations.hpp", "w") as f:
-        f.write("#ifdef NG_MPI_WRAPPER\n")
         f.write(code)
-        f.write("#else  // NG_MPI_WRAPPER\n")
-        f.write(nowrapper_code)
-        f.write("#endif // NG_MPI_WRAPPER\n")
 
 def generate_dummy_init():
     code = ""

@@ -1,5 +1,3 @@
-#ifdef PARALLEL
-
 #include <filesystem>
 #include <iostream>
 #include <stdexcept>
@@ -15,18 +13,8 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-#ifndef NG_MPI_WRAPPER
-#ifdef NG_PYTHON
-#define MPI4PY_LIMITED_API 1
-#define MPI4PY_LIMITED_API_SKIP_MESSAGE 1
-#define MPI4PY_LIMITED_API_SKIP_SESSION 1
-#include "mpi4py_pycapi.h"  // mpi4py < 4.0.0
-#endif // NG_PYTHON
-#endif // NG_MPI_WRAPPER
-
 namespace ngcore {
 
-#ifdef NG_MPI_WRAPPER
 static std::unique_ptr<SharedLibrary> mpi_lib, ng_mpi_lib;
 static bool need_mpi_finalize = false;
 
@@ -130,7 +118,12 @@ void InitMPI(std::optional<std::filesystem::path> mpi_lib_path) {
 
   // Load the ng_mpi wrapper and call ng_init_mpi to set all function pointers
   typedef void (*ng_init_handle)();
-  ng_mpi_lib = std::make_unique<SharedLibrary>(ng_lib_name);
+  try {
+    ng_mpi_lib = std::make_unique<SharedLibrary>(ng_lib_name);
+  } catch (std::runtime_error &e) {
+    throw std::runtime_error("Could not load MPI wrapper library " + ng_lib_name +
+                             " (is Netgen built with USE_MPI=ON?): " + e.what());
+  }
   ng_mpi_lib->GetSymbol<ng_init_handle>("ng_init_mpi")();
   std::cout << IM(3) << "MPI wrapper loaded, vendor: " << vendor << endl;
 }
@@ -166,41 +159,5 @@ decltype(NG_MPI_CommToMPI4Py) NG_MPI_CommToMPI4Py =
 #endif  // NG_PYTHON
 
 #include "ng_mpi_generated_dummy_init.hpp"
-#else  // NG_MPI_WRAPPER
-
-static bool imported_mpi4py = false;
-#ifdef NG_PYTHON
-decltype(NG_MPI_CommFromMPI4Py) NG_MPI_CommFromMPI4Py =
-    [](py::handle src, NG_MPI_Comm &dst) -> bool {
-  if (!imported_mpi4py) {
-    import_mpi4py__MPI();
-    imported_mpi4py = true;
-  }
-  PyObject *py_src = src.ptr();
-  // auto type = Py_TYPE(py_src);
-  if (PyObject_TypeCheck(py_src, &PyMPIComm_Type)) {
-    dst = *PyMPIComm_Get(py_src);
-    return !PyErr_Occurred();
-  }
-  return false;
-};
-
-decltype(NG_MPI_CommToMPI4Py) NG_MPI_CommToMPI4Py =
-    [](NG_MPI_Comm src) -> py::handle {
-  if (!imported_mpi4py) {
-    import_mpi4py__MPI();
-    imported_mpi4py = true;
-  }
-  return py::handle(PyMPIComm_New(src));
-};
-
-#endif  // NG_PYTHON
-
-bool MPI_Loaded() { return true; }
-void InitMPI(std::optional<std::filesystem::path>) {}
-
-#endif  // NG_MPI_WRAPPER
 
 }  // namespace ngcore
-
-#endif  // PARALLEL

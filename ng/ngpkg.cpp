@@ -2314,7 +2314,6 @@ namespace netgen
                 Tcl_Interp * interp,
                 int argc, tcl_const char *argv[])
   {
-#ifdef PARALLEL
     if (!mesh)
       {
         Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
@@ -2322,22 +2321,18 @@ namespace netgen
       }
 
     int nparts = atoi (argv[1]);
-    ntasks = nparts+1;
     cout << "calling metis ... " << flush;
-    mesh->ParallelMetis(ntasks);
+    try
+      {
+        mesh->ParallelMetis(nparts+1);
+      }
+    catch (const NgException & e)
+      {
+        Tcl_SetResult (interp, (char*)"metis not available", TCL_STATIC);
+        return TCL_ERROR;
+      }
     cout << "done" << endl;
-    ntasks = 1;
-
-    // for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
-    // (*mesh)[ei].SetIndex ( (*mesh)[ei].GetPartition() );
-
     return TCL_OK;
-
-#else
-    Tcl_SetResult (interp, (char*)"metis not available", TCL_STATIC);
-    return TCL_ERROR;
-    
-#endif
 
 
 

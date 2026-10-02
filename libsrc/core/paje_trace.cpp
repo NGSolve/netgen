@@ -22,15 +22,11 @@ namespace ngcore
 {
   static std::string GetTimerName( int id )
   {
-#ifndef PARALLEL
-    return NgProfiler::GetName(id);
-#else // PARALLEL
     if(id<NgProfiler::SIZE)
       return NgProfiler::GetName(id);
 
     NgMPI_Comm comm(NG_MPI_COMM_WORLD);
     return NgProfiler::GetName(id-NgProfiler::SIZE*comm.Rank());
-#endif // PARALLEL
   }
 
   // Produce no traces by default
@@ -77,14 +73,12 @@ namespace ngcore
         m.reserve(std::min(100000U, max_num_events_per_thread));
 
     // sync start time when running in parallel
-#ifdef PARALLEL
     if(MPI_Loaded())
     {
       NgMPI_Comm comm(NG_MPI_COMM_WORLD);
       for([[maybe_unused]] auto i : Range(5))
           comm.Barrier();
     }
-#endif // PARALLEL
 
     start_time = GetTimeCounter();
     tracing_enabled = true;
@@ -144,11 +138,7 @@ namespace ngcore
 
     end_time -= start_time;
 
-    NgMPI_Comm comm;
-  #ifdef PARALLEL
-    if(MPI_Loaded())
-      comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
-  #endif
+    NgMPI_Comm comm(NG_MPI_COMM_WORLD);
     if(comm.Size()==1)
     {
       Write();
@@ -577,13 +567,9 @@ namespace ngcore
       std::vector <int> thread_aliases;
       std::vector<int> container_nodes;
 
-      NgMPI_Comm comm;
-  #ifdef PARALLEL
-      if(MPI_Loaded())
-        comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
+      NgMPI_Comm comm(NG_MPI_COMM_WORLD);
       if(comm.Size()>1)
       {
-        auto comm = NgMPI_Comm(NG_MPI_COMM_WORLD);
         nthreads = comm.Size();
         thread_aliases.reserve(nthreads);
 
@@ -610,7 +596,6 @@ namespace ngcore
         }
       }
       else
-  #endif
       {
         container_nodes.reserve(num_nodes);
         for(int i=0; i<num_nodes; i++)
@@ -817,7 +802,6 @@ namespace ngcore
             }
         }
 
-#ifdef PARALLEL
       if(comm.Size()>1)
       {
         for(auto & event : timer_events)
@@ -859,7 +843,6 @@ namespace ngcore
           }
         }
       }
-#endif // PARALLEL
 
       // Merge link event
       int nlinks = 0;
@@ -930,7 +913,6 @@ namespace ngcore
 
   void PajeTrace::SendData( )
     {
-#ifdef PARALLEL
       // Hostname
       NgMPI_Comm comm(NG_MPI_COMM_WORLD);
       // auto rank = comm.Rank();
@@ -982,7 +964,6 @@ namespace ngcore
       comm.Send (time, MPI_PAJE_WRITER, 0);
       comm.Send (is_start, MPI_PAJE_WRITER, 0);
       comm.Send (thread_id, MPI_PAJE_WRITER, 0);
-#endif // PARALLEL
     }
 
   ///////////////////////////////////////////////////////////////////

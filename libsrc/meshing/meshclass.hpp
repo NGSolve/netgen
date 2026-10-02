@@ -184,10 +184,8 @@ namespace netgen
     mutable int ps_startelement;
 
 
-#ifdef PARALLEL
     /// connection to parallel meshes
     unique_ptr<ParallelMeshTopology> paralleltop;
-#endif
 
     
     shared_ptr<NetgenGeometry> geometry;
@@ -1083,7 +1081,6 @@ namespace netgen
     GEOM_TYPE geomtype;
   
 
-#ifdef PARALLEL
     /// returns parallel topology
     class ParallelMeshTopology & GetParallelTopology () const
     { return *paralleltop; }
@@ -1116,15 +1113,6 @@ namespace netgen
     void SendMesh ( ) const;   
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
-
-    
-#else
-    void ParallelMetis (int /* nproc */) {}
-    void Distribute () {}
-    void SendRecvMesh () {}
-    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
-      Array<int> & segment_weights){ }
-#endif
 
     Array<int, ElementIndex> vol_partition;
     Array<int, SurfaceElementIndex> surf_partition;

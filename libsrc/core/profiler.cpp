@@ -1,6 +1,7 @@
 #include <mutex>
 
 #include "profiler.hpp"
+#include "mpi_wrapper.hpp"
 
 namespace ngcore
 {
@@ -33,9 +34,8 @@ namespace ngcore
     if (getenv ("NGPROFILE"))
       {
        std::string filename = "netgen.prof";
-#ifdef PARALLEL
-       filename += "."+ToString(id);
-#endif
+       if (NgMPI_Comm comm(NG_MPI_COMM_WORLD); comm.Size() > 1)
+         filename += "."+ToString(comm.Rank());
        if (id == 0) logger->info( "write profile to file {}", filename );
        FILE *prof = fopen(filename.c_str(),"w"); // NOLINT
        Print (prof);

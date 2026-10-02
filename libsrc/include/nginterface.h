@@ -273,7 +273,6 @@ extern "C" {
   void Ng_SurfaceElementTransformation (int eli, double x, double y, 
                                         double * p3d, double * jacobian);
 
-#ifdef PARALLEL
 
   // the following functions are 0-base  !!
 
@@ -284,7 +283,6 @@ extern "C" {
   
   DLL_HEADER int NgPar_GetGlobalNodeNum (int nodetype, int locnum);
 
-#endif
   
   namespace netgen {
   // #include "../visualization/soldata.hpp"

@@ -655,10 +655,8 @@ namespace netgen
     order = 1;
 
     auto comm = mesh.GetCommunicator();
-#ifdef PARALLEL
     enum { NG_MPI_TAG_CURVE = NG_MPI_TAG_MESH+20 };
     const ParallelMeshTopology & partop = mesh.GetParallelTopology ();
-#endif
     int ntasks = comm.Size();
     bool working = (ntasks == 1) || (comm.Rank() > 0);
 
@@ -773,7 +771,6 @@ namespace netgen
       }
 
 
-#ifdef PARALLEL
     // TABLE<int> send_orders(ntasks), recv_orders(ntasks);
     DynamicTable<int> send_orders(ntasks), recv_orders(ntasks);
 
@@ -802,7 +799,6 @@ namespace netgen
           for (auto proc : partop.GetDistantFaceProcs(f))
             faceorder[f] = max(faceorder[f], recv_orders[proc][cnt[proc]++]);              
       }
-#endif
 
 
     edgecoeffsindex.SetSize (nedges+1);
@@ -880,7 +876,6 @@ namespace netgen
             }
 
 
-#ifdef PARALLEL
         if (ntasks > 1)
           {
             // distribute it ...
@@ -925,7 +920,6 @@ namespace netgen
                       }
                   }
           }
-#endif    
 
 
         if (working)
@@ -1082,7 +1076,6 @@ namespace netgen
           swap_edge[edgenr] = int (seg[0] > seg[1]);
         }
 
-#ifdef PARALLEL
     if (ntasks > 1)
       {
         // distribute it ...
@@ -1135,7 +1128,6 @@ namespace netgen
                   }
               }
       }
-#endif    
 
     if (working)
       for (auto edgenr : use_edge.Range())
@@ -1283,7 +1275,6 @@ namespace netgen
         surfnr[top.GetFace(i)] = 
           mesh.GetFaceDescriptor(mesh[i].GetIndex()).SurfNr();
 
-#ifdef PARALLEL
     // TABLE<int> send_surfnr(ntasks), recv_surfnr(ntasks);
     DynamicTable<int> send_surfnr(ntasks), recv_surfnr(ntasks);
 
@@ -1306,7 +1297,6 @@ namespace netgen
           for (int proc : partop.GetDistantFaceProcs(f))
             surfnr[f] = max(surfnr[f], recv_surfnr[proc][cnt[proc]++]);              
       }
-#endif
 
     if (mesh.GetDimension() == 3 && working)
       {
@@ -1693,9 +1683,7 @@ namespace netgen
     // (*testout) << "facecoeffs = " << endl << facecoeffs << endl;
 
 
-#ifdef PARALLEL
     comm.Barrier();
-#endif
   }
 
 

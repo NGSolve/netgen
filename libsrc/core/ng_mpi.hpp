@@ -1,18 +1,17 @@
 #ifndef NG_MPI_HPP_INCLUDED
 #define NG_MPI_HPP_INCLUDED
 
-#ifdef PARALLEL
-
 #include <cstdint>
 #include <filesystem>
 #include <optional>
+#include <stdexcept>
 
 #include "ngcore_api.hpp"
 
-#ifndef NG_MPI_WRAPPER
-#define OMPI_SKIP_MPICXX
-#include <mpi.h>
-#endif  // NG_MPI_WRAPPER
+// MPI is always accessed through run-time loaded function pointers (see
+// ng_mpi_wrapper.cpp). The NG_MPI_* handle types below are opaque and
+// independent of the MPI implementation, so one Netgen binary works with
+// any supported MPI library, or without MPI at all.
 
 namespace ngcore {
 
@@ -20,7 +19,6 @@ NGCORE_API bool MPI_Loaded();
 NGCORE_API void InitMPI(
     std::optional<std::filesystem::path> mpi_lib_path = std::nullopt);
 
-#ifdef NG_MPI_WRAPPER
 inline void not_implemented() { throw std::runtime_error("Not implemented"); }
 
 struct NG_MPI_Status {
@@ -47,6 +45,8 @@ struct NG_MPI_Datatype {
   void operator=(NG_MPI_Datatype type) { value = type.value; }
   void operator=(uintptr_t value_) { value = value_; }
   void operator=(void *value_) { value = reinterpret_cast<uintptr_t>(value_); }
+  bool operator==(const NG_MPI_Datatype &t) const { return value == t.value; }
+  bool operator!=(const NG_MPI_Datatype &t) const { return value != t.value; }
 };
 
 struct NG_MPI_Request {
@@ -76,19 +76,8 @@ struct NG_MPI_Aint {
   NG_MPI_Aint() = default;
 };
 
-#else   // NG_MPI_WRAPPER
-using NG_MPI_Comm = MPI_Comm;
-using NG_MPI_Status = MPI_Status;
-using NG_MPI_Datatype = MPI_Datatype;
-using NG_MPI_Request = MPI_Request;
-using NG_MPI_Op = MPI_Op;
-using NG_MPI_Group = MPI_Group;
-using NG_MPI_Aint = MPI_Aint;
-#endif  // NG_MPI_WRAPPER
-
 #include "ng_mpi_generated_declarations.hpp"
 
 }  // namespace ngcore
 
-#endif  // PARALLEL
 #endif  // NG_MPI_HPP_INCLUDED

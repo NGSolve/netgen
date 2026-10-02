@@ -19,10 +19,8 @@ namespace py = pybind11;
 
 namespace ngcore
 {
-#ifdef PARALLEL
   NGCORE_API extern bool (*NG_MPI_CommFromMPI4Py)(py::handle, NG_MPI_Comm &);
   NGCORE_API extern py::handle (*NG_MPI_CommToMPI4Py)(NG_MPI_Comm);
-#endif // PARALLEL
 
   namespace detail
   {
@@ -86,7 +84,6 @@ namespace ngcore
     detail::SetPyArchiveCasters(typeid(T), c);
   }
 
-#ifdef PARALLEL
   struct mpi4py_comm {
     mpi4py_comm() = default;
     mpi4py_comm(NG_MPI_Comm value) : value(value) {}
@@ -94,7 +91,6 @@ namespace ngcore
 
     NG_MPI_Comm value;
   };
-#endif  // PARALLEL
 } // namespace ngcore
 
 
@@ -103,7 +99,6 @@ namespace ngcore
 namespace pybind11 {
 namespace detail {
 
-#ifdef PARALLEL
 template <> struct type_caster<ngcore::mpi4py_comm> {
   public:
   PYBIND11_TYPE_CASTER(ngcore::mpi4py_comm, _("mpi4py_comm"));
@@ -122,7 +117,6 @@ template <> struct type_caster<ngcore::mpi4py_comm> {
       return ngcore::NG_MPI_CommToMPI4Py(src.value);
     }
 };
-#endif //  PARALLEL
 
 template <typename Type, typename Value> struct ngcore_list_caster {
     using value_conv = make_caster<Value>;
