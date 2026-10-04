@@ -373,8 +373,8 @@ namespace netgen
     for (int edge = 1; edge <= ned; edge++)
       {
         auto [v1,v2] = topology.GetEdgeVertices(EdgeIndex::FromNr1(edge));        
-        for (int dest = 0; dest < ntasks; dest++)
-          if (GetDistantProcs(v1).Contains(dest) && GetDistantProcs(v2).Contains(dest))
+        for (auto dest : GetDistantProcs(v1))   // only the few ranks sharing v1, not all ranks
+          if (GetDistantProcs(v2).Contains(dest))
             dest2edge.Add (dest, edge);
       }
 
@@ -436,24 +436,20 @@ namespace netgen
         for (int face = 0; face < nfa; face++)
           {
             auto verts = topology.GetFaceVertices (FaceIndex::FromNr0(face));
-            for (int dest = 0; dest < ntasks; dest++)
-              if (dest != id)
-                if (GetDistantProcs (verts[0]).Contains(dest) &&
-                    GetDistantProcs (verts[1]).Contains(dest) &&
-                    GetDistantProcs (verts[2]).Contains(dest))
-                  cnt_send[dest]++;
+            for (auto dest : GetDistantProcs (verts[0]))   // only the ranks sharing the first vertex
+              if (GetDistantProcs (verts[1]).Contains(dest) &&
+                  GetDistantProcs (verts[2]).Contains(dest))
+                cnt_send[dest]++;
           }
         
         DynamicTable<int> dest2face(cnt_send);
         for (int face = 1; face <= nfa; face++)
           {
             auto verts = topology.GetFaceVertices (FaceIndex::FromNr1(face));
-            for (int dest = 0; dest < ntasks; dest++)
-              if (dest != id)
-                if (GetDistantProcs (verts[0]).Contains(dest) && 
-                    GetDistantProcs (verts[1]).Contains(dest) &&
-                    GetDistantProcs (verts[2]).Contains(dest))
-                  dest2face.Add(dest, face);
+            for (auto dest : GetDistantProcs (verts[0]))
+              if (GetDistantProcs (verts[1]).Contains(dest) &&
+                  GetDistantProcs (verts[2]).Contains(dest))
+                dest2face.Add(dest, face);
           }
 
         for (int & c : cnt_send) c*=3;
