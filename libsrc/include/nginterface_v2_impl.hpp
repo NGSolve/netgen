@@ -7,7 +7,7 @@ NGX_INLINE DLL_HEADER Ng_Point Ngx_Mesh :: GetPoint (int nr) const
 template <>
 NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<0> (size_t nr) const
 {
-  return (*mesh).pointelements[nr].index.Nr1();
+  return (*mesh).pointelements[PointElementIndex::FromNr0(nr)].index.Nr1();
 }
 
 template <>
@@ -47,7 +47,7 @@ NGX_INLINE DLL_HEADER int Ngx_Mesh :: GetElementIndex<3> (size_t nr) const
 template <>
 NGX_INLINE DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (size_t nr) const
 {
-  const Element0d & el = mesh->pointelements[nr];
+  const Element0d & el = mesh->pointelements[PointElementIndex::FromNr0(nr)];
   
   Ng_Element ret;
   ret.type = NG_PNT;

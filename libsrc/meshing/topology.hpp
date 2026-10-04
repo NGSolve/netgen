@@ -59,15 +59,14 @@ class MeshTopology
   
   Array<EdgeIndex,SegmentIndex> segedges;
   Array<FaceIndex,SurfaceElementIndex> surffaces;
-  // Array<IVec<2>, SurfaceElementIndex> surf2volelement;
-  Array<std::array<ElementIndex,2>, SurfaceElementIndex> surf2volelement;
+  Array<IVec<2,ElementIndex>, SurfaceElementIndex> surf2volelement;
   Array<SurfaceElementIndex, FaceIndex> face2surfel;
   
   Array<SegmentIndex, EdgeIndex> edge2segment;
   Table<ElementIndex, PointIndex> vert2element;
   Table<SurfaceElementIndex, PointIndex> vert2surfelement;
   Table<SegmentIndex,PointIndex> vert2segment;
-  Table<int,PointIndex> vert2pointelement;
+  Table<PointElementIndex,PointIndex> vert2pointelement;
   int timestamp;
 public:
   MeshTopology () = default;
@@ -184,7 +183,7 @@ public:
     elnr2 = surf2volelement[selnr][1];
   }
 
-  std::array<ElementIndex,2> GetSurface2VolumeElement (SurfaceElementIndex sei) 
+  IVec<2,ElementIndex> GetSurface2VolumeElement (SurfaceElementIndex sei) const
   {
     return surf2volelement[sei];
   }
@@ -205,7 +204,7 @@ public:
   FlatArray<SegmentIndex> GetVertexSegments (PointIndex vnr) const
   { return vert2segment[vnr]; }
 
-  FlatArray<int> GetVertexPointElements (PointIndex vnr) const
+  FlatArray<PointElementIndex> GetVertexPointElements (PointIndex vnr) const
   { return vert2pointelement[vnr]; }
   
   DLL_HEADER EdgeIndex GetVerticesEdge ( PointIndex v1, PointIndex v2) const;

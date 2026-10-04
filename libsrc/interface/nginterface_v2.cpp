@@ -179,7 +179,7 @@ namespace netgen
   /*
   template <> DLL_HEADER Ng_Element Ngx_Mesh :: GetElement<0> (int nr) const
   {
-    const Element0d & el = mesh->pointelements[nr];
+    const Element0d & el = mesh->pointelements[PointElementIndex::FromNr0(nr)];
     
     Ng_Element ret;
     ret.type = NG_PNT;
@@ -509,7 +509,7 @@ namespace netgen
                               double * x,
                               double * dxdxi) const
   {
-    PointIndex pi = mesh->pointelements[elnr].pnum;
+    PointIndex pi = mesh->pointelements[PointElementIndex::FromNr0(elnr)].pnum;
     Point<3> xg = mesh->Point(pi);
     if (x)
       for(int i=0;i<3;i++) x[i] = xg(i);
@@ -584,7 +584,7 @@ namespace netgen
                               double * x,
                               double * dxdxi) const
   {
-    PointIndex pnum = mesh->pointelements[elnr].pnum;
+    PointIndex pnum = mesh->pointelements[PointElementIndex::FromNr0(elnr)].pnum;
     if (x)
       for (int i = 0; i< 2; i++) x[i] = (*mesh)[pnum](i);
   }
@@ -596,7 +596,7 @@ namespace netgen
                               double * x,
                               double * dxdxi) const
   {
-    PointIndex pnum = mesh->pointelements[elnr].pnum;
+    PointIndex pnum = mesh->pointelements[PointElementIndex::FromNr0(elnr)].pnum;
     if (x) x[0] = (*mesh)[pnum](0);
     // if (dxdxi) dxdxi[0] = 0;
     // Jacobi-matrix is 1 x 0 !!!
@@ -864,7 +864,7 @@ namespace netgen
   {
     //cout << "MultiElementtransformation<0,2> simd not implemented" << endl;
 
-    PointIndex pi = mesh->pointelements[elnr].pnum;
+    PointIndex pi = mesh->pointelements[PointElementIndex::FromNr0(elnr)].pnum;
     Point<3> xg = mesh->Point(pi);
     if (x)
       for (int j = 0; j < npts; j++)
@@ -879,7 +879,7 @@ namespace netgen
                                    SIMD<double> * dxdxi, size_t sdxdxi) const
   {
     //cout << "multi-eltrafo simd called, 0,1,simd" << endl;
-    PointIndex pi = mesh->pointelements[elnr].pnum;
+    PointIndex pi = mesh->pointelements[PointElementIndex::FromNr0(elnr)].pnum;
     Point<3> xg = mesh->Point(pi);
     if (x)
       for (int j = 0; j < npts; j++)

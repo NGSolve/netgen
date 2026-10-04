@@ -351,7 +351,7 @@ namespace netgen
     const auto & LineSegments() const { return segments; }
     auto & LineSegments() { return segments; }
     
-    Array<Element0d> pointelements;  // only via python interface
+    Array<Element0d, PointElementIndex> pointelements;
 
     DLL_HEADER SurfaceElementIndex AddSurfaceElement (const Element2dRef & el);
     // write to pre-allocated container, thread-safe

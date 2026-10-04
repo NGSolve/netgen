@@ -962,7 +962,7 @@ namespace netgen
     self.hp_surfinfo.SetSize(0);
     self.hp_volinfo.SetSize(0);
     self.hp_seginfo.SetSize(0);
-    self.pointelements = Array<Element0d>(0);
+    self.pointelements = Array<Element0d, PointElementIndex>(0);
     self.lockedpoints = Array<PointIndex>(0);
     /*
     auto cleanup_ptr = [](auto & ptr) {
@@ -1216,8 +1216,8 @@ namespace netgen
       pointelements.SetSize(zdes.Size());
       for (auto k : Range(pointelements)) {
         auto & el = pointelements[k];
-        el.pnum = glob2loc_vert_ht.Get(zdes[k].pnum.Nr0());
-        el.SetIndex(VertexRegionIndex::FromNr1(zdes[k].index));
+        el.pnum = glob2loc_vert_ht.Get(zdes[k.Nr0()].pnum.Nr0());
+        el.SetIndex(VertexRegionIndex::FromNr1(zdes[k.Nr0()].index));
       }
     }
 
