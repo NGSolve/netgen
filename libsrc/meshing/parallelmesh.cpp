@@ -577,7 +577,7 @@ namespace netgen
                     segs_to_send.Add (dest, segi);
                   });
 
-    DynamicTable<int> pels_to_send(ntasks);
+    DynamicTable<PointElementIndex> pels_to_send(ntasks);
     for (auto k : Range(pointelements))
       for (auto dest : procs_of_vert[pointelements[k].pnum])
         pels_to_send.Add (dest, k);
@@ -885,7 +885,7 @@ namespace netgen
       for (auto & seg : el1d) renum (seg.PNums());
       ar & el1d;
       for (auto & seg : el1d) seg.DoArchiveGeomInfo (ar);
-      Array<Element0d> el0d (pointelements);
+      Array<Element0d, PointElementIndex> el0d (pointelements);
       for (auto & el : el0d) if (el.pnum.IsValid()) el.pnum = globnum[el.pnum];
       ar & el0d;
       // identification pairs: idnr, p1, p2 (1-based global)
