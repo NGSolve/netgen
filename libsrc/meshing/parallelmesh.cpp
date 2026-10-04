@@ -691,7 +691,7 @@ namespace netgen
     self.hp_surfinfo.SetSize(0);
     self.hp_volinfo.SetSize(0);
     self.hp_seginfo.SetSize(0);
-    self.pointelements = Array<Element0d>(0);
+    self.pointelements = Array<Element0d, PointElementIndex>(0);
     self.lockedpoints = Array<PointIndex>(0);
     /*
     auto cleanup_ptr = [](auto & ptr) {

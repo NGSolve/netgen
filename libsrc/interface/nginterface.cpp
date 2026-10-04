@@ -1900,9 +1900,9 @@ int Ng_GetVertex_SurfaceElements( int vnr_, int* elems )
     case 1:
       {
         int cnt = 0;
-        for (int i = 0; i < mesh->pointelements.Size(); i++)
+        for (auto i : mesh->pointelements.Range())
           if (mesh->pointelements[i].pnum == vnr)
-            elems[cnt++] = i+1;
+            elems[cnt++] = i.Nr1();
         return cnt;
       }
     }

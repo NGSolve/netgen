@@ -417,8 +417,8 @@ namespace netgen
                                                                               table.Add (seg[1], segi);
                                                                             }, np);
         
-        vert2pointelement = ngcore::CreateSortedTable<int, PointIndex>( mesh->pointelements.Range(),
-                                                                        [&](auto & table, int pei)
+        vert2pointelement = ngcore::CreateSortedTable<PointElementIndex, PointIndex>( mesh->pointelements.Range(),
+                                                                        [&](auto & table, PointElementIndex pei)
                                                                         {
                                                                           const Element0d & pointel = mesh->pointelements[pei];
                                                                           table.Add(pointel.pnum, pei);
@@ -1240,8 +1240,7 @@ namespace netgen
 
         
         surf2volelement.SetSize (nse);
-        // surf2volelement = IVec<2>(0,0);
-        surf2volelement = { ElementIndex::INVALID, ElementIndex::INVALID };
+        surf2volelement = IVec<2,ElementIndex>(ElementIndex::INVALID, ElementIndex::INVALID);
 
         static Timer t_topology_update_build_surf2vol("Topology::Update build surf2vol"); t_topology_update_build_surf2vol.Start();        
         // for (int i = 0; i < ne; i++)

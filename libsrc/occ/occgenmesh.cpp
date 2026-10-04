@@ -8,6 +8,9 @@
 #include "occmeshsurf.hpp"
 
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepBndLib.hxx>
+#include <Bnd_Box.hxx>
 #include <BRepGProp.hxx>
 #include <BRepLProp_CLProps.hxx>
 #include <BRepLProp_SLProps.hxx>
@@ -636,10 +639,36 @@ namespace netgen
 
             if(triangulation.IsNull())
               {
+                Bnd_Box fbox;
+                BRepBndLib::Add (face, fbox);
+                double fx0, fy0, fz0, fx1, fy1, fz1;
+                fbox.Get (fx0, fy0, fz0, fx1, fy1, fz1);
+                const double fdiag = sqrt ((fx1-fx0)*(fx1-fx0) + (fy1-fy0)*(fy1-fy0)
+                                           + (fz1-fz0)*(fz1-fz0));
+                IMeshTools_Parameters retryParams;
+                retryParams.Angle                    = 0.5;
+                retryParams.Relative                 = Standard_False;
+                retryParams.InParallel               = Standard_False;
+                retryParams.MinSize                  = Precision::Confusion();
+                retryParams.InternalVerticesMode     = Standard_True;
+                retryParams.ControlSurfaceDeflection = Standard_True;
+                for (double rel : {0.1, 0.05, 0.02, 0.2, 0.01, 0.005})
+                  {
+                    BRepTools::Clean (face);   // stale partial data poisons retries
+                    retryParams.Deflection = std::max (rel * fdiag, 1e-6);
+                    BRepMesh_IncrementalMesh remesher(face, retryParams);
+                    triangulation = BRep_Tool::Triangulation (face, loc);
+                    if (!triangulation.IsNull())
+                      break;
+                  }
+              }
+            if(triangulation.IsNull())
+              {
                 if (geom.shape.Infinite())
                   throw Exception("Cannot generate mesh for an infinite geometry");
-                else
-                  throw Exception("OCC-Triangulation could not be built for face " + to_string(i));
+                PrintMessage (1, "WARNING: OCC-Triangulation could not be built for face ",
+                              i, " - skipping curvature-based mesh size for it");
+                continue;
               }
             
             BRepAdaptor_Surface sf(face, Standard_True);

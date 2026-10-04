@@ -958,7 +958,7 @@ namespace netgen
     outfile << "pointelements" << "\n";
     outfile << pointelements.Size() << "\n";
 
-    for (int i = 0; i < pointelements.Size(); i++)
+    for (auto i : pointelements.Range())
       {
         outfile.width(8);
         outfile << pointelements[i].pnum << "  ";
@@ -4867,7 +4867,7 @@ namespace netgen
           {
             el.GetTransformation (j, Points(), dtrans);
             double det = dtrans.Det();
-            if (det > 0)
+            if (det < 0)
               {
                 PrintError ("Element ", i.Nr1() , " has wrong orientation");
                 el.Flags().badel = 1;
@@ -7668,12 +7668,11 @@ namespace netgen
     }
 
     // Check in reverse order because they are deleted from the end
-    auto npointelements = mesh.pointelements.Size();
-    for(auto i : Range(npointelements))
+    for (auto pei = mesh.pointelements.Range().Next(); pei-- > mesh.pointelements.Range().First(); )
     {
-      auto pel = mesh.pointelements[npointelements-i-1];
+      auto pel = mesh.pointelements[pei];
       if(!keep_point[pel.pnum])
-        mesh.pointelements.DeleteElement(npointelements-i-1);
+        mesh.pointelements.DeleteElement(pei);
     }
 
     mesh.Compress();

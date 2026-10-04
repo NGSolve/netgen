@@ -327,6 +327,16 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("__hash__" , FunctionPointer( [](SegmentIndex &self ) { return self.Nr0(); }) )
     ;
 
+  py::class_<PointElementIndex>(m, "ElementId0D")
+    .def(py::init([](int i) { return PointElementIndex::FromNr0(i); }))
+    .def("__repr__", &ToString<PointElementIndex>)
+    .def("__str__", &ToString<PointElementIndex>)
+    .def_property_readonly("nr", [](PointElementIndex &self) { return self.Nr0(); })
+    .def("__eq__" , FunctionPointer( [](PointElementIndex &self, PointElementIndex &other)
+                  { return self==other; }) )
+    .def("__hash__" , FunctionPointer( [](PointElementIndex &self ) { return self.Nr0(); }) )
+    ;
+
 
 
   /*  
@@ -745,6 +755,9 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          "create point element"
          )
     .def("__repr__", &ToString<Element0d>)
+    .def_property("index",
+                  [](const Element0d & self) { return self.GetIndex().Nr1(); },
+                  [](Element0d & self, int index) { self.SetIndex(VertexRegionIndex::FromNr1(index)); })
     .def_property_readonly("vertices", 
                   FunctionPointer ([](const Element0d & self) -> py::list
                                    {
@@ -855,7 +868,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
   ExportArray<ElementIndex, ElementIndex>(m);
   
   ExportArray<Segment,SegmentIndex>(m);
-  ExportArray<Element0d>(m);
+  ExportArray<Element0d, PointElementIndex>(m);
   ExportArray<MeshPoint,PointIndex>(m);
   py::class_<FaceRegionIndex>(m, "FaceDescriptorIndex")
     .def(py::init([](int nr0) { return FaceRegionIndex::FromNr0(nr0); }), py::arg("nr0"), "from 0-based position")
@@ -1266,7 +1279,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
          static_cast<Array<Segment, SegmentIndex>&(Mesh::*)()> (&Mesh::LineSegments),
          py::return_value_policy::reference)
 
-    .def("Elements0D", FunctionPointer([] (Mesh & self) -> Array<Element0d>&
+    .def("Elements0D", FunctionPointer([] (Mesh & self) -> Array<Element0d, PointElementIndex>&
                                        {
                                          return self.pointelements;
                                        } ),

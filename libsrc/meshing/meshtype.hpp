@@ -504,6 +504,7 @@ namespace netgen
   using ElementIndex = ElIndex<3>;
   using SurfaceElementIndex = ElIndex<2>;
   using SegmentIndex = ElIndex<1>;
+  using PointElementIndex = ElIndex<0>;
 }
 
 namespace ngcore
@@ -1019,14 +1020,12 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void GetTransformation (int ip, class DenseMatrix & pmat,
                                        class DenseMatrix & trans) const;
 
-    DLL_HEADER void GetShape (const Point<2> & p, class Vector & shape) const;
-    DLL_HEADER void GetShapeNew (const Point<2> & p, class FlatVector & shape) const;
+    DLL_HEADER void GetShape (const Point<2> & p, class FlatVector & shape) const;
     template <typename T>
-    DLL_HEADER void GetShapeNew (const Point<2,T> & p, TFlatVector<T> shape) const;
-    /// matrix 2 * GetNP()
-    DLL_HEADER void GetDShape (const Point<2> & p, class DenseMatrix & dshape) const;
+    DLL_HEADER void GetShape (const Point<2,T> & p, TFlatVector<T> shape) const;
+    /// matrix GetNP() * 2
     template <typename T>
-    DLL_HEADER void GetDShapeNew (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
+    DLL_HEADER void GetDShape (const Point<2,T> & p, class MatrixFixWidth<2,T> & dshape) const;
     /// matrix 2 * GetNP()
     DLL_HEADER void GetPointMatrix (FlatArray<Point<2>, PointIndex> points,
                                     class DenseMatrix & pmat) const;
@@ -1256,13 +1255,11 @@ inline ostream & operator<<(ostream  & s, const MiniElement2dT<TINDEX> & el)
     DLL_HEADER void GetTransformation (int ip, class DenseMatrix & pmat,
                                        class DenseMatrix & trans) const;
 
-    DLL_HEADER void GetShape (const Point<3> & p, class Vector & shape) const;
     template <typename T>
-    DLL_HEADER void GetShapeNew (const Point<3,T> & p, TFlatVector<T> shape) const;
-    /// matrix 2 * np
-    DLL_HEADER void GetDShape (const Point<3> & p, class DenseMatrix & dshape) const;
+    DLL_HEADER void GetShape (const Point<3,T> & p, TFlatVector<T> shape) const;
+    /// matrix np * 3
     template <typename T>
-    DLL_HEADER void GetDShapeNew (const Point<3,T> & p, class MatrixFixWidth<3,T> & dshape) const;
+    DLL_HEADER void GetDShape (const Point<3,T> & p, class MatrixFixWidth<3,T> & dshape) const;
     /// matrix 3 * np
     DLL_HEADER void GetPointMatrix (const T_POINTS & points,
                                     class DenseMatrix & pmat) const;
