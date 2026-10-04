@@ -504,6 +504,7 @@ namespace netgen
   using ElementIndex = ElIndex<3>;
   using SurfaceElementIndex = ElIndex<2>;
   using SegmentIndex = ElIndex<1>;
+  using PointElementIndex = ElIndex<0>;
 }
 
 namespace ngcore
