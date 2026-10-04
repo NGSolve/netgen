@@ -1,8 +1,8 @@
 import pytest
 import netgen.meshing
 
-mpi4py = pytest.importorskip("mpi4py")
-_ = pytest.importorskip("pytest_mpi")
+MPI = pytest.importorskip("mpi4py.MPI")
+pytestmark = pytest.mark.skipif(MPI.COMM_WORLD.size == 1, reason="needs more than one MPI rank")
 
 try:
     from netgen.occ import Box, Pnt, OCCGeometry
@@ -11,11 +11,10 @@ except ImportError:
     has_occ = False
 
 
-@pytest.mark.mpi
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
 def test_mpi_segments_have_valid_ed_after_load():
     """Check that every local segment has a valid edge descriptor index (>= 0) after MPI distribution."""
-    comm = mpi4py.MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD
 
     if comm.rank == 0:
         geo = OCCGeometry(Box(Pnt(0, 0, 0), Pnt(1, 1, 1)))
@@ -27,18 +26,15 @@ def test_mpi_segments_have_valid_ed_after_load():
     mesh = netgen.meshing.Mesh(3, comm)
     mesh.Load("test_ed_segments.vol.gz")
 
-    if comm.rank == 0:
-        assert mesh.ne == 0
-    else:
-        for seg in mesh.Elements1D():
-            assert seg.index >= 0, f"segment has index={seg.index}"
+    assert mesh.ne > 0   # every rank, including 0, holds a part
+    for seg in mesh.Elements1D():
+        assert seg.index >= 0, f"segment has index={seg.index}"
 
 
-@pytest.mark.mpi
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
 def test_mpi_edge_descriptors_distributed():
     """Check that non-root ranks have edge descriptors with valid edgenr after MPI distribution."""
-    comm = mpi4py.MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD
 
     if comm.rank == 0:
         geo = OCCGeometry(Box(Pnt(0, 0, 0), Pnt(1, 1, 1)))
@@ -58,11 +54,10 @@ def test_mpi_edge_descriptors_distributed():
             assert ed.edgenr > 0, f"ED[{i}] edgenr={ed.edgenr} should be > 0"
 
 
-@pytest.mark.mpi
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
 def test_mpi_cd2names_survive_distribution():
     """Check that named edges (CD2 names) survive MPI distribution."""
-    comm = mpi4py.MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD
 
     if comm.rank == 0:
         box = Box(Pnt(0, 0, 0), Pnt(1, 1, 1))

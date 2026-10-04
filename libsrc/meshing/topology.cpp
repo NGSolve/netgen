@@ -372,10 +372,6 @@ namespace netgen
     static Timer timer_tables("Build vertex to element table");
     RegionTimer reg (timer);
 
-#ifdef PARALLEL
-    // ParallelMeshTopology & paralleltop = mesh.GetParallelTopology();
-#endif
-
     auto id = this->mesh->GetCommunicator().Rank();
     auto ntasks = this->mesh->GetCommunicator().Size();
   
@@ -1266,11 +1262,6 @@ namespace netgen
         // face table complete
 
 
-#ifdef PARALLEL
-        // (*testout) << " RESET Paralleltop" << endl;
-        // paralleltop.Reset ();
-#endif
-
         static Timer t_topology_update_count_face_els("Topology::Update count face_els"); t_topology_update_count_face_els.Start();
         Array<short int, FaceIndex> face_els(nfa), face_surfels(nfa);
         face_els = 0;
@@ -1316,14 +1307,9 @@ namespace netgen
                 if (face_els[i] + face_surfels[i] == 1)
                   {
                     cnt_err++;
-#ifdef PARALLEL
                     if ( ntasks > 1 )
-                      {
-                        continue;
-                        // if ( !paralleltop.DoCoarseUpdate() ) continue;
-                      }
+                      continue;
                     else
-#endif
                       {
                         (*testout) << "illegal face : " << i.Nr0() << ", cnt = " << face_els[i]+face_surfels[i] << endl;
                         (*testout) << "points = "
@@ -1663,13 +1649,6 @@ namespace netgen
       }
     
 
-#ifdef PARALLEL
-    if (id != 0)  
-      {
-        // if ( paralleltop.DoCoarseUpdate() )
-        // paralleltop.UpdateCoarseGrid();
-      }
-#endif
  
  
   

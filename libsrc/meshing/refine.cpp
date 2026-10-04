@@ -21,9 +21,6 @@ namespace netgen
 
     
     mesh.SetNextMajorTimeStamp();
-    
-    if (ntasks > 1 && id == 0)
-      return;
 
 
     // reduce 2nd order
@@ -750,14 +747,7 @@ namespace netgen
 
     mesh.level_nv.Append (mesh.GetNV());
 
-#ifdef PARALLEL
-    if (mesh.GetCommunicator().Size() > 1)
-      {
-        mesh.GetParallelTopology().IdentifyVerticesAfterRefinement();
-        mesh.GetCommunicator().Barrier();
-        mesh.GetParallelTopology().EnumeratePointsGlobally();
-      }
-#endif
+    mesh.UpdateParallelTopology();
       
     PrintMessage (5, "mesh updates complete");
     return;

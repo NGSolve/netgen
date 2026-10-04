@@ -75,12 +75,10 @@ namespace netgen
 
   void Ngx_Mesh :: DoArchive (Archive & archive)
   {
-#ifdef PARALLEL
     if (archive.Input()) {
       mesh = make_shared<Mesh>();
       mesh->SetCommunicator(GetCommunicator());
     }
-#endif
     mesh->DoArchive(archive);
     if (archive.Input())
       {
@@ -1300,17 +1298,14 @@ void Ngx_Mesh::SetSurfaceElementOrders (int enr, int ox, int oy)
 
 size_t Ngx_Mesh :: GetGlobalVertexNum (int locnum) const
 {
-#ifdef PARALLEL  
+  if (mesh->GetCommunicator().Size() == 1)
+    return locnum;
   return mesh->GetParallelTopology().GetGlobalPNum (PointIndex::FromNr0(locnum))-1;
-#else
-  return locnum;
-#endif
 }
 
   
 FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
   {
-#ifdef PARALLEL
     if (mesh->GetCommunicator().Size() == 1)
       return FlatArray<int>(0,nullptr);
     
@@ -1328,9 +1323,6 @@ FlatArray<int>  Ngx_Mesh :: GetDistantProcs (int nodetype, int locnum) const
       default:
         return FlatArray<int>(0, nullptr);
       }
-#else
-    return FlatArray<int>(0,nullptr);
-#endif
   }
 }
 

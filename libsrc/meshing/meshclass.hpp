@@ -184,10 +184,8 @@ namespace netgen
     mutable int ps_startelement;
 
 
-#ifdef PARALLEL
     /// connection to parallel meshes
     unique_ptr<ParallelMeshTopology> paralleltop;
-#endif
 
     
     shared_ptr<NetgenGeometry> geometry;
@@ -1083,15 +1081,21 @@ namespace netgen
     GEOM_TYPE geomtype;
   
 
-#ifdef PARALLEL
     /// returns parallel topology
     class ParallelMeshTopology & GetParallelTopology () const
     { return *paralleltop; }
 
-    /// distributes the master-mesh to local meshes
-    DLL_HEADER void Distribute ();
+    /// collective: the whole mesh, in global point numbering, on rank root; nullptr on the other ranks
+    DLL_HEADER shared_ptr<Mesh> GatherToRoot (int root = 0) const;
+
+    /// collective: shared vertices (new ones after refinement) and global vertex numbers;
+    /// shared edges and faces are updated by UpdateTopology
+    DLL_HEADER void UpdateParallelTopology ();
+
+    /// distributes the mesh of rank 0 over the communicator; root_participates=false leaves rank 0 empty (legacy master layout)
+    DLL_HEADER void Distribute (bool root_participates = true);
     DLL_HEADER void Distribute (Array<int> & volume_weights, Array<int> & surface_weights,
-                                Array<int> & segment_weights);
+                                Array<int> & segment_weights, bool root_participates = true);
 
 
     /// find connection to parallel meshes
@@ -1101,13 +1105,9 @@ namespace netgen
     //   void FindExchangeFaces ();
 
     /// use metis to decompose master mesh 
-    DLL_HEADER void ParallelMetis (int nproc); 
+    DLL_HEADER void ParallelMetis (int nproc, bool root_participates = true);
     DLL_HEADER void ParallelMetis (Array<int> & volume_weights, Array<int> & surface_weights,
-                                   Array<int> & segment_weights); 
-
-    void PartHybridMesh (); 
-    void PartDualHybridMesh (); 
-    void PartDualHybridMesh2D ();
+                                   Array<int> & segment_weights, bool root_participates = true);
 
     /// send mesh from master to local procs
     void SendRecvMesh ();
@@ -1116,15 +1116,8 @@ namespace netgen
     void SendMesh ( ) const;   
     /// loads a mesh sent from master processor
     void ReceiveParallelMesh ();
-
-    
-#else
-    void ParallelMetis (int /* nproc */) {}
-    void Distribute () {}
-    void SendRecvMesh () {}
-    void Distribute (Array<int> & volume_weights, Array<int> & surface_weights, 
-      Array<int> & segment_weights){ }
-#endif
+    /// replaces the mesh by the part archived by SendMesh
+    void UnpackMeshPart (FlatArray<std::byte> data);
 
     Array<int, ElementIndex> vol_partition;
     Array<int, SurfaceElementIndex> surf_partition;

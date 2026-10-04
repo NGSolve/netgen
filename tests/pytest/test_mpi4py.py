@@ -1,12 +1,11 @@
 import pytest
 import netgen.meshing
 
-mpi4py = pytest.importorskip("mpi4py")
-_ = pytest.importorskip("pytest_mpi")
+MPI = pytest.importorskip("mpi4py.MPI")
+pytestmark = pytest.mark.skipif(MPI.COMM_WORLD.size == 1, reason="needs more than one MPI rank")
 
-@pytest.mark.mpi
 def test_mpi4py():
-    comm = mpi4py.MPI.COMM_WORLD
+    comm = MPI.COMM_WORLD
 
     if comm.rank==0:
         from netgen.csg import unit_cube
@@ -18,5 +17,4 @@ def test_mpi4py():
     mesh = netgen.meshing.Mesh(3, comm)
     mesh.Load("mpimesh.vol.gz")
 
-    if comm.rank==0:
-        assert mesh.ne==0
+    assert mesh.ne > 0   # every rank, including 0, holds a part

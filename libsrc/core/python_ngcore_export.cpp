@@ -39,11 +39,10 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
   ExportTable<int>(m);
 
-  #ifdef PARALLEL
   py::class_<NG_MPI_Comm> (m, "_NG_MPI_Comm")
           ;
   m.def("InitMPI", &InitMPI, py::arg("mpi_library_path")=nullopt);
-  #endif // PARALLEL
+  m.def("MPI_Loaded", &MPI_Loaded);
 
   py::class_<BitArray, shared_ptr<BitArray>> (m, "BitArray")
     .def(py::init([] (size_t n) { return make_shared<BitArray>(n); }),py::arg("n"))
@@ -417,11 +416,10 @@ threads : int
   m.def("ResetTimers", &NgProfiler::Reset);
 
   py::class_<NgMPI_Comm> (m, "MPI_Comm")
-#ifdef PARALLEL
+    .def(py::init<>(), "serial communicator (rank 0 of 1)")
     .def(py::init([] (mpi4py_comm comm) { return NgMPI_Comm(comm); }))
     .def("WTime", [](NgMPI_Comm  & c) { return NG_MPI_Wtime(); })
     .def_property_readonly ("mpi4py", [](NgMPI_Comm & self) { return NG_MPI_CommToMPI4Py(self); })
-#endif  // PARALLEL
     .def_property_readonly ("rank", &NgMPI_Comm::Rank)
     .def_property_readonly ("size", &NgMPI_Comm::Size)
     .def("Barrier", &NgMPI_Comm::Barrier)
@@ -460,7 +458,5 @@ threads : int
   });
 
     
-#ifdef PARALLEL
   py::implicitly_convertible<mpi4py_comm, NgMPI_Comm>();
-#endif // PARALLEL
 }

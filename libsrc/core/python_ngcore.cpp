@@ -8,7 +8,7 @@ using std::string;
 namespace ngcore
 {
   bool ngcore_have_numpy = false;
-  bool parallel_pickling = true;
+  bool parallel_pickling = false;   // collective pickling is deprecated, see Mesh.Gather
 
   namespace detail
   {

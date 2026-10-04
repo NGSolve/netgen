@@ -188,10 +188,6 @@ namespace netgen
         mesh -> Load(filename);
         SetGlobalMesh (mesh);
 
-#ifdef PARALLEL_NETGEN
-        MyMPI_SendCmd ("mesh");
-        mesh -> Distribute();
-#endif
         if(mesh->GetGeometry())
           ng_geometry = mesh->GetGeometry();
       }
@@ -1254,10 +1250,6 @@ namespace netgen
         mesh->SetMinimalH (mparam.minh);
       }
 
-#ifdef PARALLELGL
-    MyMPI_SendCmd ("bcastparthread");
-    MyMPI_Bcast (mparam.parthread, MPI_COMM_WORLD);
-#endif
 
     return TCL_OK;
   }
@@ -2314,7 +2306,6 @@ namespace netgen
                 Tcl_Interp * interp,
                 int argc, tcl_const char *argv[])
   {
-#ifdef PARALLEL
     if (!mesh)
       {
         Tcl_SetResult (interp, err_needsmesh, TCL_STATIC);
@@ -2322,22 +2313,18 @@ namespace netgen
       }
 
     int nparts = atoi (argv[1]);
-    ntasks = nparts+1;
     cout << "calling metis ... " << flush;
-    mesh->ParallelMetis(ntasks);
+    try
+      {
+        mesh->ParallelMetis(nparts+1);
+      }
+    catch (const NgException & e)
+      {
+        Tcl_SetResult (interp, (char*)"metis not available", TCL_STATIC);
+        return TCL_ERROR;
+      }
     cout << "done" << endl;
-    ntasks = 1;
-
-    // for (ElementIndex ei = 0; ei < mesh->GetNE(); ei++)
-    // (*mesh)[ei].SetIndex ( (*mesh)[ei].GetPartition() );
-
     return TCL_OK;
-
-#else
-    Tcl_SetResult (interp, (char*)"metis not available", TCL_STATIC);
-    return TCL_ERROR;
-    
-#endif
 
 
 
@@ -2704,9 +2691,6 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
 
 
 
-#ifdef PARALLELGL
-    vsmesh.Broadcast ();
-#endif
 
     return TCL_OK;
   }
@@ -2727,16 +2711,6 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
                Tcl_Interp * interp,
                int argc, tcl_const char *argv[])
   {
-    /*
-#ifdef PARALLEL
-    int id, rc, ntasks;
-    MPI_Comm_size(MPI_COMM_WORLD, &ntasks);
-    MPI_Comm_rank(MPI_COMM_WORLD, &id);
-    if ( id != 0 )
-      return TCL_OK;
-#endif
-    */
-
     /*
     if (ngsolve_handle)
       {
@@ -2770,10 +2744,6 @@ void PlayAnimFile(const char* name, int speed, int maxcnt)
     //cout << "stopped acis, outcome = " << res.ok() << endl;
 #endif
 
-#ifdef PARALLELGL
-    if (id == 0) MyMPI_SendCmd ("end");
-    MPI_Finalize();
-#endif
 
     mesh.reset();
     ng_geometry.reset();

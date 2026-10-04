@@ -1226,28 +1226,6 @@ namespace ngcore
 } // namespace ngcore
 
 
-/*
-#ifdef PARALLEL
-namespace ngcore {
-  template<int S, typename T>
-  class MPI_typetrait<ngcore::IVec<S, T> >
-  {
-  public:
-    /// gets the MPI datatype
-    static MPI_Datatype MPIType () 
-    { 
-      static MPI_Datatype MPI_T = 0;
-      if (!MPI_T)
-        {
-          MPI_Type_contiguous ( S, MPI_typetrait<T>::MPIType(), &MPI_T);
-          MPI_Type_commit ( &MPI_T );
-        }
-      return MPI_T;
-    }
-  };
-}
-#endif
-*/
 
 namespace ngcore
 {

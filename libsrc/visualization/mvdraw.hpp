@@ -79,10 +79,6 @@ namespace netgen
     NGGUI_API void SetOpenGlColor(double val, double valmin, double valmax, int logscale = 0);
         
 
-#ifdef PARALLELGL
-    NGGUI_API void InitParallelGL ();
-    NGGUI_API void Broadcast ();
-#endif 
   };
 
 
@@ -209,10 +205,6 @@ namespace netgen
 
     VisualSelect select;
 
-#ifdef PARALLELGL
-    Array<int> par_linelists;
-    Array<int> par_filledlists;
-#endif
 
     MouseEventHandler * user_me_handler;
 

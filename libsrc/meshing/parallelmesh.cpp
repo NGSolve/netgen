@@ -1,4 +1,3 @@
-#ifdef PARALLEL
 
 #include <meshing.hpp>
 #include "paralleltop.hpp"
@@ -25,150 +24,8 @@ namespace metis {
 using namespace metis;
 #endif
 
-/*
-namespace ngcore {
-  template <> struct MPI_typetrait<netgen::PointIndex> {
-    static MPI_Datatype MPIType () { return MPI_INT; } };  
-}
-*/
-
-namespace ngcore
-{
-
-  /** An MPI-Package for a Surface element **/
-  class SurfPointPackage
-  {
-  public:
-    netgen::PointIndex num;   // point number
-    int trignum; // STL geo info
-    double u, v; // OCC geo info
-    SurfPointPackage () { ; }
-    SurfPointPackage & operator = (const SurfPointPackage & other) {
-      num = other.num;
-      trignum = other.trignum;
-      u = other.u;
-      v = other.v;
-      return *this;
-    }
-  }; // class SurfPointPackage
-
-  template<> struct MPI_typetrait<SurfPointPackage> {
-    static NG_MPI_Datatype MPIType () {
-      static NG_MPI_Datatype MPI_T = 0;
-      if (!MPI_T)
-        {
-          int block_len[2] = { 2, 2 };
-          NG_MPI_Aint displs[3] = { 0, 2*sizeof(int) };
-          NG_MPI_Datatype types[2] = { NG_MPI_INT, NG_MPI_DOUBLE };
-          NG_MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
-          NG_MPI_Type_commit(&MPI_T);
-        }
-      return MPI_T;
-    }
-  }; // struct MPI_typetrait<SurfPointPackage>
-
-
-  class SelPackage
-  {
-  public:
-    int sei;
-    int index;
-    int np;
-    /** we send too much here, especially in 2d! **/
-    SurfPointPackage points[ELEMENT2D_MAXPOINTS];
-    SelPackage () { ; }
-    SelPackage (const netgen::Mesh & mesh, netgen::SurfaceElementIndex _sei)
-    {
-      const netgen::Element2dRef el = mesh[_sei];
-      sei = _sei.Nr0();
-      index = el.GetIndex().Nr1();
-      np = el.GetNP();
-      for (int k : Range(1, np+1)) {
-        auto & pnt = points[k-1];;
-        pnt.num = el.PNum(k);
-        pnt.trignum = el.GeomInfoPi(k).trignum;
-        pnt.u = el.GeomInfoPi(k).u;
-        pnt.v = el.GeomInfoPi(k).v;
-      }
-      /** otherwise, we use uninitialized values **/
-      for (int k : Range(np, ELEMENT2D_MAXPOINTS)) {
-        points[k].num = netgen::PointIndex::INVALID;
-        points[k].trignum = -1;
-        points[k].u = -1;
-        points[k].v = -1;
-      }
-    }
-    void Unpack (netgen::Element2dRef el) const {
-        el.SetIndex(netgen::FaceRegionIndex::FromNr1(index));
-        for (int k : Range(1, np + 1)) {
-          auto & pnt = points[k-1];
-          el.PNum(k) = pnt.num;
-          el.GeomInfoPi(k).trignum = pnt.trignum;
-          el.GeomInfoPi(k).u = pnt.u;
-          el.GeomInfoPi(k).v = pnt.v;
-        }
-    }
-    SelPackage & operator = (const SelPackage & other) {
-      sei = other.sei;
-      index = other.index;
-      np = other.np;
-      for (int k : Range(ELEMENT2D_MAXPOINTS))
-        { points[k] = other.points[k]; }
-      return *this;
-    }
-  }; // class SelPackage
-
-  template<> struct MPI_typetrait<SelPackage> {
-    static NG_MPI_Datatype MPIType () {
-      static NG_MPI_Datatype MPI_T = 0;
-      if (!MPI_T)
-        {
-          int block_len[2] = { 3, ELEMENT2D_MAXPOINTS };
-          NG_MPI_Aint displs[3] = { 0, 3*sizeof(int) };
-          NG_MPI_Datatype types[2] = { NG_MPI_INT, GetMPIType<SurfPointPackage>() };
-          NG_MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
-          NG_MPI_Type_commit(&MPI_T);
-        }
-      return MPI_T;
-    }
-  }; // MPI_typetrait<SelPackage>
-
-
-  class PointElPackage
-  {
-  public:
-    netgen::PointIndex pnum;
-    int index;
-    PointElPackage () { pnum = netgen::PointIndex::INVALID; index = -1; }
-    PointElPackage (const netgen::Element0d & el)
-    { pnum = el.pnum; index = el.index.Nr1(); }
-  }; // class PointElPackage
-
-  template<> struct MPI_typetrait<PointElPackage> {
-    static NG_MPI_Datatype MPIType () {
-      static NG_MPI_Datatype MPI_T = 0;
-      if (!MPI_T)
-        {
-          int block_len[2] = { 1, 1 };
-          NG_MPI_Aint displs[3] = { 0, sizeof(netgen::PointIndex) };
-          NG_MPI_Datatype types[2] = { GetMPIType<netgen::PointIndex>(), NG_MPI_INT };
-          NG_MPI_Type_create_struct(2, block_len, displs, types, &MPI_T);
-          NG_MPI_Type_commit(&MPI_T);
-        }
-      return MPI_T;
-    }
-  }; // MPI_typetrait<Element0d>
-
-
-} // namespace ngcore
-
 namespace netgen
 {
-  /*
-  template <>
-  inline MPI_Datatype MyGetMPIType<PointIndex> ( )
-  { return MPI_INT; }
-  */
 
   void Mesh :: SendRecvMesh ()
   {
@@ -182,49 +39,54 @@ namespace netgen
     if (id == 0)
       PrintMessage (1, "Send/Receive mesh");
 
-    // Why is this here??
-    if (id == 0)
-      {
-        paralleltop -> SetNV (GetNV());
-        paralleltop -> SetNV_Loc2Glob (GetNV());
-        paralleltop -> SetNE (GetNE());
-        paralleltop -> SetNSegm (GetNSeg());
-        paralleltop -> SetNSE (GetNSE());
-      }
-
     if (id == 0)
       SendMesh ();
     else
       ReceiveParallelMesh();
-
-    paralleltop -> UpdateCoarseGrid();
   }
 
 
+  void Mesh :: UpdateParallelTopology ()
+  {
+    if (GetCommunicator().Size() == 1) return;
+    paralleltop->IdentifyNewVertices();
+    paralleltop->EnumeratePointsGlobally();
+  }
 
 
+  /*
+    The master walks the mesh once and writes, for every destination rank, one
+    binary MemoryOutArchive with the part of the mesh that rank gets:
 
+      dim
+      global vertex numbers (0-based)      -> defines the local vertex numbering
+      points                               -> Array<MeshPoint>
+      identifications                      -> int table, local vertex numbers
+      distant procs of vertices            -> pairs (local vertex, proc)
+      volume elements                      (StridedElementArray::DoArchiveCurrent)
+      regions of dimension 2, 1, 3, 0      -> descriptors including names
+      surface elements, their geometry info
+      segments, their geometry info
+      point elements
 
-
+    Element point numbers are mapped to the destination's local numbers before
+    archiving, so the receiver reads straight into its arrays with the same
+    DoArchive methods used for files and pickling.
+  */
   void Mesh :: SendMesh () const   
   {
     static Timer tsend("SendMesh"); RegionTimer reg(tsend);
     static Timer tbuildvertex("SendMesh::BuildVertex");
     static Timer tbuildvertexa("SendMesh::BuildVertex a");
     static Timer tbuildvertexb("SendMesh::BuildVertex b");
-    static Timer tbuilddistpnums("SendMesh::Build_distpnums");
-    static Timer tbuildelementtable("SendMesh::Build_elementtable");
+    static Timer tarchive("SendMesh::Archive");
     
     NgMPI_Comm comm = GetCommunicator();
-    // int id = comm.Rank();
     int ntasks = comm.Size();
+    auto & self = const_cast<Mesh&>(*this);
 
     int dim = GetDimension();
-    comm.Bcast(dim);
 
-    NgMPI_Requests sendrequests;  // (8*(ntasks-1));
-    // sendrequests.SetSize0();
-    
     // periodic identifications need the vertex2element tables
     bool has_periodic = false;
     {
@@ -244,14 +106,12 @@ namespace netgen
       top.Update();
     }
     
-    PrintMessage ( 3, "Sending nr of elements");
+    PrintMessage ( 3, "Building element tables");
     
     Array<int> num_els_on_proc(ntasks);
     num_els_on_proc = 0;
     for (ElementIndex ei : VolumeElements().Range())
       num_els_on_proc[vol_partition[ei]]++;
-
-    comm.ScatterRoot (num_els_on_proc);
 
     Table<ElementIndex> els_of_proc (num_els_on_proc);
     num_els_on_proc = 0;
@@ -261,8 +121,6 @@ namespace netgen
         els_of_proc[nr][num_els_on_proc[nr]++] = ei;
       }
     
-    PrintMessage ( 3, "Building vertex/proc mapping");
-
     Array<int> num_sels_on_proc(ntasks);
     num_sels_on_proc = 0;
     for (SurfaceElementIndex ei : SurfaceElements().Range())
@@ -382,7 +240,7 @@ namespace netgen
     
     auto iterate_vertices = [&](auto f) {
       vert_flag = -1;
-      for (int dest = 1; dest < ntasks; dest++)
+      for (int dest = 0; dest < ntasks; dest++)
         {
           for (auto ei : els_of_proc[dest])
             for (auto pnum : (*this)[ei].PNums())
@@ -460,43 +318,19 @@ namespace netgen
           }
       }
     tbuildvertex.Stop();    
-    PrintMessage ( 3, "Sending Vertices - vertices");
 
-    Array<NG_MPI_Datatype> point_types(ntasks-1);
-    for (int dest = 1; dest < ntasks; dest++)
-      {
-        FlatArray<int> verts = verts_of_proc[dest];
-        sendrequests += comm.ISend (verts, dest, NG_MPI_TAG_MESH+1);
+    // local number of a global vertex on dest, INVALID if the vertex is not sent there
+    auto loc_num = [&] (PointIndex vert, int dest) -> PointIndex
+    {
+      auto procs = procs_of_vert[vert];
+      for (int j = 0; j < procs.Size(); j++)
+        if (procs[j] == dest) return loc_num_of_vert[vert][j];
+      return PointIndex::INVALID;
+    };
 
-        NG_MPI_Datatype mptype = MeshPoint::MyGetMPIType();
-
-        int numv = verts.Size();
-
-        Array<int> blocklen (numv);  
-        blocklen = 1;
-        
-        NG_MPI_Type_indexed (numv, (numv == 0) ? nullptr : &blocklen[0], 
-                          (numv == 0) ? nullptr : &verts[0], 
-                          mptype, &point_types[dest-1]);
-        NG_MPI_Type_commit (&point_types[dest-1]);
-
-        NG_MPI_Request request;
-        NG_MPI_Isend( points.Data(), 1, point_types[dest-1], dest, NG_MPI_TAG_MESH+1, comm, &request);
-        sendrequests += request;
-      }
-
-
-    /**
-       Next, we send the identifications themselves.
-       
-       Info about periodic identifications sent to each proc is an array of
-       integers.
-       - maxidentnr
-       - type for each identification
-       - nr of pairs for each identification (each pair is local!)
-       - pairs for each periodic ident (global numbers)
-    **/
-    PrintMessage ( 3, "Sending Vertices - identifications");
+    /** periodic identifications, per destination, in local numbers:
+        maxidentnr, type of each ident, nr of pairs of each ident, pairs **/
+    PrintMessage ( 3, "Building identifications");
     int maxidentnr = idents.GetMaxNr();
     Array<int> ppd_sizes(ntasks);
     ppd_sizes = 1 + 2*maxidentnr;
@@ -505,20 +339,13 @@ namespace netgen
         if(idents.GetType(idnr)!=Identifications::PERIODIC) continue;
         idents.GetPairs(idnr, pp2);
         for (auto pair : pp2)
-          {
-            // both are on same procs!
-            auto ps = procs_of_vert[pair[0]];
-            for (int l = 0; l < ps.Size(); l++)
-              {
-                ppd_sizes[ps[l]] += 2;
-              }
-          }
+          for (auto p : procs_of_vert[pair[0]])   // both are on the same procs
+            ppd_sizes[p] += 2;
       }
     DynamicTable<int> pp_data(ppd_sizes);
-    for(int dest = 0; dest < ntasks; dest++)
-      pp_data.Add(dest, maxidentnr);
     for (int dest = 0; dest < ntasks; dest++)
       {
+        pp_data.Add(dest, maxidentnr);
         for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
           pp_data.Add(dest, idents.GetType(idnr));
         for (int idnr = 1; idnr < idents.GetMaxNr()+1; idnr++)
@@ -529,38 +356,27 @@ namespace netgen
         if(idents.GetType(idnr)!=Identifications::PERIODIC) continue;
         idents.GetPairs(idnr, pp2);
         for (auto pair : pp2)
-          {
-            auto ps = procs_of_vert[pair[0]];
-            for (int l = 0; l < ps.Size(); l++)
-              {
-                auto p = ps[l];
-                pp_data[p][maxidentnr + idnr]++;
-                pp_data.Add(p, pair[0].Nr0());
-                pp_data.Add(p, pair[1].Nr0());
-              }
-          }
+          for (auto p : procs_of_vert[pair[0]])
+            {
+              PointIndex l0 = loc_num(pair[0], p), l1 = loc_num(pair[1], p);
+              if (!l0.IsValid() || !l1.IsValid()) continue;
+              pp_data[p][maxidentnr + idnr]++;
+              pp_data.Add(p, l0.Nr0());
+              pp_data.Add(p, l1.Nr0());
+            }
       }
-    NgMPI_Requests req_per;
-    for(int dest = 1; dest < ntasks; dest++)
-      // req_per.Append(MyMPI_ISend(pp_data[dest], dest, NG_MPI_TAG_MESH+1, comm));
-      req_per += comm.ISend(FlatArray<int>(pp_data[dest]), dest, NG_MPI_TAG_MESH+1);
-    req_per.WaitAll();
 
-    PrintMessage ( 3, "Sending Vertices - distprocs");
-
-    tbuilddistpnums.Start();
+    /** distant procs of the vertices: pairs (local vertex, proc) **/
+    PrintMessage ( 3, "Building distant procs");
     Array<int> num_distpnums(ntasks);
     num_distpnums = 0;
-    // for (int vert = 1; vert <= GetNP(); vert++)
     for (PointIndex vert : Points().Range())
       {
         FlatArray<int> procs = procs_of_vert[vert];
         for (auto p : procs)
-          num_distpnums[p] += 3 * (procs.Size()-1);
+          num_distpnums[p] += 2 * (procs.Size()-1);
       }
-
     DynamicTable<int> distpnums (num_distpnums);
-    // for (int vert = 1; vert <= GetNP(); vert++)
     for (PointIndex vert : Points().Range())
       {
         FlatArray<int> procs = procs_of_vert[vert];
@@ -569,90 +385,12 @@ namespace netgen
             if (j != k)
               {
                 distpnums.Add (procs[j], loc_num_of_vert[vert][j].Nr0());
-                distpnums.Add (procs[j], procs_of_vert[vert][k]);
-                distpnums.Add (procs[j], loc_num_of_vert[vert][k].Nr0());
+                distpnums.Add (procs[j], procs[k]);
               }
       }
 
-    tbuilddistpnums.Stop();
-        
-    for ( int dest = 1; dest < ntasks; dest ++ )
-      sendrequests += comm.ISend (distpnums[dest], dest, NG_MPI_TAG_MESH+1);
-
-
-
-    PrintMessage ( 3, "Sending elements" );
-
-    tbuildelementtable.Start();
-    Array<int> elarraysize (ntasks);
-    elarraysize = 0;
-    // for (int ei = 1; ei <= GetNE(); ei++)
-    for (ElementIndex ei : VolumeElements().Range())
-      {
-        auto el = VolumeElement (ei);
-        // int dest = el.GetPartition();
-        int dest = vol_partition[ei];
-        elarraysize[dest] += 3 + el.GetNP();
-      }
-
-    DynamicTable<int> elementarrays(elarraysize);
-    
-    for (ElementIndex ei : VolumeElements().Range())    
-      {
-        auto el = VolumeElement (ei);
-        int dest = vol_partition[ei];
-        
-        elementarrays.Add (dest, ei.Nr1());
-        elementarrays.Add (dest, el.GetIndex().Nr1());
-        elementarrays.Add (dest, el.GetNP());
-        for (PointIndex pi : el.PNums())
-          elementarrays.Add (dest, pi.Nr0());
-      }
-    tbuildelementtable.Stop();
-    
-    for (int dest = 1; dest < ntasks; dest ++ )
-      sendrequests += comm.ISend (elementarrays[dest], dest, NG_MPI_TAG_MESH+2);
-
-
-    PrintMessage ( 3, "Sending Face Descriptors" );
-
-    Array<double> fddata (6 * GetNFD());
-    for (int fdi = 1; fdi <= GetNFD(); fdi++)
-      {
-        const auto & fd = GetFaceDescriptor(FaceRegionIndex::FromNr1(fdi));
-        fddata[6*fdi-6] = fd.SurfNr();
-        fddata[6*fdi-5] = fd.DomainIn();    
-        fddata[6*fdi-4] = fd.DomainOut();
-        fddata[6*fdi-3] = fd.BCProperty();
-        fddata[6*fdi-2] = fd.domin_singular;
-        fddata[6*fdi-1] = fd.domout_singular;
-        
-      }
-    for (int dest = 1; dest < ntasks; dest++)
-      sendrequests += comm.ISend (fddata, dest, NG_MPI_TAG_MESH+3);
-
-    PrintMessage ( 3, "Sending Edge Descriptors" );
-
-    int ned = GetNED();
-    Array<double> eddata (8 * ned);
-    for (int edi = 0; edi < ned; edi++)
-      {
-        auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(edi)];
-        eddata[8*edi+0] = ed.EdgeNr();
-        eddata[8*edi+1] = ed.SurfNr(0);
-        eddata[8*edi+2] = ed.SurfNr(1);
-        eddata[8*edi+3] = ed.SingEdgeLeft();
-        eddata[8*edi+4] = ed.SingEdgeRight();
-        eddata[8*edi+5] = ed.TLOSurface();
-        eddata[8*edi+6] = ed.DomainIn();
-        eddata[8*edi+7] = ed.DomainOut();
-      }
-    for (int dest = 1; dest < ntasks; dest++)
-      sendrequests += comm.ISend (eddata, dest, NG_MPI_TAG_MESH+7);
-
-    /** Surface Elements **/
-
-    PrintMessage ( 3, "Sending Surface elements" );
+    /** surface elements, segments and point elements per destination (periodic copies included) **/
+    PrintMessage ( 3, "Building surface element and segment tables");
     // build sel-identification
     size_t nse = GetNSE();
     Array<SurfaceElementIndex, SurfaceElementIndex> ided_sel(nse);
@@ -695,7 +433,6 @@ namespace netgen
             ided_sel[os1[0]] = sei;
           }
       }
-    // build sel data to send
     auto iterate_sels = [&](auto f) {
       for (SurfaceElementIndex sei : SurfaceElements().Range())
         {
@@ -711,24 +448,10 @@ namespace netgen
             }
         }      
     };
-    Array <int> nlocsel(ntasks), bufsize(ntasks);
-    nlocsel = 0;
-    bufsize = 0;
-    iterate_sels([&](SurfaceElementIndex sei, const Element2dRef & sel, int dest){
-        nlocsel[dest]++;
-        bufsize[dest]++;
-      });
-    DynamicTable<SelPackage> selbuf(bufsize);
-    iterate_sels([&](SurfaceElementIndex sei, const auto & sel, int dest) {
-        selbuf.Add (dest, SelPackage(*this, sei));
-      });
-    // distribute sel data
-    for (int dest = 1; dest < ntasks; dest++)
-      sendrequests += comm.ISend(selbuf[dest], dest, NG_MPI_TAG_MESH+4);
-    
+    DynamicTable<SurfaceElementIndex> sels_to_send(ntasks);
+    iterate_sels([&](SurfaceElementIndex sei, const Element2dRef & sel, int dest)
+                 { sels_to_send.Add (dest, sei); });
 
-    /** Segments **/
-    PrintMessage ( 3, "Sending Edge Segments");
     auto iterate_segs1 = [&](auto f) {
       Array<SegmentIndex> osegs1, osegs2, osegs_both;
       Array<int> type1, type2;
@@ -826,7 +549,6 @@ namespace netgen
         for (int j = 0; j < segs.Size(); j++)
           per_seg_trans.Add(segi, segs[j]);
       });
-    // build segment data
     Array<int> dests;
     auto iterate_segs2 = [&](auto f)
       {
@@ -847,114 +569,121 @@ namespace netgen
               f(segi, seg, dests[l]);
           }
       };
-    Array<int> nloc_seg(ntasks);
-    // bufsize = 1; //was originally this - why??
-    bufsize = 0;
-    nloc_seg = 0;
+    DynamicTable<SegmentIndex> segs_to_send(ntasks);
     iterate_segs2([&](auto segi, const auto & seg, int dest)
                   {
-                    nloc_seg[dest]++;
-                    bufsize[dest] += 15;
+                    for (auto pi : seg.PNums())
+                      if (!loc_num(pi, dest).IsValid()) return;
+                    segs_to_send.Add (dest, segi);
                   });
-    DynamicTable<double> segm_buf(bufsize);
-    iterate_segs2([&](auto segi, const auto & seg, int dest)
-                  {
-                    segm_buf.Add (dest, segi.Nr0());
-                    bool has_ed = HasEdgeDescriptor(seg);
-                    int fdi = has_ed ? GetEdgeDescriptor(seg).GetIndex().Nr1() : -1;
-                    segm_buf.Add (dest, fdi);
-                    segm_buf.Add (dest, seg[0].Nr0());
-                    segm_buf.Add (dest, seg[1].Nr0());
-                    segm_buf.Add (dest, seg.GeomInfo(0).trignum);
-                    segm_buf.Add (dest, seg.GeomInfo(1).trignum);
-                    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(0) : -1);
-                    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SurfNr(1) : -1);
-                    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
-                    segm_buf.Add (dest, seg.GetIndex().Nr1());
-                    segm_buf.Add (dest, seg.EPGeomInfo(0).dist);
-                    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).EdgeNr() : -1);
-                    segm_buf.Add (dest, seg.EPGeomInfo(1).dist);
-                    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SingEdgeRight() : 0.0);
-                    segm_buf.Add (dest, has_ed ? GetEdgeDescriptor(seg.GetIndex()).SingEdgeLeft() : 0.0);
-                  });
-    // distribute segment data
-    for (int dest = 1; dest < ntasks; dest++)
-      sendrequests += comm.ISend(segm_buf[dest], dest, NG_MPI_TAG_MESH+5);
 
-    /** Point-Elements **/
-    PrintMessage ( 3, "Point-Elements ...");
+    DynamicTable<int> pels_to_send(ntasks);
+    for (auto k : Range(pointelements))
+      for (auto dest : procs_of_vert[pointelements[k].pnum])
+        pels_to_send.Add (dest, k);
 
-    auto iterate_zdes = [&](auto f) {
-      for (auto k : Range(pointelements)) {
-        auto & el = pointelements[k];
-        PointElPackage pack(el);
-        auto dests = procs_of_vert[el.pnum];
-        for (auto dest : dests)
-          { f(pack, dest); }
-      }
+    /** serialize and send **/
+    PrintMessage ( 3, "Sending mesh");
+    tarchive.Start();
+    Array<unique_ptr<MemoryOutArchive>> archives(ntasks);   // outlive the requests
+    NgMPI_Requests sendrequests;
+
+    auto archive_array = [] (Archive & ar, auto data)   // compatible with Array<T>::DoArchive
+    {
+      size_t n = data.Size();
+      ar & n;
+      ar.Do (data.Data(), n);
     };
 
-    bufsize = 0;
-    iterate_zdes([&](const auto & pack, auto dest) { bufsize[dest]++; });
-    DynamicTable<PointElPackage> zde_buf(bufsize); // zero dim elements
-    iterate_zdes([&](const auto & pack, auto dest) { zde_buf.Add(dest, pack); });
+    for (int dest = 0; dest < ntasks; dest++)
+      {
+        archives[dest] = make_unique<MemoryOutArchive>();
+        auto & ar = *archives[dest];
 
-    for (int dest = 1; dest < ntasks; dest++)
-      sendrequests += comm.ISend(zde_buf[dest], dest, NG_MPI_TAG_MESH+6); 
+        ar & dim;
+
+        // vertices
+        FlatArray<int> verts = verts_of_proc[dest];
+        archive_array (ar, verts);
+        size_t nv = verts.Size();
+        ar & nv;
+        for (int v : verts)
+          ar & self.points[PointIndex::FromNr0(v)];
+
+        archive_array (ar, pp_data[dest]);
+        archive_array (ar, distpnums[dest]);
+
+        // volume elements
+        {
+          auto els = els_of_proc[dest];
+          size_t n = els.Size(), w = volelements.Width();   // as StridedElementArray::DoArchiveCurrent
+          ar & n & w;
+          for (auto ei : els)
+            {
+              Element el ((*this)[ei]);
+              for (auto & pi : el.PNums()) pi = loc_num (pi, dest);
+              el.DoArchive (ar);
+            }
+        }
+
+        ar & self.Regions<2>() & self.Regions<1>() & self.Regions<3>() & self.Regions<0>();
+
+        // surface elements
+        {
+          auto sels = sels_to_send[dest];
+          size_t n = sels.Size(), w = surfelements.Width();
+          ar & n & w;
+          for (auto sei : sels)
+            {
+              Element2d el ((*this)[sei]);
+              for (auto & pi : el.PNums()) pi = loc_num (pi, dest);
+              el.DoArchive (ar);
+            }
+          for (auto sei : sels)
+            Element2d((*this)[sei]).DoArchiveGeomInfo (ar);
+        }
+
+        // segments
+        {
+          auto segs = segs_to_send[dest];
+          size_t n = segs.Size();
+          ar & n;
+          for (auto segi : segs)
+            {
+              Segment seg = (*this)[segi];
+              for (auto & pi : seg.PNums()) pi = loc_num (pi, dest);
+              seg.DoArchive (ar);
+            }
+          for (auto segi : segs)
+            Segment((*this)[segi]).DoArchiveGeomInfo (ar);
+        }
+
+        // point elements
+        {
+          auto pels = pels_to_send[dest];
+          size_t n = pels.Size();
+          ar & n;
+          for (auto k : pels)
+            {
+              Element0d el = pointelements[k];
+              el.pnum = loc_num (el.pnum, dest);
+              ar & el;
+            }
+        }
+
+        auto & data = ar.Data();
+        if (data.size() > size_t(std::numeric_limits<int>::max()))
+          throw NgException("SendMesh: mesh part for rank " + ToString(dest) + " exceeds the MPI message size limit");
+        if (dest != comm.Rank())   // own part is unpacked below
+          sendrequests += comm.ISend (FlatArray<std::byte>(data.size(), data.data()), dest, NG_MPI_TAG_MESH);
+      }
+    tarchive.Stop();
 
     PrintMessage ( 3, "now wait ...");
-
     sendrequests.WaitAll();
-
-    // clean up MPI-datatypes we allocated earlier
-    for (auto t : point_types)
-      { NG_MPI_Type_free(&t); }
-
-    paralleltop -> SetNV_Loc2Glob (0);
-    paralleltop -> SetNV (0);
-    paralleltop -> EnumeratePointsGlobally();
-    PrintMessage ( 3, "Sending names");
-
-    std::array<int,4> nnames{ int(Regions<3>().Size()), int(Regions<2>().Size()), int(Regions<1>().Size()), int(Regions<0>().Size()) };
-    int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
-
-    NgMPI_Requests requ;
-    requ += comm.IBcast (nnames);
-    
-    auto iterate_names = [&](auto func) {
-      auto names_of = [&](auto & regs) {
-        for (auto & reg : regs) func(reg.HasName() ? &reg.GetName() : nullptr);
-      };
-      names_of(Regions<3>()); names_of(Regions<2>()); names_of(Regions<1>()); names_of(Regions<0>());
-    };
-    // sizes of names
-    Array<int> name_sizes(tot_nn);
-    tot_nn = 0;
-    iterate_names([&](auto ptr) { name_sizes[tot_nn++] = (ptr==NULL) ? 0 : ptr->size(); });
-
-    requ += comm.IBcast (name_sizes);
-    // names
-    int strs = 0;
-    iterate_names([&](auto ptr) { strs += (ptr==NULL) ? 0 : ptr->size(); });
-    Array<char> compiled_names(strs);
-    strs = 0;
-    iterate_names([&](auto ptr) {
-        if (ptr==NULL) return;
-        auto& name = *ptr;
-        for (int j=0; j < name.size(); j++) compiled_names[strs++] = name[j];
-      });
-
-
-    requ += comm.IBcast (compiled_names);
-    PrintMessage ( 3, "wait for names");
-
-    requ.WaitAll();
-    
-    comm.Barrier();
 
     PrintMessage( 3, "Clean up local memory");
 
-    auto & self = const_cast<Mesh&>(*this);
     self.points = T_POINTS(0);
     self.surfelements = T_SURFELEMENTS();
     self.volelements = T_VOLELEMENTS();
@@ -981,7 +710,7 @@ namespace netgen
     
     self.openelements = Array<Element2d>(0);
     self.opensegments = Array<Segment>(0);
-    self.numvertices = 0;
+    self.numvertices = -1;   // all points are vertices until ComputeNVertices
     self.mlbetweennodes = Array<PointIndices<2>,PointIndex> (0);
     self.mlparentelement = Array<ElementIndex, ElementIndex>(0);
     self.mlparentsurfaceelement = Array<SurfaceElementIndex, SurfaceElementIndex>(0);
@@ -989,20 +718,16 @@ namespace netgen
     self.clusters = make_unique<AnisotropicClusters> (self);
     self.ident = make_unique<Identifications> (self);
     self.topology = MeshTopology(*this);
-    self.topology.Update();
-    self.BuildElementSearchTree(3);
-    
-    // const_cast<Mesh&>(*this).DeleteMesh();
+    self.vol_partition.SetSize(0);
+    self.surf_partition.SetSize(0);
+    self.seg_partition.SetSize(0);
 
-    // paralleltop -> SetNV (0);
-    // paralleltop->EnumeratePointsGlobally();
-    
+    // the own part: empty unless root_participates
+    auto & own = archives[comm.Rank()]->Data();
+    self.UnpackMeshPart (FlatArray<std::byte>(own.size(), own.data()));
+
     PrintMessage( 3, "send mesh complete");
   }
-
-
-
-
 
 
 
@@ -1010,278 +735,83 @@ namespace netgen
   // workers receive the mesh from the master
   void Mesh :: ReceiveParallelMesh ( )
   {
-    Timer timer("ReceiveParallelMesh");
-    Timer timer_pts("Receive points");
-    Timer timer_els("Receive elements");
-    Timer timer_sels("Receive surface elements");
-    RegionTimer reg(timer);
+    static Timer timer("ReceiveParallelMesh"); RegionTimer reg(timer);
+
+    Array<std::byte> buffer;
+    GetCommunicator().Recv (buffer, 0, NG_MPI_TAG_MESH);
+    UnpackMeshPart (buffer);
+  }
+
+
+  // collective: every rank unpacks its part, the global enumeration needs all of them
+  void Mesh :: UnpackMeshPart (FlatArray<std::byte> data)
+  {
+    static Timer timer("UnpackMeshPart"); RegionTimer reg(timer);
+    static Timer timer_unpack("Unpack mesh");
 
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
-    // int ntasks = comm.Size();
-    
+
+    timer_unpack.Start();
+    MemoryInArchive ar(data.Data(), data.Size());
+
     int dim;
-    comm.Bcast(dim);
+    ar & dim;
     SetDimension(dim);
-    
-    // Receive number of local elements
-    int nelloc;
-    comm.Scatter (nelloc);
-    paralleltop -> SetNE (nelloc);
-    
-    // receive vertices
-    timer_pts.Start();
 
+    // vertices
     Array<int> verts;
-    comm.Recv (verts, 0, NG_MPI_TAG_MESH+1);
-
+    ar & verts;
     int numvert = verts.Size();
     paralleltop -> SetNV (numvert);
     paralleltop -> SetNV_Loc2Glob (numvert);
-    
-    ClosedHashTable<int, PointIndex> glob2loc_vert_ht (3*numvert+1);
-
     for (int vert = 0; vert < numvert; vert++)
-      {
-        PointIndex globvert = verts[vert] + IndexBASE<T_POINTS::index_type>();
-        PointIndex locvert = vert + IndexBASE<PointIndex>();
-        paralleltop->L2G (locvert) = globvert.Nr1();
-        glob2loc_vert_ht.Set (globvert.Nr0(), locvert);
-      }
-    
-    for (int i = 0; i < numvert; i++)
-      AddPoint (netgen::Point<3> (0,0,0));
-    
-    NG_MPI_Datatype mptype = MeshPoint::MyGetMPIType();
-    NG_MPI_Status status;
-    NG_MPI_Recv( points.Data(), numvert, mptype, 0, NG_MPI_TAG_MESH+1, comm, &status);
+      paralleltop->L2G (PointIndex::FromNr0(vert)) = PointIndex::FromNr0(verts[vert]).Nr1();
+    ar & points;
 
+    // identifications
     Array<int> pp_data;
-    comm.Recv(pp_data, 0, NG_MPI_TAG_MESH+1);
-
+    ar & pp_data;
     int maxidentnr = pp_data[0];
     auto & idents = GetIdentifications();
     for (int idnr = 1; idnr < maxidentnr+1; idnr++)
       idents.SetType(idnr, (Identifications::ID_TYPE)pp_data[idnr]);
-
     int offset = 2*maxidentnr+1;
-    for(int idnr = 1; idnr < maxidentnr+1; idnr++)
+    for (int idnr = 1; idnr < maxidentnr+1; idnr++)
       {
         int npairs = pp_data[maxidentnr+idnr];
         FlatArray<int> pairdata(2*npairs, &pp_data[offset]);
         offset += 2*npairs;
-        for (int k = 0; k<npairs; k++) {
-          PointIndex loc1 = glob2loc_vert_ht.Get(pairdata[2*k]);
-          PointIndex loc2 = glob2loc_vert_ht.Get(pairdata[2*k+1]);
-          idents.Add(loc1, loc2, idnr);
-        }
+        for (int k = 0; k < npairs; k++)
+          idents.Add (PointIndex::FromNr0(pairdata[2*k]), PointIndex::FromNr0(pairdata[2*k+1]), idnr);
       }
-    
+
+    // distant procs
     Array<int> dist_pnums; 
-    comm.Recv (dist_pnums, 0, NG_MPI_TAG_MESH+1);
-    
-    for (int hi = 0; hi < dist_pnums.Size(); hi += 3)
-      paralleltop ->
-        // SetDistantPNum (dist_pnums[hi+1], dist_pnums[hi]); // , dist_pnums[hi+2]);
-        AddDistantProc (PointIndex::FromNr0(dist_pnums[hi]), dist_pnums[hi+1]);
-    
-    timer_pts.Stop();
+    ar & dist_pnums;
+    for (int hi = 0; hi < dist_pnums.Size(); hi += 2)
+      paralleltop -> AddDistantProc (PointIndex::FromNr0(dist_pnums[hi]), dist_pnums[hi+1]);
     *testout << "got " << numvert << " vertices" << endl;
 
-    
-    {
-      RegionTimer reg(timer_els);
+    volelements.DoArchiveCurrent (ar);
 
-      Array<int> elarray;
-      comm.Recv (elarray, 0, NG_MPI_TAG_MESH+2);
+    ar & Regions<2>() & Regions<1>() & Regions<3>() & Regions<0>();
 
-      for (int ind = 0, elnum = 1; ind < elarray.Size(); elnum++)
-        {
-          paralleltop->SetLoc2Glob_VolEl ( elnum,  elarray[ind++]);
+    surfelements.DoArchiveCurrent (ar);
+    for (auto el : surfelements)
+      el.DoArchiveGeomInfo (ar);
 
-          int index = elarray[ind++];
-          Element el(elarray[ind++]);          
-          el.SetIndex(VolumeRegionIndex::FromNr1(index));
-          
-          for ( int j = 0; j < el.GetNP(); j++)
-            el[j] = glob2loc_vert_ht.Get (elarray[ind++]); 
-          
-          AddVolumeElement (el);
-        }
-    }
+    ar & segments;
+    for (auto & seg : segments)
+      seg.DoArchiveGeomInfo (ar);
 
-    {
-      Array<double> fddata;
-      comm.Recv (fddata, 0, NG_MPI_TAG_MESH+3);
-      for (int i = 0; i < fddata.Size(); i += 6)
-        {
-          auto faceind = AddFaceDescriptor 
-            (FaceRegion(int(fddata[i]), int(fddata[i+1]), int(fddata[i+2]), 0));
-          GetFaceDescriptor(faceind).SetBCProperty (int(fddata[i+3]));
-          GetFaceDescriptor(faceind).domin_singular = fddata[i+4];
-        GetFaceDescriptor(faceind).domout_singular = fddata[i+5];
-        }
-    }
+    ar & pointelements;
+    timer_unpack.Stop();
 
-    {
-      Array<double> eddata;
-      comm.Recv (eddata, 0, NG_MPI_TAG_MESH+7);
-      int ned = eddata.Size() / 8;
-      Regions<1>().SetSize(ned);
-      for (int edi = 0; edi < ned; edi++)
-        {
-          auto & ed = Regions<1>()[EdgeRegionIndex::FromNr0(edi)];
-          ed.SetEdgeNr(int(eddata[8*edi+0]));
-          ed.SetSurfNr(0, int(eddata[8*edi+1]));
-          ed.SetSurfNr(1, int(eddata[8*edi+2]));
-          ed.SetSingEdgeLeft(eddata[8*edi+3]);
-          ed.SetSingEdgeRight(eddata[8*edi+4]);
-          ed.SetTLOSurface(int(eddata[8*edi+5]));
-          ed.SetDomainIn(int(eddata[8*edi+6]));
-          ed.SetDomainOut(int(eddata[8*edi+7]));
-        }
-    }
+    RebuildSurfaceElementLists();
+    RebuildFDIndices();
 
-    {
-      RegionTimer reg(timer_sels);
-      Array<SelPackage> selbuf;
-
-      comm.Recv ( selbuf, 0, NG_MPI_TAG_MESH+4);
-      
-      int nlocsel = selbuf.Size();
-      paralleltop -> SetNSE ( nlocsel );
-      
-      int sel = 0;
-      for (auto k : Range(selbuf)) {
-        auto & pack = selbuf[k];
-        Element2d el(pack.np);
-        pack.Unpack(el);
-        /** map global point numbers to local ones **/
-        for (int k : Range(1, 1+el.GetNP()))
-          { el.PNum(k) = glob2loc_vert_ht.Get(el.PNum(k).Nr0()); }
-        paralleltop->SetLoc2Glob_SurfEl (sel+1, pack.sei);
-        AddSurfaceElement (el);
-        sel++;
-      }
-    }
-    
-
-
-    {
-      // Array<double> segmbuf;
-      // MyMPI_Recv ( segmbuf, 0, NG_MPI_TAG_MESH+5, comm);
-      Array<double> segmbuf;
-      comm.Recv (segmbuf, 0, NG_MPI_TAG_MESH+5);
-
-      Segment seg;
-      int globsegi;
-      int ii = 0;
-      int segi = 1;
-      int nsegloc = int ( segmbuf.Size() / 15 ) ;
-      paralleltop -> SetNSegm ( nsegloc );
-
-      while ( ii < segmbuf.Size() )
-        {
-          globsegi = int (segmbuf[ii++]);
-          ii++; // fdi (now on EdgeRegion)
-          
-          seg[0] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-          seg[1] = glob2loc_vert_ht.Get (int(segmbuf[ii++]));
-          seg.GeomInfo(0).trignum = int( segmbuf[ii++] );
-          seg.GeomInfo(1).trignum = int ( segmbuf[ii++]);
-          ii++; // surfnr1 (on EdgeRegion)
-          ii++; // surfnr2 (on EdgeRegion)
-          ii++; // edgenr (on EdgeRegion)
-          seg.SetIndex(EdgeRegionIndex::FromNr1(int ( segmbuf[ii++])));
-          seg.EPGeomInfo(0).dist = segmbuf[ii++];
-          ii++; // edgenr (now on EdgeRegion)
-          seg.EPGeomInfo(1).dist = segmbuf[ii++];
-          
-          ii++; // singedge_right (on EdgeRegion)
-          ii++; // singedge_left (on EdgeRegion)
-          
-          if ( seg[0].IsValid() && seg[1].IsValid() )
-            {
-              paralleltop-> SetLoc2Glob_Segm ( segi,  globsegi );
-              
-              AddSegment (seg);
-              segi++;
-            }
-        }
-    }
-
-    { /** 0d-Elements **/
-      Array<PointElPackage> zdes;
-      comm.Recv ( zdes, 0, NG_MPI_TAG_MESH+6);
-      pointelements.SetSize(zdes.Size());
-      for (auto k : Range(pointelements)) {
-        auto & el = pointelements[k];
-        el.pnum = glob2loc_vert_ht.Get(zdes[k.Nr0()].pnum.Nr0());
-        el.SetIndex(VertexRegionIndex::FromNr1(zdes[k.Nr0()].index));
-      }
-    }
-
-    // paralleltop -> SetNV_Loc2Glob (0);
-    paralleltop -> EnumeratePointsGlobally();
-    /** Recv bc-names **/
-    /*
-    ArrayMem<int,4> nnames{0,0,0,0};
-    // NG_MPI_Recv(nnames, 4, NG_MPI_INT, 0, NG_MPI_TAG_MESH+6, comm, NG_MPI_STATUS_IGNORE);
-    comm.Recv(nnames, 0, NG_MPI_TAG_MESH+7);
-    */
-
-    // Array<NG_MPI_Request> recvrequests(1);
-    std::array<int,4> nnames;
-    /*
-    recvrequests[0] = comm.IBcast (nnames);
-    MyMPI_WaitAll (recvrequests);
-    */
-    comm.IBcast (nnames).Wait();
-    
-    int tot_nn = nnames[0] + nnames[1] + nnames[2] + nnames[3];
-    Array<int> name_sizes(tot_nn);
-    // NG_MPI_Recv(&name_sizes[0], tot_nn, NG_MPI_INT, 0, NG_MPI_TAG_MESH+7, comm, NG_MPI_STATUS_IGNORE);
-    /*
-    recvrequests[0] = comm.IBcast (name_sizes);
-    MyMPI_WaitAll (recvrequests);
-    */
-    comm.IBcast (name_sizes).Wait();
-    
-    int tot_size = 0;
-    for (int k = 0; k < tot_nn; k++) tot_size += name_sizes[k];
-    
-    // Array<char> compiled_names(tot_size);
-    // NG_MPI_Recv(&(compiled_names[0]), tot_size, NG_MPI_CHAR, 0, NG_MPI_TAG_MESH+7, comm, NG_MPI_STATUS_IGNORE);
-    Array<char> compiled_names(tot_size);
-    // recvrequests[0] = comm.IBcast (compiled_names);
-    // MyMPI_WaitAll (recvrequests);
-    comm.IBcast (compiled_names).Wait();
-    
-    tot_nn = tot_size = 0;
-    auto next_name = [&] () -> optional<string> {
-      int s = name_sizes[tot_nn++];
-      optional<string> name;
-      if (s) name = string(&compiled_names[tot_size], s);
-      tot_size += s;
-      return name;
-    };
-    // faces and edges exist already, volume and vertex regions carry only names
-    Regions<3>().SetSize(nnames[0]);
-    Regions<0>().SetSize(nnames[3]);
-    auto set_names = [&](auto & regs, int n) {
-      for (int k = 0; k < n; k++)
-        {
-          auto name = next_name();
-          if (k < regs.Size())
-            regs[regs.Range()[k]].SetName(std::move(name));
-        }
-    };
-    set_names(Regions<3>(), nnames[0]);
-    set_names(Regions<2>(), nnames[1]);
-    set_names(Regions<1>(), nnames[2]);
-    set_names(Regions<0>(), nnames[3]);
-    
-    comm.Barrier();
+    UpdateParallelTopology();
 
     static Timer timerloc("Update local mesh");
     static Timer timerloc2("CalcSurfacesOfNode");
@@ -1301,21 +831,156 @@ namespace netgen
 
     timerloc2.Stop();
 
-    topology.Update();
-    clusters -> Update();
-
-    // paralleltop -> UpdateCoarseGrid();
-    // paralleltop->EnumeratePointsGlobally();
+    UpdateTopology();   // includes the shared edges and faces
     SetNextMajorTimeStamp();
   }
-  
 
 
-  
-  
+
+
+  /*
+    Every rank packs its part with global point numbers (points, elements with
+    geometry info, identification pairs) into a MemoryOutArchive; the root
+    unpacks all parts into one mesh. Partition arrays and curving are not
+    gathered: the result is a plain serial mesh, curve it again if needed.
+  */
+  shared_ptr<Mesh> Mesh :: GatherToRoot (int root) const
+  {
+    static Timer t("Mesh::GatherToRoot"); RegionTimer r(t);
+    NgMPI_Comm comm = GetCommunicator();
+
+    if (comm.Size() == 1)
+      {
+        auto m = make_shared<Mesh>();
+        *m = *this;
+        return m;
+      }
+
+    auto & self = const_cast<Mesh&>(*this);
+    auto & partop = GetParallelTopology();
+
+    Array<PointIndex, PointIndex> globnum(points.Size());
+    PointIndex maxglob = PointIndex::INVALID;
+    for (auto pi : Range(points))
+      {
+        globnum[pi] = PointIndex::FromNr1(partop.GetGlobalPNum(pi));
+        maxglob = max(globnum[pi], maxglob);
+      }
+    maxglob = comm.AllReduce (maxglob, NG_MPI_MAX);
+    int numglob = maxglob+1-IndexBASE<PointIndex>();
+
+    auto pack = [&] (Archive & ar)
+    {
+      auto renum = [&] (auto pnums) { for (auto & pi : pnums) if (pi.IsValid()) pi = globnum[pi]; };
+      ar & globnum;
+      ar & self.points;
+      T_VOLELEMENTS el3d (volelements);
+      for (auto el : el3d) renum (el.PNums());
+      el3d.DoArchiveCurrent (ar);
+      T_SURFELEMENTS el2d (surfelements);
+      for (auto el : el2d) renum (el.PNums());
+      el2d.DoArchiveCurrent (ar);
+      for (auto el : el2d) el.DoArchiveGeomInfo (ar);
+      Array<Segment, SegmentIndex> el1d (segments);
+      for (auto & seg : el1d) renum (seg.PNums());
+      ar & el1d;
+      for (auto & seg : el1d) seg.DoArchiveGeomInfo (ar);
+      Array<Element0d> el0d (pointelements);
+      for (auto & el : el0d) if (el.pnum.IsValid()) el.pnum = globnum[el.pnum];
+      ar & el0d;
+      // identification pairs: idnr, p1, p2 (1-based global)
+      Array<int> idpairs;
+      Array<PointIndices<2>> pairs;
+      for (int idnr = 1; idnr <= ident->GetMaxNr(); idnr++)
+        {
+          ident->GetPairs (idnr, pairs);
+          for (auto [p1, p2] : pairs)
+            { idpairs += idnr; idpairs += globnum[p1].Nr1(); idpairs += globnum[p2].Nr1(); }
+        }
+      ar & idpairs;
+    };
+
+    if (comm.Rank() != root)
+      {
+        MemoryOutArchive out;
+        pack (out);
+        auto & data = out.Data();
+        if (data.size() > size_t(std::numeric_limits<int>::max()))
+          throw NgException("GatherToRoot: mesh part exceeds the MPI message size limit");
+        comm.Send (FlatArray<std::byte>(data.size(), data.data()), root, NG_MPI_TAG_MESH+1);
+        return nullptr;
+      }
+
+    auto result = make_shared<Mesh>();
+    Mesh & m = *result;
+    m.SetDimension (GetDimension());
+    for (int idnr = 1; idnr <= ident->GetMaxNr(); idnr++)
+      m.ident->SetType (idnr, ident->GetType(idnr));
+    Array<MeshPoint, PointIndex> globpoints(numglob);
+
+    auto unpack = [&] (Archive & ar)
+    {
+      Array<PointIndex, PointIndex> gn;
+      Array<MeshPoint, PointIndex> pts;
+      ar & gn & pts;
+      for (auto i : Range(gn)) globpoints[gn[i]] = pts[i];
+      T_VOLELEMENTS el3d;
+      el3d.DoArchiveCurrent (ar);
+      for (auto el : el3d) m.volelements.Append (el);
+      T_SURFELEMENTS el2d;
+      el2d.DoArchiveCurrent (ar);
+      for (auto el : el2d) el.DoArchiveGeomInfo (ar);
+      for (auto el : el2d) m.surfelements.Append (el);
+      Array<Segment, SegmentIndex> el1d;
+      ar & el1d;
+      for (auto & seg : el1d) seg.DoArchiveGeomInfo (ar);
+      for (auto & seg : el1d) m.segments.Append (seg);
+      Array<Element0d> el0d;
+      ar & el0d;
+      for (auto & el : el0d) m.pointelements.Append (el);
+      Array<int> idpairs;
+      ar & idpairs;
+      for (int k = 0; k < idpairs.Size(); k += 3)
+        m.ident->Add (PointIndex::FromNr1(idpairs[k+1]), PointIndex::FromNr1(idpairs[k+2]), idpairs[k]);
+    };
+
+    {  // own part
+      MemoryOutArchive out;
+      pack (out);
+      auto & data = out.Data();
+      MemoryInArchive in (data.data(), data.size());
+      unpack (in);
+    }
+    for (int src = 0; src < comm.Size(); src++)
+      if (src != root)
+        {
+          Array<std::byte> buffer;
+          comm.Recv (buffer, src, NG_MPI_TAG_MESH+1);
+          MemoryInArchive in (buffer.Data(), buffer.Size());
+          unpack (in);
+        }
+
+    m.points = std::move(globpoints);
+    m.numvertices = numglob;
+    m.Regions<3>() = Regions<3>();
+    m.Regions<2>() = Regions<2>();
+    m.Regions<1>() = Regions<1>();
+    m.Regions<0>() = Regions<0>();
+    m.SetGeometry (GetGeometry());
+
+    m.RebuildSurfaceElementLists();
+    m.RebuildFDIndices();
+    m.CalcSurfacesOfNode();
+    m.topology.Update();
+    m.clusters->Update();
+    m.SetNextMajorTimeStamp();
+    return result;
+  }
+
+
   // distribute the mesh to the worker processors
   // call it only for the master !
-  void Mesh :: Distribute ()
+  void Mesh :: Distribute (bool root_participates)
   {
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -1323,14 +988,9 @@ namespace netgen
 
     if (id != 0 || ntasks == 1 ) return;
 
-#ifdef METIS
     if (vol_partition.Size() < GetNE() || surf_partition.Size() < GetNSE() ||
         seg_partition.Size() < GetNSeg())
-      ParallelMetis (comm.Size());
-#else
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      (*this)[ei].SetPartition(ntasks * ei/GetNE() + 1);
-#endif
+      ParallelMetis (comm.Size(), root_participates);
 
     /*
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
@@ -1339,13 +999,12 @@ namespace netgen
       *testout << "sel(" << int(ei) << ") is in part " << (*this)[ei].GetPartition() << endl;
       */
     
-    // MyMPI_SendCmd ("mesh");
     SendRecvMesh (); 
   }
   
 
 #ifdef METIS5
-  void Mesh :: ParallelMetis (int nproc)  
+  void Mesh :: ParallelMetis (int nproc, bool root_participates)
   {
     PrintMessage (3, "call metis 5 ...");
 
@@ -1380,7 +1039,9 @@ namespace netgen
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = nproc-1; // GetCommunicator().Size()-1;
+    // partition numbers are destination ranks
+    int first_rank = root_participates ? 0 : 1;
+    idxtype nparts = nproc - first_rank;
 
     vol_partition.SetSize(GetNE());
     surf_partition.SetSize(GetNSE());
@@ -1388,11 +1049,11 @@ namespace netgen
     if (nparts == 1)
       {
         for (int i = 0; i < GetNE(); i++)
-          vol_partition[ElementIndex::FromNr0(i)]= 1;
+          vol_partition[ElementIndex::FromNr0(i)]= first_rank;
         for (int i = 0; i < GetNSE(); i++)
-          surf_partition[SurfaceElementIndex::FromNr0(i)] = 1;
+          surf_partition[SurfaceElementIndex::FromNr0(i)] = first_rank;
         for (int i = 0; i < GetNSeg(); i++)
-          seg_partition[SegmentIndex::FromNr0(i)] = 1;
+          seg_partition[SegmentIndex::FromNr0(i)] = first_rank;
       }
 
     else
@@ -1414,11 +1075,11 @@ namespace netgen
         PrintMessage (3, "metis complete");
         
         for (int i = 0; i < GetNE(); i++)
-          vol_partition[ElementIndex::FromNr0(i)]= epart[i] + 1;
+          vol_partition[ElementIndex::FromNr0(i)]= epart[i] + first_rank;
         for (int i = 0; i < GetNSE(); i++)
-          surf_partition[SurfaceElementIndex::FromNr0(i)] = epart[i+GetNE()] + 1;
+          surf_partition[SurfaceElementIndex::FromNr0(i)] = epart[i+GetNE()] + first_rank;
         for (int i = 0; i < GetNSeg(); i++)
-          seg_partition[SegmentIndex::FromNr0(i)] = epart[i+GetNE()+GetNSE()] + 1;
+          seg_partition[SegmentIndex::FromNr0(i)] = epart[i+GetNE()+GetNSE()] + first_rank;
       }
     
         
@@ -1609,7 +1270,8 @@ namespace netgen
 
   // distribute the mesh to the worker processors
   // call it only for the master !
-  void Mesh :: Distribute (Array<int> & volume_weights , Array<int>  & surface_weights, Array<int>  & segment_weights)
+  void Mesh :: Distribute (Array<int> & volume_weights , Array<int>  & surface_weights, Array<int>  & segment_weights,
+                           bool root_participates)
   {
     NgMPI_Comm comm = GetCommunicator();
     int id = comm.Rank();
@@ -1617,12 +1279,7 @@ namespace netgen
 
     if (id != 0 || ntasks == 1 ) return;
 
-#ifdef METIS
-    ParallelMetis (volume_weights, surface_weights, segment_weights);
-#else
-    for (ElementIndex ei = 0; ei < GetNE(); ei++)
-      (*this)[ei].SetPartition(ntasks * ei/GetNE() + 1);
-#endif
+    ParallelMetis (volume_weights, surface_weights, segment_weights, root_participates);
 
     /*
     for (ElementIndex ei = 0; ei < GetNE(); ei++)
@@ -1631,13 +1288,13 @@ namespace netgen
       *testout << "sel(" << int(ei) << ") is in part " << (*this)[ei].GetPartition() << endl;
       */
     
-    // MyMPI_SendCmd ("mesh");
     SendRecvMesh (); 
   }
   
 
 #ifdef METIS5
-  void Mesh :: ParallelMetis (Array<int> & volume_weights , Array<int> & surface_weights, Array<int> & segment_weights)  
+  void Mesh :: ParallelMetis (Array<int> & volume_weights , Array<int> & surface_weights, Array<int> & segment_weights,
+                              bool root_participates)
   {
     PrintMessage (3, "call metis 5 with weights ...");
     
@@ -1702,7 +1359,8 @@ namespace netgen
     eptr.Append (eind.Size());
     Array<idx_t> epart(ne), npart(nn);
 
-    idxtype nparts = GetCommunicator().Size()-1;
+    int first_rank = root_participates ? 0 : 1;
+    idxtype nparts = GetCommunicator().Size() - first_rank;
     vol_partition.SetSize(GetNE());
     surf_partition.SetSize(GetNSE());
     seg_partition.SetSize(GetNSeg());
@@ -1711,13 +1369,13 @@ namespace netgen
       {
         for (int i = 0; i < GetNE(); i++)
           // VolumeElement(i+1).SetPartition(1);
-          vol_partition[ElementIndex::FromNr0(i)] = 1;
+          vol_partition[ElementIndex::FromNr0(i)] = first_rank;
         for (int i = 0; i < GetNSE(); i++)
           // SurfaceElement(i+1).SetPartition(1);
-          surf_partition[SurfaceElementIndex::FromNr0(i)] = 1;
+          surf_partition[SurfaceElementIndex::FromNr0(i)] = first_rank;
         for (int i = 0; i < GetNSeg(); i++)
           // LineSegment(i+1).SetPartition(1);
-          seg_partition[SegmentIndex::FromNr0(i)] = 1;
+          seg_partition[SegmentIndex::FromNr0(i)] = first_rank;
         return;
       }
 
@@ -1739,495 +1397,28 @@ namespace netgen
 
     for (int i = 0; i < GetNE(); i++)
       // VolumeElement(i+1).SetPartition(epart[i] + 1);
-      vol_partition[ElementIndex::FromNr0(i)] = epart[i] + 1;
+      vol_partition[ElementIndex::FromNr0(i)] = epart[i] + first_rank;
     for (int i = 0; i < GetNSE(); i++)
       // SurfaceElement(i+1).SetPartition(epart[i+GetNE()] + 1);
-      surf_partition[SurfaceElementIndex::FromNr0(i)] = epart[i+GetNE()] + 1;
+      surf_partition[SurfaceElementIndex::FromNr0(i)] = epart[i+GetNE()] + first_rank;
     for (int i = 0; i < GetNSeg(); i++)
       // LineSegment(i+1).SetPartition(epart[i+GetNE()+GetNSE()] + 1);
-      seg_partition[SegmentIndex::FromNr0(i)] = epart[i+GetNE()+GetNSE()] + 1;
+      seg_partition[SegmentIndex::FromNr0(i)] = epart[i+GetNE()+GetNSE()] + first_rank;
   }
-#endif 
+#endif
 
-
-
-//===========================================================================================
-
-
-
-
-
-
-
-
-
-#ifdef METIS4
-  void Mesh :: ParallelMetis ( )  
+#ifndef METIS5
+  void Mesh :: ParallelMetis (int /* nproc */, bool /* root_participates */)
   {
-    static Timer timer("Mesh::Partition");
-    RegionTimer reg(timer);
-
-    PrintMessage (3, "Metis called");
-      
-    if (GetDimension() == 2) 
-      {
-        PartDualHybridMesh2D ( ); // neloc );
-        return;
-      }
-
-
-    idx_t ne = GetNE();
-    idx_t nn = GetNP();
-
-    if (ntasks <= 2 || ne <= 1)
-      {
-        if (ntasks == 1) return;
-        
-        for (int i=1; i<=ne; i++)
-          VolumeElement(i).SetPartition(1);
-
-        for (int i=1; i<=GetNSE(); i++)
-          SurfaceElement(i).SetPartition(1);
-
-        return;
-      }
-
-
-    bool uniform_els = true;
-
-    ELEMENT_TYPE elementtype = TET; 
-    for (int el = 1; el <= GetNE(); el++)
-      if (VolumeElement(el).GetType() != elementtype)
-        {
-          uniform_els = false;
-          break;
-        }
-
-
-    if (!uniform_els)
-      {
-        PartHybridMesh ();  
-      }
-    else
-      {
-        
-        // uniform (TET) mesh,  JS
-        int npe = VolumeElement(1).GetNP();
-        Array<idxtype> elmnts(ne*npe);
-        
-        int etype;
-        if (elementtype == TET)
-          etype = 2;
-        else if (elementtype == HEX)
-          etype = 3;
-        
-    
-        for (int i=1; i<=ne; i++)
-          for (int j = 0; j < npe; j++)
-            elmnts[(i-1)*npe+(j)] = VolumeElement(i)[j]-1;
-        
-        int numflag = 0;
-        int nparts = ntasks-1;
-        int ncommon = 3;
-        int edgecut;
-        Array<idxtype> epart(ne), npart(nn);
-        
-        //     if ( ntasks == 1 ) 
-        //       {
-        //      (*this) = *mastermesh;
-        //      nparts = 4;        
-        //      metis :: METIS_PartMeshDual (&ne, &nn, elmnts, &etype, &numflag, &nparts,
-        //                                   &edgecut, epart, npart);
-        //      cout << "done" << endl;
-        
-        //      cout << "edge-cut: " << edgecut << ", balance: " << metis :: ComputeElementBalance(ne, nparts, epart) << endl;
-        
-        //      for (int i=1; i<=ne; i++)
-        //        {
-        //          mastermesh->VolumeElement(i).SetPartition(epart[i-1]);
-        //        }
-        
-        //      return;
-        //       }
-        
-        
-        static Timer timermetis("Metis itself");
-        timermetis.Start();
-        
-#ifdef METIS4
-        cout << "call metis(4)_PartMeshDual ... " << flush;
-        METIS_PartMeshDual (&ne, &nn, &elmnts[0], &etype, &numflag, &nparts,
-                            &edgecut, &epart[0], &npart[0]);
-#else
-        cout << "call metis(5)_PartMeshDual ... " << endl;
-        // idx_t options[METIS_NOPTIONS];
-        
-        Array<idx_t> eptr(ne+1);
-        for (int j = 0; j < ne+1; j++)
-          eptr[j] = 4*j;
-        
-        METIS_PartMeshDual (&ne, &nn, &eptr[0], &elmnts[0], NULL, NULL, &ncommon, &nparts,
-                            NULL, NULL,
-                            &edgecut, &epart[0], &npart[0]);
-#endif
-        
-        timermetis.Stop();
-        
-        cout << "complete" << endl;
-#ifdef METIS4
-        cout << "edge-cut: " << edgecut << ", balance: " 
-             << ComputeElementBalance(ne, nparts, &epart[0]) << endl;
-#endif
-        
-        // partition numbering by metis : 0 ...  ntasks - 1
-        // we want:                       1 ...  ntasks
-        for (int i=1; i<=ne; i++)
-          VolumeElement(i).SetPartition(epart[i-1] + 1);
-      }
-    
-
-    for (SurfaceElementIndex sei : SurfaceElements().Range())
-      {
-        ElementIndex ei1, ei2;
-        GetTopology().GetSurface2VolumeElement (sei, ei1, ei2);
-        Element2dRef sel = (*this)[sei];
-
-        for (int j = 0; j < 2; j++)
-          {
-            ElementIndex ei = (j == 0) ? ei1 : ei2;
-            if ( ei.IsValid() && ei.Nr0() < GetNE() )
-              {
-                sel.SetPartition ((*this)[ei].GetPartition());
-                break;
-              }
-          }     
-      }
-    
+    throw NgException("Mesh::ParallelMetis: Netgen was built without METIS");
   }
-#endif
-
-
-  void Mesh :: PartHybridMesh () 
+  void Mesh :: ParallelMetis (Array<int> &, Array<int> &, Array<int> &, bool /* root_participates */)
   {
-    throw Exception("PartHybridMesh not supported");    
-#ifdef METISxxx
-    int ne = GetNE();
-    
-    int nn = GetNP();
-    int nedges = topology.GetNEdges();
-
-    idxtype *xadj, * adjacency;
-    // idxtype *v_weights = NULL, *e_weights = NULL;
-
-    int weightflag = 0;
-    int numflag = 0;
-    int nparts = ntasks - 1;
-
-    int options[5];
-    options[0] = 0;
-    int edgecut;
-    idxtype * part;
-
-    xadj = new idxtype[nn+1];
-    part = new idxtype[nn];
-
-    Array<int> cnt(nn+1);
-    cnt = 0;
-
-    for ( int edge = 0; edge < nedges; edge++ )
-      {
-        // int v1, v2;
-        // topology.GetEdgeVertices ( edge, v1, v2);
-        auto [v1,v2] = topology.GetEdgeVertices(edge);
-        cnt[v1-1] ++;
-        cnt[v2-1] ++;
-      }
-
-    xadj[0] = 0;
-    for ( int n = 1; n <= nn; n++ )
-      {
-        xadj[n] = idxtype(xadj[n-1] + cnt[n-1]); 
-      }
-
-    adjacency = new idxtype[xadj[nn]];
-    cnt = 0;
-
-    for ( int edge = 0; edge < nedges; edge++ )
-      {
-        // int v1, v2;
-        // topology.GetEdgeVertices ( edge, v1, v2);
-        auto [v1,v2] = topology.GetEdgeVertices(edge);        
-        adjacency[ xadj[v1-1] + cnt[v1-1] ] = v2-1;
-        adjacency[ xadj[v2-1] + cnt[v2-1] ] = v1-1;
-        cnt[v1-1]++;
-        cnt[v2-1]++;
-      }
-
-    for ( int vert = 0; vert < nn; vert++ )
-      {
-        FlatArray<idxtype> array ( cnt[vert], &adjacency[ xadj[vert] ] );
-        BubbleSort(array);
-      }
-
-#ifdef METIS4
-    METIS_PartGraphKway ( &nn, xadj, adjacency, v_weights, e_weights, &weightflag, 
-                          &numflag, &nparts, options, &edgecut, part );
-#else
-    cout << "currently not supported (metis5), A" << endl;
-#endif
-
-    Array<int> nodesinpart(ntasks);
-    vol_partition.SetSize(ne);
-    for ( int el = 1; el <= ne; el++ )
-      {
-        Element & volel = VolumeElement(el);
-        nodesinpart = 0;
-
-        
-        int el_np = volel.GetNP();
-        int partition = 0; 
-        for ( int i = 0; i < el_np; i++ )
-          nodesinpart[ part[volel[i]-1]+1 ] ++;
-
-        for ( int i = 1; i < ntasks; i++ )
-          if ( nodesinpart[i] > nodesinpart[partition] ) 
-            partition = i;
-
-        // volel.SetPartition(partition);
-        vol_partition[el-1] = partition;
-      }
-
-    delete [] xadj;
-    delete [] part;
-    delete [] adjacency;
-#else
-    cout << "parthybridmesh not available" << endl;
-#endif
+    throw NgException("Mesh::ParallelMetis: Netgen was built without METIS");
   }
-
-
-  void Mesh :: PartDualHybridMesh ( ) // Array<int> & neloc ) 
-  {
-    throw Exception("PartDualHybridMesh not supported");
-#ifdef OLD      
-#ifdef METIS
-    int ne = GetNE();
-    
-    // int nn = GetNP();
-    // int nedges = topology->GetNEdges();
-    int nfaces = topology.GetNFaces();
-
-    idxtype  *xadj, * adjacency, *v_weights = NULL, *e_weights = NULL;
-
-    int weightflag = 0;
-    // int numflag = 0;
-    int nparts = ntasks - 1;
-
-    int options[5];
-    options[0] = 0;
-    int edgecut;
-    idxtype * part;
-
-    Array<int> facevolels1(nfaces), facevolels2(nfaces);
-    facevolels1 = -1;
-    facevolels2 = -1;
-
-    // Array<int, 0> elfaces;
-    xadj = new idxtype[ne+1];
-    part = new idxtype[ne];
-
-    Array<int> cnt(ne+1);
-    cnt = 0;
-
-    for ( int el=1; el <= ne; el++ )
-      {
-        Element volel = VolumeElement(el);
-        // topology.GetElementFaces(el, elfaces);
-        auto elfaces = topology.GetFaces (ElementIndex(el-1));
-        for ( int i = 0; i < elfaces.Size(); i++ )
-          {
-            if ( facevolels1[elfaces[i]] == -1 )
-              facevolels1[elfaces[i]] = el;
-            else
-              {
-                facevolels2[elfaces[i]] = el;
-                cnt[facevolels1[elfaces[i]]-1]++;
-                cnt[facevolels2[elfaces[i]]-1]++;
-              }
-          }
-      }
-
-    xadj[0] = 0;
-    for ( int n = 1; n <= ne; n++ )
-      {
-        xadj[n] = idxtype(xadj[n-1] + cnt[n-1]); 
-      }
-
-    adjacency = new idxtype[xadj[ne]];
-    cnt = 0;
-
-    for (int face = 0; face < nfaces; face++)
-      {
-        int e1, e2;
-        e1 = facevolels1[face];
-        e2 = facevolels2[face];
-        if ( e2 == -1 ) continue;
-        adjacency[ xadj[e1-1] + cnt[e1-1] ] = e2-1;
-        adjacency[ xadj[e2-1] + cnt[e2-1] ] = e1-1;
-        cnt[e1-1]++;
-        cnt[e2-1]++;
-      }
-
-    for ( int el = 0; el < ne; el++ )
-      {
-        FlatArray<idxtype> array ( cnt[el], &adjacency[ xadj[el] ] );
-        BubbleSort(array);
-      }
-
-    Timer timermetis("Metis itself");
-    timermetis.Start();
-
-#ifdef METIS4
-    METIS_PartGraphKway ( &ne, xadj, adjacency, v_weights, e_weights, &weightflag, 
-                          &numflag, &nparts, options, &edgecut, part );
-#else
-    cout << "currently not supported (metis5), B" << endl;
 #endif
-
-
-    timermetis.Stop();
-
-    Array<int> nodesinpart(ntasks);
-
-    vol_partition.SetSize(ne);
-    for ( int el = 1; el <= ne; el++ )
-      {
-        // Element & volel = VolumeElement(el);
-        nodesinpart = 0;
-
-        // VolumeElement(el).SetPartition(part[el-1 ] + 1);
-        vol_partition[el-1] = part[el-1 ] + 1;
-      }
-
-    /*    
-    for ( int i=1; i<=ne; i++)
-      {
-        neloc[ VolumeElement(i).GetPartition() ] ++;
-      }
-    */
-
-    delete [] xadj;
-    delete [] part;
-    delete [] adjacency;
-#else
-    cout << "partdualmesh not available" << endl;
-#endif
-#endif
-    
-  }
-
-
-
-
-
-  void Mesh :: PartDualHybridMesh2D ( ) 
-  {
-#ifdef METIS
-    idxtype ne = GetNSE();
-    int nv = GetNV();
-
-    Array<idxtype> xadj(ne+1);
-    Array<idxtype> adjacency(ne*4);
-
-    // first, build the vertex 2 element table:
-    Array<int, PointIndex> cnt(nv);
-    cnt = 0;
-    for (auto el : SurfaceElements())
-      for (int j = 0; j < el.GetNP(); j++)
-        cnt[ el[j] ] ++;
-    
-    DynamicTable<SurfaceElementIndex, PointIndex> vert2els(nv);
-    for (SurfaceElementIndex sei : SurfaceElements().Range())
-      for (int j = 0; j < (*this)[sei].GetNP(); j++)
-        vert2els.Add ((*this)[sei][j], sei);
-    
-
-    // find all neighbour elements
-    int cntnb = 0;
-    Array<SurfaceElementIndex, SurfaceElementIndex> marks(ne);   // to visit each neighbour just once
-    marks = SurfaceElementIndex::INVALID;
-    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
-      {
-        xadj[sei.Nr0()] = cntnb;
-        for (int j = 0; j < (*this)[sei].GetNP(); j++)
-          {
-            PointIndex vnr = (*this)[sei][j];
-
-            // all elements with at least one common vertex
-            for (int k = 0; k < vert2els[vnr].Size(); k++)   
-              {
-                SurfaceElementIndex sei2 = vert2els[vnr][k];
-                if (sei == sei2) continue;
-                if (marks[sei2] == sei) continue;
-                
-                // neighbour, if two common vertices
-                int common = 0;
-                for (int m1 = 0; m1 < (*this)[sei].GetNP(); m1++)
-                  for (int m2 = 0; m2 < (*this)[sei2].GetNP(); m2++)
-                    if ( (*this)[sei][m1] == (*this)[sei2][m2])
-                      common++;
-                
-                if (common >= 2)
-                  {
-                    marks[sei2] = sei;     // mark as visited
-                    adjacency[cntnb++] = sei2.Nr0();
-                  }
-              }
-          }
-      }
-    xadj[ne] = cntnb;
-
-    idxtype *v_weights = NULL, *e_weights = NULL;
-
-    // int numflag = 0;
-    idxtype nparts = ntasks - 1;
-
-    idxtype edgecut;
-    Array<idxtype> part(ne);
-
-    for ( int el = 0; el < ne; el++ )
-      BubbleSort (adjacency.Range (xadj[el], xadj[el+1]));
-
-#ifdef METIS4   
-    idxtype weightflag = 0;
-    int options[5];
-    options[0] = 0;
-    METIS_PartGraphKway ( &ne, &xadj[0], &adjacency[0], v_weights, e_weights, &weightflag, 
-                          &numflag, &nparts, options, &edgecut, &part[0] );
-#else
-    idx_t ncon = 1;
-    METIS_PartGraphKway ( &ne, &ncon, &xadj[0], &adjacency[0], 
-                          v_weights, NULL, e_weights, 
-                          &nparts, 
-                          NULL, NULL, NULL,
-                          &edgecut, &part[0] );
-#endif
-
-
-    surf_partition.SetSize(ne);
-    for (SurfaceElementIndex sei : T_Range<SurfaceElementIndex>(ne))
-      // (*this) [sei].SetPartition (part[sei]+1);
-      surf_partition[sei] = part[sei.Nr0()]+1;
-#else
-    cout << "partdualmesh not available" << endl;
-#endif
-
-  }
+ 
 
 
 
 }
-
-
-
-#endif

@@ -121,11 +121,6 @@ namespace netgen
         BuildFilledList (false);
 
 
-#ifdef PARALLELGL
-        if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
-          glCallList (par_filledlists[vispar.drawtetsdomain]);
-        else
-#endif
           glCallList (filledlist);
       }
 
@@ -206,11 +201,6 @@ namespace netgen
 
         BuildLineList ();
 
-#ifdef PARALLELGL
-        if (ntasks > 1 && vispar.drawtetsdomain > 0 && vispar.drawtetsdomain < ntasks)
-          glCallList (par_linelists[vispar.drawtetsdomain]);
-        else
-#endif
           glCallList (linelist);
 
 
@@ -1155,33 +1145,6 @@ namespace netgen
       return;
 
 
-#ifdef PARALLELGL
-    if (id == 0 && ntasks > 1)
-      {
-        InitParallelGL();
-        par_filledlists.SetSize (ntasks);
-
-        MyMPI_SendCmd ("redraw");
-        MyMPI_SendCmd ("filledlist");
-        for ( int dest = 1; dest < ntasks; dest++ )
-          MyMPI_Recv (par_filledlists[dest], dest, MPI_TAG_VIS);
-
-        if (list)
-          glDeleteLists (list, 1);
-
-        list = glGenLists (1);
-        glNewList (list, GL_COMPILE);
-
-        for ( int dest = 1; dest < ntasks; dest++ )
-          glCallList (par_filledlists[dest]);
-
-        glEndList();
-
-        timestamp = NextTimeStamp();
-        return;
-      }
-
-#endif
 
 
     if (!lock)
@@ -1295,11 +1258,6 @@ namespace netgen
     glEndList ();
 
 
-#ifdef PARALLELGL
-    glFinish();
-    if (id > 0)
-      MyMPI_Send (list, 0, MPI_TAG_VIS);
-#endif
     lock = {};
 
   }
@@ -1314,37 +1272,6 @@ namespace netgen
     static Timer timer("Mesh::BuildLineList");
     RegionTimer reg (timer);
 
-#ifdef PARALLELGL
-
-    if (id == 0 && ntasks > 1)
-      {
-        InitParallelGL();
-
-        par_linelists.SetSize (ntasks);
-
-        MyMPI_SendCmd ("redraw");
-        MyMPI_SendCmd ("linelist");
-
-        for ( int dest = 1; dest < ntasks; dest++ )
-          MyMPI_Recv (par_linelists[dest], dest, MPI_TAG_VIS);
-
-        if (linelist)
-          glDeleteLists (linelist, 1);
-
-        linelist = glGenLists (1);
-        glNewList (linelist, GL_COMPILE);
-
-        for ( int dest = 1; dest < ntasks; dest++ )
-          glCallList (par_linelists[dest]);
-
-        glEndList();
-
-
-        linetimestamp = NextTimeStamp();
-        return;
-      }
-
-#endif
 
     if (!lock)
       {
@@ -1579,11 +1506,6 @@ namespace netgen
     glEndList ();
 
 
-#ifdef PARALLELGL
-    glFinish();
-    if (id > 0)
-      MyMPI_Send (linelist, 0, MPI_TAG_VIS);
-#endif
   }
 
 
@@ -1623,15 +1545,6 @@ namespace netgen
       {
         const Segment & seg = (*mesh)[i];
 
-        /*
-#ifdef PARALLEL
-        if (ntasks > 1 && 
-            vispar.drawtetsdomain && 
-            // (vispar.drawtetsdomain != seg.GetPartition())) continue;
-            (vispar.drawtetsdomain != mesh->seg_partition[i-1]) continue;
-#endif
-        */
-        
         const Point<3> & p1 = (*mesh)[seg[0]];
         const Point<3> & p2 = (*mesh)[seg[1]];
 
