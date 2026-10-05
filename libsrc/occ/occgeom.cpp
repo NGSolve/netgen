@@ -6,6 +6,7 @@
 
 #include <mystdlib.h>
 #include <core/register_archive.hpp>
+#include <core/taskmanager.hpp>
 
 #include "occ_vertex.hpp"
 #include "occ_edge.hpp"
@@ -1211,41 +1212,66 @@ namespace netgen
           vertices.Append(std::move(occ_vertex));
       }
 
-      for(auto i1 : Range(1, emap.Extent()+1))
       {
-          auto e = emap(i1);
-          auto edge = TopoDS::Edge(e);
-          auto verts = GetVertices(e);
-          if(verts.size() == 0)
-            continue;
-          auto occ_edge = make_unique<OCCEdge>(edge, GetVertex(verts[0]), GetVertex(verts[1]) );
-          if(HaveProperties(edge))
-            occ_edge->properties = GetProperties(e);
-          edges.Append(std::move(occ_edge));
+          const int ne = emap.Extent();
+          Array<unique_ptr<OCCEdge>> tmp(ne);
+          ParallelFor(ne, [&](size_t i)
+          {
+              auto e = emap(i+1);
+              auto verts = GetVertices(e);
+              if(verts.size() == 0) return;
+              try
+              {
+                  auto occ_edge = make_unique<OCCEdge>(e, GetVertex(verts[0]), GetVertex(verts[1]));
+                  if(HaveProperties(e))
+                      occ_edge->properties = GetProperties(e);
+                  tmp[i] = std::move(occ_edge);
+              }
+              catch(Standard_Failure & ex)
+              {
+                  throw Exception(string("Failed to build OCC edge: ") + ex.GetMessageString());
+              }
+          });
+          for(int i = 0; i < ne; i++)
+              if(tmp[i]) edges.Append(std::move(tmp[i]));
       }
 
-      for(auto i1 : Range(1, fmap.Extent()+1))
       {
-          auto f = fmap(i1);
-
-          auto k = faces.Size();
-          auto occ_face = make_unique<OCCFace>(f);
-
-          for(auto e : GetEdges(f))
-              occ_face->edges.Append( &GetEdge(e) );
-
-          if(HaveProperties(f))
-            occ_face->properties = GetProperties(f);
-          faces.Append(std::move(occ_face));
+          const int nf = fmap.Extent();
+          Array<unique_ptr<OCCFace>> tmp(nf);
+          ParallelFor(nf, [&](size_t i)
+          {
+              auto f = fmap(i+1);
+              try
+              {
+                  auto occ_face = make_unique<OCCFace>(f);
+                  for(auto e : GetEdges(f))
+                      occ_face->edges.Append( &GetEdge(e) );
+                  if(HaveProperties(f))
+                      occ_face->properties = GetProperties(f);
+                  tmp[i] = std::move(occ_face);
+              }
+              catch(Standard_Failure & ex)
+              {
+                  throw Exception(string("Failed to build OCC face: ") + ex.GetMessageString());
+              }
+          });
+          for(int i = 0; i < nf; i++)
+              faces.Append(std::move(tmp[i]));
 
           if(dimension==2)
-              for(auto e : GetEdges(f))
+              for(auto i1 : Range(1, nf+1))
               {
-                  auto & edge = GetEdge(e);
-                  if(e.Orientation() == TopAbs_REVERSED)
-                      edge.domout = k;
-                  else
-                      edge.domin = k;
+                  auto f = fmap(i1);
+                  int k = i1-1;
+                  for(auto e : GetEdges(f))
+                  {
+                      auto & edge = GetEdge(e);
+                      if(e.Orientation() == TopAbs_REVERSED)
+                          edge.domout = k;
+                      else
+                          edge.domin = k;
+                  }
               }
       }
 
@@ -2422,20 +2448,19 @@ namespace netgen
         auto shapeTool = XCAFDoc_DocumentTool::ShapeTool(step_doc->Main());
 
         // load colors
+        XCAFPrs_IndexedDataMapOfShapeStyle styles;
+        {
+          TDF_LabelSequence roots;
+          shapeTool->GetFreeShapes(roots);
+          for (Standard_Integer ri = 1; ri <= roots.Length(); ri++)
+            XCAFPrs::CollectStyleSettings(roots.Value(ri), TopLoc_Location(), styles);
+        }
         for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
           for (TopExp_Explorer e(shape, typ); e.More(); e.Next())
           {
-            TDF_Label label;
-            shapeTool->Search(e.Current(), label);
-
-            if(label.IsNull())
-                continue;
-
-            XCAFPrs_IndexedDataMapOfShapeStyle set;
-            TopLoc_Location loc;
-            XCAFPrs::CollectStyleSettings(label, loc, set);
             XCAFPrs_Style aStyle;
-            set.FindFromKey(e.Current(), aStyle);
+            if(!styles.FindFromKey(e.Current(), aStyle))
+                continue;
             if(aStyle.IsSetColorSurf())
               {
                 for(TopExp_Explorer e2(e.Current(), TopAbs_FACE); e2.More(); e2.Next())
