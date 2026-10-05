@@ -451,13 +451,18 @@ namespace netgen
         illegal1 += 1-mesh.LegalTrig(el);
       }
 
+    PointGeomInfo gi1 = mesh[hasbothpi[0]].GeomInfo()[mesh[hasbothpi[0]].PNums<3>().Pos(pi1)];
+
     double bad2 = 0;
     for (int k = 0; k < hasonepi.Size(); k++)
       {
         Element2d el (mesh[hasonepi[k]]);
         for (auto i : Range(3))
             if(el[i]==pi2)
+              {
                 el[i] = pi1;
+                el.GeomInfo()[i] = gi1;
+              }
 
         double err =
             CalcTriangleBadness (mesh[el[0]], mesh[el[1]], mesh[el[2]],
