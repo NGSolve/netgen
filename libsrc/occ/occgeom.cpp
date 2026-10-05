@@ -81,10 +81,66 @@ namespace netgen
   };
 
 
-  TopTools_IndexedMapOfShape OCCGeometry::global_shape_property_indices;
-  std::vector<ShapeProperties> OCCGeometry::global_shape_properties;
-  TopTools_IndexedMapOfShape OCCGeometry::global_identification_indices;
-  std::vector<std::vector<OCCIdentification>> OCCGeometry::global_identifications;
+  std::unordered_map<TopoDS_Shape, ShapeProperties, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> OCCGeometry::global_shape_properties;
+  std::unordered_map<TopoDS_Shape, std::vector<OCCIdentification>, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> OCCGeometry::global_identifications;
+  std::mutex OCCGeometry::global_shape_mutex;
+  static size_t global_shape_data_size_after_cleanup = 0;
+
+  void OCCGeometry::CleanupGlobalShapeDataIfGrown()
+  {
+    {
+      std::lock_guard<std::mutex> guard(global_shape_mutex);
+      if(global_shape_properties.size() + global_identifications.size()
+         <= 2 * global_shape_data_size_after_cleanup + 1000)
+        return;
+    }
+    CleanupGlobalShapeData();
+  }
+
+  size_t OCCGeometry::CleanupGlobalShapeData()
+  {
+    std::lock_guard<std::mutex> guard(global_shape_mutex);
+    size_t nremoved = 0;
+    while(true)
+      {
+        // a shape is unused if all references to its TShape come from the maps,
+        // removing it can free parents or identified shapes, so repeat
+        std::unordered_map<const TopoDS_TShape*, int> internal;
+        auto count = [&](const TopoDS_Shape & s)
+          {
+            if(!s.IsNull())
+              internal[s.TShape().get()]++;
+          };
+        for(auto & [s, props] : global_shape_properties)
+          count(s);
+        for(auto & [s, idents] : global_identifications)
+          {
+            count(s);
+            for(auto & id : idents)
+              {
+                count(id.from);
+                count(id.to);
+              }
+          }
+        std::set<const TopoDS_TShape*> unused;
+        for(auto [ts, n] : internal)
+          if(ts->GetRefCount() == n)
+            unused.insert(ts);
+        auto is_unused = [&](const auto & entry)
+          { return entry.first.IsNull() || unused.count(entry.first.TShape().get()); };
+        size_t nbefore = global_shape_properties.size() + global_identifications.size();
+        for(auto it = global_shape_properties.begin(); it != global_shape_properties.end();)
+          it = is_unused(*it) ? global_shape_properties.erase(it) : std::next(it);
+        for(auto it = global_identifications.begin(); it != global_identifications.end();)
+          it = is_unused(*it) ? global_identifications.erase(it) : std::next(it);
+        size_t n = nbefore - global_shape_properties.size() - global_identifications.size();
+        if(n == 0)
+          break;
+        nremoved += n;
+      }
+    global_shape_data_size_after_cleanup = global_shape_properties.size() + global_identifications.size();
+    return nremoved;
+  }
 
   TopoDS_Shape ListOfShapes::Max(gp_Vec dir)
   {
@@ -167,6 +223,7 @@ namespace netgen
         BuildFMap();
         CalcBoundingBox();
         PrintContents (this);
+        CleanupGlobalShapeDataIfGrown();
       }
   }
 
@@ -1606,6 +1663,7 @@ namespace netgen
       occgeo->BuildFMap();
       occgeo->CalcBoundingBox();
       PrintContents (occgeo);
+      OCCGeometry::CleanupGlobalShapeDataIfGrown();
   }
 
    // Philippose - 23/02/2009
@@ -1721,6 +1779,7 @@ namespace netgen
 
       occgeo->CalcBoundingBox();
       PrintContents (occgeo);
+      OCCGeometry::CleanupGlobalShapeDataIfGrown();
       return occgeo;
    }
 
@@ -1768,6 +1827,7 @@ namespace netgen
 
       occgeo->CalcBoundingBox();
       PrintContents (occgeo);
+      OCCGeometry::CleanupGlobalShapeDataIfGrown();
 
       return occgeo;
    }

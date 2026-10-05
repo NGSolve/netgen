@@ -18,6 +18,7 @@
 #include <TopoDS_Vertex.hxx>
 #include <gp_Trsf.hxx>
 #include <gp_GTrsf.hxx>
+#include <TopTools_ShapeMapHasher.hxx>
 
 #define NETGEN_OCC_VERSION_AT_LEAST(MAJOR, MINOR) \
   ((OCC_VERSION_MAJOR > MAJOR) ||                               \

@@ -733,9 +733,11 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     ;
   
   m.def("ResetGlobalShapeProperties", [] () {
+    std::lock_guard<std::mutex> guard(OCCGeometry::global_shape_mutex);
     OCCGeometry::global_shape_properties.clear();
-    OCCGeometry::global_shape_property_indices.Clear();
   }, "Clear cached OpenCascade shape property metadata stored by Netgen.");
+  m.def("CleanupGlobalShapeProperties", &OCCGeometry::CleanupGlobalShapeData,
+        "Remove shape properties and identifications of shapes that are not referenced anymore. Returns the number of removed entries.");
 
   struct SwigTypeInfo
   {
@@ -959,10 +961,9 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def_property("name", [](const TopoDS_Shape & self) -> optional<string> {
         CheckValidPropertyType(self);
-        if (auto name = OCCGeometry::GetProperties(self).name)
-          return *name;
-        else
-          return nullopt;
+        if (auto props = OCCGeometry::FindProperties(self))
+          return props->name;
+        return nullopt;
       }, [](const TopoDS_Shape & self, optional<string> name) {
         for (auto & s : GetHighestDimShapes(self))
           OCCGeometry::GetProperties(s).name = name;
@@ -972,7 +973,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   [](const TopoDS_Shape& self)
                   {
                     CheckValidPropertyType(self);
-                    return OCCGeometry::GetProperties(self).maxh;
+                    auto props = OCCGeometry::FindProperties(self);
+                    return props ? props->maxh : ShapeProperties{}.maxh;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
@@ -984,7 +986,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
                   [](const TopoDS_Shape& self)
                   {
                     CheckValidPropertyType(self);
-                    return OCCGeometry::GetProperties(self).hpref;
+                    auto props = OCCGeometry::FindProperties(self);
+                    return props ? props->hpref : ShapeProperties{}.hpref;
                   },
                   [](TopoDS_Shape& self, double val)
                   {
@@ -994,9 +997,10 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
     
     .def_property("col", [](const TopoDS_Shape & self) -> py::object {
       CheckValidPropertyType(self);
-      if(!OCCGeometry::HaveProperties(self) || !OCCGeometry::GetProperties(self).col)
+      auto props = OCCGeometry::FindProperties(self);
+      if(!props || !props->col)
         return py::none();
-      auto col = *OCCGeometry::GetProperties(self).col;
+      auto col = *props->col;
       return py::cast(std::vector<double>({ col(0), col(1), col(2), col(3) }));
     }, [](const TopoDS_Shape & self, std::optional<std::vector<double>> c) {
       if(c.has_value())
@@ -1152,8 +1156,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return shape1.IsSame(shape2);
     })
     .def("__hash__", [] (const TopoDS_Shape& shape) {
-      OCCGeometry::GetProperties(shape); // make sure it is in global properties
-      return OCCGeometry::global_shape_property_indices.FindIndex(shape);
+      return TopTools_ShapeMapHasher{}(shape);
     })
 
     .def("Reversed", [](const TopoDS_Shape & shape) {
@@ -1789,7 +1792,8 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         }), "Create a face from a TopoDS_Shape (must be a face).")
     .def_property("quad_dominated", [](const TopoDS_Face& self) -> optional<bool>
                   {
-                    return OCCGeometry::GetProperties(self).quad_dominated;
+                    auto props = OCCGeometry::FindProperties(self);
+                    return props ? props->quad_dominated : nullopt;
                   },
                   [](TopoDS_Face& self, optional<bool> quad_dominated)
                   {
