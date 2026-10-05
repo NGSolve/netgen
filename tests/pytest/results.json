@@ -1819,16 +1819,16 @@
                 12.025,
                 141.48
             ],
-            "hash": "f0e69c59182d0484e19a7b0c8a20e55a98ef0ea54ce6a28c875a776c6e475e90",
+            "hash": "4b04f603bcf7d6eadbfff92fd7c751c94a704f8416014fdf31ff833517ea13ab",
             "hash_el1d": "7d1095f572437ad8f35eca9b514a5161e0388db47d66d1402dcea1f4eb396fe9",
-            "hash_el2d": "2db3f2d15e4988f72ce7978b141e040472ef5c76b5b9951c51e0f7b3076c835b",
-            "hash_el3d": "18b065e368cf90402ed1317cc78cece98568bcce6b765195c848562defe26023",
-            "hash_points": "14302101094bda61ce2fdeb6d072cb8072fb78685eacfb6d03b394b339c82324",
+            "hash_el2d": "27a89afafba84ff5755330b80c35383c1fcd54605e73afef27e766fe13faf32c",
+            "hash_el3d": "d368ad508f4bf79b77c36f8d1f00f4cfb12ff1dcf524e6ce5b816e348a684cd8",
+            "hash_points": "080c95140958b07b0fc7f56b4856e280e45b3d7db79d6068d9088bd7cc9ff82d",
             "ne1d": 298,
-            "ne2d": 514,
-            "ne3d": 620,
-            "quality_histogram": "[0, 0, 0, 3, 4, 10, 29, 23, 47, 37, 57, 78, 61, 64, 46, 54, 39, 38, 23, 7]",
-            "total_badness": 1104.1153947
+            "ne2d": 516,
+            "ne3d": 621,
+            "quality_histogram": "[0, 0, 0, 3, 4, 9, 28, 24, 51, 40, 52, 69, 59, 62, 59, 53, 44, 31, 25, 8]",
+            "total_badness": 1101.2985764
         },
         {
             "angles_tet": [
