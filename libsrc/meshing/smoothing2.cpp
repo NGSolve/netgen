@@ -985,6 +985,25 @@ namespace netgen
           double fact = 1;
           int moveisok = 0;
 
+          // the minimizer works in the tangent plane, the projection back to a
+          // strongly curved surface may fold the patch
+          auto patch_badness = [&] (const Point<3> & p, const Vec<3> & n)
+            {
+              double bad = 0;
+              for (int j = 0; j < ld.locelements.Size(); j++)
+                {
+                  if (ld.uselocalh) ld.loch = ld.lochs[j];
+                  Vec<3> e1 = ld.loc_pnts2[j] - p;
+                  Vec<3> e2 = ld.loc_pnts3[j] - p;
+                  if (Determinant(e1, e2, n) <= 1e-8 * ld.loch * ld.loch)
+                    return 1e10;
+                  bad += CalcTriangleBadness (p, ld.loc_pnts2[j], ld.loc_pnts3[j],
+                                              ld.locmetricweight, ld.loch);
+                }
+              return bad;
+            };
+          double origbad = mixed ? 0 : patch_badness (origp, ld.normal);
+
           if(mixed)
             {
               // restore other points
@@ -1009,7 +1028,7 @@ namespace netgen
               mesh[pi].Y() = origp.Y() + (x.Get(1) * t1.Y() + x.Get(2) * t2.Y())*fact;
               mesh[pi].Z() = origp.Z() + (x.Get(1) * t1.Z() + x.Get(2) * t2.Z())*fact;
               */
-              Vec<3> hv = x(0) * ld.t1 + x(1) * ld.t2;
+              Vec<3> hv = fact * (x(0) * ld.t1 + x(1) * ld.t2);
               Point<3> hnp = origp + Vec<3> (hv);
               mesh[pi](0) = hnp(0);
               mesh[pi](1) = hnp(1);
@@ -1024,7 +1043,10 @@ namespace netgen
               ngi = ld.gi1;
               moveisok = geo.ProjectPointGI(ld.surfi, mesh[pi], ngi);
               // point lies on same chart in stlsurface
-            
+
+              if (moveisok && !mixed)
+                moveisok = patch_badness (mesh[pi], geo.GetNormal (ld.surfi, mesh[pi], &ngi)) < origbad;
+
               if (moveisok)
                 {
                   for (int j = 0; j < ld.locelements.Size(); j++)
