@@ -25,6 +25,7 @@ namespace netgen
         Handle( Geom_Surface ) surface;
         Handle( ShapeAnalysis_Surface ) shape_analysis;
         double tolerance;
+        double uperiod = 0, vperiod = 0, umax = 0, vmax = 0;
 
         public:
         OCCFace(TopoDS_Shape dshape);
@@ -37,6 +38,7 @@ namespace netgen
         virtual PointGeomInfo Project(Point<3>& p) const override;
         virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const override;
         virtual Point<3> GetPoint(const PointGeomInfo& gi) const override;
+        virtual void AlignGeomInfo(PointGeomInfo& gi1, PointGeomInfo& gi2) const override;
         virtual void CalcEdgePointGI(const GeometryEdge& edge,
                 double t,
                 EdgePointGeomInfo& egi) const override;
