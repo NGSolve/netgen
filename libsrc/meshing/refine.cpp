@@ -251,7 +251,6 @@ namespace netgen
                                    pb, pgi);
 
 
-                  pgis[j+3] = pgi;
                   PointIndex pinew = between.Get(i2); 
                   pnums[j+3] = pinew;
                   if (!pointset[pinew])
@@ -259,6 +258,11 @@ namespace netgen
                       pointset[pinew] = true;
                       mesh.Point(pinew) = pb;                      
                     }
+                  else if (auto surfnr = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
+                           surfnr > 0 && surfnr <= geo.GetNFaces())
+                    // the point may be set by a segment, on the edge curve
+                    geo.GetFace(surfnr-1).UpdateGeomInfo (mesh.Point(pinew), pgi);
+                  pgis[j+3] = pgi;
                   /*
                   if (between.Used(i2))
                     pnums.Elem(4+j) = between.Get(i2);
@@ -341,7 +345,6 @@ namespace netgen
                                    el.GeomInfoPi (betw[j][1]+1 ),
                                    pb, pgi); 
 
-                  pgis[4+j] = pgi;
                   PointIndex pinew = between.Get(i2); 
                   pnums[4+j] = pinew; 
 
@@ -350,6 +353,11 @@ namespace netgen
                       pointset[pinew] = true;
                       mesh.Point(pinew) = pb;                      
                     }
+                  else if (auto surfnr = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
+                           surfnr > 0 && surfnr <= geo.GetNFaces())
+                    // the point may be set by a segment, on the edge curve
+                    geo.GetFace(surfnr-1).UpdateGeomInfo (mesh.Point(pinew), pgi);
+                  pgis[4+j] = pgi;
                   
                   if (surfgi.Size() < pnums[4+j].Nr1())
                     surfgi.SetSize (pnums[4+j].Nr1());

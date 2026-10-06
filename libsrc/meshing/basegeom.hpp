@@ -171,6 +171,14 @@ namespace netgen
     // Project point using geo info. Fast if point is close to
     // parametrization in geo info.
     virtual bool ProjectPointGI(Point<3>& p, PointGeomInfo& gi) const =0;
+    // geominfo of the point p on the face, gi is the start value
+    void UpdateGeomInfo(const Point<3>& p, PointGeomInfo& gi) const
+    {
+      Point<3> pp = p;
+      if (ProjectPointGI(pp, gi)) return;
+      pp = p;
+      gi = Project(pp);
+    }
     virtual bool CalcPointGeomInfo(const Point<3>& p, PointGeomInfo& gi) const
     {
       auto pnew = p;
