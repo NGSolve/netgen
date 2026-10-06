@@ -184,6 +184,10 @@ namespace netgen
                 gi.trignum = el.GeomInfoPi(betw[j][0]+1).trignum;
                 gi.u = 0.5 * (el.GeomInfoPi(betw[j][0]+1).u + el.GeomInfoPi(betw[j][1]+1).u);
                 gi.v = 0.5 * (el.GeomInfoPi(betw[j][0]+1).v + el.GeomInfoPi(betw[j][1]+1).v);
+                // the point may be set by a segment, on the edge curve
+                if (auto surfnr = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
+                    surfnr > 0 && surfnr <= geo.GetNFaces())
+                  geo.GetFace(surfnr-1).UpdateGeomInfo (mesh.Point(newel[onp+j]), gi);
                 newel.GeomInfoPi(onp+j+1) = gi;
               }
             else

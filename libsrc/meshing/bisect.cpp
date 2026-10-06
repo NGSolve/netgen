@@ -3879,6 +3879,19 @@ namespace netgen
           }
        });
     mesh.RebuildSurfaceElementLists();
+
+    // bisected points on edges might have uv off the edge, recompute uv
+    for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+      {
+        auto el = mesh[sei];
+        auto surfnr = mesh.GetFaceDescriptor(el.GetIndex()).SurfNr();
+        if (surfnr < 1 || surfnr > geo.GetNFaces()) continue;
+        auto & face = geo.GetFace(surfnr-1);
+        double tol = 1e-8 * face.GetBoundingBox().Diam();
+        for (int j = 0; j < el.GetNP(); j++)
+          if (Dist (face.GetPoint (el.GeomInfo()[j]), mesh[el[j]]) > tol)
+            face.UpdateGeomInfo (mesh[el[j]], el.GeomInfo()[j]);
+      }
     
     for (int i = 0; i < mquads.Size(); i++)
       {
