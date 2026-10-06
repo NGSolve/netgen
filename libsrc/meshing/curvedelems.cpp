@@ -1439,9 +1439,16 @@ namespace netgen
                         SurfaceElementIndex sei = top.GetFace2SurfaceElement(f);
                         if (sei.IsValid()) {
                           PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
+                          PointGeomInfo gc[3] = { mesh[sei].GeomInfoPi(1), mesh[sei].GeomInfoPi(2), mesh[sei].GeomInfoPi(3) };
+                          if (surfnr[facenr] > 0 && surfnr[facenr] <= geo.GetNFaces())
+                            {
+                              auto & gface = geo.GetFace(surfnr[facenr]-1);
+                              gface.AlignGeomInfo (gc[0], gc[1]);
+                              gface.AlignGeomInfo (gc[1], gc[2]);
+                            }
                           // use improved initial guess
-                          gi.u = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).u+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).u+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).u);
-                          gi.v = (lami[fnums[0]]*mesh[sei].GeomInfoPi(1).v+lami[fnums[1]]*mesh[sei].GeomInfoPi(2).v+lami[fnums[2]]*mesh[sei].GeomInfoPi(3).v);
+                          gi.u = (lami[fnums[0]]*gc[0].u+lami[fnums[1]]*gc[1].u+lami[fnums[2]]*gc[2].u);
+                          gi.v = (lami[fnums[0]]*gc[0].v+lami[fnums[1]]*gc[1].v+lami[fnums[2]]*gc[2].v);
                           
                           geo.ProjectPointGI(surfnr[facenr], pp, gi);
                         }
@@ -1489,12 +1496,19 @@ namespace netgen
                         if (sei.IsValid()) {
                           PointGeomInfo gi = mesh[sei].GeomInfoPi(1);
                           // use improved initial guess TODO JOACHIM
+                          PointGeomInfo gc[4];
+                          for (int k = 0; k < 4; k++) gc[k] = mesh[sei].GeomInfoPi(k+1);
+                          if (surfnr[facenr] > 0 && surfnr[facenr] <= geo.GetNFaces())
+                            {
+                              auto & gface = geo.GetFace(surfnr[facenr]-1);
+                              for (int k = 1; k < 4; k++) gface.AlignGeomInfo (gc[k-1], gc[k]);
+                            }
                           gi.u = 0;
                           gi.v = 0;
                           for (int k = 0; k < 4; k++)
                             {
-                              gi.u += lami[k] * mesh[sei].GeomInfoPi(k+1).u;
-                              gi.v += lami[k] * mesh[sei].GeomInfoPi(k+1).v;
+                              gi.u += lami[k] * gc[k].u;
+                              gi.v += lami[k] * gc[k].v;
                             }
                           geo.ProjectPointGI(surfnr[facenr], pp, gi);
                         }

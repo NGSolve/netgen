@@ -105,6 +105,18 @@ namespace netgen
       return GetLength() < tol;
     }
     virtual void ProjectPoint(Point<3>& p, EdgePointGeomInfo* gi) const = 0;
+    // For closed edges, the closing vertex (parameter 0 or 1) takes the
+    // value on the side of the other point
+    virtual void AlignGeomInfo(EdgePointGeomInfo& gi1, EdgePointGeomInfo& gi2) const
+    {
+      if (start != end) return;
+      const double eps = 1e-10;
+      bool v1 = gi1.dist < eps || gi1.dist > 1-eps;
+      bool v2 = gi2.dist < eps || gi2.dist > 1-eps;
+      if (v1 && v2) { gi1.dist = 0; gi2.dist = 1; }
+      else if (v1) gi1.dist = gi2.dist < 0.5 ? 0 : 1;
+      else if (v2) gi2.dist = gi1.dist < 0.5 ? 0 : 1;
+    }
     virtual void PointBetween(const Point<3>& p1,
                               const Point<3>& p2,
                               double secpoint,
@@ -113,9 +125,32 @@ namespace netgen
                               Point<3>& newp,
                               EdgePointGeomInfo& newgi) const
     {
+      EdgePointGeomInfo g1 = gi1, g2 = gi2;
+      AlignGeomInfo (g1, g2);
       newp = p1 + secpoint * (p2-p1);
       newgi = gi1;
-      ProjectPoint(newp, &newgi);
+
+      double t0 = g1.dist + secpoint * (g2.dist - g1.dist);
+      double t = t0;
+      bool converged = false;
+      for (int it = 0; it < 20 && !converged; it++)
+        {
+          Vec<3> d = GetTangent (t);
+          double dd = d.Length2();
+          if (dd == 0) break;
+          double dt = (GetPoint (t) - newp) * d / dd;
+          t -= dt;
+          converged = fabs (dt) < 1e-12;
+        }
+      if (!converged || fabs (t - t0) > fabs (g2.dist - g1.dist))
+        {
+          // closest point not near the interpolated one
+          ProjectPoint (newp, &newgi);
+          return;
+        }
+      t = std::clamp (t, 0.0, 1.0);
+      newgi.dist = t;
+      newp = GetPoint (t);
     }
     virtual Vec<3> GetTangent(double t) const = 0;
     virtual bool IsMappedShape( const GeometryShape & other, const Transformation<3> & trafo, double tolerance ) const override;
@@ -143,6 +178,9 @@ namespace netgen
       return (p-pnew).Length() < 1e-10 * GetBoundingBox().Diam() ;
     }
     virtual Point<3> GetPoint(const PointGeomInfo& gi) const = 0;
+    // makes the parameters of two points consistent for interpolation:
+    // periodic parameters, at singular points (poles) the other one's parameter
+    virtual void AlignGeomInfo(PointGeomInfo& gi1, PointGeomInfo& gi2) const { ; }
     virtual void CalcEdgePointGI(const GeometryEdge& edge,
                                  double t,
                                  EdgePointGeomInfo& egi) const = 0;
@@ -164,12 +202,10 @@ namespace netgen
     {
       newp = p1 + secpoint * (p2-p1);
       newgi.trignum = gi1.trignum;
-      /*
-      newgi.u = 0.5 * (gi1.u + gi1.u);
-      newgi.v = 0.5 * (gi1.v + gi2.v);
-      */
-      newgi.u = gi1.u + secpoint*(gi2.u - gi1.u);
-      newgi.v = gi1.v + secpoint*(gi2.v - gi1.v);
+      PointGeomInfo g1 = gi1, g2 = gi2;
+      AlignGeomInfo (g1, g2);
+      newgi.u = g1.u + secpoint*(g2.u - g1.u);
+      newgi.v = g1.v + secpoint*(g2.v - g1.v);
       if(!ProjectPointGI(newp, newgi))
         newgi = Project(newp);
     }

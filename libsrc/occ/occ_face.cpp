@@ -3,6 +3,7 @@
 
 #include <BRepGProp.hxx>
 #include <BRep_Tool.hxx>
+#include <BRepTools.hxx>
 #include <GeomAPI_ProjectPointOnCurve.hxx>
 #include <BRepLProp_SLProps.hxx>
 #include <ShapeAnalysis.hxx>
@@ -24,6 +25,41 @@ namespace netgen
         surface = BRep_Tool::Surface(face);
         shape_analysis = new ShapeAnalysis_Surface( surface );
         tolerance = BRep_Tool::Tolerance( face );
+        if (surface->IsUPeriodic()) uperiod = surface->UPeriod();
+        if (surface->IsVPeriodic()) vperiod = surface->VPeriod();
+        double umin, vmin;
+        BRepTools::UVBounds (face, umin, umax, vmin, vmax);
+    }
+
+    void OCCFace::AlignGeomInfo(PointGeomInfo& gi1, PointGeomInfo& gi2) const
+    {
+        // at a singular point (pole, apex) the parameter is arbitrary
+        auto singular = [&] (const PointGeomInfo & gi, bool & su, bool & sv)
+          {
+            gp_Pnt p;
+            gp_Vec du, dv;
+            surface->D1 (gi.u, gi.v, p, du, dv);
+            double dum = du.Magnitude(), dvm = dv.Magnitude();
+            su = dum < 1e-8 * dvm;
+            sv = dvm < 1e-8 * dum;
+          };
+        bool su1, sv1, su2, sv2;
+        singular (gi1, su1, sv1);
+        singular (gi2, su2, sv2);
+        if (su1 && !su2) gi1.u = gi2.u;
+        if (su2 && !su1) gi2.u = gi1.u;
+        if (sv1 && !sv2) gi1.v = gi2.v;
+        if (sv2 && !sv1) gi2.v = gi1.v;
+        auto periodic = [] (double & a, double & b, double period, double pmax)
+          {
+            if (period == 0 || fabs (a-b) <= 0.5*period) return;
+            double & lo = (a < b) ? a : b;
+            double & hi = (a < b) ? b : a;
+            if (lo + period <= pmax + 1e-8*period) lo += period;
+            else hi -= period;
+          };
+        periodic (gi1.u, gi2.u, uperiod, umax);
+        periodic (gi1.v, gi2.v, vperiod, vmax);
     }
 
     size_t OCCFace::GetNBoundaries() const
