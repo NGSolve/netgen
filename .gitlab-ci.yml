@@ -155,7 +155,7 @@ build_image:
     - bash
   script:
     - docker build -t netgen_ci:24.04 -f tests/dockerfile tests
-    - docker image prune -f
+    - docker image prune -f || true
 
 .template_ubuntu:
   image:
