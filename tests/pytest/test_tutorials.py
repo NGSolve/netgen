@@ -11,7 +11,6 @@ import numpy as np
 try:
     import netgen.occ as occ
     has_occ = occ.occ_version >= "7.4.0"
-    has_occ = False # skip occ tests (current development on interface)
 except ImportError:
     has_occ = False
 
