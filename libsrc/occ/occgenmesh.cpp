@@ -468,6 +468,9 @@ namespace netgen
     for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(oldnf, 0))
       mesh[sei].SetIndex (FaceRegionIndex::FromNr1(k));
 
+    if (!meshing_failed)
+      geom.SplitBentEdges (mesh, mparam, noldsurfel);
+
     auto n_illegal_trigs = mesh.FindIllegalTrigs();
     PrintMessage (3, n_illegal_trigs, " illegal triangles");
     return meshing_failed;

@@ -294,6 +294,11 @@ namespace netgen
     bool MeshFace(Mesh& mesh, const MeshingParameters& mparam,
                      int nr, FlatArray<int, PointIndex> glob2loc) const override;
     // void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const override {}
+    double BentEdgeAngle(const MeshingParameters& mparam) const override
+    {
+      if (mparam.curvaturesafety <= 0) return 0;
+      return min (max (1.0 / mparam.curvaturesafety, M_PI/3), 0.5*M_PI);
+    }
  
     void Save (const filesystem::path & filename) const override;
     void SaveToMeshFile (ostream & /* ost */) const override;

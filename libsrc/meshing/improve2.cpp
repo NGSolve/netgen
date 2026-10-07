@@ -374,6 +374,7 @@ namespace netgen
                            Array<bool, PointIndex> & fixed,
                            PointIndex pi1, PointIndex pi2,
                            double metricweight,
+                           double maxbend_cos,
                            bool check_only = true)
   {
     Vec<3> nv;
@@ -476,6 +477,7 @@ namespace netgen
         if (hnv * nv < 0)
             bad2 += 1e10;
 
+        Vec<3> elnormals[3];
         for (int l = 0; l < 3; l++)
           {
             auto normal = normals[el[l]];
@@ -485,9 +487,16 @@ namespace netgen
                 const int surfnr = mesh.GetFaceDescriptor (el.GetIndex()).SurfNr();
                 normal = mesh.GetGeometry()->GetNormal (surfnr, mesh[el[l]], &el.GeomInfo()[l]);
             }
+            elnormals[l] = normal;
             if ( ( normal * nv) < 0.5)
                 bad2 += 1e10;
           }
+        if (maxbend_cos > -2)
+          for (int l = 0; l < 3; l++)
+            if (el[l] == pi1)
+              for (int m = 0; m < 3; m++)
+                if (m != l && elnormals[l] * elnormals[m] < min (maxbend_cos, nv * elnormals[m]))
+                  bad2 += 1e10;
 
         illegal2 += 1-mesh.LegalTrig(el);
       }
@@ -655,10 +664,10 @@ namespace netgen
     ParallelFor( Range(edges), [&] (auto i) NETGEN_LAMBDA_INLINE
       {
         auto [pi1, pi2] = edges[i];
-        double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, true);
+        double d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, maxbend_cos, true);
         if(d_badness < 0.0)
             candidate_edges[improvement_counter++] = make_tuple(d_badness, i);
-        d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi2, pi1, metricweight, true);
+        d_badness = CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi2, pi1, metricweight, maxbend_cos, true);
         if(d_badness < 0.0)
             candidate_edges[improvement_counter++] = make_tuple(d_badness, -i);
       }, TasksPerThread(4));
@@ -671,7 +680,7 @@ namespace netgen
         auto [pi1, pi2] = edges[ei < 0 ? -ei : ei];
         if(ei<0)
             Swap(pi1,pi2);
-        CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, false);
+        CombineImproveEdge(mesh, elementsonnode, normals, fixed, pi1, pi2, metricweight, maxbend_cos, false);
       }
 
     //  mesh.Compress();

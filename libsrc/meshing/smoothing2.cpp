@@ -1019,6 +1019,21 @@ namespace netgen
             }
 
           
+          ArrayMem<Vec<3>,30> nbnormals;
+          if (maxbend_cos > -2 && !mixed)
+            for (int j = 0; j < ld.locelements.Size(); j++)
+              {
+                const Element2dRef & el = mesh[ld.locelements[j]];
+                for (int k = 0; k < el.GetNP(); k++)
+                  if (el[k] != pi)
+                    {
+                      Vec<3> n = geo.GetNormal (ld.surfi, mesh[el[k]], &el.GeomInfoPi(k+1));
+                      nbnormals.Append (n.Normalize());
+                    }
+              }
+          Vec<3> nold = ld.normal;
+          nold.Normalize();
+
           //optimizer loop (if whole distance is not possible, move only a bit!!!!)
           while (loci <= 5 && !moveisok)
             {
@@ -1046,6 +1061,15 @@ namespace netgen
 
               if (moveisok && !mixed)
                 moveisok = patch_badness (mesh[pi], geo.GetNormal (ld.surfi, mesh[pi], &ngi)) < origbad;
+
+              if (moveisok && nbnormals.Size())
+                {
+                  Vec<3> nnew = geo.GetNormal (ld.surfi, mesh[pi], &ngi);
+                  nnew.Normalize();
+                  for (auto & nq : nbnormals)
+                    if (nnew * nq < min (maxbend_cos, nold * nq))
+                      { moveisok = false; break; }
+                }
 
               if (moveisok)
                 {

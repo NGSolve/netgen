@@ -53,3 +53,25 @@ def test_internal_face():
     mesh = geo.GenerateMesh(maxh=0.5)
     assert any(mesh.Elements2D().NumPy()['index'] == 8)
 
+
+def test_split_bent_edges():
+    # test enforment of curvature safety
+    occ = pytest.importorskip("netgen.occ")
+    r, cs = 0.02, 0.85
+    shape = occ.Box((-1,-1,-1), (1,1,1)) - occ.Cylinder((0,0,-1), occ.Z, r, 2)
+    mesh = occ.OCCGeometry(shape).GenerateMesh(maxh=0.5, curvaturesafety=cs)
+    assert len(mesh.Elements3D()) > 0
+
+    oncyl = lambda p: abs(math.hypot(p[0], p[1]) - r) < 1e-6
+    oncircle = lambda p: abs(abs(p[2]) - 1) < 1e-9
+    maxturn = 0
+    for el in mesh.Elements2D():
+        pts = [mesh[v].p for v in el.vertices]
+        if not all(oncyl(p) for p in pts):
+            continue
+        for p, q in zip(pts, pts[1:] + pts[:1]):
+            if oncircle(p) and oncircle(q) and abs(p[2]-q[2]) < 1e-9:
+                continue   # face boundary, not split
+            turn = abs(math.atan2(p[1], p[0]) - math.atan2(q[1], q[0]))
+            maxturn = max(maxturn, min(turn, 2*math.pi - turn))
+    assert maxturn <= 1/cs

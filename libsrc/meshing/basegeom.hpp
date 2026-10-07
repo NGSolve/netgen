@@ -300,6 +300,8 @@ namespace netgen
                      int nr, FlatArray<int, PointIndex> glob2loc) const;
     virtual void MapSurfaceMesh( Mesh & mesh, const GeometryFace & dst, std::map<tuple<PointIndex, int>, PointIndex> & mapto) const;
     virtual void OptimizeSurface(Mesh& mesh, const MeshingParameters& mparam) const;
+    virtual double BentEdgeAngle(const MeshingParameters& mparam) const { return 0; }
+    void SplitBentEdges(Mesh& mesh, const MeshingParameters& mparam, int first = 0) const;
 
     virtual void FinalizeMesh(Mesh& mesh) const;
 
