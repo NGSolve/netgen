@@ -1789,68 +1789,6 @@
             "total_badness": 582.04207662
         }
     ],
-    "frame.step": [
-        {
-            "angles_tet": [
-                2.9627,
-                170.52
-            ],
-            "angles_trig": [
-                2.2329,
-                168.12
-            ],
-            "hash": "068a06023350ebee58df05f84197224381dbb47750eb793adac74aad927638ab",
-            "hash_el1d": "1011f020909cb9ebf0ac1ee0425ef8c3b5d1c6464daa63fb2b70a53efe3f36d7",
-            "hash_el2d": "cbb288f50dfa0bf19eda9723e12ddb76e94b11b6a1b5d9337cfb6fd9314a4f95",
-            "hash_el3d": "cdb12accd7fcc6542de843f0a66e976e4d25aab64e068020b42dd20975468f62",
-            "hash_points": "52576087d12142d6a7ff65716d6e881d43c0c3cad04d3c1d4eca87452997bcef",
-            "ne1d": 5054,
-            "ne2d": 27610,
-            "ne3d": 131548,
-            "quality_histogram": "[0, 2, 1, 1, 5, 8, 35, 99, 313, 987, 2306, 4783, 8680, 13896, 18661, 22599, 23287, 19662, 12682, 3541]",
-            "total_badness": 173339.46275
-        },
-        {
-            "angles_tet": [
-                1.3482,
-                177.21
-            ],
-            "angles_trig": [
-                1.9309,
-                175.24
-            ],
-            "hash": "6b440690fafb6e653e2f68aae04f17950670e789890fb14041df40aefb3dcf09",
-            "hash_el1d": "fba61a1225a8fbc851b841d612dd93a519b3b34dbe32c45ba02b64ee7c7e37c1",
-            "hash_el2d": "192a80a3294d540af67c1a1354e8fcb86a576bb1c84841ca4d47d2e19b054aa8",
-            "hash_el3d": "a6e4198cc53390c70873988cade78522c737a8ced3a43f901f094a5ec6d91cd1",
-            "hash_points": "d7979f9e487742f1d332b8c3c19f07783451ebd75fc7d223c66e99bc98eddb49",
-            "ne1d": 2916,
-            "ne2d": 9558,
-            "ne3d": 31599,
-            "quality_histogram": "[3, 8, 40, 152, 407, 872, 1270, 1678, 2167, 2576, 3104, 3313, 3497, 3294, 2970, 2464, 1868, 1158, 625, 133]",
-            "total_badness": 59039.588311
-        },
-        {
-            "angles_tet": [
-                2.4893,
-                174.07
-            ],
-            "angles_trig": [
-                2.6851,
-                174.08
-            ],
-            "hash": "8e621c2d905ceb8015915cf95ce578f2e92e91d2f8546fa29967a7ff697e3677",
-            "hash_el1d": "c1131045d16bc7cd1e56012dfa920c6f97b727a5ac8097a1d5c42cd7baf9a7d7",
-            "hash_el2d": "7a38d208d92dda534b68306cc22356d6a32889f71583906a8f830e3d9a5d981c",
-            "hash_el3d": "a3de5f6016fffb7c23af2fa1e31e7ee485fbafe299d8f93a101455cf3388048d",
-            "hash_points": "d1a2cf3aa42f3f985534bcc9910671ff14498ca25b4bfa01fdeb9571458352de",
-            "ne1d": 4738,
-            "ne2d": 19858,
-            "ne3d": 61176,
-            "quality_histogram": "[0, 2, 0, 4, 12, 8, 38, 108, 314, 781, 1609, 3257, 5350, 7903, 9534, 10314, 9405, 7255, 4145, 1137]",
-            "total_badness": 83676.974323
-        }
-    ],
     "hinge.stl": [
         {
             "angles_tet": [
@@ -2889,68 +2827,6 @@
             "ne3d": 150302,
             "quality_histogram": "[0, 0, 0, 0, 0, 0, 0, 0, 7, 50, 202, 786, 2288, 5893, 12057, 20654, 30587, 36727, 30871, 10180]",
             "total_badness": 180356.78333
-        }
-    ],
-    "screw.step": [
-        {
-            "angles_tet": [
-                14.863,
-                148.77
-            ],
-            "angles_trig": [
-                15.07,
-                136.96
-            ],
-            "hash": "3470d1161ea6c66da31f0ab121bd0b5f1f4ed2c7de256b1cbbd387253bb7fde4",
-            "hash_el1d": "18c4a831820c2e7cbe92bbf425b9f47881a97bb346b0ad12804a6685fb145790",
-            "hash_el2d": "9c6890ed73e44d60e4761b0c9dcceef613f8a3404562e4da8bb2c52025e47f7d",
-            "hash_el3d": "b798c65b6afee4d5c7684dc2a093cffbb8fc043aee2b8a7245b75bfa759af3a7",
-            "hash_points": "0a692d7bf43520f8e4eb7a4ea0c88aa42b805e5a077390b69b41e8173c79b605",
-            "ne1d": 207,
-            "ne2d": 1290,
-            "ne3d": 2047,
-            "quality_histogram": "[0, 0, 0, 0, 0, 1, 10, 33, 53, 113, 144, 206, 227, 259, 273, 224, 204, 167, 108, 25]",
-            "total_badness": 3108.9436439
-        },
-        {
-            "angles_tet": [
-                19.854,
-                139.33
-            ],
-            "angles_trig": [
-                20.857,
-                130.95
-            ],
-            "hash": "ebd70178cb41fb8fd0fdf330e01c6e539f69960058e1fb7fb979ad31285deea9",
-            "hash_el1d": "96bec0f99273b6bab3e9c943012720fe4f6ffe5a64b013a5e35fdfc77fbcd8e0",
-            "hash_el2d": "9341fe4698ef4ecfd59420767914c757fbb4d1a7f4ebf5fa90128c80cebf6030",
-            "hash_el3d": "6ac1db89028fed876dcf981da0da6b3999f5702a4aef192f27f0d87cf418522c",
-            "hash_points": "8b6344e5e7c19c806bfb44d5508adb0b43f890c1e1dc8e13894b3e8959443cf3",
-            "ne1d": 264,
-            "ne2d": 2422,
-            "ne3d": 6361,
-            "quality_histogram": "[0, 0, 0, 0, 0, 0, 2, 3, 17, 35, 95, 219, 366, 581, 842, 1075, 1187, 1021, 685, 233]",
-            "total_badness": 8267.1765365
-        },
-        {
-            "angles_tet": [
-                21.08,
-                145.47
-            ],
-            "angles_trig": [
-                21.839,
-                124.69
-            ],
-            "hash": "569a6d85f770532e28c2125f159cc4574dfa025c432937d3b93d1d5cd581a3af",
-            "hash_el1d": "d7de5c840f8651fa0667fda1f38f74a037c3c412e87571ea5d864bf5a96ba7d6",
-            "hash_el2d": "421b417be09a58897cd7fcbde7975ab2cbdc9770aa6265328d4f24aaeb3820db",
-            "hash_el3d": "aa5753d34558de31987874ae23321e3a52109b0f3740ecd59c74f763266148e5",
-            "hash_points": "b923c10a7095d71587a25c899511398358e578a20d805646d60c7134523ed0c8",
-            "ne1d": 294,
-            "ne2d": 4092,
-            "ne3d": 19691,
-            "quality_histogram": "[0, 0, 0, 0, 0, 0, 0, 2, 7, 18, 72, 170, 463, 1046, 1810, 3001, 4076, 4503, 3391, 1132]",
-            "total_badness": 24063.44493
         }
     ],
     "sculpture.geo": [
