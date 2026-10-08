@@ -254,60 +254,60 @@ namespace netgen
             
             DynamicTable<int> send_verts(cnt_send);
 
+            // neighbours only; loc2exchange is reset per neighbour via dest2vert
             Array<int, PointIndex> loc2exchange(mesh.GetNV());
-
+            loc2exchange = -1;
+            Array<int> neighbours;
             for (int dest = 0; dest < ntasks; dest++)
-              if (dest != id)
-                {
-                  loc2exchange = -1;
-                  int cnt = 0;
-                  for (PointIndex pi : dest2vert[dest])
-                    loc2exchange[pi] = cnt++;
-                  
-                  for (PointIndex pi : dest2pair[dest])
-                    if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())                    
+              if (dest != id && dest2vert[dest].Size())
+                neighbours.Append(dest);
+
+            for (int dest : neighbours)
+              {
+                int cnt = 0;
+                for (PointIndex pi : dest2vert[dest])
+                  loc2exchange[pi] = cnt++;
+
+                for (PointIndex pi : dest2pair[dest])
+                  if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())
+                    if (loc2exchange[v1] != -1 && loc2exchange[v2] != -1)
                       {
-                        auto procs1 = GetDistantProcs(v1);
-                        auto procs2 = GetDistantProcs(v2);
-                        
-                        if (procs1.Contains(dest) && procs2.Contains(dest))
-                          {
-                            send_verts.Add (dest, loc2exchange[v1]);
-                            send_verts.Add (dest, loc2exchange[v2]);
-                          }
+                        send_verts.Add (dest, loc2exchange[v1]);
+                        send_verts.Add (dest, loc2exchange[v2]);
                       }
-                }
+
+                for (PointIndex pi : dest2vert[dest])
+                  loc2exchange[pi] = -1;
+              }
 
             DynamicTable<int> recv_verts(ntasks);
             comm.ExchangeTable (send_verts, recv_verts, NG_MPI_TAG_MESH+9);
 
-            for (int dest = 0; dest < ntasks; dest++)
-              if (dest != id)
-                {
-                  loc2exchange = -1;
-                  int cnt = 0;
+            for (int dest : neighbours)
+              {
+                int cnt = 0;
+                for (PointIndex pi : dest2vert[dest])
+                  loc2exchange[pi] = cnt++;
 
-                  for (PointIndex pi : dest2vert[dest])
-                    loc2exchange[pi] = cnt++;
-                  
-                  FlatArray<int> recvarray = recv_verts[dest];
-                  for (int ii = 0; ii < recvarray.Size(); ii+=2)
-                    for (PointIndex pi : dest2pair[dest])
+                // exchange-number pair -> new vertex
+                ClosedHashTable<IVec<2>, PointIndex> pair2vert(2*dest2pair[dest].Size()+8);
+                for (PointIndex pi : dest2pair[dest])
+                  if (auto [v1,v2] = mesh.mlbetweennodes[pi]; v1.IsValid())
+                    if (loc2exchange[v1] != -1 && loc2exchange[v2] != -1)
+                      pair2vert.Set (IVec<2>(loc2exchange[v1], loc2exchange[v2]), pi);
+
+                FlatArray<int> recvarray = recv_verts[dest];
+                for (int ii = 0; ii < recvarray.Size(); ii+=2)
+                  if (auto pi = pair2vert.GetIfUsed (IVec<2>(recvarray[ii], recvarray[ii+1])))
+                    if (!GetDistantProcs(*pi).Contains(dest))
                       {
-                        PointIndex v1 = mesh.mlbetweennodes[pi][0];
-                        PointIndex v2 = mesh.mlbetweennodes[pi][1];
-                        if (v1.IsValid())
-                          {
-                            IVec<2> re(recvarray[ii], recvarray[ii+1]);
-                            IVec<2> es(loc2exchange[v1], loc2exchange[v2]);
-                            if (es == re && !GetDistantProcs(pi).Contains(dest))
-                              {
-                                AddDistantProc (pi, dest);
-                                changed = true;
-                              }
-                          }
+                        AddDistantProc (*pi, dest);
+                        changed = true;
                       }
-                }
+
+                for (PointIndex pi : dest2vert[dest])
+                  loc2exchange[pi] = -1;
+              }
 
             changed = comm.AllReduce (changed, NG_MPI_LOR);
           }
