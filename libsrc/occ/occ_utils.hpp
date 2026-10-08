@@ -86,6 +86,22 @@ namespace netgen
         }
     }
 
+    struct ShapeHasher
+    {
+      size_t operator() (const TopoDS_Shape & s) const
+      {
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 8)
+        return TopTools_ShapeMapHasher{}(s);
+#else
+        return TopTools_ShapeMapHasher::HashCode(s, std::numeric_limits<int>::max());
+#endif
+      }
+      bool operator() (const TopoDS_Shape & a, const TopoDS_Shape & b) const
+      {
+        return a.IsSame(b);
+      }
+    };
+
     DLL_HEADER Box<3> GetBoundingBox( const TopoDS_Shape & shape );
 
     struct OCCIdentification

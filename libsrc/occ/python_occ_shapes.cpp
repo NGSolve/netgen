@@ -1156,7 +1156,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       return shape1.IsSame(shape2);
     })
     .def("__hash__", [] (const TopoDS_Shape& shape) {
-      return TopTools_ShapeMapHasher{}(shape);
+      return ShapeHasher{}(shape);
     })
 
     .def("Reversed", [](const TopoDS_Shape & shape) {

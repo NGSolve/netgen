@@ -81,8 +81,8 @@ namespace netgen
   };
 
 
-  std::unordered_map<TopoDS_Shape, ShapeProperties, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> OCCGeometry::global_shape_properties;
-  std::unordered_map<TopoDS_Shape, std::vector<OCCIdentification>, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> OCCGeometry::global_identifications;
+  std::unordered_map<TopoDS_Shape, ShapeProperties, ShapeHasher, ShapeHasher> OCCGeometry::global_shape_properties;
+  std::unordered_map<TopoDS_Shape, std::vector<OCCIdentification>, ShapeHasher, ShapeHasher> OCCGeometry::global_identifications;
   std::mutex OCCGeometry::global_shape_mutex;
   static size_t global_shape_data_size_after_cleanup = 0;
 

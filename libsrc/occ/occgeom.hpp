@@ -151,8 +151,8 @@ namespace netgen
     Point<3> center;
     OCCParameters occparam;
   public:
-    static std::unordered_map<TopoDS_Shape, ShapeProperties, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> global_shape_properties;
-    static std::unordered_map<TopoDS_Shape, std::vector<OCCIdentification>, TopTools_ShapeMapHasher, TopTools_ShapeMapHasher> global_identifications;
+    static std::unordered_map<TopoDS_Shape, ShapeProperties, ShapeHasher, ShapeHasher> global_shape_properties;
+    static std::unordered_map<TopoDS_Shape, std::vector<OCCIdentification>, ShapeHasher, ShapeHasher> global_identifications;
     static std::mutex global_shape_mutex;
 
     static ShapeProperties& GetProperties(const TopoDS_Shape& shape)
