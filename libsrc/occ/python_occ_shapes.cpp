@@ -2654,6 +2654,81 @@ TopoDS_Shape
         py::arg("tol")=1e-7,
         "Creates a rational Bezier surface with the set of poles and the set of weights. The weights are defaulted to all being 1. If all the weights are identical the surface is considered as non rational. Raises ConstructionError if the number of poles in any direction is greater than MaxDegree + 1 or lower than 2 or CurvePoles and CurveWeights have not the same length or one weight value is lower or equal to Resolution. Returns an occ face with the given tolerance.");
 
+  m.def("BSplineCurve", [](std::vector<gp_Pnt> vpoles,
+                           std::vector<double> vknots, std::vector<int> vmults,
+                           int degree, optional<std::vector<double>> vweights)
+  {
+    if(vknots.size() != vmults.size())
+      throw std::length_error("`knots` and `mults` must have the same length.");
+    if(vweights && vweights->size() != vpoles.size())
+      throw std::length_error("`weights` must have one entry per pole.");
+    TColgp_Array1OfPnt poles(1, vpoles.size());
+    TColStd_Array1OfReal weights(1, vpoles.size());
+    for(int i = 0; i < vpoles.size(); i++)
+      {
+        poles.SetValue(i + 1, vpoles[i]);
+        weights.SetValue(i + 1, vweights ? (*vweights)[i] : 1.0);
+      }
+    TColStd_Array1OfReal knots(1, vknots.size());
+    TColStd_Array1OfInteger mults(1, vmults.size());
+    for(int i = 0; i < vknots.size(); i++)
+      {
+        knots.SetValue(i + 1, vknots[i]);
+        mults.SetValue(i + 1, vmults[i]);
+      }
+    Handle(Geom_Curve) curve = new Geom_BSplineCurve(poles, weights, knots, mults, degree);
+    return BRepBuilderAPI_MakeEdge(curve).Edge();
+  }, py::arg("poles"), py::arg("knots"), py::arg("mults"), py::arg("degree"),
+     py::arg("weights")=std::nullopt,
+     "Creates a rational B-spline edge from poles, distinct knots with their multiplicities, the degree and optional weights (default 1). The multiplicities must sum to len(poles) + degree + 1.");
+
+  m.def("BSplineSurface", [](py::array_t<double> nppoles,
+                             std::vector<double> vknots_u, std::vector<int> vmults_u,
+                             std::vector<double> vknots_v, std::vector<int> vmults_v,
+                             int deg_u, int deg_v,
+                             optional<py::array_t<double>> npweights,
+                             double tol)
+  {
+    if(nppoles.ndim() != 3)
+      throw std::length_error("`poles` array must have dimension 3.");
+    if(nppoles.shape(2) != 3)
+      throw std::length_error("The third dimension must have size 3.");
+    if(npweights && (npweights->ndim() != 2 || npweights->shape(0) != nppoles.shape(0)
+                     || npweights->shape(1) != nppoles.shape(1)))
+      throw std::length_error("`weights` array must have the shape of the first two dimensions of `poles`.");
+    if(vknots_u.size() != vmults_u.size() || vknots_v.size() != vmults_v.size())
+      throw std::length_error("knots and multiplicities must have the same length.");
+
+    auto nu = nppoles.shape(0);
+    auto nv = nppoles.shape(1);
+    TColgp_Array2OfPnt poles(1, nu, 1, nv);
+    TColStd_Array2OfReal weights(1, nu, 1, nv);
+    for(int i = 0; i < nu; ++i)
+      for(int j = 0; j < nv; ++j)
+        {
+          poles.SetValue(i + 1, j + 1, gp_Pnt(nppoles.at(i, j, 0), nppoles.at(i, j, 1), nppoles.at(i, j, 2)));
+          weights.SetValue(i + 1, j + 1, npweights ? npweights->at(i, j) : 1.0);
+        }
+    TColStd_Array1OfReal knots_u(1, vknots_u.size()), knots_v(1, vknots_v.size());
+    TColStd_Array1OfInteger mults_u(1, vmults_u.size()), mults_v(1, vmults_v.size());
+    for(int i = 0; i < vknots_u.size(); ++i)
+      {
+        knots_u.SetValue(i + 1, vknots_u[i]);
+        mults_u.SetValue(i + 1, vmults_u[i]);
+      }
+    for(int i = 0; i < vknots_v.size(); ++i)
+      {
+        knots_v.SetValue(i + 1, vknots_v[i]);
+        mults_v.SetValue(i + 1, vmults_v[i]);
+      }
+    Handle(Geom_Surface) surface = new Geom_BSplineSurface(poles, weights, knots_u, knots_v,
+                                                           mults_u, mults_v, deg_u, deg_v);
+    return BRepBuilderAPI_MakeFace(surface, tol).Face();
+  }, py::arg("poles"), py::arg("knots_u"), py::arg("mults_u"),
+        py::arg("knots_v"), py::arg("mults_v"), py::arg("degree_u"), py::arg("degree_v"),
+        py::arg("weights")=std::nullopt, py::arg("tol")=1e-7,
+        "Creates a rational B-spline surface from poles (nu x nv x 3), the distinct knots and their multiplicities in u and v, the degrees and optional weights (nu x nv, default 1). In each direction the multiplicities must sum to the number of poles + degree + 1. Returns an occ face with the given tolerance.");
+
 
   m.def("SplineApproximation", [](const std::vector<gp_Pnt> &points, Approx_ParametrizationType approx_type, int deg_min,
           int deg_max, GeomAbs_Shape continuity, double tol) {
