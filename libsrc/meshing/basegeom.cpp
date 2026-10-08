@@ -1328,6 +1328,8 @@ namespace netgen
         PrintMessage(3, "Optimization step ", i);
         meshopt.SetFaceIndex(fi);
         meshopt.SetMetricWeight (mparam.elsizeweight);
+        if (double maxbend = BentEdgeAngle(mparam); maxbend > 0)
+          meshopt.SetMaxBend (maxbend);
         int innerstep = 0;
         for(auto optstep : mparam.optimize2d)
           {
@@ -1352,6 +1354,199 @@ namespace netgen
     mesh.CalcSurfacesOfNode();
     mesh.Compress();
     multithread.task = savetask;
+  }
+
+  void NetgenGeometry :: SplitBentEdges(Mesh& mesh, const MeshingParameters& mparam, int first) const
+  {
+    const double maxturn = BentEdgeAngle(mparam);
+    if (maxturn <= 0 || faces.Size() == 0) return;
+    static Timer t("SplitBentEdges"); RegionTimer reg(t);
+
+    auto face_of = [&] (const auto & el) -> const GeometryFace *
+      {
+        int nr = el.GetIndex().Nr0();
+        if (nr < 0 || nr >= faces.Size()) return nullptr;
+        auto & f = *faces[nr];
+        if (f.primary != &f || f.identifications.Size()) return nullptr;
+        return &f;
+      };
+    using Key = tuple<int, PointIndex, PointIndex>;
+    auto key = [] (int f, PointIndex a, PointIndex b) { return a < b ? Key(f,a,b) : Key(f,b,a); };
+    struct Mark { PointIndex mid; PointGeomInfo gi; Point<3> p; int layer; };
+    std::set<Key> straight;
+    // geometry edges (incl. seams) are not changed anymore
+    std::set<std::pair<PointIndex,PointIndex>> segedges;
+    for (const auto & seg : mesh.LineSegments())
+      segedges.insert (seg[0] < seg[1] ? std::pair(seg[0], seg[1]) : std::pair(seg[1], seg[0]));
+    size_t nsplit = 0;
+
+    for (int round = 0; round < 8; round++)
+      {
+        std::map<Key, ArrayMem<PointIndex,2>> opposite;
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(first, 0))
+          {
+            const auto & el = mesh[sei];
+            if (el.IsDeleted() || el.GetType() != TRIG || !face_of(el)) continue;
+            for (int i = 0; i < 3; i++)
+              opposite[key(el.GetIndex().Nr0(), el[i], el[(i+1)%3])].Append (el[(i+2)%3]);
+          }
+
+        std::map<Key, Mark> marked;
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(first, 0))
+          {
+            const auto & el = mesh[sei];
+            if (el.IsDeleted() || el.GetType() != TRIG) continue;
+            auto gface = face_of(el);
+            if (!gface) continue;
+            for (int i = 0; i < 3; i++)
+              {
+                int j = (i+1)%3;
+                auto e = key(el.GetIndex().Nr0(), el[i], el[j]);
+                if (opposite[e].Size() != 2 || marked.count(e) || straight.count(e)) continue;
+                if (segedges.count (std::pair(get<1>(e), get<2>(e)))) continue;
+                PointGeomInfo g1 = el.GeomInfo()[i], g2 = el.GeomInfo()[j];
+                gface->AlignGeomInfo (g1, g2);
+                PointGeomInfo gm = g1;
+                gm.u = 0.5 * (g1.u + g2.u);
+                gm.v = 0.5 * (g1.v + g2.v);
+                Point<3> pm = gface->GetPoint (gm);
+                Vec<3> n1 = gface->GetNormal (mesh[el[i]], &g1).Normalize();
+                Vec<3> n2 = gface->GetNormal (mesh[el[j]], &g2).Normalize();
+                Vec<3> nm = gface->GetNormal (pm, &gm).Normalize();
+                double turn = acos (max (-1.0, min (1.0, n1*nm))) + acos (max (-1.0, min (1.0, nm*n2)));
+                if (!(turn >= maxturn)) { straight.insert(e); continue; }
+                gm.trignum = el.GetIndex().Nr1();
+                marked[e] = { PointIndex::INVALID, gm, pm, mesh[el[i]].GetLayer() };
+              }
+          }
+        if (marked.empty()) break;
+
+        // the midpoint on the surface must not poke through other surface elements
+        Box<3> region(Box<3>::EMPTY_BOX);
+        for (auto & [e, mk] : marked)
+          {
+            region.Add (mk.p);
+            region.Add (mesh[get<1>(e)]);
+            region.Add (mesh[get<2>(e)]);
+            for (auto c : opposite[e]) region.Add (mesh[c]);
+          }
+        region.Increase (1e-3 * region.Diam());
+        BoxTree<3, SurfaceElementIndex> setree(region);
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range())
+          {
+            const auto & el = mesh[sei];
+            if (el.IsDeleted() || el.GetType() != TRIG) continue;
+            Box<3> box(mesh[el[0]], mesh[el[1]]);
+            box.Add (mesh[el[2]]);
+            if (box.Intersect (region))
+              setree.Insert (box, sei);
+          }
+        for (auto it = marked.begin(); it != marked.end(); )
+          {
+            auto & [e, mk] = *it;
+            bool overlap = false;
+            for (auto c : opposite[e])
+              for (auto [a, b] : { std::pair(get<1>(e), c), std::pair(get<2>(e), c) })
+                {
+                  const Point<3> * tri1[3] = { &mk.p, &mesh[a], &mesh[b] };
+                  Box<3> box(mk.p, mesh[a]);
+                  box.Add (mesh[b]);
+                  setree.GetFirstIntersecting (box.PMin(), box.PMax(), [&] (SurfaceElementIndex sej)
+                    {
+                      const auto & el2 = mesh[sej];
+                      const Point<3> * tri2[3] = { &mesh[el2[0]], &mesh[el2[1]], &mesh[el2[2]] };
+                      overlap = overlap || IntersectTriangleTriangle (tri1, tri2);
+                      return overlap;
+                    });
+                }
+            if (overlap)
+              {
+                straight.insert (e);
+                it = marked.erase (it);
+              }
+            else
+              {
+                mk.mid = mesh.AddPoint (mk.p, mk.layer, SURFACEPOINT);
+                ++it;
+              }
+          }
+        if (marked.empty()) break;
+
+        Array<SurfaceElementIndex> els;
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(first, 0))
+          els.Append (sei);
+        for (auto sei : els)
+          {
+            Element2d el (mesh[sei]);
+            if (el.IsDeleted() || el.GetType() != TRIG || !face_of(el)) continue;
+            int fnr = el.GetIndex().Nr0();
+            PointIndex v[3] = { el[0], el[1], el[2] };
+            PointGeomInfo g[3] = { el.GeomInfo()[0], el.GeomInfo()[1], el.GeomInfo()[2] };
+            // m[i]: midpoint of the edge (v[i], v[i+1])
+            bool has[3]; PointIndex m[3]; PointGeomInfo gm[3]; int nm = 0;
+            for (int i = 0; i < 3; i++)
+              {
+                auto it = marked.find (key(fnr, v[i], v[(i+1)%3]));
+                has[i] = it != marked.end();
+                if (has[i]) { m[i] = it->second.mid; gm[i] = it->second.gi; nm++; }
+              }
+            if (nm == 0) continue;
+
+            struct Tri { PointIndex p[3]; PointGeomInfo g[3]; };
+            ArrayMem<Tri,4> kids;
+            auto add = [&] (PointIndex a, PointGeomInfo ga, PointIndex b, PointGeomInfo gb, PointIndex c, PointGeomInfo gc)
+              { kids.Append (Tri { {a, b, c}, {ga, gb, gc} }); };
+            if (nm == 3)
+              {
+                add (v[0], g[0], m[0], gm[0], m[2], gm[2]);
+                add (v[1], g[1], m[1], gm[1], m[0], gm[0]);
+                add (v[2], g[2], m[2], gm[2], m[1], gm[1]);
+                add (m[0], gm[0], m[1], gm[1], m[2], gm[2]);
+              }
+            else if (nm == 1)
+              {
+                int i = has[0] ? 0 : (has[1] ? 1 : 2);
+                int j = (i+1)%3, l = (i+2)%3;
+                add (v[i], g[i], m[i], gm[i], v[l], g[l]);
+                add (m[i], gm[i], v[j], g[j], v[l], g[l]);
+              }
+            else
+              {
+                // marked edges i and j = i+1 share the vertex v[j]
+                int i = (!has[0]) ? 1 : ((!has[1]) ? 2 : 0);
+                int j = (i+1)%3, l = (i+2)%3;
+                add (m[i], gm[i], v[j], g[j], m[j], gm[j]);
+                add (v[i], g[i], m[i], gm[i], v[l], g[l]);
+                add (m[i], gm[i], m[j], gm[j], v[l], g[l]);
+              }
+
+            // the element keeps its place (and its link in the per-face
+            // element list), only its corners change
+            auto ref = mesh[sei];
+            for (int q = 0; q < 3; q++)
+              {
+                ref[q] = kids[0].p[q];
+                ref.GeomInfo()[q] = kids[0].g[q];
+              }
+            for (int t = 1; t < kids.Size(); t++)
+              {
+                Element2d nel(TRIG);
+                nel.SetIndex (el.GetIndex());
+                for (int q = 0; q < 3; q++)
+                  {
+                    nel[q] = kids[t].p[q];
+                    nel.GeomInfo()[q] = kids[t].g[q];
+                  }
+                mesh.AddSurfaceElement (nel);
+              }
+          }
+        nsplit += marked.size();
+      }
+    if (nsplit)
+      {
+        PrintMessage (3, nsplit, " bent edges split");
+        mesh.CalcSurfacesOfNode();
+      }
   }
 
   void NetgenGeometry :: FinalizeMesh(Mesh& mesh) const

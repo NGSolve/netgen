@@ -116,6 +116,7 @@ class MeshOptimize2d
   int improveedges = 0;
   double metricweight = 0.;
   int writestatus = 1;
+  double maxbend_cos = -2;
   Mesh& mesh;
   const NetgenGeometry& geo;
 public:
@@ -140,6 +141,7 @@ public:
 
 
   void SetFaceIndex (FaceRegionIndex fi) { faceindex = fi; }
+  void SetMaxBend (double angle) { maxbend_cos = cos(angle); }
   void SetImproveEdges (int ie) { improveedges = ie; }
   void SetMetricWeight (double mw) { metricweight = mw; }
   void SetWriteStatus (int ws) { writestatus = ws; }
