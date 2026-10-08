@@ -131,8 +131,10 @@ namespace netgen
       newgi = gi1;
 
       double t0 = g1.dist + secpoint * (g2.dist - g1.dist);
+      double tmin = min (g1.dist, g2.dist), tmax = max (g1.dist, g2.dist);
+      double tol = 1e-8 * (tmax - tmin);
       double t = t0;
-      bool converged = false;
+      bool converged = false, out = false;
       for (int it = 0; it < 20 && !converged; it++)
         {
           Vec<3> d = GetTangent (t);
@@ -140,15 +142,25 @@ namespace netgen
           if (dd == 0) break;
           double dt = (GetPoint (t) - newp) * d / dd;
           t -= dt;
+          if (!std::isfinite (t)) break;
+          // a non-uniform parametrisation can make a step overshoot the
+          // segment: clamp once, give up if it wants out again
+          if (!(t >= tmin - tol && t <= tmax + tol))
+            {
+              if (out) break;
+              out = true;
+              t = std::clamp (t, tmin, tmax);
+              continue;
+            }
+          out = false;
           converged = fabs (dt) < 1e-12;
         }
-      if (!converged || fabs (t - t0) > fabs (g2.dist - g1.dist))
+      if (!converged)
         {
-          // closest point not near the interpolated one
           ProjectPoint (newp, &newgi);
           return;
         }
-      t = std::clamp (t, 0.0, 1.0);
+      t = std::clamp (t, tmin, tmax);
       newgi.dist = t;
       newp = GetPoint (t);
     }

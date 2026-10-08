@@ -26,6 +26,7 @@ namespace netgen
         Handle( ShapeAnalysis_Surface ) shape_analysis;
         double tolerance;
         double uperiod = 0, vperiod = 0, umax = 0, vmax = 0;
+        double sumin, sumax, svmin, svmax;
 
         public:
         OCCFace(TopoDS_Shape dshape);
