@@ -13,6 +13,7 @@ target_sources(nglib PRIVATE
         python_mesh.cpp surfacegeom.cpp
         debugging.cpp fieldlines.cpp visual_interface.cpp
         boundarylayer2d.cpp boundarylayer_interpolate.cpp
+        extend_curving.cpp
 )
 
 target_link_libraries( nglib PRIVATE $<BUILD_INTERFACE:netgen_metis> $<BUILD_INTERFACE:netgen_python> )
@@ -20,6 +21,7 @@ target_link_libraries( nglib PRIVATE $<BUILD_INTERFACE:netgen_metis> $<BUILD_INT
 install(FILES
   adfront2.hpp adfront3.hpp basegeom.hpp bcfunctions.hpp bisect.hpp
   boundarylayer.hpp classifyhpel.hpp clusters.hpp curvedelems.hpp
+  extend_curving.hpp
   findip2.hpp findip.hpp geomsearch.hpp global.hpp hpref_hex.hpp
   hprefinement.hpp hpref_prism.hpp hpref_pyramid.hpp hpref_quad.hpp
   hpref_segm.hpp hpref_tet.hpp hpref_trig.hpp improve2.hpp improve3.hpp

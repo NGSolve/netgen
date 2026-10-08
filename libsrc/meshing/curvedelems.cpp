@@ -1645,50 +1645,7 @@ namespace netgen
             }
       }
 
-    // compress edge and face tables
-    int newbase = 0;
-    for (auto i : edgeorder.Range())
-      {
-        bool curved = 0;
-        int oldbase = edgecoeffsindex[i];
-        int nd = edgecoeffsindex[i+1] - edgecoeffsindex[i];
-
-        for (int j = 0; j < nd; j++)
-          if (edgecoeffs[oldbase+j].Length() > 1e-12)
-            curved = 1;
-        if (rational) curved = 1;
-
-        if (curved && newbase != oldbase)
-          for (int j = 0; j < nd; j++)
-            edgecoeffs[newbase+j] = edgecoeffs[oldbase+j];
-
-        edgecoeffsindex[i] = newbase;
-        if (!curved) edgeorder[i] = 1;
-        if (curved) newbase += nd;
-      }
-    edgecoeffsindex.Last() = newbase;
-
-
-    newbase = 0;
-    for (auto i : faceorder.Range())
-      {
-        bool curved = 0;
-        int oldbase = facecoeffsindex[i];
-        int nd = facecoeffsindex[i+1] - facecoeffsindex[i];
-
-        for (int j = 0; j < nd; j++)
-          if (facecoeffs[oldbase+j].Length() > 1e-12)
-            curved = 1;
-
-        if (curved && newbase != oldbase)
-          for (int j = 0; j < nd; j++)
-            facecoeffs[newbase+j] = facecoeffs[oldbase+j];
-
-        facecoeffsindex[i] = newbase;
-        if (!curved) faceorder[i] = 1;
-        if (curved) newbase += nd;
-      }
-    facecoeffsindex.Last() = newbase;
+    CompressCoefficients();
     
     if (working)
       ishighorder = (order > 1);
@@ -2889,6 +2846,135 @@ namespace netgen
 
     return (info.ndof > info.nv);
   }
+
+
+  void CurvedElements :: CompressCoefficients ()
+  {
+    int newbase = 0;
+    for (auto i : edgeorder.Range())
+      {
+        bool curved = 0;
+        int oldbase = edgecoeffsindex[i];
+        int nd = edgecoeffsindex[i+1] - edgecoeffsindex[i];
+
+        for (int j = 0; j < nd; j++)
+          if (edgecoeffs[oldbase+j].Length() > 1e-12)
+            curved = 1;
+        if (rational) curved = 1;
+
+        if (curved && newbase != oldbase)
+          for (int j = 0; j < nd; j++)
+            edgecoeffs[newbase+j] = edgecoeffs[oldbase+j];
+
+        edgecoeffsindex[i] = newbase;
+        if (!curved) edgeorder[i] = 1;
+        if (curved) newbase += nd;
+      }
+    edgecoeffsindex.Last() = newbase;
+
+
+    newbase = 0;
+    for (auto i : faceorder.Range())
+      {
+        bool curved = 0;
+        int oldbase = facecoeffsindex[i];
+        int nd = facecoeffsindex[i+1] - facecoeffsindex[i];
+
+        for (int j = 0; j < nd; j++)
+          if (facecoeffs[oldbase+j].Length() > 1e-12)
+            curved = 1;
+
+        if (curved && newbase != oldbase)
+          for (int j = 0; j < nd; j++)
+            facecoeffs[newbase+j] = facecoeffs[oldbase+j];
+
+        facecoeffsindex[i] = newbase;
+        if (!curved) faceorder[i] = 1;
+        if (curved) newbase += nd;
+      }
+    facecoeffsindex.Last() = newbase;
+  }
+
+
+  void CurvedElements :: RaiseOrder (FlatArray<EdgeIndex> edges, FlatArray<FaceIndex> faces)
+  {
+    if (order <= 1) return;
+    const MeshTopology & top = mesh.GetTopology();
+
+    {
+      Array<int, EdgeIndex> neworder(edgeorder);
+      for (auto e : edges) neworder[e] = max2 (neworder[e], order);
+
+      Array<int, EdgeIndex> newindex(edgeorder.Size()+1);
+      int nd = 0;
+      for (auto e : edgeorder.Range())
+        { newindex[e] = nd; nd += max2 (0, neworder[e]-1); }
+      newindex.Last() = nd;
+
+      Array<Vec<3>> newcoeffs(nd);
+      newcoeffs = Vec<3> (0,0,0);
+      for (auto e : edgeorder.Range())
+        for (int j = 0; j < edgecoeffsindex[e+1]-edgecoeffsindex[e]; j++)
+          newcoeffs[newindex[e]+j] = edgecoeffs[edgecoeffsindex[e]+j];
+
+      edgeorder = std::move(neworder);
+      edgecoeffsindex = std::move(newindex);
+      edgecoeffs = std::move(newcoeffs);
+    }
+
+    {
+      Array<int, FaceIndex> neworder(faceorder);
+      for (auto f : faces) neworder[f] = max2 (neworder[f], order);
+
+      Array<int, FaceIndex> newindex(faceorder.Size()+1);
+      int nd = 0;
+      for (auto f : faceorder.Range())
+        {
+          newindex[f] = nd;
+          if (top.GetFaceType0(f) == TRIG)
+            nd += max2 (0, (neworder[f]-1)*(neworder[f]-2)/2);
+          else
+            nd += max2 (0, sqr(neworder[f]-1));
+        }
+      newindex.Last() = nd;
+
+      Array<Vec<3>> newcoeffs(nd);
+      newcoeffs = Vec<3> (0,0,0);
+      for (auto f : faceorder.Range())
+        for (int j = 0; j < facecoeffsindex[f+1]-facecoeffsindex[f]; j++)
+          newcoeffs[newindex[f]+j] = facecoeffs[facecoeffsindex[f]+j];
+
+      faceorder = std::move(neworder);
+      facecoeffsindex = std::move(newindex);
+      facecoeffs = std::move(newcoeffs);
+    }
+
+    ishighorder = true;
+  }
+
+
+  void CurvedElements :: SetupElementInfo (ElementIndex elnr, ElementInfo & info) const
+  {
+    auto el = mesh[elnr];
+    const MeshTopology & top = mesh.GetTopology();
+    info.elnr = elnr;
+    info.order = order;
+    info.ndof = info.nv = MeshTopology::GetNPoints (el.GetType());
+    info.SetEdges (top.GetEdges(elnr));
+    info.SetFaces (top.GetFaces(elnr));
+    if (order > 1)
+      {
+        for (auto e : info.GetEdges())
+          info.ndof += edgecoeffsindex[e+1] - edgecoeffsindex[e];
+        for (auto f : info.GetFaces())
+          info.ndof += facecoeffsindex[f+1] - facecoeffsindex[f];
+      }
+  }
+
+  template void CurvedElements ::
+  CalcElementShapes<double> (ElementInfo & info, Point<3,double> xi, TFlatVector<double> shapes) const;
+  template void CurvedElements ::
+  CalcElementDShapes<double> (ElementInfo & info, const Point<3,double> xi, MatrixFixWidth<3,double> & dshapes) const;
 
 
   bool CurvedElements :: IsElementHighOrder (ElementIndex elnr) const

@@ -35,6 +35,8 @@ namespace netgen
 
   class HPRefElement;
   class CurvedElements;
+  struct ExtendCurvingParameters;
+  struct ExtendCurvingInfo;
   class AnisotropicClusters;
   class ParallelMeshTopology;
 
@@ -995,6 +997,8 @@ namespace netgen
     
     DLL_HEADER void BuildCurvedElements  (const class Refinement * ref, int aorder, bool arational = false);
     DLL_HEADER void BuildCurvedElements  (int aorder);
+    DLL_HEADER ExtendCurvingInfo
+    ExtendCurving (const ExtendCurvingParameters & params);
 
     const class AnisotropicClusters & GetClusters () const
     { return *clusters; }
