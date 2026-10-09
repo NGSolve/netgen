@@ -29,6 +29,7 @@ namespace netgen
         if (surface->IsVPeriodic()) vperiod = surface->VPeriod();
         double umin, vmin;
         BRepTools::UVBounds (face, umin, umax, vmin, vmax);
+        surface->Bounds (sumin, sumax, svmin, svmax);
     }
 
     void OCCFace::AlignGeomInfo(PointGeomInfo& gi1, PointGeomInfo& gi2) const
@@ -281,6 +282,7 @@ namespace netgen
         gp_Pnt xold;
         gp_Vec n;
         double det, lambda, mu;
+        bool out = false;
       
         do {
            count++;
@@ -303,6 +305,21 @@ namespace netgen
 
            u += lambda;
            v += mu;
+
+           // a non-uniform parametrisation can make a step leave the surface
+           // domain, where OCC extrapolates: clamp once, give up if it wants
+           // out again
+           double uc = uperiod ? u : std::clamp (u, sumin, sumax);
+           double vc = vperiod ? v : std::clamp (v, svmin, svmax);
+           if (!std::isfinite (u) || !std::isfinite (v)) return false;
+           if (uc != u || vc != v)
+             {
+               if (out) return false;
+               out = true;
+               u = uc; v = vc;
+             }
+           else
+             out = false;
 
            xold = x;
            surface->D1(u,v,x,du,dv);

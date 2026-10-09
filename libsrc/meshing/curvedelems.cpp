@@ -1450,7 +1450,8 @@ namespace netgen
                           gi.u = (lami[fnums[0]]*gc[0].u+lami[fnums[1]]*gc[1].u+lami[fnums[2]]*gc[2].u);
                           gi.v = (lami[fnums[0]]*gc[0].v+lami[fnums[1]]*gc[1].v+lami[fnums[2]]*gc[2].v);
                           
-                          geo.ProjectPointGI(surfnr[facenr], pp, gi);
+                          if (!geo.ProjectPointGI(surfnr[facenr], pp, gi))
+                            geo.ProjectPoint(surfnr[facenr], pp);
                         }
                         else
                           { geo.ProjectPoint(surfnr[facenr], pp); }
@@ -1510,7 +1511,8 @@ namespace netgen
                               gi.u += lami[k] * gc[k].u;
                               gi.v += lami[k] * gc[k].v;
                             }
-                          geo.ProjectPointGI(surfnr[facenr], pp, gi);
+                          if (!geo.ProjectPointGI(surfnr[facenr], pp, gi))
+                            geo.ProjectPoint(surfnr[facenr], pp);
                         }
                         else
                           geo.ProjectPoint(surfnr[facenr], pp);
