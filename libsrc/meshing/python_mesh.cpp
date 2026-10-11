@@ -1576,6 +1576,10 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.Compress ();
           } ,py::call_guard<py::gil_scoped_release>())
           
+    .def ("ConsistentPeriodicity", &Mesh::ConsistentPeriodicity,
+          py::call_guard<py::gil_scoped_release>(),
+          "Renumber points such that periodically identified points are numbered consecutively, "
+          "then elements on both sides of a periodic boundary have consistent vertex orientations")
     .def ("AddRegion", [] (Mesh & self, string name, int dim) -> int
          {
            switch (dim)

@@ -137,10 +137,16 @@ namespace netgen
 
     PrintMessage (5, "have points");
     
-    Array<int> par_nr(parents.Size());
-    for (int i = 0; i < par_nr.Size(); i++)
-      par_nr[i] = i;
-    QuickSortPair (parents, par_nr);
+    // order by the periodic classes of the parents: identified new points get
+    // consecutive numbers, so a consistently periodic mesh stays consistent
+    auto rep = mesh.PeriodicClasses();
+    QuickSort (parents, [&] (PointIndices<2> a, PointIndices<2> b)
+               {
+                 auto ra = PointIndices<2>(rep[a[0]], rep[a[1]]).Sort();
+                 auto rb = PointIndices<2>(rep[b[0]], rep[b[1]]).Sort();
+                 if (ra != rb) return ra[0] < rb[0] || (ra[0] == rb[0] && ra[1] < rb[1]);
+                 return a[0] < b[0] || (a[0] == b[0] && a[1] < b[1]);
+               });
     mesh.mlbetweennodes.SetSize(mesh.GetNV()+parents.Size());
     for (int i = 0; i < parents.Size(); i++)
       {

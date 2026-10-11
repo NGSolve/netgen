@@ -579,6 +579,14 @@ namespace netgen
     */
     DLL_HEADER void Compress ();
 
+    /**
+       Renumber points such that periodically identified points are numbered
+       consecutively. Then every element orders its vertices as its periodic
+       image does, i.e. vertex based orientations agree on both sides.
+    */
+    DLL_HEADER void ConsistentPeriodicity ();
+    DLL_HEADER Array<PointIndex, PointIndex> PeriodicClasses () const;
+
     /// first vertex has lowest index
     void OrderElements(); 
 

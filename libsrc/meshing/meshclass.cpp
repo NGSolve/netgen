@@ -4640,6 +4640,82 @@ namespace netgen
     timestamp = NextTimeStamp();
   }
 
+  Array<PointIndex, PointIndex> Mesh :: PeriodicClasses () const
+  {
+    Array<PointIndex, PointIndex> rep(GetNP());
+    for (PointIndex pi : points.Range())
+      rep[pi] = pi;
+    auto find = [&] (PointIndex pi)
+    {
+      while (rep[pi] != pi)
+        pi = rep[pi] = rep[rep[pi]];
+      return pi;
+    };
+    auto & idents = const_cast<Mesh&>(*this).GetIdentifications();
+    for (auto [pair, nr] : idents.GetPairs())
+      if (idents.GetType(nr) == Identifications::PERIODIC)
+        {
+          auto r0 = find(pair[0]), r1 = find(pair[1]);
+          if (r0 < r1) rep[r1] = r0;
+          if (r1 < r0) rep[r0] = r1;
+        }
+    for (PointIndex pi : points.Range())
+      rep[pi] = find(pi);
+    return rep;
+  }
+
+  void Mesh :: ConsistentPeriodicity ()
+  {
+    static Timer t("Mesh::ConsistentPeriodicity"); RegionTimer reg(t);
+    if (GetCommunicator().Size() > 1)
+      throw NgException ("ConsistentPeriodicity not supported for distributed meshes");
+    if (level_nv.Size() > 1 || hpelements)
+      throw NgException ("ConsistentPeriodicity only for unrefined meshes, refinement keeps consistency");
+    if (curvedelems->IsHighOrder())
+      throw NgException ("ConsistentPeriodicity must be called before curving");
+
+    auto rep = PeriodicClasses();
+    Array<PointIndex> order(GetNP());
+    for (auto i : Range(order))
+      order[i] = PointIndex::FromNr0(i);
+    QuickSort (order, [&] (PointIndex a, PointIndex b)
+               {
+                 if (rep[a] != rep[b]) return rep[a] < rep[b];
+                 return a < b;
+               });
+
+    Array<PointIndex, PointIndex> op2np(GetNP());
+    bool identity = true;
+    for (auto i : Range(order))
+      {
+        op2np[order[i]] = PointIndex::FromNr0(i);
+        if (order[i] != PointIndex::FromNr0(i)) identity = false;
+      }
+    if (identity) return;
+
+    T_POINTS hpoints(points);
+    for (PointIndex pi : points.Range())
+      points[op2np[pi]] = hpoints[pi];
+    for (auto el : volelements)
+      for (PointIndex & pi : el.PNums())
+        pi = op2np[pi];
+    for (Element2dRef el : surfelements)
+      for (PointIndex & pi : el.PNums())
+        pi = op2np[pi];
+    for (Segment & seg : segments)
+      for (int j = 0; j < seg.GetNP(); j++)
+        seg[j] = op2np[seg[j]];
+    for (auto & pe : pointelements)
+      pe.pnum = op2np[pe.pnum];
+    GetIdentifications().MapPoints(op2np);
+
+    CalcSurfacesOfNode();
+    ComputeNVertices();
+    topology.ClearEdges();
+    topology.ClearFaces();
+    SetNextMajorTimeStamp();
+  }
+
   void Mesh :: OrderElements()
   {
     for (auto el : surfelements)
