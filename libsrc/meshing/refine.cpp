@@ -139,14 +139,14 @@ namespace netgen
     
     // order by the periodic classes of the parents: identified new points get
     // consecutive numbers, so a consistently periodic mesh stays consistent
-    auto rep = mesh.PeriodicClasses();
-    QuickSort (parents, [&] (PointIndices<2> a, PointIndices<2> b)
-               {
-                 auto ra = PointIndices<2>(rep[a[0]], rep[a[1]]).Sort();
-                 auto rb = PointIndices<2>(rep[b[0]], rep[b[1]]).Sort();
-                 if (ra != rb) return ra[0] < rb[0] || (ra[0] == rb[0] && ra[1] < rb[1]);
-                 return a[0] < b[0] || (a[0] == b[0] && a[1] < b[1]);
-               });
+    auto rep = mesh.IdentificationRepresentatives();
+    auto repc = mesh.IdentificationRepresentatives(true);
+    auto key = [&] (PointIndices<2> p)
+    {
+      return std::make_tuple (min(repc[p[0]], repc[p[1]]), max(repc[p[0]], repc[p[1]]),
+                              min(rep[p[0]], rep[p[1]]), max(rep[p[0]], rep[p[1]]), p[0], p[1]);
+    };
+    QuickSort (parents, [&] (PointIndices<2> a, PointIndices<2> b) { return key(a) < key(b); });
     mesh.mlbetweennodes.SetSize(mesh.GetNV()+parents.Size());
     for (int i = 0; i < parents.Size(); i++)
       {

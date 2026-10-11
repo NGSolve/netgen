@@ -3690,31 +3690,38 @@ namespace netgen
 
     timer1.Stop();
 
-    // number new points which will be periodically identified consecutively,
+    // number new points which will be periodically or layer identified consecutively,
     // so a consistently periodic mesh stays consistent: new points share a class
     // iff the classes of their parents agree, parents are created first
     if (mesh.GetCommunicator().Size() == 1 && first_newp < mesh.Points().Range().Next())
       {
-        auto rep = mesh.PeriodicClasses();
-        Array<int, PointIndex> cls(mesh.GetNP());
-        for (PointIndex pi : mesh.Points().Range())
-          cls[pi] = rep[pi] - IndexBASE<PointIndex>();
         Array<PointIndices<2>, PointIndex> parents(mesh.GetNP());
         for (auto [edge, newpi] : cutedges)
           parents[newpi] = edge;
-        std::map<std::tuple<int,int>, int> newcls;
+        // periodic classes, and layer classes containing them
+        auto classes = [&] (bool layers)
+        {
+          auto rep = mesh.IdentificationRepresentatives(layers);
+          Array<int, PointIndex> cls(mesh.GetNP());
+          for (PointIndex pi : mesh.Points().Range())
+            cls[pi] = rep[pi] - IndexBASE<PointIndex>();
+          std::map<std::tuple<int,int>, int> newcls;
+          for (PointIndex pi = first_newp; pi < mesh.Points().Range().Next(); pi++)
+            {
+              int c0 = cls[parents[pi][0]], c1 = cls[parents[pi][1]];
+              auto key = std::make_tuple (min(c0,c1), max(c0,c1));
+              cls[pi] = newcls.emplace (key, mesh.GetNP()+newcls.size()).first->second;
+            }
+          return cls;
+        };
+        auto cls = classes(false);
+        auto clsc = classes(true);
         Array<PointIndex> order;
         for (PointIndex pi = first_newp; pi < mesh.Points().Range().Next(); pi++)
-          {
-            int c0 = cls[parents[pi][0]], c1 = cls[parents[pi][1]];
-            auto key = std::make_tuple (min(c0,c1), max(c0,c1));
-            cls[pi] = newcls.emplace (key, mesh.GetNP()+newcls.size()).first->second;
-            order.Append (pi);
-          }
+          order.Append (pi);
         QuickSort (order, [&] (PointIndex a, PointIndex b)
                    {
-                     if (cls[a] != cls[b]) return cls[a] < cls[b];
-                     return a < b;
+                     return std::make_tuple (clsc[a], cls[a], a) < std::make_tuple (clsc[b], cls[b], b);
                    });
 
         Array<PointIndex, PointIndex> op2np(mesh.GetNP());

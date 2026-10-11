@@ -4640,7 +4640,7 @@ namespace netgen
     timestamp = NextTimeStamp();
   }
 
-  Array<PointIndex, PointIndex> Mesh :: PeriodicClasses () const
+  Array<PointIndex, PointIndex> Mesh :: IdentificationRepresentatives (bool layers) const
   {
     Array<PointIndex, PointIndex> rep(GetNP());
     for (PointIndex pi : points.Range())
@@ -4653,7 +4653,10 @@ namespace netgen
     };
     auto & idents = const_cast<Mesh&>(*this).GetIdentifications();
     for (auto [pair, nr] : idents.GetPairs())
-      if (idents.GetType(nr) == Identifications::PERIODIC)
+      if (idents.GetType(nr) == Identifications::PERIODIC ||
+          (layers && (idents.GetType(nr) == Identifications::CLOSESURFACES ||
+                      idents.GetType(nr) == Identifications::CLOSEEDGES ||
+                      idents.GetType(nr) == Identifications::OFFSET_POINT)))
         {
           auto r0 = find(pair[0]), r1 = find(pair[1]);
           if (r0 < r1) rep[r1] = r0;
@@ -4664,24 +4667,25 @@ namespace netgen
     return rep;
   }
 
-  void Mesh :: ConsistentPeriodicity ()
+  void Mesh :: ConsistentIdentifications ()
   {
-    static Timer t("Mesh::ConsistentPeriodicity"); RegionTimer reg(t);
+    static Timer t("Mesh::ConsistentIdentifications"); RegionTimer reg(t);
     if (GetCommunicator().Size() > 1)
-      throw NgException ("ConsistentPeriodicity not supported for distributed meshes");
+      throw NgException ("ConsistentIdentifications not supported for distributed meshes");
     if (level_nv.Size() > 1 || hpelements)
-      throw NgException ("ConsistentPeriodicity only for unrefined meshes, refinement keeps consistency");
+      throw NgException ("ConsistentIdentifications only for unrefined meshes, refinement keeps consistency");
     if (curvedelems->IsHighOrder())
-      throw NgException ("ConsistentPeriodicity must be called before curving");
+      throw NgException ("ConsistentIdentifications must be called before curving");
 
-    auto rep = PeriodicClasses();
+    // layer classes contain periodic classes, number both consecutively
+    auto rep = IdentificationRepresentatives();
+    auto repc = IdentificationRepresentatives(true);
     Array<PointIndex> order(GetNP());
     for (auto i : Range(order))
       order[i] = PointIndex::FromNr0(i);
     QuickSort (order, [&] (PointIndex a, PointIndex b)
                {
-                 if (rep[a] != rep[b]) return rep[a] < rep[b];
-                 return a < b;
+                 return std::make_tuple (repc[a], rep[a], a) < std::make_tuple (repc[b], rep[b], b);
                });
 
     Array<PointIndex, PointIndex> op2np(GetNP());
