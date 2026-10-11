@@ -752,6 +752,7 @@ namespace netgen
       {
         HPRefElement el = elements[i];
         HPRef_Struct * hprs = Get_HPRef_Struct (el.type);
+        if (!hprs) continue;
         int newlevel = el.levelx;
         int oldnp = 0;
         switch (hprs->geom)
@@ -780,8 +781,6 @@ namespace netgen
             el.type == HP_HEX7 || 
             el.type == HP_PYRAMID)
           newlevel = el.levelx;
-
-        if (!hprs) continue;
 
         PointIndex newpnums[64];
         double newparam[64][3];
@@ -1025,7 +1024,7 @@ namespace netgen
   {
     int oldne = elements.Size();
     for (int i = 0; i < oldne; i++)
-      if (Get_HPRef_Struct (elements[i].type)->geom == HP_HEX)
+      if (auto hprs = Get_HPRef_Struct (elements[i].type); hprs && hprs->geom == HP_HEX)
         {
           bool common = 0;
           for (int j = 0; j < 8; j++)
@@ -1326,7 +1325,7 @@ namespace netgen
           {
             const HPRefElement & hpel = hpelements[i];
             
-            if (Get_HPRef_Struct (hpel.type) -> geom == HP_PRISM)
+            if (auto hprs = Get_HPRef_Struct (hpel.type); hprs && hprs->geom == HP_PRISM)
               {
                 int minbot = 0, mintop = 0;
                 for (int j = 0; j < 3; j++)
@@ -1928,6 +1927,7 @@ namespace netgen
       {
         HPRefElement & hpel = elements[i]; 
         HPRef_Struct * hprs = Get_HPRef_Struct (hpel.type);
+        if (!hprs) continue;
         HPRefElement old_el = elements[i]; 
         int dd=3; 
 

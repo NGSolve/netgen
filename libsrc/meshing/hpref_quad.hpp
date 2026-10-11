@@ -1272,8 +1272,7 @@ HPREF_ELEMENT_TYPE refquad_2e_2vc_newelstypes[] =
 };
 int refquad_2e_2vc_newels[][8] =
 {
-  { 1, 5, 9 },
-  { 6, 1, 9 },
+  { 1, 5, 9, 6 },
   { 5, 2, 7, 9 },
   { 12, 6, 9, 8 },
   { 7, 8, 9 },
