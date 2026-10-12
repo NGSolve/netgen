@@ -33,7 +33,6 @@ void WriteTochnogFormat (const Mesh & mesh,
 
   outfile << "(Nodes)" << endl;
 
-  int np = mesh.GetNP();
   int ne = mesh.GetNE();
   int j;
 

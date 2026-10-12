@@ -160,7 +160,6 @@ void CutOffAndCombine (Mesh & mesh, const Mesh & othermesh)
 
 void HelmholtzMesh (Mesh & mesh)
 {
-  int i;
   double ri, ra, rinf;
 
   cout << "ri = ";

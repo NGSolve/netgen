@@ -44,7 +44,6 @@ namespace netgen
             return;
         }
     
-        int np = mesh.GetNP();
         int ne = mesh.GetNE();
         int nse = mesh.GetNSE();
         int j, k;

@@ -401,7 +401,6 @@ void WriteVRMLFormat (const Mesh & mesh,
       // Output in VRML, IndexedFaceSet is used
       // Bartosz Sawicki <sawickib@ee.pw.edu.pl>
 
-      int np = mesh.GetNP();
       int nse = mesh.GetNSE();
       int j;
 
@@ -477,7 +476,6 @@ void WriteVRMLFormat (const Mesh & mesh,
         // Output in VRML, IndexedLineSet is used
         // Bartosz Sawicki <sawickib@ee.pw.edu.pl>
 
-      int np = mesh.GetNP();
       int nse = mesh.GetNSE();
       int j;
 

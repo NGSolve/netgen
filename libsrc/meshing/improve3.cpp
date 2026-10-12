@@ -2431,7 +2431,7 @@ void MeshOptimize3d :: SwapImprove2 (bool conform_segments)
   // double bad1, bad2;
 
   int np = mesh.GetNP();
-  int ne = mesh.GetNE();
+  // int ne = mesh.GetNE();
   int nse = mesh.GetNSE();
 
   // contains at least all elements at node

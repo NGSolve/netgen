@@ -1640,7 +1640,7 @@ namespace netgen
   GetTransformation (int ip, class DenseMatrix & pmat,
                      class DenseMatrix & trans) const
   {
-    int np = GetNP();
+    // int np = GetNP();
 
     if (pmat.Width() != GetNP() || pmat.Height() != 3)
       {
@@ -1946,7 +1946,7 @@ namespace netgen
   GetPointMatrix (const T_POINTS & points,
                   DenseMatrix & pmat) const
   {
-    int np = GetNP();
+    // int np = GetNP();
     for (int i = 1; i <= GetNP(); i++)
       {
         const auto& p = points[PNum(i)];

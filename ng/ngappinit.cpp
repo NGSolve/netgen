@@ -123,7 +123,7 @@ int main(int argc, char ** argv)
     cout << "NETGENDIR = " << ngdir << endl;
   
 
-    {
+  {
       if (parameters.StringFlagDefined ("testout"))
         {
           delete ngcore::testout;
@@ -260,7 +260,7 @@ int main(int argc, char ** argv)
 #endif
 
       Tcl_Exit(0);
-    }
+  }
 
   return 0;             
 }

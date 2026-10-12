@@ -304,7 +304,7 @@ void STLGeometry::GetMeshChartBoundary (Array<Point<2>> & apoints,
                                         Array<Point<3>> & points3d,
                                         Array<IVec<2>> & alines, double h)
 {
-  IVec<2> seg, newseg;
+  IVec<2> seg; // , newseg;
   int zone;
   Point<2> p2;
 
