@@ -4667,15 +4667,15 @@ namespace netgen
     return rep;
   }
 
-  void Mesh :: ConsistentIdentifications ()
+  void Mesh :: ConsistentIdentificationOrdering ()
   {
-    static Timer t("Mesh::ConsistentIdentifications"); RegionTimer reg(t);
+    static Timer t("Mesh::ConsistentIdentificationOrdering"); RegionTimer reg(t);
     if (GetCommunicator().Size() > 1)
-      throw NgException ("ConsistentIdentifications not supported for distributed meshes");
+      throw NgException ("ConsistentIdentificationOrdering not supported for distributed meshes");
     if (level_nv.Size() > 1 || hpelements)
-      throw NgException ("ConsistentIdentifications only for unrefined meshes, refinement keeps consistency");
+      throw NgException ("ConsistentIdentificationOrdering only for unrefined meshes, refinement keeps consistency");
     if (curvedelems->IsHighOrder())
-      throw NgException ("ConsistentIdentifications must be called before curving");
+      throw NgException ("ConsistentIdentificationOrdering must be called before curving");
 
     // layer classes contain periodic classes, number both consecutively
     auto rep = IdentificationRepresentatives();

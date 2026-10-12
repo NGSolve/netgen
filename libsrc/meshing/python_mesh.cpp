@@ -1576,7 +1576,7 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
             return self.Compress ();
           } ,py::call_guard<py::gil_scoped_release>())
           
-    .def ("ConsistentIdentifications", &Mesh::ConsistentIdentifications,
+    .def ("ConsistentIdentificationOrdering", &Mesh::ConsistentIdentificationOrdering,
           py::call_guard<py::gil_scoped_release>(),
           "Renumber points such that periodically, close surface/edge and boundary layer offset "
           "identified points are numbered consecutively, then identified elements have consistent "
