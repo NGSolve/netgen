@@ -456,7 +456,9 @@ namespace netgen
     auto ntasks = this->mesh->GetCommunicator().Size();
   
     if (timestamp > mesh->GetTimeStamp()) return;
-  
+
+    const_cast<Mesh*>(mesh)->ComputeNVertices();
+
     int ne = mesh->GetNE();
     int nse = mesh->GetNSE();
     int nseg = mesh->GetNSeg();

@@ -681,12 +681,10 @@ namespace netgen
      catch(...)
        {
          MergeMeshes(mesh3d, md);
-         mesh3d.ComputeNVertices();
          return MESHING3_GIVEUP;
        }
 
      MergeMeshes(mesh3d, md);
-     mesh3d.ComputeNVertices();
 
      MeshQuality3d (mesh3d);
 
@@ -779,8 +777,7 @@ namespace netgen
         // mesh3d.mglevels = 1;
         MeshQuality3d (mesh3d);
       }
-
-    mesh3d.ComputeNVertices();
+  
     multithread.task = savetask;
     return MESHING3_OK;
   }
