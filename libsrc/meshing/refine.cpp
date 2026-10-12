@@ -137,10 +137,16 @@ namespace netgen
 
     PrintMessage (5, "have points");
     
-    Array<int> par_nr(parents.Size());
-    for (int i = 0; i < par_nr.Size(); i++)
-      par_nr[i] = i;
-    QuickSortPair (parents, par_nr);
+    // order by the periodic classes of the parents: identified new points get
+    // consecutive numbers, so a consistently periodic mesh stays consistent
+    auto rep = mesh.IdentificationRepresentatives();
+    auto repc = mesh.IdentificationRepresentatives(true);
+    auto key = [&] (PointIndices<2> p)
+    {
+      return std::make_tuple (min(repc[p[0]], repc[p[1]]), max(repc[p[0]], repc[p[1]]),
+                              min(rep[p[0]], rep[p[1]]), max(rep[p[0]], rep[p[1]]), p[0], p[1]);
+    };
+    QuickSort (parents, [&] (PointIndices<2> a, PointIndices<2> b) { return key(a) < key(b); });
     mesh.mlbetweennodes.SetSize(mesh.GetNV()+parents.Size());
     for (int i = 0; i < parents.Size(); i++)
       {

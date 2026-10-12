@@ -579,6 +579,14 @@ namespace netgen
     */
     DLL_HEADER void Compress ();
 
+    /**
+       Renumber points such that identified elements (periodic, close surface) are
+       numbered consecutively. Then every element orders its vertices as its
+       identified image does, i.e. vertex based orientations agree on both sides.
+    */
+    DLL_HEADER void ConsistentIdentificationOrdering ();
+    DLL_HEADER Array<PointIndex, PointIndex> IdentificationRepresentatives (bool layers = false) const;
+
     /// first vertex has lowest index
     void OrderElements(); 
 

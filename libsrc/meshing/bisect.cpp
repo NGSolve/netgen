@@ -1,4 +1,5 @@
 #include <mystdlib.h>
+#include <map>
 #include <core/array.hpp>
 
 #include "meshclass.hpp" 
@@ -2921,6 +2922,7 @@ namespace netgen
     // INDEX_2_CLOSED_HASHTABLE<PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     // ClosedHashTable<IVec<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
     ClosedHashTable<SortedPointIndices<2>, PointIndex> cutedges(10 + 9 * (mtets.Size()+mprisms.Size()+mtris.Size()+mquads.Size()));
+    PointIndex first_newp = mesh.Points().Range().Next();
 
     bool noprojection = false;
     timer1a.Stop();
@@ -3687,6 +3689,73 @@ namespace netgen
       }
 
     timer1.Stop();
+
+    // number new points which will be periodically or layer identified consecutively,
+    // so a consistently periodic mesh stays consistent: new points share a class
+    // iff the classes of their parents agree, parents are created first
+    if (mesh.GetCommunicator().Size() == 1 && first_newp < mesh.Points().Range().Next())
+      {
+        Array<PointIndices<2>, PointIndex> parents(mesh.GetNP());
+        for (auto [edge, newpi] : cutedges)
+          parents[newpi] = edge;
+        // periodic classes, and layer classes containing them
+        auto classes = [&] (bool layers)
+        {
+          auto rep = mesh.IdentificationRepresentatives(layers);
+          Array<int, PointIndex> cls(mesh.GetNP());
+          for (PointIndex pi : mesh.Points().Range())
+            cls[pi] = rep[pi] - IndexBASE<PointIndex>();
+          std::map<std::tuple<int,int>, int> newcls;
+          for (PointIndex pi = first_newp; pi < mesh.Points().Range().Next(); pi++)
+            {
+              int c0 = cls[parents[pi][0]], c1 = cls[parents[pi][1]];
+              auto key = std::make_tuple (min(c0,c1), max(c0,c1));
+              cls[pi] = newcls.emplace (key, mesh.GetNP()+newcls.size()).first->second;
+            }
+          return cls;
+        };
+        auto cls = classes(false);
+        auto clsc = classes(true);
+        Array<PointIndex> order;
+        for (PointIndex pi = first_newp; pi < mesh.Points().Range().Next(); pi++)
+          order.Append (pi);
+        QuickSort (order, [&] (PointIndex a, PointIndex b)
+                   {
+                     return std::make_tuple (clsc[a], cls[a], a) < std::make_tuple (clsc[b], cls[b], b);
+                   });
+
+        Array<PointIndex, PointIndex> op2np(mesh.GetNP());
+        for (PointIndex pi : mesh.Points().Range())
+          op2np[pi] = pi;
+        for (auto i : Range(order))
+          op2np[order[i]] = first_newp + i;
+
+        Array<MeshPoint> hpoints;
+        for (auto pi : order)
+          hpoints.Append (mesh[pi]);
+        for (auto i : Range(order))
+          mesh.Points()[first_newp + i] = hpoints[i];
+
+        for (auto & tet : mtets)
+          for (auto & pi : tet.pnums) pi = op2np[pi];
+        for (auto & prism : mprisms)
+          for (auto & pi : prism.pnums) pi = op2np[pi];
+        for (auto & id : mids)
+          for (int j = 0; j < 2*id.np; j++) id.pnums[j] = op2np[id.pnums[j]];
+        for (auto & trig : mtris)
+          for (auto & pi : trig.pnums) pi = op2np[pi];
+        for (auto & quad : mquads)
+          for (auto & pi : quad.pnums) pi = op2np[pi];
+        for (Segment & seg : mesh.LineSegments())
+          for (int j = 0; j < seg.GetNP(); j++)
+            seg[j] = op2np[seg[j]];
+        Array<std::tuple<SortedPointIndices<2>, PointIndex>> cut;
+        for (auto [edge, newpi] : cutedges)
+          cut.Append ( { edge, newpi } );
+        cutedges.DeleteData();
+        for (auto [edge, newpi] : cut)
+          cutedges.Set (SortedPointIndices<2> (PointIndices<2> (op2np[edge[0]], op2np[edge[1]])), op2np[newpi]);
+      }
 
 
     // (*testout) << "mtets = " << mtets << endl;

@@ -4640,6 +4640,86 @@ namespace netgen
     timestamp = NextTimeStamp();
   }
 
+  Array<PointIndex, PointIndex> Mesh :: IdentificationRepresentatives (bool layers) const
+  {
+    Array<PointIndex, PointIndex> rep(GetNP());
+    for (PointIndex pi : points.Range())
+      rep[pi] = pi;
+    auto find = [&] (PointIndex pi)
+    {
+      while (rep[pi] != pi)
+        pi = rep[pi] = rep[rep[pi]];
+      return pi;
+    };
+    auto & idents = const_cast<Mesh&>(*this).GetIdentifications();
+    for (auto [pair, nr] : idents.GetPairs())
+      if (idents.GetType(nr) == Identifications::PERIODIC ||
+          (layers && (idents.GetType(nr) == Identifications::CLOSESURFACES ||
+                      idents.GetType(nr) == Identifications::CLOSEEDGES ||
+                      idents.GetType(nr) == Identifications::OFFSET_POINT)))
+        {
+          auto r0 = find(pair[0]), r1 = find(pair[1]);
+          if (r0 < r1) rep[r1] = r0;
+          if (r1 < r0) rep[r0] = r1;
+        }
+    for (PointIndex pi : points.Range())
+      rep[pi] = find(pi);
+    return rep;
+  }
+
+  void Mesh :: ConsistentIdentificationOrdering ()
+  {
+    static Timer t("Mesh::ConsistentIdentificationOrdering"); RegionTimer reg(t);
+    if (GetCommunicator().Size() > 1)
+      throw NgException ("ConsistentIdentificationOrdering not supported for distributed meshes");
+    if (level_nv.Size() > 1 || hpelements)
+      throw NgException ("ConsistentIdentificationOrdering only for unrefined meshes, refinement keeps consistency");
+    if (curvedelems->IsHighOrder())
+      throw NgException ("ConsistentIdentificationOrdering must be called before curving");
+
+    // layer classes contain periodic classes, number both consecutively
+    auto rep = IdentificationRepresentatives();
+    auto repc = IdentificationRepresentatives(true);
+    Array<PointIndex> order(GetNP());
+    for (auto i : Range(order))
+      order[i] = PointIndex::FromNr0(i);
+    QuickSort (order, [&] (PointIndex a, PointIndex b)
+               {
+                 return std::make_tuple (repc[a], rep[a], a) < std::make_tuple (repc[b], rep[b], b);
+               });
+
+    Array<PointIndex, PointIndex> op2np(GetNP());
+    bool identity = true;
+    for (auto i : Range(order))
+      {
+        op2np[order[i]] = PointIndex::FromNr0(i);
+        if (order[i] != PointIndex::FromNr0(i)) identity = false;
+      }
+    if (identity) return;
+
+    T_POINTS hpoints(points);
+    for (PointIndex pi : points.Range())
+      points[op2np[pi]] = hpoints[pi];
+    for (auto el : volelements)
+      for (PointIndex & pi : el.PNums())
+        pi = op2np[pi];
+    for (Element2dRef el : surfelements)
+      for (PointIndex & pi : el.PNums())
+        pi = op2np[pi];
+    for (Segment & seg : segments)
+      for (int j = 0; j < seg.GetNP(); j++)
+        seg[j] = op2np[seg[j]];
+    for (auto & pe : pointelements)
+      pe.pnum = op2np[pe.pnum];
+    GetIdentifications().MapPoints(op2np);
+
+    CalcSurfacesOfNode();
+    ComputeNVertices();
+    topology.ClearEdges();
+    topology.ClearFaces();
+    SetNextMajorTimeStamp();
+  }
+
   void Mesh :: OrderElements()
   {
     for (auto el : surfelements)
