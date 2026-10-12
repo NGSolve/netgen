@@ -281,6 +281,15 @@ namespace ngcore
     // only used for PyArchive
     virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
+    bool HasFormat(int version)
+    {
+      auto sversion = std::to_string(version);
+      if (GetVersion("netgen_archive") < VersionInfo(sversion))
+        return false;
+      NeedsVersion("netgen_archive", sversion);
+      return true;
+    }
+
     // Pure virtual functions that have to be implemented by In-/OutArchive
     virtual Archive & operator & (std::byte & d) = 0;    
     virtual Archive & operator & (float & d) = 0;

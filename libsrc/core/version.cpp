@@ -24,6 +24,7 @@ namespace ngcore
 
   static bool dummy = [](){
     SetLibraryVersion("netgen", NETGEN_VERSION);
+    SetLibraryVersion("netgen_archive", std::to_string(NETGEN_ARCHIVE_VERSION));
     return true;
   }();
 } // namespace ngcore

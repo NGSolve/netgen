@@ -215,6 +215,18 @@ public:
   void ClearEdges() { edge2vert.SetSize0(); }
   void ClearFaces() { face2vert.SetSize0(); }
 
+  DLL_HEADER bool HasCanonicalNumbering () const;
+  FlatArray<const std::array<PointIndex,2>, EdgeIndex> GetEdge2Vert () const { return edge2vert; }
+  FlatArray<const std::array<PointIndex,4>, FaceIndex> GetFace2Vert () const { return face2vert; }
+  DLL_HEADER void DoArchive (Archive & ar);
+  void SetNumbering (Array<std::array<PointIndex,2>, EdgeIndex> && e2v,
+                     Array<std::array<PointIndex,4>, FaceIndex> && f2v)
+  {
+    edge2vert = std::move(e2v);
+    face2vert = std::move(f2v);
+    timestamp = -1;
+  }
+
 private:
   Array<std::tuple<int, std::array<EdgeIndex,3>>, EdgeIndex> parent_edges;
   void BuildParentEdges ();
