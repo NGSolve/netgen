@@ -2,6 +2,7 @@
 #define NETGEN_CORE_PYTHON_NGCORE_HPP
 
 #include "ngcore_api.hpp" // for operator new
+#include <pybind11/embed.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/operators.h>
 #include <pybind11/numpy.h>
