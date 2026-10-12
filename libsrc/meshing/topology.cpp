@@ -57,7 +57,87 @@ namespace netgen
   bool MeshTopology :: NeedsUpdate() const
   { return (timestamp <= mesh->GetTimeStamp()); }
 
-  
+  bool MeshTopology :: HasCanonicalNumbering () const
+  {
+    for (size_t i = 1; i < edge2vert.Size(); i++)
+      if (!(edge2vert[EdgeIndex::FromNr0(i-1)] < edge2vert[EdgeIndex::FromNr0(i)]))
+        return false;
+    for (size_t i = 1; i < face2vert.Size(); i++)
+      if (!(face2vert[FaceIndex::FromNr0(i-1)] < face2vert[FaceIndex::FromNr0(i)]))
+        return false;
+
+    auto mark = [](auto & used, auto nr) { if (nr.IsValid()) used.SetBit(nr); };
+    if (buildedges)
+      {
+        TBitArray<EdgeIndex> used(edge2vert.Size());
+        used.Clear();
+        for (ElementIndex ei : mesh->VolumeElements().Range())
+          for (EdgeIndex e : GetEdges(ei))
+            mark(used, e);
+        for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
+          for (EdgeIndex e : GetEdges(sei))
+            mark(used, e);
+        for (SegmentIndex si : mesh->LineSegments().Range())
+          mark(used, segedges[si]);
+        if (used.NumSet() != edge2vert.Size())
+          return false;
+      }
+    if (buildfaces)
+      {
+        TBitArray<FaceIndex> used(face2vert.Size());
+        used.Clear();
+        for (ElementIndex ei : mesh->VolumeElements().Range())
+          for (FaceIndex f : GetFaces(ei))
+            mark(used, f);
+        for (SurfaceElementIndex sei : mesh->SurfaceElements().Range())
+          mark(used, surffaces[sei]);
+        if (used.NumSet() != face2vert.Size())
+          return false;
+      }
+    return true;
+  }
+
+
+  void MeshTopology :: DoArchive (Archive & ar)
+  {
+    bool canonical = true;
+    if (ar.Output())
+      {
+        if (NeedsUpdate())
+          Update();
+        canonical = HasCanonicalNumbering();
+      }
+    ar & canonical;
+    if (canonical) return;
+
+    Array<int> e2v, f2v;
+    if (ar.Output())
+      {
+        for (auto & e : edge2vert)
+          for (auto pi : e)
+            e2v.Append (pi.Nr1());
+        for (auto & f : face2vert)
+          for (auto pi : f)
+            f2v.Append (pi.IsValid() ? pi.Nr1() : 0);
+      }
+    ar & e2v & f2v;
+    if (ar.Input())
+      {
+        Array<std::array<PointIndex,2>, EdgeIndex> edges(e2v.Size()/2);
+        for (auto i : Range(edges))
+          for (int j = 0; j < 2; j++)
+            edges[i][j] = PointIndex::FromNr1(e2v[2*i.Nr0()+j]);
+        Array<std::array<PointIndex,4>, FaceIndex> faces(f2v.Size()/4);
+        for (auto i : Range(faces))
+          for (int j = 0; j < 4; j++)
+            {
+              int pn = f2v[4*i.Nr0()+j];
+              faces[i][j] = pn > 0 ? PointIndex::FromNr1(pn) : PointIndex(PointIndex::INVALID);
+            }
+        SetNumbering (std::move(edges), std::move(faces));
+      }
+  }
+
   void MeshTopology :: EnableTable (string name, bool set)
   {
     if (name == "edges")
@@ -376,7 +456,9 @@ namespace netgen
     auto ntasks = this->mesh->GetCommunicator().Size();
   
     if (timestamp > mesh->GetTimeStamp()) return;
-  
+
+    const_cast<Mesh*>(mesh)->ComputeNVertices();
+
     int ne = mesh->GetNE();
     int nse = mesh->GetNSE();
     int nseg = mesh->GetNSeg();

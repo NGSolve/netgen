@@ -94,6 +94,9 @@ namespace ngcore
     return ost << version.to_string();
   }
 
+  // format version of netgen archives: increase it with every change of archived data
+  constexpr int NETGEN_ARCHIVE_VERSION = 1;
+
   NGCORE_API const VersionInfo& GetLibraryVersion(const std::string& library);
   NGCORE_API const std::map<std::string, VersionInfo>& GetLibraryVersions();
   NGCORE_API void SetLibraryVersion(const std::string& library, const VersionInfo& version);

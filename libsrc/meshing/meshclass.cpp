@@ -1258,17 +1258,27 @@ namespace netgen
     }
 
 
+    if (topology.NeedsUpdate())
+      const_cast<MeshTopology&>(topology).Update();
+    if (!topology.HasCanonicalNumbering())
+      {
+        auto e2v = topology.GetEdge2Vert();
+        outfile << "topology_edges" << endl << e2v.Size() << endl;
+        for (auto & e : e2v)
+          outfile << e[0].Nr1() << " " << e[1].Nr1() << endl;
+        auto f2v = topology.GetFace2Vert();
+        outfile << "topology_faces" << endl << f2v.Size() << endl;
+        for (auto & f : f2v)
+          outfile << f[0].Nr1() << " " << f[1].Nr1() << " " << f[2].Nr1() << " "
+                  << (f[3].IsValid() ? f[3].Nr1() : 0) << endl;
+      }
+
     if (curvedelems && curvedelems->IsHighOrder())
       {
-        if (level_nv.Size() > 1 && (MeshTopology().HasParentEdges() || MeshTopology().HasParentFaces()))
-          cerr << "Waring: cannot store curvedelements on refined meshes with full hierarchy" << endl;
-        else
-          {
-            outfile << "curvedelements" << endl;
-            shared_ptr<std::ostream> spoutfile(&outfile,  [](void*) noexcept {});
-            TextOutArchive out(std::move(spoutfile));
-            out & (*curvedelems);
-          }
+        outfile << "curvedelements" << endl;
+        shared_ptr<std::ostream> spoutfile(&outfile,  [](void*) noexcept {});
+        TextOutArchive out(std::move(spoutfile));
+        out & (*curvedelems);
       }
 
 
@@ -1368,6 +1378,7 @@ namespace netgen
     Array<int, SegmentIndex> seg_edgenrs;
     Array<int, SegmentIndex> seg_sis;
     Array<string> bcnames2d;
+    Array<std::array<PointIndex,2>, EdgeIndex> topo_edges;
     
 
     while (infile.good() && !endmesh)
@@ -1919,6 +1930,32 @@ namespace netgen
               }
           }
         
+        if (strcmp (str, "topology_edges") == 0)
+          {
+            infile >> n;
+            topo_edges.SetSize(n);
+            for (auto & e : topo_edges)
+              {
+                int p0, p1;
+                infile >> p0 >> p1;
+                e = { PointIndex::FromNr1(p0), PointIndex::FromNr1(p1) };
+              }
+          }
+
+        if (strcmp (str, "topology_faces") == 0)
+          {
+            infile >> n;
+            Array<std::array<PointIndex,4>, FaceIndex> topo_faces(n);
+            for (auto & f : topo_faces)
+              {
+                int pn[4];
+                infile >> pn[0] >> pn[1] >> pn[2] >> pn[3];
+                for (int j = 0; j < 4; j++)
+                  f[j] = pn[j] > 0 ? PointIndex::FromNr1(pn[j]) : PointIndex(PointIndex::INVALID);
+              }
+            topology.SetNumbering (std::move(topo_edges), std::move(topo_faces));
+          }
+
         if (strcmp (str, "curvedelements") == 0)              
           {
             topology.Update();
@@ -2108,6 +2145,9 @@ namespace netgen
         archive.NeedsVersion("netgen", "v6.2.2603-26");
         archive & Regions<1>();
       }
+
+    if (archive.HasFormat(1))
+      archive & topology;
 
     if (archive.Input())
       {
