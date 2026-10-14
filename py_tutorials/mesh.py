@@ -10,8 +10,7 @@ print (param)
 m1 = GenerateMesh (geo, param)
 m1.SecondOrder()
 
-import exportNeutral
-exportNeutral.Export (m1, "shaft.mesh")
+m1.Export('shaft.mesh', 'Neutral Format')
 
 
 
