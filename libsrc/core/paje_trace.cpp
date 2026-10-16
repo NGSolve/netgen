@@ -326,7 +326,7 @@ namespace ngcore
       PajeFile( const std::string & filename)
         {
           std::string fname = filename + ".trace";
-          ctrace_stream = fopen (fname.c_str(),"w"); // NOLINT
+          ctrace_stream = fopen (fname.c_str(),"wb"); // NOLINT
           fprintf(ctrace_stream, "%s", header ); // NOLINT
           alias_counter = 0;
         }
