@@ -632,7 +632,6 @@ double MeshOptimize3d :: SplitImproveEdge (Table<ElementIndex,PointIndex> & elem
           }
         }
 
-      if (!mesh.LegalTet (oldel)) return 0.0;
       if (!mesh.LegalTet (newel1)) return 0.0;
       if (!mesh.LegalTet (newel2)) return 0.0;
 

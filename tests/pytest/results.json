@@ -171,11 +171,11 @@
                 19.228,
                 140.0
             ],
-            "hash": "cec812282fcf6535ea50c39813238729b3eee22bcd324b951cf22e1992dabe4e",
+            "hash": "4a64b984d064e8f557298c0a0aab71e9469e553ac63645e2f5256de1108464d7",
             "hash_el1d": "06c2b5cb8782c47f15700ec93cc82623d0a1d64d621345756f85a1667b8917eb",
             "hash_el2d": "5dd3adbea8ddc92d920950b07f558af590c013f5004523af72e86cc625a4ab56",
-            "hash_el3d": "ce08b5d435f733e657ed967ef6ca593ba8c6aefe469fe28d21d78264f1d53240",
-            "hash_points": "03d882494739674bf4b7c73cfdfbd33615f03c638af50e6f9478b883762b003d",
+            "hash_el3d": "0cca0c04d7c930fb6837f3678671b91ffff1ee0ac13c52939a12bf9c7a537152",
+            "hash_points": "3d011566626ff11bd8dd0f40b9427ffe395f62a9fd1ac9d643da369588a6be48",
             "ne1d": 136,
             "ne2d": 204,
             "ne3d": 298,
@@ -395,16 +395,16 @@
                 12.979,
                 139.05
             ],
-            "hash": "921168ea7525720fa62058e741daedeb16df0cbb6e075e5e79b3e68a4d9e8757",
+            "hash": "54c747812096ad8de8a2b996c4501e2b078930045f8cf7eec3a226ec8451031e",
             "hash_el1d": "cc6686ee982fc03bab3ad2b3c5abe5a0660deb22b2d67422f8aaedbe9c90e3d4",
             "hash_el2d": "a54e8c0321e6e6317f551bb9cc448f3befa2b643d7eccf64fa55c0bfaa695889",
-            "hash_el3d": "f486cb04ae91dbbd0f9ec9fcec8f4bbbc403644a5d7b483fb8c6b494017b02a0",
-            "hash_points": "20e8772079cb29a1b499be9bafe6f303cf9cd9b6c35ecec8402563c190fb67cf",
+            "hash_el3d": "539eba7be9d787771e72e371ed2cb626f5249fb5cd381a12128c1e188963d2a5",
+            "hash_points": "a86cf00b4caf7ec07199b9d29d6b061c8ca59937882bb6daf7832ba2a9a79d47",
             "ne1d": 32,
             "ne2d": 208,
-            "ne3d": 267,
-            "quality_histogram": "[0, 1, 3, 3, 6, 18, 38, 40, 18, 12, 16, 10, 11, 20, 12, 25, 14, 12, 8, 0]",
-            "total_badness": 624.33828402
+            "ne3d": 272,
+            "quality_histogram": "[0, 1, 3, 3, 6, 17, 39, 39, 21, 10, 17, 9, 12, 18, 11, 30, 17, 11, 8, 0]",
+            "total_badness": 630.38939816
         },
         {
             "angles_tet": [
@@ -415,11 +415,11 @@
                 9.6496,
                 150.01
             ],
-            "hash": "ab0e5e8b3687a3e7455d6ba863ddbc0b0864c280c99480e69e949e0dec473dcb",
+            "hash": "390087afd88158fe305d7e2780ccd5fd1f9ebdf8a8b79e8de8d36b7bd45d27c5",
             "hash_el1d": "816ce2e5344ed5fb08f223ebf53520938ef5ee71837c8b97afb224235e314ec8",
             "hash_el2d": "4927700c1d71848a049afb4eb8aa141562d19928c6b985dacf3485c340328e43",
-            "hash_el3d": "1c00ae1884b4d5cab662cf748ba674df39aa4a52dab9689ea091c633325954a0",
-            "hash_points": "1a35eb8e41b080278268bde58d40aa723ab70520e105b6101f0b243d8d656d99",
+            "hash_el3d": "fbe80230c5f4faae8674f1e4986c23be793b85ab870cb3a9add36901caabb8dc",
+            "hash_points": "389a929290fc5bd65d1fca7507e16db77324306e4f60c09532f0db9a7e32c4f2",
             "ne1d": 48,
             "ne2d": 420,
             "ne3d": 537,
@@ -619,11 +619,11 @@
                 11.709,
                 156.34
             ],
-            "hash": "7250c0253c242ab2dac62ea0afc3e21d963baddc31d9dcc5901717cb6357ac6a",
+            "hash": "224955ae929c0eaf2e3fe3809a5c8ee7379856826fbe272bcd6cdd08610aa852",
             "hash_el1d": "9527e6b8b920a3f04863e96885ca379e0dee8841e8d6f2fedf3d555026384438",
             "hash_el2d": "2bfeeecf5c1147ba6577ec8d28602c9974aac249cf58b56ebccd2238b579172f",
-            "hash_el3d": "dbc5602978b014ddb5609bbb760a415b72776de064ea0f45b94c1904f100a381",
-            "hash_points": "85f4293a8d7a25d8a6f449fcc1a445c3dcca783af7ff48351996989cf1e7c61b",
+            "hash_el3d": "ce952b2652cfa18aa693510828ba2c63be0e5b607c2e5ad42d9e4c349b60de41",
+            "hash_points": "695a73b53045ecad6133f1d4bd11e7cb9bc836e5afbe256c9fa80386ccbc91d0",
             "ne1d": 262,
             "ne2d": 652,
             "ne3d": 1800,
@@ -679,11 +679,11 @@
                 11.709,
                 156.34
             ],
-            "hash": "2810c743830f51314adaa68504bed4501d17836e18efc11f2c00d2734d37565a",
+            "hash": "9beeb757ed69648e49db13504e8a8c892aa0c57768adc21378d5b838f684cccb",
             "hash_el1d": "9527e6b8b920a3f04863e96885ca379e0dee8841e8d6f2fedf3d555026384438",
             "hash_el2d": "2bfeeecf5c1147ba6577ec8d28602c9974aac249cf58b56ebccd2238b579172f",
-            "hash_el3d": "edaf02e139e1e5a8be099efb08789c295350109b29c266c0b9ecea5e6b947b77",
-            "hash_points": "e324195acc7f2d07aff901ca16a3cf9170a75026b26f3e8eceacdd4f21aba9b5",
+            "hash_el3d": "83d091101519de2e2ca73dbf99364a8237cf17d9bf136e11024a72846779af82",
+            "hash_points": "7b53496f83ac1d5bcc52f57e3da0e7732bde1c72666643a926e71663ea90aa76",
             "ne1d": 262,
             "ne2d": 652,
             "ne3d": 1649,
@@ -985,11 +985,11 @@
                 20.547,
                 128.1
             ],
-            "hash": "2e6e24cf74946ce05be497e9428e80a7eb967db72dd8f0a7fc3c9f3960554574",
+            "hash": "07abd9c0d3e4a82d286a249d2bed28ad6591d205af0269af15491c21f8c34b78",
             "hash_el1d": "68385f7c59c4eadf3d1f4354905181043d89df7bace0f1ac22579b7b17fb5127",
             "hash_el2d": "8f6af57d2f19fbe14128b570414b5a729b1e28a103bb5eb8ce6fdbf1b3da5e60",
-            "hash_el3d": "60bd489686021f012a97d3315a7fcf4e466af6568c91a918ead70b2e2b89deb6",
-            "hash_points": "b76a02e3aae02ed8b24a881367b8172c1e73bd2adfe9a0414773401e74adde1f",
+            "hash_el3d": "c7e3f5cdc7673d27012fab3222bc47ce3d1976953fec23c7d1e4624c0e624da0",
+            "hash_points": "3a0ffb0dde3c1f5a693852e4371014424e5f146ad59e0a770f525867913ab2f7",
             "ne1d": 90,
             "ne2d": 570,
             "ne3d": 3995,
@@ -1045,11 +1045,11 @@
                 25.09,
                 118.46
             ],
-            "hash": "4586762f7dc0f4a860fb98c870a1594511672c6cb64ebd5f3f73d30b901f1433",
+            "hash": "7db120dda473ebbf3190636b9c0340698a539fe5067583d9de943b320b654aa5",
             "hash_el1d": "68385f7c59c4eadf3d1f4354905181043d89df7bace0f1ac22579b7b17fb5127",
             "hash_el2d": "8f6af57d2f19fbe14128b570414b5a729b1e28a103bb5eb8ce6fdbf1b3da5e60",
-            "hash_el3d": "79c80254296f28ebcc95737b1179d4db7a7cedcbda12d25228805278f4cebf52",
-            "hash_points": "c2b56433f461d14a3d15cb9b2fe507d5876a28e5d8b4895fc7907db40c0ae26e",
+            "hash_el3d": "ab2f28d7af75019b94ed128673ea0c3fbf7cee0817a8557b036e2bbddb5c95cf",
+            "hash_points": "681396de2628c8ffcf44e84c6555f159d02ebda18a7048cbe05c7710519afb98",
             "ne1d": 90,
             "ne2d": 570,
             "ne3d": 3360,
@@ -1222,23 +1222,23 @@
         },
         {
             "angles_tet": [
-                5.2584,
-                171.14
+                4.1866,
+                169.67
             ],
             "angles_trig": [
-                13.512,
-                152.22
+                12.472,
+                149.19
             ],
-            "hash": "510fb805354d87c9b5461c330bf38d6a846a25f82ab13a91a7a469f84189ca58",
+            "hash": "a09b59de476c9bbcb4b044f48eeecae9076b58eeb7b436c9fb2ee64a381bf9cf",
             "hash_el1d": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "hash_el2d": "0d18b21aafd078f335d75824a04c3d56b304668564578af135fdfa78130991c3",
-            "hash_el3d": "92498d119408d4f2216f8fee6198a7a1cff2687f207039841228e497a858ba0c",
-            "hash_points": "a56f207841bf7e0f2b033b98cc011e614afc0f3824995cd8b2c08145d0da6a04",
+            "hash_el3d": "5bc392e820692755528d85d852509b9f881dadf0cb7403390bb99d7c5c7b8729",
+            "hash_points": "20706944dd63d21c1889b5f25107fc3ededfbe4edbf834577cad7e8e32979a5b",
             "ne1d": 0,
             "ne2d": 156,
-            "ne3d": 264,
-            "quality_histogram": "[0, 4, 11, 25, 53, 58, 33, 23, 23, 12, 7, 5, 4, 4, 1, 0, 1, 0, 0, 0]",
-            "total_badness": 995.21455744
+            "ne3d": 258,
+            "quality_histogram": "[0, 3, 9, 11, 44, 47, 31, 21, 20, 14, 14, 9, 4, 13, 6, 3, 6, 3, 0, 0]",
+            "total_badness": 855.31115188
         },
         {
             "angles_tet": [
@@ -1655,16 +1655,16 @@
                 17.398,
                 118.98
             ],
-            "hash": "975b0c59b232957e5764bc32723fbaf79578357dee46b9d2be75afc8b4a761c7",
+            "hash": "bdba9ebed213dbe51fd8f465eb18b6701d25fd9f3f4344b05f200197a6d92217",
             "hash_el1d": "850323db4c9c0125b32e7a4fc7c9a1f5fa76f0ed707b5359a4adc54ffd3ae026",
             "hash_el2d": "b3ac81c90efb28f450497fa3ab4d68d92e2d9fd75a92abd31ea17bd5d49c2962",
-            "hash_el3d": "72bad52de8d28589134cde2f3007830c8cfbcbe79d46abd0cce398374e738378",
-            "hash_points": "90e855e390e49e229557c44c6e6c9414f6a374f7db55a24de9e34ea7e6844569",
+            "hash_el3d": "672fff36d566d0c030fc76e145772262706d62152c3bd9d08c144bf91e4bb761",
+            "hash_points": "be44151cbdeac1788986170e717ba09de32e9b723572ad9262554087b779a391",
             "ne1d": 276,
             "ne2d": 544,
             "ne3d": 601,
-            "quality_histogram": "[0, 0, 0, 0, 0, 1, 4, 10, 32, 45, 47, 61, 66, 70, 69, 68, 71, 39, 13, 5]",
-            "total_badness": 949.56484152
+            "quality_histogram": "[0, 0, 0, 0, 0, 1, 4, 10, 32, 45, 47, 61, 67, 69, 66, 70, 72, 39, 13, 5]",
+            "total_badness": 949.53274294
         }
     ],
     "fichera.geo": [
@@ -1799,11 +1799,11 @@
                 19.554,
                 136.71
             ],
-            "hash": "fb772135a24f8aa67091c246466cce7f9b05b6690f739d3061fe0f2c603f8e37",
+            "hash": "9405dbd5f00855042c4e4f0bc27d5e04dd95665014d506a185f05908aa6e3ad1",
             "hash_el1d": "f7c73bc5f74a13a115ad3ac06b6475420ea79f048e5096d0abcedefacd632e8b",
             "hash_el2d": "8a0aef5382ec6dd5ddd3154af84491d34b02a9bea696468fccf6efef2349b7fe",
-            "hash_el3d": "dfdb2e85ad7185018fbbd3c7465159205356e2140bfc8575031dac425bbc0eb7",
-            "hash_points": "1dc3c4a85577eb55ef16f2ab5e087860ae78e99a89e69c64a4938b64c914e3c5",
+            "hash_el3d": "1ecda5df675d3cd148450674bcaf78c4db97f27cc7a85f39240dabe1555c2d29",
+            "hash_points": "4c73875ad39869d3c6d779717f495287406ab2ae33c3d153a332d0d665eca9af",
             "ne1d": 456,
             "ne2d": 1082,
             "ne3d": 1670,
@@ -1899,11 +1899,11 @@
                 20.975,
                 127.71
             ],
-            "hash": "68a36769ed5f4539af8fcfee22ee5df33138c8f6275d3b51cd72aeafdc06fb65",
+            "hash": "19c96a227cc87289c8f6b805ceda0792143c487b07f1717abd53efc9f89e860b",
             "hash_el1d": "193ca85616bb0f95b747a3401e00088eded73107f08b710043a05ca0d422fec5",
             "hash_el2d": "c2701a1021661f39961a0646f3edf05dd0041785af45b354c06e4491290d3f4d",
-            "hash_el3d": "7a331ab48c63e55acdb25dcf9cc86f88b3f52ff3a2ead5242ef0cdb6ee7f4e9f",
-            "hash_points": "eceb32981350bdb44b0d38ccc8fef210c3b5e5c75ace6a7d6f27e1fc4e71d6a8",
+            "hash_el3d": "2aca0c087031e63f7537db17ff29e9e5df2022f62526073cfe885835d748ab5b",
+            "hash_points": "c034981391bbbed379b11948c7aa5d6afcf7978aec7a4a88ba560a9f608e4aa2",
             "ne1d": 1862,
             "ne2d": 18484,
             "ne3d": 94196,
@@ -2165,16 +2165,16 @@
                 17.888,
                 139.33
             ],
-            "hash": "c1f801a4c4337d19af5eb0fa1a96c4545a4daab067adf94617ae667ef93fb993",
+            "hash": "5b59db4fb1ded44ad00004fd3a5611b6de4d03fc5afacd109880e276c28a3fc3",
             "hash_el1d": "5ebd0aa13ffd286d2e02208f81a5f4f738b84dbc2b93aeff390f99b0730fa158",
             "hash_el2d": "79c76972a76093bddf105456e85a4f4a20bbb44936ee5baf4ef45a838f0a2f1a",
-            "hash_el3d": "7304d9db5276f93b2ce06b9fac1d43bb6c9c461e4e8d502f41f01e236aa29423",
-            "hash_points": "fb6cb0048c0a057184ad9cd10454f399f39a3ced049b47a0b288bc8d51a1763d",
+            "hash_el3d": "73dc00f70f88fa3ad19f761e1c62d0e810a113d32f9368d84f2919563c854534",
+            "hash_points": "04ef000d6032945ebb361e0022f7948075f4fdf8b97ef943f9409134afff3b27",
             "ne1d": 5886,
             "ne2d": 45882,
-            "ne3d": 154526,
-            "quality_histogram": "[0, 0, 0, 0, 0, 0, 6, 55, 236, 692, 2073, 5662, 10233, 16701, 23201, 25444, 26281, 23257, 16475, 4210]",
-            "total_badness": 202416.84104
+            "ne3d": 154511,
+            "quality_histogram": "[0, 0, 0, 0, 0, 0, 7, 53, 235, 687, 2065, 5666, 10228, 16690, 23195, 25448, 26277, 23267, 16482, 4211]",
+            "total_badness": 202379.26098
         },
         {
             "angles_tet": [
@@ -2227,16 +2227,16 @@
                 16.373,
                 136.58
             ],
-            "hash": "cc2634eb5b39aa936c241565ed5429ecab006c930f97e70afec044f4b1ec4030",
+            "hash": "32ff3072c2bd0da4993155bd1228fc5b903d7081e70e957618afa842dd36caea",
             "hash_el1d": "8499368924d494627065bc0f94ec15eae626f0e0f4def4aa6cba690adc72b16a",
             "hash_el2d": "af16c8dcef66a60f3dbbf052bec10861c90fea9a0cfc0bfbeaf16f6faaf7976c",
-            "hash_el3d": "e335ce47338a1214152c9c8e720908d0c0bd58566882eb15c237743abcea31ba",
-            "hash_points": "8a556571c56aea98204d4da51195dbb4e9eaee529c5b6bad19831744f625e7d4",
+            "hash_el3d": "5ea13ea77dd3fa2f1c14d7d2c5c9dd7c3504157c6de53932d79069d3ad225e98",
+            "hash_points": "613b359e3345b32047e97368c554606a8539533cae5690cc7a0d38e6f20cde45",
             "ne1d": 10202,
             "ne2d": 41054,
-            "ne3d": 96876,
-            "quality_histogram": "[0, 0, 0, 0, 3, 15, 78, 231, 660, 1712, 3719, 6478, 9520, 12135, 13066, 13560, 13384, 12111, 8061, 2143]",
-            "total_badness": 134083.55662
+            "ne3d": 96877,
+            "quality_histogram": "[0, 0, 0, 0, 3, 15, 78, 231, 661, 1716, 3717, 6477, 9519, 12143, 13065, 13559, 13396, 12096, 8057, 2144]",
+            "total_badness": 134089.59098
         }
     ],
     "matrix.geo": [
@@ -2269,11 +2269,11 @@
                 8.2262,
                 162.29
             ],
-            "hash": "a9b95d01c4e05244765799118928a8537fb852ef6a95cf25ce00acdb9603714b",
+            "hash": "982ed46f67a29948280902d0736c43a90816e599b9e8e523a43b82b07be89c78",
             "hash_el1d": "c76383bbd9caae74070a7fd9aab88d034f6f4bb00b11bbc272a76e71a8c1ac2b",
             "hash_el2d": "63b2e5db2f5505d35b497078e4b7b47c34d547089ad87622326fa9d00041895a",
-            "hash_el3d": "8b069389a95ea5daef475687ce9655024b99f36b86b5728f7f9929114a7a28ed",
-            "hash_points": "e22b5cdb7e047c264e5fd105baf7bfa6292d51bf9e59acb29312c29cc58381b0",
+            "hash_el3d": "db89ffa3cda03bae14da78b99a97fe0a374a432842dc7333e7ef4bf3a609102f",
+            "hash_points": "26334ead899bb2a4d0dbead47b0caa11f13db0a0b1ad3c636910f5b8df1ca79f",
             "ne1d": 106,
             "ne2d": 314,
             "ne3d": 847,
@@ -2510,19 +2510,19 @@
                 158.2
             ],
             "angles_trig": [
-                16.501,
-                146.39
+                17.097,
+                125.79
             ],
-            "hash": "a2518dad65098bfd5464d10cee86baa6db40c603b24928ae8069ed94b95bc7bb",
+            "hash": "450d2bcbf95a23e0f5e5fc60252dc446a1a5c33384611d640f2ecd253ced1c25",
             "hash_el1d": "35c29e0f9036c9ddc5212e33cd3797f9f9ae86e67472fd918b7e13372eb03229",
             "hash_el2d": "b5c867384948cd6f2cfe14cf2f2473c981aa6311e0894d8b4d061394c0878878",
-            "hash_el3d": "e90337b646c079ce1dbe5729a7f7bbe0d729ea601c6e5315ae35fc4186576369",
-            "hash_points": "807744d9b155ee6f7f2c7df5686e4da30f42b398b90f6425e3d2ca9cc4a25c6f",
+            "hash_el3d": "5aacb867192cbf1277f9b610e8400642d14f203d8f03dd6757a60ad26c86ded2",
+            "hash_points": "bb6526b9a950308511eb3f4448717c133ad98d66c26ad2f6563c73e242ec78bb",
             "ne1d": 134,
             "ne2d": 258,
-            "ne3d": 430,
-            "quality_histogram": "[0, 0, 0, 2, 2, 3, 5, 3, 17, 18, 29, 38, 62, 49, 51, 52, 50, 29, 15, 5]",
-            "total_badness": 676.68240064
+            "ne3d": 424,
+            "quality_histogram": "[0, 0, 0, 2, 1, 2, 5, 5, 14, 18, 30, 48, 51, 58, 47, 49, 44, 32, 15, 3]",
+            "total_badness": 668.42272863
         },
         {
             "angles_tet": [
@@ -2573,16 +2573,16 @@
                 25.066,
                 115.06
             ],
-            "hash": "2d9e75b2dc04d14bfbbe2d6bba5f2343b084aaed8a2f84c6cb054a50bcf01a01",
+            "hash": "669964845884526fe879c522d57d96309eb0b48fc1d301dd41108789255825e4",
             "hash_el1d": "72279586cfd9390dbd1994448872306e63a56c070c3d3526f903b93e227f2a87",
             "hash_el2d": "acb4a340533826ed9a8ac934230e3bd07244b6da610d8fa9ee08f66be5d6f40b",
-            "hash_el3d": "4eb8cb7023c11c5e05bd6fa0ee014ed42a79bc80800ecbdd10461145bb4a9f8d",
-            "hash_points": "405f153b7237ec3367e7b38e23d7229ee4afd34b2711cc937f062769d8497d5e",
+            "hash_el3d": "822ba8106d6296253dae552414725f6f6de124aafd25c2aaf2964c5bfffa2f89",
+            "hash_points": "8c8931f16b4c5fd647fee6c6200f9bd1eb1d3ca18462d010ccff3e08e2beab2d",
             "ne1d": 674,
             "ne2d": 6262,
             "ne3d": 54309,
             "quality_histogram": "[0, 0, 0, 0, 0, 0, 0, 1, 3, 18, 70, 227, 704, 2070, 4146, 7405, 11357, 13231, 11405, 3672]",
-            "total_badness": 65008.161055
+            "total_badness": 65008.161397
         }
     ],
     "period.geo": [
@@ -2628,23 +2628,23 @@
         },
         {
             "angles_tet": [
-                9.2757,
-                164.58
+                9.9228,
+                164.18
             ],
             "angles_trig": [
                 15.73,
                 145.3
             ],
-            "hash": "9da8271d8936dc2016715c91b1e77d9c80d56c60e51e97e731923203ef992daa",
+            "hash": "8e467ceea6af460ac8c68fcba81bae26ab535d82782be230970f4844237d67dd",
             "hash_el1d": "0c75829b4cd1cef638712b1cb1bdaef109fb140143113e0b786785c1ade0137c",
             "hash_el2d": "94c67aa29c3979468ae2d6f7240b7042829e32aa9698e696ff0cfda04b25ce11",
-            "hash_el3d": "85aecaf9b089e6f7cd09896071f6968564f9bf2f851f076b4ffc590fd277a53d",
-            "hash_points": "2ff2a08d711bc85d4b791b4aaf62a407b8a947889f5ed26c64d06c5577345ed7",
+            "hash_el3d": "cddcd23a16515f3c6823e67eaa0a2434f1c1c73a9e9d3f74253280318a5c7473",
+            "hash_points": "30b3762317a76913b997cbe4a9750a48635813eb45ebd92caeee277a2b9053c1",
             "ne1d": 232,
             "ne2d": 494,
-            "ne3d": 1007,
-            "quality_histogram": "[0, 0, 0, 4, 15, 37, 46, 61, 56, 63, 79, 103, 113, 104, 98, 93, 61, 49, 22, 3]",
-            "total_badness": 1862.6192483
+            "ne3d": 1019,
+            "quality_histogram": "[0, 0, 1, 2, 14, 36, 49, 61, 61, 65, 86, 98, 117, 105, 93, 90, 64, 54, 20, 3]",
+            "total_badness": 1886.4187584
         },
         {
             "angles_tet": [
@@ -2755,18 +2755,18 @@
             ],
             "angles_trig": [
                 19.732,
-                132.84
+                136.18
             ],
-            "hash": "8f00bc84f4cd53c6837edeae1bd9dca09dd23db5290d17b7d8fa3646e77cd1b2",
+            "hash": "256d674bad944c3d49f863c431f29f6ecd4a8d5d3d3eb98b3a4252d66a7397c6",
             "hash_el1d": "0267c479e74b6d825c80f4a2a907ecf7d4ece720c24301cc692de9b54af63de2",
             "hash_el2d": "15b807ef905248a2fbc85b0297bb715d58bec87e5c850a1fa43be6b6d08ba521",
-            "hash_el3d": "4d134cb3004b1d65f352f0f0d10e79b322b24735da1a7674020baf83a06684cf",
-            "hash_points": "3adb0faa553e82f2b0e3e506e6c01dbb91b803f3882148d90d4040d17b7bab0d",
+            "hash_el3d": "14be95f7a8102b2809409cc03804180a0fb0c70c9408c6f26db594ed9ade7b69",
+            "hash_points": "c4c7037c864294cb080465515bb28d066de5856dac3a80e39c13f60db134d46c",
             "ne1d": 240,
             "ne2d": 1584,
-            "ne3d": 3345,
-            "quality_histogram": "[0, 0, 0, 0, 0, 0, 0, 5, 39, 95, 219, 366, 454, 470, 475, 412, 317, 269, 177, 47]",
-            "total_badness": 4900.9028143
+            "ne3d": 3366,
+            "quality_histogram": "[0, 0, 0, 0, 0, 0, 1, 6, 39, 98, 227, 377, 458, 462, 480, 402, 336, 249, 177, 54]",
+            "total_badness": 4940.526781
         },
         {
             "angles_tet": [
@@ -2839,10 +2839,10 @@
                 26.076,
                 111.32
             ],
-            "hash": "03b5902eac2346324d7bee2984b884e2b7f0b2d1f469b17ee8e72ad575f026aa",
+            "hash": "c42ab26a13fbb620bbca2a13163caa59b03ff33caee2bef65fecf957307972b5",
             "hash_el1d": "ec2e6dc4ef6ed1302ca79b1912522377243d0637b3532287638f2263801544ac",
             "hash_el2d": "183621d43da2e787e56ca9a9dc5105cab8ce64b4accb52b6cc6c747888d4f61a",
-            "hash_el3d": "7fc6f39395ce7ccc0b76b7b8f8d10e7ad7a71076c7c57b1b677aa2ca995f23be",
+            "hash_el3d": "3608b7433c268c14a922b3734badc09eebc43e910f1a9a61134e609a3a97b027",
             "hash_points": "7c77f725aaef5f99456b4e29aeba91b1e6debac23f2da79a1a2d8c3aec69f035",
             "ne1d": 192,
             "ne2d": 358,
@@ -2899,10 +2899,10 @@
                 26.076,
                 111.32
             ],
-            "hash": "03b5902eac2346324d7bee2984b884e2b7f0b2d1f469b17ee8e72ad575f026aa",
+            "hash": "c42ab26a13fbb620bbca2a13163caa59b03ff33caee2bef65fecf957307972b5",
             "hash_el1d": "ec2e6dc4ef6ed1302ca79b1912522377243d0637b3532287638f2263801544ac",
             "hash_el2d": "183621d43da2e787e56ca9a9dc5105cab8ce64b4accb52b6cc6c747888d4f61a",
-            "hash_el3d": "7fc6f39395ce7ccc0b76b7b8f8d10e7ad7a71076c7c57b1b677aa2ca995f23be",
+            "hash_el3d": "3608b7433c268c14a922b3734badc09eebc43e910f1a9a61134e609a3a97b027",
             "hash_points": "7c77f725aaef5f99456b4e29aeba91b1e6debac23f2da79a1a2d8c3aec69f035",
             "ne1d": 192,
             "ne2d": 358,
@@ -2954,23 +2954,23 @@
     "shaft.geo": [
         {
             "angles_tet": [
-                6.0594,
-                169.09
+                6.7141,
+                168.7
             ],
             "angles_trig": [
-                12.713,
+                12.818,
                 152.57
             ],
-            "hash": "f088cab6df53db33f881bbd287f43637d781e8b90e0f61d4178980da9dd4a3c1",
+            "hash": "710a0f7a47f641b42ace4bd9fe1883a591da3eac3eb54366a8cfe5ddafd5a14e",
             "hash_el1d": "d1f56c69e7f254aeeee55faafe8ca266280632e1af4b09a9c0e8b90620067364",
             "hash_el2d": "35f16f21087dd8959c6c7a0b2d1627706f0a842c762ad93e359db6c3e541c6d8",
-            "hash_el3d": "3649ab478771c483b70511edd4a8a278b57f28cc1e3c603c3344ccfc1fe41254",
-            "hash_points": "5b1fae26030b8d54ec437cac11e9d78660084182ababb1027f34580a929d7979",
+            "hash_el3d": "fd38ec4d2e97653f5582efb919620e75176d97a48dc9f8eaae1e89f01cb820e1",
+            "hash_points": "deb4a1f7256b3a77eb30197a42b7ed9f5001109feb3d5a46594c0e32f9024320",
             "ne1d": 708,
             "ne2d": 1656,
-            "ne3d": 2449,
-            "quality_histogram": "[0, 1, 0, 9, 40, 24, 15, 47, 68, 147, 225, 348, 307, 223, 219, 251, 237, 180, 90, 18]",
-            "total_badness": 4062.3419097
+            "ne3d": 2470,
+            "quality_histogram": "[0, 0, 2, 9, 43, 27, 19, 43, 66, 138, 235, 351, 284, 237, 219, 256, 250, 181, 94, 16]",
+            "total_badness": 4101.7866795
         },
         {
             "angles_tet": [
@@ -3001,36 +3001,36 @@
                 9.6019,
                 144.68
             ],
-            "hash": "2632d51a7024980fce5c90500274ab86fde07a3e610b0883611bef384807e76a",
+            "hash": "54d75aefea9a29544eb22ffd63f2a6dad57921839c55dc9014ef794ef21a9d8e",
             "hash_el1d": "f90513050683cbca5fc8274106ec80a5ac36333a78c4abdcb28a05e64f4e64d6",
             "hash_el2d": "bc54fba58a42e4334abfa029ca1bc2f97500ff331b58b50a4e06eb52349c0e82",
-            "hash_el3d": "8f8e41b7eb4277044a52b70dc7123e8a2a061ffbc289b5b7ea3123b17e4e3bd0",
-            "hash_points": "164aa38374b584527bc9ecb8992f625ed606bbb8b93b06614aafa66b2947e4e2",
+            "hash_el3d": "819731eab8ec82374a53e4972689a4f29c99d52823427ec16511809f56741157",
+            "hash_points": "2a01af9c5e68a719de4ae501bd866f942abc9da781bd908880a6fa5b318e0f42",
             "ne1d": 510,
             "ne2d": 912,
-            "ne3d": 1281,
-            "quality_histogram": "[3, 0, 0, 2, 13, 43, 81, 68, 45, 49, 74, 95, 105, 125, 171, 148, 136, 73, 40, 10]",
-            "total_badness": 2584.5605485
+            "ne3d": 1264,
+            "quality_histogram": "[3, 0, 0, 1, 8, 40, 68, 76, 47, 47, 68, 99, 111, 131, 161, 154, 129, 68, 42, 11]",
+            "total_badness": 2526.3161198
         },
         {
             "angles_tet": [
-                11.54,
+                9.1927,
                 166.59
             ],
             "angles_trig": [
-                13.646,
-                152.27
+                12.818,
+                152.57
             ],
-            "hash": "d0eadb4511fcee88bcaf7ea28847d39424eeaa536a86f91899da8d61d53d0d7e",
+            "hash": "3bd16b0c8c05dd65e932005c3398ec98a425367eaac3805ce1faee30c3f51d28",
             "hash_el1d": "d1f56c69e7f254aeeee55faafe8ca266280632e1af4b09a9c0e8b90620067364",
             "hash_el2d": "35f16f21087dd8959c6c7a0b2d1627706f0a842c762ad93e359db6c3e541c6d8",
-            "hash_el3d": "b468240a84114707cdddb963af54bbf000683c26d4b57d31f5bc5e6d8e0d2d0a",
-            "hash_points": "ad41c7eb1bf014eec05caf1529c704eddddf14d3d9d764180a1639827532488d",
+            "hash_el3d": "329942744274736dc58a0aee61c0a9f2a6e39f2f74b2703cdaec1840ccd28c2e",
+            "hash_points": "3e78afd03b6f64eb3357fc3631e1f13749e48039559a197ec62cf3be36575938",
             "ne1d": 708,
             "ne2d": 1656,
-            "ne3d": 2364,
-            "quality_histogram": "[0, 0, 0, 3, 24, 9, 9, 19, 69, 179, 237, 321, 277, 213, 232, 246, 237, 183, 88, 18]",
-            "total_badness": 3793.6516738
+            "ne3d": 2403,
+            "quality_histogram": "[0, 0, 0, 4, 26, 11, 8, 24, 68, 162, 218, 323, 291, 223, 234, 264, 253, 183, 89, 22]",
+            "total_badness": 3841.5346678
         },
         {
             "angles_tet": [
@@ -3713,16 +3713,16 @@
                 9.0702,
                 156.78
             ],
-            "hash": "70bb35302c523d18bcc5b79b54fccd4338c854ae09eb7a48f2e05281742ef917",
+            "hash": "5795bae3a897104e56143e59a252b81ced5f1b49725c830e946ca7cec8786afd",
             "hash_el1d": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
             "hash_el2d": "61f938644cf49676feae6f46d121e96287b7747cdb85ff0f26114a48206b8d19",
-            "hash_el3d": "ce947d07f69d6f4782ec73cea952058b647559d90f6f572a0b9f8963193dbce4",
-            "hash_points": "02703bd4d2607c0ac80db367c3a717413549642429efab1a5ca7b0f65f2dc8c3",
+            "hash_el3d": "b278a7ff0113ea2ab77a861b6ae390206ee5fb9258995739f8435a96385c2137",
+            "hash_points": "943f555d889b6bb29521bd307c5a7a217795d27097375f9ea83a96995fbee4d6",
             "ne1d": 0,
             "ne2d": 648,
-            "ne3d": 1316,
-            "quality_histogram": "[4, 69, 112, 154, 262, 273, 143, 70, 53, 27, 33, 27, 23, 20, 14, 11, 7, 6, 3, 5]",
-            "total_badness": 5967.2366141
+            "ne3d": 1327,
+            "quality_histogram": "[4, 62, 116, 160, 268, 270, 150, 70, 52, 26, 29, 28, 22, 21, 13, 13, 5, 9, 4, 5]",
+            "total_badness": 5956.7830237
         },
         {
             "angles_tet": [
@@ -3829,22 +3829,22 @@
         {
             "angles_tet": [
                 2.8238,
-                175.21
+                174.1
             ],
             "angles_trig": [
                 7.7605,
                 156.22
             ],
-            "hash": "1c14f6467eb59c09043e4aeb66d275b0a85a78091578d689254dc709ba686d2d",
+            "hash": "fa99f4b305f8bde6de0e48b21430fc7a653e6e0568083322f04b23fdf2400891",
             "hash_el1d": "99758d9f659c0e3db9112d2e9c44b3dc8cc23a269bdde578956938180105b30c",
             "hash_el2d": "0cca9b28a210b874e4e99b1982a9136d497641579afc93dd031ba13322e8557c",
-            "hash_el3d": "cdcbd05351fc8f1c03fddbde432a09b04dc0cea95ab7ec59a52868ad788518fe",
-            "hash_points": "291ececc432ae3362749a145b49380699815d1cd05cf1287907927dd26b0ce28",
+            "hash_el3d": "6d69ca19e65b69d9008dfab9020054aad80d8db9663db2e82d9d091af8a4db99",
+            "hash_points": "3d71a51e12fd4328a5dc39e96e7eb3e91456ae34f9f949e2f29e9ec851f28da8",
             "ne1d": 390,
             "ne2d": 516,
-            "ne3d": 1332,
-            "quality_histogram": "[0, 2, 5, 14, 16, 42, 76, 118, 126, 153, 159, 133, 121, 106, 87, 80, 53, 27, 11, 3]",
-            "total_badness": 2769.107096
+            "ne3d": 1330,
+            "quality_histogram": "[0, 1, 5, 14, 16, 42, 76, 118, 126, 151, 160, 134, 120, 106, 86, 80, 53, 28, 11, 3]",
+            "total_badness": 2746.9153651
         },
         {
             "angles_tet": [
@@ -4181,11 +4181,11 @@
                 21.37,
                 119.53
             ],
-            "hash": "7ec4710a11f10370195a3f1b3827290de2e1193d75b4154fd0498b8df2e8120c",
+            "hash": "2b3311af8124c85e4f4ebd498aaf895b7e3a04caa36d4c64f9ed77facee25005",
             "hash_el1d": "c7e78cb1397e96d718033b75edea587070f8a5ead584377eb4da56a9ccb53239",
             "hash_el2d": "731e30d6f6fd218c0170e6d84e0c66ba4f292985f49f57f4797f25e855a69da9",
-            "hash_el3d": "39751f86058f0e75fcea13b0f2c1dfa7f0c0831eb65f925c92bd31cb2f9285a4",
-            "hash_points": "e2fe8b36d65a20e9933e6e33e3af71dc87a90fb595a1c9610d6118f1ed8c181d",
+            "hash_el3d": "cb9f7a28f8d8bb8f20d285b956f44ca7828cf80c8b7de7c50ee3e51a328da53c",
+            "hash_points": "96a22ab331b23a553f9c47e822f46daeced13b2c3a74e3c87e9fe5b7888c9fc2",
             "ne1d": 144,
             "ne2d": 408,
             "ne3d": 568,
@@ -4195,42 +4195,42 @@
         {
             "angles_tet": [
                 18.044,
-                142.71
+                148.81
             ],
             "angles_trig": [
-                25.435,
-                118.39
+                23.956,
+                123.61
             ],
-            "hash": "4694483fc851a56a3f2bf2c09614a3e10e113827b852539e311fa0ac96fabd66",
+            "hash": "d0692bd3b9d9f6c8d0d4d6a462ba8063553a75f793cf428a2656d5ab383dbaf2",
             "hash_el1d": "c36214e4a333a9597c0ea01d8febc45ce9ac32069e1de1d28839ef27214d34d8",
             "hash_el2d": "d27921623e2f9b0082ea86bec58b4e48bcf9dfdd1a0a812ade67da89bac14a06",
-            "hash_el3d": "98d14452c31e7977a0c3d677fa18934109a0db8227ef8c963461c051c48439a8",
-            "hash_points": "4f74443af1882a8ba96988e1383cc0343fbb4c3bb8ca1b4d764cf21b7e30cee5",
+            "hash_el3d": "780c3c57d36f204eff8daac732d178f86d860ed3d5ee3ca67d2eb4615a18b714",
+            "hash_points": "c379c4abce891393396023a03804ce0c5881d196c85848f7b6a7773d48fbca62",
             "ne1d": 68,
             "ne2d": 98,
-            "ne3d": 106,
-            "quality_histogram": "[0, 0, 0, 0, 0, 1, 0, 4, 6, 5, 5, 13, 5, 15, 7, 9, 15, 18, 3, 0]",
-            "total_badness": 164.37650945
+            "ne3d": 114,
+            "quality_histogram": "[0, 0, 0, 0, 0, 1, 1, 5, 8, 11, 4, 14, 7, 14, 7, 6, 16, 17, 3, 0]",
+            "total_badness": 185.60477446
         },
         {
             "angles_tet": [
-                9.1027,
-                161.67
+                7.8606,
+                162.96
             ],
             "angles_trig": [
-                15.302,
-                141.93
+                16.45,
+                138.95
             ],
-            "hash": "d8d09af3f71d39d68a9a4efbf86a66f126eb1b7cbc1ca7bebd1af0b71321d244",
+            "hash": "d18aa47e87a8e07ffbb83884b89882db57b0f7825055e473f9990b9fe5deb74f",
             "hash_el1d": "94decf7cd440e9d3cce75a1367bfa12435b2167511bd94dc91279c6745013dfb",
             "hash_el2d": "4ef3b95b272e53ed25584132a8a5514f3c24463eab379b630ce1acd9d297c364",
-            "hash_el3d": "4f81148541bafc02aa6159a9cfa2e99a4696f665b4ba0644b7d3d6ad2469ba3c",
-            "hash_points": "862ac02c4360e938e92b46b04a8f2a575f75652888a8419b2ccaf818af942d73",
+            "hash_el3d": "07c5464debdecdacb662799d7a090e6bd333a42b8cdf68fdb30af2fd71f6caec",
+            "hash_points": "cba13bd64568cce5fb3c4090e99d561d7e206fa8e92c300f3ac39ae4dba84f5c",
             "ne1d": 102,
             "ne2d": 234,
-            "ne3d": 334,
-            "quality_histogram": "[0, 1, 4, 9, 7, 28, 26, 36, 48, 26, 13, 7, 13, 21, 14, 19, 37, 14, 8, 3]",
-            "total_badness": 774.94126931
+            "ne3d": 319,
+            "quality_histogram": "[0, 0, 4, 7, 9, 19, 25, 34, 44, 24, 14, 7, 13, 21, 16, 21, 38, 13, 6, 4]",
+            "total_badness": 716.37263117
         },
         {
             "angles_tet": [
@@ -4241,11 +4241,11 @@
                 21.946,
                 111.07
             ],
-            "hash": "c0f076a0b7421b2e6e04f5f123c320eaa2d9773ba5f9e339c04c7014ef093cf2",
+            "hash": "0d4657b278b2e48a0382ee05a5cc6c3acbaf38ea31579507a24dab6659041639",
             "hash_el1d": "c7e78cb1397e96d718033b75edea587070f8a5ead584377eb4da56a9ccb53239",
             "hash_el2d": "731e30d6f6fd218c0170e6d84e0c66ba4f292985f49f57f4797f25e855a69da9",
-            "hash_el3d": "38219e41a2b32697f6f9eaf68e90d8b9c74bb6d327a97d1baec8c825959b5afd",
-            "hash_points": "9d029b93e968daf14237fdb62dc40d4464634047df118d799ed01926b9681de9",
+            "hash_el3d": "fd0f007d42167bd80d20b3522bc1c4eae09bff3555ac734cee690db30f8c3e04",
+            "hash_points": "b959fb4ac3fb4c1ba4d28f3eacd7d83335d06fa5e5883837695e8e9b428add3a",
             "ne1d": 144,
             "ne2d": 408,
             "ne3d": 565,
