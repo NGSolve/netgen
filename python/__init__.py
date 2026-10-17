@@ -41,12 +41,12 @@ def load_occ_libs():
             "TKShHealing",
             "TKTopAlgo",
             "TKGeomAlgo",
+            "TKDE",
             "TKBRep",
             "TKGeomBase",
             "TKG3d",
             "TKG2d",
             "TKMath",
-            "TKDE",
             "TKernel",
         ]
         lib_names.reverse()
