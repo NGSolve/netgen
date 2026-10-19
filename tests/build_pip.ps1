@@ -49,7 +49,7 @@ foreach ($pydir in $pythons) {
 
     # Build-critical deps only (twine is installed separately before upload, so a
     # twine dependency hiccup can never block the build itself).
-    Invoke-Step { & $python -m pip install -U build delvewheel "scikit-build-core>=0.10" pybind11-stubgen netgen-occt==7.8.1 netgen-occt-devel==7.8.1 ninja cmake }
+    Invoke-Step { & $python -m pip install -U build delvewheel "scikit-build-core>=0.10" pybind11-stubgen netgen-occt==8.0.1.dev0 netgen-occt-devel==8.0.1.dev0 ninja cmake }
 
     if (test-path dist) { cmd.exe /c rd /s /q dist }
 

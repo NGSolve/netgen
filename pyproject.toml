@@ -2,7 +2,7 @@
 requires = [
     "scikit-build-core>=0.10",
     "pybind11-stubgen>=2.5",
-    "netgen-occt-devel==7.8.1",
+    "netgen-occt-devel==8.0.1.dev0",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -14,7 +14,7 @@ authors = [{ name = "The Netgen team" }]
 license = "LGPL-2.1-only"
 requires-python = ">=3.10"
 dependencies = [
-    "netgen-occt==7.8.1",
+    "netgen-occt==8.0.1.dev0",
     "numpy",
 ]
 
@@ -113,7 +113,7 @@ build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*-musllinux_* *_i686 *-win32"
 # Build without isolation to have tcl/tk headers available in sys.prefix
 build-frontend = { name = "pip", args = ["--no-build-isolation"] }
-before-build = "pip install -U \"scikit-build-core>=0.10\" \"pybind11-stubgen>=2.5\" netgen-occt==7.8.1 netgen-occt-devel==7.8.1 ninja cmake"
+before-build = "pip install -U \"scikit-build-core>=0.10\" \"pybind11-stubgen>=2.5\" netgen-occt==8.0.1.dev0 netgen-occt-devel==8.0.1.dev0 ninja cmake"
 build-verbosity = 1
 test-command = "python -c \"import netgen; import netgen.occ; print(netgen.__version__)\""
 
