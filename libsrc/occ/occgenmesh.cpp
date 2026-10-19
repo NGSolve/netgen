@@ -455,8 +455,34 @@ namespace netgen
       }
 
     static Timer t1("rest of loop"); RegionTimer reg1(t1);
-      
+
     bool meshing_failed = res != MESHING2_OK;
+
+    // In parameter space a strongly distorted parametrization can fold the
+    // mesh without the mesher noticing: triangles flipped against the
+    // surface normal. Treat that as a failure, the caller retries in plane
+    // space projection.
+    if (!meshing_failed && projecttype == PARAMETERSPACE)
+      {
+        size_t npos = 0, nneg = 0;
+        for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(noldsurfel, 0))
+          {
+            Element2d el(mesh[sei]);
+            if (el.GetNP() != 3) continue;
+            Point<3> p0 = mesh[el[0]], p1 = mesh[el[1]], p2 = mesh[el[2]];
+            Vec<3> n = Cross (p1-p0, p2-p0);
+            Vec<3> ns = occface.GetNormal (Center (p0, p1, p2), &el.GeomInfo()[0]);
+            // only clearly flipped triangles, not degenerate ones
+            double c = n * ns / (n.Length() * ns.Length() + 1e-300);
+            if (c > 0.5) npos++;
+            if (c < -0.5) nneg++;
+          }
+        if (npos && nneg)
+          {
+            PrintMessage (2, "Face ", k, ": ", min(npos, nneg), " folded triangles in parameter space");
+            meshing_failed = true;
+          }
+      }
     if(meshing_failed && delete_on_failure)
     {
         for (SurfaceElementIndex sei : mesh.SurfaceElements().Range().Modify(noldsurfel, 0))

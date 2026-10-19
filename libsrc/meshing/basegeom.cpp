@@ -872,6 +872,49 @@ namespace netgen
     return res != MESHING2_OK;
   }
 
+  // Splits the triangles of the primary face of dst whose vertices all lie
+  // on edges shared by both faces at their center: mapped onto dst they would
+  // give a triangle with the same vertices (faces identified with the
+  // identity, e.g. the two sides of a zero thickness wall).
+  static bool SplitTrigsOnSharedEdges (Mesh & mesh, const GeometryFace & dst)
+  {
+    const auto & src = dynamic_cast<const GeometryFace&>(*dst.primary);
+    Array<int, PointIndex> on_boundary(mesh.Points().Size());
+    on_boundary = 0;
+    for (auto & seg : src.GetBoundary(mesh))
+      for (auto pi : { seg[0], seg[1] })
+        on_boundary[pi] |= 1;
+    for (auto & seg : dst.GetBoundary(mesh))
+      for (auto pi : { seg[0], seg[1] })
+        on_boundary[pi] |= 2;
+
+    bool split = false;
+    for (auto sei : Range(mesh.SurfaceElements()))
+      {
+        Element2d el(mesh[sei]);
+        if (el.IsDeleted() || el.GetNP() != 3 || mesh.GetFaceDescriptor(el).SurfNr() != src.nr+1)
+          continue;
+        if (on_boundary[el[0]] != 3 || on_boundary[el[1]] != 3 || on_boundary[el[2]] != 3)
+          continue;
+
+        Point<3> p = Center (Point<3>(mesh[el[0]]), Point<3>(mesh[el[1]]), Point<3>(mesh[el[2]]));
+        PointGeomInfo gi = src.Project(p);
+        PointIndex pc = mesh.AddPoint (p, 1, SURFACEPOINT);
+        for (int i = 0; i < 3; i++)
+          {
+            Element2d part(el);
+            part[(i+2)%3] = pc;
+            part.GeomInfo()[(i+2)%3] = gi;
+            mesh.AddSurfaceElement (part);
+          }
+        mesh[sei].Delete();
+        split = true;
+      }
+    if (split)
+      PrintMessage (3, "split triangles with all vertices on edges shared with face ", dst.nr+1);
+    return split;
+  }
+
   void NetgenGeometry :: MeshSurface(Mesh& mesh,
                                      const MeshingParameters& mparam) const
   {
@@ -1090,6 +1133,16 @@ namespace netgen
       mesh.CalcSurfacesOfNode();
       OptimizeSurface(mesh, mparam);
     }
+
+    bool split = false;
+    for(auto & face : faces)
+        if(face->primary != face.get())
+            split |= SplitTrigsOnSharedEdges(mesh, *face);
+    if(split)
+      {
+        mesh.Compress();
+        mesh.CalcSurfacesOfNode();
+      }
 
     bool have_identifications = false;
     std::map<tuple<PointIndex, int>, PointIndex> mapto;
