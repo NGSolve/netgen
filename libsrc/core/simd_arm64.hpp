@@ -330,9 +330,12 @@ namespace ngcore
     return vmlaq_f32(c.Data(), a.Data(), b.Data());
   }
 
+  // fmla by element: ld1r costs an extra FP uop on Apple cores, the barrier keeps clang from folding into ld1r
   NETGEN_INLINE SIMD<float,4> FMA(const float & a, SIMD<float,4> b, SIMD<float,4> c)
   {
-    return FMA(SIMD<float,4> (a), b, c);
+    float s = a;
+    asm ("" : "+w"(s));
+    return vfmaq_n_f32(c.Data(), b.Data(), s);
   }
 
   // ARM complex mult:
@@ -376,7 +379,8 @@ namespace ngcore
 
     SIMD & operator= (const SIMD &) = default;
 
-    SIMD (double val) : data{val,val} { }
+    // lets clang use fmla by element instead of ld1r (extra FP uop on Apple cores)
+    SIMD (double val) : data{vdupq_lane_f64(vld1_f64(&val), 0)} { }
     SIMD (int val)    : data{double(val),double(val)} { }
     SIMD (size_t val) : data{double(val),double(val)} { }
 
@@ -468,7 +472,7 @@ namespace ngcore
   {
     return vmlaq_f64(c.Data(), a.Data(), b.Data());
   }
-  NETGEN_INLINE SIMD<double,2> FMA (const double & a, SIMD<double,2> b, SIMD<double,2> c)
+  NETGEN_INLINE SIMD<double,2> FMA (double a, SIMD<double,2> b, SIMD<double,2> c)
   {
     return FMA(SIMD<double,2> (a), b, c);
   }
@@ -478,7 +482,7 @@ namespace ngcore
     return vmlsq_f64(c.Data(), a.Data(), b.Data());    
     // return c-a*b;
   }
-  NETGEN_INLINE SIMD<double,2> FNMA (const double & a, SIMD<double,2> b, SIMD<double,2> c)
+  NETGEN_INLINE SIMD<double,2> FNMA (double a, SIMD<double,2> b, SIMD<double,2> c)
   {
     return FNMA(SIMD<double,2> (a), b, c);
   }
