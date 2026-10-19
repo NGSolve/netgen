@@ -279,7 +279,205 @@ namespace ngcore
   {
     return _mm512_shuffle_pd (a.Data(), a.Data(), 0b01010101);
   }
-  
+
+
+  // *************************** mask32 ***************************
+  // only AVX512F intrinsics: conversions to the AVX vector masks go through a full 0/-1 vector
+
+  template <>
+  class SIMD<mask32,16>
+  {
+    __mmask16 mask;
+  public:
+    SIMD (int i)
+      : mask(_mm512_cmpgt_epi32_mask(_mm512_set1_epi32(i),
+                                     _mm512_set_epi32(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)))
+    { ; }
+    SIMD (__mmask16 _mask) : mask(_mask) { ; }
+    SIMD (SIMD<mask32,8> lo, SIMD<mask32,8> hi)
+      : mask(_mm512_cmplt_epi32_mask(_mm512_inserti64x4(_mm512_castsi256_si512(lo.Data()), hi.Data(), 1),
+                                     _mm512_setzero_si512()))
+    { ; }
+    __mmask16 Data() const { return mask; }
+    static constexpr int Size() { return 16; }
+    static NETGEN_INLINE SIMD<mask32,16> GetMaskFromBits (unsigned int i)
+    {
+      return SIMD<mask32,16>(__mmask16(i));
+    }
+    SIMD<mask32,8> Lo() const { return _mm512_castsi512_si256(_mm512_maskz_set1_epi32(mask, -1)); }
+    SIMD<mask32,8> Hi() const { return _mm512_extracti64x4_epi64(_mm512_maskz_set1_epi32(mask, -1), 1); }
+  };
+
+  NETGEN_INLINE SIMD<mask32,16> operator&& (SIMD<mask32,16> a, SIMD<mask32,16> b)
+  { return (__mmask16)(a.Data() & b.Data()); }
+  NETGEN_INLINE SIMD<mask32,16> operator|| (SIMD<mask32,16> a, SIMD<mask32,16> b)
+  { return (__mmask16)(a.Data() | b.Data()); }
+  NETGEN_INLINE SIMD<mask32,16> operator! (SIMD<mask32,16> a)
+  { return (__mmask16)(~a.Data()); }
+
+
+  // *************************** int32 ***************************
+
+  template<>
+  class alignas(64) SIMD<int32_t,16>
+  {
+    __m512i data;
+
+  public:
+    static constexpr int Size() { return 16; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (int32_t val) : data{_mm512_set1_epi32(val)} { }
+    SIMD (size_t val)  : SIMD(int32_t(val)) { }
+    SIMD (SIMD<int32_t,8> lo, SIMD<int32_t,8> hi)
+      : data{_mm512_inserti64x4(_mm512_castsi256_si512(lo.Data()), hi.Data(), 1)} { }
+    SIMD (std::array<int32_t,16> arr) : data{_mm512_loadu_si512(arr.data())} { }
+    SIMD (int32_t const * p) : data{_mm512_loadu_si512(p)} { }
+    SIMD (__m512i _data) : data{_data} { }
+
+    // __m512i has 64-bit elements: reading it via int32_t* breaks strict aliasing (gcc -O2 reads stale values)
+#if defined(__GNUC__)
+    typedef int32_t __attribute__((__may_alias__)) int32_alias;
+#else
+    typedef int32_t int32_alias;
+#endif
+    NETGEN_INLINE int32_t operator[] (int i) const { return ((const int32_alias*)(&data))[i]; }
+    NETGEN_INLINE __m512i Data() const { return data; }
+    NETGEN_INLINE __m512i & Data() { return data; }
+
+    void Store (int32_t * p) { _mm512_storeu_si512(p, data); }
+
+    SIMD<int32_t,8> Lo() const { return _mm512_castsi512_si256(data); }
+    SIMD<int32_t,8> Hi() const { return _mm512_extracti64x4_epi64(data, 1); }
+    static SIMD FirstInt(int32_t n0=0)
+    { return _mm512_add_epi32(_mm512_set1_epi32(n0), _mm512_set_epi32(15,14,13,12,11,10,9,8,7,6,5,4,3,2,1,0)); }
+  };
+
+  NETGEN_INLINE SIMD<int32_t,16> operator+ (SIMD<int32_t,16> a, SIMD<int32_t,16> b) { return _mm512_add_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,16> operator- (SIMD<int32_t,16> a, SIMD<int32_t,16> b) { return _mm512_sub_epi32(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<int32_t,16> operator& (SIMD<int32_t,16> a, SIMD<int32_t,16> b) { return _mm512_and_si512(a.Data(), b.Data()); }
+
+  template <int N>
+  SIMD<int32_t,16> operator<< (SIMD<int32_t,16> a, IC<N> n) { return _mm512_slli_epi32(a.Data(), N); }
+
+  NETGEN_INLINE SIMD<mask32,16> operator== (SIMD<int32_t,16> a, SIMD<int32_t,16> b) { return _mm512_cmpeq_epi32_mask(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<mask32,16> operator> (SIMD<int32_t,16> a, SIMD<int32_t,16> b) { return _mm512_cmpgt_epi32_mask(a.Data(), b.Data()); }
+
+  NETGEN_INLINE SIMD<int32_t,16> If (SIMD<mask32,16> a, SIMD<int32_t,16> b, SIMD<int32_t,16> c)
+  { return _mm512_mask_blend_epi32(a.Data(), c.Data(), b.Data()); }
+
+
+  // *************************** float ***************************
+
+  template<>
+  class alignas(64) SIMD<float,16>
+  {
+    __m512 data;
+
+  public:
+    static constexpr int Size() { return 16; }
+    SIMD () {}
+    SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+
+    SIMD (float val)  : data{_mm512_set1_ps(val)} { }
+    SIMD (double val) : SIMD(float(val)) { }
+    SIMD (int val)    : SIMD(float(val)) { }
+    SIMD (size_t val) : SIMD(float(val)) { }
+
+    SIMD (float const * p) : data{_mm512_loadu_ps(p)} { }
+    SIMD (float const * p, SIMD<mask32,16> mask) : data{_mm512_maskz_loadu_ps(mask.Data(), p)} { }
+    SIMD (__m512 _data) : data{_data} { }
+    // insertf32x8 would need AVX512DQ
+    SIMD (SIMD<float,8> lo, SIMD<float,8> hi)
+      : data{_mm512_castpd_ps(_mm512_insertf64x4(_mm512_castps_pd(_mm512_castps256_ps512(lo.Data())),
+                                                 _mm256_castps_pd(hi.Data()), 1))} { }
+    SIMD (std::array<float,16> arr) : data{_mm512_loadu_ps(arr.data())} { }
+
+    template<typename ...T, typename = std::enable_if_t<sizeof...(T)==16 && (std::is_convertible_v<T,float> && ...)>>
+    explicit SIMD (const T... vals) : SIMD(std::array<float,16>{ float(vals)... }) { }
+
+    template<typename T, typename std::enable_if<std::is_convertible<T, std::function<float(int)>>::value, int>::type = 0>
+    SIMD (const T & func)
+    {
+      std::array<float,16> arr;
+      for (int i = 0; i < 16; i++) arr[i] = func(i);
+      data = _mm512_loadu_ps(arr.data());
+    }
+
+    void Store (float * p) { _mm512_storeu_ps(p, data); }
+    void Store (float * p, SIMD<mask32,16> mask) { _mm512_mask_storeu_ps(p, mask.Data(), data); }
+
+    NETGEN_INLINE float operator[] (int i) const { return ((float*)(&data))[i]; }
+    NETGEN_INLINE float & operator[] (int i) { return ((float*)(&data))[i]; }
+
+    template <int I>
+    float Get() const
+    {
+      static_assert(I>=0 && I<16, "Index out of range");
+      return (*this)[I];
+    }
+
+    NETGEN_INLINE __m512 Data() const { return data; }
+    NETGEN_INLINE __m512 & Data() { return data; }
+
+    SIMD<float,8> Lo() const { return _mm512_castps512_ps256(data); }
+    SIMD<float,8> Hi() const { return _mm256_castpd_ps(_mm512_extractf64x4_pd(_mm512_castps_pd(data), 1)); }
+  };
+
+  // _mm512_xor_ps is AVX512DQ, flip the sign bit with the integer xor
+  NETGEN_INLINE SIMD<float,16> operator- (SIMD<float,16> a)
+  { return _mm512_castsi512_ps(_mm512_xor_si512(_mm512_castps_si512(a.Data()), _mm512_set1_epi32(int32_t(0x80000000u)))); }
+  NETGEN_INLINE SIMD<float,16> operator+ (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_add_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,16> operator- (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_sub_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,16> operator* (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_mul_ps(a.Data(),b.Data()); }
+  NETGEN_INLINE SIMD<float,16> operator/ (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_div_ps(a.Data(),b.Data()); }
+
+  NETGEN_INLINE float HSum (SIMD<float,16> a) { return _mm512_reduce_add_ps(a.Data()); }
+
+  NETGEN_INLINE SIMD<float,16> FMA (SIMD<float,16> a, SIMD<float,16> b, SIMD<float,16> c)
+  { return _mm512_fmadd_ps(a.Data(), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<float,16> FMA (const float & a, SIMD<float,16> b, SIMD<float,16> c)
+  { return _mm512_fmadd_ps(_mm512_set1_ps(a), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<float,16> FNMA (SIMD<float,16> a, SIMD<float,16> b, SIMD<float,16> c)
+  { return _mm512_fnmadd_ps(a.Data(), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<float,16> FNMA (const float & a, SIMD<float,16> b, SIMD<float,16> c)
+  { return _mm512_fnmadd_ps(_mm512_set1_ps(a), b.Data(), c.Data()); }
+  NETGEN_INLINE SIMD<float,16> FMAddSub (SIMD<float,16> a, SIMD<float,16> b, SIMD<float,16> c)
+  { return _mm512_fmaddsub_ps(a.Data(), b.Data(), c.Data()); }
+
+  NETGEN_INLINE SIMD<float,16> fabs (SIMD<float,16> a) { return _mm512_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,16> Min (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_min_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,16> Max (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_max_ps(a.Data(), b.Data()); }
+  NETGEN_INLINE SIMD<float,16> round (SIMD<float,16> a)
+  { return _mm512_roundscale_ps(a.Data(), _MM_FROUND_TO_NEAREST_INT | _MM_FROUND_NO_EXC); }
+
+  NETGEN_INLINE SIMD<float,16> If (SIMD<mask32,16> a, SIMD<float,16> b, SIMD<float,16> c)
+  { return _mm512_mask_blend_ps(a.Data(), c.Data(), b.Data()); }
+
+  NETGEN_INLINE SIMD<int32_t,16> lround (SIMD<float,16> a) { return _mm512_cvtps_epi32(a.Data()); }
+
+  template <>
+  NETGEN_INLINE SIMD<float,16> Reinterpret (SIMD<int32_t,16> a) { return _mm512_castsi512_ps(a.Data()); }
+
+  // same semantics as the generic Unpack: interleave within each 128-bit lane
+  template<>
+  NETGEN_INLINE auto Unpack (SIMD<float,16> a, SIMD<float,16> b)
+  {
+    __m512 lo = _mm512_unpacklo_ps(a.Data(), b.Data());
+    __m512 hi = _mm512_unpackhi_ps(a.Data(), b.Data());
+    return std::make_tuple(SIMD<float,16>(_mm512_shuffle_ps(lo, hi, _MM_SHUFFLE(1,0,1,0))),
+                           SIMD<float,16>(_mm512_shuffle_ps(lo, hi, _MM_SHUFFLE(3,2,3,2))));
+  }
+
+  template<>
+  NETGEN_INLINE SIMD<float,16> SwapPairs (SIMD<float,16> a)
+  {
+    return _mm512_shuffle_ps(a.Data(), a.Data(), _MM_SHUFFLE(2,3,0,1));
+  }
+
 }
 
 #endif // NETGEN_CORE_SIMD_AVX512_HPP
