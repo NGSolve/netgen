@@ -5662,7 +5662,10 @@ namespace netgen
               {
                 Element2d nel(3);
                 for (int k = 1; k <= 3; k++)
-                  nel.PNum(k) = el.PNum(min2pi[3 * j + k - 4]);
+                  {
+                    nel.PNum(k) = el.PNum(min2pi[3 * j + k - 4]);
+                    nel.GeomInfoPi(k) = el.GeomInfoPi(min2pi[3 * j + k - 4]);
+                  }
                 nel.SetIndex (el.GetIndex());
 
                 int legal = 1;
