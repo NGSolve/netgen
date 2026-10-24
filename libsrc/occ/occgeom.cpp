@@ -438,15 +438,15 @@ namespace netgen
 
     // Setting options for GF
     // Set parallel processing mode (default is false)
-    // Standard_Boolean bRunParallel = Standard_True;
+    // bool bRunParallel = true;
     // aBuilder.SetRunParallel(bRunParallel);
     
     // Set Fuzzy value (default is Precision::Confusion())
-    // Standard_Real aFuzzyValue = 1.e-5;
+    // double aFuzzyValue = 1.e-5;
     // aBuilder.SetFuzzyValue(aFuzzyValue);
     
     // Set safe processing mode (default is false)
-    // Standard_Boolean bSafeMode = Standard_True;
+    // bool bSafeMode = true;
     // aBuilder.SetNonDestructive(bSafeMode);
     
     // Set Gluing mode for coinciding arguments (default is off)
@@ -454,11 +454,11 @@ namespace netgen
     // aBuilder.SetGlue(aGlue);
     
     // Disabling/Enabling the check for inverted solids (default is true)
-    // Standard Boolean bCheckInverted = Standard_False;
+    // Standard Boolean bCheckInverted = false;
     // aBuilder.SetCheckInverted(bCheckInverted);
     
     // Set OBB usage (default is false)
-    // Standard_Boolean bUseOBB = Standard_True;
+    // bool bUseOBB = true;
     // aBuilder.SetUseOBB(buseobb);
     
     // Perform the operation
@@ -545,8 +545,8 @@ namespace netgen
             auto props = GetProperties(face);
 
             sff = new ShapeFix_Face (face);
-            sff->FixAddNaturalBoundMode() = Standard_True;
-            sff->FixSmallAreaWireMode() = Standard_True;
+            sff->FixAddNaturalBoundMode() = true;
+            sff->FixSmallAreaWireMode() = true;
             sff->Perform();
 
             if(sff->Status(ShapeExtend_DONE1) ||
@@ -609,9 +609,9 @@ namespace netgen
             {
                TopoDS_Wire oldwire = TopoDS::Wire(exp1.Current());
                sfw = new ShapeFix_Wire (oldwire, face ,tolerance);
-               sfw->ModifyTopologyMode() = Standard_True;
+               sfw->ModifyTopologyMode() = true;
 
-               sfw->ClosedWireMode() = Standard_True;
+               sfw->ClosedWireMode() = true;
 
                bool replace = false;
 
@@ -621,7 +621,7 @@ namespace netgen
 
 
 
-               if (sfw->FixSmall (Standard_False, tolerance) && ! (sfw->StatusSmall(ShapeExtend_FAIL1) ||
+               if (sfw->FixSmall (false, tolerance) && ! (sfw->StatusSmall(ShapeExtend_FAIL1) ||
                   sfw->StatusSmall(ShapeExtend_FAIL2) ||
                   sfw->StatusSmall(ShapeExtend_FAIL3)))
                {
@@ -645,7 +645,7 @@ namespace netgen
 
                replace = sfw->FixSelfIntersection() || replace;
 
-               replace = sfw->FixLacking(Standard_True) || replace;
+               replace = sfw->FixLacking(true) || replace;
 
                if(replace)
                {
@@ -709,7 +709,7 @@ namespace netgen
          Handle(ShapeFix_Wireframe) sfwf = new ShapeFix_Wireframe;
          sfwf->SetPrecision(tolerance);
          sfwf->Load (shape);
-         sfwf->ModeDropSmallEdges() = Standard_True;
+         sfwf->ModeDropSmallEdges() = true;
 
          if (sfwf->FixWireGaps())
          {
@@ -1514,7 +1514,7 @@ namespace netgen
 //    {
 //       cout << "writing stl..."; cout.flush();
 //       StlAPI_Writer writer;
-//       writer.RelativeMode() = Standard_False;
+//       writer.RelativeMode() = false;
 // 
 //       writer.SetDeflection(0.02);
 //       writer.Write(shape,filename);
@@ -1546,8 +1546,8 @@ namespace netgen
         {
           node->is_assembly = true;
           TDF_LabelSequence comps;
-          XCAFDoc_ShapeTool::GetComponents(label, comps, Standard_False); // immediate only
-          for(Standard_Integer ci = 1; ci <= comps.Length(); ci++)
+          XCAFDoc_ShapeTool::GetComponents(label, comps, false); // immediate only
+          for(int ci = 1; ci <= comps.Length(); ci++)
             {
               TDF_Label comp = comps.Value(ci);
               TopLoc_Location childLoc = loc * XCAFDoc_ShapeTool::GetLocation(comp);
@@ -1585,7 +1585,7 @@ namespace netgen
         return nullptr;
       auto root = make_shared<OCCAssemblyNode>();
       root->is_assembly = true;
-      for(Standard_Integer ri = 1; ri <= roots.Length(); ri++)
+      for(int ri = 1; ri <= roots.Length(); ri++)
         {
           TDF_Label r = roots.Value(ri);
           string nm = XCAFLabelName(r);
@@ -1631,9 +1631,9 @@ namespace netgen
       STEPCAFControl_Reader reader;
 
       // Enable transfer of colours
-      reader.SetColorMode(Standard_True);
-      reader.SetNameMode(Standard_True);
-      Standard_Integer stat = reader.ReadFile(filename.string().c_str());
+      reader.SetColorMode(true);
+      reader.SetNameMode(true);
+      int stat = reader.ReadFile(filename.string().c_str());
       timer_readfile.Stop();
 
       timer_transfer.Start();
@@ -1692,7 +1692,7 @@ namespace netgen
 
       IGESCAFControl_Reader reader;
 
-      Standard_Integer stat = reader.ReadFile(filename.string().c_str());
+      int stat = reader.ReadFile(filename.string().c_str());
 
       if(stat != IFSelect_RetDone)
       {
@@ -1700,8 +1700,8 @@ namespace netgen
       }
 
       // Enable transfer of colours
-      reader.SetColorMode(Standard_True);
-      reader.SetNameMode(Standard_True);
+      reader.SetColorMode(true);
+      reader.SetNameMode(true);
 
       reader.Transfer(iges_doc);
 
@@ -1755,8 +1755,8 @@ namespace netgen
       auto workSession = reader.WS();
       auto model = workSession->Model();
       auto transProc = workSession->TransferReader()->TransientProcess();
-      Standard_Integer nb = model->NbEntities();
-      for (Standard_Integer i = 1; i <= nb; i++)
+      int nb = model->NbEntities();
+      for (int i = 1; i <= nb; i++)
         {
           Handle(Standard_Transient) entity = model->Value(i);
           auto item = Handle(StepRepr_RepresentationItem)::DownCast(entity);
@@ -1810,7 +1810,7 @@ namespace netgen
       occgeo = new OCCGeometry;
 
       BRep_Builder aBuilder;
-      Standard_Boolean result = BRepTools::Read(occgeo->shape, filename.string().c_str(), aBuilder);
+      bool result = BRepTools::Read(occgeo->shape, filename.string().c_str(), aBuilder);
 
       if(!result)
       {
@@ -1852,13 +1852,13 @@ namespace netgen
     else if (ext == ".stl")
       {
         StlAPI_Writer writer;
-        writer.ASCIIMode() = Standard_True;
+        writer.ASCIIMode() = true;
         writer.Write (shape, c_filename);
       }
     else if (ext == ".stlb")
       {
         StlAPI_Writer writer;
-        writer.ASCIIMode() = Standard_False;
+        writer.ASCIIMode() = false;
         writer.Write (shape, c_filename);
       }
 
@@ -2512,7 +2512,7 @@ namespace netgen
         {
           TDF_LabelSequence roots;
           shapeTool->GetFreeShapes(roots);
-          for (Standard_Integer ri = 1; ri <= roots.Length(); ri++)
+          for (int ri = 1; ri <= roots.Length(); ri++)
             XCAFPrs::CollectStyleSettings(roots.Value(ri), TopLoc_Location(), styles);
         }
         for (auto typ : { TopAbs_SOLID, TopAbs_FACE,  TopAbs_EDGE })
@@ -2540,8 +2540,8 @@ namespace netgen
           }
 
         // load names
-        Standard_Integer nb = model->NbEntities();
-        for (Standard_Integer i = 1; i <= nb; i++)
+        int nb = model->NbEntities();
+        for (int i = 1; i <= nb; i++)
           {
             Handle(Standard_Transient) entity = model->Value(i);
             auto item = Handle(StepRepr_RepresentationItem)::DownCast(entity);
@@ -2563,7 +2563,7 @@ namespace netgen
 
 
         // load custom data (maxh etc.)
-        for (Standard_Integer i = 1; i <= nb; i++)
+        for (int i = 1; i <= nb; i++)
           {
             Handle(Standard_Transient) entity = model->Value(i);
 

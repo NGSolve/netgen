@@ -161,7 +161,7 @@ void ExtractFaceData( const TopoDS_Face & face, int index, std::vector<double> *
     TopLoc_Location loc;
     Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
     Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
-    BRepAdaptor_Surface sf(face, Standard_False);
+    BRepAdaptor_Surface sf(face, false);
     BRepLProp_SLProps prop(sf, 1, 1e-5);
 
     bool flip = TopAbs_REVERSED == face.Orientation();
@@ -2263,7 +2263,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
           if (auxspine)
             {
               BRepOffsetAPI_MakePipeShell builder(spine);
-              builder.SetMode (*auxspine, Standard_True);
+              builder.SetMode (*auxspine, true);
               for (TopExp_Explorer e(profile, TopAbs_WIRE); e.More(); e.Next())
                 builder.Add (TopoDS::Wire(e.Current()));
               builder.Build();
@@ -2282,7 +2282,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
         {
           BRepOffsetAPI_MakePipeShell builder(spine);
           if(auxspine)
-            builder.SetMode (*auxspine, Standard_True);
+            builder.SetMode (*auxspine, true);
           if(std::holds_alternative<TopoDS_Shape>(profile))
             builder.Add (std::get<TopoDS_Shape>(profile));
           else
@@ -2973,10 +2973,10 @@ degen_tol : double
 
   m.def("ThruSections", [](std::vector<TopoDS_Shape> wires, bool solid)
         {
-          BRepOffsetAPI_ThruSections aTool(solid); // Standard_True);
+          BRepOffsetAPI_ThruSections aTool(solid); // true);
           for (auto shape : wires)
             aTool.AddWire(TopoDS::Wire(shape));
-          aTool.CheckCompatibility(Standard_False);
+          aTool.CheckCompatibility(false);
           return aTool.Shape();
         }, py::arg("wires"), py::arg("solid")=true,
         "Building a loft. This is a shell or solid passing through a set of sections (wires). "

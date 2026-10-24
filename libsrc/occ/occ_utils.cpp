@@ -59,7 +59,7 @@ namespace netgen
         return {occ2ng(bb.CornerMin()), occ2ng(bb.CornerMax())};
     }
 
-    Standard_Integer BuildTriangulation( const TopoDS_Shape & shape,
+    int BuildTriangulation( const TopoDS_Shape & shape,
                                          double deflection, double angle )
     {
        BRepTools::Clean (shape);
@@ -69,11 +69,11 @@ namespace netgen
        IMeshTools_Parameters aMeshParams;
        aMeshParams.Deflection               = deflection;
        aMeshParams.Angle                    = angle;
-       aMeshParams.Relative                 = Standard_True;
-       aMeshParams.InParallel               = Standard_True;
+       aMeshParams.Relative                 = true;
+       aMeshParams.InParallel               = true;
        aMeshParams.MinSize                  = Precision::Confusion();
-       aMeshParams.InternalVerticesMode     = Standard_True;
-       aMeshParams.ControlSurfaceDeflection = Standard_True;
+       aMeshParams.InternalVerticesMode     = true;
+       aMeshParams.ControlSurfaceDeflection = true;
 
        BRepMesh_IncrementalMesh aMesher (shape, aMeshParams);
        return  aMesher.GetStatusFlags();

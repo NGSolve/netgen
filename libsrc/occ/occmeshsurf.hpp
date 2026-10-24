@@ -34,7 +34,7 @@ public:
   TopAbs_Orientation orient;
   int projecttype;
   ShapeAnalysis_Surface su;
-  Standard_Real toltool;
+  double toltool;
 protected:
   Point<3> p1;
   Point<3> p2;

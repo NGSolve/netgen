@@ -356,7 +356,7 @@ namespace netgen
 
     double OCCFace::GetCurvature(const PointGeomInfo& gi) const
     {
-        BRepAdaptor_Surface sf(face, Standard_True);
+        BRepAdaptor_Surface sf(face, true);
         BRepLProp_SLProps prop2(sf, 2, 1e-5);
         prop2.SetParameters (gi.u, gi.v);
         return max(fabs(prop2.MinCurvature()),

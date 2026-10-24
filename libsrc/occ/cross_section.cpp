@@ -46,7 +46,7 @@ namespace netgen
     BRepBndLib::Add(shape, b);
     b.SetGap(0.0);
 
-    Standard_Real xmin, ymin, zmin, xmax, ymax, zmax;
+    double xmin, ymin, zmin, xmax, ymax, zmax;
     b.Get(xmin, ymin, zmin, xmax, ymax, zmax);
 
     gp_Trsf w2l;
@@ -172,7 +172,7 @@ namespace netgen
           continue;
 
         // Check distance of face plane to our plane
-        Standard_Real dist = fpln.Distance(p0);
+        double dist = fpln.Distance(p0);
         if (dist > 1e-7 * diam)
           continue;
         if (my_n.Dot(n) > 0)
@@ -190,7 +190,7 @@ namespace netgen
 
     gp_Trsf T;
     T.SetTransformation(axes, xy);
-    BRepBuilderAPI_Transform btransf(out, T, Standard_True);
+    BRepBuilderAPI_Transform btransf(out, T, true);
     PropagateProperties(btransf, out);
     return btransf.Shape();
   }

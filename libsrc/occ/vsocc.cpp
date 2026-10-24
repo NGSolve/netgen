@@ -292,7 +292,7 @@ namespace netgen
 
     TopLoc_Location loc;
     Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
-    BRepAdaptor_Surface sf(face, Standard_False);
+    BRepAdaptor_Surface sf(face, false);
     BRepLProp_SLProps prop(sf, 1, 1e-5);
     Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
 
@@ -566,7 +566,7 @@ namespace netgen
 
          TopLoc_Location loc;
          Handle(Geom_Surface) surf = BRep_Tool::Surface (face);
-         BRepAdaptor_Surface sf(face, Standard_False);
+         BRepAdaptor_Surface sf(face, false);
          BRepLProp_SLProps prop(sf, 1, 1e-5);
          Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
 

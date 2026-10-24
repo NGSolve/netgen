@@ -650,11 +650,11 @@ namespace netgen
                                            + (fz1-fz0)*(fz1-fz0));
                 IMeshTools_Parameters retryParams;
                 retryParams.Angle                    = 0.5;
-                retryParams.Relative                 = Standard_False;
-                retryParams.InParallel               = Standard_False;
+                retryParams.Relative                 = false;
+                retryParams.InParallel               = false;
                 retryParams.MinSize                  = Precision::Confusion();
-                retryParams.InternalVerticesMode     = Standard_True;
-                retryParams.ControlSurfaceDeflection = Standard_True;
+                retryParams.InternalVerticesMode     = true;
+                retryParams.ControlSurfaceDeflection = true;
                 for (double rel : {0.1, 0.05, 0.02, 0.2, 0.01, 0.005})
                   {
                     BRepTools::Clean (face);   // stale partial data poisons retries
@@ -674,7 +674,7 @@ namespace netgen
                 continue;
               }
             
-            BRepAdaptor_Surface sf(face, Standard_True);
+            BRepAdaptor_Surface sf(face, true);
             // one prop for evaluating and one for derivatives
             BRepLProp_SLProps prop(sf, 0, 1e-5);
             BRepLProp_SLProps prop2(sf, 2, 1e-5);

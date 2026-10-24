@@ -492,7 +492,7 @@ namespace netgen
                   if (strcmp (argv[2], "Wire") == 0) sh = occgeometry->wmap(nr);
                   if (strcmp (argv[2], "Edge") == 0) sh = occgeometry->emap(nr);
 
-                  rebuild->Replace(sh, sh.Reversed(), Standard_False);
+                  rebuild->Replace(sh, sh.Reversed(), false);
 
                   TopoDS_Shape newshape = rebuild->Apply(occgeometry->shape, TopAbs_SHELL, 1);
                   occgeometry->shape = newshape;

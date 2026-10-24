@@ -345,7 +345,7 @@ DLL_HEADER void ExportNgOCC(py::module &m)
                  }
                auto surf = BRep_Tool::Surface(face);
                TopLoc_Location loc;
-               BRepAdaptor_Surface sf(face, Standard_False);
+               BRepAdaptor_Surface sf(face, false);
                BRepLProp_SLProps prop(sf, 1, 1e-5);
                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation (face, loc);
                if (triangulation.IsNull())
