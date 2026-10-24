@@ -155,8 +155,14 @@ namespace ngcore
   public:
     static constexpr int Size() { return 4; }
     SIMD () {}
+#ifdef _MSC_VER
+    // defaulted copy goes through the stack in two halves
+    SIMD (const SIMD & s) : data(s.data) { }
+    SIMD & operator= (const SIMD & s) { data = s.data; return *this; }
+#else
     SIMD (const SIMD &) = default;
     SIMD & operator= (const SIMD &) = default;
+#endif
 
     SIMD (double val) { data = _mm256_set1_pd(val); }
     SIMD (int val)    { data = _mm256_set1_pd(val); }
@@ -243,7 +249,7 @@ namespace ngcore
   }
 #endif
 
-#if defined(__FMA__) && !defined(__AVX512F__)
+#if defined(__FMA__) && !defined(__AVX512F__) && !defined(_MSC_VER)
   // make sure to use the update-version of fma
   // important in matrix kernels using 12 sum-registers, 3 a-values and updated b-value
   // avx512 has enough registers, and gcc seems to use only the first 16 z-regs

@@ -92,8 +92,14 @@ namespace ngcore
   public:
     static constexpr int Size() { return 8; }
     SIMD () {}
+#ifdef _MSC_VER
+    // defaulted copy goes through the stack in two halves
+    SIMD (const SIMD & s) : data(s.data) { }
+    SIMD & operator= (const SIMD & s) { data = s.data; return *this; }
+#else
     SIMD (const SIMD &) = default;
     SIMD & operator= (const SIMD &) = default;
+#endif
 
     SIMD (double val) { data = _mm512_set1_pd(val); }
     SIMD (int val)    { data = _mm512_set1_pd(val); }

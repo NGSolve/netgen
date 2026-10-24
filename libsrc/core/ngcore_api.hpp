@@ -72,6 +72,10 @@
     #define NETGEN_INLINE __attribute__ ((__always_inline__)) inline
     #define NETGEN_LAMBDA_INLINE __attribute__ ((__always_inline__))
     #define NETGEN_VLA
+  #elif defined(_MSC_VER)
+    #define NETGEN_ALWAYS_INLINE __forceinline
+    #define NETGEN_INLINE inline
+    #define NETGEN_LAMBDA_INLINE
   #else
     #define NETGEN_ALWAYS_INLINE
     #define NETGEN_INLINE inline

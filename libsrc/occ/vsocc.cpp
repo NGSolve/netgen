@@ -466,7 +466,7 @@ namespace netgen
          for (int j = 1; j <= nbnodes; j++)
          {
            /*
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5           
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 5)           
            gp_Pnt p = T -> Node(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
 #else           
            gp_Pnt p = T -> Nodes()(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
@@ -520,7 +520,7 @@ namespace netgen
          for (int j = 1; j <= nbnodes; j++)
            {
              /*
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 5)
              gp_Pnt p = T -> Node(aEdgePoly->Node(j)).Transformed(aEdgeLoc);
 #else             
              gp_Pnt p = (T -> Nodes())(aEdgePoly->Nodes()(j)).Transformed(aEdgeLoc);
@@ -586,7 +586,7 @@ namespace netgen
          for (int j = 1; j <= ntriangles; j++)
          {
            /*
-#if OCC_VERSION_MAJOR>=7 && OCC_VERSION_MINOR>=5           
+#if NETGEN_OCC_VERSION_AT_LEAST(7, 5)           
            Poly_Triangle triangle = triangulation -> Triangle(j);
 #else
            Poly_Triangle triangle = triangulation -> Triangles()(j);           

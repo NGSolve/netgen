@@ -552,7 +552,7 @@ namespace ngcore
     static constexpr int Size() { return N; }
     SIMD () {}
     SIMD (const SIMD &) = default;
-    SIMD (SIMD<double,N1> lo_, SIMD<double,N2> hi_) : lo(lo_), high(hi_) { ; }
+    NETGEN_ALWAYS_INLINE SIMD (SIMD<double,N1> lo_, SIMD<double,N2> hi_) : lo(lo_), high(hi_) { ; }
 
     template <typename T, typename std::enable_if<std::is_convertible<T,std::function<double(int)>>::value,int>::type = 0>
     SIMD (const T & func)
@@ -574,16 +574,16 @@ namespace ngcore
 
     SIMD & operator= (const SIMD &) = default;
 
-    SIMD (double val) : lo{val}, high{val} { ; }
+    NETGEN_ALWAYS_INLINE SIMD (double val) : lo{val}, high{val} { ; }
     SIMD (int val)    : lo{val}, high{val} { ; }
     SIMD (size_t val) : lo{val}, high{val} { ; }
 
-    SIMD (double const * p) : lo{p}, high{p+N1} { ; }
-    SIMD (double const * p, SIMD<mask64,N> mask)
+    NETGEN_ALWAYS_INLINE SIMD (double const * p) : lo{p}, high{p+N1} { ; }
+    NETGEN_ALWAYS_INLINE SIMD (double const * p, SIMD<mask64,N> mask)
         : lo{p, mask.Lo()}, high{p+N1, mask.Hi()}
       { }
-    SIMD (double * p) : lo{p}, high{p+N1} { ; }
-    SIMD (double * p, SIMD<mask64,N> mask)
+    NETGEN_ALWAYS_INLINE SIMD (double * p) : lo{p}, high{p+N1} { ; }
+    NETGEN_ALWAYS_INLINE SIMD (double * p, SIMD<mask64,N> mask)
         : lo{p, mask.Lo()}, high{p+N1, mask.Hi()}
       { }
 
@@ -600,15 +600,15 @@ namespace ngcore
         static_assert(sizeof...(vals)==N, "wrong number of arguments");
       }
 
-    void Store (double * p) { lo.Store(p); high.Store(p+N1); }
-    void Store (double * p, SIMD<mask64,N> mask)
+    NETGEN_ALWAYS_INLINE void Store (double * p) { lo.Store(p); high.Store(p+N1); }
+    NETGEN_ALWAYS_INLINE void Store (double * p, SIMD<mask64,N> mask)
     {
       lo.Store(p, mask.Lo());
       high.Store(p+N1, mask.Hi());
     }
 
-    NETGEN_INLINE auto Lo() const { return lo; }
-    NETGEN_INLINE auto Hi() const { return high; }
+    NETGEN_ALWAYS_INLINE auto Lo() const { return lo; }
+    NETGEN_ALWAYS_INLINE auto Hi() const { return high; }
 
     double operator[] (int i) const { return ((double*)(&lo))[i]; }
 
@@ -939,6 +939,20 @@ namespace ngcore
   NETGEN_INLINE auto FNMA(T1 a, T2 b, T3 c)
   {
     return c-a*b;
+  }
+
+  // wide (non-native) SIMD: fused per native part, as c+a*b would not be
+#define NGCORE_HAVE_WIDE_FMA
+  template <int N, typename std::enable_if<!IsNativeSIMDSize(N),int>::type = 0>
+  NETGEN_ALWAYS_INLINE inline SIMD<double,N> FMA (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> c)
+  {
+    return { FMA(a.Lo(), b.Lo(), c.Lo()), FMA(a.Hi(), b.Hi(), c.Hi()) };
+  }
+
+  template <int N, typename std::enable_if<!IsNativeSIMDSize(N),int>::type = 0>
+  NETGEN_ALWAYS_INLINE inline SIMD<double,N> FNMA (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> c)
+  {
+    return { FNMA(a.Lo(), b.Lo(), c.Lo()), FNMA(a.Hi(), b.Hi(), c.Hi()) };
   }
 
   // update form of fma

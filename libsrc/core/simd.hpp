@@ -19,6 +19,10 @@
 #ifndef __SSE__
 #define __SSE__
 #endif
+// MSVC: /arch:AVX2 implies FMA3 but does not define __FMA__
+#if defined(_MSC_VER) && defined(__AVX2__) && !defined(__FMA__)
+#define __FMA__
+#endif
 #include "simd_sse.hpp"
 #endif
 
@@ -32,6 +36,10 @@
 
 #ifdef __aarch64__
 #include "simd_arm64.hpp"
+#endif
+
+#ifdef __wasm_simd128__
+#include "simd_wasm.hpp"
 #endif
 
 #endif // __CUDA_ARCH__
