@@ -551,7 +551,14 @@ namespace ngcore
   public:
     static constexpr int Size() { return N; }
     SIMD () {}
+#ifdef _MSC_VER
+    // MSVC calls the defaulted copy out of line in kernel loops
+    NETGEN_ALWAYS_INLINE SIMD (const SIMD & s) : lo(s.lo), high(s.high) { }
+    NETGEN_ALWAYS_INLINE SIMD & operator= (const SIMD & s) { lo = s.lo; high = s.high; return *this; }
+#else
     SIMD (const SIMD &) = default;
+    SIMD & operator= (const SIMD &) = default;
+#endif
     NETGEN_ALWAYS_INLINE SIMD (SIMD<double,N1> lo_, SIMD<double,N2> hi_) : lo(lo_), high(hi_) { ; }
 
     template <typename T, typename std::enable_if<std::is_convertible<T,std::function<double(int)>>::value,int>::type = 0>
@@ -571,8 +578,6 @@ namespace ngcore
       return *this;
     }
 
-
-    SIMD & operator= (const SIMD &) = default;
 
     NETGEN_ALWAYS_INLINE SIMD (double val) : lo{val}, high{val} { ; }
     SIMD (int val)    : lo{val}, high{val} { ; }
