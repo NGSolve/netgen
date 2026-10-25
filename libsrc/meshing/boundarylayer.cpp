@@ -970,7 +970,7 @@ void BoundaryLayerTool ::InsertNewElements (
 
   // fill holes in surface mesh at special boundary points (i.e. points with >=4
   // adjacent boundary faces)
-  auto p2sel = ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>(
+  auto p2newsel = ngcore::CreateSortedTable<SurfaceElementIndex, PointIndex>(
     new_sels.Range(),
     [&] (auto& table, SurfaceElementIndex ei) {
       for (PointIndex pi : new_sels[ei].PNums())
@@ -992,6 +992,8 @@ void BoundaryLayerTool ::InsertNewElements (
       for (auto sei : p2sel[special_pi])
         {
           const auto& sel = mesh[sei];
+          if (!moved_surfaces.Test(sel.GetIndex().Nr1()))
+            continue;
           for (auto p : sel.PNums())
             if (p != special_pi)
               close_group[sel.GetIndex().Nr1()][getClosestGroup(special_pi, sei)].insert(
@@ -1005,16 +1007,16 @@ void BoundaryLayerTool ::InsertNewElements (
           for (auto pi : groups[0])
             if (groups[1].count(pi) == 1)
               common_points.insert(pi);
-          if (common_points.size() > 0)
+          if (common_points.size() > 0 && mapto[*common_points.begin()].Size() > 0)
             {
               auto pi_common = mapto[*common_points.begin()].Last();
               auto new_special_pi0 = special_point.growth_groups[0].new_points.Last();
               auto new_special_pi1 = special_point.growth_groups[1].new_points.Last();
-              for (auto sei : p2sel[pi_common])
+              for (auto sei : p2newsel[pi_common])
                 {
-                  if (mesh[sei].GetIndex().Nr1() == mapped_fi && mesh[sei].PNums().Contains(new_special_pi0))
+                  if (new_sels[sei].GetIndex().Nr1() == mapped_fi && new_sels[sei].PNums().Contains(new_special_pi0))
                     {
-                      Element2d sel (mesh[sei]);
+                      Element2d sel (new_sels[sei]);
                       sel.Invert();
                       for (auto& pi : sel.PNums())
                         if (pi != pi_common && pi != new_special_pi0)
@@ -1039,8 +1041,8 @@ void BoundaryLayerTool ::InsertNewElements (
           auto pi_new = group.new_points.Last();
           auto pi_new_other =
             special_point.growth_groups[1 - igroup].new_points.Last();
-          for (auto sei : p2sel[pi_new])
-            faces.erase(mesh[sei].GetIndex().Nr1());
+          for (auto sei : p2newsel[pi_new])
+            faces.erase(new_sels[sei].GetIndex().Nr1());
           for (auto face : faces)
             for (auto seg : new_segments)
               {
@@ -1049,9 +1051,9 @@ void BoundaryLayerTool ::InsertNewElements (
                   {
                     bool is_correct_face = false;
                     auto pi_other = seg[0] == pi_new ? seg[1] : seg[0];
-                    for (auto sei : p2sel[pi_other])
+                    for (auto sei : p2newsel[pi_other])
                       {
-                        if (mesh[sei].GetIndex().Nr1() == face)
+                        if (new_sels[sei].GetIndex().Nr1() == face)
                           {
                             is_correct_face = true;
                             break;
