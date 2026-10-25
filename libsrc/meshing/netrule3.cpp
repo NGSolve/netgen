@@ -338,8 +338,11 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
 
               an /= lan;
               
-              int out1 = (a * v1) > 0;
-              int out2 = (a * v2) > 0;
+              const double eps = 1e-10;
+              double av1 = a * v1, av2 = a * v2;
+              bool inplane = fabs (av1) <= eps && fabs (av2) <= eps;
+              int out1 = !inplane && av1 > -eps;
+              int out2 = !inplane && av2 > -eps;
               //              (*testout) << "out1, out2 = " << out1 << ", " << out2 << endl;
               if (out1 && out2)
                 return 0;
@@ -604,7 +607,8 @@ int vnetrule :: IsTriangleInFreeSet (const Point<3> & p1, const Point<3> & p2,
                   freesetinequ.Get(ff2, 2),
                   freesetinequ.Get(ff2, 3));
 
-      if ( ( (a1 * trivec) > 0) || ( (a2 * trivec) > 0))
+      double eps = 1e-10 * trivec.Length();
+      if ( ( (a1 * trivec) > eps) || ( (a2 * trivec) > eps))
         return 0;
 
       return 1;
