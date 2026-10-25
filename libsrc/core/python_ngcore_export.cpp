@@ -75,9 +75,7 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def("__setitem__", [] (BitArray & self, py::slice inds, bool b)
                                          {
-                                           size_t start, step, stop, n;
-                                           if (!inds.compute(self.Size(), &start, &stop, &step, &n))
-                                             throw py::error_already_set();
+                                           auto [start, step, n] = InitSlice (inds, self.Size());
 
                                            if (start == 0 && n == self.Size() && step == 1)
                                              { // base branch
@@ -99,9 +97,7 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def("__setitem__", [] (BitArray & self, py::slice inds, BitArray & ba)
                                          {
-                                           size_t start, step, stop, n;
-                                           if (!inds.compute(self.Size(), &start, &stop, &step, &n))
-                                             throw py::error_already_set();
+                                           auto [start, step, n] = InitSlice (inds, self.Size());
 
                                            if (start == 0 && n == self.Size() && step == 1)
                                              {

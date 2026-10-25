@@ -22,6 +22,15 @@ namespace ngcore
   NGCORE_API extern bool (*NG_MPI_CommFromMPI4Py)(py::handle, NG_MPI_Comm &);
   NGCORE_API extern py::handle (*NG_MPI_CommToMPI4Py)(NG_MPI_Comm);
 
+  // start, step and length of a python slice on a container of size len
+  inline std::tuple<size_t,size_t,size_t> InitSlice (const py::slice & inds, size_t len)
+  {
+    size_t start, stop, step, n;
+    if (!inds.compute(len, &start, &stop, &step, &n))
+      throw py::error_already_set();
+    return { start, step, n };
+  }
+
   namespace detail
   {
     template<typename T>
@@ -391,9 +400,7 @@ namespace ngcore
         .def ("__setitem__",
               [](TFlat & self, py::slice slice, T val)
               {
-                size_t start, stop, step, slicelength;
-                if (!slice.compute(self.Size(), &start, &stop, &step, &slicelength))
-                  throw py::error_already_set();
+                auto [start, step, slicelength] = InitSlice (slice, self.Size());
                 // pybind slices are 0-based
                 for (size_t i = 0; i < slicelength; i++, start+=step)
                   self[IndexBASE<TIND>()+start] = val;

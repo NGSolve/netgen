@@ -1934,9 +1934,7 @@ DLL_HEADER void ExportNgOCCShapes(py::module &m)
       "Return the i-th shape from the list.")
     
     .def("__getitem__", [](const ListOfShapes & self, py::slice inds) {
-        size_t start, step, n, stop;
-        if (!inds.compute(self.size(), &start, &stop, &step, &n))                                          
-          throw py::error_already_set();
+        auto [start, step, n] = InitSlice (inds, self.size());
         ListOfShapes sub;
         sub.reserve(n);
         for (size_t i = 0; i < n; i++)
