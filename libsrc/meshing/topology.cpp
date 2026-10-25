@@ -1325,19 +1325,33 @@ namespace netgen
         surf2volelement = IVec<2,ElementIndex>(ElementIndex::INVALID, ElementIndex::INVALID);
 
         static Timer t_topology_update_build_surf2vol("Topology::Update build surf2vol"); t_topology_update_build_surf2vol.Start();        
-        // for (int i = 0; i < ne; i++)
-        ParallelFor (ne, [this](auto i)
+        // every volume neighbour takes its own slot, then the larger element
+        // number goes first
+        Array<std::atomic<int>, SurfaceElementIndex> nvolel(nse);
+        ParallelFor (nse, [&nvolel](auto i)
+                     { nvolel[SurfaceElementIndex::FromNr0(i)].store (0, std::memory_order_relaxed); });
+        std::atomic<size_t> nmore_than_two{0};
+        ParallelFor (ne, [this, &nvolel, &nmore_than_two](auto i)
                      {
                        for (FaceIndex fnum : faces[ElementIndex::FromNr0(i)])
-                         {
-                           if (fnum.IsValid() && face2surfel[fnum].IsValid())
-                             {
-                               SurfaceElementIndex sel = face2surfel[fnum];
-                               surf2volelement[sel][1] = surf2volelement[sel][0];
-                               surf2volelement[sel][0] = ElementIndex::FromNr0(i); // +1;
-                             }
-                         }});
-        t_topology_update_build_surf2vol.Stop();        
+                         if (fnum.IsValid() && face2surfel[fnum].IsValid())
+                           {
+                             SurfaceElementIndex sel = face2surfel[fnum];
+                             int slot = nvolel[sel].fetch_add (1, std::memory_order_relaxed);
+                             if (slot < 2)
+                               surf2volelement[sel][slot] = ElementIndex::FromNr0(i);
+                             else if (slot == 2)
+                               nmore_than_two.fetch_add (1, std::memory_order_relaxed);
+                           }
+                     });
+        if (nmore_than_two > 0)
+          PrintWarning ("Topology: ", size_t(nmore_than_two), " surface elements have more than two volume elements, the others are dropped");
+        ParallelFor (nse, [this](auto i)
+                     {
+                       auto & s2v = surf2volelement[SurfaceElementIndex::FromNr0(i)];
+                       if (s2v[1].IsValid() && s2v[1] > s2v[0]) swap (s2v[0], s2v[1]);
+                     });
+        t_topology_update_build_surf2vol.Stop();
 
         face2vert.SetAllocSize (face2vert.Size());
 
