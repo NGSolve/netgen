@@ -429,6 +429,9 @@ namespace netgen
     GProp_GProps sprops;
     BRepGProp::SurfaceProperties(TopoDS::Face(geom.fmap(k)),sprops);
     tsurfprop.Stop();
+    if (sprops.Mass() < 0)
+      throw Exception("Face " + ToString(k) + " is unbounded: its boundary runs the "
+                      "wrong way (e.g. a rectangle with negative width or height)");
     meshing.SetMaxArea(2.*sprops.Mass());
 
     MESHING2_RESULT res;
