@@ -190,8 +190,8 @@ namespace netgen
     int ntasks = comm.Size();
     if (ntasks == 1) return;
 
-    if (loc2distvert.Size() != mesh.GetNV())
-      SetNV (mesh.GetNV());
+    if (loc2distvert.Size() != mesh.GetNP())
+      SetNV (mesh.GetNP());
 
     Array<int> cnt_send(ntasks);
 
@@ -255,7 +255,7 @@ namespace netgen
             DynamicTable<int> send_verts(cnt_send);
 
             // neighbours only; loc2exchange is reset per neighbour via dest2vert
-            Array<int, PointIndex> loc2exchange(mesh.GetNV());
+            Array<int, PointIndex> loc2exchange(mesh.GetNP());
             loc2exchange = -1;
             Array<int> neighbours;
             for (int dest = 0; dest < ntasks; dest++)
@@ -379,7 +379,7 @@ namespace netgen
       }
 
 
-    Array<int, PointIndex> loc2exchange(mesh.GetNV());
+    Array<int, PointIndex> loc2exchange(mesh.GetNP());
     for (int dest = 0; dest < ntasks; dest++)
       {
         loc2exchange = -1;
@@ -454,7 +454,7 @@ namespace netgen
 
         for (int & c : cnt_send) c*=3;
         DynamicTable<int> send_faces(cnt_send);
-        Array<int, PointIndex> loc2exchange(mesh.GetNV());
+        Array<int, PointIndex> loc2exchange(mesh.GetNP());
         for (int dest = 0; dest < ntasks; dest++)
           if (dest != id)
             {

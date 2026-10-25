@@ -174,7 +174,7 @@ namespace netgen
         idents.GetPairs(idnr, pp2);
         per_pairs += pp2;
       }
-    Array<int, PointIndex> npvs(GetNV());
+    Array<int, PointIndex> npvs(GetNP());
     npvs = 0;
     for (auto [p1, p2] : per_pairs) {
       npvs[p1]++;
@@ -182,21 +182,19 @@ namespace netgen
     }
 
     /** for each vertex, gives us all identified vertices **/
-    DynamicTable<PointIndex, PointIndex> per_verts(GetNV());
+    DynamicTable<PointIndex, PointIndex> per_verts(GetNP());
     for (auto [p1, p2] : per_pairs) {
       per_verts.Add(p1, p2);
       per_verts.Add(p2, p1);
     }
-    for (PointIndex k : Range(PointIndex::FromNr0(0), PointIndex::FromNr0(GetNV()))) {
+    for (PointIndex k : Points().Range()) {
       BubbleSort(per_verts[k]);
     }
 
     /** The same table as per_verts, but TRANSITIVE!! **/
     auto iterate_per_verts_trans = [&](auto f){
       Array<PointIndex> allvs;
-      // for (int k = PointIndex::BASE; k < GetNV()+PointIndex::BASE; k++)
-      for (PointIndex k = IndexBASE<PointIndex>();
-           k < GetNV()+IndexBASE<PointIndex>(); k++)      
+      for (PointIndex k : Points().Range())
         {
           allvs.SetSize(0);
           allvs.Append(per_verts[k]);
@@ -221,19 +219,19 @@ namespace netgen
     iterate_per_verts_trans([&](auto k, auto & allvs) {
         npvs[k] = allvs.Size();
       });
-    DynamicTable<PointIndex, PointIndex> per_verts_trans(GetNV());
+    DynamicTable<PointIndex, PointIndex> per_verts_trans(GetNP());
     iterate_per_verts_trans([&](auto k, auto & allvs) {
         for (int j = 0; j<allvs.Size(); j++)
           per_verts_trans.Add(k, allvs[j]);
       });
-    for (PointIndex k : Range(PointIndex::FromNr0(0), PointIndex::FromNr0(GetNV()))) {
+    for (PointIndex k : Points().Range()) {
       BubbleSort(per_verts_trans[k]);
     }
 
     /** Now we build the vertex-data to send to the workers. **/
     tbuildvertex.Start();
-    Array<int, PointIndex> vert_flag (GetNV());
-    Array<int, PointIndex> num_procs_on_vert (GetNV());
+    Array<int, PointIndex> vert_flag (GetNP());
+    Array<int, PointIndex> num_procs_on_vert (GetNP());
     Array<int> num_verts_on_proc (ntasks);
     num_verts_on_proc = 0;
     num_procs_on_vert = 0;
@@ -285,8 +283,8 @@ namespace netgen
     tbuildvertexb.Start();    
     
     DynamicTable<int> verts_of_proc (num_verts_on_proc);   // 0-based offsets into points
-    DynamicTable<int, PointIndex> procs_of_vert (GetNV());
-    DynamicTable<PointIndex, PointIndex> loc_num_of_vert (GetNV());
+    DynamicTable<int, PointIndex> procs_of_vert (GetNP());
+    DynamicTable<PointIndex, PointIndex> loc_num_of_vert (GetNP());
     /** Write vertex/proc mappingfs to tables **/
     iterate_vertices([&](auto vertex, auto dest) {
         auto addit = [&] (auto vertex, auto dest) {
@@ -1199,9 +1197,9 @@ namespace netgen
               {
                 auto el = (*this)[ElementIndex::FromNr0(els[j])];
                 
-                bool haspi[9] = { false };  // max surfnp
+                bool haspi[3] = { false };
                 
-                for (int k = 0; k < 2; k++)
+                for (int k = 0; k < sel.GetNP(); k++)
                   for (int l = 0; l < el.GetNP(); l++)
                     if (sel[k] == el[l])
                       haspi[k] = true;

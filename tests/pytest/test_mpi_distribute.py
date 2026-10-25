@@ -36,10 +36,10 @@ def distribute(generate, root_participates):
 
 def signature(m):
     """point set and element vertex coordinates, independent of numbering"""
-    pts = {i + 1: tuple(round(c, 9) for c in p.p) for i, p in enumerate(m.Points())}
+    pts = [tuple(round(c, 9) for c in p.p) for p in m.Points()]
     def els(elements):
-        return sorted(tuple(sorted(pts[v.nr] for v in el.vertices)) for el in elements)
-    return sorted(pts.values()), els(m.Elements3D()), els(m.Elements2D()), els(m.Elements1D())
+        return sorted(tuple(sorted(pts[v.nr0] for v in el.vertices)) for el in elements)
+    return sorted(pts), els(m.Elements3D()), els(m.Elements2D()), els(m.Elements1D())
 
 
 @pytest.mark.parametrize("root_participates", [True, False])
@@ -73,6 +73,25 @@ def test_gather_matches_serial_refinement(root_participates):
         assert again.ne == gathered.ne
     else:
         assert gathered is None
+
+
+@pytest.mark.parametrize("root_participates", [True, False])
+def test_distribute_second_order(root_participates):
+    # more points than vertices: the vertex tables have to be sized by the points
+    def generate():
+        m = unit_cube_mesh()
+        m.SecondOrder()
+        return m
+    mesh, ref = distribute(generate, root_participates)
+    ne_ref = comm.bcast(ref.ne if ref else None, root=0)
+    assert comm.allreduce(mesh.ne, op=MPI.SUM) == ne_ref
+    npts = len(mesh.Points())
+    for el in mesh.Elements3D():
+        assert len(el.points) == 10
+        assert all(0 <= p.nr0 < npts for p in el.points)
+    gathered = mesh.Gather()
+    if comm.rank == 0:
+        assert signature(gathered) == signature(ref)
 
 
 @pytest.mark.skipif(not has_occ, reason="OCC not available")
