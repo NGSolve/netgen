@@ -2286,10 +2286,27 @@ namespace netgen
 
                   CalcEdgeShape (eorder, mu[vi1]-mu[vi2], &shapes(ii));
                   T lame = shapes(vi1)+shapes(vi2);
-                  for (int j = 0; j < order-1; j++)
+                  for (int j = 0; j < eorder-1; j++)
                     shapes(ii+j) *= lame;
                   ii += eorder-1;
                 }
+            }
+
+          int forder = faceorder[info.facenr];
+          if (forder >= 2)
+            {
+              int fnums[4];
+              int fmin = 0;
+              for (int j = 1; j < 4; j++)
+                if (el[j] < el[fmin]) fmin = j;
+              fnums[0] = fmin;
+              fnums[1] = (fmin+1)%4;
+              fnums[2] = (fmin+2)%4;
+              fnums[3] = (fmin+3)%4;
+              if (el[fnums[3]] < el[fnums[1]]) swap (fnums[1], fnums[3]);
+              CalcQuadShapeLambda (forder, mu[fnums[1]]-mu[fnums[0]], mu[fnums[3]]-mu[fnums[0]],
+                                   [&](int j, T shape) { shapes(ii+j) = shape; });
+              ii += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
             }
           
           for (int i = ii; i < info.ndof; i++)
@@ -2558,19 +2575,34 @@ namespace netgen
 
                   ii += eorder-1;
                 }
-              
-              // TODO (if still needed???)
-              /*
-              int forder = faceorder[info.facenr];
-              if (forder >= 2)
-                {
-                  
-                }
-              */
-              for (int i = ii; i < info.ndof; i++)
-                for (int k = 0; k < 2; k++)                
-                  dshapes(i,k) = 0;
             }
+
+          int forder = faceorder[info.facenr];
+          if (forder >= 2)
+            {
+              int fnums[4];
+              int fmin = 0;
+              for (int j = 1; j < 4; j++)
+                if (el[j] < el[fmin]) fmin = j;
+              fnums[0] = fmin;
+              fnums[1] = (fmin+1)%4;
+              fnums[2] = (fmin+2)%4;
+              fnums[3] = (fmin+3)%4;
+              if (el[fnums[3]] < el[fnums[1]]) swap (fnums[1], fnums[3]);
+              AutoDiff<2,T> ax(xi(0), 0), ay(xi(1), 1);
+              AutoDiff<2,T> amu[4] = { (1-ax)+(1-ay), ax+(1-ay), ax+ay, (1-ax)+ay };
+              CalcQuadShapeLambda (forder, amu[fnums[1]]-amu[fnums[0]], amu[fnums[3]]-amu[fnums[0]],
+                                   [&](int j, AutoDiff<2,T> shape)
+                                   {
+                                     for (int k = 0; k < 2; k++)
+                                       dshapes(ii+j, k) = shape.DValue(k);
+                                   });
+              ii += facecoeffsindex[info.facenr+1] - facecoeffsindex[info.facenr];
+            }
+
+          for (int i = ii; i < info.ndof; i++)
+            for (int k = 0; k < 2; k++)
+              dshapes(i,k) = 0;
 
           /*      
            *testout << "quad, dshape = " << endl << dshapes << endl;
@@ -3015,6 +3047,17 @@ namespace netgen
           }
       }
 
+    {
+      Point<3> mx;
+      Mat<3,3> jac;
+      if (EvaluateMapping (info, xi, mx, jac))
+        {
+          if (x) *x = mx;
+          if (dxdxi) *dxdxi = info.hdxdxi = jac;
+          return;
+        }
+    }
+
     ArrayMem<double,100> mem(info.ndof);
     TFlatVector<double> shapes(info.ndof, &mem[0]);
     ArrayMem<double,100> dshapes_mem(info.ndof*3);
@@ -3242,6 +3285,41 @@ namespace netgen
                 shapes(ii+j) *= lamiz[fav[1]];
               ii += ndf;
             }
+
+          {
+            AutoDiff<3,T> ax(xi(0), 0), ay(xi(1), 1), az(xi(2), 2);
+            AutoDiff<3,T> alami[6] = { ax, ay, 1-ax-ay, ax, ay, 1-ax-ay };
+            AutoDiff<3,T> alamiz[6] = { 1-az, 1-az, 1-az, az, az, az };
+            auto sigma = [&] (int v) { return alami[v] + alamiz[v]; };
+            for (int i = 2; i < 5; i++)
+              {
+                int forder = faceorder[info.facenrs[i]];
+                if (forder < 2) continue;
+
+                int fmin = 0;
+                for (int j = 1; j < 4; j++)
+                  if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+                int fx = (fmin+1)%4;
+                int fy = (fmin+3)%4;
+                if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+
+                AutoDiff<3,T> scalexi(1.0), scaleeta(1.0);
+                if (faces[i][fmin] / 3 == faces[i][fx] / 3)
+                  scalexi = alami[faces[i][fmin]]+alami[faces[i][fx]];  // xi is horizontal
+                else
+                  scaleeta = alami[faces[i][fmin]]+alami[faces[i][fy]];
+
+                CalcScaledQuadShapeLambda (forder,
+                                           sigma(faces[i][fx])-sigma(faces[i][fmin]),
+                                           sigma(faces[i][fy])-sigma(faces[i][fmin]),
+                                           scalexi, scaleeta,
+                                           [&](int j, AutoDiff<3,T> shape)
+                                           {
+                                             shapes(ii+j) = shape.Value();
+                                           });
+                ii += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
+              }
+          }
           break;
         }
 
@@ -3385,12 +3463,33 @@ namespace netgen
 
                   CalcEdgeShape (eorder, mu[vi1]-mu[vi2], &shapes(ii));
                   T lame = shapes(vi1)+shapes(vi2);
-                  for (int j = 0; j < order-1; j++)
+                  for (int j = 0; j < eorder-1; j++)
                     shapes(ii+j) *= lame;
                   ii += eorder-1;
                 }
             }
 
+          auto faces = MeshTopology::GetFaces (HEX);
+          for (int i = 0; i < 6; i++)
+            {
+              int forder = faceorder[info.facenrs[i]];
+              if (forder >= 2)
+                {
+                  int fmin = 0;
+                  for (int j = 1; j < 4; j++)
+                    if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+                  int fx = (fmin+1)%4;
+                  int fy = (fmin+3)%4;
+                  if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+
+                  T lamf = shapes(faces[i][0]) + shapes(faces[i][1]) + shapes(faces[i][2]) + shapes(faces[i][3]);
+                  CalcQuadShapeLambda (forder,
+                                       mu[faces[i][fx]]-mu[faces[i][fmin]],
+                                       mu[faces[i][fy]]-mu[faces[i][fmin]],
+                                       [&](int j, T shape) { shapes(ii+j) = lamf * shape; });
+                  ii += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
+                }
+            }
           
           break;
         }
@@ -3540,7 +3639,7 @@ namespace netgen
                       trans(1,j) = dshapes(vi1,j)+dshapes(vi2,j);
                     }
                   
-                  for (int j = 0; j < order-1; j++)
+                  for (int j = 0; j < eorder-1; j++)
                     {
                       T ddx = dshapes(ii+j,0);
                       T ddt = dshapes(ii+j,1);
@@ -3646,6 +3745,7 @@ namespace netgen
 
       case PRISM:
         {
+          dshapes = T(0.0);
           T lami[6] = { xi(0), xi(1), 1-xi(0)-xi(1), xi(0), xi(1), 1-xi(0)-xi(1)  };
           T lamiz[6] = { 1-xi(2), 1-xi(2), 1-xi(2), xi(2), xi(2), xi(2) };
           T dlamiz[6] = { -1, -1, -1, 1, 1, 1 };
@@ -3673,18 +3773,18 @@ namespace netgen
           auto edges = MeshTopology::GetEdges (PRISM);
           for (int i = 0; i < 6; i++)    // horizontal edges
             {
-              int order = edgeorder[info.edgenrs[i]];
-              if (order >= 2)
+              int eorder = edgeorder[info.edgenrs[i]];
+              if (eorder >= 2)
                 {
                   int vi1 = (edges[i][0]), vi2 = (edges[i][1]);
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
                   vi1 = vi1 % 3;
                   vi2 = vi2 % 3;
 
-                  ArrayMem<T,20> shapei_mem(order+1);
-                  TFlatVector<T> shapei(order+1, &shapei_mem[0]);
-                  CalcScaledEdgeShapeDxDt<3> (order, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &dshapes(ii,0) );
-                  CalcScaledEdgeShape(order, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &shapei(0) );
+                  ArrayMem<T,20> shapei_mem(eorder+1);
+                  TFlatVector<T> shapei(eorder+1, &shapei_mem[0]);
+                  CalcScaledEdgeShapeDxDt<3> (eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &dshapes(ii,0) );
+                  CalcScaledEdgeShape(eorder, lami[vi1]-lami[vi2], lami[vi1]+lami[vi2], &shapei(0) );
 
                   Mat<2,2,T> trans;
                   for (int j = 0; j < 2; j++)
@@ -3693,7 +3793,7 @@ namespace netgen
                       trans(1,j) = dlami[vi1][j]+dlami[vi2][j];
                     }
                   
-                  for (int j = 0; j < order-1; j++)
+                  for (int j = 0; j < eorder-1; j++)
                     {
                       T ddx = dshapes(ii+j,0);
                       T ddt = dshapes(ii+j,1);
@@ -3705,14 +3805,14 @@ namespace netgen
 
                   T facz = (i < 3) ? (1-xi(2)) : xi(2);
                   T dfacz = (i < 3) ? (-1) : 1;
-                  for (int j = 0; j < order-1; j++)
+                  for (int j = 0; j < eorder-1; j++)
                     {
                       dshapes(ii+j,0) *= facz;
                       dshapes(ii+j,1) *= facz;
                       dshapes(ii+j,2) = shapei(j) * dfacz;
                     }
 
-                  ii += order-1;
+                  ii += eorder-1;
                 }
             }
 
@@ -3761,7 +3861,6 @@ namespace netgen
             }
 
 
-          if (info.order == 2) return;
           // FACE SHAPES
           auto faces = MeshTopology::GetFaces (PRISM);
           for (int i = 0; i < 2; i++)
@@ -3813,6 +3912,41 @@ namespace netgen
               ii += ndf;
             }
 
+          {
+            AutoDiff<3,T> ax(xi(0), 0), ay(xi(1), 1), az(xi(2), 2);
+            AutoDiff<3,T> alami[6] = { ax, ay, 1-ax-ay, ax, ay, 1-ax-ay };
+            AutoDiff<3,T> alamiz[6] = { 1-az, 1-az, 1-az, az, az, az };
+            auto sigma = [&] (int v) { return alami[v] + alamiz[v]; };
+            for (int i = 2; i < 5; i++)
+              {
+                int forder = faceorder[info.facenrs[i]];
+                if (forder < 2) continue;
+
+                int fmin = 0;
+                for (int j = 1; j < 4; j++)
+                  if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+                int fx = (fmin+1)%4;
+                int fy = (fmin+3)%4;
+                if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+
+                AutoDiff<3,T> scalexi(1.0), scaleeta(1.0);
+                if (faces[i][fmin] / 3 == faces[i][fx] / 3)
+                  scalexi = alami[faces[i][fmin]]+alami[faces[i][fx]];  // xi is horizontal
+                else
+                  scaleeta = alami[faces[i][fmin]]+alami[faces[i][fy]];
+
+                CalcScaledQuadShapeLambda (forder,
+                                           sigma(faces[i][fx])-sigma(faces[i][fmin]),
+                                           sigma(faces[i][fy])-sigma(faces[i][fmin]),
+                                           scalexi, scaleeta,
+                                           [&](int j, AutoDiff<3,T> shape)
+                                           {
+                                             for (int k = 0; k < 3; k++)
+                                               dshapes(ii+j,k) = shape.DValue(k);
+                                           });
+                ii += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
+              }
+          }
           break;
 
         }
@@ -3995,6 +4129,7 @@ namespace netgen
       case HEX:
         {
           // if (typeid(T) == typeid(SIMD<double>)) return;
+          dshapes = T(0.0);
           
           // NgProfiler::StartTimer(timer);
           T x = xi(0);
@@ -4106,6 +4241,40 @@ namespace netgen
                         + dlame[k] * hshapes[j];
 
                   ii += eorder-1;
+                }
+            }
+
+          AutoDiff<3,T> ax(x, 0), ay(y, 1), az(z, 2);
+          AutoDiff<3,T> alami[8] = {
+            (1-ax)*(1-ay)*(1-az), ax*(1-ay)*(1-az), ax*ay*(1-az), (1-ax)*ay*(1-az),
+            (1-ax)*(1-ay)*az,     ax*(1-ay)*az,     ax*ay*az,     (1-ax)*ay*az };
+          AutoDiff<3,T> amu[8] = {
+            (1-ax)+(1-ay)+(1-az), ax+(1-ay)+(1-az), ax+ay+(1-az), (1-ax)+ay+(1-az),
+            (1-ax)+(1-ay)+az,     ax+(1-ay)+az,     ax+ay+az,     (1-ax)+ay+az };
+          auto faces = MeshTopology::GetFaces (HEX);
+          for (int i = 0; i < 6; i++)
+            {
+              int forder = faceorder[info.facenrs[i]];
+              if (forder >= 2)
+                {
+                  int fmin = 0;
+                  for (int j = 1; j < 4; j++)
+                    if (el[faces[i][j]] < el[faces[i][fmin]]) fmin = j;
+                  int fx = (fmin+1)%4;
+                  int fy = (fmin+3)%4;
+                  if (el[faces[i][fy]] < el[faces[i][fx]]) swap(fx,fy);
+
+                  AutoDiff<3,T> lamf = alami[faces[i][0]] + alami[faces[i][1]] + alami[faces[i][2]] + alami[faces[i][3]];
+                  CalcQuadShapeLambda (forder,
+                                       amu[faces[i][fx]]-amu[faces[i][fmin]],
+                                       amu[faces[i][fy]]-amu[faces[i][fmin]],
+                                       [&](int j, AutoDiff<3,T> shape)
+                                       {
+                                         AutoDiff<3,T> s = lamf * shape;
+                                         for (int k = 0; k < 3; k++)
+                                           dshapes(ii+j, k) = s.DValue(k);
+                                       });
+                  ii += facecoeffsindex[info.facenrs[i]+1] - facecoeffsindex[info.facenrs[i]];
                 }
             }
 
