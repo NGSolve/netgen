@@ -25,7 +25,7 @@ do
     # interpreter; we build with --no-isolation so CMake's FindPython sees the
     # real Python headers (an isolated build venv has none).
     $PYDIR/pip install -U build auditwheel twine ninja cmake
-    $PYDIR/pip install -U "scikit-build-core>=0.10" pybind11-stubgen netgen-occt==8.0.1.dev0 netgen-occt-devel==8.0.1.dev0
+    $PYDIR/python3 ./tests/utils.py --install-build-requires
 
     # Point CMake at the Python prefix for Tcl/Tk discovery (as the old setup.py did)
     PYPREFIX=$($PYDIR/python3 -c 'import sys; print(sys.prefix)')

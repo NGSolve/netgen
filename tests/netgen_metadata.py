@@ -2,11 +2,16 @@
 
 Computes the PEP 440 package version from the git history, reusing the logic in
 ``tests/utils.py`` (the single source of truth, also used by the CI ``--check-pip``
-and ``--wait-pip`` helpers).
+and ``--wait-pip`` helpers). The runtime dependencies pin ``netgen-occt`` to the
+``netgen-occt-devel`` version in ``build-system.requires``.
 
 Referenced from ``pyproject.toml``::
 
     [tool.scikit-build.metadata.version]
+    provider = "netgen_metadata"
+    provider-path = "tests"
+
+    [tool.scikit-build.metadata.dependencies]
     provider = "netgen_metadata"
     provider-path = "tests"
 
@@ -31,17 +36,20 @@ def __dir__() -> list[str]:
     return __all__
 
 
-def dynamic_metadata(field: str, settings: dict | None = None) -> str:
-    if field != "version":
-        msg = "Only the 'version' field is supported"
-        raise ValueError(msg)
+def dynamic_metadata(field: str, settings: dict | None = None) -> str | list[str]:
     if settings:
         msg = "No inline configuration is supported"
         raise ValueError(msg)
 
-    return utils.get_version(os.getcwd())
+    if field == "version":
+        return utils.get_version(os.getcwd())
+    if field == "dependencies":
+        return [utils.get_occt_requirement(), "numpy"]
+
+    msg = "Only the 'version' and 'dependencies' fields are supported"
+    raise ValueError(msg)
 
 
 def get_requires_for_dynamic_metadata(_settings: dict | None = None) -> list[str]:
-    # get_version() only needs git and the standard library.
+    # get_version() and get_occt_requirement() only need git and the standard library.
     return []

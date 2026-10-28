@@ -2,7 +2,7 @@ import argparse
 import os
 import sys
 import time
-from subprocess import check_output
+from subprocess import check_call, check_output
 
 # NOTE: ``requests`` and ``packaging`` are imported lazily inside the functions
 # that need them. This keeps ``get_version`` / ``get_git_version`` (used by the
@@ -66,6 +66,25 @@ def is_dev_build():
     return True
 
 
+def get_build_requires():
+    try:
+        import tomllib
+    except ImportError:
+        import tomli as tomllib
+
+    pyproject = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "pyproject.toml")
+    with open(pyproject, "rb") as f:
+        return tomllib.load(f)["build-system"]["requires"]
+
+
+def get_occt_requirement():
+    # runtime netgen-occt must match the netgen-occt-devel version used for building
+    for req in get_build_requires():
+        if req.startswith("netgen-occt-devel"):
+            return req.replace("netgen-occt-devel", "netgen-occt", 1)
+    raise RuntimeError("netgen-occt-devel is missing in build-system.requires")
+
+
 def get_git_version(cwd):
     return check_output(["git", "describe", "--tags"], cwd=cwd).decode("utf-8").strip()
 
@@ -108,6 +127,11 @@ def main():
         action="store_true",
         help="Generate the current package version using git",
     )
+    parser.add_argument(
+        "--install-build-requires",
+        action="store_true",
+        help="Install build-system.requires from pyproject.toml (for builds without isolation)",
+    )
     parser.add_argument("--dir", type=str, default=".", help="CWD to run git commands")
     parser.add_argument(
         "--package",
@@ -122,6 +146,8 @@ def main():
         print(get_git_version(args.dir))
     elif args.get_version:
         print(get_version(args.dir))
+    elif args.install_build_requires:
+        check_call([sys.executable, "-m", "pip", "install", "-U", *get_build_requires()])
     elif args.check_pip:
         version = get_version(args.dir)
         if is_package_available(args.package, version):

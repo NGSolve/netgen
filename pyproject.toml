@@ -1,22 +1,18 @@
 [build-system]
 requires = [
-    "scikit-build-core>=0.10",
+    "scikit-build-core>=0.11",
     "pybind11-stubgen>=2.5",
-    "netgen-occt-devel==8.0.1.dev0",
+    "netgen-occt-devel==8.0.1", # single source of the OCC version, see tests/utils.py
 ]
 build-backend = "scikit_build_core.build"
 
 [project]
 name = "netgen-mesher"
-dynamic = ["version"]
+dynamic = ["version", "dependencies"]
 description = "Netgen mesh generator"
 authors = [{ name = "The Netgen team" }]
 license = "LGPL-2.1-only"
 requires-python = ">=3.10"
-dependencies = [
-    "netgen-occt==8.0.1.dev0",
-    "numpy",
-]
 
 [project.optional-dependencies]
 test = ["pytest"]
@@ -27,9 +23,14 @@ netgen = "netgen.__main__:main"
 [tool.scikit-build]
 cmake.version = ">=3.16"
 build-dir = "build/{wheel_tag}"
-experimental = true # required to use the local version-metadata provider (tests/netgen_metadata.py)
+experimental = true # required to use the local metadata provider (tests/netgen_metadata.py)
 
 [tool.scikit-build.metadata.version]
+provider = "netgen_metadata"
+provider-path = "tests"
+
+# netgen-occt pinned to the netgen-occt-devel version from build-system.requires, plus numpy
+[tool.scikit-build.metadata.dependencies]
 provider = "netgen_metadata"
 provider-path = "tests"
 
@@ -113,7 +114,7 @@ build = "cp311-* cp312-* cp313-* cp314-* cp315-*"
 skip = "*-musllinux_* *_i686 *-win32"
 # Build without isolation to have tcl/tk headers available in sys.prefix
 build-frontend = { name = "pip", args = ["--no-build-isolation"] }
-before-build = "pip install -U \"scikit-build-core>=0.10\" \"pybind11-stubgen>=2.5\" netgen-occt==8.0.1.dev0 netgen-occt-devel==8.0.1.dev0 ninja cmake"
+before-build = "pip install -U ninja cmake && python {project}/tests/utils.py --install-build-requires"
 build-verbosity = 1
 test-command = "python -c \"import netgen; import netgen.occ; print(netgen.__version__)\""
 
