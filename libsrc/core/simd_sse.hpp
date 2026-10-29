@@ -444,7 +444,9 @@ NETGEN_INLINE SIMD<int64_t,2> operator- (SIMD<int64_t,2> a, SIMD<int64_t,2> b) {
   }
 
   NETGEN_INLINE SIMD<float,2> fabs (SIMD<float,2> a) { return _mm_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,2> sqrt (SIMD<float,2> a) { return _mm_sqrt_ps(a.Data()); }
   NETGEN_INLINE SIMD<float,4> fabs (SIMD<float,4> a) { return _mm_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,4> sqrt (SIMD<float,4> a) { return _mm_sqrt_ps(a.Data()); }
 
   NETGEN_INLINE SIMD<float,2> Min (SIMD<float,2> a, SIMD<float,2> b) { return _mm_min_ps(a.Data(), b.Data()); }
   NETGEN_INLINE SIMD<float,4> Min (SIMD<float,4> a, SIMD<float,4> b) { return _mm_min_ps(a.Data(), b.Data()); }

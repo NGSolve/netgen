@@ -474,6 +474,7 @@ namespace ngcore
   }
 
   NETGEN_INLINE SIMD<float,8> fabs (SIMD<float,8> a) { return _mm256_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,8> sqrt (SIMD<float,8> a) { return _mm256_sqrt_ps(a.Data()); }
   NETGEN_INLINE SIMD<float,8> Min (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_min_ps(a.Data(), b.Data()); }
   NETGEN_INLINE SIMD<float,8> Max (SIMD<float,8> a, SIMD<float,8> b) { return _mm256_max_ps(a.Data(), b.Data()); }
   NETGEN_INLINE SIMD<float,8> round (SIMD<float,8> a)

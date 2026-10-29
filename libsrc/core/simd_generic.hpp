@@ -1158,6 +1158,13 @@ namespace ngcore
     // return ngcore::SIMD<double,N>([a](int i)->double { return sqrt(a[i]); } );
   }
 
+  template <int N>
+  NETGEN_INLINE ngcore::SIMD<float,N> sqrt (ngcore::SIMD<float,N> a)
+  {
+    if constexpr (N == 1) return sqrt(a.Data());
+    else return { sqrt(a.Lo()), sqrt(a.Hi()) };
+  }
+
   using std::fabs;
   template <int N>
   NETGEN_INLINE ngcore::SIMD<double,N> fabs (ngcore::SIMD<double,N> a) {

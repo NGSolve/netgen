@@ -455,6 +455,7 @@ namespace ngcore
   { return _mm512_fmaddsub_ps(a.Data(), b.Data(), c.Data()); }
 
   NETGEN_INLINE SIMD<float,16> fabs (SIMD<float,16> a) { return _mm512_max_ps(a.Data(), (-a).Data()); }
+  NETGEN_INLINE SIMD<float,16> sqrt (SIMD<float,16> a) { return _mm512_sqrt_ps(a.Data()); }
   NETGEN_INLINE SIMD<float,16> Min (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_min_ps(a.Data(), b.Data()); }
   NETGEN_INLINE SIMD<float,16> Max (SIMD<float,16> a, SIMD<float,16> b) { return _mm512_max_ps(a.Data(), b.Data()); }
   NETGEN_INLINE SIMD<float,16> round (SIMD<float,16> a)

@@ -524,6 +524,12 @@ namespace ngcore
   NETGEN_INLINE SIMD<double,2> sqrt (SIMD<double,2> x)
   { return vsqrtq_f64(x.Data()); }
 
+  NETGEN_INLINE SIMD<float,2> sqrt (SIMD<float,2> x)
+  { return vsqrt_f32(x.Data()); }
+
+  NETGEN_INLINE SIMD<float,4> sqrt (SIMD<float,4> x)
+  { return vsqrtq_f32(x.Data()); }
+
   
   NETGEN_INLINE SIMD<double,2> round (SIMD<double,2> x)
   {
