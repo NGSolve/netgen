@@ -1054,32 +1054,26 @@ namespace netgen
   void DenseMatrix :: Residuum (const Vector & x, const Vector & b,
                                 Vector & res) const
   {
-    double sum;
-    //   const Vector & x = bx.CastToVector();
-    //  const Vector & b = bb.CastToVector();
-    //  Vector & res = bres.CastToVector();
-
     res.SetSize (Height());
 
     if (Width() != x.Size() || Height() != b.Size())
       throw Exception ("DenseMatrix::Residuum: matrix and vector don't fit");
     if (Height() != res.Size())
       throw Exception ("DenseMatrix::Residuum: res vector size not ok");
+    
+    int h = Height(); 
+    int w = Width();
+    const double * mp = &Get(1, 1);
+    
+    for (int i = 0; i < h; i++)
       {
-        int h = Height(); 
-        int w = Width();
-        const double * mp = &Get(1, 1);
-
-        for (int i = 0; i < h; i++)
-          {
-            sum = b(i);
-            const double * xp = &x(0);
-
-            for (int j = 1; j <= w; ++j, ++mp, ++xp)
-              sum -= *mp * *xp;
-          
-            res(i) = sum;
-          }
+        double sum = b(i);
+        const double * xp = &x(0);
+        
+        for (int j = 1; j <= w; ++j, ++mp, ++xp)
+          sum -= *mp * *xp;
+        
+        res(i) = sum;
       }
   }
 
