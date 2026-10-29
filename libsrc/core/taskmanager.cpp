@@ -36,12 +36,13 @@ namespace ngcore
     int total;
     int producing_thread;
     atomic<int> * endcnt;
+    std::exception_ptr * ex;
 
     TNestedTask () { ; }
     TNestedTask (const function<void(TaskInfo&)> & _func,
                  int _mynr, int _total,
-                 atomic<int> & _endcnt, int prod_tid)
-      : func(&_func), mynr(_mynr), total(_total), producing_thread(prod_tid), endcnt(&_endcnt)
+                 atomic<int> & _endcnt, std::exception_ptr & _ex, int prod_tid)
+      : func(&_func), mynr(_mynr), total(_total), producing_thread(prod_tid), endcnt(&_endcnt), ex(&_ex)
     {
       ;
     }
@@ -260,14 +261,14 @@ namespace ngcore
   /////////////////////// NEW: nested tasks using concurrent queue
 
   void TaskManager :: AddTask (const function<void(TaskInfo&)> & afunc,
-                atomic<int> & endcnt)
-                
+                atomic<int> & endcnt, std::exception_ptr & ex)
+
   {
     auto &taskqueue = *static_cast<TQueue*>(taskqueue_ptr);
     int num = endcnt;
     auto tid = TaskManager::GetThreadId();
     for (int i = 0; i < num; i++)
-      taskqueue.enqueue (*static_cast<TPToken*>(worker_data->produce_token), { afunc, i, num, endcnt, tid });
+      taskqueue.enqueue (*static_cast<TPToken*>(worker_data->produce_token), { afunc, i, num, endcnt, ex, tid });
   }
 
   bool TaskManager :: ProcessTask()
@@ -292,7 +293,15 @@ namespace ngcore
         // if(trace && task.producing_thread != ti.thread_nr)
         // trace->StartTask (ti.thread_nr, t, PajeTrace::Task::ID_TIMER, task.producing_thread);
 
-        (*task.func)(ti);
+        try
+          {
+            (*task.func)(ti);
+          }
+        catch (...)
+          {
+            lock_guard<mutex> guard(copyex_mutex);
+            if (!*task.ex) *task.ex = std::current_exception();
+          }
         --*task.endcnt;
 
         // if(trace && task.producing_thread != ti.thread_nr)
@@ -341,12 +350,14 @@ namespace ngcore
           }
         
         atomic<int> endcnt(antasks);
-        tm->AddTask (afunc, endcnt);
+        std::exception_ptr ex;
+        tm->AddTask (afunc, endcnt, ex);
         while (endcnt > 0)
           {
             tm->ProcessTask();
           }
-        
+        if (ex) std::rethrow_exception(ex);
+
         // if (cleanup_function) (*cleanup_function)();
         return;
       }
@@ -440,12 +451,11 @@ namespace ngcore
           }
 
       }
-    catch (Exception & e)
+    catch (...)
       {
         {
           lock_guard<mutex> guard(tm->copyex_mutex);
-          delete tm->ex;
-          tm->ex = new Exception (e);
+          if (!tm->ex) tm->ex = std::current_exception();
           mynode_data.start_cnt = mytasks.Size();
         }
       }
@@ -465,7 +475,11 @@ namespace ngcore
 
     tm->func = nullptr;
     if (tm->ex)
-      throw Exception (*tm->ex);
+      {
+        auto ex = tm->ex;
+        tm->ex = nullptr;
+        std::rethrow_exception(ex);
+      }
 
     // if (trace)
     //    trace->StopJob();
@@ -584,13 +598,11 @@ namespace ngcore
               }
 
           }
-        catch (Exception & e)
+        catch (...)
           {
             {
-              // cout << "got exception in TM" << endl; 
               lock_guard<mutex> guard(copyex_mutex);
-              delete ex;
-              ex = new Exception (e);
+              if (!ex) ex = std::current_exception();
               mynode_data.start_cnt = mytasks.Size();
             }
           }

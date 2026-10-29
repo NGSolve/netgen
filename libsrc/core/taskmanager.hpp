@@ -8,6 +8,7 @@
 /*********************************************************************/
 
 #include <atomic>
+#include <exception>
 #include <functional>
 #include <list>
 #include <cmath>
@@ -81,12 +82,13 @@ namespace ngcore
     };
     
     void * taskqueue_ptr;
-    void AddTask (const function<void(TaskInfo&)> & afunc, atomic<int> & endcnt);
+    void AddTask (const function<void(TaskInfo&)> & afunc, atomic<int> & endcnt,
+                  std::exception_ptr & ex);
     const function<void(TaskInfo&)> * func = nullptr;
     const function<void()> * startup_function = nullptr;
     const function<void()> * cleanup_function = nullptr;
     atomic<int> ntasks;
-    Exception * ex = nullptr;
+    std::exception_ptr ex;
 
     atomic<int> jobnr;
 
