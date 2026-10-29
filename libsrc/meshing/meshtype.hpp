@@ -291,7 +291,7 @@ namespace netgen
     constexpr T GetRawInteger () const { return i; }
 
     void Invalidate() { i = long(TIndex::BASE)-1; }
-    bool IsValid() const { return i+1 != TIndex::BASE; }
+    constexpr bool IsValid() const { return i+1 != TIndex::BASE; }
     // operator bool() const { return IsValid(); }
 
     // archives store 1-based numbers (the historic base-1 raw value), independent of BASE
