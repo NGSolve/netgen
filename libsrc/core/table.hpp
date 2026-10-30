@@ -199,7 +199,7 @@ namespace ngcore
       TraceAlloc();
     }
 
-    NETGEN_INLINE Table (Table && tab2)
+    NETGEN_INLINE Table (Table && tab2) noexcept
       : FlatTable<T,IndexType>(0, nullptr, nullptr)
     {
       Swap (size, tab2.size);
@@ -227,7 +227,7 @@ namespace ngcore
       ar.Do(data, index[size]);
     }
 
-    NETGEN_INLINE Table & operator= (Table && tab2)
+    NETGEN_INLINE Table & operator= (Table && tab2) noexcept
     {
       Swap (size, tab2.size);
       Swap (index, tab2.index);
@@ -533,7 +533,7 @@ namespace ngcore
         }
     }
 
-    DynamicTable (DynamicTable && tab2)
+    DynamicTable (DynamicTable && tab2) noexcept
     {
       Swap (data, tab2.data);
       Swap (oneblock, tab2.oneblock);
@@ -548,7 +548,7 @@ namespace ngcore
           delete [] d.col;
     }
     
-    DynamicTable & operator= (DynamicTable && tab2)
+    DynamicTable & operator= (DynamicTable && tab2) noexcept
     {
       Swap (data, tab2.data);
       Swap (oneblock, tab2.oneblock);

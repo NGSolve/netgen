@@ -191,7 +191,7 @@ namespace ngcore
       events.push_back(MemoryEvent{GetTimeCounter(), bytes, reinterpret_cast<uintptr_t>(p), kind});
     }
 
-  void MemTraceRecord (const void * p, size_t bytes, unsigned char kind)
+  void MemTraceRecord (const void * p, size_t bytes, unsigned char kind) noexcept
     {
       if(auto t = memtrace)
         t->AddMemoryEvent(p, bytes, kind);

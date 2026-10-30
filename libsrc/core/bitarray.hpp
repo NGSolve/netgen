@@ -44,7 +44,7 @@ public:
   NGCORE_API BitArray (size_t asize, LocalHeap & lh);
   ///
   NGCORE_API BitArray (const BitArray & ba2);
-  BitArray (BitArray && ba2)
+  BitArray (BitArray && ba2) noexcept
     : size(ba2.size), data(ba2.data), owns_data(ba2.owns_data)
   {
     ba2.owns_data = false;

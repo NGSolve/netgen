@@ -53,6 +53,7 @@ namespace ngcore
 
     /// create new timer, use integer index
     NGCORE_API static int CreateTimer (const std::string & name);
+    NGCORE_API static int CreateTimer (const char * name) noexcept;
 
     NGCORE_API static void Reset ();
 
@@ -183,14 +184,20 @@ namespace ngcore
     static constexpr bool do_timing = TTiming::do_timing;
 
     Timer (const std::string & name) : timernr(Init(name)) { }
+    Timer (const char * name) noexcept : timernr(NgProfiler::CreateTimer(name)) { }
 
     template<std::enable_if_t< detail::is_tracing_type_v<TTracing>, bool> = false>
     Timer( const std::string & name, TTracing ) : timernr(Init(name)) { }
+    template<std::enable_if_t< detail::is_tracing_type_v<TTracing>, bool> = false>
+    Timer( const char * name, TTracing ) noexcept : timernr(NgProfiler::CreateTimer(name)) { }
 
     template<std::enable_if_t< detail::is_timing_type_v<TTiming>, bool> = false>
     Timer( const std::string & name, TTiming ) : timernr(Init(name)) { }
+    template<std::enable_if_t< detail::is_timing_type_v<TTiming>, bool> = false>
+    Timer( const char * name, TTiming ) noexcept : timernr(NgProfiler::CreateTimer(name)) { }
 
     Timer( const std::string & name, TTracing, TTiming ) : timernr(Init(name)) { }
+    Timer( const char * name, TTracing, TTiming ) noexcept : timernr(NgProfiler::CreateTimer(name)) { }
 
     void SetName (const std::string & name)
     {

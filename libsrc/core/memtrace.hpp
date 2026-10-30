@@ -9,15 +9,15 @@ namespace ngcore
 {
   extern NGCORE_API class PajeTrace * memtrace;
 
-  NGCORE_API void MemTraceRecord (const void * p, size_t bytes, unsigned char kind);
+  NGCORE_API void MemTraceRecord (const void * p, size_t bytes, unsigned char kind) noexcept;
 
-  NETGEN_INLINE void MemTraceAlloc (const void * p, size_t bytes)
+  NETGEN_INLINE void MemTraceAlloc (const void * p, size_t bytes) noexcept
   { if(memtrace) MemTraceRecord(p, bytes, 0); }
-  NETGEN_INLINE void MemTraceFree (const void * p, size_t bytes)
+  NETGEN_INLINE void MemTraceFree (const void * p, size_t bytes) noexcept
   { if(memtrace) MemTraceRecord(p, bytes, 1); }
-  NETGEN_INLINE void MemTraceDeviceAlloc (const void * p, size_t bytes)
+  NETGEN_INLINE void MemTraceDeviceAlloc (const void * p, size_t bytes) noexcept
   { if(memtrace) MemTraceRecord(p, bytes, 2); }
-  NETGEN_INLINE void MemTraceDeviceFree (const void * p, size_t bytes)
+  NETGEN_INLINE void MemTraceDeviceFree (const void * p, size_t bytes) noexcept
   { if(memtrace) MemTraceRecord(p, bytes, 3); }
 } // namespace ngcore
 

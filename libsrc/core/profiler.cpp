@@ -67,6 +67,11 @@ namespace ngcore
   }
 
 
+  int NgProfiler :: CreateTimer (const char * name) noexcept
+  {
+    return CreateTimer (std::string(name));
+  }
+
   int NgProfiler :: CreateTimer (const std::string & name)
   {
     static std::mutex createtimer_mutex;

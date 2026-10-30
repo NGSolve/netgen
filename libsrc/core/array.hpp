@@ -832,7 +832,7 @@ namespace ngcore
       mem_to_delete = nullptr;
     }
 
-    NETGEN_INLINE Array (Array && a2) 
+    NETGEN_INLINE Array (Array && a2) noexcept
     {
       size = a2.size; 
       data = a2.data;
@@ -1130,7 +1130,7 @@ namespace ngcore
 
     
     /// steal array 
-    NETGEN_INLINE Array & operator= (Array && a2)
+    NETGEN_INLINE Array & operator= (Array && a2) noexcept
     {
       ngcore::Swap (size, a2.size);
       ngcore::Swap (data, a2.data);
@@ -1298,7 +1298,7 @@ namespace ngcore
       Array<T,TIND>::operator= (a2);
     }
   
-    ArrayMem(ArrayMem && a2)
+    ArrayMem(ArrayMem && a2) noexcept(std::is_nothrow_copy_assignable_v<T>)
       : Array<T,TIND> (a2.Size(), (T*)mem)
     {
       if (a2.mem_to_delete)
@@ -1341,7 +1341,7 @@ namespace ngcore
       return *this;
     }
 
-    ArrayMem & operator= (ArrayMem && a2)
+    ArrayMem & operator= (ArrayMem && a2) noexcept(std::is_nothrow_move_assignable_v<T>)
     {
       ngcore::Swap (mem_to_delete, a2.mem_to_delete);
       ngcore::Swap (allocsize, a2.allocsize);
