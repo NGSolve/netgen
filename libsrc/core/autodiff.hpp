@@ -818,6 +818,21 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
     return AutoDiffRec<D,SCAL> (a*b.Rec(), a*b.Last());
   }
 
+  // a*b+c, fused per component
+  template <int D, typename SCAL>
+  NETGEN_INLINE AutoDiffRec<D,SCAL> FMA (AutoDiffRec<D,SCAL> a, AutoDiffRec<D,SCAL> b, AutoDiffRec<D,SCAL> c)
+  {
+    return AutoDiffRec<D,SCAL> (FMA(a.Rec(), b.Rec(), c.Rec()),
+                                FMA(a.Value(), b.Last(), FMA(b.Value(), a.Last(), c.Last())));
+  }
+
+  template <int D, typename SCAL, typename SCAL1,
+            typename std::enable_if<std::is_convertible<SCAL1,SCAL>::value, int>::type = 0>
+  NETGEN_INLINE AutoDiffRec<D,SCAL> FMA (SCAL1 a, AutoDiffRec<D,SCAL> b, AutoDiffRec<D,SCAL> c)
+  {
+    return AutoDiffRec<D,SCAL> (FMA(a, b.Rec(), c.Rec()), FMA(a, b.Last(), c.Last()));
+  }
+
   template <int D, typename SCAL>
   NETGEN_INLINE AutoDiffRec<D,SCAL> & operator+= (AutoDiffRec<D,SCAL> & a, AutoDiffRec<D,SCAL> b)
   {

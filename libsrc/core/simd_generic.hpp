@@ -955,6 +955,12 @@ namespace ngcore
   }
 
   template <int N, typename std::enable_if<!IsNativeSIMDSize(N),int>::type = 0>
+  NETGEN_ALWAYS_INLINE inline SIMD<double,N> FMA (double a, SIMD<double,N> b, SIMD<double,N> c)
+  {
+    return { FMA(a, b.Lo(), c.Lo()), FMA(a, b.Hi(), c.Hi()) };
+  }
+
+  template <int N, typename std::enable_if<!IsNativeSIMDSize(N),int>::type = 0>
   NETGEN_ALWAYS_INLINE inline SIMD<double,N> FNMA (SIMD<double,N> a, SIMD<double,N> b, SIMD<double,N> c)
   {
     return { FNMA(a.Lo(), b.Lo(), c.Lo()), FNMA(a.Hi(), b.Hi(), c.Hi()) };
