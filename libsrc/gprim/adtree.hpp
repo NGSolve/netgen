@@ -949,6 +949,33 @@ public:
   const ADTree3<T> & Tree() const { return tree; }
 };
 
+// A key for BoxTree's leaf index whose hash scrambles the key's own: element and line numbers run consecutively, and
+// with the plain hash they fill one long run of the closed hash table, which every Delete then re-inserts.
+template <typename T>
+struct ScrambledKey
+{
+  T key;
+  bool operator== (const ScrambledKey & other) const { return key == other.key; }
+};
+
+} // namespace netgen
+namespace ngcore
+{
+  template <typename T>
+  struct CHT_trait<netgen::ScrambledKey<T>>
+  {
+    constexpr static inline netgen::ScrambledKey<T> Invalid() { return { CHT_trait<T>::Invalid() }; }
+    constexpr static inline size_t HashValue (const netgen::ScrambledKey<T> & k, size_t mask)
+    {
+      uint64_t x = CHT_trait<T>::HashValue (k.key, ~size_t(0));
+      x ^= x >> 33; x *= 0xff51afd7ed558ccdULL; x ^= x >> 33; // MurmurHash3's finaliser
+      return size_t(x) & mask;
+    }
+  };
+}
+namespace netgen
+{
+
 template<int dim, typename T=int>
 class BoxTree
 {
@@ -967,12 +994,12 @@ public:
     Leaf() : n_elements(0)
     { }
 
-    void Add( ClosedHashTable<T, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
+    void Add( ClosedHashTable<ScrambledKey<T>, Leaf*> &leaf_index, const Point<2*dim> &ap, T aindex )
       {
         p[n_elements] = ap;
         index[n_elements] = aindex;
         n_elements++;
-        leaf_index[aindex] = this;
+        leaf_index[ScrambledKey<T>{aindex}] = this;
       }
   };
 
@@ -985,6 +1012,17 @@ public:
     };
     double sep;
     int level;
+    // Bounding box of every element ever inserted below this node (deletions leave it as it is), so that a query
+    // can skip a subtree on both sides; the separators alone prune only one side per level.
+    Point<dim> bmin, bmax;
+    void Expand (const Point<2*dim> & p)
+      {
+        for (int d = 0; d < dim; d++)
+          {
+            bmin(d) = min2 (bmin(d), p(d));
+            bmax(d) = max2 (bmax(d), p(d+dim));
+          }
+      }
 
     Node()
         : children{nullptr,nullptr}
@@ -1002,7 +1040,7 @@ public:
 private:
   Node root;
 
-  ClosedHashTable<T, Leaf*> leaf_index;
+  ClosedHashTable<ScrambledKey<T>, Leaf*> leaf_index;
 
   Point<dim> global_min, global_max;
   double tol;
@@ -1018,6 +1056,11 @@ public:
     {
       root.leaf = (Leaf*) ball_leaves.Alloc(); new (root.leaf) Leaf();
       root.level = 0;
+      for (int d = 0; d < dim; d++)
+        {
+          root.bmin(d) = std::numeric_limits<double>::max();
+          root.bmax(d) = std::numeric_limits<double>::lowest();
+        }
       tol = 1e-7 * Dist(pmax, pmin);
     }
 
@@ -1071,6 +1114,12 @@ public:
 
           int dir = dir_stack.Last();
           dir_stack.DeleteLast();
+
+          bool overlaps = true;
+          for (int d = 0; d < dim; d++)
+            if (node->bmin(d) > tpmax[d] || node->bmax(d) < tpmin[d+dim])
+              overlaps = false;
+          if (!overlaps) continue;
 
           if(Leaf *leaf = node->GetLeaf())
             {
@@ -1133,12 +1182,14 @@ public:
         }
 
       Node * node = &root;
+      node->Expand (p);
       Leaf * leaf = node->GetLeaf();
 
       // search correct leaf to add point
       while(!leaf)
         {
           node = p[dir] < node->sep ? node->children[0] : node->children[1];
+          node->Expand (p);
           dir++;
           if(dir==2*dim) dir = 0;
           leaf = node->GetLeaf();
@@ -1179,15 +1230,30 @@ public:
           node2->leaf = leaf2;
           node2->level = node->level+1;
 
+          for (Node * nd : {node1, node2})
+            for (int d = 0; d < dim; d++)
+              {
+                nd->bmin(d) = std::numeric_limits<double>::max();
+                nd->bmax(d) = std::numeric_limits<double>::lowest();
+              }
+          for (auto i : IntRange(leaf1->n_elements)) node1->Expand (leaf1->p[i]);
+          for (auto i : IntRange(leaf2->n_elements)) node2->Expand (leaf2->p[i]);
+
           node->children[0] = node1;
           node->children[1] = node2;
           node->sep = 0.5 * (leaf->p[order[isplit-1]][dir] + leaf->p[order[isplit]][dir]);
 
           // add new point to one of the new leaves
           if (p[dir] < node->sep)
+            {
               leaf1->Add( leaf_index, p, pi );
+              node1->Expand (p);
+            }
           else
+            {
               leaf2->Add( leaf_index, p, pi );
+              node2->Expand (p);
+            }
 
           ball_leaves.Free(leaf);
           n_leaves++;
@@ -1198,8 +1264,8 @@ public:
   void DeleteElement (T pi)
     {
       // static Timer timer("BoxTree::DeleteElement"); RegionTimer rt(timer);
-      Leaf *leaf = leaf_index[pi];
-      leaf_index.Delete(pi);
+      Leaf *leaf = leaf_index[ScrambledKey<T>{pi}];
+      leaf_index.Delete(ScrambledKey<T>{pi});
       auto & n_elements = leaf->n_elements;
       auto & index = leaf->index;
       auto & p = leaf->p;
