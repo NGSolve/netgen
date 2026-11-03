@@ -1709,12 +1709,11 @@ namespace netgen
 
       case PYRAMID:
         {
-          T noz = 1-p(2);
-          // if (noz == 0.0) noz = 1e-10;
-          noz += T(1e-12);
+          T noz = 1-ClampPyramidApex (p(2));
+          T den = noz;
 
-          T xi  = p(0) / noz;
-          T eta = p(1) / noz;
+          T xi  = p(0) / den;
+          T eta = p(1) / den;
           shape(0) = (1-xi)*(1-eta) * (noz);
           shape(1) = (  xi)*(1-eta) * (noz);
           shape(2) = (  xi)*(  eta) * (noz);
@@ -1727,20 +1726,21 @@ namespace netgen
           T x = p(0);
           T y = p(1);
           T z = p(2);
-          z *= 1-1e-12;
-          shape[0] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (-2*x - z + 2)*(-2*y - z + 2))*(-0.5*x - 0.5*y - 0.5*z + 0.25);
-          shape[1] = (0.5*x - 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(-2*y - z + 2));
-          shape[2] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*x + z)*(2*y + z))*(0.5*x + 0.5*y + 0.5*z - 0.75);
-          shape[3] = (-0.5*x + 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/(-z + 1) + (2*y + z)*(-2*x - z + 2));
+          z = ClampPyramidApex (z);
+          T den = 1-z;
+          shape[0] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/den + (-2*x - z + 2)*(-2*y - z + 2))*(-0.5*x - 0.5*y - 0.5*z + 0.25);
+          shape[1] = (0.5*x - 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/den + (2*x + z)*(-2*y - z + 2));
+          shape[2] = (-z + z*(2*x + z - 1)*(2*y + z - 1)/den + (2*x + z)*(2*y + z))*(0.5*x + 0.5*y + 0.5*z - 0.75);
+          shape[3] = (-0.5*x + 0.5*y - 0.25)*(-z - z*(2*x + z - 1)*(2*y + z - 1)/den + (2*y + z)*(-2*x - z + 2));
           shape[4] = z*(2*z - 1);
-          shape[5] = 2*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
-          shape[6] = 4*x*y*(-2*x - 2*z + 2)/(-2*z + 2);
-          shape[7] = 2*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-2*z + 2);
-          shape[8] = 4*x*y*(-2*y - 2*z + 2)/(-2*z + 2);
-          shape[9] = z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(-z + 1);
-          shape[10] = 2*x*z*(-2*y - 2*z + 2)/(-z + 1);
-          shape[11] = 4*x*y*z/(-z + 1);
-          shape[12] = 2*y*z*(-2*x - 2*z + 2)/(-z + 1);
+          shape[5] = 2*x*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(2*den);
+          shape[6] = 4*x*y*(-2*x - 2*z + 2)/(2*den);
+          shape[7] = 2*y*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/(2*den);
+          shape[8] = 4*x*y*(-2*y - 2*z + 2)/(2*den);
+          shape[9] = z*(-2*x - 2*z + 2)*(-2*y - 2*z + 2)/den;
+          shape[10] = 2*x*z*(-2*y - 2*z + 2)/den;
+          shape[11] = 4*x*y*z/den;
+          shape[12] = 2*y*z*(-2*x - 2*z + 2)/den;
           break;
         }
       case PRISM:

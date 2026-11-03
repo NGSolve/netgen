@@ -725,6 +725,34 @@ NETGEN_INLINE AutoDiffDiff<D,SCAL> IfPos (SCAL /* SIMD<double> */ a, AutoDiffDif
 
 //@}
 
+  // keep 1-z > 0 at the pyramid apex; changes z only within eps of the apex,
+  // derivatives are kept, so 0/0 limits like (1-z)/(1-z) stay 1
+  template <typename T> struct is_ad_type : std::false_type { };
+  template <int D, typename S> struct is_ad_type<AutoDiff<D,S>> : std::true_type { };
+  template <int D, typename S> struct is_ad_type<AutoDiffDiff<D,S>> : std::true_type { };
+
+  template <typename T> inline constexpr double pyramid_apex_eps = 1e-12;
+  template <> inline constexpr double pyramid_apex_eps<float> = 1e-6;
+  template <int N> inline constexpr double pyramid_apex_eps<SIMD<float,N>> = 1e-6;
+
+  template <typename T>
+  NETGEN_INLINE T ClampPyramidApex (T z)
+  {
+    if constexpr (is_ad_type<T>::value)
+      {
+        z.Value() = ClampPyramidApex (z.Value());
+        return z;
+      }
+    else
+      {
+        T zmax(1-pyramid_apex_eps<T>);
+        if constexpr (std::is_arithmetic_v<T>)
+          return z > zmax ? zmax : z;
+        else
+          return IfPos (z-zmax, zmax, z);
+      }
+  }
+
 }
 
 
@@ -743,6 +771,9 @@ namespace ngbla
     return x*x;
   }
   
+
+
+
 }
 
 
