@@ -48,7 +48,7 @@ namespace netgen
 
    void VisualSceneOCCGeometry :: DrawScene ()
    {
-      if ( occgeometry->changed )
+      if ( occgeometry->changed && !multithread.running )
       {
          BuildScene();
          occgeometry -> changed = 0;
