@@ -390,7 +390,7 @@ void BoundaryLayerTool ::CreateFaceDescriptorsSides ()
         {
           int new_si = mesh.GetNFD() + 1;
           string fd_name = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei)).GetBCName();
-          int si = params.sides_keep_surfaceindex ? int(facei) : -1;
+          int si = params.sides_keep_surfaceindex.value_or(!params.outside) ? int(facei) : -1;
           // domin and domout can only be set later
           FaceRegion new_fd(si, -1, -1, si);
           new_fd.SetBCProperty(new_si);
@@ -1313,6 +1313,32 @@ void BoundaryLayerTool ::ProcessParameters ()
         }
     }
 
+  // the layer must end on periodic faces, else their points move off the face
+  {
+    auto& idents = mesh.GetIdentifications();
+    TBitArray<PointIndex> periodic_point(mesh.GetNP());
+    periodic_point = false;
+    Array<PointIndices<2>> pairs;
+    for (auto nr : Range(1, idents.GetMaxNr() + 1))
+      if (idents.GetType(nr) == Identifications::PERIODIC)
+        {
+          idents.GetPairs(nr, pairs);
+          for (auto pair : pairs)
+            for (auto pi : pair)
+              periodic_point.SetBit(pi);
+        }
+    BitArray periodic_face(mesh.GetNFD() + 1);
+    periodic_face.Set();
+    periodic_face.Clear(0);
+    for (const auto& sel : mesh.SurfaceElements())
+      for (auto pi : sel.PNums())
+        if (!periodic_point.Test(pi))
+          periodic_face.Clear(sel.GetIndex().Nr1());
+    for (int i = 1; i <= mesh.GetNFD(); i++)
+      if (periodic_face.Test(i) && !par_surfid.Contains(i) && !par_project_boundaries.Contains(i))
+        par_project_boundaries.Append(i);
+  }
+
   if (double* height = get_if<double>(&params.thickness); height)
     {
       par_heights.Append(*height);
@@ -1443,26 +1469,82 @@ void BoundaryLayerTool ::Perform ()
       }
   }
 
+  Array<Vec<3>, PointIndex> displacement(mesh.GetNP());
+  displacement = 0.;
   for (auto [pi, data] : growth_vector_map)
     {
       auto [gw, height] = data;
-      mesh[pi] += height * (*gw);
+      displacement[pi] = height * (*gw);
     }
 
   auto& identifications = mesh.GetIdentifications();
   Array<PointIndices<2>> pairs;
-  for (auto nr : Range(0, identifications.GetMaxNr() + 1))
+  // identification numbers start at 1, GetPairs(0) returns the pairs of all
+  for (auto nr : Range(1, identifications.GetMaxNr() + 1))
     {
       identifications.GetPairs(nr, pairs);
       for (auto pair : pairs)
         {
           auto p0 = pair[0];
           auto p1 = pair[1];
-          if (max(p0, p1) < first_new_pi && mapto[p0].Size() && mapto[p1].Size())
+          if (max(p0, p1) < first_new_pi && mapto[p0].Size() == mapto[p1].Size())
             for (auto i : Range(mapto[p0].Size()))
               identifications.Add(mapto[p0][i], mapto[p1][i], nr);
         }
     }
+
+  // growth vectors and their smoothing are computed per face, so periodic
+  // partners got different displacements: average over each group of
+  // periodically identified points, the positions stay exact translates.
+  // Only for translations, a rotation would have to rotate the displacements
+  {
+    Array<PointIndex, PointIndex> root(mesh.GetNP());
+    for (auto pi : mesh.Points().Range())
+      root[pi] = pi;
+    auto find = [&] (PointIndex pi) {
+      while (root[pi] != pi)
+        pi = root[pi] = root[root[pi]];
+      return pi;
+    };
+    for (auto nr : Range(1, identifications.GetMaxNr() + 1))
+      if (identifications.GetType(nr) == Identifications::PERIODIC)
+        {
+          identifications.GetPairs(nr, pairs);
+          if (pairs.Size() == 0)
+            continue;
+          auto shift = mesh[pairs[0][1]] - mesh[pairs[0][0]];
+          bool translation = true;
+          for (auto pair : pairs)
+            if ((mesh[pair[1]] - mesh[pair[0]] - shift).Length() > 1e-8 * (1 + shift.Length()))
+              translation = false;
+          if (!translation)
+            {
+              PrintMessage(1, "BLayer: periodic identification ", nr, " is no translation, layers on it are not made periodic");
+              continue;
+            }
+          for (auto pair : pairs)
+            {
+              auto r0 = find(pair[0]), r1 = find(pair[1]);
+              if (r0 != r1)
+                root[max(r0, r1)] = min(r0, r1);
+            }
+        }
+    Array<Vec<3>, PointIndex> sum(mesh.GetNP());
+    Array<int, PointIndex> cnt(mesh.GetNP());
+    sum = 0.;
+    cnt = 0;
+    for (auto pi : mesh.Points().Range())
+      {
+        sum[find(pi)] += displacement[pi];
+        cnt[find(pi)]++;
+      }
+    for (auto pi : mesh.Points().Range())
+      if (cnt[find(pi)] > 1)
+        displacement[pi] = (1.0 / cnt[find(pi)]) * sum[find(pi)];
+  }
+
+  for (auto pi : mesh.Points().Range())
+    mesh[pi] += displacement[pi];
 
   // there is still a bug with segment edge numbers in moved boundaries.
   // As a workaround, don't add them at all if only volume elements are inserted
