@@ -238,15 +238,12 @@ namespace netgen
         size_t entries, size;
         ar & size & entries;
         data.SetSize(size);
-        oneblock = new char [entries*elemsize];
-        size_t cnt = 0;
         for (size_t i = 0; i < size; i++)
           {
             ar & data[i].size;
-            data[i].col = oneblock+cnt;
             data[i].maxsize = data[i].size;
-            ar.Do ((unsigned char*)(oneblock+cnt), data[i].size*elemsize);
-            cnt += data[i].size*elemsize;
+            data[i].col = new char[data[i].size*elemsize];
+            ar.Do ((unsigned char*)data[i].col, data[i].size*elemsize);
           }
       }
   }    
