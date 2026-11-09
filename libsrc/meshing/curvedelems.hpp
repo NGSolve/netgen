@@ -156,6 +156,18 @@ public:
                                             T * x, size_t sx,
                                             T * dxdxi, size_t sdxdxi);
 
+  // exact second derivatives d^2 x_i / dxi_j dxi_k at ddx[i*D*D+j*D+k], D = element dim;
+  // returns false if not available (hp-refined, rational, serendipity), use finite differences then
+  template <typename T>
+  bool CalcMultiPointElementHesse (ElementIndex elnr, int n,
+                                   const T * xi, size_t sxi,
+                                   T * ddx, size_t sddx);
+
+  template <int DIM_SPACE, typename T>
+  bool CalcMultiPointSurfaceHesse (SurfaceElementIndex elnr, int n,
+                                   const T * xi, size_t sxi,
+                                   T * ddx, size_t sddx);
+
 
   
 
@@ -237,6 +249,8 @@ private:
 
   template <typename T>
   bool EvaluateMapping (ElementInfo & info, const Point<3,T> xi, Point<3,T> & x, Mat<3,3,T> & jac) const;  
+  template <typename TAD>
+  bool EvaluateMappingAD (ElementInfo & info, TAD x, TAD y, TAD z, TAD * mapped_x) const;
   
   class SurfaceElementInfo
   {
@@ -266,6 +280,8 @@ private:
 
   template <int DIM_SPACE, typename T>
   bool EvaluateMapping (SurfaceElementInfo & info, const Point<2,T> xi, Point<DIM_SPACE,T> & x, Mat<DIM_SPACE,2,T> & jac) const;  
+  template <int DIM_SPACE, typename TAD>
+  bool EvaluateMappingAD (SurfaceElementInfo & info, TAD x, TAD y, TAD * mapped_x) const;
 };
 
 } //namespace netgen

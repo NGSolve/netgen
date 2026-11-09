@@ -293,6 +293,14 @@ namespace netgen
                                      const T * xi, size_t sxi,
                                      T * x, size_t sx,
                                      T * dxdxi, size_t sdxdxi) const;
+
+    /// Hessian of the element mapping:
+    /// ddx ... d^2 x_i / dxi_j dxi_k at ddx[i*DIM_EL*DIM_EL+j*DIM_EL+k]
+    /// exact for curved elements, finite differences of the Jacobian otherwise
+    template <int DIM_EL, int DIM_SPACE, typename T> 
+    void MultiElementHesse (int elnr, int npts,
+                            const T * xi, size_t sxi,
+                            T * ddx, size_t sddx) const;
     
 
     template <int DIM>

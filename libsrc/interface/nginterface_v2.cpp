@@ -1005,6 +1005,61 @@ namespace netgen
   
 
 
+  template <int DIMS, int DIMR, typename T>
+  static void MultiElementHesseImpl (const Ngx_Mesh & ngmesh, Mesh & mesh, int elnr, int npts,
+                                     const T * xi, size_t sxi, T * ddx, size_t sddx)
+  {
+    if constexpr (DIMS == 3)
+      if (mesh.GetCurvedElements().CalcMultiPointElementHesse
+          (ElementIndex::FromNr0(elnr), npts, xi, sxi, ddx, sddx)) return;
+    if constexpr (DIMS == 2)
+      if (mesh.GetCurvedElements().template CalcMultiPointSurfaceHesse<DIMR>
+          (SurfaceElementIndex::FromNr0(elnr), npts, xi, sxi, ddx, sddx)) return;
+
+    // fallback: 4th order differences of the Jacobian
+    double eps = 1e-4;
+    double shift[4] = { eps, -eps, 2*eps, -2*eps };
+    for (int ip = 0; ip < npts; ip++)
+      {
+        T pnts[4*DIMS][DIMS], x[4*DIMS][DIMR], dx[4*DIMS][DIMR*DIMS];
+        for (int j = 0; j < DIMS; j++)
+          for (int s = 0; s < 4; s++)
+            {
+              for (int k = 0; k < DIMS; k++)
+                pnts[4*j+s][k] = xi[ip*sxi+k];
+              pnts[4*j+s][j] += shift[s];
+            }
+        ngmesh.MultiElementTransformation<DIMS,DIMR> (elnr, 4*DIMS, &pnts[0][0], DIMS,
+                                                      &x[0][0], DIMR, &dx[0][0], DIMR*DIMS);
+        for (int i = 0; i < DIMR; i++)
+          for (int j = 0; j < DIMS; j++)
+            for (int k = 0; k < DIMS; k++)
+              ddx[ip*sddx + i*DIMS*DIMS + j*DIMS + k] =
+                (8.0*dx[4*j][i*DIMS+k] - 8.0*dx[4*j+1][i*DIMS+k]
+                 - dx[4*j+2][i*DIMS+k] + dx[4*j+3][i*DIMS+k]) / (12*eps);
+      }
+  }
+
+#define NGX_MULTI_HESSE(DIMS, DIMR, T)                                  \
+  template <> DLL_HEADER void Ngx_Mesh ::                               \
+  MultiElementHesse<DIMS,DIMR> (int elnr, int npts, const T * xi, size_t sxi, \
+                                T * ddx, size_t sddx) const             \
+  { MultiElementHesseImpl<DIMS,DIMR> (*this, *mesh, elnr, npts, xi, sxi, ddx, sddx); }
+
+  NGX_MULTI_HESSE(1,1,double)
+  NGX_MULTI_HESSE(1,2,double)
+  NGX_MULTI_HESSE(1,3,double)
+  NGX_MULTI_HESSE(2,2,double)
+  NGX_MULTI_HESSE(2,3,double)
+  NGX_MULTI_HESSE(3,3,double)
+  NGX_MULTI_HESSE(1,1,SIMD<double>)
+  NGX_MULTI_HESSE(1,2,SIMD<double>)
+  NGX_MULTI_HESSE(1,3,SIMD<double>)
+  NGX_MULTI_HESSE(2,2,SIMD<double>)
+  NGX_MULTI_HESSE(2,3,SIMD<double>)
+  NGX_MULTI_HESSE(3,3,SIMD<double>)
+#undef NGX_MULTI_HESSE
+
   template <>
   DLL_HEADER int Ngx_Mesh :: FindElementOfPoint <1> 
   (double * hp, double * lami,
