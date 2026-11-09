@@ -636,6 +636,14 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
 
 
   
+  // SCAL2 converts to SCAL, or is a constant for a nested AutoDiff
+  template <typename SCAL2, typename SCAL>
+  struct is_autodiff_scalar : std::is_convertible<SCAL2,SCAL> { };
+  template <typename SCAL2, int D, typename SCAL>
+  struct is_autodiff_scalar<SCAL2, AutoDiffRec<D,SCAL>>
+    : std::integral_constant<bool, std::is_convertible<SCAL2,AutoDiffRec<D,SCAL>>::value ||
+                             (std::is_arithmetic<SCAL2>::value && is_autodiff_scalar<SCAL2,SCAL>::value)> { };
+
   template <int D, typename SCAL>
   class AutoDiffRec
   {
@@ -649,6 +657,10 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
     AutoDiffRec & operator= (const AutoDiffRec &) = default;
 
     NETGEN_INLINE AutoDiffRec (SCAL aval) : rec(aval), last(0.0) { ; }
+    // constants for nested AutoDiff
+    template <typename SCAL2,
+              std::enable_if_t<std::is_arithmetic_v<SCAL2> && !std::is_convertible_v<SCAL2,SCAL>, int> = 0>
+    NETGEN_INLINE explicit AutoDiffRec (SCAL2 aval) : AutoDiffRec(SCAL(aval)) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, int diffindex) : rec(aval, diffindex), last((diffindex==D-1) ? 1.0 : 0.0) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, const SCAL * grad)
       : rec(aval, grad), last(grad[D-1]) { } 
@@ -692,6 +704,10 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
     AutoDiffRec () = default;
     AutoDiffRec (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec (SCAL _val) : val(_val) { ; }
+    // constants for nested AutoDiff
+    template <typename SCAL2,
+              std::enable_if_t<std::is_arithmetic_v<SCAL2> && !std::is_convertible_v<SCAL2,SCAL>, int> = 0>
+    NETGEN_INLINE explicit AutoDiffRec (SCAL2 aval) : AutoDiffRec(SCAL(aval)) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL _val, SCAL /* _dummylast */) : val(_val) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, const SCAL * /* grad */)
       : val(aval) { } 
@@ -720,6 +736,10 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
     AutoDiffRec () = default;
     AutoDiffRec (const AutoDiffRec &) = default;
     NETGEN_INLINE AutoDiffRec (SCAL _val) : val(_val), last(0.0) { ; }
+    // constants for nested AutoDiff
+    template <typename SCAL2,
+              std::enable_if_t<std::is_arithmetic_v<SCAL2> && !std::is_convertible_v<SCAL2,SCAL>, int> = 0>
+    NETGEN_INLINE explicit AutoDiffRec (SCAL2 aval) : AutoDiffRec(SCAL(aval)) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL _val, SCAL _last) : val(_val), last(_last) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, int diffindex) : val(aval), last((diffindex==0) ? 1.0 : 0.0) { ; }
     NETGEN_INLINE AutoDiffRec (SCAL aval, const SCAL * grad)
@@ -752,14 +772,14 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   };
 
   template <int D, typename SCAL, typename SCAL2,
-            typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL2,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator+ (SCAL2 a, AutoDiffRec<D,SCAL> b)
   {
     return AutoDiffRec<D,SCAL> (a+b.Rec(), b.Last());
   }
   
   template <int D, typename SCAL, typename SCAL2,
-            typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL2,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator+ (AutoDiffRec<D,SCAL> a, SCAL2 b)
   {
     return AutoDiffRec<D,SCAL> (a.Rec()+b, a.Last());
@@ -772,14 +792,14 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   }
 
   template <int D, typename SCAL, typename SCAL2,
-            typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL2,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator- (SCAL2 b, AutoDiffRec<D,SCAL> a)
   {
     return AutoDiffRec<D,SCAL> (b-a.Rec(), -a.Last());
   }
   
   template <int D, typename SCAL, typename SCAL2, 
-            typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL2,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator- (AutoDiffRec<D,SCAL> a, SCAL2 b)
   {
     return AutoDiffRec<D,SCAL> (a.Rec()-b, a.Last());
@@ -805,14 +825,14 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   }
 
   template <int D, typename SCAL, typename SCAL1,
-            typename std::enable_if<std::is_convertible<SCAL1,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL1,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator* (AutoDiffRec<D,SCAL> b, SCAL1 a)
   {
     return AutoDiffRec<D,SCAL> (a*b.Rec(), a*b.Last());
   }
 
   template <int D, typename SCAL, typename SCAL1,
-            typename std::enable_if<std::is_convertible<SCAL1,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL1,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator* (SCAL1 a, AutoDiffRec<D,SCAL> b)
   {
     return AutoDiffRec<D,SCAL> (a*b.Rec(), a*b.Last());
@@ -827,7 +847,7 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
   }
 
   template <int D, typename SCAL, typename SCAL1,
-            typename std::enable_if<std::is_convertible<SCAL1,SCAL>::value, int>::type = 0>
+            typename std::enable_if<is_autodiff_scalar<SCAL1,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> FMA (SCAL1 a, AutoDiffRec<D,SCAL> b, AutoDiffRec<D,SCAL> c)
   {
     return AutoDiffRec<D,SCAL> (FMA(a, b.Rec(), c.Rec()), FMA(a, b.Last(), c.Last()));
@@ -894,7 +914,7 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
 
   /// AutoDiffVec div double
   template<int D, typename SCAL, typename SCAL2,
-           typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
+           typename std::enable_if<is_autodiff_scalar<SCAL2,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator/ (const AutoDiffRec<D,SCAL> & x, SCAL2 y)
   {
     return (1.0/y) * x;
@@ -903,7 +923,7 @@ NETGEN_INLINE AutoDiffVec<D,SCAL> asin (AutoDiffVec<D,SCAL> x)
 
   /// double div AutoDiffVec
   template<int D, typename SCAL, typename SCAL2,
-           typename std::enable_if<std::is_convertible<SCAL2,SCAL>::value, int>::type = 0>
+           typename std::enable_if<is_autodiff_scalar<SCAL2,SCAL>::value, int>::type = 0>
   NETGEN_INLINE AutoDiffRec<D,SCAL> operator/ (SCAL2 x, const AutoDiffRec<D,SCAL> & y)
   {
     return x * Inv1(y);
