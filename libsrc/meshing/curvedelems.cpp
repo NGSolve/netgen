@@ -4691,13 +4691,14 @@ namespace netgen
                   int vi1 = edges[i][0], vi2 = edges[i][1];
                   if (el[vi1] > el[vi2]) swap (vi1, vi2);
                   
+                  TAD fac = lambda[vi1]+lambda[vi2];
                   CalcScaledEdgeShapeLambda (eorder, (sigma[vi1]-sigma[vi2])*(1-z),
                                              1-z,
                                              [&](int j, TAD shape)
                                              {
                                                Vec<3> coef = edgecoeffs[first+j];
                                                for (int k = 0; k < 3; k++)
-                                                 mapped_x[k] += coef(k) * shape;
+                                                 mapped_x[k] += coef(k) * (fac*shape);
                                              });
                 }
             }
