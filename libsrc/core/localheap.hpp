@@ -173,7 +173,7 @@ public:
 
     // if ( size_t(p - data) >= totsize )
 #ifndef FULLSPEED
-    if (likely(p >= next))
+    if (unlikely(p >= next))
         ThrowException();
 #endif
       return oldp;
@@ -191,7 +191,7 @@ public:
       p += size;
 
 #ifndef FULLSPEED
-      if (likely(p >= next))
+      if (unlikely(p >= next))
         ThrowException();
 #endif
 
