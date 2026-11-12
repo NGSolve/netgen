@@ -445,6 +445,9 @@ void BoundaryLayerTool ::CalculateGrowthVectors ()
           ns.Append(n);
         }
 
+      if (SplitAtInterface(pi, normals))
+        continue;
+
       try
         {
           growthvectors[pi] = CalcGrowthVector(ns);
@@ -456,6 +459,95 @@ void BoundaryLayerTool ::CalculateGrowthVectors ()
             special_boundary_points[pi].growth_groups[0].growth_vector;
         }
     }
+}
+
+// A point where the grown surfaces of two domains meet at an interface between
+// them (listed in project_boundaries). One growth vector for both would cross
+// the interface at reflex corners, so each domain grows from its own faces.
+// The group closer to tangent to the interface is projected into it and the
+// interface moves with it, the gap to the other group is filled with wedges.
+bool BoundaryLayerTool ::SplitAtInterface (PointIndex pi,
+                                           const std::map<int, Vec<3>>& normals)
+{
+  if (!insert_only_volume_elements || par_project_boundaries.Size() == 0)
+    return false;
+
+  auto grownDomain = [&] (int facei) {
+    const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei));
+    return domains.Test(fd.DomainIn()) ? fd.DomainOut() : fd.DomainIn();
+  };
+
+  std::map<int, Array<int>> faces_of_domain;
+  for (auto& [facei, n] : normals)
+    faces_of_domain[grownDomain(facei)].Append(facei);
+  if (faces_of_domain.size() != 2)
+    return false;
+  auto it = faces_of_domain.begin();
+  int dom0 = it->first;
+  int dom1 = (++it)->first;
+
+  Vec<3> n_interface = 0.;
+  for (auto sei : p2sel[pi])
+    {
+      const auto& sel = mesh[sei];
+      auto facei = sel.GetIndex().Nr1();
+      if (!par_project_boundaries.Contains(facei))
+        continue;
+      const auto& fd = mesh.GetFaceDescriptor(FaceRegionIndex::FromNr1(facei));
+      int din = fd.DomainIn(), dout = fd.DomainOut();
+      if ((din == dom0 && dout == dom1) || (din == dom1 && dout == dom0))
+        {
+          auto n = getNormal(sel);
+          if (n * n_interface < 0)
+            n = -n;
+          n_interface += n;
+        }
+    }
+  if (n_interface.Length2() == 0.)
+    return false;
+  n_interface.Normalize();
+
+  std::array<int, 2> doms = {dom0, dom1};
+  std::array<Vec<3>, 2> gws;
+  for (auto i : Range(2))
+    {
+      ArrayMem<Vec<3>, 5> ns;
+      for (auto facei : faces_of_domain[doms[i]])
+        ns.Append(normals.at(facei));
+      try
+        {
+          gws[i] = CalcGrowthVector(ns);
+        }
+      catch (const SpecialPointException&)
+        {
+          return false;
+        }
+    }
+  // the grown surfaces of both domains are parallel, nothing crosses the interface
+  if (gws[0] * gws[1] > 0.99 * gws[0].Length() * gws[1].Length())
+    return false;
+
+  auto tangentiality = [&] (int i) { return fabs(gws[i] * n_interface) / gws[i].Length(); };
+  int along = tangentiality(0) <= tangentiality(1) ? 0 : 1;
+  int other = 1 - along;
+  auto g_along = gws[along] - (gws[along] * n_interface) * n_interface;
+  if (g_along.Length2() == 0.)
+    return false;
+
+  SpecialBoundaryPoint sp;
+  sp.domain_split = true;
+  sp.wedge_domain = doms[other];
+  sp.separating_direction = 0.;
+  for (auto i : {along, other})
+    {
+      SpecialBoundaryPoint::GrowthGroup group;
+      group.faces = faces_of_domain[doms[i]];
+      group.growth_vector = i == along ? g_along : gws[i];
+      sp.growth_groups.Append(group);
+    }
+  special_boundary_points[pi] = sp;
+  growthvectors[pi] = g_along;
+  return true;
 }
 
 Array<Array<pair<SegmentIndex, int>>, SegmentIndex>
@@ -578,6 +670,24 @@ BitArray BoundaryLayerTool ::ProjectGrowthVectorsOnSurface ()
                 g += a * g + b * n;
               }
           }
+
+      // interfaces between two grown domains are moved with the layer,
+      // keep their points in the interface (reflex corners give a growth
+      // vector through it)
+      for (const auto& sel : mesh.SurfaceElements())
+        {
+          auto fi = sel.GetIndex().Nr1();
+          if (!is_boundary_moved.Test(fi) || !par_project_boundaries.Contains(fi))
+            continue;
+          auto n = getNormal(sel);
+          for (auto pi : sel.PNums())
+            {
+              auto& g = growthvectors[pi];
+              if (g.Length2() == 0.)
+                continue;
+              g -= (g * n) / (n * n) * n;
+            }
+        }
     }
   else
     {
@@ -900,7 +1010,7 @@ void BoundaryLayerTool ::InsertNewElements (
             groups[i] = getClosestGroup(points[i], si);
           bool add_volume_element = true;
           for (auto pi : points)
-            if (numGroups(pi) > 1)
+            if (numGroups(pi) > 1 && !special_boundary_points[pi].domain_split)
               add_volume_element = false;
 
           Element el(2 * np);
@@ -949,6 +1059,54 @@ void BoundaryLayerTool ::InsertNewElements (
         }
     }
 
+  // wedges between the two layers at interface points: the cross section of
+  // layer k is the quad (o[k-1], o[k], a[k], a[k-1]) with a[0] = o[0] = base
+  // point, split into two prisms, swept along the interface edge
+  {
+    auto isSplit = [&] (PointIndex pi) {
+      auto sp = special_boundary_points.find(pi);
+      return sp != special_boundary_points.end() && sp->second.domain_split;
+    };
+    auto layerPoint = [&] (PointIndex pi, int group, int k) {
+      return k == 0 ? pi : newPoint(pi, k - 1, group);
+    };
+    std::set<std::pair<PointIndex, PointIndex>> edges_done;
+    for (const auto& seg : old_segments)
+      {
+        auto p0 = seg[0], p1 = seg[1];
+        if (!isSplit(p0) || !isSplit(p1))
+          continue;
+        if (special_boundary_points[p0].wedge_domain != special_boundary_points[p1].wedge_domain)
+          continue;
+        if (!edges_done.insert({min(p0, p1), max(p0, p1)}).second)
+          continue;
+        auto addWedge = [&] (std::array<std::pair<int, int>, 3> tri) {
+          Element el(PRISM);
+          for (auto i : Range(3))
+            {
+              el[i] = layerPoint(p0, tri[i].first, tri[i].second);
+              el[3 + i] = layerPoint(p1, tri[i].first, tri[i].second);
+            }
+          el.SetIndex(VolumeRegionIndex::FromNr1(special_boundary_points[p0].wedge_domain));
+          wedge_elements.Append(mesh.AddVolumeElement(el));
+        };
+        for (int k = 1; k <= par_heights.Size(); k++)
+          {
+            addWedge({std::pair{1, k - 1}, {1, k}, {0, k}});
+            if (k > 1)
+              addWedge({std::pair{1, k - 1}, {0, k}, {0, k - 1}});
+          }
+        // the outer quad of the wedges is open, the volume mesher closes it
+        // with pyramids
+        for (auto p : {p0, p1})
+          {
+            auto po = newPoint(p, -1, 1), pa = newPoint(p, -1, 0);
+            if (identifications.Get(po, pa) == 0)
+              identifications.Add(po, pa, identnr);
+          }
+      }
+  }
+
   for (SegmentIndex sei : T_Range<SegmentIndex>(nseg))
     {
       auto& seg = segments[sei];
@@ -980,6 +1138,8 @@ void BoundaryLayerTool ::InsertNewElements (
 
   for (auto& [special_pi, special_point] : special_boundary_points)
     {
+      if (special_point.domain_split)
+        continue;
       if (special_point.growth_groups.Size() != 2)
         throw Exception("special_point.growth_groups.Size() != 2");
 
@@ -1030,6 +1190,8 @@ void BoundaryLayerTool ::InsertNewElements (
 
   for (auto& [pi, special_point] : special_boundary_points)
     {
+      if (special_point.domain_split)
+        continue;
       if (special_point.growth_groups.Size() != 2)
         throw Exception("special_point.growth_groups.Size() != 2");
       for (auto igroup : Range(2))
@@ -1479,17 +1641,38 @@ void BoundaryLayerTool ::Perform ()
 
   auto& identifications = mesh.GetIdentifications();
   Array<PointIndices<2>> pairs;
+  // points split at an interface use the group growing towards the partner,
+  // periodic partners the same group
+  auto identifiedNewPoints = [&] (PointIndex pi, Vec<3> to_partner, bool periodic) -> FlatArray<PointIndex> {
+    auto sp = special_boundary_points.find(pi);
+    if (sp == special_boundary_points.end() || !sp->second.domain_split)
+      return mapto[pi];
+    auto& groups = sp->second.growth_groups;
+    int best = 0;
+    if (!periodic)
+      for (auto i : Range(groups))
+        if (groups[i].growth_vector * to_partner / groups[i].growth_vector.Length() >
+            groups[best].growth_vector * to_partner / groups[best].growth_vector.Length())
+          best = i;
+    return groups[best].new_points;
+  };
   // identification numbers start at 1, GetPairs(0) returns the pairs of all
   for (auto nr : Range(1, identifications.GetMaxNr() + 1))
     {
+      bool periodic = identifications.GetType(nr) == Identifications::PERIODIC;
       identifications.GetPairs(nr, pairs);
       for (auto pair : pairs)
         {
           auto p0 = pair[0];
           auto p1 = pair[1];
-          if (max(p0, p1) < first_new_pi && mapto[p0].Size() == mapto[p1].Size())
-            for (auto i : Range(mapto[p0].Size()))
-              identifications.Add(mapto[p0][i], mapto[p1][i], nr);
+          if (max(p0, p1) >= first_new_pi)
+            continue;
+          auto d = mesh[p1] - mesh[p0];
+          auto new0 = identifiedNewPoints(p0, d, periodic);
+          auto new1 = identifiedNewPoints(p1, -d, periodic);
+          if (new0.Size() == new1.Size())
+            for (auto i : Range(new0.Size()))
+              identifications.Add(new0[i], new1[i], nr);
         }
     }
 
@@ -1545,6 +1728,26 @@ void BoundaryLayerTool ::Perform ()
 
   for (auto pi : mesh.Points().Range())
     mesh[pi] += displacement[pi];
+
+  // orient the wedges like the layer prisms
+  if (wedge_elements.Size())
+    {
+      auto orientation = [&] (const auto& el) {
+        return Determinant(mesh[el[1]] - mesh[el[0]], mesh[el[2]] - mesh[el[0]], mesh[el[3]] - mesh[el[0]]) > 0;
+      };
+      std::set<ElementIndex> wedges(wedge_elements.begin(), wedge_elements.end());
+      std::optional<bool> reference;
+      for (auto ei : mesh.VolumeElements().Range())
+        if (mesh[ei].GetType() == PRISM && !wedges.count(ei))
+          {
+            reference = orientation(mesh[ei]);
+            break;
+          }
+      if (reference)
+        for (auto ei : wedge_elements)
+          if (orientation(mesh[ei]) != *reference)
+            mesh[ei].Invert();
+    }
 
   // there is still a bug with segment edge numbers in moved boundaries.
   // As a workaround, don't add them at all if only volume elements are inserted

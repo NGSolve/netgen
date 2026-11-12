@@ -1,7 +1,7 @@
 
 import pytest
 from netgen.csg import *
-from netgen.meshing import BoundaryLayerParameters
+from netgen.meshing import BoundaryLayerParameters, MeshingStep
 
 geometries=[unit_cube]
 

@@ -28,6 +28,10 @@ struct SpecialBoundaryPoint
   };
   Array<GrowthGroup> growth_groups;
   Vec<3> separating_direction;
+  // split at an interface between two grown domains: group 0 grows along the
+  // interface, group 1 into its own domain, wedges in that domain close the gap
+  bool domain_split = false;
+  int wedge_domain = -1;
 
   SpecialBoundaryPoint (const std::map<int, Vec<3>>& normals);
   SpecialBoundaryPoint () = default;
@@ -98,6 +102,9 @@ public:
 
   std::map<PointIndex, SpecialBoundaryPoint> special_boundary_points;
   std::map<PointIndex, std::tuple<Vec<3>*, double>> growth_vector_map;
+  Array<ElementIndex> wedge_elements;
+
+  bool SplitAtInterface (PointIndex pi, const std::map<int, Vec<3>>& normals);
 
   // major steps called in Perform()
   void CreateNewFaceDescriptors ();
