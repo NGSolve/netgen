@@ -80,6 +80,13 @@ namespace netgen
     K.SetSize(steps);
   }
 
+  // fresh stepper of the same type (types 0..3 have steps = type+1)
+  RKStepper :: RKStepper(const RKStepper & other)
+    : RKStepper(other.steps-1)
+  {
+    tolerance = other.tolerance;
+  }
+
   void RKStepper :: StartNextValCalc(const Point<3> & astartval, const double astartt, const double ah, const bool aadaptive)
   {
     //cout << "Starting RK-Step with h=" << ah << endl;
@@ -189,8 +196,6 @@ namespace netgen
 
   void FieldLineCalc :: GenerateFieldLines(Array<Point<3>> & potential_startpoints, const int numlines)
   {
-
-    
     Array<Point<3>> line_points;
     Array<double> line_values;
     Array<bool> drawelems;
@@ -198,6 +203,50 @@ namespace netgen
     pstart.SetSize0();
     pend.SetSize0();
     values.SetSize0();
+
+    const_cast<Mesh&>(mesh).BuildElementSearchTree(mesh.GetDimension());
+
+    if (!randomized)
+      {
+        // lines are independent: one task per line, then concatenate in order
+        size_t n = potential_startpoints.Size();
+        Array<Array<Point<3>>> lstart(n), lend(n);
+        Array<Array<double>> lvals(n);
+
+        RunWithTaskManager ([&]()
+          {
+            ParallelForRange (n, [&](IntRange r)
+              {
+                Array<Point<3>> line_points;
+                Array<double> line_values;
+                Array<bool> drawelems;
+                Array<int> dirstart;
+                for (auto i : r)
+                  {
+                    Calc(potential_startpoints[i],line_points,line_values,drawelems,dirstart);
+                    for(int j=1; j<dirstart.Size(); j++)
+                      for(int k=dirstart[j-1]; k<dirstart[j]-1; k++)
+                        {
+                          if(!drawelems[k] || !drawelems[k+1]) continue;
+                          lstart[i].Append(line_points[k]);
+                          lend[i].Append(line_points[k+1]);
+                          lvals[i].Append( 0.5*(line_values[k]+line_values[k+1]) );
+                        }
+                  }
+              }, n);
+          });
+
+        int calculated = 0;
+        for (size_t i = 0; i < n && calculated < numlines; i++)
+          if (lstart[i].Size())
+            {
+              pstart.Append(lstart[i]);
+              pend.Append(lend[i]);
+              values.Append(lvals[i]);
+              calculated++;
+            }
+        return;
+      }
 
     double crit = 1.0;
 
@@ -298,9 +347,10 @@ namespace netgen
   
   void FieldLineCalc :: Calc(const Point<3> & startpoint, Array<Point<3>> & points, Array<double> & vals, Array<bool> & drawelems, Array<int> & dirstart)
   {
+    RKStepper stepper(this->stepper);  // per call, Calc runs in parallel
     Vec<3> v = 0.0;
     double startlami[3] = {0.0, 0.0, 0.0};
-    
+
     points.SetSize(0);
     vals.SetSize(0);
     drawelems.SetSize(0);
@@ -309,11 +359,8 @@ namespace netgen
     dirstart.Append(0);
 
     int startelnr = GetVolElement(mesh, startpoint,startlami);
-    (*testout) << "p = " << startpoint << "; elnr = " << startelnr << endl;
     if (startelnr == -1)
       return;
-      
-    mesh.SetPointSearchStartElement(startelnr);
 
     Vec<3> startv;
     bool startdraw = func(startelnr, startlami, startv);
@@ -347,10 +394,7 @@ namespace netgen
         for(double length = 0; length < maxlength; length += h*vals.Last())
           {
             if(v.Length() < 1e-12*rad)
-              {
-                (*testout) << "Current fieldlinecalculation came to a stillstand at " << points.Last() << endl;
-                break;
-              }
+              break;
 
             double dummyt{0};
             stepper.StartNextValCalc(points.Last(),dummyt,h,true);
@@ -363,7 +407,6 @@ namespace netgen
                 elnr = GetVolElement(mesh, newp, lami);
                 if(elnr != -1)
                   {
-                    mesh.SetPointSearchStartElement(elnr);
                     drawelem = func(elnr, lami, v);
                     if(dir == -1) v *= -1.;
                     stepper.FeedNextF(v);
@@ -379,9 +422,6 @@ namespace netgen
             points.Append(newp);
             vals.Append(v.Length());
             drawelems.Append(drawelem);
-
-            if(points.Size() % 40 == 0 && points.Size() > 1)
-              (*testout) << "Points in current fieldline: " << points.Size() << ", current position: " << newp << endl;
 
             if(maxpoints > 0 && points.Size() >= maxpoints)
               {

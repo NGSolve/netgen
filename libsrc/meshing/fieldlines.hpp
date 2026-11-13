@@ -35,6 +35,7 @@ public:
   DLL_HEADER ~RKStepper();
 
   RKStepper(int type = 0);
+  RKStepper(const RKStepper & other);
 
   void SetTolerance(const double tol){tolerance = tol;}
 
