@@ -855,7 +855,7 @@ async def _MakeScreenshot(data, png_file, width=1200, height=600):
         browser = await play.chromium.launch()
         page = await browser.new_page(viewport={"width": width, "height": height})
         await page.goto(f"file://{os.path.abspath(html_file)}")
-        await page.screenshot(path=png_file)
+        await page.screenshot(path=png_file, timeout=180000)
         await browser.close()
 
 def _DrawDocu(obj, *args, **kwargs):
@@ -875,12 +875,18 @@ def _DrawDocu(obj, *args, **kwargs):
     if not os.path.exists(path):
         os.makedirs(path)
     counter_file = os.path.join(docu_path, ".counter")
-    if os.path.exists(counter_file):
-        file_counter = int(open(counter_file, "r").read()) + 1
-    else:
-        file_counter = 0
-
-    open(counter_file, "w").write(str(file_counter))
+    # locked, sphinx may run notebooks in parallel
+    with os.fdopen(os.open(counter_file, os.O_RDWR | os.O_CREAT), "r+") as f:
+        try:
+            import fcntl
+            fcntl.flock(f, fcntl.LOCK_EX)
+        except ImportError:
+            pass
+        content = f.read()
+        file_counter = int(content) + 1 if content else 0
+        f.seek(0)
+        f.truncate()
+        f.write(str(file_counter))
 
     data_file = "render_data_{}.json".format(file_counter)
     data_file_abs = os.path.join(path, data_file)
