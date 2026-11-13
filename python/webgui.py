@@ -834,7 +834,7 @@ def GenerateHTML(data, filename=None, template=None):
     data = json.dumps(data)
 
     jscode = "var render_data = {}\n".format(data)
-    html = _html_template.replace('{render}', jscode )
+    html = template.replace('{render}', jscode )
 
     if filename is not None:
         open(filename,'w').write( html )
@@ -842,6 +842,22 @@ def GenerateHTML(data, filename=None, template=None):
 
 
 
+
+async def _RouteWebguiJS(route):
+    """Serves webgui.js from a local copy, downloaded once."""
+    import hashlib, tempfile
+    name = "netgen_webgui_" + hashlib.md5(route.request.url.encode()).hexdigest() + ".js"
+    cache = os.path.join(tempfile.gettempdir(), name)
+    if os.path.exists(cache):
+        await route.fulfill(path=cache, content_type="application/javascript")
+        return
+    response = await route.fetch()
+    if response.ok:
+        tmp = f"{cache}.{os.getpid()}"
+        with open(tmp, "wb") as f:
+            f.write(await response.body())
+        os.replace(tmp, cache)
+    await route.fulfill(response=response)
 
 async def _MakeScreenshot(data, png_file, width=1200, height=600):
     """Uses playwright to make a screenshot of the given html file."""
@@ -854,6 +870,7 @@ async def _MakeScreenshot(data, png_file, width=1200, height=600):
     async with async_playwright() as play:
         browser = await play.chromium.launch()
         page = await browser.new_page(viewport={"width": width, "height": height})
+        await page.route("**/webgui.js", _RouteWebguiJS)
         await page.goto(f"file://{os.path.abspath(html_file)}")
         await page.screenshot(path=png_file, timeout=180000)
         await browser.close()
