@@ -98,6 +98,8 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
     .def("__setitem__", [] (BitArray & self, py::slice inds, BitArray & ba)
                                          {
                                            auto [start, step, n] = InitSlice (inds, self.Size());
+                                           if (ba.Size() != n)
+                                             throw py::value_error("BitArray slice assignment: sizes don't match");
 
                                            if (start == 0 && n == self.Size() && step == 1)
                                              {
@@ -118,6 +120,8 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def("__setitem__", [](BitArray & self,  IntRange range, bool b)
       {
+        if (range.First() > range.Next() || range.Next() > self.Size())
+          throw py::index_error("BitArray: range out of bounds");
         if (b)
           for (size_t i : range)
             self.SetBit(i);
@@ -128,10 +132,15 @@ PYBIND11_MODULE(pyngcore, m) // NOLINT
 
     .def("NumSet", &BitArray::NumSet)
     .def("Set", [] (BitArray & self) { self.Set(); }, "Set all bits")
-    .def("Set", &BitArray::SetBit, py::arg("i"), "Set bit at given position")
-    .def("Clear", [] (BitArray & self) { self.Clear(); }, "Clear all bits")
-    .def("Clear", [] (BitArray & self, int i)
+    .def("Set", [] (BitArray & self, size_t i)
                                    {
+                                       if (i >= self.Size()) throw py::index_error();
+                                       self.SetBit(i);
+                                   }, py::arg("i"), "Set bit at given position")
+    .def("Clear", [] (BitArray & self) { self.Clear(); }, "Clear all bits")
+    .def("Clear", [] (BitArray & self, size_t i)
+                                   {
+                                       if (i >= self.Size()) throw py::index_error();
                                        self.Clear(i);
                                    }, py::arg("i"), "Clear bit at given position")
 
@@ -315,6 +324,7 @@ threads : int
       void Enter() {num_threads = EnterTaskManager(); }
       void Exit(py::object exc_type, py::object exc_value, py::object traceback) {
           ExitTaskManager(num_threads);
+          num_threads = 0;
       }
     };
 

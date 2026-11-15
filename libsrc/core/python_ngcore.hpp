@@ -294,7 +294,11 @@ namespace ngcore
     void ShallowOutPtr(std::shared_ptr<void> p, const std::type_info& ti) override
     { lst.append(detail::GetPyArchiveCasters(ti).shared_to_py(std::move(p))); }
     void ShallowInPtr(std::shared_ptr<void>& p, const std::type_info& ti) override
-    { p = detail::GetPyArchiveCasters(ti).py_to_shared(lst[index++]); }
+    {
+      pybind11::object obj = lst[index++];
+      if (obj.is_none()) p = nullptr;
+      else p = detail::GetPyArchiveCasters(ti).py_to_shared(obj);
+    }
     void ShallowOutAny(const std::any& a) override { lst.append(CastAnyToPy(a)); }
     void ShallowInAny(std::any& a) override
     {

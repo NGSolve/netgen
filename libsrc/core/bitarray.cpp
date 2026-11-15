@@ -75,6 +75,8 @@ namespace ngcore
 
   BitArray & BitArray :: And (const BitArray & ba2)
   {
+    if (size != ba2.size)
+      throw Exception ("BitArray::And: sizes don't match");
     if (!size) return *this;
     for (size_t i = 0; i <= Addr (size); i++)
       data[i] &= ba2.data[i];
@@ -84,6 +86,8 @@ namespace ngcore
 
   BitArray & BitArray :: Or (const BitArray & ba2)
   {
+    if (size != ba2.size)
+      throw Exception ("BitArray::Or: sizes don't match");
     if (!size) return *this;
     for (size_t i = 0; i <= Addr (size); i++)
       data[i] |= ba2.data[i];

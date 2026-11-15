@@ -129,7 +129,9 @@ namespace ngcore
 
 
   void TaskManager :: SetNumThreads(int amax_threads)
-    { 
+    {
+      if (amax_threads < 1)
+        throw Exception ("SetNumThreads: need at least one thread");
       if(task_manager && task_manager->active_workers>0)
         {
           std::cerr << "Warning: can't change number of threads while TaskManager active!" << std::endl;

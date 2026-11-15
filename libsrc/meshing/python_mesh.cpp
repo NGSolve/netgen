@@ -56,7 +56,22 @@ static Transformation<3> global_trafo(Vec<3> (0,0,0));
 
 DLL_HEADER void ExportNetgenMeshing(py::module &m) 
 {
-  py::register_exception<NgException>(m, "NgException");
+  auto & ngexc = py::register_exception<NgException>(m, "NgException");
+
+  // RangeException is an NgException and an IndexError
+  static PyObject * range_exc =
+    PyErr_NewException ("netgen.libngpy._meshing.RangeException",
+                        py::make_tuple(ngexc, py::handle(PyExc_IndexError)).ptr(), nullptr);
+  m.add_object ("RangeException", range_exc);
+  py::register_exception_translator([](std::exception_ptr p)
+  {
+    try {
+      if(p) std::rethrow_exception(p);
+    } catch (const ngcore::RangeException & e) {
+      PyErr_SetString (range_exc, e.what());
+    }
+  });
+
   m.attr("_netgen_executable_started") = py::cast(netgen::netgen_executable_started);
   string script;
   const char ** hcp = ngscript;
