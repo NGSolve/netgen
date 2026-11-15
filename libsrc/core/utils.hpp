@@ -283,7 +283,34 @@ namespace ngcore
 #if defined(NETGEN_VLA) || defined(VLA)
 #define STACK_ARRAY(TYPE,VAR,SIZE) TYPE VAR[SIZE]
 #else
-#define STACK_ARRAY(TYPE,VAR,SIZE) TYPE * VAR = (TYPE*)aligned_alloca((SIZE)*sizeof(TYPE), alignof(TYPE))
+namespace ngcore::detail
+{
+  // constructs and destroys the elements like a VLA does, no code for trivial types
+  template <typename T>
+  struct StackArrayGuard
+  {
+    T * data;
+    size_t size;
+    StackArrayGuard (T * adata, size_t asize) : data(adata), size(asize)
+    {
+      if constexpr (!std::is_trivially_default_constructible_v<T>)
+        for (size_t i = 0; i < size; i++)
+          new (data+i) T;
+    }
+    ~StackArrayGuard ()
+    {
+      if constexpr (!std::is_trivially_destructible_v<T>)
+        for (size_t i = size; i-- > 0; )
+          data[i].~T();
+    }
+    StackArrayGuard (const StackArrayGuard &) = delete;
+    StackArrayGuard & operator= (const StackArrayGuard &) = delete;
+  };
+}
+#define STACK_ARRAY(TYPE,VAR,SIZE) \
+  size_t VAR##_stack_size = (SIZE); \
+  TYPE * VAR = (TYPE*)aligned_alloca(VAR##_stack_size*sizeof(TYPE), alignof(TYPE)); \
+  ngcore::detail::StackArrayGuard<TYPE> VAR##_stack_guard (VAR, VAR##_stack_size)
 #endif
 
 namespace std
