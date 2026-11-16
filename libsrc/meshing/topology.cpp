@@ -57,6 +57,16 @@ namespace netgen
   bool MeshTopology :: NeedsUpdate() const
   { return (timestamp <= mesh->GetTimeStamp()); }
 
+  bool MeshTopology :: MatchesElements () const
+  {
+    size_t ne = mesh->GetNE(), nse = mesh->GetNSE(), nseg = mesh->GetNSeg();
+    if (buildedges && (edges.Size() != ne || surfedges.Size() != nse || segedges.Size() != nseg))
+      return false;
+    if (buildfaces && (faces.Size() != ne || surffaces.Size() != nse))
+      return false;
+    return true;
+  }
+
   bool MeshTopology :: HasCanonicalNumbering () const
   {
     for (size_t i = 1; i < edge2vert.Size(); i++)

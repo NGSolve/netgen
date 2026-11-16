@@ -815,6 +815,15 @@ namespace netgen
         default: return Regions<0>().Size();
         }
     }
+    /**
+       Region incidence by entity dimension (3 volume, 2 face, 1 edge, 0 vertex regions):
+       row r of inc[d1][d2] lists the regions (0-based, sorted) of dimension d2 touching
+       region r of dimension d1, d1 != d2. Rows exist for all regions with descriptors or elements.
+       Computed from the elements at each call, local to this rank.
+       Needs the topology of the current elements, with edges (and faces in 3D).
+    */
+    typedef std::array<std::array<Table<int>,4>,4> T_RegionIncidence;
+    DLL_HEADER T_RegionIncidence GetRegionIncidence () const;
     /// name of region nr (1-based) of entity dimension dim
     std::string_view GetRegionName (int dim, int nr) const
     {

@@ -1360,6 +1360,25 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     
     
     .def("GetNDomains", &Mesh::GetNDomains)
+    .def("RegionIncidence", [](Mesh & self, int d1, int d2)
+         {
+           if (d1 < 0 || d1 > 3 || d2 < 0 || d2 > 3 || d1 == d2)
+             throw Exception ("RegionIncidence: needs two different dimensions in 0..3, got "
+                              + ToString(d1) + ", " + ToString(d2));
+           if (self.GetDimension() >= 2 && self.GetTopology().NeedsUpdate())
+             self.UpdateTopology();
+           auto inc = self.GetRegionIncidence();
+           const auto & tab = inc[d1][d2];
+           py::list res;
+           for (auto row : tab)
+             {
+               py::list r;
+               for (int o : row) r.append(o);
+               res.append(r);
+             }
+           return res;
+         }, py::arg("d1"), py::arg("d2"),
+         "for each region (0-based) of entity dimension d1, the regions of entity dimension d2 it touches, computed from the current elements")
 
     .def("GetVolumeNeighboursOfSurfaceElement", [](Mesh & self, size_t sel)
                                                 {

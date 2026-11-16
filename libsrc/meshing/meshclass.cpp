@@ -2704,6 +2704,118 @@ namespace netgen
     RebuildFDIndices();
   }
 
+  Mesh::T_RegionIncidence Mesh :: GetRegionIncidence () const
+  {
+    static Timer t("Mesh::GetRegionIncidence"); RegionTimer reg(t);
+
+    if (dimension >= 2 && (!topology.HasEdges() || (dimension == 3 && !topology.HasFaces())))
+      throw Exception ("region incidence needs a topology with edges (and faces in 3D)");
+    if (dimension >= 2 && !topology.MatchesElements())
+      throw Exception ("region incidence: elements were added after the last UpdateTopology()");
+
+    size_t nreg[4];
+    for (int d = 0; d < 4; d++)
+      nreg[d] = GetNRegions(d);
+    auto count = [&] (int d, auto index)
+    {
+      if (index.IsValid())
+        nreg[d] = max(nreg[d], size_t(index.Nr0()+1));
+    };
+    for (auto & el : pointelements) count (0, el.GetIndex());
+    for (auto & seg : LineSegments()) count (1, seg.GetIndex());
+    for (SurfaceElementIndex sei : SurfaceElements().Range()) count (2, (*this)[sei].GetIndex());
+    for (ElementIndex ei : VolumeElements().Range()) count (3, (*this)[ei].GetIndex());
+
+    // lower-dimensional entity -> regions living on it (several possible)
+    TableCreator<int, PointIndex> cvert(GetNP());
+    for ( ; !cvert.Done(); cvert++)
+      for (auto & el : pointelements)
+        if (el.GetIndex().IsValid())
+          cvert.Add (el.pnum, el.GetIndex().Nr0());
+    auto vert2reg = cvert.MoveTable();
+
+    size_t nedges = dimension >= 2 ? topology.GetNEdges() : 0;
+    TableCreator<int, EdgeIndex> cedge(nedges);
+    for ( ; !cedge.Done(); cedge++)
+      if (nedges)
+        for (SegmentIndex si : LineSegments().Range())
+          if ((*this)[si].GetIndex().IsValid())
+            cedge.Add (topology.GetEdge(si), (*this)[si].GetIndex().Nr0());
+    auto edge2reg = cedge.MoveTable();
+
+    size_t nfaces = dimension == 3 ? topology.GetNFaces() : 0;
+    TableCreator<int, FaceIndex> cface(nfaces);
+    for ( ; !cface.Done(); cface++)
+      if (nfaces)
+        for (SurfaceElementIndex sei : SurfaceElements().Range())
+          if ((*this)[sei].GetIndex().IsValid())
+            cface.Add (topology.GetFace(sei), (*this)[sei].GetIndex().Nr0());
+    auto face2reg = cface.MoveTable();
+
+    DynamicTable<int> inc[4][4];
+    for (int i = 0; i < 4; i++)
+      for (int j = 0; j < 4; j++)
+        if (i != j)
+          inc[i][j] = DynamicTable<int>(nreg[i]);
+    auto add = [&] (int dh, int rh, int dl, FlatArray<int> rls)
+    {
+      for (int rl : rls)
+        {
+          inc[dh][dl].AddUnique (rh, rl);
+          inc[dl][dh].AddUnique (rl, rh);
+        }
+    };
+
+    for (SegmentIndex si : LineSegments().Range())
+      {
+        const Segment & seg = (*this)[si];
+        if (!seg.GetIndex().IsValid()) continue;
+        for (PointIndex v : seg.Vertices())
+          add (1, seg.GetIndex().Nr0(), 0, vert2reg[v]);
+      }
+    for (SurfaceElementIndex sei : SurfaceElements().Range())
+      {
+        const auto & el = (*this)[sei];
+        if (!el.GetIndex().IsValid()) continue;
+        int r = el.GetIndex().Nr0();
+        for (PointIndex v : el.Vertices())
+          add (2, r, 0, vert2reg[v]);
+        if (nedges)
+          for (EdgeIndex e : topology.GetEdges(sei))
+            add (2, r, 1, edge2reg[e]);
+      }
+    for (ElementIndex ei : VolumeElements().Range())
+      {
+        const auto & el = (*this)[ei];
+        if (!el.GetIndex().IsValid()) continue;
+        int r = el.GetIndex().Nr0();
+        for (PointIndex v : el.Vertices())
+          add (3, r, 0, vert2reg[v]);
+        if (nedges)
+          for (EdgeIndex e : topology.GetEdges(ei))
+            add (3, r, 1, edge2reg[e]);
+        if (nfaces)
+          for (FaceIndex f : topology.GetFaces(ei))
+            add (3, r, 2, face2reg[f]);
+      }
+
+    T_RegionIncidence res;
+    for (int i = 0; i < 4; i++)
+      for (int j = 0; j < 4; j++)
+        if (i != j)
+          {
+            TableCreator<int> creator(nreg[i]);
+            for ( ; !creator.Done(); creator++)
+              for (size_t r = 0; r < nreg[i]; r++)
+                for (int o : inc[i][j][r])
+                  creator.Add (r, o);
+            res[i][j] = creator.MoveTable();
+            for (auto row : res[i][j])
+              QuickSort (row);
+          }
+    return res;
+  }
+
   void Mesh :: RebuildFDIndices ()
   {
     // Recompute EdgeRegion::index_ from surfnr + domin/domout vs face descriptors.

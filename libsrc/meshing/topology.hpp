@@ -85,6 +85,8 @@ public:
   static void EnableTableStatic (string name, bool set);
 
   bool HasEdges () const  { return buildedges; }
+  /// the element tables have one row per element of the mesh
+  DLL_HEADER bool MatchesElements () const;
   bool HasFaces () const  { return buildfaces; }
   bool HasParentEdges () const { return build_parent_edges; }
   bool HasParentFaces () const { return build_parent_faces; }
