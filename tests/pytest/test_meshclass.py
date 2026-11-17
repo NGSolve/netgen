@@ -95,6 +95,7 @@ def _check_incidence(mesh):
                 assert set(row) == exp.get(r, set()), (d1, d2, r)
 
 def test_region_incidence_3d():
+    pytest.importorskip("netgen.occ")
     import netgen.occ as occ
     box = occ.Box((0,0,0), (1,1,1))
     box.edges.Min(occ.Z).name = "bottom"
@@ -109,6 +110,7 @@ def test_region_incidence_3d():
         mesh.RegionIncidence(3, 3)
 
 def test_region_incidence_2d():
+    pytest.importorskip("netgen.occ")
     import netgen.occ as occ
     rect = occ.Rectangle(2, 1).Face()
     rect.vertices.Min(occ.X+occ.Y).name = "pin"
