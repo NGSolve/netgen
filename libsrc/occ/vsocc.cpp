@@ -37,8 +37,7 @@ namespace netgen
    : VisualScene()
    {
       trilists.SetSize(0);
-      linelists.SetSize(1);
-
+      linelists.SetSize(0);
    }
 
    VisualSceneOCCGeometry :: ~VisualSceneOCCGeometry ()
@@ -57,6 +56,14 @@ namespace netgen
 
       glClearColor(backcolor, backcolor, backcolor, 1.0);
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+      // scene not built yet (BuildScene is deferred while a job runs)
+      if (trilists.Size() == 0)
+      {
+         glFinish();
+         return;
+      }
+
       SetLight();
 
       glPushMatrix();
@@ -639,6 +646,7 @@ namespace netgen
 
    void VisualSceneOCCGeometry :: MouseDblClick (int px, int py)
    {
+      if (trilists.Size() == 0) return;
       int hits;
 
       // select surface triangle by mouse click
