@@ -1715,6 +1715,67 @@ py::arg("point_tolerance") = -1.)
           {
             return self.GetCurvedElements().GetOrder();
           })
+    .def("ExtendCurving", [] (Mesh & self, double quality, double eps, int max_depth,
+                                    int max_sweeps, bool reduce, int max_release_passes,
+                                    double straighten_tol, int bezier_depth, double beta,
+                                    bool move_vertices, int vertex_layers)
+          {
+            ExtendCurvingParameters params;
+            params.quality = quality;
+            params.eps = eps;
+            params.max_depth = max_depth;
+            params.max_sweeps = max_sweeps;
+            params.reduce = reduce;
+            params.max_release_passes = max_release_passes;
+            params.straighten_tol = straighten_tol;
+            params.bezier_depth = bezier_depth;
+            params.beta = beta;
+            params.move_vertices = move_vertices;
+            params.vertex_layers = vertex_layers;
+            ExtendCurvingInfo info;
+            {
+              py::gil_scoped_release release;
+              info = self.ExtendCurving (params);
+            }
+            py::dict res;
+            res["nbad"] = info.nbad;
+            res["ncurved_before"] = info.ncurved_before;
+            res["ncurved_after"] = info.ncurved_after;
+            res["nreleased"] = info.nreleased;
+            res["nremaining"] = info.nremaining;
+            res["nundecided"] = info.nundecided;
+            res["geometry_error"] = info.geometry_error;
+            res["nmoved"] = info.nmoved;
+            res["max_vertex_move"] = info.max_vertex_move;
+            py::dict causes;
+            const char * names[] = { "folded_boundary_face", "all_vertices_on_boundary",
+                                     "inner_vertex_behind_curved_face", "corner_with_fixed_edges", "other" };
+            for (int i = 0; i < info.causes.Size(); i++) causes[names[i]] = info.causes[i];
+            res["causes"] = causes;
+            py::list hist;
+            for (auto h : info.depth_histogram) hist.append (h);
+            res["depth_histogram"] = hist;
+            return res;
+          },
+         py::arg("quality") = 0.2, py::arg("eps") = 0.05, py::arg("max_depth") = 4,
+         py::arg("max_sweeps") = 20, py::arg("reduce") = true, py::arg("max_release_passes") = 4,
+         py::arg("straighten_tol") = 0., py::arg("bezier_depth") = 3, py::arg("beta") = 5.,
+         py::arg("move_vertices") = false, py::arg("vertex_layers") = 1,
+         R"doc(Extend the curving of the boundary into the interior to prevent folded elements, reduce the boundary curving where that is not enough)doc")
+    .def("CurvedElementQuality", [] (Mesh & self, int bezier_depth)
+          {
+            Array<double, ElementIndex> lower, upper;
+            {
+              py::gil_scoped_release release;
+              CurvedElementQuality (self, lower, upper, bezier_depth);
+            }
+            py::array_t<double> lo(lower.Size()), up(upper.Size());
+            auto wl = lo.mutable_unchecked<1>(), wu = up.mutable_unchecked<1>();
+            for (auto ei : lower.Range())
+              { wl(ei.Nr0()) = lower[ei]; wu(ei.Nr0()) = upper[ei]; }
+            return py::make_tuple (lo, up);
+          }, py::arg("bezier_depth") = 6,
+         "bounds of min det J_curved / det J_straight per volume element")
     .def("GetNrIdentifications", [](Mesh& self)
                                  {
                                    return self.GetIdentifications().GetMaxNr();

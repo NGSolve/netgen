@@ -19,8 +19,11 @@ namespace netgen
 class Refinement;
 class Mesh;
 
+class CurvingOptimizer;
+
 class CurvedElements
 {
+  friend class CurvingOptimizer;
   const Mesh & mesh;
 
   Array<int, EdgeIndex> edgeorder;
@@ -51,7 +54,8 @@ public:
   
   DLL_HEADER void BuildCurvedElements(const Refinement * ref, int aorder, bool arational = false);
 
-  int GetOrder () { return order; }
+  int GetOrder () const { return order; }
+  bool IsRational () const { return rational; }
 
   void DoArchive(Archive& ar);
 
@@ -63,6 +67,9 @@ public:
   bool IsCurved (ElementIndex ei) const        { return IsElementCurved(ei); }
   bool IsCurved (SurfaceElementIndex sei) const { return IsSurfaceElementCurved(sei); }
   bool IsCurved (SegmentIndex segnr) const      { return IsSegmentCurved(segnr); }
+
+  DLL_HEADER void RaiseOrder (FlatArray<EdgeIndex> edges, FlatArray<FaceIndex> faces);
+  DLL_HEADER void CompressCoefficients ();
 
   void CalcSegmentTransformation (double xi, SegmentIndex segnr,
                                   Point<3> & x)
@@ -241,6 +248,7 @@ private:
     { return FlatArray(nfaces, facenrs); }
   };
 
+  void SetupElementInfo (ElementIndex elnr, ElementInfo & info) const;
   template <typename T>
   void CalcElementShapes (ElementInfo & info, Point<3,T> xi, TFlatVector<T> shapes) const;
   void GetCoefficients (ElementInfo & info, Vec<3> * coefs) const;

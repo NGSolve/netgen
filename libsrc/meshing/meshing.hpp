@@ -45,6 +45,7 @@ namespace netgen
 #include "improve3.hpp"
 
 #include "curvedelems.hpp"
+#include "extend_curving.hpp"
 #include "clusters.hpp"
 #include "meshfunc.hpp"
 
