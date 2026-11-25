@@ -548,8 +548,8 @@ namespace netgen
               for(auto it = mods_from.cbegin(); it != mods_from.cend(); it++)
                 for(auto it2 = mods_to.cbegin(); it2 != mods_to.cend(); it2++)
                   {
-                      auto& from_mapped = it.Iterator().Value();
-                      auto& to_mapped = it2.Iterator().Value();
+                      auto& from_mapped = *it;
+                      auto& to_mapped = *it2;
                       if(from.IsSame(from_mapped) && to.IsSame(to_mapped))
                         continue;
   
