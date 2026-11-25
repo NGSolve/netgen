@@ -3,11 +3,17 @@ if(ENABLE_UNIT_TESTS)
 add_custom_target(unit_tests)
 
 # Build catch_main test object
+find_package(Catch2 REQUIRED)
 include_directories(${CATCH_INCLUDE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../../libsrc/include ${SPDLOG_INCLUDE_DIR})
 add_library(catch_main STATIC main.cpp)
 set_target_properties(catch_main PROPERTIES CXX_STANDARD 17)
 add_dependencies(unit_tests catch_main)
 add_dependencies(catch_main project_catch)
+
+if (Catch2_VERSION VERSION_GREATER_EQUAL 3)
+  target_compile_options(catch_main PUBLIC -DCATCH2_v3)
+  target_link_libraries(catch_main Catch2::Catch2WithMain)
+endif()
 
 # ensure the test targets are built before testing
 add_test(NAME unit_tests_built COMMAND ${CMAKE_COMMAND} --build . --target unit_tests --config ${CMAKE_BUILD_TYPE} WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/../.. )
