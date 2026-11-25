@@ -26,7 +26,7 @@ def StartGUI():
     if config.is_python_package and 'darwin' in sys.platform:
         # libngsolve and other libraries are installed into netgen python dir to keep relative installation paths, but tcl won't find them there automatically
         netgen_dir = os.path.abspath(os.path.dirname(netgen.__file__))
-        win.tk.eval(f'set netgen_library_dir {netgen_dir}')
+        win.tk.eval(f'set netgen_library_dir "{netgen_dir}"')
 
     win.tk.eval( netgen.libngpy._meshing._ngscript)
 
