@@ -256,6 +256,7 @@ int main(int argc, char ** argv)
       Tk_MainLoop();
       Tcl_DeleteInterp (myinterp); 
 #ifdef NETGEN_PYTHON
+      py::scoped_interpreter guard{};
       py::gil_scoped_acquire ensure_gil;
 #endif
 
