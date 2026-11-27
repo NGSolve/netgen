@@ -1391,10 +1391,12 @@ DLL_HEADER void ExportNetgenMeshing(py::module &m)
     .def("GetNED", &Mesh::GetNED)
     
 
-    .def("__getitem__", [](const Mesh & self, PointIndex id) { return self[id]; })
+    .def("__getitem__", [](Mesh & self, PointIndex id) -> MeshPoint & { return self[id]; },
+         py::return_value_policy::reference_internal)
     .def("__getitem__", [](const Mesh & self, ElementIndex id) { return self[id]; })
     .def("__getitem__", [](const Mesh & self, SurfaceElementIndex id) { return self[id]; })
-    .def("__getitem__", [](const Mesh & self, SegmentIndex id) { return self[id]; })
+    .def("__getitem__", [](Mesh & self, SegmentIndex id) -> Segment & { return self[id]; },
+         py::return_value_policy::reference_internal)
 
     .def("__setitem__", [](Mesh & self, PointIndex id, const MeshPoint & mp) { return self[id] = mp; })
     
