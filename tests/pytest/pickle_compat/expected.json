@@ -1,0 +1,3470 @@
+{
+ "6.2.2404": {
+  "circ2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.070979809,
+     -0.987204868,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "c16b184f64f3ef729fcc8be8bd107464",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 102,
+    "nel_codim1": 32,
+    "nel_codim2": 0,
+    "np": 62
+   }
+  },
+  "csg3d": {
+   "fingerprint": {
+    "coordsum": [
+     -4.842250759,
+     6.794992501,
+     -0.585818768
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "7b2ae490e2d034c4847613ffeb49aec2",
+    "elhash_codim1": "bea60e7fa23b6fce7f748b7068a17171",
+    "elhash_codim2": "2911c2e096a069599f66c7ac4a27c201",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "shell",
+     "ball"
+    ],
+    "names_codim1": [
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "sph"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 696,
+    "nel_codim1": 258,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 168
+   }
+  },
+  "csgper": {
+   "fingerprint": {
+    "coordsum": [
+     26.773180235,
+     26.378690495,
+     25.922619318
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "7dd8c1cf7ac7076f60212c5c7fb8ec5b",
+    "elhash_codim1": "a7bf03272694e1c920b8030a95414658",
+    "elhash_codim2": "0f0b769287b5b3eb7e9d2e9354598675",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 13,
+    "names_codim0": [
+     "cube"
+    ],
+    "names_codim1": [
+     "left",
+     "front",
+     "right",
+     "back",
+     "bot",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 130,
+    "nel_codim1": 86,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 53
+   }
+  },
+  "hex3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "85d57911d9f7bfc47921edf4bb06c568",
+    "elhash_codim1": "8eaaa55f75572b9854bb0a5a9ab03a3f",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 8,
+    "nel_codim1": 24,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "occ2d": {
+   "fingerprint": {
+    "coordsum": [
+     62.243247762,
+     32.39931263,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "a4e1b2863fc24e2fe12a961e08a13f42",
+    "elhash_codim1": "95dbd3190c080fda30bb56d2d2b69904",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "plate",
+     "disk"
+    ],
+    "names_codim1": [
+     "rim",
+     "rim",
+     "rim",
+     "rim",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 101,
+    "nel_codim1": 33,
+    "nel_codim2": 0,
+    "np": 62
+   },
+   "needs_occ": true
+  },
+  "occ3d": {
+   "fingerprint": {
+    "coordsum": [
+     265.87029247,
+     133.256821653,
+     130.0858214
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "998af8ee43712d7971b0c1c74bae4674",
+    "elhash_codim1": "0aac0f0f84f8ffa866029dab2768e43d",
+    "elhash_codim2": "9b9b3faa5fd45f35e1d00fa13fa50c05",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "block",
+     "rod"
+    ],
+    "names_codim1": [
+     "wall",
+     "wall",
+     "wall",
+     "wall",
+     "floor",
+     "wall",
+     "cyl",
+     "cyl",
+     "cyl"
+    ],
+    "names_codim2": [
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "boxedge",
+     "boxedge",
+     "boxedge"
+    ],
+    "names_codim3": [
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "",
+     "corner",
+     ""
+    ],
+    "nel_codim0": 1119,
+    "nel_codim1": 440,
+    "nel_codim2": 71,
+    "nel_codim3": 0,
+    "np": 267
+   },
+   "needs_occ": true
+  },
+  "occsurf": {
+   "fingerprint": {
+    "coordsum": [
+     0.789638898,
+     -0.338930558,
+     0.152495656
+    ],
+    "curveorder": 2,
+    "dim": 3,
+    "elhash_codim0": "d41d8cd98f00b204e9800998ecf8427e",
+    "elhash_codim1": "9d4557885e0e8fc84849838b45bae6cd",
+    "elhash_codim2": "cce9ce40beab128d010cda690d0babc1",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "sphere"
+    ],
+    "names_codim2": [
+     "default",
+     "default"
+    ],
+    "names_codim3": [
+     "",
+     ""
+    ],
+    "nel_codim0": 0,
+    "nel_codim1": 112,
+    "nel_codim2": 6,
+    "nel_codim3": 0,
+    "np": 58
+   },
+   "needs_occ": true
+  },
+  "prism3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "b8b2a3b76b26d80c465e46c310b6868d",
+    "elhash_codim1": "a624ea822df514c4bd523ccbf11a95b9",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 16,
+    "nel_codim1": 32,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "quad2d": {
+   "fingerprint": {
+    "coordsum": [
+     0.286164412,
+     1.389504748,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d8ab7b5c0bcfb0d81d4dd3f16b12b516",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 55,
+    "nel_codim1": 32,
+    "nel_codim2": 0,
+    "np": 61
+   }
+  },
+  "quadstruct": {
+   "fingerprint": {
+    "coordsum": [
+     8.0,
+     8.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "9aa1c2a958e5910d8420824d6f52dbd1",
+    "elhash_codim1": "21f535aac4d50fe0ef42d2c0373aee59",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 9,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 16
+   }
+  },
+  "refined": {
+   "fingerprint": {
+    "coordsum": [
+     64.157314033,
+     57.821613385,
+     60.088954285
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "89331b775a44125911454c41cb403adb",
+    "elhash_codim1": "993b4e0281f7a8e0732358df1d4a4ca0",
+    "elhash_codim2": "e56548f4c4bad5b9452bbc83637a76a6",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     ""
+    ],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 424,
+    "nel_codim1": 144,
+    "nel_codim2": 96,
+    "nel_codim3": 0,
+    "np": 122
+   }
+  },
+  "refined2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.157200826,
+     -3.784305435,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "48cb9a9780505facb2b37f83d97c0125",
+    "elhash_codim1": "056a20abc5d5fa7d53b9a28e3b6bea5a",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 408,
+    "nel_codim1": 64,
+    "nel_codim2": 0,
+    "np": 225
+   }
+  },
+  "seg1d": {
+   "fingerprint": {
+    "coordsum": [
+     3.0,
+     0.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 1,
+    "elhash_codim0": "cf5ab4a980c922eff4b9ceb354e26ded",
+    "elhash_codim1": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "left",
+     "right"
+    ],
+    "nel_codim0": 5,
+    "nel_codim1": 0,
+    "np": 6
+   }
+  },
+  "sq2d": {
+   "fingerprint": {
+    "coordsum": [
+     9.524881154,
+     9.637848174,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "b838c205c2243a662f033b5d4b7908ec",
+    "elhash_codim1": "bcdbe3d4d3bbe669b0e9a8df34a12688",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "default"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 24,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 19
+   },
+   "known_bugs": {
+    "names_codim0": "reader differs from the writing release"
+   }
+  }
+ },
+ "6.2.2406": {
+  "circ2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.070979809,
+     -0.987204868,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "c16b184f64f3ef729fcc8be8bd107464",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 102,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 62
+   }
+  },
+  "csg3d": {
+   "fingerprint": {
+    "coordsum": [
+     -4.842250758,
+     6.794992502,
+     -0.585818767
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "efb7aa8ad05aa8a97a71833eeb23f9c5",
+    "elhash_codim1": "bea60e7fa23b6fce7f748b7068a17171",
+    "elhash_codim2": "2911c2e096a069599f66c7ac4a27c201",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "shell",
+     "ball"
+    ],
+    "names_codim1": [
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "sph"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 696,
+    "nel_codim1": 258,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 168
+   }
+  },
+  "csgper": {
+   "fingerprint": {
+    "coordsum": [
+     26.773180235,
+     26.378690495,
+     25.922619318
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "7dd8c1cf7ac7076f60212c5c7fb8ec5b",
+    "elhash_codim1": "a7bf03272694e1c920b8030a95414658",
+    "elhash_codim2": "0f0b769287b5b3eb7e9d2e9354598675",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 13,
+    "names_codim0": [
+     "cube"
+    ],
+    "names_codim1": [
+     "left",
+     "front",
+     "right",
+     "back",
+     "bot",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 130,
+    "nel_codim1": 86,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 53
+   }
+  },
+  "hex3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "85d57911d9f7bfc47921edf4bb06c568",
+    "elhash_codim1": "8eaaa55f75572b9854bb0a5a9ab03a3f",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 8,
+    "nel_codim1": 24,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "occ2d": {
+   "fingerprint": {
+    "coordsum": [
+     62.243247763,
+     32.399312632,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d3fb29ce5610bdd997662dfe804bdff0",
+    "elhash_codim1": "95dbd3190c080fda30bb56d2d2b69904",
+    "elhash_codim2": "3e27f8898f31703c2b8733bc20f75215",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "plate",
+     "disk"
+    ],
+    "names_codim1": [
+     "rim",
+     "rim",
+     "rim",
+     "rim",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 101,
+    "nel_codim1": 33,
+    "nel_codim2": 5,
+    "np": 62
+   },
+   "needs_occ": true
+  },
+  "occ3d": {
+   "fingerprint": {
+    "coordsum": [
+     251.25585398,
+     127.426870182,
+     124.521621508
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "22fcf8eee44d290db3fc37f050aaa716",
+    "elhash_codim1": "063b01df14a71a37c7c3525a974f03ba",
+    "elhash_codim2": "9b9b3faa5fd45f35e1d00fa13fa50c05",
+    "elhash_codim3": "01eb84b726317604ea0bb5f70fd390e6",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "block",
+     "rod"
+    ],
+    "names_codim1": [
+     "wall",
+     "wall",
+     "wall",
+     "wall",
+     "floor",
+     "wall",
+     "cyl",
+     "cyl",
+     "cyl"
+    ],
+    "names_codim2": [
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "boxedge",
+     "boxedge",
+     "boxedge"
+    ],
+    "names_codim3": [
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "",
+     "corner",
+     ""
+    ],
+    "nel_codim0": 1043,
+    "nel_codim1": 440,
+    "nel_codim2": 71,
+    "nel_codim3": 10,
+    "np": 253
+   },
+   "needs_occ": true
+  },
+  "occsurf": {
+   "fingerprint": {
+    "coordsum": [
+     0.789638898,
+     -0.338930558,
+     0.152495656
+    ],
+    "curveorder": 2,
+    "dim": 3,
+    "elhash_codim0": "d41d8cd98f00b204e9800998ecf8427e",
+    "elhash_codim1": "9d4557885e0e8fc84849838b45bae6cd",
+    "elhash_codim2": "cce9ce40beab128d010cda690d0babc1",
+    "elhash_codim3": "bd31a92a51ec62deb503903119f059ca",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "sphere"
+    ],
+    "names_codim2": [
+     "default",
+     "default"
+    ],
+    "names_codim3": [
+     "",
+     ""
+    ],
+    "nel_codim0": 0,
+    "nel_codim1": 112,
+    "nel_codim2": 6,
+    "nel_codim3": 2,
+    "np": 58
+   },
+   "needs_occ": true
+  },
+  "prism3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "b8b2a3b76b26d80c465e46c310b6868d",
+    "elhash_codim1": "a624ea822df514c4bd523ccbf11a95b9",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 16,
+    "nel_codim1": 32,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "quad2d": {
+   "fingerprint": {
+    "coordsum": [
+     0.286164412,
+     1.389504748,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d8ab7b5c0bcfb0d81d4dd3f16b12b516",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 55,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 61
+   }
+  },
+  "quadstruct": {
+   "fingerprint": {
+    "coordsum": [
+     8.0,
+     8.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "9aa1c2a958e5910d8420824d6f52dbd1",
+    "elhash_codim1": "21f535aac4d50fe0ef42d2c0373aee59",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 9,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 16
+   }
+  },
+  "refined": {
+   "fingerprint": {
+    "coordsum": [
+     64.157314033,
+     57.821613385,
+     60.088954285
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "3c31bc4e1ab65ee8fde002bb4bf170fe",
+    "elhash_codim1": "4f72825e09ebe8d6ae6dcee905abd6d5",
+    "elhash_codim2": "e56548f4c4bad5b9452bbc83637a76a6",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     ""
+    ],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 424,
+    "nel_codim1": 144,
+    "nel_codim2": 96,
+    "nel_codim3": 0,
+    "np": 122
+   }
+  },
+  "refined2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.157200826,
+     -3.784305435,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "52854e376f0dcad1ef577220b912ad6b",
+    "elhash_codim1": "a6283132d85cf254ecb1cb20e9114c96",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 408,
+    "nel_codim1": 64,
+    "nel_codim2": 8,
+    "np": 225
+   }
+  },
+  "seg1d": {
+   "fingerprint": {
+    "coordsum": [
+     3.0,
+     0.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 1,
+    "elhash_codim0": "cf5ab4a980c922eff4b9ceb354e26ded",
+    "elhash_codim1": "6d67a969959f9f439e871ff94353c983",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "left",
+     "right"
+    ],
+    "nel_codim0": 5,
+    "nel_codim1": 2,
+    "np": 6
+   }
+  },
+  "sq2d": {
+   "fingerprint": {
+    "coordsum": [
+     9.524881154,
+     9.637848174,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "b838c205c2243a662f033b5d4b7908ec",
+    "elhash_codim1": "bcdbe3d4d3bbe669b0e9a8df34a12688",
+    "elhash_codim2": "ec158f0051ce66cfbe2fe55d04988c5e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "default"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 24,
+    "nel_codim1": 12,
+    "nel_codim2": 4,
+    "np": 19
+   },
+   "known_bugs": {
+    "names_codim0": "reader differs from the writing release"
+   }
+  }
+ },
+ "6.2.2602": {
+  "circ2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.070979809,
+     -0.987204868,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "c16b184f64f3ef729fcc8be8bd107464",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 102,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 62
+   }
+  },
+  "csg3d": {
+   "fingerprint": {
+    "coordsum": [
+     -4.842250758,
+     6.794992502,
+     -0.585818767
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "efb7aa8ad05aa8a97a71833eeb23f9c5",
+    "elhash_codim1": "bea60e7fa23b6fce7f748b7068a17171",
+    "elhash_codim2": "2911c2e096a069599f66c7ac4a27c201",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "shell",
+     "ball"
+    ],
+    "names_codim1": [
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "sph"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 696,
+    "nel_codim1": 258,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 168
+   }
+  },
+  "csgper": {
+   "fingerprint": {
+    "coordsum": [
+     26.773180235,
+     26.378690495,
+     25.922619318
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "7dd8c1cf7ac7076f60212c5c7fb8ec5b",
+    "elhash_codim1": "a7bf03272694e1c920b8030a95414658",
+    "elhash_codim2": "0f0b769287b5b3eb7e9d2e9354598675",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 13,
+    "names_codim0": [
+     "cube"
+    ],
+    "names_codim1": [
+     "left",
+     "front",
+     "right",
+     "back",
+     "bot",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 130,
+    "nel_codim1": 86,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 53
+   }
+  },
+  "hex3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "85d57911d9f7bfc47921edf4bb06c568",
+    "elhash_codim1": "8eaaa55f75572b9854bb0a5a9ab03a3f",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 8,
+    "nel_codim1": 24,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "occ2d": {
+   "fingerprint": {
+    "coordsum": [
+     57.384794592,
+     28.642149687,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "ee55892cd266569dcc01f756ef853be5",
+    "elhash_codim1": "95dbd3190c080fda30bb56d2d2b69904",
+    "elhash_codim2": "3e27f8898f31703c2b8733bc20f75215",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "plate",
+     "disk"
+    ],
+    "names_codim1": [
+     "rim",
+     "rim",
+     "rim",
+     "rim",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 91,
+    "nel_codim1": 33,
+    "nel_codim2": 5,
+    "np": 57
+   },
+   "needs_occ": true
+  },
+  "occ3d": {
+   "fingerprint": {
+    "coordsum": [
+     245.267014293,
+     124.918273957,
+     123.942869256
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "a841a9776a7beb647209fad7529d76d0",
+    "elhash_codim1": "82c4d31caedbcec44f50ec5da5dc9161",
+    "elhash_codim2": "9b9b3faa5fd45f35e1d00fa13fa50c05",
+    "elhash_codim3": "01eb84b726317604ea0bb5f70fd390e6",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "block",
+     "rod"
+    ],
+    "names_codim1": [
+     "wall",
+     "wall",
+     "wall",
+     "wall",
+     "floor",
+     "wall",
+     "cyl",
+     "cyl",
+     "cyl"
+    ],
+    "names_codim2": [
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "boxedge",
+     "boxedge",
+     "boxedge"
+    ],
+    "names_codim3": [
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "",
+     "corner",
+     ""
+    ],
+    "nel_codim0": 1028,
+    "nel_codim1": 428,
+    "nel_codim2": 71,
+    "nel_codim3": 10,
+    "np": 249
+   },
+   "needs_occ": true
+  },
+  "occsurf": {
+   "fingerprint": {
+    "coordsum": [
+     0.374359802,
+     -0.294961535,
+     -0.25389811
+    ],
+    "curveorder": 2,
+    "dim": 3,
+    "elhash_codim0": "d41d8cd98f00b204e9800998ecf8427e",
+    "elhash_codim1": "df6228c56a0dc9a6a91fe8d6d613999d",
+    "elhash_codim2": "cce9ce40beab128d010cda690d0babc1",
+    "elhash_codim3": "bd31a92a51ec62deb503903119f059ca",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "sphere"
+    ],
+    "names_codim2": [
+     "default",
+     "default"
+    ],
+    "names_codim3": [
+     "",
+     ""
+    ],
+    "nel_codim0": 0,
+    "nel_codim1": 112,
+    "nel_codim2": 6,
+    "nel_codim3": 2,
+    "np": 58
+   },
+   "needs_occ": true
+  },
+  "prism3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "b8b2a3b76b26d80c465e46c310b6868d",
+    "elhash_codim1": "a624ea822df514c4bd523ccbf11a95b9",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 16,
+    "nel_codim1": 32,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "quad2d": {
+   "fingerprint": {
+    "coordsum": [
+     0.286164412,
+     1.389504748,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d8ab7b5c0bcfb0d81d4dd3f16b12b516",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 55,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 61
+   }
+  },
+  "quadstruct": {
+   "fingerprint": {
+    "coordsum": [
+     8.0,
+     8.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "9aa1c2a958e5910d8420824d6f52dbd1",
+    "elhash_codim1": "21f535aac4d50fe0ef42d2c0373aee59",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 9,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 16
+   }
+  },
+  "refined": {
+   "fingerprint": {
+    "coordsum": [
+     64.157314033,
+     57.821613385,
+     60.088954285
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "3c31bc4e1ab65ee8fde002bb4bf170fe",
+    "elhash_codim1": "4f72825e09ebe8d6ae6dcee905abd6d5",
+    "elhash_codim2": "e56548f4c4bad5b9452bbc83637a76a6",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     ""
+    ],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 424,
+    "nel_codim1": 144,
+    "nel_codim2": 96,
+    "nel_codim3": 0,
+    "np": 122
+   }
+  },
+  "refined2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.157200826,
+     -3.784305435,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "52854e376f0dcad1ef577220b912ad6b",
+    "elhash_codim1": "a6283132d85cf254ecb1cb20e9114c96",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 408,
+    "nel_codim1": 64,
+    "nel_codim2": 8,
+    "np": 225
+   }
+  },
+  "seg1d": {
+   "fingerprint": {
+    "coordsum": [
+     3.0,
+     0.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 1,
+    "elhash_codim0": "cf5ab4a980c922eff4b9ceb354e26ded",
+    "elhash_codim1": "6d67a969959f9f439e871ff94353c983",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "left",
+     "right"
+    ],
+    "nel_codim0": 5,
+    "nel_codim1": 2,
+    "np": 6
+   }
+  },
+  "sq2d": {
+   "fingerprint": {
+    "coordsum": [
+     9.524881154,
+     9.637848174,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "b838c205c2243a662f033b5d4b7908ec",
+    "elhash_codim1": "bcdbe3d4d3bbe669b0e9a8df34a12688",
+    "elhash_codim2": "ec158f0051ce66cfbe2fe55d04988c5e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "default"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 24,
+    "nel_codim1": 12,
+    "nel_codim2": 4,
+    "np": 19
+   },
+   "known_bugs": {
+    "names_codim0": "reader differs from the writing release"
+   }
+  }
+ },
+ "6.2.2604": {
+  "circ2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.070979809,
+     -0.987204868,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "c16b184f64f3ef729fcc8be8bd107464",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 102,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 62
+   }
+  },
+  "csg3d": {
+   "fingerprint": {
+    "coordsum": [
+     -4.842250758,
+     6.794992502,
+     -0.585818767
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "efb7aa8ad05aa8a97a71833eeb23f9c5",
+    "elhash_codim1": "bea60e7fa23b6fce7f748b7068a17171",
+    "elhash_codim2": "2911c2e096a069599f66c7ac4a27c201",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "shell",
+     "ball"
+    ],
+    "names_codim1": [
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "sph"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 696,
+    "nel_codim1": 258,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 168
+   }
+  },
+  "csgper": {
+   "fingerprint": {
+    "coordsum": [
+     26.773180235,
+     26.378690495,
+     25.922619318
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "7dd8c1cf7ac7076f60212c5c7fb8ec5b",
+    "elhash_codim1": "a7bf03272694e1c920b8030a95414658",
+    "elhash_codim2": "0f0b769287b5b3eb7e9d2e9354598675",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 13,
+    "names_codim0": [
+     "cube"
+    ],
+    "names_codim1": [
+     "left",
+     "front",
+     "right",
+     "back",
+     "bot",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 130,
+    "nel_codim1": 86,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 53
+   }
+  },
+  "hex3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "85d57911d9f7bfc47921edf4bb06c568",
+    "elhash_codim1": "8eaaa55f75572b9854bb0a5a9ab03a3f",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 8,
+    "nel_codim1": 24,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "occ2d": {
+   "fingerprint": {
+    "coordsum": [
+     57.384794592,
+     28.642149687,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "ee55892cd266569dcc01f756ef853be5",
+    "elhash_codim1": "95dbd3190c080fda30bb56d2d2b69904",
+    "elhash_codim2": "3e27f8898f31703c2b8733bc20f75215",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "plate",
+     "disk"
+    ],
+    "names_codim1": [
+     "rim",
+     "rim",
+     "rim",
+     "rim",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 91,
+    "nel_codim1": 33,
+    "nel_codim2": 5,
+    "np": 57
+   },
+   "needs_occ": true
+  },
+  "occ3d": {
+   "fingerprint": {
+    "coordsum": [
+     245.267014293,
+     124.918273957,
+     123.942869256
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "a841a9776a7beb647209fad7529d76d0",
+    "elhash_codim1": "82c4d31caedbcec44f50ec5da5dc9161",
+    "elhash_codim2": "9b9b3faa5fd45f35e1d00fa13fa50c05",
+    "elhash_codim3": "01eb84b726317604ea0bb5f70fd390e6",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "block",
+     "rod"
+    ],
+    "names_codim1": [
+     "wall",
+     "wall",
+     "wall",
+     "wall",
+     "floor",
+     "wall",
+     "cyl",
+     "cyl",
+     "cyl"
+    ],
+    "names_codim2": [
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "boxedge",
+     "boxedge",
+     "boxedge"
+    ],
+    "names_codim3": [
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "",
+     "corner",
+     ""
+    ],
+    "nel_codim0": 1028,
+    "nel_codim1": 428,
+    "nel_codim2": 71,
+    "nel_codim3": 10,
+    "np": 249
+   },
+   "needs_occ": true
+  },
+  "occsurf": {
+   "fingerprint": {
+    "coordsum": [
+     0.374359802,
+     -0.294961535,
+     -0.25389811
+    ],
+    "curveorder": 2,
+    "dim": 3,
+    "elhash_codim0": "d41d8cd98f00b204e9800998ecf8427e",
+    "elhash_codim1": "df6228c56a0dc9a6a91fe8d6d613999d",
+    "elhash_codim2": "cce9ce40beab128d010cda690d0babc1",
+    "elhash_codim3": "bd31a92a51ec62deb503903119f059ca",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "sphere"
+    ],
+    "names_codim2": [
+     "default",
+     "default"
+    ],
+    "names_codim3": [
+     "",
+     ""
+    ],
+    "nel_codim0": 0,
+    "nel_codim1": 112,
+    "nel_codim2": 6,
+    "nel_codim3": 2,
+    "np": 58
+   },
+   "needs_occ": true
+  },
+  "prism3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "b8b2a3b76b26d80c465e46c310b6868d",
+    "elhash_codim1": "a624ea822df514c4bd523ccbf11a95b9",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 16,
+    "nel_codim1": 32,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "quad2d": {
+   "fingerprint": {
+    "coordsum": [
+     0.286164412,
+     1.389504748,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d8ab7b5c0bcfb0d81d4dd3f16b12b516",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 55,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 61
+   }
+  },
+  "quadstruct": {
+   "fingerprint": {
+    "coordsum": [
+     8.0,
+     8.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "9aa1c2a958e5910d8420824d6f52dbd1",
+    "elhash_codim1": "21f535aac4d50fe0ef42d2c0373aee59",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 9,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 16
+   }
+  },
+  "refined": {
+   "fingerprint": {
+    "coordsum": [
+     64.157314033,
+     57.821613385,
+     60.088954285
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "3c31bc4e1ab65ee8fde002bb4bf170fe",
+    "elhash_codim1": "4f72825e09ebe8d6ae6dcee905abd6d5",
+    "elhash_codim2": "e56548f4c4bad5b9452bbc83637a76a6",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     ""
+    ],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 424,
+    "nel_codim1": 144,
+    "nel_codim2": 96,
+    "nel_codim3": 0,
+    "np": 122
+   }
+  },
+  "refined2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.157200826,
+     -3.784305435,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "52854e376f0dcad1ef577220b912ad6b",
+    "elhash_codim1": "a6283132d85cf254ecb1cb20e9114c96",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 408,
+    "nel_codim1": 64,
+    "nel_codim2": 8,
+    "np": 225
+   }
+  },
+  "seg1d": {
+   "fingerprint": {
+    "coordsum": [
+     3.0,
+     0.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 1,
+    "elhash_codim0": "cf5ab4a980c922eff4b9ceb354e26ded",
+    "elhash_codim1": "6d67a969959f9f439e871ff94353c983",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "left",
+     "right"
+    ],
+    "nel_codim0": 5,
+    "nel_codim1": 2,
+    "np": 6
+   }
+  },
+  "sq2d": {
+   "fingerprint": {
+    "coordsum": [
+     9.524881154,
+     9.637848174,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "b838c205c2243a662f033b5d4b7908ec",
+    "elhash_codim1": "bcdbe3d4d3bbe669b0e9a8df34a12688",
+    "elhash_codim2": "ec158f0051ce66cfbe2fe55d04988c5e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "default"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 24,
+    "nel_codim1": 12,
+    "nel_codim2": 4,
+    "np": 19
+   },
+   "known_bugs": {
+    "names_codim0": "reader differs from the writing release"
+   }
+  }
+ },
+ "6.2.2606": {
+  "circ2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.070979809,
+     -0.987204868,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "c16b184f64f3ef729fcc8be8bd107464",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 102,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 62
+   }
+  },
+  "csg3d": {
+   "fingerprint": {
+    "coordsum": [
+     -4.842250758,
+     6.794992502,
+     -0.585818767
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "efb7aa8ad05aa8a97a71833eeb23f9c5",
+    "elhash_codim1": "bea60e7fa23b6fce7f748b7068a17171",
+    "elhash_codim2": "845d590ead7b2a6c7d1db003d0afdaed",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "shell",
+     "ball"
+    ],
+    "names_codim1": [
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "sph"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 696,
+    "nel_codim1": 258,
+    "nel_codim2": 74,
+    "nel_codim3": 0,
+    "np": 168
+   }
+  },
+  "csgper": {
+   "fingerprint": {
+    "coordsum": [
+     26.773180235,
+     26.378690495,
+     25.922619318
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "7dd8c1cf7ac7076f60212c5c7fb8ec5b",
+    "elhash_codim1": "a7bf03272694e1c920b8030a95414658",
+    "elhash_codim2": "7e71215481d54f3b76679ed2e80773c9",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 13,
+    "names_codim0": [
+     "cube"
+    ],
+    "names_codim1": [
+     "left",
+     "front",
+     "right",
+     "back",
+     "bot",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 130,
+    "nel_codim1": 86,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 53
+   }
+  },
+  "hex3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "85d57911d9f7bfc47921edf4bb06c568",
+    "elhash_codim1": "8eaaa55f75572b9854bb0a5a9ab03a3f",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 8,
+    "nel_codim1": 24,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "occ2d": {
+   "fingerprint": {
+    "coordsum": [
+     57.384794592,
+     28.642149687,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "ee55892cd266569dcc01f756ef853be5",
+    "elhash_codim1": "95dbd3190c080fda30bb56d2d2b69904",
+    "elhash_codim2": "3e27f8898f31703c2b8733bc20f75215",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "plate",
+     "disk"
+    ],
+    "names_codim1": [
+     "rim",
+     "rim",
+     "rim",
+     "rim",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 91,
+    "nel_codim1": 33,
+    "nel_codim2": 5,
+    "np": 57
+   },
+   "needs_occ": true
+  },
+  "occ3d": {
+   "fingerprint": {
+    "coordsum": [
+     245.267014293,
+     124.918273957,
+     123.942869256
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "a841a9776a7beb647209fad7529d76d0",
+    "elhash_codim1": "82c4d31caedbcec44f50ec5da5dc9161",
+    "elhash_codim2": "9b9b3faa5fd45f35e1d00fa13fa50c05",
+    "elhash_codim3": "01eb84b726317604ea0bb5f70fd390e6",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "block",
+     "rod"
+    ],
+    "names_codim1": [
+     "wall",
+     "wall",
+     "wall",
+     "wall",
+     "floor",
+     "wall",
+     "cyl",
+     "cyl",
+     "cyl"
+    ],
+    "names_codim2": [
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "default"
+    ],
+    "names_codim3": [
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "",
+     "corner",
+     ""
+    ],
+    "nel_codim0": 1028,
+    "nel_codim1": 428,
+    "nel_codim2": 71,
+    "nel_codim3": 10,
+    "np": 249
+   },
+   "needs_occ": true
+  },
+  "occsurf": {
+   "fingerprint": {
+    "coordsum": [
+     0.374359802,
+     -0.294961535,
+     -0.25389811
+    ],
+    "curveorder": 2,
+    "dim": 3,
+    "elhash_codim0": "d41d8cd98f00b204e9800998ecf8427e",
+    "elhash_codim1": "df6228c56a0dc9a6a91fe8d6d613999d",
+    "elhash_codim2": "034e68920f448fd1ed1419df1c95b0d7",
+    "elhash_codim3": "bd31a92a51ec62deb503903119f059ca",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "sphere"
+    ],
+    "names_codim2": [
+     "default"
+    ],
+    "names_codim3": [
+     "",
+     ""
+    ],
+    "nel_codim0": 0,
+    "nel_codim1": 112,
+    "nel_codim2": 6,
+    "nel_codim3": 2,
+    "np": 58
+   },
+   "needs_occ": true
+  },
+  "prism3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "b8b2a3b76b26d80c465e46c310b6868d",
+    "elhash_codim1": "a624ea822df514c4bd523ccbf11a95b9",
+    "elhash_codim2": "4e79dcc3693dc99af64cb22fcea75c1e",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 16,
+    "nel_codim1": 32,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "quad2d": {
+   "fingerprint": {
+    "coordsum": [
+     0.286164412,
+     1.389504748,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d8ab7b5c0bcfb0d81d4dd3f16b12b516",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 55,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 61
+   }
+  },
+  "quadstruct": {
+   "fingerprint": {
+    "coordsum": [
+     8.0,
+     8.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "9aa1c2a958e5910d8420824d6f52dbd1",
+    "elhash_codim1": "21f535aac4d50fe0ef42d2c0373aee59",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 9,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 16
+   }
+  },
+  "refined": {
+   "fingerprint": {
+    "coordsum": [
+     64.157314033,
+     57.821613385,
+     60.088954285
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "3c31bc4e1ab65ee8fde002bb4bf170fe",
+    "elhash_codim1": "4f72825e09ebe8d6ae6dcee905abd6d5",
+    "elhash_codim2": "b2da1522cdc340c32ae4b5c63fafe4b1",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     ""
+    ],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 424,
+    "nel_codim1": 144,
+    "nel_codim2": 96,
+    "nel_codim3": 0,
+    "np": 122
+   }
+  },
+  "refined2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.157200826,
+     -3.784305435,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "52854e376f0dcad1ef577220b912ad6b",
+    "elhash_codim1": "a6283132d85cf254ecb1cb20e9114c96",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 408,
+    "nel_codim1": 64,
+    "nel_codim2": 8,
+    "np": 225
+   }
+  },
+  "seg1d": {
+   "fingerprint": {
+    "coordsum": [
+     3.0,
+     0.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 1,
+    "elhash_codim0": "cf5ab4a980c922eff4b9ceb354e26ded",
+    "elhash_codim1": "6d67a969959f9f439e871ff94353c983",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "left",
+     "right"
+    ],
+    "nel_codim0": 5,
+    "nel_codim1": 2,
+    "np": 6
+   }
+  },
+  "sq2d": {
+   "fingerprint": {
+    "coordsum": [
+     9.524881154,
+     9.637848174,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "b838c205c2243a662f033b5d4b7908ec",
+    "elhash_codim1": "bcdbe3d4d3bbe669b0e9a8df34a12688",
+    "elhash_codim2": "ec158f0051ce66cfbe2fe55d04988c5e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "default"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 24,
+    "nel_codim1": 12,
+    "nel_codim2": 4,
+    "np": 19
+   }
+  }
+ },
+ "6.2.2608": {
+  "circ2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.070979809,
+     -0.987204868,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "c16b184f64f3ef729fcc8be8bd107464",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "nel_codim0": 102,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 62
+   }
+  },
+  "csg3d": {
+   "fingerprint": {
+    "coordsum": [
+     -4.842250759,
+     6.794992501,
+     -0.585818768
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "7b2ae490e2d034c4847613ffeb49aec2",
+    "elhash_codim1": "bea60e7fa23b6fce7f748b7068a17171",
+    "elhash_codim2": "efe05b45176388a0add16173d089b5bf",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "shell",
+     "ball"
+    ],
+    "names_codim1": [
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "outer",
+     "sph"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 696,
+    "nel_codim1": 258,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 168
+   }
+  },
+  "csgper": {
+   "fingerprint": {
+    "coordsum": [
+     26.773180235,
+     26.378690495,
+     25.922619318
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "7dd8c1cf7ac7076f60212c5c7fb8ec5b",
+    "elhash_codim1": "a7bf03272694e1c920b8030a95414658",
+    "elhash_codim2": "7e71215481d54f3b76679ed2e80773c9",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 13,
+    "names_codim0": [
+     "cube"
+    ],
+    "names_codim1": [
+     "left",
+     "front",
+     "right",
+     "back",
+     "bot",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 130,
+    "nel_codim1": 86,
+    "nel_codim2": 72,
+    "nel_codim3": 0,
+    "np": 53
+   }
+  },
+  "hex3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "85d57911d9f7bfc47921edf4bb06c568",
+    "elhash_codim1": "8eaaa55f75572b9854bb0a5a9ab03a3f",
+    "elhash_codim2": "bc6b3e5acd9abf19190ae258c2db4cb7",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 8,
+    "nel_codim1": 24,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "occ2d": {
+   "fingerprint": {
+    "coordsum": [
+     57.384794592,
+     28.64214969,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "76786d9c21f19950176f81194266601f",
+    "elhash_codim1": "95dbd3190c080fda30bb56d2d2b69904",
+    "elhash_codim2": "3e27f8898f31703c2b8733bc20f75215",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "plate",
+     "disk"
+    ],
+    "names_codim1": [
+     "rim",
+     "rim",
+     "rim",
+     "rim",
+     "circ"
+    ],
+    "names_codim2": [
+     "",
+     "",
+     "",
+     "",
+     ""
+    ],
+    "nel_codim0": 91,
+    "nel_codim1": 33,
+    "nel_codim2": 5,
+    "np": 57
+   },
+   "needs_occ": true
+  },
+  "occ3d": {
+   "fingerprint": {
+    "coordsum": [
+     245.267014299,
+     124.918273946,
+     123.94286926
+    ],
+    "curveorder": 3,
+    "dim": 3,
+    "elhash_codim0": "4f251907a5b7c25f77429c2ca1393c40",
+    "elhash_codim1": "d4e018b895c7c65b73735d099e31dfc9",
+    "elhash_codim2": "9b9b3faa5fd45f35e1d00fa13fa50c05",
+    "elhash_codim3": "01eb84b726317604ea0bb5f70fd390e6",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "block",
+     "rod"
+    ],
+    "names_codim1": [
+     "wall",
+     "wall",
+     "wall",
+     "wall",
+     "floor",
+     "wall",
+     "cyl",
+     "cyl",
+     "cyl"
+    ],
+    "names_codim2": [
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "boxedge",
+     "boxedge",
+     "boxedge",
+     "default",
+     "default"
+    ],
+    "names_codim3": [
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "corner",
+     "",
+     "corner",
+     ""
+    ],
+    "nel_codim0": 1028,
+    "nel_codim1": 428,
+    "nel_codim2": 71,
+    "nel_codim3": 10,
+    "np": 249
+   },
+   "needs_occ": true
+  },
+  "occsurf": {
+   "fingerprint": {
+    "coordsum": [
+     0.374359802,
+     -0.294961535,
+     -0.25389811
+    ],
+    "curveorder": 2,
+    "dim": 3,
+    "elhash_codim0": "d41d8cd98f00b204e9800998ecf8427e",
+    "elhash_codim1": "df6228c56a0dc9a6a91fe8d6d613999d",
+    "elhash_codim2": "034e68920f448fd1ed1419df1c95b0d7",
+    "elhash_codim3": "bd31a92a51ec62deb503903119f059ca",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "sphere"
+    ],
+    "names_codim2": [
+     "default"
+    ],
+    "names_codim3": [
+     "",
+     ""
+    ],
+    "nel_codim0": 0,
+    "nel_codim1": 112,
+    "nel_codim2": 6,
+    "nel_codim3": 2,
+    "np": 58
+   },
+   "needs_occ": true
+  },
+  "prism3d": {
+   "fingerprint": {
+    "coordsum": [
+     13.5,
+     13.5,
+     13.5
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "b8b2a3b76b26d80c465e46c310b6868d",
+    "elhash_codim1": "a624ea822df514c4bd523ccbf11a95b9",
+    "elhash_codim2": "bc6b3e5acd9abf19190ae258c2db4cb7",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 16,
+    "nel_codim1": 32,
+    "nel_codim2": 48,
+    "nel_codim3": 0,
+    "np": 27
+   }
+  },
+  "quad2d": {
+   "fingerprint": {
+    "coordsum": [
+     0.286164412,
+     1.389504748,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "d8ab7b5c0bcfb0d81d4dd3f16b12b516",
+    "elhash_codim1": "c13abdfd2d851f0239677e8bc40ec622",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "nel_codim0": 55,
+    "nel_codim1": 32,
+    "nel_codim2": 8,
+    "np": 61
+   }
+  },
+  "quadstruct": {
+   "fingerprint": {
+    "coordsum": [
+     8.0,
+     8.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "9aa1c2a958e5910d8420824d6f52dbd1",
+    "elhash_codim1": "21f535aac4d50fe0ef42d2c0373aee59",
+    "elhash_codim2": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [],
+    "nel_codim0": 9,
+    "nel_codim1": 12,
+    "nel_codim2": 0,
+    "np": 16
+   }
+  },
+  "refined": {
+   "fingerprint": {
+    "coordsum": [
+     64.157314033,
+     57.821613385,
+     60.088954285
+    ],
+    "curveorder": 1,
+    "dim": 3,
+    "elhash_codim0": "4c813ead5dbac4f359be20ef82b6e956",
+    "elhash_codim1": "e4c4090cb5add9dbce0c05120c1727d3",
+    "elhash_codim2": "b2da1522cdc340c32ae4b5c63fafe4b1",
+    "elhash_codim3": "d41d8cd98f00b204e9800998ecf8427e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     ""
+    ],
+    "names_codim1": [
+     "back",
+     "left",
+     "front",
+     "right",
+     "bottom",
+     "top"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "names_codim3": [],
+    "nel_codim0": 424,
+    "nel_codim1": 144,
+    "nel_codim2": 96,
+    "nel_codim3": 0,
+    "np": 122
+   }
+  },
+  "refined2d": {
+   "fingerprint": {
+    "coordsum": [
+     -0.157200826,
+     -3.784305435,
+     0.0
+    ],
+    "curveorder": 3,
+    "dim": 2,
+    "elhash_codim0": "934858083c3266d5c1c2d27f79e83bbd",
+    "elhash_codim1": "056a20abc5d5fa7d53b9a28e3b6bea5a",
+    "elhash_codim2": "d8e3112669e526fcc8a276de3ad9b4ae",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "outer",
+     "inner"
+    ],
+    "names_codim1": [
+     "b",
+     "r",
+     "t",
+     "l",
+     "circ",
+     "circ",
+     "circ",
+     "circ"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "nel_codim0": 408,
+    "nel_codim1": 64,
+    "nel_codim2": 8,
+    "np": 225
+   }
+  },
+  "seg1d": {
+   "fingerprint": {
+    "coordsum": [
+     3.0,
+     0.0,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 1,
+    "elhash_codim0": "cf5ab4a980c922eff4b9ceb354e26ded",
+    "elhash_codim1": "6d67a969959f9f439e871ff94353c983",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "dom"
+    ],
+    "names_codim1": [
+     "left",
+     "right"
+    ],
+    "nel_codim0": 5,
+    "nel_codim1": 2,
+    "np": 6
+   }
+  },
+  "sq2d": {
+   "fingerprint": {
+    "coordsum": [
+     9.524881154,
+     9.637848174,
+     0.0
+    ],
+    "curveorder": 1,
+    "dim": 2,
+    "elhash_codim0": "b838c205c2243a662f033b5d4b7908ec",
+    "elhash_codim1": "bcdbe3d4d3bbe669b0e9a8df34a12688",
+    "elhash_codim2": "ec158f0051ce66cfbe2fe55d04988c5e",
+    "has_geometry": true,
+    "identifications": 0,
+    "names_codim0": [
+     "default"
+    ],
+    "names_codim1": [
+     "bottom",
+     "right",
+     "top",
+     "left"
+    ],
+    "names_codim2": [
+     "default",
+     "default",
+     "default",
+     "default"
+    ],
+    "nel_codim0": 24,
+    "nel_codim1": 12,
+    "nel_codim2": 4,
+    "np": 19
+   }
+  }
+ }
+}

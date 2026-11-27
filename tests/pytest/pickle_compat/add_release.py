@@ -133,12 +133,14 @@ def write(outdir):
 
 
 def add(release, outdir):
+    expfile = here / "expected.json"   # *.json is in .gitignore: git add -f
+    if not expfile.exists():
+        expfile.write_text("{}")
     sys.path.insert(0, str(here.parent))
     from test_pickle_compat import fingerprint, same
     outdir = Path(outdir)
     info = json.loads((outdir / "writer.json").read_text())
-    expfile = here / "expected.json"
-    expected = json.loads(expfile.read_text()) if expfile.exists() else {}
+    expected = json.loads(expfile.read_text())
     expected[release] = {}
     (here / release).mkdir(exist_ok=True)
     for name, rec in info.items():

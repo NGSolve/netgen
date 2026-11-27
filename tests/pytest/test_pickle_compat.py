@@ -12,8 +12,7 @@ from pathlib import Path
 import pytest
 
 datadir = Path(__file__).parent / "pickle_compat"
-expfile = datadir / "expected.json"
-expected = json.loads(expfile.read_text()) if expfile.exists() else {}
+expected = json.loads((datadir / "expected.json").read_text())
 cases = [(release, case) for release in sorted(expected) for case in sorted(expected[release])]
 
 
@@ -61,6 +60,12 @@ def same(a, b):
             return names(a) == names(b)
         return len(a) == len(b) and all(same(x, y) for x, y in zip(a, b))
     return a == b
+
+
+def test_golden_files_present():
+    assert len(cases) >= 84
+    for release, case in cases:
+        assert (datadir / release / (case + ".pkl.gz")).exists(), (release, case)
 
 
 @pytest.mark.parametrize("release,case", cases)
