@@ -928,6 +928,15 @@ namespace ngcore
         {
           size_t s;
           archive & s;
+          if constexpr (std::is_arithmetic_v<T>)
+            archive.CheckSize (s, sizeof(T));
+          else if (s > 65536 && s > archive.BytesLeft())
+            { // more entries than bytes: grow while reading, the archive ends first
+              SetSize0();
+              for (size_t i = 0; i < s; i++)
+                { T val; archive & val; Append (std::move(val)); }
+              return;
+            }
           SetSize(s);
         }
       archive.Do(data, size);

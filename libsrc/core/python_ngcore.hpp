@@ -271,6 +271,7 @@ namespace ngcore
                               " must be at least " + libversion.second.to_string());
           stream = std::make_shared<std::stringstream>
             (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-2]));
+          version_map.clear();  // libraries missing in the archive count as oldest version
           *this & version_map;
           stream = std::make_shared<std::stringstream>
             (pybind11::cast<pybind11::bytes>(lst[pybind11::len(lst)-3]));

@@ -215,12 +215,15 @@ namespace ngcore
         return;
       if(ar.Input())
         {
+          ar.CheckSize (size, sizeof(IndexType));
           index = new IndexType[size+1];
           MemTraceAlloc(index, sizeof(IndexType) * (size+1));
         }
       ar.Do(index, size+1);
       if(ar.Input())
         {
+          if constexpr (std::is_arithmetic_v<T>)
+            ar.CheckSize (index[size], sizeof(T));
           data = new T[index[size]];
           MemTraceAlloc(data, sizeof(T) * index[size]);
         }

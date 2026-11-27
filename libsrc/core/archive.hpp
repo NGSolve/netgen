@@ -281,6 +281,12 @@ namespace ngcore
     // only used for PyArchive
     virtual void NeedsVersion(const std::string& /*unused*/, const std::string& /*unused*/) {}
 
+    /// input: bytes left in the archive, size_t(-1) if unknown
+    size_t BytesLeft ();
+    /// input: throws if n entries of elsize bytes cannot be left in the archive
+    void CheckSize (size_t n, size_t elsize = 1);
+    [[noreturn]] void ThrowEnd ();
+
     bool HasFormat(int version)
     {
       auto sversion = std::to_string(version);
@@ -346,7 +352,18 @@ namespace ngcore
           size = v.size();
       (*this) & size;
       if(Input())
-        v.resize(size);
+        {
+          if constexpr (std::is_arithmetic_v<T>)
+            CheckSize (size, sizeof(T));
+          else if (size > 65536 && size > BytesLeft())
+            { // more entries than bytes: grow while reading, the archive ends first
+              v.clear();
+              for (size_t i = 0; i < size; i++)
+                { T val; (*this) & val; v.push_back (std::move(val)); }
+              return (*this);
+            }
+          v.resize(size);
+        }
       Do(&v[0], size);
       return (*this);
     }
@@ -375,6 +392,7 @@ namespace ngcore
       (*this) & size;
       if(Input())
         {
+          CheckSize (size);
           v.resize(size);
           bool b;
           for(size_t i=0; i<size; i++)
@@ -1036,9 +1054,11 @@ namespace ngcore
     {
       int len;
       (*this) & len;
+      if (len < 0) ThrowEnd();
+      CheckSize (len);
       str.resize(len);
       if(len)
-        stream->read(&str[0], len); // NOLINT
+        ReadBytes(&str[0], len);
       return *this;
     }
     Archive & operator & (char *& str) override
@@ -1049,34 +1069,53 @@ namespace ngcore
         str = nullptr;
       else
         {
+          if (len < 0) ThrowEnd();
+          CheckSize (len);
           str = new char[len+1]; // NOLINT
-          stream->read(&str[0], len); // NOLINT
+          ReadBytes(&str[0], len);
           str[len] = '\0'; // NOLINT
         }
       return *this;
     }
 
     Archive & Do (std::byte * d, size_t n) override
-    { stream->read(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this; } // NOLINT
+    { ReadBytes(reinterpret_cast<char*>(d), n*sizeof(std::byte)); return *this; } // NOLINT
     Archive & Do (double * d, size_t n) override
-    { stream->read(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
+    { ReadBytes(reinterpret_cast<char*>(d), n*sizeof(double)); return *this; } // NOLINT
     Archive & Do (int * i, size_t n) override
-    { stream->read(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; } // NOLINT
+    { ReadBytes(reinterpret_cast<char*>(i), n*sizeof(int)); return *this; } // NOLINT
     Archive & Do (size_t * i, size_t n) override
     {
       // for platform independence
       if constexpr (sizeof(long) == 8)
-        stream->read(reinterpret_cast<char*>(i), n*sizeof(size_t)); // NOLINT
+        ReadBytes(reinterpret_cast<char*>(i), n*sizeof(size_t)); // NOLINT
       else
         for(size_t j = 0; j < n; j++)
           (*this) & i[j];
       return *this;
     }
 
+    /// bytes left in the stream, size_t(-1) if the stream cannot tell
+    size_t StreamBytesLeft ()
+    {
+      auto pos = stream->tellg();
+      if (pos == std::istream::pos_type(-1)) return size_t(-1);
+      stream->seekg(0, std::ios::end);
+      auto end = stream->tellg();
+      stream->seekg(pos);
+      if (end == std::istream::pos_type(-1) || !*stream) { stream->clear(); return size_t(-1); }
+      return size_t(end - pos);
+    }
+
   private:
+    void ReadBytes (char * p, size_t n)
+    {
+      stream->read(p, n); // NOLINT
+      if (stream->fail()) ThrowEnd();
+    }
     template<typename T>
     inline void Read(T& val)
-    { stream->read(reinterpret_cast<char*>(&val), sizeof(T)); } // NOLINT
+    { ReadBytes(reinterpret_cast<char*>(&val), sizeof(T)); } // NOLINT
   };
 
   // MemoryOutArchive / MemoryInArchive =====================================================
@@ -1120,6 +1159,15 @@ namespace ngcore
           char * p = const_cast<char*> (reinterpret_cast<const char*> (data));
           setg (p, p, p + n);
         }
+        pos_type seekoff (off_type off, std::ios_base::seekdir dir, std::ios_base::openmode) override
+        {
+          char * p = (dir == std::ios_base::beg ? eback() : dir == std::ios_base::cur ? gptr() : egptr()) + off;
+          if (p < eback() || p > egptr()) return pos_type(off_type(-1));
+          setg (eback(), p, egptr());
+          return pos_type(p - eback());
+        }
+        pos_type seekpos (pos_type pos, std::ios_base::openmode mode) override
+        { return seekoff (off_type(pos), std::ios_base::beg, mode); }
       };
       Buf buf;
     public:

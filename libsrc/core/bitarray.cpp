@@ -146,7 +146,10 @@ namespace ngcore
         auto size = Size();
         archive & size;
         if(archive.Input())
-          SetSize(size);
+          {
+            archive.CheckSize (size/CHAR_BIT);
+            SetSize(size);
+          }
         if(archive.GetVersion("netgen") < "v6.2.2009-20")
           archive.Do(data, size/CHAR_BIT+1);
         else
@@ -175,6 +178,7 @@ namespace ngcore
           {
             size_t size;
             archive & size;
+            archive.CheckSize (size);
             SetSize (size);
             Clear();
             for (size_t i = 0; i < size; i++)

@@ -237,10 +237,13 @@ namespace netgen
       {
         size_t entries, size;
         ar & size & entries;
+        ar.CheckSize (size, sizeof(int));
         data.SetSize(size);
         for (size_t i = 0; i < size; i++)
           {
             ar & data[i].size;
+            if (data[i].size < 0) ar.ThrowEnd();
+            ar.CheckSize (data[i].size, elemsize);
             data[i].maxsize = data[i].size;
             data[i].col = new char[data[i].size*elemsize];
             ar.Do ((unsigned char*)data[i].col, data[i].size*elemsize);
