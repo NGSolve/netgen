@@ -360,6 +360,16 @@ namespace netgen
 
     numvertices = mesh2.numvertices;
 
+    ident = make_unique<Identifications> (*this);
+    const auto & ident2 = *mesh2.ident;
+    for (auto [pair, nr] : ident2.GetPairs())
+      ident->Add (pair[0], pair[1], nr);
+    for (int nr = 1; nr <= ident2.GetMaxNr(); nr++)
+      {
+        ident->SetName (nr, ident2.GetName(nr));
+        ident->SetType (nr, ident2.GetType(nr));
+      }
+
     return *this;
   }
 
