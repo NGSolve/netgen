@@ -2107,7 +2107,11 @@ namespace netgen
     archive & surfelements;
     archive & volelements;
     archive & segments;
-    archive & pointelements;
+    if (archive.GetVersion("netgen") >= "v6.2.2404-23")
+      {
+        archive.NeedsVersion("netgen", "v6.2.2404-23");
+        archive & pointelements;
+      }
     archive & Regions<2>();
     Array<optional<string>> bcnames2d_compat;
     if (archive.GetVersion("netgen") >= names_in_descriptors_version)
@@ -2150,9 +2154,9 @@ namespace netgen
     archive.Shallow(geometry);
     archive & *curvedelems;
 
-    if(archive.GetVersion("netgen") >= "v6.2.2603-26")
+    if(archive.GetVersion("netgen") >= "v6.2.2604-1")
       {
-        archive.NeedsVersion("netgen", "v6.2.2603-26");
+        archive.NeedsVersion("netgen", "v6.2.2604-1");
         archive & Regions<1>();
       }
 

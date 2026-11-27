@@ -50,6 +50,9 @@ namespace netgen
       & epgi_edgenr_compat & epgi_edgenr_compat;
     if (!ar.Output())
       {
+        // older archives have cd2i in the index slot, the index was edgenr
+        if (ar.GetVersion("netgen") < "v6.2.2602-10")
+          index_compat = edgenr_compat;
         SetIndex(EdgeRegionIndex::FromNr1(index_compat)); // archive stores 1-based, same as in-memory
       }
   }
@@ -2314,7 +2317,26 @@ namespace netgen
     void Identifications :: DoArchive (Archive & ar)
     {
       ar & maxidentnr;
-      ar & identifiedpoints & identifiedpoints_nr;
+      if (ar.Input() && ar.GetVersion("netgen") < "v6.2.2406-89")
+        {
+          // old INDEX_2/INDEX_3 hashtables: bag tables of keys and values, 1-based points
+          TABLE<IVec<2,int>> hash2;
+          TABLE<IVec<3,int>> hash3;
+          TABLE<int> cont2, cont3;
+          ar & hash2 & cont2 & hash3 & cont3;
+          auto pnt = [](int nr1) { return PointIndex::FromNr1(nr1); };
+          for (int i = 0; i < hash2.Size(); i++)
+            for (int j = 0; j < hash2[i].Size(); j++)
+              identifiedpoints.Set (PointIndices<2>(pnt(hash2[i][j][0]), pnt(hash2[i][j][1])), cont2[i][j]);
+          for (int i = 0; i < hash3.Size(); i++)
+            for (int j = 0; j < hash3[i].Size(); j++)
+              identifiedpoints_nr.Set ({ { pnt(hash3[i][j][0]), pnt(hash3[i][j][1]) }, hash3[i][j][2] }, cont3[i][j]);
+        }
+      else
+        {
+          ar.NeedsVersion("netgen", "v6.2.2406-89");
+          ar & identifiedpoints & identifiedpoints_nr;
+        }
       // idpoints_table is archived as raw bytes: store 1-based numbers, independent of BASE
       auto to_nr1 = [&]()
       {
