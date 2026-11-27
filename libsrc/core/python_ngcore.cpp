@@ -61,7 +61,7 @@ namespace ngcore
       {             
         Flags nested_flags;
         for(auto item : value.cast<py::dict>())
-          SetFlag(nested_flags, item.first.cast<string>(),
+          SetFlag(nested_flags, py::str(item.first).cast<string>(),
                   item.second.cast<py::object>());
         flags.SetFlag(s, nested_flags);
         return;
@@ -125,6 +125,8 @@ namespace ngcore
         if (py::isinstance<py::str>(value))
           flags.SetFlag(s, makeCArray<string>(vdt));
       }
+    else if (py::hasattr(py::type::of(value), "__members__") && py::hasattr(value, "__int__"))
+      flags.SetFlag(s, double(py::int_(value).cast<int>()));   // pybind11 enum
     else
       {
         flags.SetFlag(s, CastPyToAny(value));
