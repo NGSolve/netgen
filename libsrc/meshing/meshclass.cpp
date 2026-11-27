@@ -2126,7 +2126,15 @@ namespace netgen
                      " uses the old layout of region names. It is converted now, but loading it might not be",
                      " supported by future versions. Save it again to update the file.");
         auto [mats, bcnames, cd2names, cd3names] = ReadRegionNamesCompat(archive);
-        SetDomainNames(std::move(mats));
+        if (dimension == 2)
+          // old 2D meshes: the material goes by bc number, the descriptor carries a boundary name
+          for (auto & fd : Regions<2>())
+            {
+              int nr = fd.BCProperty();
+              fd.SetBCName((nr >= 1 && nr <= mats.Size() && mats[nr-1]) ? *mats[nr-1] : defaultmat);
+            }
+        else
+          SetDomainNames(std::move(mats));
         if (dimension == 1)
           SetRegionNames<0>(bcnames);   // bc names of 1D meshes are the vertex names
         if (dimension == 2)

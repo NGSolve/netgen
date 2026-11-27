@@ -547,9 +547,6 @@
     "nel_codim1": 12,
     "nel_codim2": 0,
     "np": 19
-   },
-   "known_bugs": {
-    "names_codim0": "reader differs from the writing release"
    }
   }
  },
@@ -1101,9 +1098,6 @@
     "nel_codim1": 12,
     "nel_codim2": 4,
     "np": 19
-   },
-   "known_bugs": {
-    "names_codim0": "reader differs from the writing release"
    }
   }
  },
@@ -1655,9 +1649,6 @@
     "nel_codim1": 12,
     "nel_codim2": 4,
     "np": 19
-   },
-   "known_bugs": {
-    "names_codim0": "reader differs from the writing release"
    }
   }
  },
@@ -2209,9 +2200,6 @@
     "nel_codim1": 12,
     "nel_codim2": 4,
     "np": 19
-   },
-   "known_bugs": {
-    "names_codim0": "reader differs from the writing release"
    }
   }
  },
