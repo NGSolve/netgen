@@ -4104,17 +4104,26 @@ namespace netgen
                 }
             }
         */
-        for (auto [i2, newpi] : cutedges)
+        bool added = true;
+        while (added)
           {
-            PointIndices<2> oi2(identmap[i2[0]], 
-                                identmap[i2[1]]);
-            if((!oi2[0].IsValid()) || (!oi2[1].IsValid()))
-              continue;
-            oi2.Sort();
-            if (cutedges.Used (oi2))
+            added = false;
+            for (auto [i2, newpi] : cutedges)
               {
-                PointIndex onewpi = cutedges.Get(oi2);
-                mesh.GetIdentifications().Add (newpi, onewpi, i);
+                if (identmap[newpi].IsValid())
+                  continue;
+                PointIndices<2> oi2(identmap[i2[0]],
+                                    identmap[i2[1]]);
+                if((!oi2[0].IsValid()) || (!oi2[1].IsValid()))
+                  continue;
+                oi2.Sort();
+                if (cutedges.Used (oi2))
+                  {
+                    PointIndex onewpi = cutedges.Get(oi2);
+                    mesh.GetIdentifications().Add (newpi, onewpi, i);
+                    identmap[newpi] = onewpi;
+                    added = true;
+                  }
               }
           }
       }
