@@ -116,15 +116,7 @@ namespace ngcore
           }
       }
     else if (py::isinstance<py::tuple>(value))
-      {
-        auto vdt = py::cast<py::tuple>(value);
-        if (py::isinstance<py::float_>(value))
-          flags.SetFlag(s, makeCArray<double>(vdt));
-        if (py::isinstance<py::int_>(value))
-          flags.SetFlag(s, makeCArray<double>(vdt));
-        if (py::isinstance<py::str>(value))
-          flags.SetFlag(s, makeCArray<string>(vdt));
-      }
+      SetFlag(flags, s, py::list(value));   // same as a list
     else if (py::hasattr(py::type::of(value), "__members__") && py::hasattr(value, "__int__"))
       flags.SetFlag(s, double(py::int_(value).cast<int>()));   // pybind11 enum
     else
